@@ -728,9 +728,9 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
     /*---------------------------------------------------------------*/
     /* Find machine endian-ness                                      */
-    /* cckd_endian() returns 1 for big-endian machines               */
+    /* cckd_def_opt_bigend() returns 1 for big-endian machines       */
     /*---------------------------------------------------------------*/
-    swapend = (cckd_endian() !=
+    swapend = (cckd_def_opt_bigend() !=
                ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != 0));
 
     /*---------------------------------------------------------------*/

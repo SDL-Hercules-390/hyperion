@@ -322,7 +322,7 @@ int     cfba64_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 /* Functions in module cckdutil.c/cckdutil64.c */
 CCDU_DLL_IMPORT   int   cckd_swapend (DEVBLK *);
 CCDU_DLL_IMPORT   void  cckd_swapend_chdr ( CCKD_DEVHDR* );
-CCDU_DLL_IMPORT   void  cckd_swapend_l1   ( CCKD_L1ENT*, int );
+CCDU_DLL_IMPORT   void  cckd_swapend_l1   ( CCKD_L1ENT*, int num_L1tab );
 CCDU_DLL_IMPORT   void  cckd_swapend_l2   ( CCKD_L2ENT* );
 CCDU_DLL_IMPORT   void  cckd_swapend_free ( CCKD_FREEBLK* );
 
@@ -334,7 +334,7 @@ CCDU64_DLL_IMPORT void  cckd64_swapend_free ( CCKD64_FREEBLK* );
 CCDU64_DLL_IMPORT int   cckd64_comp (DEVBLK *);
 CCDU64_DLL_IMPORT int   cckd64_chkdsk (DEVBLK *, int);
 
-CCDU_DLL_IMPORT   int   cckd_endian ();
+CCDU_DLL_IMPORT   int   cckd_def_opt_bigend ();
 CCDU_DLL_IMPORT   int   cckd_comp (DEVBLK *);
 CCDU_DLL_IMPORT   int   cckd_chkdsk (DEVBLK *, int);
 

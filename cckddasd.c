@@ -2482,7 +2482,7 @@ int             sfx;                    /* File index                */
 
     /* Check endian format */
     cckd->swapend[sfx] = 0;
-    if ((cckd->cdevhdr[sfx].cdh_opts & CCKD_OPT_BIGEND) != cckd_endian())
+    if ((cckd->cdevhdr[sfx].cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {
         if (cckd->open[sfx] == CCKD_OPEN_RW)
         {

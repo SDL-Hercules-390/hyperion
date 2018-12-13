@@ -482,7 +482,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
         cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
-        if (cckd_endian())
+        if (cckd_def_opt_bigend())
             cdevhdr.cdh_opts |= CCKD_OPT_BIGEND;
 
         cdevhdr.cdh_opts     |= CCKD_OPT_OPENRW;
@@ -1343,7 +1343,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
     cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
     cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
-    if (cckd_endian())
+    if (cckd_def_opt_bigend())
         cdevhdr.cdh_opts |= CCKD_OPT_BIGEND;
 
     cdevhdr.cdh_opts     |= CCKD_OPT_OPENRW;

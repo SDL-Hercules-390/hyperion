@@ -37,7 +37,7 @@ static char *comps[]  = { "none", "zlib",   "bzip2" };
 #define  gui_fprintf        if (extgui) fprintf
 
 /*-------------------------------------------------------------------*/
-/* Change the endianess of a compressed file                         */
+/* Toggle the endianess of a compressed file                         */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd64_swapend (DEVBLK *dev)
 {
@@ -78,15 +78,20 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
     len = CCKD64_DEVHDR_SIZE;
     if ((rc = read (fd, &cdevhdr, len)) != len)
         goto cswp_read_error;
-    swapend = (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_endian();
+
+    swapend = (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend();
+
     cckd64_swapend_chdr (&cdevhdr);
+
     cdevhdr.cdh_opts |= CCKD_OPT_OPENRW;
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, &cdevhdr, len)) != len)
         goto cswp_write_error;
-    if (!swapend) cckd64_swapend_chdr (&cdevhdr);
+
+    if (!swapend)
+        cckd64_swapend_chdr (&cdevhdr);
 
     /* l1 table */
     len = cdevhdr.num_L1tab * CCKD64_L1ENT_SIZE;
@@ -98,13 +103,18 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = read (fd, l1, len)) != len)
         goto cswp_read_error;
+
     cckd64_swapend_l1 (l1, cdevhdr.num_L1tab);
+
     if (lseek (fd, off, SEEK_SET) < 0)
         goto cswp_lseek_error;
     gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
     if ((rc = write (fd, l1, len)) != len)
         goto cswp_write_error;
-    if (!swapend) cckd64_swapend_l1 (l1, cdevhdr.num_L1tab);
+
+    if (!swapend)
+        cckd64_swapend_l1 (l1, cdevhdr.num_L1tab);
+
     lopos = CCKD64_L1TAB_POS + len;
 
     /* l2 tables */
@@ -120,7 +130,9 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
         len = CCKD64_L2TAB_SIZE;
         if ((rc = read (fd, l2, len)) != len)
             goto cswp_read_error;
+
         cckd64_swapend_l2 (l2);
+
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
         gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -155,7 +167,9 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
+
                 cckd64_swapend_free (&freeblk);
+
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
@@ -175,13 +189,18 @@ CCKD64_FREEBLK    freeblk;              /* Free block                */
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = read (fd, &freeblk, len)) != len)
                     goto cswp_read_error;
+
                 cckd64_swapend_free (&freeblk);
+
                 if (lseek (fd, off, SEEK_SET) < 0)
                     goto cswp_lseek_error;
                 gui_fprintf (stderr, "POS=%"PRIu64"\n", (U64) lseek( fd, 0, SEEK_CUR ));
                 if ((rc = write (fd, &freeblk, len)) != len)
                     goto cswp_write_error;
-                if (!swapend) cckd64_swapend_free (&freeblk);
+
+                if (!swapend)
+                    cckd64_swapend_free (&freeblk);
+
                 off = freeblk.fb_offnxt;
             } /* for each free space */
         } /* else old format free space */
@@ -244,7 +263,7 @@ cswp_error:
 }
 
 /*-------------------------------------------------------------------*/
-/* Swap endian - compressed device header                            */
+/* UNCONDITIONAL endian swap of compressed device header fields      */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void cckd64_swapend_chdr( CCKD64_DEVHDR* cdevhdr )
 {
@@ -264,17 +283,17 @@ DLL_EXPORT void cckd64_swapend_chdr( CCKD64_DEVHDR* cdevhdr )
 }
 
 /*-------------------------------------------------------------------*/
-/* Swap endian - level 1 table                                       */
+/* UNCONDITIONAL endian swap of level 1 table entries                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void cckd64_swapend_l1( CCKD64_L1ENT* l1, int n )
+DLL_EXPORT void cckd64_swapend_l1( CCKD64_L1ENT* l1, int num_L1tab )
 {
     int  i;
-    for (i = 0; i < n; i++)
+    for (i = 0; i < num_L1tab; i++)
         l1[i] = SWAP64( l1[i] );
 }
 
 /*-------------------------------------------------------------------*/
-/* Swap endian - level 2 table                                       */
+/* UNCONDITIONAL endian swap of all level 2 table entries fields     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void cckd64_swapend_l2( CCKD64_L2ENT* l2 )
 {
@@ -288,7 +307,7 @@ DLL_EXPORT void cckd64_swapend_l2( CCKD64_L2ENT* l2 )
 }
 
 /*-------------------------------------------------------------------*/
-/* Swap endian - free space entry                                    */
+/* UNCONDITIONAL endian swap of all free space entry fields          */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void cckd64_swapend_free( CCKD64_FREEBLK* fb )
 {
@@ -389,14 +408,19 @@ comp_restart:
     /*---------------------------------------------------------------
      * Check the endianess of the file
      *---------------------------------------------------------------*/
-    if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_endian())
+    if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {
         if(dev->batch)
+            // "%1d:%04X CCKD file %s: converting to %s"
             FWRMSG( stdout, HHC00357, "I", LCSS_DEVNUM, dev->filename,
-                    cckd_endian() ? "big-endian" : "little-endian" );
+                    (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) ?
+                        "little-endian" : "big-endian" );
         else
+            // "%1d:%04X CCKD file %s: converting to %s"
             WRMSG( HHC00357, "I", LCSS_DEVNUM, dev->filename,
-                   cckd_endian() ? "big-endian" : "little-endian" );
+                   (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) ?
+                    "little-endian" : "big-endian" );
+
         if (cckd64_swapend (dev) < 0)
             goto comp_error;
         else
@@ -1050,23 +1074,32 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_read_error;
 
     /* Endianess check */
-    if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_endian())
+    if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {
         if (!ro)
         {
             if(dev->batch)
+                // "%1d:%04X CCKD file %s: converting to %s"
                 FWRMSG( stdout, HHC00357, "I", LCSS_DEVNUM, dev->filename,
-                        cckd_endian() ? "big-endian" : "little-endian" );
+                        (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) ?
+                            "little-endian" : "big-endian" );
             else
+                // "%1d:%04X CCKD file %s: converting to %s"
                 WRMSG( HHC00357, "I", LCSS_DEVNUM, dev->filename,
-                       cckd_endian() ? "big-endian" : "little-endian" );
+                       (cdevhdr.cdh_opts & CCKD_OPT_BIGEND) ?
+                        "little-endian" : "big-endian" );
+
             if (cckd64_swapend (dev) < 0)
                 goto cdsk_error;
-            if (level < 0) level = 0;
+
+            if (level < 0)
+                level = 0;
+
             swapend = 0;
         }
         else
             swapend = 1;
+
         cckd64_swapend_chdr (&cdevhdr);
     }
 

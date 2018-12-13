@@ -739,9 +739,9 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
     /*---------------------------------------------------------------*/
     /* Find machine endian-ness                                      */
-    /* cckd_endian() returns 1 for big-endian machines               */
+    /* cckd_def_opt_bigend() returns 1 for big-endian machines       */
     /*---------------------------------------------------------------*/
-    swapend = (cckd_endian() !=
+    swapend = (cckd_def_opt_bigend() !=
                ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != 0));
 
     /*---------------------------------------------------------------*/
@@ -754,7 +754,6 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         num_L1tab = SWAP32( num_L1tab );
 
     L1tab = makbuf( num_L1tab * CCKD_L1ENT_SIZE, "L1TAB" );
-
     readpos( fd, L1tab, CCKD_L1TAB_POS, num_L1tab * CCKD_L1ENT_SIZE );
 
     /* L1TAB itself is NOT adjusted for endian-ness */
