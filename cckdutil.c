@@ -120,7 +120,7 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     /* l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0    || l1[i] == 0xffffffff
+        if (l1[i] == 0    || l1[i] == UINT_MAX
          || l1[i] < lopos || l1[i] > hipos - CCKD_L2TAB_SIZE)
             continue;
         off = (off_t)l1[i];
@@ -492,7 +492,7 @@ comp_restart:
      *---------------------------------------------------------------*/
     n = 1 + 1 + 1 + cdevhdr.num_L1tab + 1;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != 0xffffffff)
+        if (l1[i] != 0 && l1[i] != UINT_MAX)
             n += 256;
     len = sizeof(SPCTAB);
     if ((spctab = calloc (n, len)) == NULL)
@@ -524,7 +524,7 @@ comp_restart:
     s++;
 
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != 0xffffffff)
+        if (l1[i] != 0 && l1[i] != UINT_MAX)
         {
             spctab[s].spc_typ = SPCTAB_L2;
             spctab[s].spc_val = i;
@@ -557,7 +557,7 @@ comp_restart:
             goto comp_read_error;
         for (j = 0; j < 256; j++)
         {
-            if (l2[l][j].L2_trkoff == 0 || l2[l][j].L2_trkoff == 0xffffffff)
+            if (l2[l][j].L2_trkoff == 0 || l2[l][j].L2_trkoff == UINT_MAX)
                 continue;
             spctab[s].spc_typ = SPCTAB_TRK;
             spctab[s].spc_val = spctab[i].spc_val*256 + j;
@@ -570,7 +570,7 @@ comp_restart:
         if (memcmp (l2[l], &zero_l2, CCKD_L2TAB_SIZE) == 0
          || memcmp (l2[l], &ff_l2,   CCKD_L2TAB_SIZE) == 0)
         {
-            l1[l] = l2[l][0].L2_trkoff; /* 0x00000000 or 0xffffffff */
+            l1[l] = l2[l][0].L2_trkoff; /* 0 or UINT_MAX */
             spctab[i].spc_typ = SPCTAB_NONE;
             free (l2[l]);
             l2[l] = NULL;
@@ -591,7 +591,7 @@ comp_restart:
     l2area = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
+        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
         if (l1[i] != l2area)
             relocate = 1;
         l2area += CCKD_L2TAB_SIZE;
@@ -659,7 +659,7 @@ comp_restart:
     off = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
+        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
         spctab[s].spc_typ = SPCTAB_L2;
         spctab[s].spc_val = i;
         spctab[s].spc_off = (U32)off;
@@ -811,7 +811,7 @@ comp_restart:
 
     /* write l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != 0xffffffff)
+        if (l1[i] != 0 && l1[i] != UINT_MAX)
         {
             off = (off_t)l1[i];
             if (lseek (fd, off, SEEK_SET) < 0)
@@ -1329,7 +1329,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* find number of non-null l1 entries */
     for (i = n = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != 0xffffffff)
+        if (l1[i] != 0 && l1[i] != UINT_MAX)
             n++;
 
     if (level >= 4) n = cdevhdr.num_L1tab;
@@ -1373,7 +1373,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab && level < 4; i++)
     {
-        if (l1[i] == 0 || l1[i] == 0xffffffff) continue;
+        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
         spctab[s].spc_typ = SPCTAB_L2;
         spctab[s].spc_val = i;
         spctab[s].spc_off = l1[i];
@@ -1453,7 +1453,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         /* add trks/blkgrps to the space table */
         for (j = 0; j < 256; j++)
         {
-            if (l2tab[j].L2_trkoff != 0 && l2tab[j].L2_trkoff != 0xffffffff)
+            if (l2tab[j].L2_trkoff != 0 && l2tab[j].L2_trkoff != UINT_MAX)
             {
                 spctab[s].spc_typ = trktyp;
                 spctab[s].spc_val = spctab[i].spc_val * 256 + j;
@@ -2318,7 +2318,7 @@ cdsk_fba_recover:
             {
                 if ((l2[L1idx] = malloc (len)) == NULL)
                     goto cdsk_malloc_error;
-                l1[L1idx] = shadow ? 0xffffffff : 0;
+                l1[L1idx] = shadow ? UINT_MAX : 0;
                 memcpy (l2[L1idx], &empty_l2, len);
             }
         }
