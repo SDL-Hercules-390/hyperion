@@ -4385,7 +4385,7 @@ char           *strtok_str = NULL;      /* last token position       */
     cif = open_ckd64_image (ofname, NULL, O_RDWR | O_BINARY, IMAGE_OPEN_NORMAL);
     if (!cif)
     {
-        XMERRF ( MSG( HHC02504, "E", ofname, "open_ckd_image()" ) );
+        XMERRF ( MSG( HHC02504, "E", ofname, "open_ckd64_image()" ) );
         return -1;
     }
 
