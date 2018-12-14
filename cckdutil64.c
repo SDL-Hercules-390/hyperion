@@ -1059,7 +1059,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_error;
     }
 
-    if (imgtyp & ANY32_SF_TYP)
+    if (imgtyp & ANY64_SF_TYP)
         shadow = 0xff;
 
     trktyp = ckddasd ? SPCTAB_TRK : SPCTAB_BLKGRP;
