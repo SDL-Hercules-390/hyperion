@@ -541,7 +541,7 @@ comp_restart:
         if (memcmp (l2[l], &zero_l2, CCKD64_L2TAB_SIZE) == 0
          || memcmp (l2[l], &ff_l2,   CCKD64_L2TAB_SIZE) == 0)
         {
-            l1[l] = l2[l][0].L2_trkoff; /* 0x00000000 or 0xffffffff */
+            l1[l] = l2[l][0].L2_trkoff; /* 0 or ULLONG_MAX */
             spctab[i].spc_typ = SPCTAB_NONE;
             free (l2[l]);
             l2[l] = NULL;
@@ -2316,7 +2316,7 @@ cdsk_fba_recover:
             {
                 if ((l2[L1idx] = malloc((size_t)len)) == NULL)
                     goto cdsk_malloc_error;
-                l1[L1idx] = shadow ? 0xffffffff : 0;
+                l1[L1idx] = shadow ? ULLONG_MAX : 0;
                 memcpy( l2[L1idx], &empty_l2, (size_t)len );
             }
         }
