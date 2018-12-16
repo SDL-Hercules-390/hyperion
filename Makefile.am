@@ -994,13 +994,13 @@ install-exec-hook:
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
 	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/fba2cfba64$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) fba2cfba64$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd64$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) ckd2cckd64$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cfba642fba$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) cfba642fba$(EXEEXT))
-	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cckd642ckd$(EXEEXT)
 	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy64$(EXEEXT) cckd642ckd$(EXEEXT))
 if SETUID_HERCIFC
 	chown root $(DESTDIR)$(bindir)/hercifc
