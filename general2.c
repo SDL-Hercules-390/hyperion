@@ -529,7 +529,7 @@ int     i;                              /* Loop counter              */
 int     dist;                           /* length working distance   */
 int     cpu_length;                     /* CPU determined length     */
 VADR    addr1, addr2;                   /* End/start addresses       */
-BYTE    *main;
+BYTE    *main1;
 BYTE    termchar;                       /* Terminating character     */
 
     RRE(inst, regs, r1, r2);
@@ -551,13 +551,13 @@ BYTE    termchar;                       /* Terminating character     */
     /* Should the second operand cross a page boundary, it is necessary to 
        break up the search into two parts (one part in each page) in order 
        to meet the minimum requirement of 256 CPU determined bytes. */
-    if unlikely(CROSSPAGEL(addr2,cpu_length))
+    if (unlikely(CROSSPAGEL(addr2,cpu_length)))
     {
         /* compute distance to the end of the page */
         dist = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
         while (cpu_length)
         {
-            main = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+            main1 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
             for (i = 0; i < dist; i++)
             {
                 /* If operand end address has been reached, return condition
@@ -570,7 +570,7 @@ BYTE    termchar;                       /* Terminating character     */
 
                 /* If the terminating character was found, return condition
                 code 1 and load the address of the character into R1 */
-                if (*main == termchar)
+                if (*main1 == termchar)
                 {
                     SET_GR_A(r1, regs, addr2);
                     regs->psw.cc = 1;
@@ -578,7 +578,7 @@ BYTE    termchar;                       /* Terminating character     */
                 }
 
                 /* Increment the mainstor address representing the operand address */
-                main++;
+                main1++;
 
                 /* Increment operand address */
                 addr2++;
@@ -595,12 +595,12 @@ BYTE    termchar;                       /* Terminating character     */
         SET_GR_A(r2, regs, addr2);
         regs->psw.cc = 3;
         return;
-    } /* end if unlikely( ) */
+    } /* end if */
 
     /* We didn't cross a page boundary with the minimum length, so extend the
        CPU determined length out to the end of the page.  */
     cpu_length = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-    main = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+    main1 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     for (i = 0; i < cpu_length; i++)
     {
@@ -614,7 +614,7 @@ BYTE    termchar;                       /* Terminating character     */
 
         /* If the terminating character was found, return condition
            code 1 and load the address of the character into R1 */
-        if (*main == termchar)
+        if (*main1 == termchar)
         {
             SET_GR_A(r1, regs, addr2);
             regs->psw.cc = 1;
@@ -622,7 +622,7 @@ BYTE    termchar;                       /* Terminating character     */
         }
 
         /* Increment the mainstor address representing the operand address */
-        main++;
+        main1++;
 
         /* Increment operand address */
         addr2++;

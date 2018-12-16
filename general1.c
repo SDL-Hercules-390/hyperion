@@ -3134,7 +3134,7 @@ BYTE    termchar;                       /* Terminating character     */
     /* Should the either operand or both cross a page boundary, it is necessary to 
     break up the search into two parts (one part in each page) in order 
     to meet the minimum requirement of 256 CPU determined bytes. */
-    if unlikely(CROSSPAGEL(addr1,cpu_length) | CROSSPAGEL(addr2,cpu_length))
+    if (unlikely(CROSSPAGEL(addr1,cpu_length) | CROSSPAGEL(addr2,cpu_length)))
     {
         /* compute distance to the end of the page for each operand */
         dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
@@ -3217,7 +3217,7 @@ BYTE    termchar;                       /* Terminating character     */
         SET_GR_A(r2, regs,addr2);
         return;
 
-    } /* end if unlikely */
+    } /* end if */
 
 
     /* We didn't cross a page boundary with the minimum length, so extend the
