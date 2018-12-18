@@ -10,10 +10,10 @@ This version of Hercules 4.x Hyperion links with several "external package"
 static libraries.
 
 Hercules comes distributed with pre-built external packages as part of its
-source code repository that were built, at the timeof this writing, using
-the latest version of Visual Studio (2017) that ideally SHOULD work fine
-for most everyone as-is, thereby eliminating the need to build any of the
-external packages yourself.  Just build Hercules normally and you're done.
+source code repository that were built, at the time of this writing, using
+the latest version of Visual Studio (2017) (or clang, etc, for Linux) that
+ideally SHOULD work fine for most everyone as-is, thus eliminating the need
+to build any of them yourself. Just build Hercules normally and you're done.
 
 In some situations however you might need (or want) to rebuild one or more
 of the external packages for your system.  Some (but certainly not all) of
@@ -85,7 +85,7 @@ document within each of their respective repositories.
 
 
                       BUILDING THE EXTERNAL PACKAGES
-                      FOR A WINDOWS-BASED HYPERION
+                       FOR A WINDOWS-BASED HYPERION
 
 
 Building the packages is a fairly simple and straightforward process and the
