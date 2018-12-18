@@ -28,7 +28,7 @@
 #include "tapedev.h"
 
 #define UTILITY_NAME    "maketape"
-#define UTILITY_DESC    "create .AWS tape file"
+#define UTILITY_DESC    "Create an .AWS tape file from data"
 
 #define MAXFILES        50         /* Maximum files per run                */
 #define MAXLRECL        32767      /* Maximum record length                */
@@ -521,13 +521,13 @@ bool errors;                       /* indicate missing/invalid arguments   */
         errors = true;
     }
 
-    if (!pVolSer)
+    if (!nltape && !pVolSer)
     {
         // "required %s omitted or not found"
         FWRMSG( stderr, HHC02775, "E", "VOLSER: <volume serial number>" );
         errors = true;
     }
-    else
+    else if (!nltape)
     {
         if (!valid_volser( pVolSer ))
         {
@@ -543,14 +543,19 @@ bool errors;                       /* indicate missing/invalid arguments   */
                 volSer[i] = ' ';
         }
     }
+    else if (nltape && pVolSer)
+    {
+        // "Parameter %s ignored due to NLTAPE option"
+        FWRMSG( stderr, HHC02783, "W", "VOLSER" );
+    }
 
-    if (!datasetName)
+    if (!nltape && !datasetName)
     {
         // "required %s omitted or not found"
         FWRMSG( stderr, HHC02775, "E", "DATASET: <dataset name>" );
         errors = true;
     }
-    else
+    else if (!nltape)
     {
         if (!valid_dataset( datasetName ))
         {
@@ -559,8 +564,19 @@ bool errors;                       /* indicate missing/invalid arguments   */
             errors = true;
         }
     }
+    else if (nltape && datasetName)
+    {
+        // "Parameter %s ignored due to NLTAPE option"
+        FWRMSG( stderr, HHC02783, "W", "DATASET" );
+    }
 
     /* Validate optional argument values... */
+
+    if (nltape && ansi)
+    {
+        // "Parameter %s ignored due to NLTAPE option"
+        FWRMSG( stderr, HHC02783, "W", "ANSI" );
+    }
 
     if (pLRECL)
     {
@@ -826,25 +842,27 @@ int     offset;                    /* used for building blocked records    */
     }
 
     /* build and write VOLume 1 label */
-    for (i=0; i < 80; i++)
-        buf[i] = ' ';
-
-    STRLCPY( buf, "VOL1" );
-    strncpy( buf+4, volSer, 6 );
-
-    if (!ansi)
-        buf[10] = '0';
-
-    /* ensure that label fields only contain upper case */
-    for (i=0; i < 80; i++)
-        buf[i] = toupper( buf[i] );
-
-    if (ansi)
-        buf[79] = '1';
-
     if (!nltape)
     {
-        bool save = binary;
+        bool save;
+
+        for (i=0; i < 80; i++)
+            buf[i] = ' ';
+
+        STRLCPY( buf, "VOL1" );
+        strncpy( buf+4, volSer, 6 );
+
+        if (!ansi)
+            buf[10] = '0';
+
+        /* ensure that label fields only contain upper case */
+        for (i=0; i < 80; i++)
+            buf[i] = toupper( buf[i] );
+
+        if (ansi)
+            buf[79] = '1';
+
+        save = binary;
         binary = ansi;
         writeBuffer( 80 );
         binary = save;
@@ -875,7 +893,7 @@ int     offset;                    /* used for building blocked records    */
         }
 
         /* if multiple output files specified, write header labels */
-        if ((outGLOBBING == outputUNIQUE) && !nltape)
+        if (!nltape && (outGLOBBING == outputUNIQUE))
         {
             writeLabel( 'H', '1' );
             writeLabel( 'H', '2' );

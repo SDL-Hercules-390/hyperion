@@ -2095,16 +2095,17 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02771 "%s missing following %s parameter"
 #define HHC02772 "Error opening %s file '%s': %s"
 #define HHC02773 "Error opening %s file %i '%s': %s"
-#define HHC02774 "number of files in %s exceeds %d; excess ignored"
-#define HHC02775 "required %s omitted or not found"
+#define HHC02774 "Number of files in %s exceeds %d; excess ignored"
+#define HHC02775 "Required %s omitted or not found"
 #define HHC02776 "Error writing %s to file' %s': %s"
 #define HHC02777 "Processing input from: '%s'"
 #define HHC02778 "Wrote %i blocks to AWSTAPE file: '%s' (Seq #%.4s Dataset:'%.17s')"
 #define HHC02779 "%s (C) copyright Jay Moseley, CCP 2000"
-#define HHC02780 "unsupported parameter: %s"
-#define HHC02781 "invalid %s parameter: %s"
+#define HHC02780 "Unsupported parameter: %s"
+#define HHC02781 "Invalid %s parameter: %s"
 #define HHC02782 "LRECL %i and BLOCK %i exceeds maximum AWS blocksize of %i"
-//efine HHC02783 - HHC02799 (available)
+#define HHC02783 "Parameter %s ignored due to NLTAPE option"
+//efine HHC02784 - HHC02799 (available)
 
 // mt_cmd
 #define HHC02800 "%1d:%04X %s complete"
