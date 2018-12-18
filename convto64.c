@@ -28,7 +28,7 @@
 #include "ccwarn.h"
 
 #define UTILITY_NAME    "convto64"
-#define UTILITY_DESC    "Convert cckd file to cckd64 format"
+#define UTILITY_DESC    "Convert CCKD file to CCKD64 format"
 
 /*-------------------------------------------------------------------*/
 /* Helper macros                                                     */
@@ -321,6 +321,7 @@ CCKD64_L2ENT*   oL2tab    = NULL;       /* Level 2 table             */
 
     /* Save the number of L1 table entries */
     num_L1tab = icdevhdr.num_L1tab;
+    EXTGUIMSG( "TRKS=%d\n", num_L1tab * 256 );
 
     /* Allocate room for the L1 tables */
     size = (U32) (num_L1tab * sizeof( CCKD_L1ENT ));
@@ -573,6 +574,8 @@ int process_L2_tab( int trkblk, int ifd, CCKD_L2ENT*   iL2,
     /* For each L2 table entry... */
     for (i=0; i < 256; i++)
     {
+        EXTGUIMSG( "TRK=%d\n", trkblk+i );
+
         oL2[i].L2_len  = iL2[i].L2_len;
         oL2[i].L2_size = iL2[i].L2_size;
         oL2[i].L2_pad  = 0;
