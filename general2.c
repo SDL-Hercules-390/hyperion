@@ -522,118 +522,118 @@ VADR    effective_addr2,
 /*-------------------------------------------------------------------*/
 /* B25E SRST  - Search String                                  [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(search_string)
+DEF_INST( search_string )
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
 int     dist;                           /* length working distance   */
 int     cpu_length;                     /* CPU determined length     */
 VADR    addr1, addr2;                   /* End/start addresses       */
-BYTE    *main1;
+BYTE    *main2;                         /* Operand-2 mainstor addr   */
 BYTE    termchar;                       /* Terminating character     */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
-        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* Load string terminating character from register 0 bits 24-31 */
     termchar = regs->GR_LHLCL(0);
 
     /* Determine the operand end and start addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
+    addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
 
-    /* Establish minimum CPU determined length per the specification  */
+    /* Set the minimum CPU determined length per the specification  */
     cpu_length = 256;
 
-    /* Should the second operand cross a page boundary, it is necessary to 
-       break up the search into two parts (one part in each page) in order 
+    /* Should the second operand cross a page boundary, we need to
+       break up the search into two parts (one part in each page)
        to meet the minimum requirement of 256 CPU determined bytes. */
-    if (unlikely(CROSSPAGEL(addr2,cpu_length)))
+    if (unlikely( CROSSPAGEL( addr2, cpu_length )))
     {
-        /* compute distance to the end of the page */
+        /* Compute the distance to the end of operand-2's page */
         dist = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
+
         while (cpu_length)
         {
-            main1 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
-            for (i = 0; i < dist; i++)
+            main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+            for (i=0; i < dist; i++)
             {
-                /* If operand end address has been reached, return condition
-                code 2 and leave the R1 and R2 registers unchanged */
+                /* If operand end address has been reached, return
+                   CC=2 and leave the R1 and R2 registers unchanged */
                 if (addr2 == addr1)
                 {
                     regs->psw.cc = 2;
                     return;
                 }
 
-                /* If the terminating character was found, return condition
-                code 1 and load the address of the character into R1 */
-                if (*main1 == termchar)
+                /* Set CC=1 if the terminating character was found,
+                   and load the address of that character into R1 */
+                if (*main2 == termchar)
                 {
-                    SET_GR_A(r1, regs, addr2);
+                    SET_GR_A( r1, regs, addr2 );
                     regs->psw.cc = 1;
                     return;
                 }
 
-                /* Increment the mainstor address representing the operand address */
-                main1++;
-
-                /* Increment operand address */
+                /* Bump operand-2 */
+                main2++;
                 addr2++;
-                addr2 &= ADDRESS_MAXWRAP(regs);
+                addr2 &= ADDRESS_MAXWRAP( regs );
 
             } /* end for(i) */
 
-            cpu_length = cpu_length - dist;
+            cpu_length -= dist;
             dist = cpu_length;
 
         } /* end while */
     
-        /* Set R2 to point to next character of operand; set CC=3 and exit */
-        SET_GR_A(r2, regs, addr2);
+        /* The CPU determine number of bytes has been reached. Set R2
+           to point to next character of operand, set CC=3 and exit */
+        SET_GR_A( r2, regs, addr2 );
         regs->psw.cc = 3;
         return;
-    } /* end if */
+    } /* end if unlikely() */
 
-    /* We didn't cross a page boundary with the minimum length, so extend the
-       CPU determined length out to the end of the page.  */
+    /* We don't cross a page boundary with the minimum length, so
+       extend the CPU determined length out to the end of the page */
     cpu_length = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-    main1 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+    main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    for (i = 0; i < cpu_length; i++)
+    for (i=0; i < cpu_length; i++)
     {
-        /* If operand end address has been reached, return condition
-           code 2 and leave the R1 and R2 registers unchanged */
+        /* If operand end address has been reached, return
+           CC=2 and leave the R1 and R2 registers unchanged */
         if (addr2 == addr1)
         {
             regs->psw.cc = 2;
             return;
         }
 
-        /* If the terminating character was found, return condition
-           code 1 and load the address of the character into R1 */
-        if (*main1 == termchar)
+        /* If the terminating character was found, return
+           CC=1 and load the address of the character in R1 */
+        if (*main2 == termchar)
         {
-            SET_GR_A(r1, regs, addr2);
+            SET_GR_A( r1, regs, addr2 );
             regs->psw.cc = 1;
             return;
         }
 
-        /* Increment the mainstor address representing the operand address */
-        main1++;
-
-        /* Increment operand address */
+        /* Bump operand-2 */
+        main2++;
         addr2++;
-        addr2 &= ADDRESS_MAXWRAP(regs);
+        addr2 &= ADDRESS_MAXWRAP( regs );
 
     } /* end for(i) */
-    
-    /* Set R2 to point to next character of operand */
-    SET_GR_A(r2, regs, addr2);
 
-    /* Return condition code 3 */
+    /* The CPU determine number of bytes has been reached.
+       Set R2 to point to next character of operand-2 and
+       return CC=3.
+    */
+    SET_GR_A( r2, regs, addr2 );
     regs->psw.cc = 3;
 
 } /* end DEF_INST(search_string) */

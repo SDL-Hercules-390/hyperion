@@ -3104,181 +3104,204 @@ BYTE    pad;                            /* Padding byte              */
 /*-------------------------------------------------------------------*/
 /* B25D CLST  - Compare Logical String                         [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_string)
+DEF_INST( compare_logical_string )
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
-int     dist1,dist2;                    /* length working distances  */
+int     dist1, dist2;                   /* length working distances  */
 int     usable;                         /* usable length to page end */
 int     cpu_length;                     /* CPU determined length     */
 VADR    addr1, addr2;                   /* End/start addresses       */
-BYTE    *main1,*main2;                  /* ptrs to compare bytes     */
+BYTE    *main1, *main2;                 /* ptrs to compare bytes     */
 BYTE    termchar;                       /* Terminating character     */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
-        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* Load string terminating character from register 0 bits 24-31 */
     termchar = regs->GR_LHLCL(0);
 
     /* Determine the operand addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
+    addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
 
-    /* Establish minimum CPU determined length per the specification  */
+    /* Establish minimum CPU determined length per the specification */
     cpu_length = 256;
 
-    /* Should the either operand or both cross a page boundary, it is necessary to 
-    break up the search into two parts (one part in each page) in order 
-    to meet the minimum requirement of 256 CPU determined bytes. */
-    if (unlikely(CROSSPAGEL(addr1,cpu_length) | CROSSPAGEL(addr2,cpu_length)))
+    /* Should either operand cross a page boundary, we need to
+       break up the search into two parts (one part in each page)
+       to meet the minimum requirement of 256 CPU determined bytes.
+    */
+    if (unlikely( CROSSPAGEL( addr1, cpu_length ) ||
+                  CROSSPAGEL( addr2, cpu_length )))
     {
-        /* compute distance to the end of the page for each operand */
+        /* Compute distance to the end of the page for each operand */
         dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
         dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
 
         while (cpu_length)
         {
-            usable = min(dist1,dist2);
-            usable = min(usable,cpu_length);
+            usable = min( dist1, dist2 );
+            usable = min( usable, cpu_length );
+
             main1 = MADDR( addr1, r1, regs, ACCTYPE_READ, regs->psw.pkey );
             main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
-            for (i = 0; i < usable; i++)
+            for (i=0; i < usable; i++)
             {
-                /* If both bytes are the terminating character then the
-                strings are equal so return condition code 0
-                and leave the R1 and R2 registers unchanged */
+                /* If both bytes are the terminating character, then
+                   the strings are equal, so return CC=0 and leave
+                   the R1 and R2 registers unchanged.
+                */
                 if (*main1 == termchar && *main2 == termchar)
                 {
                     regs->psw.cc = 0;
                     return;
                 }
 
-                /* If first operand byte is the terminating character,
-                or if the first operand byte is lower than the
-                second operand byte, then return condition code 1 */
-                if (*main1 == termchar || ((*main1 < *main2) && (*main2 != termchar)))
+                /* If FIRST operand byte is the terminating character,
+                   -OR- if the first operand byte is LOWER than the
+                   second operand byte, then return condition code 1
+                */
+                if (0
+                    || *main1 == termchar
+                    || (1
+                        && (*main1 < *main2)
+                        && (*main2 != termchar)
+                       )
+                )
                 {
                     regs->psw.cc = 1;
-                    SET_GR_A(r1, regs,addr1);
-                    SET_GR_A(r2, regs,addr2);
+                    SET_GR_A( r1, regs,addr1 );
+                    SET_GR_A( r2, regs,addr2 );
                     return;
                 }
 
-                /* If second operand byte is the terminating character,
-                or if the first operand byte is higher than the
-                second operand byte, then return condition code 2 */
+                /* If SECOND operand byte is the terminating character,
+                   -OR- if the first operand byte is HIGHER than the
+                   second operand byte, then return condition code 2.
+                */
                 if (*main2 == termchar || *main1 > *main2)
                 {
                     regs->psw.cc = 2;
-                    SET_GR_A(r1, regs,addr1);
-                    SET_GR_A(r2, regs,addr2);
+                    SET_GR_A( r1, regs,addr1 );
+                    SET_GR_A( r2, regs,addr2 );
                     return;
                 }
 
-                /* Increment the mainstor addresses representing the operands  */
+                /* Bump both operands to the next byte */
                 main1++;
                 main2++;
 
-                /* Increment operand addresses */
                 addr1++;
-                addr1 &= ADDRESS_MAXWRAP(regs);
+                addr1 &= ADDRESS_MAXWRAP( regs );
+
                 addr2++;
-                addr2 &= ADDRESS_MAXWRAP(regs);
+                addr2 &= ADDRESS_MAXWRAP( regs );
 
             } /* end for(i) */
 
-            /* adjust all counts by number of bytes scanned */
-            cpu_length = cpu_length - usable;
-            dist1 -= usable;
-            dist2 -= usable;
+            /* Adjust all counts by number of bytes scanned */
+            cpu_length -= usable;
+            dist1      -= usable;
+            dist2      -= usable;
 
-            /* If either operand dist value is 0, then we are at a page boundary.
-               Adjust the remaining distance to the remaining CPU determined length */
-            if (!dist1)
-            {
-                dist1 = cpu_length;
-            }
-            if (!dist2)
-            {
-                dist2 = cpu_length;
-            }
+            /* If either operand dist value is 0, then we're at a page
+               boundary. Adjust the remaining distance to the remaining
+               CPU determined length.
+            */
+            if (!dist1) dist1 = cpu_length;
+            if (!dist2) dist2 = cpu_length;
 
         } /* end while */
 
-        /* There was no determination on equality, so set CC=3 and exit with the
-           current position updated in the operand registers */
+        /* CPU determine number of bytes reached without finding any
+           inequality. Set CC=3 and exit with the current position
+           updated in the operand registers.
+        */
         regs->psw.cc = 3;
-        SET_GR_A(r1, regs,addr1);
-        SET_GR_A(r2, regs,addr2);
+        SET_GR_A( r1, regs,addr1 );
+        SET_GR_A( r2, regs,addr2 );
         return;
 
     } /* end if */
 
-
-    /* We didn't cross a page boundary with the minimum length, so extend the
-    CPU determined length out to the nearest end of the page by either operand.  */
+    /* Neither operand crosses a page boundary using the minimum
+       length, so extend the CPU determined length out to the
+       nearest end of page of either operand.
+    */
     dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-    cpu_length = min(dist1,dist2);
+
+    cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
 
     main1 = MADDR( addr1, r1, regs, ACCTYPE_READ, regs->psw.pkey );
     main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
-    for (i = 0; i < cpu_length; i++)
+    for (i=0; i < cpu_length; i++)
     {
-        /* If both bytes are the terminating character then the
-        strings are equal so return condition code 0
-        and leave the R1 and R2 registers unchanged */
+        /* If both bytes are the terminating character, then
+           the strings are equal, so return CC=0 and leave
+           the R1 and R2 registers unchanged.
+        */
         if (*main1 == termchar && *main2 == termchar)
         {
             regs->psw.cc = 0;
             return;
         }
 
-        /* If first operand byte is the terminating character,
-        or if the first operand byte is lower than the
-        second operand byte, then return condition code 1 */
-        if (*main1 == termchar || ((*main1 < *main2) && (*main2 != termchar)))
+        /* If FIRST operand byte is the terminating character,
+           -OR- if the first operand byte is LOWER than the
+           second operand byte, then return CC=1
+        */
+        if (0
+            || *main1 == termchar
+            || (1
+                && (*main1 < *main2)
+                && (*main2 != termchar)
+               )
+        )
         {
             regs->psw.cc = 1;
-            SET_GR_A(r1, regs,addr1);
-            SET_GR_A(r2, regs,addr2);
+            SET_GR_A( r1, regs,addr1 );
+            SET_GR_A( r2, regs,addr2 );
             return;
         }
 
-        /* If second operand byte is the terminating character,
-        or if the first operand byte is higher than the
-        second operand byte, then return condition code 2 */
+        /* If SECOND operand byte is the terminating character,
+           -OR- if the first operand byte is HIGHER than the
+           second operand byte, then return CC=2.
+        */
         if (*main2 == termchar || *main1 > *main2)
         {
             regs->psw.cc = 2;
-            SET_GR_A(r1, regs,addr1);
-            SET_GR_A(r2, regs,addr2);
+            SET_GR_A( r1, regs,addr1 );
+            SET_GR_A( r2, regs,addr2 );
             return;
         }
 
-        /* Increment the mainstor addresses representing the operands  */
+        /* Bump both operands to the next byte */
         main1++;
         main2++;
 
-        /* Increment operand addresses */
         addr1++;
-        addr1 &= ADDRESS_MAXWRAP(regs);
+        addr1 &= ADDRESS_MAXWRAP( regs );
+
         addr2++;
-        addr2 &= ADDRESS_MAXWRAP(regs);
+        addr2 &= ADDRESS_MAXWRAP( regs );
 
     } /* end for(i) */
 
-    /* There was no determination on equality, so set CC=3 and exit with the
-       current position updated in the operand registers */
+    /* CPU determine number of bytes reached without finding any
+       inequality. Set CC=3 and exit with the current position
+       updated in the operand registers.
+    */
     regs->psw.cc = 3;
-    SET_GR_A(r1, regs,addr1);
-    SET_GR_A(r2, regs,addr2);
+    SET_GR_A( r1, regs,addr1 );
+    SET_GR_A( r2, regs,addr2 );
 
 } /* end DEF_INST( compare_logical_string ) */
 #endif /* defined( FEATURE_STRING_INSTRUCTION ) */
@@ -5551,17 +5574,17 @@ int     i;                              /* Loop counter              */
 /*-------------------------------------------------------------------*/
 /* B255 MVST  - Move String                                    [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(move_string)
+DEF_INST( move_string )
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
-int     dist1,dist2;                    /* length working distances  */
+int     dist1, dist2;                   /* length working distances  */
 int     cpu_length;                     /* CPU determined length     */
 VADR    addr1, addr2;                   /* End/start addresses       */
-BYTE    *main1,*main2;                  /* ptrs to compare bytes     */
+BYTE    *main1, *main2;                 /* ptrs to compare bytes     */
 BYTE    termchar;                       /* Terminating character     */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -5574,48 +5597,54 @@ BYTE    termchar;                       /* Terminating character     */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
-    /* Per the specification, the CPU determined length can be any number above zero.
-       Set the CPU determined length to the nearest end of the page by either operand.  */
+    /* Per the specification, the CPU determined length can be
+       any number above zero. Set the CPU determined length to
+       the nearest end of page of either operand.
+    */
     dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-    cpu_length = min(dist1,dist2);
+
+    cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
 
     main1 = MADDR( addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
-    main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+    main2 = MADDR( addr2, r2, regs, ACCTYPE_READ,  regs->psw.pkey );
 
-    for (i = 0; i < cpu_length; i++)
+    for (i=0; i < cpu_length; i++)
     {
-        /* move a byte */
+        /* Move a single byte */
         *main1 = *main2;
 
-        /* If we find the terminating character in operand 2 the
-        movement is completed.  Set CC=1 and the R1 register to the
-        location of the just moved terminating character and leave
-        the R2 register unchanged, and exit */
+        /* If we find the terminating character in operand 2, then
+           the movement is complete.  Set CC=1 and the R1 register
+           to the location of the just moved terminating character
+           and leave the R2 register unchanged and exit.
+        */
         if (*main2 == termchar)
         {
             regs->psw.cc = 1;
-            SET_GR_A(r1, regs,addr1);
+            SET_GR_A( r1, regs,addr1 );
             return;
         }
 
-        /* Increment the mainstor addresses representing the operands  */
+        /* Bump both operands to the next byte */
         main1++;
         main2++;
 
-        /* Increment operand addresses */
         addr1++;
-        addr1 &= ADDRESS_MAXWRAP(regs);
+        addr1 &= ADDRESS_MAXWRAP( regs );
+
         addr2++;
-        addr2 &= ADDRESS_MAXWRAP(regs);
+        addr2 &= ADDRESS_MAXWRAP( regs );
 
     } /* end for(i) */
 
-    /* Here if no terminating character found.  Set CC=3 and exit with the
-       current position updated in the operand registers */
+    /* No terminating character was found within the CPU determined
+       number of bytes.  Set CC=3 and exit with the current position
+       updated in both operand registers.
+    */
     regs->psw.cc = 3;
-    SET_GR_A(r1, regs,addr1);
-    SET_GR_A(r2, regs,addr2);
+    SET_GR_A( r1, regs,addr1 );
+    SET_GR_A( r2, regs,addr2 );
 
 } /* end DEF_INST(move_string) */
 #endif /*defined(FEATURE_STRING_INSTRUCTION)*/
