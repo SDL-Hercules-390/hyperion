@@ -1701,8 +1701,11 @@ int             rc;
     /* Set the writer thread's priority just BELOW the CPU threads'
        in order to minimize any potential impact from compression.
     */
-    cckdblk.wrprio = sysblk.cpuprio - 1;
-    set_thread_priority( cckdblk.wrprio );
+    if (!cckdblk.batch)
+    {
+        cckdblk.wrprio = sysblk.cpuprio - 1;
+        set_thread_priority( cckdblk.wrprio );
+    }
 
     obtain_lock( &cckdblk.wrlock );
 
