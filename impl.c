@@ -1244,14 +1244,16 @@ int     rc;
             /* daemon mode without any daemon_task */
             process_script_file("-", 1);
 
-            /* We come here only when the user did ctl-d on a tty or */
-            /* end  of  file of the standard input.  No quit command */
-            /* has  been issued since that (via do_shutdown()) would */
-            /* not return.                                           */
-
-            if (sysblk.started_mask)  /* All quiesced?               */
-                usleep( 10 * 1000 );  /* Wait for CPUs to stop       */
-            quit_cmd(0, NULL, NULL);  /* Then pull the plug          */
+            /* We come here only if the user did ctl-d on a tty,
+               or we reached EOF on stdin.  No quit command has
+               been issued (yet) since that (via do_shutdown())
+               would not return.  So we issue the quit here once
+               all CPUs have quiesced since without any CPUs and
+               stdin at EOF, there's nothing more for us to do!
+            */
+            while (sysblk.started_mask) /* All CPUs quiesced?        */
+                usleep( 10 * 1000 );    /* Wait for CPUs to stop.    */
+            quit_cmd( 0, NULL, NULL );  /* Then pull the plug.       */
         }
     }
 
