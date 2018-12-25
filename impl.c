@@ -865,8 +865,8 @@ int     rc;
     {
         // "Terminating due to %d argument errors"
         WRMSG( HHC02343, "S", rc );
-        usleep( 250000 );   // give logger time to display message(s)
-        exit( rc );
+        delayed_exit( rc );
+        return rc;
     }
 
     /* Now display the version information again after logger_init
@@ -1019,8 +1019,8 @@ int     rc;
 
     if (rc != 0)
     {
-        usleep( 100000 );  // (give logger time to display message)
-        exit( rc );
+        delayed_exit( rc );
+        return rc;
     }
 
     /* Load DYNGUI module if needed */
