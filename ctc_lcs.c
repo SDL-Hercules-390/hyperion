@@ -2511,7 +2511,6 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
     PLCSHDR     pLCSHdr;
     PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
     size_t      iLength = 0;
-    BYTE        haltorclear = FALSE;
 
     struct timespec  waittime;
     struct timeval   now;
@@ -2554,20 +2553,14 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
                                   &waittime );
             pLCSDEV->fReadWaiting = 0;
         }
+
         PTT_DEBUG(        "WOKE DevEventLock ", 000, pDEVBLK->devnum, -1 );
-        if (pLCSDEV->fHaltOrClear)
-        {
-            haltorclear = TRUE;
-            pLCSDEV->fHaltOrClear = 0;
-        }
-        PTT_DEBUG(        "REL  DevEventLock ", 000, pDEVBLK->devnum, -1 );
-        release_lock( &pLCSDEV->DevEventLock );
 
         // Check for channel conditions...
 
-        if (haltorclear)
+        if (pLCSDEV->fHaltOrClear)
         {
-            *pUnitStat = CSW_CE | CSW_DE;
+            *pUnitStat = 0;
             *pResidual = sCount;
 
             PTT_DEBUG(    "*HALT or CLEAR*   ", *pUnitStat, pDEVBLK->devnum, sCount );
@@ -2575,8 +2568,10 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
             if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug)
                 // "%1d:%04X %s: halt or clear recognized"
                 WRMSG( HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
+            release_lock( &pLCSDEV->DevEventLock );
             return;
         }
+        release_lock( &pLCSDEV->DevEventLock );
 
     } // end for (;;)
 
