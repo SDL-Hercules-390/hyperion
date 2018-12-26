@@ -13,6 +13,7 @@
 */* -------------------------------------------------------------------
 *   local macros
 * ------------------------------------------------------------------ */
+
          MACRO
 &L      #LLE  &R,&A                      load little-endian
 &L       IC   &R,&A
@@ -21,6 +22,8 @@
          ICM  &R,8,3+&A
          MEND
 
+*----------------------------------------------------------------------
+
          MACRO
 &L      #LHLE &R,&A                      load halfword little-endian
 &L       SLR  &R,&R
@@ -28,9 +31,11 @@
          ICM  &R,2,1+&A
          MEND
 
+*----------------------------------------------------------------------
+
          MACRO
 &L      #LC   &R,&A                      load conditional
-&L       TM   cdevhdr_options,CCKD_BIGENDIAN
+&L       TM   cdh_opts,CCKD_OPT_BIGEND
          BO   #LC&SYSNDX.A
         #LLE  &R,&A
          B    #LC&SYSNDX.B
@@ -38,9 +43,11 @@
 #LC&SYSNDX.B  DS 0H
          MEND
 
+*----------------------------------------------------------------------
+
          MACRO
 &L      #LHC  &R,&A                      load halfword conditional
-&L       TM   cdevhdr_options,CCKD_BIGENDIAN
+&L       TM   cdh_opts,CCKD_OPT_BIGEND
          BO   #LHC&SYSNDX.A
         #LHLE &R,&A
          B    #LHC&SYSNDX.B
@@ -48,6 +55,8 @@
               ICM &R,3,&A
 #LHC&SYSNDX.B DS  0H
          MEND
+
+*----------------------------------------------------------------------
 
          MACRO
 &L      #READ &OFFSET=,&LENGTH=,&ADDR=   read a cckd block
@@ -76,6 +85,8 @@
          BALR re,rf
          MEND
 
+*----------------------------------------------------------------------
+
          MACRO
 &L      #WRITE &ADDR=                    write a ckd track image
 .*
@@ -88,6 +99,8 @@
          L    rf,=A(writer)
          BALR re,rf
          MEND
+
+*----------------------------------------------------------------------
 
          MACRO
 &L      #MSG   &MSG,&TYPE=CALL           messages
@@ -150,7 +163,7 @@
 .MEND    MEND
 
 */* -------------------------------------------------------------------
-*   mainline routine
+*                  CCKDLOAD
 * ------------------------------------------------------------------ */
 main     CSECT ,
 main     AMODE 31
@@ -158,7 +171,7 @@ main     RMODE ANY
          B     init-*(,rf)
          DC    AL1(init-*)
 pgmid    DC    CL8'cckdload'
-vrm      DC    X'000102'          version 0 release 1 modlvl 2  CZV70
+vrm      DC    X'000301'          version 0 release 3 modlvl 1
          DC    C' &SYSDATE &SYSTIME '
 init     SAVE  (14,12)
          LR    rc,rf              set base reg
@@ -261,18 +274,17 @@ ut1      USING IHADCB,sysut1
          ST    r0,bpt                            save blks/trk
 
 */* -------------------------------------------------------------------
-*   read the CKDDASD_DEVHDR
+*   read the CKD_DEVHDR
 * ------------------------------------------------------------------ */
-        #READ  OFFSET=0,LENGTH=CKDDASD_DEVHDR_SIZE,ADDR=devhdr
-         USING CKDDASD_DEVHDR,devhdr
-         TR    devhdr_devid,A2E
-         CLC   devhdr_devid,=C'CKD_C370'         check devid
+        #READ  OFFSET=0,LENGTH=CKD_DEVHDR_SIZE,ADDR=devhdr
+         USING CKD_DEVHDR,devhdr
+         CLC   dh_devid,devid_CKD_C370           check devid
          BNE   Edevid
-        #LLE   r1,devhdr_heads                   get number of heads
+        #LLE   r1,dh_heads                       get number of heads
          ST    r1,heads
-        #LLE   r1,devhdr_trksize                 get trk size
+        #LLE   r1,dh_trksize                     get trk size
          ST    r1,trklen
-         IC    r1,devhdr_devtype                 get device type
+         IC    r1,dh_devtyp                      get device type
          STC   r1,devtype+1
          STC   r1,devtype
          TR    devtype(1),devtype_table          get 1st byte
@@ -280,19 +292,19 @@ ut1      USING IHADCB,sysut1
          BE    Ebaddevt                           no, error
 
 */* -------------------------------------------------------------------
-*   read the CCKDDASD_DEVHDR
+*   read the CCKD_DEVHDR
 * ------------------------------------------------------------------ */
-        #READ  OFFSET=CKDDASD_DEVHDR_SIZE,LENGTH=CCKDDASD_DEVHDR_SIZE, x
+        #READ  OFFSET=CKD_DEVHDR_SIZE,LENGTH=CCKD_DEVHDR_SIZE,         x
                ADDR=cdevhdr
-         USING CCKDDASD_DEVHDR,cdevhdr
-         TM    cdevhdr_options,CCKD_OPENED       was file closed ?
-         BNO   openok                             yes, continue
+         USING CCKD_DEVHDR,cdevhdr
+         TM    cdh_opts,CCKD_OPT_OPENED          was file closed ?
+         BNO   openok                            yes, continue
         #MSG   'Warning... cckd file was not closed'
          MVC   result,=A(4)
 openok   DS    0H
-        #LC    r1,cdevhdr_cyls                   number of cylinders
+        #LC    r1,cdh_cyls                       number of cylinders
          ST    r1,cyls
-        #LC    r2,cdevhdr_numl1tab               l1 table entries
+        #LC    r2,num_L1tab                      l1 table entries
          ST    r2,numl1tab
 
 */* -------------------------------------------------------------------
@@ -321,7 +333,7 @@ lastl2   SH    r5,=Y(CCKD_L2ENT_SIZE)            backup an entry
          CLR   r5,r4                             before the beginning ?
          BL    lastl1                             yes, keep looking
          USING CCKD_L2ENT,r5
-        #LC    r0,l2ent_pos                      load trk offset
+        #LC    r0,L2_trkoff                      load trk offset
          LTR   r0,r0                             empty ?
          BZ    lastl2                             yes, keep looking
          SR    r2,r3                             each 4-byte l1tab
@@ -740,8 +752,8 @@ rwloop2  LR    rf,r3
          SLL   r5,3
          LA    r5,l2tab(r5)
          USING CCKD_L2ENT,r5
-        #LC    r6,l2ent_pos
-        #LHC   r7,l2ent_len
+        #LC    r6,L2_trkoff
+        #LHC   r7,L2_len
          DROP  r5
 
          L     r5,bufs(r2)
@@ -788,18 +800,18 @@ compnone LR    r6,r5
 */* zlib compression                                                 */
 compzlib LR    r6,r5
          AL    r6,trklen
-         MVC   0(CKDDASD_TRKHDR_SIZE,r6),0(r5)
+         MVC   0(CKD_TRKHDR_SIZE,r6),0(r5)
          LA    re,handle
          LA    rf,=V(UNCOMPRE)
-         LA    r0,CKDDASD_TRKHDR_SIZE(,r6)
+         LA    r0,CKD_TRKHDR_SIZE(,r6)
          L     r1,trklen
-         SH    r1,=Y(CKDDASD_TRKHDR_SIZE)
+         SH    r1,=Y(CKD_TRKHDR_SIZE)
          ST    r1,complen
          LA    r1,complen
          STM   re,r1,pl
-         LA    re,CKDDASD_TRKHDR_SIZE(,r5)
+         LA    re,CKD_TRKHDR_SIZE(,r5)
          LR    rf,r7
-         SH    rf,=Y(CKDDASD_TRKHDR_SIZE)
+         SH    rf,=Y(CKD_TRKHDR_SIZE)
          STM   re,rf,pl+16
          LA    r1,pl
          L     rf,=V(EDCXHOTU)
@@ -814,18 +826,18 @@ compzlib LR    r6,r5
 */* bzip2 compression                                                */
 compbz2  LR    r6,r5
          AL    r6,trklen
-         MVC   0(CKDDASD_TRKHDR_SIZE,r6),0(r5)
+         MVC   0(CKD_TRKHDR_SIZE,r6),0(r5)
          LA    re,handle
          LA    rf,=V(bzbuffd)
-         LA    r0,CKDDASD_TRKHDR_SIZE(,r6)
+         LA    r0,CKD_TRKHDR_SIZE(,r6)
          L     r1,trklen
-         SH    r1,=Y(CKDDASD_TRKHDR_SIZE)
+         SH    r1,=Y(CKD_TRKHDR_SIZE)
          ST    r1,complen
          LA    r1,complen
          STM   re,r1,pl
-         LA    re,CKDDASD_TRKHDR_SIZE(,r5)
+         LA    re,CKD_TRKHDR_SIZE(,r5)
          LR    rf,r7
-         SH    rf,=Y(CKDDASD_TRKHDR_SIZE)
+         SH    rf,=Y(CKD_TRKHDR_SIZE)
          SLR   r0,r0
          SLR   r1,r1
          STM   re,r1,pl+16
@@ -1079,8 +1091,8 @@ Ebadparm MVC   dw,=CL8' '
          B     Eexit
 Edevid  #MSG   '** SYSUT1 is not a cckd file; devid validation failed'
          B     Eexit
-Esynad1 #MSG   '** SYSUT1 fatal error, Synad EP loaded'    CZV70
-         B     Eexit                                       CZV70
+Esynad1 #MSG   '** SYSUT1 fatal error, Synad EP loaded'         CZV70
+         B     Eexit                                            CZV70
 Edevterr STM   rf,r0,retcd
          CLC   retcd(8),=A(4,4)     missing ddname ?
          BE    Enoddn                yes, noddn error
@@ -1093,7 +1105,7 @@ Enotdasd1 #MSG '** SYSUT1 not a dasd file'
          B     Eexit
 Eopenerr #MSG  '** SYSUT1 did not open'
          B     Eexit
-Ebadblksz #MSG '** SYSUT1 blksz is not 16384'              CZV70
+Ebadblksz #MSG '** SYSUT1 blksz is not 16384'                   CZV70
          B     Eexit
 Etrkcalc ST    rf,retcd
         #MSG   '** TRKCAP failed for SYSUT1: rc=%d',retcd
@@ -1188,6 +1200,7 @@ l_cupl    EQU   *-m_cupl
 m_tcpl    TRKCALC MF=L
 l_tcpl    EQU   *-m_tcpl
 eightFF   DC    X'ffffffffffffffff'
+
 devtype_table   DC 256X'00'
           ORG   devtype_table+x'80'
           DC    X'33'
@@ -1196,6 +1209,7 @@ devtype_table   DC 256X'00'
           ORG   devtype_table+x'45'
           DC    X'93'
           ORG   devtype_table+256
+
 hextab    DC    256X'00'
           ORG   hextab+C'0'
           DC    AL1(0,1,2,3,4,5,6,7,8,9)
@@ -1204,6 +1218,7 @@ hextab    DC    256X'00'
           ORG   hextab+C'A'
           DC    AL1(10,11,12,13,14,15)
           ORG   hextab+256
+
 hexchars  DC    256x'ff'
           ORG   hexchars+C'a'
           DC    6x'0'
@@ -1212,6 +1227,7 @@ hexchars  DC    256x'ff'
           ORG   hexchars+C'0'
           DC    10x'0'
           ORG   hexchars+256
+
 upcase    DC    C' ',255AL1(*-upcase)
           ORG   upcase+c'a'
           DC    C'ABCDEFGHI'
@@ -1220,26 +1236,10 @@ upcase    DC    C' ',255AL1(*-upcase)
           ORG   upcase+c's'
           DC    C'STUVWXYZ'
           ORG   upcase+256
-A2E       DS    0D
-*      0 1 2 3 4 5 6 7 8 9 a b c d e f
- DC X'00010203372D2E2F1605250B0C0D0E0F' 0
- DC X'101112133C3D322618193F27221D351F' 1
- DC X'405A7F7B5B6C507D4D5D5C4E6B604B61' 2
- DC X'F0F1F2F3F4F5F6F7F8F97A5E4C7E6E6F' 3
- DC X'7CC1C2C3C4C5C6C7C8C9D1D2D3D4D5D6' 4
- DC X'D7D8D9E2E3E4E5E6E7E8E9ADE0BD5F6D' 5
- DC X'79818283848586878889919293949596' 6
- DC X'979899A2A3A4A5A6A7A8A9C04FD0A107' 7
- DC X'00010203372D2E2F1605250B0C0D0E0F' 8
- DC X'101112133C3D322618193F27221D351F' 9
- DC X'405A7F7B5B6C507D4D5D5C4E6B604B61' a
- DC X'F0F1F2F3F4F5F6F7F8F97A5E4C7E6E6F' b
- DC X'7CC1C2C3C4C5C6C7C8C9D1D2D3D4D5D6' c
- DC X'D7D8D9E2E3E4E5E6E7E8E9ADE0BD5F6D' d
- DC X'79818283848586878889919293949596' e
- DC X'979899A2A3A4A5A6A7A8A9C04FD0A107' f
-hex2char  EQU   *-240
-          DC    C'0123456789ABCDEF'
+
+devid_CKD_C370  DC  XL8'434B445F43333730'   "CKD_C370" in ascii
+devid_CKD_C064  DC  XL8'434B445F43303634'   "CKD_C064" in ascii
+
           DROP  ,
 mainend   DS    0D
 
@@ -1258,7 +1258,7 @@ readr     STM  r0,rf,save1
 
 */* Read the first block into the tempbuf                            */
           LR   r7,r2                copy the offset
-          SRL  r7,14                get the block number   CZV70
+          SRL  r7,14                get the block number        CZV70
           LTR  r2,r2                test offset
           BZ   r_getblk1            always read 1st block for offset 0
           CL   r7,lastblk           already have the 1st block ?
@@ -1266,9 +1266,9 @@ readr     STM  r0,rf,save1
           ST   r7,lastblk           remember this block
           SLR  r6,r6
           D    r6,bpt               calculate ttr
-          STCM r7,7,ttr                                    CZV70
+          STCM r7,7,ttr                                         CZV70
           LA   r6,1(,r6)
-          STC  r6,ttr+3                                    CZV70
+          STC  r6,ttr+3                                         CZV70
           POINT sysut1,ttr          position to the block
           LTR  rf,rf
           BNZ  Epoint
@@ -1278,8 +1278,8 @@ r_gotblk1 DS   0H
 
 */* Copy data from the first block to the caller's buffer            */
           LR   r5,r2                calculate data offset
-          N    r5,=A(X'00003fff')    in the first block    CZV70
-          LH   r6,=Y(16384)         calculate data length  CZV70
+          N    r5,=A(X'00003fff')    in the first block         CZV70
+          LH   r6,=Y(16384)         calculate data length       CZV70
           SR   r6,r5                 in the first block
           AR   r2,r6                new offset
           LR   re,r4                target address
@@ -1296,17 +1296,17 @@ r_gotblk1 DS   0H
 */* Read the intermediate blocks directly into the caller's buffer   */
 r_getint  LTR  r3,r3                test length left to read
           BZ   r_return             return if everything read
-          CH   r3,=Y(16384)   able to read a full block ?  CZV70
+          CH   r3,=Y(16384)   able to read a full block ?       CZV70
           BL   r_getlast             no, special processing for last
           READ ut1decb,SF,sysut1,(r4),'S',MF=E
           CHECK ut1decb             read an intermediate block
-          AH   r2,=Y(16384)         adjust the offset      CZV70
-          SH   r3,=Y(16384)         adjust the length left CZV70
-          AH   r4,=Y(16384)         adjust buffer position CZV70
+          AH   r2,=Y(16384)         adjust the offset           CZV70
+          SH   r3,=Y(16384)         adjust the length left      CZV70
+          AH   r4,=Y(16384)         adjust buffer position      CZV70
           B    r_getint             read some more
 
 */* Read the last block into the tempbuf                             */
-r_getlast SRL  r2,14       change offset to block number   CZV70
+r_getlast SRL  r2,14       change offset to block number        CZV70
           ST   r2,lastblk            and save it
           READ ut1decb,SF,sysut1,tempbuf,'S',MF=E
           CHECK ut1decb
@@ -1757,7 +1757,7 @@ mr_oxit  CLI   DCBRECFM,0          any record format ?
 
          CH    r0,DCBBLKSI         any blksize
          BNE   *+10                 jumps if yes
-         MVC   DCBBLKSI,=Y(16384)    copy default blksize  CZV70
+         MVC   DCBBLKSI,=Y(16384)    copy default blksize       CZV70
 
          TM    DCBRECFM,DCBRECU    test record type
          BO    mr_oxitu             undefined
@@ -1841,7 +1841,7 @@ ptoken   DS    D                        ucb pin token
 devta    DS    D                        devtype area
 ctime    DS    D                        current date/time
 dtime    DS    CL20                     date/time display area
-lastblk  DS    F               last cckd 16384 block read  CZV70
+lastblk  DS    F               last cckd 16384 block read       CZV70
 ttr      DS    F                        ttr for cckd block
 dw       DS    D                        double word work areas
 dw2      DS    D
@@ -1851,12 +1851,12 @@ sysut1e  DS    XL(l_sysut1e)            cckd file dcbe
 prtdcbe  DS    XL(l_prtdcbe)            print dcbe
 pl       DS    32F                      general parameter list
 openl    DS    XL(l_openl)              open parameter list
-devhdr   DS    0XL(CKDDASD_DEVHDR_SIZE) device header
-cdevhdr  DS    XL(CCKDDASD_DEVHDR_SIZE) compressed device header
+devhdr   DS    0XL(CKD_DEVHDR_SIZE)     device header
+cdevhdr  DS    XL(CCKD_DEVHDR_SIZE)     compressed device header
 l1tab    DS    A                        l1tab address
 l2tab    DS    XL(CCKD_L2TAB_SIZE)      l2tab
 msg      DS    CL256                    message
-tempbuf  DS    XL16384          temp buffer for cckd read  CZV70
+tempbuf  DS    XL16384          temp buffer for cckd read       CZV70
 workl    EQU   *-work
 
 work24    DSECT ,                  24-bit work area
@@ -1953,64 +1953,75 @@ LRsector DS    X
 LRtlf    DS    XL2                transfer length factor
 LRparml  EQU   *-LRparm
 
-CKDDASD_DEVHDR   DSECT ,
-devhdr_devid     DS    CL8
-devhdr_heads     DS    F
-devhdr_trksize   DS    F
-devhdr_devtype   DS    X
-devhdr_fileseq   DS    X
-devhdr_highcyl   DS    H
-                 DS    XL492
-CKDDASD_DEVHDR_SIZE    EQU *-CKDDASD_DEVHDR
+*----------------------------------------------------------------------
+*                   CKD Device Header
+*----------------------------------------------------------------------
 
-CKDDASD_TRKHDR   DSECT ,
-trkhdr_bin       DS    X
-trkhdr_cyl       DS    XL2
-trkhdr_head      DS    XL2
-CKDDASD_TRKHDR_SIZE    EQU *-CKDDASD_TRKHDR
+CKD_TRKHDR          DSECT ,
+bin                 DS   X
+cyl                 DS   XL2
+head                DS   XL2
+CKD_TRKHDR_SIZE     EQU  *-CKD_TRKHDR
 
-CCKDDASD_DEVHDR  DSECT   ,
-cdevhdr_vrm      DS      XL3
-cdevhdr_options  DS      X
-cdevhdr_numl1tab DS      F
-cdevhdr_numl2tab DS      F
-cdevhdr_size     DS      F
-cdevhdr_used     DS      F
-cdevhdr_free     DS      F
-cdevhdr_free_total    DS F
-cdevhdr_free_largest  DS F
-cdevhdr_free_number   DS F
-cdevhdr_free_imbed    DS F
-cdevhdr_cyls     DS      F
-                 DS      X
-cdevhdr_compress DS      X
-cdevhdr_compress_parm DS H
-                 DS      XL464
-CCKDDASD_DEVHDR_SIZE EQU *-CCKDDASD_DEVHDR
+*----------------------------------------------------------------------
+*                   CKD Device Header
+*----------------------------------------------------------------------
 
-CCKD_VERSION     EQU   0
-CCKD_RELEASE     EQU   2
-CCKD_MODLVL      EQU   1
+CKD_DEVHDR          DSECT ,
+dh_devid            DS   XL8
+dh_heads            DS   F
+dh_trksize          DS   F
+dh_devtyp           DS   X
+dh_fileseq          DS   X
+dh_highcyl          DS   H
+                    DS   XL(512-(*-CKD_DEVHDR))
+CKD_DEVHDR_SIZE     EQU  *-CKD_DEVHDR
 
-CCKD_NOFUDGE     EQU   1
-CCKD_BIGENDIAN   EQU   2
-CCKD_OPENED      EQU   128
+*----------------------------------------------------------------------
+*                   CCKD Compressed Device Header
+*----------------------------------------------------------------------
 
-CCKD_COMPRESS_NONE  EQU 0
-CCKD_COMPRESS_ZLIB  EQU 1
-CCKD_COMPRESS_BZIP2 EQU 2
-CCKD_COMPRESS_MAX   EQU CCKD_COMPRESS_BZIP2
+CCKD_DEVHDR         DSECT ,
+cdh_vrm             DS   XL3
+cdh_opts            DS   X
+num_L1tab           DS   F
+num_L2tab           DS   F
+cdh_size            DS   F
+cdh_used            DS   F
+free_off            DS   F
+free_total          DS   F
+free_largest        DS   F
+free_num            DS   F
+free_imbed          DS   F
+cdh_cyls            DS   F
+                    DS   X
+cmp_algo            DS   X
+cmp_parm            DS   H
+                    DS   XL(512-(*-CCKD_DEVHDR))
+CCKD_DEVHDR_SIZE    EQU  *-CCKD_DEVHDR
 
-CCKD_L1TAB_POS      EQU CKDDASD_DEVHDR_SIZE+CCKDDASD_DEVHDR_SIZE
-CCKD_L1ENT_SIZE     EQU 4
-CCKD_NULLTRK_SIZE   EQU 37
+CCKD_OPT_BIGEND     EQU  X'02'
+CCKD_OPT_OPENED     EQU  X'80'
 
-CCKD_L2ENT       DSECT   ,
-l2ent_pos        DS      F
-l2ent_len        DS      H
-l2ent_size       DS      H
-CCKD_L2ENT_SIZE  EQU     *-CCKD_L2ENT
-CCKD_L2TAB_SIZE  EQU     256*CCKD_L2ENT_SIZE
+CCKD_COMPRESS_ZLIB  EQU  1
+CCKD_COMPRESS_BZIP2 EQU  2
+CCKD_COMPRESS_MAX   EQU  CCKD_COMPRESS_BZIP2
+
+CCKD_L1TAB_POS      EQU  CKD_DEVHDR_SIZE+CCKD_DEVHDR_SIZE
+CCKD_L1ENT_SIZE     EQU  4
+CCKD_NULLTRK_SIZE   EQU  37
+
+*----------------------------------------------------------------------
+*                   Level 2 Lookup Table Entry
+*----------------------------------------------------------------------
+
+CCKD_L2ENT          DSECT ,
+L2_entry            DS   0XL8
+L2_trkoff           DS   XL4             pos of track image
+L2_len              DS   XL2             length of track in area
+L2_size             DS   XL2             size of track area
+CCKD_L2ENT_SIZE     EQU  *-CCKD_L2ENT
+CCKD_L2TAB_SIZE     EQU  256*CCKD_L2ENT_SIZE
 
 */* -------------------------------------------------------------------
 *   dsects

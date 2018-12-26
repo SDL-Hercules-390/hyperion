@@ -2,8 +2,8 @@
 * *      build a dasd file from sysut1 to sysut2
 * * ---------------------------------------------------------------- */
 version  EQU   0
-release  EQU   1
-mod      EQU   15                                               CZV70
+release  EQU   3
+mod      EQU   1
 
 */* ----------------------------------------------------------------
 * *      macros
@@ -17,11 +17,15 @@ mod      EQU   15                                               CZV70
          STCM &R,8,3+&A
          MEND
 
+*----------------------------------------------------------------------
+
          MACRO
 &L       STHLE &R,&A                     store halfword little-endian
 &L       STC  &R,&A
          STCM &R,2,1+&A
          MEND
+
+*----------------------------------------------------------------------
 
          MACRO
 &L       LLE  &R,&A                      load little-endian
@@ -31,12 +35,16 @@ mod      EQU   15                                               CZV70
          ICM  &R,8,3+&A
          MEND
 
+*----------------------------------------------------------------------
+
          MACRO
 &L       LHLE &R,&A                      load halfword little-endian
 &L       SLR  &R,&R
          IC   &R,&A
          ICM  &R,2,1+&A
          MEND
+
+*----------------------------------------------------------------------
 
          MACRO
 &L      #MSG   &LVL,&MSG,&TYPE=CALL
@@ -104,7 +112,7 @@ mod      EQU   15                                               CZV70
          AGO   .GENLOOP
 .MEND    MEND
 */* ----------------------------------------------------------------
-* *
+* *                      CCKDDUMP
 * * ---------------------------------------------------------------- */
 main     CSECT ,
 main     RMODE ANY
@@ -754,25 +762,20 @@ o        USING IHADCB,outdcb
          L     r1,=A(16384)
          SLR   rf,rf
          MVCL  r0,re
-         USING CKDDASD_DEVHDR,VDH_devhdr
-*        MVC   CKD_devid,=cl8'CKD_C370'                 Deleted SOMITCW
-*        TR    CKD_devid,e2aTab                         Deleted SOMITCW
-         MVC   CKD_devid,=XL8'434B445F43333730'                 SOMITCW
+         USING CKD_DEVHDR,VDH_devhdr
+         MVC   dh_devid,devid_CKD_C370
          L     rf,trks_per_cyl
-         STLE  rf,CKD_heads
+         STLE  rf,dh_heads
          L     rf,trk_size
-         STLE  rf,CKD_trksize
-         MVI   CKD_devtype,x'90'
-         CLI   devta+3,x'0f'
-         BE    *+8
-         MVI   CKD_devtype,x'80'
-         USING CCKDDASD_DEVHDR,VDH_devhdr2
-         MVC   CCKD_vrm,=AL1(version,release,mod)
-         TM    opts,DONTCOMPRESS
-         BO    *+8
-         MVI   CCKD_options,1
+         STLE  rf,dh_trksize
+         MVI   dh_devtyp,x'90'            presume 3390 dasd
+         CLI   devta+3,x'0f'              is it a 3390 dasd?
+         BE    *+8                        yes correct guess
+         MVI   dh_devtyp,x'80'            must be 3380 then
+         USING CCKD_DEVHDR,VDH_devhdr2
+         MVC   cdh_vrm,=AL1(version,release,mod)
          L     rf,cyls
-         STLE  rf,CCKD_cyls
+         STLE  rf,cdh_cyls
 
 *        calculate number lvl 1 entries
          L     rf,trks
@@ -781,14 +784,14 @@ o        USING IHADCB,outdcb
          N     rf,=A(X'000000ff')          evenly divisible ?
          BZ    *+8
          LA    r2,1(,r2)                     no, increment number
-         STLE  r2,CCKD_numl1tab
+         STLE  r2,num_L1tab
          LA    r1,256
-         STLE  r1,CCKD_numl2tab
+         STLE  r1,num_L2tab
 
          L     r1,cckd_compr
-         STC   r1,CCKD_compress
+         STC   r1,cmp_algo
          L     r1,cckd_compr_level
-         STHLE r1,CCKD_compress_parm
+         STHLE r1,cmp_parm
          LR    r1,r2                     calclate first pos
          SLL   r1,2                       (at end ov lvl 1 tab)
          AL    r1,=A(VDH_l1tab-VDHDR)
@@ -1096,13 +1099,13 @@ write_track    DS 0H
 *         level 2 table doesn't exist yet; build one
 
           L    r0,bytes_ovh          update
-          AL   r0,=A(256*L'L2TAB_entry) overhead
+          AL   r0,=A(CCKD_L2TAB_SIZE) overhead
           ST   r0,bytes_ovh               total
 *         get pos range of the new level 2 table
           L    r3,out_pos            load current pos
           STLE r3,0(r4)              update lvl 1 pos
           LR   r4,r3                 calculate next pos
-          AL   r4,=A(256*L'L2TAB_entry)
+          AL   r4,=A(CCKD_L2TAB_SIZE)
           ST   r4,out_pos            set next available pos
 *         set  buffer for rewrite [if it already isn't]
           L    r5,last_rw            see if buf set for rewrite
@@ -1154,13 +1157,13 @@ wt_l2t_ok DS   0H                    r3 has lvl 2 tab pos
 
 *         build the lvl 2 entry in a work area
 *         (this is necessary because the entry might span buffers)
-w         USING L2TAB,dw
-          XC   w.L2TAB_entry,w.L2TAB_entry
+w         USING CCKD_L2ENT,dw
+          XC   w.L2_entry,w.L2_entry
           L    r1,out_pos            get next available pos
-          STLE r1,w.L2TAB_pos         set pos for trk image
+          STLE r1,w.L2_trkoff        set pos for trk image
           L    r1,4(,r8)             get length of trk image
-          STHLE r1,w.L2TAB_size       set size of the area
-          STHLE r1,w.L2TAB_len         set length of the trk image
+          STHLE r1,w.L2_size         set size of the area
+          STHLE r1,w.L2_len          set length of the trk image
           DROP w
 
 *         get address of the lvl 2 entry
@@ -1181,7 +1184,7 @@ wt_l2t_2  L    rf,rw_buf             load buf addr for this entry
           AR   r2,rf                 now have addr of lvl 2 entry
 
 *         copy the work entry to the actual entry
-          USING L2TAB,r2
+          USING CCKD_L2ENT,r2
           A    rf,=A(16384)          calculate length
           SR   rf,r2                 left in this buf
           CH   rf,=Y(8)              check length to copy
@@ -1197,8 +1200,8 @@ wt_l2t_2  L    rf,rw_buf             load buf addr for this entry
           L    r2,rw_buf             target addr (start of next buf)
           EX   re,wt_l2t_mvc2        copy the rest
           B    wt_l2t_x
-wt_l2t_mvc  MVC L2TAB_entry(0),dw
-wt_l2t_mvc2 MVC L2TAB_entry(0),0(rf)
+wt_l2t_mvc  MVC L2_entry(0),dw
+wt_l2t_mvc2 MVC L2_entry(0),0(rf)
           DROP r4,r2
 wt_l2t_x  DS   0H                    lvl 2 tab entry built
 
@@ -1327,19 +1330,19 @@ wt_fsp_ok DS   0H                    last block has been written
 *         update the header
           L    r2,vdhdr_addr
           USING VDHDR,r2
-          USING CCKDDASD_DEVHDR,VDH_devhdr2
+          USING CCKD_DEVHDR,VDH_devhdr2
           L    re,out_buf_pos
-          STLE re,CCKD_size           set file size
+          STLE re,cdh_size            set file size
           L    rf,out_pos
-          STLE rf,CCKD_used           set bytes used
+          STLE rf,cdh_used            set bytes used
           L    r0,bytes_free
-          STLE r0,CCKD_free_total     set total free space
-          STLE r0,CCKD_free_largest   set largest free space
+          STLE r0,free_total          set total free space
+          STLE r0,free_largest        set largest free space
           LTR  r0,r0                  any free space ?
-          BZ   wt_hd2_ok               no, continue
-          STLE rf,CCKD_free           set offset to free entry
+          BZ   wt_hd2_ok              no, continue
+          STLE rf,free_off            set offset to free entry
           LA   r1,1
-          STLE r1,CCKD_free_number    set number free entries
+          STLE r1,free_num            set number free entries
           DROP r2
 wt_hd2_ok DS   0H
 
@@ -1696,24 +1699,9 @@ model_cvpl       CVAFSEQ MF=L
 model_cvpl_l     EQU  *-model_cvpl
 model_trkcalcl   TRKCALC MF=L
 model_trkcalcl_l EQU  *-model_trkcalcl
-* e2aTAB   DS    0D                                     Deleted SOMITCW
-*      0 1 2 3  4 5 6 7  8 9 a b  c d e f               Deleted SOMITCW
-* DC X'00010203 1A091A7F 1A1A1A0B 0C0D0E0F' 0           Deleted SOMITCW
-* DC X'10111213 1A0A081A 18191A1A 1C1D1E1F' 1           Deleted SOMITCW
-* DC X'1A1A1C1A 1A0A171B 1A1A1A1A 1A050607' 2           Deleted SOMITCW
-* DC X'1A1A161A 1A1E1A04 1A1A1A1A 14151A1A' 3           Deleted SOMITCW
-* DC X'20A6E180 EB909FE2 AB8B9B2E 3C282B7C' 4           Deleted SOMITCW
-* DC X'26A9AA9C DBA599E3 A89E2124 2A293B5E' 5           Deleted SOMITCW
-* DC X'2D2FDFDC 9ADDDE98 9DACBA2C 255F3E3F' 6           Deleted SOMITCW
-* DC X'D78894B0 B1B2FCD6 FB603A23 40273D22' 7           Deleted SOMITCW
-* DC X'F8616263 64656667 686996A4 F3AFAEC5' 8           Deleted SOMITCW
-* DC X'8C6A6B6C 6D6E6F70 71729787 CE93F1FE' 9           Deleted SOMITCW
-* DC X'C87E7374 75767778 797AEFC0 DA5BF2F9' a           Deleted SOMITCW
-* DC X'B5B6FDB7 B8B9E6BB BCBD8DD9 BF5DD8C4' b           Deleted SOMITCW
-* DC X'7B414243 44454647 4849CBCA BEE8ECED' c           Deleted SOMITCW
-* DC X'7D4A4B4C 4D4E4F50 5152A1AD F5F4A38F' d           Deleted SOMITCW
-* DC X'5CE75354 55565758 595AA085 8EE9E4D1' e           Deleted SOMITCW
-* DC X'30313233 34353637 3839B3F7 F0FAA7FF' f           Deleted SOMITCW
+
+devid_CKD_C370  DC  XL8'434B445F43333730'   "CKD_C370" in ascii
+devid_CKD_C064  DC  XL8'434B445F43303634'   "CKD_C064" in ascii
 
 in_trt_table DC 256Xl1'0'   Table to find end of dsname         SOMITCW
          ORG   in_trt_table+X'40'  Back up the location counter SOMITCW
@@ -2034,7 +2022,6 @@ opts              DS  X
 ALLTRKS           EQU X'80'              dump all tracks
 ALLDATA           EQU X'40'              dump all data in datasets
 COMPRESSION       EQU X'20'              compress dumped data
-DONTCOMPRESS      EQU X'10'              explicitly don't compress
 msglvl            DS  X
 volser            DS  CL6
 retcode           DS  F
@@ -2198,52 +2185,63 @@ rw_ttr            DS  F
 rw_next           DS  0F
 rw_len            EQU *-rw_ent
 
-L2TAB          DSECT  ,                  level 2 lookup table entry
-L2TAB_entry       DS  0XL8
-L2TAB_pos         DS  XL4                   pos of track image
-L2TAB_len         DS  XL2                   length of track in area
-L2TAB_size        DS  XL2                   size of track area
-L2TAB_next        DS  0X
+*----------------------------------------------------------------------
+*                   Virtual Disk File Headers
+*----------------------------------------------------------------------
 
-VDHDR          DSECT  ,                  virt disk file header
-VDH_devhdr        DS  XL512
-VDH_devhdr2       DS  XL512
-VDH_l1tab         DS  0X
+VDHDR               DSECT ,
+VDH_devhdr          DS   XL512
+VDH_devhdr2         DS   XL512
+VDH_l1tab           DS   0X
 
-CKDDASD_DEVHDR DSECT  ,                  device header
-CKD_devid         DS  XL8
-CKD_heads         DS  F
-CKD_trksize       DS  F
-CKD_devtype       DS  X
-CKD_fileseq       DS  X
-CKD_highcyl       DS  H
-CKD_resv          DS  XL(512-(*-CKDDASD_DEVHDR))
-CKD_len           EQU *-CKDDASD_DEVHDR
+*----------------------------------------------------------------------
+*                   CKD Device Header
+*----------------------------------------------------------------------
 
-CCKDDASD_DEVHDR   DSECT ,                compressed device header
-CCKD_vrm            DS  XL3
-CCKD_options        DS  X
-CCKD_NOFUDGE        EQU 1
-CCKD_BIGENDIAN      EQU 2
-CCKD_OPENED         EQU 128
-CCKD_numl1tab       DS  F
-CCKD_numl2tab       DS  F
-CCKD_size           DS  F
-CCKD_used           DS  F
-CCKD_free           DS  F
-CCKD_free_total     DS  F
-CCKD_free_largest   DS  F
-CCKD_free_number    DS  F
-CCKD_free_imbed     DS  F
-CCKD_cyls           DS  F
-                    DS  X
-CCKD_compress       DS  X
-CCKD_COMPRESS_NONE  EQU 0
-CCKD_COMPRESS_ZLIB  EQU 1
-CCKD_compress_parm  DS  H
-CCKD_gcol           DS  5XL16
-CCKD_resv           DS  XL(512-(*-CCKDDASD_DEVHDR))
-CCKD_len            EQU *-CCKDDASD_DEVHDR
+CKD_DEVHDR          DSECT ,
+dh_devid            DS   XL8
+dh_heads            DS   F
+dh_trksize          DS   F
+dh_devtyp           DS   X
+dh_fileseq          DS   X
+dh_highcyl          DS   H
+                    DS   XL(512-(*-CKD_DEVHDR))
+
+*----------------------------------------------------------------------
+*                   CCKD Compressed Device Header
+*----------------------------------------------------------------------
+
+CCKD_DEVHDR         DSECT ,
+cdh_vrm             DS   XL3
+cdh_opts            DS   X
+num_L1tab           DS   F
+num_L2tab           DS   F
+cdh_size            DS   F
+cdh_used            DS   F
+free_off            DS   F
+free_total          DS   F
+free_largest        DS   F
+free_num            DS   F
+free_imbed          DS   F
+cdh_cyls            DS   F
+                    DS   X
+cmp_algo            DS   X
+cmp_parm            DS   H
+                    DS   XL(512-(*-CCKD_DEVHDR))
+
+CCKD_COMPRESS_ZLIB  EQU  1
+
+*----------------------------------------------------------------------
+*                   Level 2 Lookup Table Entry
+*----------------------------------------------------------------------
+
+CCKD_L2ENT          DSECT ,
+L2_entry            DS   0XL8
+L2_trkoff           DS   XL4             pos of track image
+L2_len              DS   XL2             length of track in area
+L2_size             DS   XL2             size of track area
+CCKD_L2ENT_SIZE     EQU  *-CCKD_L2ENT
+CCKD_L2TAB_SIZE     EQU  256*CCKD_L2ENT_SIZE
 
 */* ----------------------------------------------------------------
 * *      dsects
