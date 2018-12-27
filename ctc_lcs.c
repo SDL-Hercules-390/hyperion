@@ -2562,6 +2562,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
         {
             *pUnitStat = 0;
             *pResidual = sCount;
+            pLCSDEV->fHaltOrClear=0;
 
             PTT_DEBUG(    "*HALT or CLEAR*   ", *pUnitStat, pDEVBLK->devnum, sCount );
 
