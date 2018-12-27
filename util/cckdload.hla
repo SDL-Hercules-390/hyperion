@@ -1954,7 +1954,7 @@ LRtlf    DS    XL2                transfer length factor
 LRparml  EQU   *-LRparm
 
 *----------------------------------------------------------------------
-*                   CKD Device Header
+*                   CKD Track Header
 *----------------------------------------------------------------------
 
 CKD_TRKHDR          DSECT ,
@@ -2006,6 +2006,8 @@ CCKD_OPT_OPENED     EQU  X'80'
 CCKD_COMPRESS_ZLIB  EQU  1
 CCKD_COMPRESS_BZIP2 EQU  2
 CCKD_COMPRESS_MAX   EQU  CCKD_COMPRESS_BZIP2
+
+*----------------------------------------------------------------------
 
 CCKD_L1TAB_POS      EQU  CKD_DEVHDR_SIZE+CCKD_DEVHDR_SIZE
 CCKD_L1ENT_SIZE     EQU  4
