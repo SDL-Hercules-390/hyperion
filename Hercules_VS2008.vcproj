@@ -3283,6 +3283,18 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\str-001-clst.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\str-001-mvst.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\str-001-srst.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\tape.core"
 						>
 					</File>
@@ -4298,6 +4310,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\str-001-clst.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\str-001-mvst.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\str-001-srst.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\tape.tst"
 							>
 						</File>
@@ -4510,6 +4534,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\str-001-clst.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\str-001-mvst.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\str-001-srst.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\tape.asm"
 							>
 						</File>
@@ -4662,6 +4698,18 @@
 							</File>
 							<File
 								RelativePath=".\tests\stfl.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\str-001-clst.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\str-001-mvst.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\str-001-srst.list"
 								>
 							</File>
 							<File

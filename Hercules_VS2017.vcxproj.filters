@@ -1631,6 +1631,15 @@
     <None Include="tests\stfl.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\str-001-clst.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\str-001-mvst.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\str-001-srst.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\agf.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
     </None>
@@ -1854,6 +1863,15 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\stfl.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\str-001-clst.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\str-001-mvst.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\str-001-srst.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\stidp.tst">
@@ -2174,6 +2192,15 @@
     <None Include="tests\stfl.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\str-001-clst.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\str-001-mvst.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\str-001-srst.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\mhi.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -2187,6 +2214,15 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\stfl.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-clst.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-mvst.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-srst.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\tape.core">

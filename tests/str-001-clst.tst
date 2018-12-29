@@ -44,7 +44,7 @@ runtest
 
 # Restore program check messages
 
-ostailor null
+ostailor default
 
 ###########################################################################################
 
@@ -79,9 +79,4 @@ r 08A0.0C
 r 08B0.0C
 *Want "Test 13 R6-R8"       00006000 0000C000 00000005
 
-# Restore program check messages
-
-ostailor null
-
 *Done
-
