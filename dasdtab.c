@@ -408,7 +408,7 @@ int altcyls;                            /* Number alternate cyls     */
       (cu->devt == 0x3990 &&                    // ... or in 24-byte sense
        ckd->devt == 0x3380));                   // ... compatability for 3380
                                                 // ... hosted on 3990 controller
-    devchar[10] = ckd->devclass;                   // Device class code
+    devchar[10] = ckd->devclass;                // Device class code
     devchar[11] = ckd->code;                    // Device type code
     store_hw(devchar+12, cyls - altcyls);       // Primary cylinders
     store_hw(devchar+14, ckd->heads);           // Tracks per cylinder

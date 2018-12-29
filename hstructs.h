@@ -1546,6 +1546,8 @@ struct DEVBLK {                         /* Device configuration block*/
         int     ckdcurkl;               /* Current record key length */
         int     ckdorient;              /* Current orientation       */
         int     ckdcuroper;             /* Curr op: read=6, write=5  */
+        BYTE    ckdfcwrk[CKD_RECHDR_SIZE];/* data for 1st read count */
+        BYTE    ckdxcode;               /* extended code             */
         U16     ckdcurdl;               /* Current record data length*/
         U16     ckdrem;                 /* #of bytes from current
                                            position to end of field  */
@@ -1564,7 +1566,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ckdloper;               /* Locate record operation   */
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
-        BYTE    ckdreserved1;           /* Alignment                 */
+        BYTE    ckdextcd;               /* extended code             */
         void   *cckd_ext;               /* -> CCKD_EXT, else NULL    */
         BYTE    cckd64:1;               /* 1=CCKD64/CFBA64           */
         BYTE    devcache:1;             /* 0 = device cache off
@@ -1573,6 +1575,7 @@ struct DEVBLK {                         /* Device configuration block*/
         u_int   ckdxtdef:1;             /* 1=Define Extent processed */
         u_int   ckdsetfm:1;             /* 1=Set File Mask processed */
         u_int   ckdlocat:1;             /* 1=Locate Record processed */
+        u_int   ckdfcoun:1;             /* 1=first read count done   */
         u_int   ckdspcnt:1;             /* 1=Space Count processed   */
         u_int   ckdseek:1;              /* 1=Seek command processed  */
         u_int   ckdskcyl:1;             /* 1=Seek cylinder processed */
