@@ -927,6 +927,10 @@
     <None Include="tests\stfl.core" />
     <None Include="tests\stfl.list" />
     <None Include="tests\stfl.tst" />
+    <None Include="tests\str-001-cksm.asm" />
+    <None Include="tests\str-001-cksm.core" />
+    <None Include="tests\str-001-cksm.list" />
+    <None Include="tests\str-001-cksm.tst" />
     <None Include="tests\str-001-clst.asm" />
     <None Include="tests\str-001-clst.core" />
     <None Include="tests\str-001-clst.list" />

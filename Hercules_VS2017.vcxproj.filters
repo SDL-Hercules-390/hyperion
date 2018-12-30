@@ -1631,6 +1631,9 @@
     <None Include="tests\stfl.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\str-001-cksm.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\str-001-clst.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1863,6 +1866,9 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\stfl.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\str-001-cksm.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\str-001-clst.tst">
@@ -2192,6 +2198,9 @@
     <None Include="tests\stfl.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\str-001-cksm.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\str-001-clst.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2214,6 +2223,9 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\stfl.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-cksm.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\str-001-clst.list">

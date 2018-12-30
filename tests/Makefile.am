@@ -330,6 +330,10 @@ EXTRA_DIST =                    \
      stfl.core                  \
      stfl.listing               \
      stfl.tst                   \
+     str-001-cksm.asm           \
+     str-001-cksm.core          \
+     str-001-cksm.list          \
+     str-001-cksm.tst           \
      str-001-clst.asm           \
      str-001-clst.core          \
      str-001-clst.list          \

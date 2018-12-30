@@ -3283,6 +3283,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\str-001-cksm.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\str-001-clst.core"
 						>
 					</File>
@@ -4310,6 +4314,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\str-001-cksm.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\str-001-clst.tst"
 							>
 						</File>
@@ -4534,6 +4542,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\str-001-cksm.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\str-001-clst.asm"
 							>
 						</File>
@@ -4698,6 +4710,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\stfl.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\str-001-cksm.list"
 								>
 							</File>
 							<File

@@ -1552,36 +1552,40 @@ VADR    addr2;                          /* Address of second operand */
 GREG    len;                            /* Operand length            */
 int     i, j;                           /* Loop counters             */
 int     cc = 0;                         /* Condition code            */
+U32     cpu_length;                     /* CPU determined length     */
 U32     n;                              /* Word loaded from operand  */
 U64     dreg;                           /* Checksum accumulator      */
+BYTE    *main2;                         /* Operand-2 mainstor addr   */
 
     RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r2, regs);
 
     /* Obtain the second operand address and length from R2, R2+1 */
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-    len = GR_A(r2+1, regs);
+    addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
+    len = GR_A( r2+1, regs );
 
     /* Initialize the checksum from the first operand register */
-    dreg = regs->GR_L(r1);
+    dreg = regs->GR_L( r1 );
 
-    /* Process each fullword of second operand */
-    for ( i = 0; len > 0 ; i++ )
+    /* Set the minimum CPU determined length per the specification  */
+    cpu_length = min(4, len);
+
+    /* Should the second operand cross a page boundary with the minimum
+       length or if the specified length is within the minimum, process 
+       the remaining length byte by byte so as to observe possible 
+       access exceptions */
+    if (0
+        || len <= 4 
+        || CROSSPAGEL( addr2, cpu_length )
+       )
     {
-        /* If 1024 words have been processed, exit with cc=3 */
-        if ( i >= 1024 )
-        {
-            cc = 3;
-            break;
-        }
-
         /* Fetch fullword from second operand */
-        if (len >= 4)
+        if (cpu_length == 4)
         {
             n = ARCH_DEP(vfetch4) ( addr2, r2, regs );
             addr2 += 4;
-            addr2 &= ADDRESS_MAXWRAP(regs);
+            addr2 &= ADDRESS_MAXWRAP( regs );
             len -= 4;
         }
         else
@@ -1590,12 +1594,13 @@ U64     dreg;                           /* Checksum accumulator      */
             for (j = 0, n = 0; j < 4; j++)
             {
                 n <<= 8;
-                if (len > 0)
+                if (cpu_length > 0)
                 {
                     n |= ARCH_DEP(vfetchb) ( addr2, r2, regs );
                     addr2++;
-                    addr2 &= ADDRESS_MAXWRAP(regs);
+                    addr2 &= ADDRESS_MAXWRAP( regs );
                     len--;
+                    cpu_length--;
                 }
             } /* end for(j) */
         }
@@ -1609,18 +1614,61 @@ U64     dreg;                           /* Checksum accumulator      */
             dreg &= 0xFFFFFFFFULL;
             dreg++;
         }
-    } /* end for(i) */
+
+    } 
+    else
+    {
+        /* Here if a page boundary would not be crossed with the 
+           minimum length and if the specified length is more than the
+           minimum.  Extend the CPU determined length out to the end 
+           of the page, but not longer than the specified length in 
+           register r2+1  */
+        cpu_length = PAGEFRAME_PAGESIZE - ( addr2 & PAGEFRAME_BYTEMASK );
+        cpu_length = min( cpu_length, len );
+        main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+
+        /* Compute number of 4-byte elements we can process within this page
+           and compute the number of bytes that will be processed.  Remainder
+           bytes (if any) will be processed on the next instruction
+           execution. */
+        i = cpu_length / 4;
+        cpu_length = i * 4;
+
+        for (j=0; j < i; j++)
+        {
+            /* Fetch fullword from second operand */
+            n = fetch_fw( main2 );
+            main2 += 4;
+
+            /* Accumulate the fullword into the checksum */
+            dreg += n;
+
+            /* Carry 32 bit overflow into bit 31 */
+            if (dreg > 0xFFFFFFFFULL)
+            {
+                dreg &= 0xFFFFFFFFULL;
+                dreg++;
+            }
+        } /* end for(j) */
+
+        /* Adjust the operand address and remaining length for the 
+           number of bytes processed */
+        addr2 += cpu_length;
+        addr2 &= ADDRESS_MAXWRAP( regs );
+        len -= cpu_length;
+
+    } /* end else */
 
     /* Load the updated checksum into the R1 register */
-    regs->GR_L(r1) = dreg;
+    regs->GR_L( r1 ) = dreg;
 
     /* Update the operand address and length registers */
-    SET_GR_A(r2, regs,addr2);
-    SET_GR_A(r2+1, regs,len);
+    SET_GR_A( r2, regs, addr2 );
+    SET_GR_A( r2+1, regs, len );
 
     /* Set condition code 0 or 3 */
+    if (len > 0) cc = 3;
     regs->psw.cc = cc;
-
 }
 #endif /*defined(FEATURE_CHECKSUM_INSTRUCTION)*/
 
@@ -5601,9 +5649,10 @@ BYTE    termchar;                       /* Terminating character     */
        any number above zero. Set the CPU determined length to
        the nearest end of page of either operand.
     */
+    
     dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-
+    
     cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
 
     main1 = MADDR( addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
