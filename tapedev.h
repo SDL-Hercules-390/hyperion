@@ -184,6 +184,7 @@ CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h );
 #define FEAT2_3590  (0                      \
                      | TRDC_RDFWD           \
                      | TRDC_2_BLK2DCE       \
+                     | TRDC_MEDSNS          \
                     )
 
 /*-------------------------------------------------------------------*/
