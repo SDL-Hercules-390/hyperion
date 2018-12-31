@@ -313,15 +313,9 @@ FT( Z900, Z900, NONE, 042_DFP )
 FT( Z900, Z900, NONE, 043_DFP_HPERF )
 #endif
 
-/*-------------------------------------------------------------------*/
-/* Since some modern operating systems (e.g. z/OS and z/VM) require  */
-/* it, allow the PFPO facility to be forcibly enabled Until we can   */
-/* eventually code proper support for it.                            */
-/*-------------------------------------------------------------------*/
-// FIXME: code proper support for PFPO!
-//#if defined(  FEATURE_044_PFPO_FACILITY )
-FT( Z900, NONE, NONE, 044_PFPO )
-//#endif
+#if defined(  FEATURE_044_PFPO_FACILITY )
+FT( Z900, Z900, NONE, 044_PFPO )
+#endif
 
 /*-------------------------------------------------------------------*/
 

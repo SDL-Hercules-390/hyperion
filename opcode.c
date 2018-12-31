@@ -2200,7 +2200,7 @@ static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
  /*0107*/ GENx___x390x900 (set_clock_programmable_field,E,"SCKPF"),
  /*0108*/ GENx___x___x___ , /*(test_message_path_state,?,"TMPS"),*/
  /*0109*/ GENx___x___x___ , /*(clear_message_path_state,?,"CMPS"),*/
- /*010A*/ GENx___x390x900 (perform_floating_point_operation,E,"PFPO"),
+ /*010A*/ GENx___x___x900 (perform_floating_point_operation,E,"PFPO"),
  /*010B*/ GENx___x390x900 (test_addressing_mode,E,"TAM"),
  /*010C*/ GENx___x390x900 (set_addressing_mode_24,E,"SAM24"),
  /*010D*/ GENx___x390x900 (set_addressing_mode_31,E,"SAM31"),

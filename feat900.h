@@ -76,6 +76,7 @@
 #define FEATURE_041_IEEE_EXCEPT_SIM_FACILITY
 #define FEATURE_042_DFP_FACILITY                                /*DFP*/
 #define FEATURE_043_DFP_HPERF_FACILITY
+#define FEATURE_044_PFPO_FACILITY
 #define FEATURE_045_DISTINCT_OPERANDS_FACILITY                  /*810*/
 #define FEATURE_045_FAST_BCR_SERIAL_FACILITY                    /*810*/
 #define FEATURE_045_HIGH_WORD_FACILITY                          /*810*/
