@@ -27,7 +27,7 @@ runtest
 
 # Restore program check messages
 
-ostailor null
+ostailor default
 
 ###########################################################################################
 
@@ -53,10 +53,6 @@ r 0870.0C
 *Want "Test 8 R1-R3"        99003366 00003002 00000000
 r 0880.0C
 *Want "Test 9 R1-R3"        E1E1E1E1 0000BFF8 00000000
-*
-# Restore program check messages
-
-ostailor default
 
 *Done
 
