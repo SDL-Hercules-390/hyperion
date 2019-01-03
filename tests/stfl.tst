@@ -23,7 +23,7 @@ loadcore    $(testpath)/stfl.core
 # Adjust these as needed as new facilities are added to Hercules
 #----------------------------------------------------------------------
 defsym    FW1   F3F4FFFB    # Facilities 000-031
-defsym    FW2   FCF5C800    # Facilities 032-063
+defsym    FW2   FCFDC800    # Facilities 032-063
 defsym    FW3   201C0000    # Facilities 064-095
 #----------------------------------------------------------------------
 
