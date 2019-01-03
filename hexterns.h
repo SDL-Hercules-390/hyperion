@@ -392,7 +392,7 @@ int  ecpsvm_dolra(REGS *regs,int r1,int b2,VADR effective_addr2);
 /* Functions in module w32ctca.c */
 #if defined(OPTION_W32_CTCI)
 HSYS_DLL_IMPORT int  (*debug_tt32_stats)   (int);
-HSYS_DLL_IMPORT void (*debug_tt32_tracing) (int);
+HSYS_DLL_IMPORT bool (*debug_tt32_tracing) (int);
 #endif // defined(OPTION_W32_CTCI)
 
 /* Function in crypto.c */

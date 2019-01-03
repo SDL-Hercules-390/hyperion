@@ -29,7 +29,7 @@ extern const char*  tt32_get_default_iface    ();
 extern int          tt32_build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
 
 extern int   display_tt32_stats         ( int fd );
-extern void  enable_tt32_debug_tracing  ( int enable );
+extern bool  enable_tt32_debug_tracing  ( int enable );
 
 #endif // defined(OPTION_W32_CTCI)
 #endif // _W32CTCA_H_

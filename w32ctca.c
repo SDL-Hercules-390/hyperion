@@ -129,14 +129,24 @@ void __cdecl tt32_output_debug_string( const char* debug_string )
     free(p);
 }
 
-void  enable_tt32_debug_tracing( int enable )
+BOOL tt32_loaddll(); // (fwd ref)
+
+bool  enable_tt32_debug_tracing( int enable )
 {
     // Pass to TunTap32 DLL a pointer to the function it can use to
     // display debug messages with. This function of our's (that we
     // are passing it a pointer to) will then display its debugging
     // message (string) on the Hercules console so we can see it.
 
+    // Returns true/false = whether debug tracing is enabled or not.
+
+    if (!g_tt32_pfn_set_debug_output_func)
+        if (!tt32_loaddll() || !g_tt32_pfn_set_debug_output_func)
+            return false; // (debug tracing NOT enabled)
+
     g_tt32_pfn_set_debug_output_func( enable ? &tt32_output_debug_string : NULL );
+
+    return enable;  // (enabled or disabled as requested)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

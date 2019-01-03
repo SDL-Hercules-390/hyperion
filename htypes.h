@@ -250,7 +250,7 @@ typedef void*  PANCMD       ( char* command );
 typedef int    SYSTEMCMD    ( int argc, char* argv[], char* cmdline );
 typedef void*  REPOPCODE    ( int arch, INSTR_FUNC inst, int opcode1, int opcode2 );
 typedef int    DBGT32ST     ( int fd );
-typedef void   DBGT32TR     ( int fd );
+typedef bool   DBGT32TR     ( int fd );
 
 /* The following are called via the "HDC1", "HDC2", etc, macros */
 

@@ -2520,43 +2520,55 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
 /*-------------------------------------------------------------------*/
 int tt32_cmd( int argc, char *argv[], char *cmdline )
 {
-    int      rc = 0;
-    U16      devnum;
-    U16      lcss;
-    DEVBLK*  dev;
-    char*    devclass;
+    char buf[64];
 
-    UNREFERENCED(cmdline);
-
+    UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
+    MSGBUF( buf, ". Type 'help %s' for assistance", argv[0] );
 
     if (argc < 2)
     {
-        WRMSG(HHC02202, "E", argv[0] );
-        rc = -1;
+        // "Missing argument(s). Type 'help %s' for assistance."
+        WRMSG( HHC02202, "E", argv[0] );
+        return -1;
     }
-    else if ( CMD(argv[1],stats,5) )
+
+    if (CMD( argv[1], STATS, 5 ))
     {
+        DEVBLK*  dev;
+        char*    devclass;
+        int      rc;
+        U16      devnum;
+        U16      lcss;
+
         if (argc < 3)
         {
+            // HHC02201 "Device number missing"
             missing_devnum();
             return -1;
         }
 
-        if ((rc = parse_single_devnum(argv[2], &lcss, &devnum)) < 0)
+        if (argc > 3)
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[3], buf );
+            return -1;
+        }
+
+        if ((rc = parse_single_devnum( argv[2], &lcss, &devnum )) < 0)
             return -1;
 
-        if (!(dev = find_device_by_devnum (lcss, devnum)) &&
-            !(dev = find_device_by_devnum (lcss, devnum ^ 0x01)))
+        if (!(dev = find_device_by_devnum( lcss, devnum )) &&
+            !(dev = find_device_by_devnum( lcss, devnum ^ 0x01 )))
         {
             // HHC02200 "%1d:%04X device not found"
-            devnotfound_msg(lcss,devnum);
+            devnotfound_msg( lcss, devnum );
             return -1;
         }
 
         // Device must be a non-8232 "CTCA" LCS/CTCI device or an "OSA" device
 
-        (dev->hnd->query)(dev, &devclass, 0, NULL);
+        (dev->hnd->query)( dev, &devclass, 0, NULL );
 
         if (1
             && strcasecmp( devclass, "OSA" ) != 0
@@ -2571,56 +2583,66 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
         )
         {
             // "%1d:%04X device is not a '%s'"
-            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI, LCS or OSA device" );
+            WRMSG( HHC02209, "E", lcss, devnum, "supported CTCI, LCS or OSA device" );
             return -1;
         }
 
         if (debug_tt32_stats)
-            rc = debug_tt32_stats (dev->fd);
-        else
         {
-            WRMSG(HHC02219, "E", "debug_tt32_stats()", "function itself is NULL");
-            rc = -1;
+            debug_tt32_stats( dev->fd );
+            return 0;
         }
-    }
-    else if ( CMD(argv[1],debug,5) )
-    {
-        if (debug_tt32_tracing)
-        {
-            debug_tt32_tracing(1); // 1=ON
-            rc = 0;
-            WRMSG(HHC02204, "I", "TT32 DEBUG", "enabled");
-        }
-        else
-        {
-            WRMSG(HHC02219, "E", "debug_tt32_tracing()", "function itself is NULL");
-            rc = -1;
-        }
-    }
-    else if ( CMD(argv[1],nodebug,7) )
-    {
-        if (debug_tt32_tracing)
-        {
-            debug_tt32_tracing(0); // 0=OFF
-            rc = 0;
-            WRMSG(HHC02204, "I", "TT32 DEBUG", "disabled");
-        }
-        else
-        {
-            WRMSG(HHC02219, "E", "debug_tt32_tracing()", "function itself is NULL");
-            rc = -1;
-        }
-    }
-    else
-    {
-        char buf[64];
 
-        MSGBUF( buf, ". Type 'help %s' for assistance", argv[0] );
-        WRMSG(HHC02205, "E", argv[1], buf);
-        rc = -1;
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "debug_tt32_stats()", "function itself is NULL" );
+        return -1;
     }
 
-    return rc;
+    if (CMD( argv[1], DEBUG, 5 ))
+    {
+        if (argc > 2)
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[2], buf );
+            return -1;
+        }
+
+        if (debug_tt32_tracing)
+        {
+            bool enabled = debug_tt32_tracing(1); // 1=ON
+            WRMSG( HHC02204, "I", "TT32 DEBUG", enabled ? "enabled" : "disabled" );
+            return enabled ? 0 : -1;
+        }
+
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "debug_tt32_tracing()", "function itself is NULL" );
+        return -1;
+    }
+
+    if (CMD( argv[1], NODEBUG, 7 ))
+    {
+        if (argc > 2)
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[2], buf );
+            return -1;
+        }
+
+        if (debug_tt32_tracing)
+        {
+            bool enabled = debug_tt32_tracing(0); // 0=OFF
+            WRMSG( HHC02204, "I", "TT32 DEBUG", enabled ? "enabled" : "disabled" );
+            return !enabled ? 0 : -1;
+        }
+
+        // "Error in function %s: %s"
+        WRMSG( HHC02219, "E", "debug_tt32_tracing()", "function itself is NULL" );
+        return -1;
+    }
+
+    // "Invalid argument %s%s"
+    WRMSG( HHC02205, "E", argv[1], buf );
+    return -1;
 }
 #endif /* defined( OPTION_W32_CTCI ) */
 
