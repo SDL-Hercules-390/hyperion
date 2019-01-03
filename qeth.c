@@ -2438,32 +2438,53 @@ U16 reqtype;
 /*-------------------------------------------------------------------*/
 /* Raise Adapter Interrupt                                           */
 /*-------------------------------------------------------------------*/
-static void raise_adapter_interrupt(DEVBLK *dev)
+static void raise_adapter_interrupt( DEVBLK* dev )
 {
-    OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
+    OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
 
     /* Don't waste time queuing interrupts during power off sequence */
     if (sysblk.shutdown)
         return;
 
-    if (grp->debugmask & DBGQETHINTRUPT)
-        DBGTRC(dev, "Adapter Interrupt");
-
-    OBTAIN_INTLOCK(NULL);
+    /* Keep trying to OBTAIN_INTLOCK until we either succeed
+       or we detect that a halt/clear subchannel was requested
+       (which would cause a deadlock if we just blindly tried
+       to obtain it).  Note that we test for the halt or clear
+       subchannel request WITHOUT first obtaining dev->lock to
+       prevent a deadlock that would occur for the same reason
+       (since channel.c holds BOTH during HSCH/CSCH processing).
+    */
+    while (!(dev->scsw.flag2 & (SCSW2_FC_HALT | SCSW2_FC_CLEAR)))
     {
-        obtain_lock( &dev->lock );
+        /* Try to obtain the interrupt lock (OBTAIN_INTLOCK) */
+
+        if (try_obtain_lock( &sysblk.intlock ) == 0)
         {
-            dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
-            dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
-            dev->pciscsw.chanstat = CSW_PCI;
-            obtain_lock(&sysblk.iointqlk);
-            QUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint,FALSE);
-            UPDATE_IC_IOPENDING_QLOCKED();
-            release_lock(&sysblk.iointqlk);
+            sysblk.intowner = LOCK_OWNER_OTHER;
+
+            obtain_lock( &dev->lock );
+            {
+                if (grp->debugmask & DBGQETHINTRUPT)
+                    DBGTRC( dev, "Adapter Interrupt" );
+
+                dev->pciscsw.flag2 |= SCSW2_Q | SCSW2_FC_START;
+                dev->pciscsw.flag3 |= SCSW3_SC_INTER | SCSW3_SC_PEND;
+                dev->pciscsw.chanstat = CSW_PCI;
+
+                obtain_lock( &sysblk.iointqlk );
+                {
+                    QUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint, FALSE );
+                    UPDATE_IC_IOPENDING_QLOCKED();
+                }
+                release_lock( &sysblk.iointqlk );
+            }
+            release_lock( &dev->lock );
+
+            sysblk.intowner = LOCK_OWNER_NONE;
+            release_lock( &sysblk.intlock );  // (RELEASE_INTLOCK)
+            return;
         }
-        release_lock (&dev->lock);
     }
-    RELEASE_INTLOCK(NULL);
 }
 
 
@@ -3690,6 +3711,13 @@ static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
     return unitstat;
 }
 
+/*-------------------------------------------------------------------*/
+/*                  QETH Halt or Clear Subchannel                    */
+/*-------------------------------------------------------------------*/
+/* This function is called by channelc. in response to a HSCH (Halt  */
+/* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
+/* both INTLOCK (sysblk.intlock) and dev->lock are held.             */
+/*-------------------------------------------------------------------*/
 static BYTE qeth_halt_or_clear( DEVBLK* dev )
 {
     OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
@@ -5111,8 +5139,10 @@ U32 num;                                /* Number of bytes to move   */
         if (sig == QDSIG_HALT)
         {
             obtain_lock( &grp->qlock );
-            dev->scsw.flag2 &= ~SCSW2_Q;
-            signal_condition( &grp->qdcond );
+            {
+                dev->scsw.flag2 &= ~SCSW2_Q;
+                signal_condition( &grp->qdcond );
+            }
             release_lock( &grp->qlock );
         }
 
