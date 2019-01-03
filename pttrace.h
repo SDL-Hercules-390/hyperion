@@ -33,7 +33,7 @@
 //efine PTT_CL_XXX   0x0000000000008000 /* System class 16           */
 #define PTT_CL_LCS1  0x0000000000010000 /* LCS Timing Debug          */
 #define PTT_CL_LCS2  0x0000000000020000 /* LCS General Debugging     */
-//efine PTT_CL_ZZZ   0x0000000000040000 /* User class 3              */
+#define PTT_CL_QETH  0x0000000000040000 /* QETH General Debugging    */
 //efine PTT_CL_ZZZ   0x0000000000080000 /* User class 4              */
 //efine PTT_CL_ZZZ   0x0000000000100000 /* User class 5              */
 //efine PTT_CL_ZZZ   0x0000000000200000 /* User class 6              */
@@ -107,6 +107,7 @@ do {                                                                 \
 #define PTT_IO(    m, d1, d2, rc )  PTT( PTT_CL_IO,    m, d1, d2, rc )
 #define PTT_LCS1(  m, d1, d2, rc )  PTT( PTT_CL_LCS1,  m, d1, d2, rc )
 #define PTT_LCS2(  m, d1, d2, rc )  PTT( PTT_CL_LCS2,  m, d1, d2, rc )
+#define PTT_QETH(  m, d1, d2, rc )  PTT( PTT_CL_QETH,  m, d1, d2, rc )
 
 /*-------------------------------------------------------------------*/
 /*           Shorter name than 'struct timeval'                      */

@@ -1047,6 +1047,7 @@
   "     (no)io           trace I/O instruction events\n"                            \
   "     (no)lcs1         trace LCS timing events\n"                                 \
   "     (no)lcs2         trace LCS general debugging events\n"                      \
+  "     (no)qeth         trace QETH general debugging events\n"                     \
   "\n"                                                                              \
   "options:   (should be specified last, after any events are specified)\n"         \
   "\n"                                                                              \

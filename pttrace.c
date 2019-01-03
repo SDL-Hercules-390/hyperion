@@ -76,6 +76,7 @@ PTTCL      pttcltab[] =                 /* trace class names table   */
     { "io"      , PTT_CL_IO   , 0 },    /* IO                        */
     { "lcs1"    , PTT_CL_LCS1 , 0 },    /* LCS Timing Debug          */
     { "lcs2"    , PTT_CL_LCS2 , 0 },    /* LCS General Debugging     */
+    { "qeth"    , PTT_CL_QETH , 0 },    /* QETH General Debugging    */
 
     /* The following aliases are defined for backward compatibility  */
 
