@@ -1,0 +1,55 @@
+os: linux
+dist: trusty
+language: c
+sudo: required
+#
+matrix:
+  include:
+    - name: "Ub 14.04 -- gcc 4.8.4"
+      dist: trusty
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "Ub 14.04 -- gcc 6.5.0"
+      dist: trusty
+      addons:
+        apt:
+          sources:  ubuntu-toolchain-r-test
+          packages: g++-6
+      env: MATRIX_EVAL="CC=gcc-6"
+
+    - name: "Ub 14.04 -- gcc 7.4.0"
+      dist: trusty
+      addons:
+        apt:
+          sources:  ubuntu-toolchain-r-test
+          packages: g++-7
+      env: MATRIX_EVAL="CC=gcc-7"
+
+    - name: "Ub 14.04 -- clang 5.0.0"
+      dist: trusty
+      env: MATRIX_EVAL="CC=clang"
+
+    - name: "Ub 16.04 -- gcc 5.4.0"
+      dist: xenial
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "Ub 16.04 -- clang 7.0.0"
+      dist: xenial
+      env: MATRIX_EVAL="CC=clang"
+
+#
+before_install:
+  - sudo apt-get install -y regina-rexx libregina3-dev
+  - eval "${MATRIX_EVAL}"
+
+#
+before_script:
+  - util/bldlvlck
+  - ./autogen.sh
+  - ./configure --enable-regina-rexx
+  - bash -c '${CC} --version'
+
+#
+script:
+  - make -j 2
+  - make check
