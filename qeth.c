@@ -162,7 +162,8 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 /* DBGTRC statements controlled by dev stmt "debug" option */
-static void DBGTRC( DEVBLK* dev, char* fmt, ... )
+static void dbgtrc( const char* file, int line, const char* func,
+                    DEVBLK* dev, char* fmt, ... )
 {
   DEVGRP *devgrp = dev->group;
   if (devgrp)
@@ -174,13 +175,14 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
       va_list   vargs;
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
-      // HHC03991 "%1d:%04X %s: %s"
-      WRMSG( HHC03991, "D", LCSS_DEVNUM, dev->typname,
-             buf );
+      // HHC03991D "%1d:%04X %s: %s"
+      fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
+        "HHC03991D " HHC03991 "\n", LCSS_DEVNUM, dev->typname, buf );
       va_end( vargs );
     }
   }
 }
+#define DBGTRC( ... ) dbgtrc( __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__ )
 
 /* (trace I/O data buffers if debugging) */
 #if defined( QETH_DUMP_DATA )
@@ -191,7 +193,8 @@ static void DBGTRC( DEVBLK* dev, char* fmt, ... )
 #endif // QETH_DUMP_DATA
 
 /* DBGUPD statements controlled by "debugupdown" option */
-static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* fmt, ... )
+static void dbgupd( const char* file, int line, const char* func,
+                    DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* fmt, ... )
 {
   DEVGRP *devgrp = dev->group;
   if (devgrp)
@@ -203,9 +206,9 @@ static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* f
       va_list   vargs;
       va_start( vargs, fmt );
       vsnprintf( buf, sizeof(buf), fmt, vargs );
-      // HHC03991 "%1d:%04X %s: %s"
-      WRMSG( HHC03991, "D", LCSS_DEVNUM, dev->typname,
-             buf );
+      // HHC03991D "%1d:%04X %s: %s"
+      fwritemsg( file, line, func, WRMSG_NORMAL, stdout,
+        "HHC03991D " HHC03991 "\n", LCSS_DEVNUM, dev->typname, buf );
       va_end( vargs );
       if (what == 3) {
         mpc_display_osa_iear( dev, adr, dir, len );
@@ -219,7 +222,7 @@ static void DBGUPD( DEVBLK* dev, int what, void* adr, int len, BYTE dir, char* f
     }
   }
 }
-
+#define DBGUPD( ... ) dbgupd( __FILE__, __LINE__, __FUNCTION__, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /* Hercules Dynamic Loader (HDL)                                     */
@@ -358,7 +361,7 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
 {
   if(addr+len>dev->mainlim)
   {
-    DBGTRC(dev,"Address %llx above main storage\n",addr);
+    DBGTRC(dev,"Address %llx above main storage",addr);
     return CSW_PROGC;  /* Outside storage */
   }
   if(dev->orb.flag5 & ORB5_A)     /* Address limit checking enabled ?*/
@@ -367,7 +370,7 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
     {
       if(addr<sysblk.addrlimval)
       {
-        DBGTRC(dev,"Address %llx below limit of %llx\n",addr,sysblk.addrlimval);
+        DBGTRC(dev,"Address %llx below limit of %llx",addr,sysblk.addrlimval);
         return CSW_PROGC;
       }
     }
@@ -375,7 +378,7 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
     {
       if((addr+len)>sysblk.addrlimval)
       {
-        DBGTRC(dev,"Address %llx above limit of %llx\n",addr+len,sysblk.addrlimval);
+        DBGTRC(dev,"Address %llx above limit of %llx",addr+len,sysblk.addrlimval);
         return CSW_PROGC;
       }
     }
@@ -399,7 +402,7 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
 
   /* Ok for write or fetch when write allowed even on key mismatch */
   if(((STORAGE_KEY(addr,dev)) & STORKEY_CHANGE)) return 0;
-  DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x\n",key,STORAGE_KEY(addr,dev),acc);
+  DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x",key,STORAGE_KEY(addr,dev),acc);
 
   return CSW_PROTC;
 }
@@ -1053,7 +1056,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     /* We should only ever be called ONCE */
     if (grp->ttfd >= 0)
     {
-        DBGTRC( dev, "ERROR: TUNTAP Interface already exists!\n" );
+        DBGTRC( dev, "ERROR: TUNTAP Interface already exists!" );
         ASSERT(0);              /* (Oops!) */
         return -1;              /* Return failure */
     }
@@ -2444,7 +2447,7 @@ static void raise_adapter_interrupt(DEVBLK *dev)
         return;
 
     if (grp->debugmask & DBGQETHINTRUPT)
-        DBGTRC(dev, "Adapter Interrupt\n");
+        DBGTRC(dev, "Adapter Interrupt");
 
     OBTAIN_INTLOCK(NULL);
     {
@@ -2512,7 +2515,7 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 /*-------------------------------------------------------------------*/
 #define SBALE_ERROR(_qrc,_dev,_sbal,_sbalk,_sb)                     \
     SBALE_Error( "** " #_qrc " **: SBAL(%d) @ %llx [%02X]:"         \
-        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X\n",            \
+        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",            \
         (_qrc), (_dev), (_sbal), (_sbalk), (_sb))
 
 
@@ -2903,7 +2906,7 @@ static QRC copy_packet_to_storage( DEVBLK* dev, OSA_GRP *grp,
         {
             FETCH_FW( sbrem, sbal->sbale[i].length );
             frag0 = sbal->sbale[i].flags[0];
-            DBGTRC( dev, "Input SBALE(%d): flag: %02X Len: %04X (%d)\n",
+            DBGTRC( dev, "Input SBALE(%d): flag: %02X Len: %04X (%d)",
                 i, frag0, sbrem, sbrem );
         }
     }
@@ -3279,7 +3282,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 
         /* Trace the pack/frame if debugging is enabled */
         if (grp->debugmask & DBGQETHSBALE)
-            DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)\n",
+            DBGTRC( dev, "Output SBALE(%d-%d): Len: %04X (%d)",
                 ssb, sb, dev->buflen, dev->buflen );
 
         /* Initialize packet pointer and packet length */
@@ -3434,7 +3437,7 @@ int did_read = 0;                       /* Indicates some data read  */
                     /* Verify Storage Block Address List is accessible */
                     if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
                     {
-                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
+                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)", sbala, sk);
                         qrc = QRC_ESTORCHK;
                     }
                     else
@@ -3458,7 +3461,7 @@ int did_read = 0;                       /* Indicates some data read  */
                         if (qrc >= 0)
                         {
                             if (grp->debugmask & DBGQETHQUEUES)
-                                DBGTRC(dev, "Input Queue(%d) Buffer(%d)\n", qn, bn);
+                                DBGTRC(dev, "Input Queue(%d) Buffer(%d)", qn, bn);
 
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
                             STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
@@ -3570,7 +3573,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
                 QRC qrc;                /* Internal return code      */
 
                     if (grp->debugmask & DBGQETHQUEUES)
-                        DBGTRC(dev, "Output Queue(%d) Buffer(%d)\n", qn, bn);
+                        DBGTRC(dev, "Output Queue(%d) Buffer(%d)", qn, bn);
 
                     found_buff = 1;
                     sk = dev->qdio.o_slk[qn];
@@ -3579,7 +3582,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
                     /* Verify Storage Block Address List is accessible */
                     if(STORCHK( sbala, sizeof(QDIO_SBAL)-1, sk, STORKEY_REF, dev ))
                     {
-                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)\n", sbala, sk);
+                        DBGTRC(dev, "STORCHK Error SBALA(%llx), Key(%2.2X)", sbala, sk);
                         qrc = QRC_ESTORCHK;
                     }
                     else
@@ -3642,7 +3645,7 @@ static BYTE qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
         /* Is read device still active? */
         if (dev->busy && dev->qdio.idxstate == MPC_IDX_STATE_ACTIVE)
         {
-            DBGTRC( dev, "Halting read device\n" );
+            DBGTRC( dev, "Halting read device" );
             {
                 /* Ask, then wait for, the READ CCW loop to exit */
                 PTT_QETH_TRACE( "b4 halt read", 0,0,0 );
@@ -3651,7 +3654,7 @@ static BYTE qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
                 wait_condition( &grp->qrcond, &grp->qlock );
                 PTT_QETH_TRACE( "af halt read", 0,0,0 );
             }
-            DBGTRC( dev, "Read device halted\n" );
+            DBGTRC( dev, "Read device halted" );
         }
     }
     release_lock( &grp->qlock );
@@ -3670,7 +3673,7 @@ static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
         {
             BYTE  sig  = QDSIG_HALT;
 
-            DBGTRC( dev, "Halting data device\n" );
+            DBGTRC( dev, "Halting data device" );
             {
                 /* Ask, then wait for, the Activate Queues loop to exit */
                 PTT_QETH_TRACE( "b4 halt data", 0,0,0 );
@@ -3679,7 +3682,7 @@ static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
                 dev->scsw.flag2 &= ~SCSW2_Q;
                 PTT_QETH_TRACE( "af halt data", 0,0,0 );
             }
-            DBGTRC( dev, "Data device halted\n" );
+            DBGTRC( dev, "Data device halted" );
         }
     }
     release_lock (&grp->qlock );
@@ -3699,7 +3702,7 @@ static BYTE qeth_halt_or_clear( DEVBLK* dev )
     else
     {
         unitstat = 0;
-        DBGTRC( dev, "qeth_halt_or_clear: noop!\n" );
+        DBGTRC( dev, "qeth_halt_or_clear: noop!" );
         PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
     }
 
@@ -4892,7 +4895,7 @@ U32 num;                                /* Number of bytes to move   */
         dev->qdio.i_qcnt = qdr->iqdcnt < QDIO_MAXQ ? qdr->iqdcnt : QDIO_MAXQ;
         dev->qdio.o_qcnt = qdr->oqdcnt < QDIO_MAXQ ? qdr->oqdcnt : QDIO_MAXQ;
 
-        DBGTRC( dev, "Establish Queues: Entry\n");
+        DBGTRC( dev, "Establish Queues: Entry");
         PTT_QETH_TRACE( "eq entry", dev->qdio.i_qcnt, dev->qdio.o_qcnt, 0 );
 
         /* Calculate length of Queue Descriptor Record */
@@ -4977,7 +4980,7 @@ U32 num;                                /* Number of bytes to move   */
             PTT_QETH_TRACE( "*eq exit", *unitstat, dev->sense[0], accerr );
         }
 
-        DBGTRC( dev, "Establish Queues: Exit\n");
+        DBGTRC( dev, "Establish Queues: Exit");
         break;
     }
 
@@ -5002,7 +5005,7 @@ U32 num;                                /* Number of bytes to move   */
         dev->scsw.flag2 |= SCSW2_Q;         /* Indicate QDIO active  */
         dev->qtype = QTYPE_DATA;            /* Identify ourselves    */
 
-        DBGTRC( dev, "Activate Queues: Entry iqm=%8.8x oqm=%8.8x\n",dev->qdio.i_qmask, dev->qdio.o_qmask);
+        DBGTRC( dev, "Activate Queues: Entry iqm=%8.8x oqm=%8.8x",dev->qdio.i_qmask, dev->qdio.o_qmask);
         PTT_QETH_TRACE( "actq entr", 0,0,0 );
 
         /* Loop until halt signal is received via notification pipe */
@@ -5025,7 +5028,7 @@ U32 num;                                /* Number of bytes to move   */
                 sig = QDSIG_RESET;
                 VERIFY( qeth_read_pipe( grp->ppfd[0], &sig ) == 1);
                 if (QDSIG_HALT == sig || grp->debugmask & DBGQETHQUEUES)
-                    DBGTRC( dev, "Activate Queues: %s received\n", qsig2str( sig ));
+                    DBGTRC( dev, "Activate Queues: %s received", qsig2str( sig ));
 
                 /* Exit immediately when requested to do so */
                 if (QDSIG_HALT == sig)
@@ -5113,7 +5116,7 @@ U32 num;                                /* Number of bytes to move   */
             release_lock( &grp->qlock );
         }
 
-        DBGTRC( dev, "Activate Queues: Exit\n");
+        DBGTRC( dev, "Activate Queues: Exit");
         PTT_QETH_TRACE( "actq exit", 0,0,0 );
 
         /* Return unit status */
@@ -5126,7 +5129,7 @@ U32 num;                                /* Number of bytes to move   */
     /*---------------------------------------------------------------*/
     /* INVALID OPERATION                                             */
     /*---------------------------------------------------------------*/
-        DBGTRC(dev, "Unknown CCW opcode 0x%02X)\n",code);
+        DBGTRC(dev, "Unknown CCW opcode 0x%02X)",code);
         /* Set command reject sense byte, and unit check status */
         dev->sense[0] = SENSE_CR;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -5177,7 +5180,7 @@ U32 qmask;
         qmask = dev->qdio.i_qmask = ~(0xffffffff >> dev->qdio.i_qcnt);
     }
 
-    DBGTRC(dev, "Initialize %s Queue: qmask(0x%08X)\n",
+    DBGTRC(dev, "Initialize %s Queue: qmask(0x%08X)",
         output ? "Output" : "Input", qmask );
 
     PTT_QETH_TRACE( "initq exit", dev->qdio.i_qcnt, dev->qdio.o_qcnt, qmask );
@@ -5193,14 +5196,14 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
 int noselrd, rc = 0;
 
     if (grp->debugmask & DBGQETHSIGA)
-        DBGTRC( dev, "SIGA-r qmask(%8.8x)\n", qmask );
+        DBGTRC( dev, "SIGA-r qmask(%8.8x)", qmask );
 
     PTT_QETH_TRACE( "b4 SIGA-r", qmask, dev->qdio.i_qmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
     {
-        DBGTRC( dev, "SIGA-r: ERROR: QDIO not active\n" );
+        DBGTRC( dev, "SIGA-r: ERROR: QDIO not active" );
         rc = 1;
     }
     else
@@ -5230,7 +5233,7 @@ int noselrd, rc = 0;
         {
             BYTE sig = QDSIG_READ;
             if (grp->debugmask & DBGQETHSIGA)
-                DBGTRC( dev, "SIGA-r: sending %s\n", qsig2str( sig ));
+                DBGTRC( dev, "SIGA-r: sending %s", qsig2str( sig ));
             VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
         }
     }
@@ -5272,7 +5275,7 @@ OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if(dev->qdio.o_qmask)
     {
         if (grp->debugmask & DBGQETHSIGA)
-            DBGTRC( dev, "SIGA-o: sending %s\n", qsig2str( sig ));
+            DBGTRC( dev, "SIGA-o: sending %s", qsig2str( sig ));
         VERIFY( qeth_write_pipe( grp->ppfd[1], &sig ) == 1);
     }
 
@@ -5288,11 +5291,11 @@ static int qeth_initiate_output( DEVBLK *dev, U32 qmask )
     int rc;
     OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if (grp->debugmask & DBGQETHSIGA)
-        DBGTRC( dev, "SIGA-w qmask(%8.8x)\n", qmask );
+        DBGTRC( dev, "SIGA-w qmask(%8.8x)", qmask );
     PTT_QETH_TRACE( "b4 SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRIT )) == 1)
-        DBGTRC( dev, "SIGA-w: ERROR: QDIO not active\n");
+        DBGTRC( dev, "SIGA-w: ERROR: QDIO not active");
 
     PTT_QETH_TRACE( "af SIGA-w", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
@@ -5307,11 +5310,11 @@ static int qeth_initiate_output_mult( DEVBLK *dev, U32 qmask )
     int rc;
     OSA_GRP *grp = (OSA_GRP*)dev->group->grp_data;
     if (grp->debugmask & DBGQETHSIGA)
-        DBGTRC( dev, "SIGA-m qmask(%8.8x)\n", qmask );
+        DBGTRC( dev, "SIGA-m qmask(%8.8x)", qmask );
     PTT_QETH_TRACE( "b4 SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
 
     if ((rc = qeth_do_initiate_output( dev, qmask, QDSIG_WRMULT )) == 1)
-        DBGTRC( dev, "SIGA-m: ERROR: QDIO not active\n");
+        DBGTRC( dev, "SIGA-m: ERROR: QDIO not active");
 
     PTT_QETH_TRACE( "af SIGA-m", qmask, dev->qdio.o_qmask, dev->devnum );
     return rc;
@@ -5333,14 +5336,14 @@ static int qeth_do_sync( DEVBLK *dev, U32 oqmask, U32 iqmask )
     oqmask &= ~(0xffffffff >> dev->qdio.o_qcnt);
     iqmask &= ~(0xffffffff >> dev->qdio.i_qcnt);
 
-    DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x), iqmask(%8.8x)\n",
+    DBGTRC( dev, "SIGA-s dev(%4.4x) oqmask(%8.8x), iqmask(%8.8x)",
         dev->devnum, oqmask, iqmask );
     PTT_QETH_TRACE( "b4 SIGA-s", oqmask, iqmask, dev->devnum );
 
     /* Return CC1 if the device is not QDIO active */
     if(!(dev->scsw.flag2 & SCSW2_Q))
     {
-        DBGTRC( dev, "SIGA-s: ERROR: QDIO not active\n");
+        DBGTRC( dev, "SIGA-s: ERROR: QDIO not active");
         rc = 1;
     }
     else
@@ -5397,7 +5400,7 @@ U16 uLength4;
     if( !req_pus_01 || !req_pus_02 )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_cm_enable: Expected pus not present\n");
+        DBGTRC(dev, "process_cm_enable: Expected pus not present");
         return NULL;
     }
 
@@ -5507,7 +5510,7 @@ U16 uLength4;
     if( !req_pus_04 || !req_pus_06 )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_cm_setup: Expected pus not present\n");
+        DBGTRC(dev, "process_cm_setup: Expected pus not present");
         return NULL;
     }
 
@@ -5653,7 +5656,7 @@ MPC_PUS *req_pus_0A;
     if( !req_pus_01 || !req_pus_0A )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_ulp_enable_extract: Expected pus not present\n");
+        DBGTRC(dev, "process_ulp_enable_extract: Expected pus not present");
         return -1;
     }
 
@@ -5707,7 +5710,7 @@ U16 uLength4;
     if( !req_pus_01 || !req_pus_0A )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_ulp_enable: Expected pus not present\n");
+        DBGTRC(dev, "process_ulp_enable: Expected pus not present");
         return NULL;
     }
 
@@ -5834,7 +5837,7 @@ U16 uLength4;
     if( !req_pus_04 || !req_pus_06 || !req_pus_0B )
     {
         /* FIXME Expected pus not present, error message please. */
-        DBGTRC(dev, "process_ulp_setup: Expected pus not present\n");
+        DBGTRC(dev, "process_ulp_setup: Expected pus not present");
         return NULL;
     }
     FETCH_HW( len_pus_0B, req_pus_0B->length);
@@ -6236,7 +6239,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         {
             char* pszMAC;
             UNREFERENCED( dev ); // (unreferenced in non-debug build)
-            DBGTRC( dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default.\n" );
+            DBGTRC( dev, "** WARNING ** TUNTAP_GetMACAddr() failed! Using default." );
             build_herc_iface_mac( iMAC, NULL );
             VERIFY( FormatMAC( &pszMAC, iMAC ) == 0);
             free( tthwaddr );
@@ -6318,7 +6321,7 @@ static void InitMTU( DEVBLK* dev, OSA_GRP* grp )
     )
     {
         UNREFERENCED(dev); /*(unreferenced in non-debug build)*/
-        DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.\n");
+        DBGTRC(dev, "** WARNING ** TUNTAP_GetMTU() failed! Using default.");
         free( ttmtu );
         ttmtu = strdup( QETH_DEF_MTU );
         uMTU = (U16) atoi( ttmtu );
