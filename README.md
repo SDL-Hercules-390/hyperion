@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/SDL-Hercules-390/hyperion.svg?branch=master)](https://travis-ci.org/SDL-Hercules-390/hyperion)
+
 # The Hercules System/370, ESA/390, and z/Architecture Emulator
 
 ## The [SoftDevLabs](http://www.softdevlabs.com) version of Hercules 4.x (Hyperion)
