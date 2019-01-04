@@ -116,7 +116,7 @@ CCKD64_DEVHDR   cdevhdr;                /* Compressed device header  */
         return -1;
     }
 
-    /* Processing for compressed fba dasd */
+    /* Processing for compressed fba64 dasd */
     if (is_dh_devid_typ( devhdr.dh_devid, FBA_C064_TYP ))
     {
         dev->cckd64 = 1;
@@ -170,7 +170,7 @@ CCKD64_DEVHDR   cdevhdr;                /* Compressed device header  */
     }
 
     /* Processing for regular fba dasd */
-    else if (is_dh_devid_typ( devhdr.dh_devid, FBA_P064_TYP ))
+    else
     {
         dev->cckd64 = 1;
 
@@ -244,22 +244,6 @@ CCKD64_DEVHDR   cdevhdr;                /* Compressed device header  */
             }
             dev->fbanumblk = numblks;
         }
-    }
-    else
-    {
-        if (is_dh_devid_typ( devhdr.dh_devid, FBA32_CMP_OR_NML_TYP ))
-        {
-            dev->cckd64 = 0;
-            close( dev->fd );
-            dev->fd = -1;
-            return fba_dasd_init_handler( dev, argc, argv );
-        }
-
-        // "%1d:%04X FBA file %s: dasd image format unsupported or unrecognized"
-        WRMSG( HHC00522, "E", LCSS_DEVNUM, dev->filename );
-        close (dev->fd);
-        dev->fd = -1;
-        return -1;
     }
 
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
