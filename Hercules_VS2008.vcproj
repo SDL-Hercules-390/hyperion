@@ -4697,6 +4697,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\PFPO.pdf"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\privop.list"
 								>
 							</File>

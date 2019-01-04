@@ -296,6 +296,7 @@ EXTRA_DIST =                    \
      pfpo.asm                   \
      pfpo.core                  \
      pfpo.list                  \
+     PFPO.pdf                   \
      pfpo.tst                   \
      popcnt.txt                 \
      pr.tst                     \
