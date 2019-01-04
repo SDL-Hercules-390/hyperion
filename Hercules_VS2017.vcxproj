@@ -889,6 +889,7 @@
     <None Include="tests\pfpo.asm" />
     <None Include="tests\pfpo.core" />
     <None Include="tests\pfpo.list" />
+    <None Include="tests\PFPO.pdf" />
     <None Include="tests\pfpo.tst" />
     <None Include="tests\pr.subtst" />
     <None Include="tests\pr.tst" />

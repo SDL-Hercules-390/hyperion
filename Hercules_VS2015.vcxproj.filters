@@ -2078,6 +2078,9 @@
     <None Include="tests\pfpo.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\PFPO.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="hercules.cnf">
       <Filter>Other Files\misc</Filter>
     </None>
