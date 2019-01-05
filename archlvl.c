@@ -1,5 +1,5 @@
 /* ARCHLVL.C    (C) Copyright Jan Jaeger,   2010-2012                */
-/*              (C) Copyright "Fish" (David B. Trout), 2018          */
+/*              (C) Copyright "Fish" (David B. Trout), 2018-2019     */
 /*                  Architecture Level functions                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

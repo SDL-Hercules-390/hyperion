@@ -1,5 +1,5 @@
 /* CRYPTO.C     (C) Copyright Jan Jaeger, 2000-2012                  */
-/*              (C) Copyright "Fish" (David B. Trout), 2018          */
+/*              (C) Copyright "Fish" (David B. Trout), 2018-2019     */
 /*              Hercules Crypto support                              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

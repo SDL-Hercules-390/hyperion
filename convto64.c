@@ -1,4 +1,4 @@
-/* CONVTO64.c (C) Copyright "Fish" (David B. Trout), 2018            */
+/* CONVTO64.c (C) Copyright "Fish" (David B. Trout), 2018-2019       */
 /*                Convert cckd file to cckd64 format                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

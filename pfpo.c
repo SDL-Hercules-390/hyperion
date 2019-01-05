@@ -8,7 +8,7 @@
 /*              (C) Copyright Bernard van der Helm, 2009-2011        */
 /*              Noordwijkerhout, The Netherlands                     */
 
-/*              (C) Copyright Bob Wood, 2018                         */
+/*              (C) Copyright Bob Wood, 2018-2019                    */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the Perform Floating Point Operation       */

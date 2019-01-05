@@ -1,4 +1,4 @@
-/* CCWARN.H   (C) Copyright "Fish" (David B. Trout), 2018            */
+/* CCWARN.H   (C) Copyright "Fish" (David B. Trout), 2018-2019       */
 /*             Re-ENABLE (un-suppress) some compiler warnings        */
 /*                                                                   */
 /*             Released under "The Q Public License Version 1"       */

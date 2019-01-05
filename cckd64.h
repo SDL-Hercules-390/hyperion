@@ -1,4 +1,4 @@
-/* CCKD64.H    (C) Copyright "Fish" (David B. Trout), 2018           */
+/* CCKD64.H    (C) Copyright "Fish" (David B. Trout), 2018-2019      */
 /*              CCKD64 dasd struct and type definitions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

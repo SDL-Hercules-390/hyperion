@@ -1,4 +1,4 @@
-/* FACILITY.H   (C) Copyright "Fish" (David B. Trout), 2018          */
+/* FACILITY.H   (C) Copyright "Fish" (David B. Trout), 2018-2019     */
 /*                  Facility bit structures and functions            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

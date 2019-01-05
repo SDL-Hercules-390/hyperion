@@ -1,6 +1,6 @@
 /* HDL.C        (C) Copyright Jan Jaeger, 2003-2012                  */
 /*              Hercules Dynamic Loader                              */
-/*              (C) Copyright "Fish" (David B. Trout), 2018          */
+/*              (C) Copyright "Fish" (David B. Trout), 2018-2019     */
 /*                  Architecture Mode and Facilities                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
