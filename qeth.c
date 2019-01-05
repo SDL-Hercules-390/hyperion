@@ -2457,11 +2457,9 @@ static void raise_adapter_interrupt( DEVBLK* dev )
     while (!(dev->scsw.flag2 & (SCSW2_FC_HALT | SCSW2_FC_CLEAR)))
     {
         /* Try to obtain the interrupt lock (OBTAIN_INTLOCK) */
-
-        if (try_obtain_lock( &sysblk.intlock ) == 0)
+        if (TRY_OBTAIN_INTLOCK( NULL ) == 0)
         {
-            sysblk.intowner = LOCK_OWNER_OTHER;
-
+            /* Interrupt lock obtained; queue the interrupt */
             obtain_lock( &dev->lock );
             {
                 if (grp->debugmask & DBGQETHINTRUPT)
@@ -2480,11 +2478,19 @@ static void raise_adapter_interrupt( DEVBLK* dev )
             }
             release_lock( &dev->lock );
 
-            sysblk.intowner = LOCK_OWNER_NONE;
-            release_lock( &sysblk.intlock );  // (RELEASE_INTLOCK)
+            RELEASE_INTLOCK( NULL );
             return;
         }
+
+        /* Yield to hopefully allow current lock owner a chance
+           to finish using it and release it before we try again.
+        */
+        sched_yield();
     }
+
+    /* Halt/Clear Subchannel was requested for device.
+       Return immediately without queuing any interrupt.
+    */
 }
 
 

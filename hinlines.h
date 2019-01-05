@@ -383,14 +383,10 @@ static inline void wakeup_cpus_mask( CPU_BITMAP mask )
 
 #define OBTAIN_INTLOCK      Obtain_Interrupt_Lock
 #define RELEASE_INTLOCK     Release_Interrupt_Lock
+#define TRY_OBTAIN_INTLOCK  Try_Obtain_Interrupt_Lock
 
-static inline void Obtain_Interrupt_Lock( REGS* regs )
+static inline void Interrupt_Lock_Obtained( REGS* regs )
 {
-    if (regs)
-        regs->hostregs->intwait = 1;
-
-    obtain_lock( &sysblk.intlock );
-
     if (regs)
     {
         while (sysblk.syncing)
@@ -408,6 +404,28 @@ static inline void Obtain_Interrupt_Lock( REGS* regs )
     }
     else
         sysblk.intowner = LOCK_OWNER_OTHER;
+}
+
+/*-------------------------------------------------------------------*/
+
+static inline void Obtain_Interrupt_Lock( REGS* regs )
+{
+    if (regs)
+        regs->hostregs->intwait = 1;
+    obtain_lock( &sysblk.intlock );
+    Interrupt_Lock_Obtained( regs );
+}
+
+/*-------------------------------------------------------------------*/
+
+static inline int Try_Obtain_Interrupt_Lock( REGS* regs )
+{
+    int rc;
+    if (regs)
+        regs->hostregs->intwait = 1;
+    if ((rc = try_obtain_lock( &sysblk.intlock )) == 0)
+        Interrupt_Lock_Obtained( regs );
+    return rc;
 }
 
 /*-------------------------------------------------------------------*/
