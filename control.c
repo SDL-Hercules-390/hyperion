@@ -51,7 +51,7 @@ DISABLE_GCC_UNUSED_SET_WARNING
 /* Temporary debug */
 extern  int     ipending_cmd(int,void *,void *);
 
-#if defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
+#if defined( FEATURE_BRANCH_AND_SET_AUTHORITY )
 /*-------------------------------------------------------------------*/
 /* B25A BSA   - Branch and Set Authority                       [RRE] */
 /*-------------------------------------------------------------------*/
@@ -62,9 +62,9 @@ U32     ducto;                          /* DUCT origin               */
 U32     duct_pkrp;                      /* DUCT PKM/Key/RA/P word    */
 RADR    duct_reta;                      /* DUCT return address/amode */
 BYTE    key;                            /* New PSW key               */
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
-#endif /*FEATURE_TRACING*/
+#endif
 
     RRE(inst, regs, r1, r2);
 
@@ -72,10 +72,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (!ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, BSA))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Load real address of dispatchable unit control table */
     ducto = regs->CR(2) & CR2_DUCTO;
@@ -83,10 +83,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Apply low-address protection to stores into the DUCT */
     if (ARCH_DEP(is_low_address_protected) (ducto, regs))
     {
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+#if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
         regs->TEA = (ducto & STORAGE_KEY_PAGEMASK);
         regs->excarid = 0;
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+#endif
         ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
     }
 
@@ -97,19 +97,19 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (ducto > regs->mainlim)
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* For ESAME, load the PKM/Key/RA/P from DUCT word 5, and load
        the return address and amode from DUCT words 8 and 9
        (note: the DUCT cannot cross a page boundary) */
     duct_pkrp = ARCH_DEP(fetch_fullword_absolute) (ducto+20, regs);
     duct_reta = ARCH_DEP(fetch_doubleword_absolute) (ducto+32, regs);
-  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     /* For ESA/390, load the PKM/Key/RA/P from DUCT word 9, and load
        the return address and amode from DUCT word 8
        (note: the DUCT cannot cross a page boundary) */
     duct_pkrp = ARCH_DEP(fetch_fullword_absolute) (ducto+36, regs);
     duct_reta = ARCH_DEP(fetch_fullword_absolute) (ducto+32, regs);
-  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     /* Perform base authority or reduced authority operation */
     if ((duct_pkrp & DUCT_RA) == 0)
@@ -118,12 +118,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (r2 == 0)
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-      #ifdef FEATURE_TRACING
+      #if defined( FEATURE_TRACING )
         /* Perform tracing */
         if (regs->CR(12) & CR12_BRTRACE)
             newcr12 = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
                                     regs->GR_L(r2), regs);
-      #endif /*FEATURE_TRACING*/
+      #endif
 
         /* Obtain the new PSW key from R1 register bits 24-27 */
         key = regs->GR_L(r1) & 0x000000F0;
@@ -135,13 +135,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
         /* Save current PSW amode and instruction address */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
         {
             duct_reta = PSW_IA(regs, 0);
         }
         else
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         {
             duct_reta = PSW_IA(regs, 0) & DUCT_IA31;
             if (regs->psw.amode) duct_reta |= DUCT_AM31;
@@ -154,19 +154,19 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Set the reduced authority bit */
         duct_pkrp |= DUCT_RA;
 
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* For ESAME, store the PKM/Key/RA/P into DUCT word 5, and
            store the return address and amode into DUCT words 8 and 9
            (note: the DUCT cannot cross a page boundary) */
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+20, regs);
         ARCH_DEP(store_doubleword_absolute) (duct_reta, ducto+32, regs);
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         /* For ESA/390, store the PKM/Key/RA/P into DUCT word 9, and
            store the return address and amode into DUCT word 8
            (note: the DUCT cannot cross a page boundary) */
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+36, regs);
         ARCH_DEP(store_fullword_absolute) (duct_reta, ducto+32, regs);
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
         /* Load new PSW key and PSW key mask from R1 register */
         regs->psw.pkey = key;
@@ -179,27 +179,27 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         SET_BEAR_REG(regs, regs->ip - 4);
 
         /* Set PSW instruction address and amode from R2 register */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
         {
             UPD_PSW_IA(regs, regs->GR_G(r2));
         }
         else
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         if (regs->GR_L(r2) & 0x80000000)
         {
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             regs->psw.amode64 = 0;
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
             regs->psw.amode = 1;
             regs->psw.AMASK = AMASK31;
             UPD_PSW_IA(regs, regs->GR_L(r2));
         }
         else
         {
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             regs->psw.amode64 =
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
             regs->psw.amode = 0;
             regs->psw.AMASK = AMASK24;
             UPD_PSW_IA(regs, regs->GR_L(r2));
@@ -213,12 +213,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (r2 != 0)
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-      #ifdef FEATURE_TRACING
+      #if defined( FEATURE_TRACING )
         /* Perform tracing */
         if (regs->CR(12) & CR12_BRTRACE)
                 newcr12 = ARCH_DEP(trace_br) (duct_reta & DUCT_AM31,
                                         duct_reta &DUCT_IA31, regs);
-      #endif /*FEATURE_TRACING*/
+      #endif
 
         /* Set the breaking event address register */
         SET_BEAR_REG(regs, regs->ip - 4);
@@ -227,13 +227,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            and instruction address in the R1 register */
         if (r1 != 0)
         {
-          #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+          #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             if (regs->psw.amode64)
             {
                 regs->GR_G(r1) = PSW_IA(regs, 0);
             }
             else
-          #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+          #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
             {
                 regs->GR_L(r1) = PSW_IA(regs, 0);
                 if (regs->psw.amode) regs->GR_L(r1) |= 0x80000000;
@@ -241,13 +241,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
         /* Restore PSW amode and instruction address from the DUCT */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
         {
             UPD_PSW_IA(regs, duct_reta);
         }
         else
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         {
             regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
@@ -269,22 +269,22 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Reset the reduced authority bit in the DUCT */
         duct_pkrp &= ~DUCT_RA;
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+20, regs);
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         ARCH_DEP(store_fullword_absolute) (duct_pkrp, ducto+36, regs);
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
         /* Specification exception if the PSW is now invalid. */
         /* (Since UPD_PSW_IA used above masks off inval bits  */
         /* in psw.IA, test duct_reta for invalid bits).       */
         if ((duct_reta & 1)
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             || (regs->psw.amode64 == 0 && regs->psw.amode == 0
                 && (duct_reta & 0x7F000000)))
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
             || (regs->psw.amode == 0 && duct_reta > 0x00FFFFFF))
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         {
             /* program_interrupt will invoke INVALIDATE_AIA which */
             /* will apply address mask to psw.IA if aie valid. */
@@ -296,20 +296,20 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     } /* end if(BSA-ra) */
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Update trace table address if branch tracing is on */
     if (regs->CR(12) & CR12_BRTRACE)
         regs->CR(12) = newcr12;
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Check for Successful Branch PER event */
     PER_SB(regs, regs->psw.IA);
 
 } /* end DEF_INST(branch_and_set_authority) */
-#endif /*defined(FEATURE_BRANCH_AND_SET_AUTHORITY)*/
+#endif /* defined( FEATURE_BRANCH_AND_SET_AUTHORITY ) */
 
 
-#if defined(FEATURE_SUBSPACE_GROUP)
+#if defined( FEATURE_SUBSPACE_GROUP )
 /*-------------------------------------------------------------------*/
 /* B258 BSG   - Branch in Subspace Group                       [RRE] */
 /*-------------------------------------------------------------------*/
@@ -327,9 +327,9 @@ RADR    abs;                            /* Absolute address          */
 BYTE   *mn;                             /* Mainstor address          */
 VADR    newia;                          /* New instruction address   */
 U16     xcode;                          /* Exception code            */
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
-#endif /*FEATURE_TRACING*/
+#endif
 CREG    inst_cr;                        /* Instruction CR            */
 
     RRE(inst, regs, r1, r2);
@@ -343,7 +343,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     inst_cr = regs->CR(regs->AEA_AR(USE_INST_SPACE));
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Perform tracing */
     if (regs->CR(12) & CR12_ASNTRACE)
         newcr12 = ARCH_DEP(trace_bsg) ((r2 == 0) ? 0 : regs->AR(r2),
@@ -352,7 +352,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         if (regs->CR(12) & CR12_BRTRACE)
             newcr12 = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
                                 regs->GR_L(r2), regs);
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Load real address of dispatchable unit control table */
     ducto = regs->CR(2) & CR2_DUCTO;
@@ -360,10 +360,10 @@ CREG    inst_cr;                        /* Instruction CR            */
     /* Apply low-address protection to stores into the DUCT */
     if (ARCH_DEP(is_low_address_protected) (ducto, regs))
     {
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+#if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
         regs->TEA = (ducto & STORAGE_KEY_PAGEMASK);
         regs->excarid = 0;
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+#endif
         ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
     }
 
@@ -501,11 +501,11 @@ CREG    inst_cr;                        /* Instruction CR            */
        and instruction address in the R1 register */
     if (r1 != 0)
     {
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             regs->GR_G(r1) = PSW_IA(regs, 0);
         else
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
             regs->GR_L(r1) = PSW_IA(regs, 0) |
                                 (regs->psw.amode ? 0x80000000 : 0);
     }
@@ -513,11 +513,11 @@ CREG    inst_cr;                        /* Instruction CR            */
     /* Update the breaking event address register */
     SET_BEAR_REG(regs, regs->ip - 4);
 
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (regs->psw.amode64 == 0 && (newia & 0x80000000))
-  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     if (newia & 0x80000000)
-  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     {
         regs->psw.amode = 1;
         regs->psw.AMASK = AMASK31;
@@ -573,11 +573,11 @@ CREG    inst_cr;                        /* Instruction CR            */
         ARCH_DEP(store_fullword_absolute) (duct3, ducto+12, regs);
     }
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Update trace table address if ASN tracing or branch tracing */
     if (regs->CR(12) & (CR12_ASNTRACE | CR12_BRTRACE))
         regs->CR(12) = newcr12;
-#endif /*FEATURE_TRACING*/
+#endif
 
     SET_AEA_COMMON(regs);
     if (inst_cr != regs->CR(regs->AEA_AR(USE_INST_SPACE)))
@@ -587,10 +587,10 @@ CREG    inst_cr;                        /* Instruction CR            */
     PER_SB(regs, regs->psw.IA);
 
 } /* end DEF_INST(branch_in_subspace_group) */
-#endif /*defined(FEATURE_SUBSPACE_GROUP)*/
+#endif /* defined( FEATURE_SUBSPACE_GROUP ) */
 
 
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
 /*-------------------------------------------------------------------*/
 /* B240 BAKR  - Branch and Stack Register                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -598,18 +598,18 @@ DEF_INST(branch_and_stack)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    n1, n2;                         /* Operand values            */
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
 VADR    n = 0;                          /* Work area                 */
-#endif /*FEATURE_TRACING*/
+#endif
 
     RRE(inst, regs, r1, r2);
 
     SIE_XC_INTERCEPT(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC3, BAKR))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* [5.12.3]/ Fig 10-2 Special operation exception if ASF is not enabled,
        or if DAT is off, or if not primary-space mode or AR-mode */
@@ -623,22 +623,22 @@ VADR    n = 0;                          /* Work area                 */
     if ( r1 != 0 )
     {
         n1 = regs->GR(r1);
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if ( (n1 & 0x01) == 0 )
             n1 &= (n1 & 0x80000000) ? 0xFFFFFFFF : 0x00FFFFFF;
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         if ( (n1 & 0x80000000) == 0 )
             n1 &= 0x00FFFFFF;
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     }
     else
     {
         n1 = PSW_IA(regs, 0);
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if ( regs->psw.amode64 )
             n1 |= 0x01;
         else
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         if ( regs->psw.amode )
             n1 |= 0x80000000;
     }
@@ -649,28 +649,28 @@ VADR    n = 0;                          /* Work area                 */
     n2 &= ADDRESS_MAXWRAP(regs);
 
     /* Set the addressing mode bit in the branch address */
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ( regs->psw.amode64 )
         n2 |= 0x01;
     else
-  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     if ( regs->psw.amode )
         n2 |= 0x80000000;
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Form the branch trace entry */
     if((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
         n = ARCH_DEP(trace_br)(regs->psw.amode, regs->GR_L(r2), regs);
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Form the linkage stack entry */
     ARCH_DEP(form_stack_entry) (LSED_UET_BAKR, n1, n2, 0, 0, regs);
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Update CR12 to reflect the new branch trace entry */
     if((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
         regs->CR(12) = n;
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
@@ -681,10 +681,10 @@ VADR    n = 0;                          /* Work area                 */
     }
 
 } /* end DEF_INST(branch_and_stack) */
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
+#endif /* defined( FEATURE_LINKAGE_STACK ) */
 
 
-#if defined(FEATURE_BROADCASTED_PURGING)
+#if defined( FEATURE_BROADCASTED_PURGING )
 /*-------------------------------------------------------------------*/
 /* B250 CSP   - Compare and Swap and Purge                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -701,19 +701,19 @@ U32     old;                            /* old value                 */
 
     ODD_CHECK(r1, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs,IC0, IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs) && regs->sie_scao)
     {
         STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
         if(regs->mainstor[regs->sie_scao] & 0x80)
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
@@ -761,7 +761,7 @@ U32     old;                            /* old value                 */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(compare_and_swap_and_purge) */
-#endif /*defined(FEATURE_BROADCASTED_PURGING)*/
+#endif /* defined( FEATURE_BROADCASTED_PURGING ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -775,20 +775,20 @@ VADR    effective_addr2;                /* Effective address         */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-#if defined(FEATURE_ECPSVM)
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dodiag(regs,r1,r3,b2,effective_addr2)==0)
     {
         return;
     }
 #endif
 
-#ifdef FEATURE_HERCULES_DIAGCALLS
+#if defined( FEATURE_HERCULES_DIAGCALLS )
     if (
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
         !SIE_MODE(regs) &&
-#endif /* defined(_FEATURE_SIE) */
+#endif /* defined( _FEATURE_SIE ) */
                       !(effective_addr2 == 0xF08 && FACILITY_ENABLED( HERC_PROBSTATE_DIAGF08,regs )) )
-#endif
+#endif /* defined( FEATURE_HERCULES_DIAGCALLS ) */
 
     PRIV_CHECK(regs);
 
@@ -805,14 +805,14 @@ VADR    effective_addr2;                /* Effective address         */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-#ifdef FEATURE_HERCULES_DIAGCALLS
+#if defined( FEATURE_HERCULES_DIAGCALLS )
     RETURN_INTCHECK(regs);
 #endif
 
 } /* end DEF_INST(diagnose) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* B226 EPAR  - Extract Primary ASN                            [RRE] */
 /*-------------------------------------------------------------------*/
@@ -839,10 +839,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_L(r1) = regs->CR_LHL(4);
 
 } /* end DEF_INST(extract_primary_asn) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B99A EPAIR - Extract Primary ASN and Instance               [RRE] */
 /*-------------------------------------------------------------------*/
@@ -872,10 +872,10 @@ int r1, r2;                             /* Values of R fields        */
     regs->GR_H(r1) = regs->CR_H(4);
 
 } /* end DEF_INST(extract_primary_asn_and_instance) */
-#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
+#endif /* defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* B227 ESAR  - Extract Secondary ASN                          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -902,10 +902,10 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_L(r1) = regs->CR_LHL(3);
 
 } /* end DEF_INST(extract_secondary_asn) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B99B ESAIR - Extract Secondary ASN and Instance             [RRE] */
 /*-------------------------------------------------------------------*/
@@ -935,10 +935,10 @@ int r1, r2;                             /* Values of R fields        */
     regs->GR_H(r1) = regs->CR_H(3);
 
 } /* end DEF_INST(extract_secondary_asn_and_instance) */
-#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
+#endif /* defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) */
 
 
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
 /*-------------------------------------------------------------------*/
 /* B249 EREG  - Extract Stacked Registers                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -960,10 +960,10 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     ARCH_DEP(unstack_registers) (0, lsea, r1, r2, regs);
 
 }
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
+#endif /* defined( FEATURE_LINKAGE_STACK ) */
 
 
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
 /*-------------------------------------------------------------------*/
 /* B24A ESTA  - Extract Stacked State                          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -988,13 +988,13 @@ int     max_esta_code;
     /* Load the extraction code from low-order byte of R2 register */
     code = regs->GR_LHLCL(r2);
 
-#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
     max_esta_code = FACILITY_ENABLED( 006_ASN_LX_REUSE, regs ) ? 5 : 4;
-#elif defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#elif defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     max_esta_code=4;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     max_esta_code=3;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     /* Program check if r1 is odd, or if extraction code is invalid */
     if ((r1 & 1) || code > max_esta_code)
@@ -1011,10 +1011,10 @@ int     max_esta_code;
     regs->psw.cc =  ((lsed.uet & LSED_UET_ET) == LSED_UET_PC) ? 1 : 0;
 
 }
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
+#endif /* defined( FEATURE_LINKAGE_STACK ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* B224 IAC   - Insert Address Space Control                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1026,10 +1026,10 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Special operation exception if DAT is off */
     if ( REAL_MODE(&(regs->psw))
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
       /* Except in XC mode */
       && !SIE_STATB(regs, MX, XC)
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
@@ -1037,10 +1037,10 @@ int     r1, r2;                         /* Values of R fields        */
        and the extraction-authority control bit is zero */
     if ( PROBSTATE(&regs->psw)
          && !(regs->CR(0) & CR0_EXT_AUTH)
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
          /* Ignore extraction control in XC mode */
          && !SIE_STATB(regs, MX, XC)
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
         )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
@@ -1051,7 +1051,7 @@ int     r1, r2;                         /* Values of R fields        */
     regs->GR_LHLCH(r1) = regs->psw.cc;
 
 }
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1077,7 +1077,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#if defined(FEATURE_BASIC_STORAGE_KEYS)
+#if defined( FEATURE_BASIC_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
 /* 09   ISK   - Insert Storage Key                              [RR] */
 /*-------------------------------------------------------------------*/
@@ -1085,17 +1085,17 @@ DEF_INST(insert_storage_key)
 {
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Absolute storage addr     */
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
 BYTE    storkey;
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     RR(inst, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
-#if defined(FEATURE_4K_STORAGE_KEYS) || defined(_FEATURE_SIE)
+#if defined( FEATURE_4K_STORAGE_KEYS ) || defined( _FEATURE_SIE )
     if(
-#if defined(_FEATURE_SIE) && !defined(FEATURE_4K_STORAGE_KEYS)
+#if defined( _FEATURE_SIE ) && !defined( FEATURE_4K_STORAGE_KEYS )
         SIE_MODE(regs) &&
 #endif
         !(regs->CR(0) & CR0_STORKEY_4K) )
@@ -1116,7 +1116,7 @@ BYTE    storkey;
     if ( n > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs))
     {
         if(SIE_STATB(regs, IC2, ISKE))
@@ -1124,25 +1124,25 @@ BYTE    storkey;
 
         if(!regs->sie_pref)
     {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if(SIE_STATB(regs, RCPO0, SKA)
               && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                 regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
                 regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
 #endif
             }
             else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
             {
             RADR rcpa;
             BYTE rcpkey;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
@@ -1160,7 +1160,7 @@ BYTE    storkey;
                     rcpa += 1025;
                 }
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
@@ -1183,7 +1183,7 @@ BYTE    storkey;
                 /* guest absolute to host real */
                 if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
                                         regs->hostregs, ACCTYPE_SIE))
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 {
                     /* In case of storage key assist obtain the
                        key and fetch bit from the PGSTE */
@@ -1194,14 +1194,14 @@ BYTE    storkey;
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
                 }
                 else
-#else /*!defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#else /*!defined( _FEATURE_STORAGE_KEY_ASSIST )*/
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     regs->GR_LHLCL(r1) = storkey
                                        | (STORAGE_KEY(n, regs) & 0xFE);
 #else
@@ -1212,16 +1212,16 @@ BYTE    storkey;
             }
         }
         else /* !sie_pref */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
             regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
             regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
 #endif
     }
     else /* !SIE_MODE */
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
         /* Insert the storage key into R1 register bits 24-31 */
-#if defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_2K_STORAGE_KEYS )
         regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
         regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
@@ -1235,10 +1235,10 @@ BYTE    storkey;
 //                  regs->GR_L(r2), regs->GR_L(r1) & 0xFE);
 
 }
-#endif /*defined(FEATURE_BASIC_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_BASIC_STORAGE_KEYS ) */
 
 
-#if defined(FEATURE_EXTENDED_STORAGE_KEYS)
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
 /* B229 ISKE  - Insert Storage Key Extended                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1246,9 +1246,9 @@ DEF_INST(insert_storage_key_extended)
 {
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Workarea                  */
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
 BYTE    storkey;
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     RRE(inst, regs, r1, r2);
 
@@ -1264,7 +1264,7 @@ BYTE    storkey;
     if ( n > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs))
     {
         if(SIE_STATB(regs, IC2, ISKE))
@@ -1272,33 +1272,33 @@ BYTE    storkey;
 
         if(!regs->sie_pref)
     {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if((SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
               || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
               ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
             SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
                 /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                 regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
                 regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
 #endif
         }
         else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
             {
             RADR rcpa;
             BYTE rcpkey;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if(SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
                   || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
                                                              )
                 {
                     /* guest absolute to host PTE addr */
@@ -1315,12 +1315,12 @@ BYTE    storkey;
                     rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                 }
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
                     if(SIE_STATB(regs, MX, XC))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
@@ -1343,7 +1343,7 @@ BYTE    storkey;
                 /* guest absolute to host real */
                 if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
                                         regs->hostregs, ACCTYPE_SIE))
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 {
                     /* In case of storage key assist obtain the
                        key and fetch bit from the PGSTE */
@@ -1354,15 +1354,15 @@ BYTE    storkey;
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
                 }
                 else
-#else /*!defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#else /*!defined( _FEATURE_STORAGE_KEY_ASSIST )*/
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     regs->GR_LHLCL(r1) = storkey | (STORAGE_KEY(n, regs) & 0xFE);
 #else
                     regs->GR_LHLCL(r1) = storkey | ((STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE);
@@ -1372,26 +1372,26 @@ BYTE    storkey;
     }
         else /* sie_pref */
             /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
             regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
             regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
 #endif
     }
     else /* !SIE_MODE */
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
         /* Insert the storage key into R1 register bits 24-31 */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
         regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xFE;
 #else
         regs->GR_LHLCL(r1) = (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)) & 0xFE;
 #endif
 
 } /* end DEF_INST(insert_storage_key_extended) */
-#endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_EXTENDED_STORAGE_KEYS ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* B223 IVSK  - Insert Virtual Storage Key                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1400,9 +1400,9 @@ DEF_INST(insert_virtual_storage_key)
 int     r1, r2;                         /* Values of R fields        */
 VADR    effective_addr;                 /* Virtual storage addr      */
 RADR    n;                              /* 32-bit operand values     */
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
 int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
 
     RRE(inst, regs, r1, r2);
 
@@ -1430,16 +1430,16 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
     if ( n > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
     /* When running under SIE, and the guest absolute address
        is paged out, then obtain the storage key from the
        SPGTE rather then causing a host page fault. */
     if(SIE_MODE(regs)
       && !regs->sie_pref
       && (SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
       || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
       ) && !SIE_FEATB(regs, RCPO2, RCPBY))
     {
         /* guest absolute to host absolute addr or PTE addr in case of rc2 */
@@ -1468,7 +1468,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
             regs->GR_LHLCL(r1) = STORAGE_KEY(n, regs) & 0xF8;
     }
     else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
     {
         SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
         /* Insert storage key bits 0-4 into R1 register bits
@@ -1477,7 +1477,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
     }
 
 } /* end DEF_INST(insert_virtual_storage_key) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1488,22 +1488,22 @@ DEF_INST(invalidate_page_table_entry)
 int     r1, r2;                         /* Values of R fields        */
 RADR    op1;
 U32     op2;
-#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
 int     r3;
 int     op3;
-#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
+#endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
 
-#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
     RRR(inst, regs, r1, r2, r3);
-#else /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
+#else /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
     RRE(inst, regs, r1, r2);
-#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
+#endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
 
     PRIV_CHECK(regs);
 
     op1 = regs->GR(r1);
     op2 = regs->GR_L(r2);
-#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
     if (FACILITY_ENABLED( 013_IPTE_RANGE, regs ) && r3)
     {
         op3 = regs->GR_LHLCL(r3);
@@ -1513,19 +1513,19 @@ int     op3;
     }
     else
         op3 = 0;
-#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
+#endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC0, IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Perform serialization before operation */
     PERFORM_SERIALIZATION (regs);
     OBTAIN_INTLOCK(regs);
     SYNCHRONIZE_CPUS(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs) && regs->sie_scao)
     {
         STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
@@ -1537,31 +1537,31 @@ int     op3;
         regs->mainstor[regs->sie_scao] |= 0x80;
         STORAGE_KEY(regs->sie_scao, regs) |= (STORKEY_REF|STORKEY_CHANGE);
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
-#if defined(FEATURE_013_IPTE_RANGE_FACILITY)
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
     /* Invalidate the additional ptes as specfied by op3 */
     for( ; op3; op3--, op2 += 0x1000)
        ARCH_DEP(invalidate_pte) (inst[1], op1, op2, regs);
-#endif /*defined(FEATURE_013_IPTE_RANGE_FACILITY)*/
+#endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
 
     /* Invalidate page table entry */
     ARCH_DEP(invalidate_pte) (inst[1], op1, op2, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs) && regs->sie_scao)
     {
         regs->mainstor[regs->sie_scao] &= 0x7F;
         STORAGE_KEY(regs->sie_scao, regs) |= (STORKEY_REF|STORKEY_CHANGE);
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     RELEASE_INTLOCK(regs);
 
 } /* DEF_INST(invalidate_page_table_entry) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* E500 LASP  - Load Address Space Parameters                  [SSE] */
 /*-------------------------------------------------------------------*/
@@ -1586,9 +1586,9 @@ U32     ltd;                            /* Linkage table designation */
 U32     pasteo=0;                       /* Primary ASTE origin       */
 U32     sasteo=0;                       /* Secondary ASTE origin     */
 U16     ax;                             /* Authorisation index       */
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
 U16     xcode;                          /* Exception code            */
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
 CREG    inst_cr;                        /* Instruction CR            */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
@@ -1604,10 +1604,10 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     DW_CHECK(effective_addr1, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, LASP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     inst_cr = regs->CR(regs->AEA_AR(USE_INST_SPACE));
 
@@ -1682,7 +1682,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         if (ASN_AND_LX_REUSE_ENABLED(regs))
             pastein_new = pastein_d;
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
         /* Perform subspace replacement on new PSTD */
         pstd = ARCH_DEP(subspace_replace) (pstd, pasteo, &xcode, regs);
 
@@ -1692,7 +1692,7 @@ CREG    inst_cr;                        /* Instruction CR            */
             regs->psw.cc = 1;
             return;
         }
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif /* defined( FEATURE_SUBSPACE_GROUP ) */
 
         /* Return with condition code 3 if either current STD
            or new STD indicates a space switch event */
@@ -1778,7 +1778,7 @@ CREG    inst_cr;                        /* Instruction CR            */
             if (ASN_AND_LX_REUSE_ENABLED(regs))
                 sastein_new = sastein_d;
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
             /* Perform subspace replacement on new SSTD */
             sstd = ARCH_DEP(subspace_replace) (sstd, sasteo,
                                                 &xcode, regs);
@@ -1789,7 +1789,7 @@ CREG    inst_cr;                        /* Instruction CR            */
                 regs->psw.cc = 2;
                 return;
             }
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif /* defined( FEATURE_SUBSPACE_GROUP ) */
 
             /* Perform SASN authorization if bit 31 of the
                LASP function bits is 0 */
@@ -1831,7 +1831,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     regs->psw.cc = 0;
 
 } /* end DEF_INST(load_address_space_parameters) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1939,12 +1939,12 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DBLWRD  dword;
 int     rc;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 int     amode64;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     S(inst, regs, b2, effective_addr2);
-#if defined(FEATURE_ECPSVM)
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dolpsw(regs,b2,effective_addr2)==0)
     {
         return;
@@ -1955,10 +1955,10 @@ int     amode64;
 
     DW_CHECK(effective_addr2, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, LPSW))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -1971,10 +1971,10 @@ int     amode64;
     SET_BEAR_REG(regs, regs->ip - 4);
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ((rc = ARCH_DEP(load_psw) ( regs, dword )))
         ARCH_DEP(program_interrupt) (regs, rc);
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     /* Make the PSW valid for ESA/390 mode
        after first saving our amode64 flag */
@@ -2028,7 +2028,7 @@ int     amode64;
        the 's390_load_psw' function didn't do that for us */
     regs->psw.IA_H = 0;
 
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -2050,7 +2050,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
-#if defined(FEATURE_ECPSVM)
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dolra(regs,r1,b2,effective_addr2)==0)
     {
         return;
@@ -2087,7 +2087,7 @@ int     cc;                             /* Condition code            */
     else
     {
         /* Set r1 and condition code as returned by translate_addr */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64 && cc != 3)
         {
             regs->GR_G(r1) = regs->dat.raddr;
@@ -2118,9 +2118,9 @@ int     cc;                             /* Condition code            */
                 cc = 3;
             } /* end else(regs->dat.raddr) */
         } /* end else(amode) */
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         regs->GR_L(r1) = regs->dat.raddr;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     } /* end else(cc) */
 
     regs->psw.cc = cc;
@@ -2152,7 +2152,7 @@ RADR    n;                              /* Unsigned work             */
 }
 
 
-#if defined(FEATURE_LOCK_PAGE)
+#if defined( FEATURE_LOCK_PAGE )
 /*-------------------------------------------------------------------*/
 /* B262 LKPG  - Lock Page                                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2184,11 +2184,11 @@ CREG    pte;                            /* Page Table Entry          */
         rpte = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
         pte =
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
               ARCH_DEP(fetch_doubleword_absolute) (rpte, regs);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
               ARCH_DEP(fetch_fullword_absolute) (rpte, regs);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
         if(regs->GR_L(0) & LKPG_GPR0_LOCKBIT)
         {
@@ -2204,11 +2204,11 @@ CREG    pte;                            /* Page Table Entry          */
                 }
 
                 pte |= PAGETAB_PGLOCK;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                 ARCH_DEP(store_doubleword_absolute) (pte, rpte, regs);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
                 regs->GR(r1) = regs->dat.raddr;
                 regs->psw.cc = 0;
             }
@@ -2221,11 +2221,11 @@ CREG    pte;                            /* Page Table Entry          */
             if(pte & PAGETAB_PGLOCK)
             {
                 pte &= ~((U64)PAGETAB_PGLOCK);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                 ARCH_DEP(store_doubleword_absolute) (pte, rpte, regs);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
                 regs->psw.cc = 0;
             }
             else
@@ -2239,10 +2239,10 @@ CREG    pte;                            /* Page Table Entry          */
     RELEASE_MAINLOCK(regs);
 
 } /* end DEF_INST(lock_page) */
-#endif /*defined(FEATURE_LOCK_PAGE)*/
+#endif /* defined( FEATURE_LOCK_PAGE ) */
 
 
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
 /*-------------------------------------------------------------------*/
 /* B247 MSTA  - Modify Stacked State                           [RRE] */
 /*-------------------------------------------------------------------*/
@@ -2275,10 +2275,10 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     /* Store two 32-bit values into modifiable area of state entry */
     ARCH_DEP(stack_modify) (lsea, m1, m2, regs);
 }
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
+#endif /* defined( FEATURE_LINKAGE_STACK ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* DA   MVCP  - Move to Primary                                 [SS] */
 /*-------------------------------------------------------------------*/
@@ -2337,10 +2337,10 @@ GREG    l;                              /* Unsigned workarea         */
     regs->psw.cc = cc;
 
 }
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* DB   MVCS  - Move to Secondary                               [SS] */
 /*-------------------------------------------------------------------*/
@@ -2398,7 +2398,7 @@ GREG    l;                              /* Unsigned workarea         */
     regs->psw.cc = cc;
 
 }
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2433,7 +2433,7 @@ int     k, l;                           /* Integer workarea          */
 }
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* D9   MVCK  - Move with Key                                   [SS] */
 /*-------------------------------------------------------------------*/
@@ -2480,10 +2480,10 @@ GREG    l;                              /* Unsigned workarea         */
     regs->psw.cc = cc;
 
 }
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_027_MVCOS_FACILITY)
+#if defined( FEATURE_027_MVCOS_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C8x0 MVCOS - Move with Optional Specifications              [SSF] */
 /*-------------------------------------------------------------------*/
@@ -2588,7 +2588,7 @@ int     space1, space2;                 /* Address space modifiers   */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(move_with_optional_specifications) */
-#endif /*defined(FEATURE_027_MVCOS_FACILITY)*/
+#endif /* defined( FEATURE_027_MVCOS_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2622,7 +2622,7 @@ int     k, l;                           /* Integer workarea          */
 }
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* B218 PC    - Program Call                                     [S] */
 /*-------------------------------------------------------------------*/
@@ -2658,25 +2658,28 @@ U32     akm;                            /* Bits 0-15=AKM, 16-31=zero */
 U16     xcode;                          /* Exception code            */
 U16     pasn;                           /* Primary ASN               */
 U16     oldpasn;                        /* Old Primary ASN           */
-#if defined(FEATURE_LINKAGE_STACK)
+
+#if defined( FEATURE_LINKAGE_STACK )
 U32     csi;                            /* Called-space identifier   */
 VADR    retn;                           /* Return address and amode  */
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
-#ifdef FEATURE_TRACING
+#endif
+
+#if defined( FEATURE_TRACING )
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
-#endif /*FEATURE_TRACING*/
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#endif
+
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 CREG    savecr12 = 0;                   /* CR12 save                 */
-#endif /*FEATURE_001_ZARCH_INSTALLED_FACILITY*/
+#endif
 
     S(inst, regs, b2, effective_addr2);
 
     SIE_XC_INTERCEPT(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, PC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -2749,11 +2752,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
 
         /* Fetch primary ASTE words 3 or 6 from absolute storage
            (note: the ASTE cannot cross a page boundary) */
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         aste[3] = ARCH_DEP(fetch_fullword_absolute) (abs+12, regs);
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         aste[6] = ARCH_DEP(fetch_fullword_absolute) (abs+24, regs);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
         /* Load LTD or LFTD from primary ASTE word 3 or 6 */
         ltdesig = ASTE_LT_DESIGNATOR(aste);
@@ -2767,11 +2770,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     if ((ltdesig & LTD_SSLINK) == 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Form trace entry if ASN tracing is active */
     if (regs->CR(12) & CR12_ASNTRACE)
         newcr12 = ARCH_DEP(trace_pc) (pctea, regs);
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* [5.5.3.2] Linkage table lookup */
     if (!ASN_AND_LX_REUSE_ENABLED(regs))
@@ -2938,29 +2941,29 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     if ((ete[4] & ETE4_T) == 0 && AR_BIT(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Program check if basic program call is attempting
        to switch into or out of 64-bit addressing mode */
     if ((ete[4] & ETE4_T) == 0
         && ((ete[4] & ETE4_G) ? 1 : 0) != regs->psw.amode64)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     /* Program check if resulting addressing mode is 24 and the
        entry instruction address is not a 24-bit address */
     if ((ete[1] & ETE1_AMODE) == 0
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         && (ete[4] & ETE4_G) == 0
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         && (ete[1] & ETE1_EIA) > 0x00FFFFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_PC_TRANSLATION_SPECIFICATION_EXCEPTION);
 
     /* Obtain the authorization key mask from the entry table */
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     akm = ete[2] & ETE2_AKM;
-  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     akm = ete[0] & ETE0_AKM;
-  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     /* Program check if in problem state and the PKM in control
        register 3 produces zero when ANDed with the AKM in the ETE */
@@ -2969,11 +2972,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
     /* Obtain the new primary ASN from the entry table */
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+  #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     pasn = ete[2] & ETE2_ASN;
-  #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
     pasn = ete[0] & ETE0_ASN;
-  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+  #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     /* Obtain the ASTE if ASN is non-zero */
     if (pasn != 0)
@@ -3027,10 +3030,10 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         /* Obtain the new PSTD or PASCE from the ASTE */
         pstd = ASTE_AS_DESIGNATOR(aste);
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
         /* Perform subspace replacement on new PSTD */
         pstd = ARCH_DEP(subspace_replace) (pstd, pasteo, NULL, regs);
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
 
     } /* end if(PC-ss) */
     else
@@ -3045,22 +3048,22 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     if ((ete[4] & ETE4_T) == 0)
     {
         /* For basic PC, load linkage info into general register 14 */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             regs->GR_G(14) = PSW_IA(regs, 0) | PROBSTATE(&regs->psw);
         else
             regs->GR_L(14) = (regs->psw.amode ? 0x80000000 : 0)
                             | PSW_IA(regs, 0) | PROBSTATE(&regs->psw);
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         regs->GR_L(14) = (regs->psw.amode ? 0x80000000 : 0)
                         | PSW_IA(regs, 0) | PROBSTATE(&regs->psw);
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
         /* Set the breaking event address register */
         SET_BEAR_REG(regs, regs->ip - 4);
 
         /* Update the PSW from the entry table */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             UPD_PSW_IA(regs , ((U64)(ete[0]) << 32)
                                 | (U64)(ete[1] & 0xFFFFFFFE));
@@ -3070,11 +3073,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
             UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
         }
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         if (ete[1] & ETE1_PROB)
             regs->psw.states |= BIT(PSW_PROB_BIT);
         else
@@ -3088,25 +3091,25 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         regs->CR(3) |= (ete[3] & ETE3_EKM);
 
         /* Load the entry parameter into general register 4 */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             regs->GR_H(4) = ete[6];
         regs->GR_L(4) = ete[7];
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         regs->GR_L(4) = ete[2];
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     } /* end if(basic PC) */
     else
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
     { /* stacking PC */
 
         /* ESA/390 POP Fig 10-17 8.B.11 */
         if (!ASF_ENABLED(regs))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-#ifdef FEATURE_TRACING
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_TRACING )
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Add a mode trace entry when switching in/out of 64 bit mode */
         if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != ((ete[4] & ETE4_G) ? 1 : 0)))
         {
@@ -3119,8 +3122,8 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             newcr12 = ARCH_DEP(trace_ms) (0, 0, regs);
             regs->CR(12) = savecr12;
         }
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#endif /*FEATURE_TRACING*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_TRACING ) */
 
         /* Set the called-space identification */
         if (pasn == 0)
@@ -3132,20 +3135,20 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
 
         /* Set the addressing mode bits in the return address */
         retn = PSW_IA(regs, 0);
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if ( regs->psw.amode64 )
             retn |= 0x01;
         else
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         if ( regs->psw.amode )
             retn |= 0x80000000;
 
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Set the high-order bit of the PC number if
            the resulting addressing mode is 64-bit */
         if (ete[4] & ETE4_G)
             pcnum |= 0x80000000;
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
         /* Perform the stacking process */
         ARCH_DEP(form_stack_entry) (LSED_UET_PC, retn, 0, csi,
@@ -3155,7 +3158,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         SET_BEAR_REG(regs, regs->ip - 4);
 
         /* Update the PSW from the entry table */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (ete[4] & ETE4_G)
         {
             regs->psw.amode64 = 1;
@@ -3171,11 +3174,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
             UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
         }
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         UPD_PSW_IA(regs, ete[1] & ETE1_EIA);
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         if (ete[1] & ETE1_PROB)
             regs->psw.states |= BIT(PSW_PROB_BIT);
         else
@@ -3206,18 +3209,18 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.asc &= ~BIT(PSW_AR_BIT);
 
         /* Load the entry parameter into general register 4 */
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             regs->GR_H(4) = ete[6];
         regs->GR_L(4) = ete[7];
-      #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #else /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
         regs->GR_L(4) = ete[2];
-      #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /*!defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     } /* end if(stacking PC) */
-#else /*!defined(FEATURE_LINKAGE_STACK)*/
+#else /*!defined( FEATURE_LINKAGE_STACK )*/
     ARCH_DEP(program_interrupt) (regs, PGM_PC_TRANSLATION_SPECIFICATION_EXCEPTION);
-#endif /*!defined(FEATURE_LINKAGE_STACK)*/
+#endif /*!defined( FEATURE_LINKAGE_STACK )*/
 
     /* If new ASN is zero, perform program call to current primary */
     if (pasn == 0)
@@ -3270,7 +3273,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         regs->CR_L(5) = ASF_ENABLED(regs) ?
                                 pasteo : ASTE_LT_DESIGNATOR(aste);
 
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
         /* For stacking PC when the S-bit in the entry table is
            one, set SASN and SSTD equal to new PASN and PSTD */
         if ((ete[4] & ETE4_T) && (ete[4] & ETE4_S))
@@ -3283,15 +3286,15 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             if (ASN_AND_LX_REUSE_ENABLED(regs))
                 regs->CR_H(3) = regs->CR_H(4);
         }
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
+#endif /* defined( FEATURE_LINKAGE_STACK ) */
 
     } /* end if(PC-ss) */
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Update trace table address if ASN or Mode switch made trace entry */
     if (newcr12)
         regs->CR(12) = newcr12;
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Update cpu states */
     SET_IC_MASK(regs);
@@ -3320,10 +3323,10 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(program_call) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
 /*-------------------------------------------------------------------*/
 /* 0101 PR    - Program Return                                   [E] */
 /*-------------------------------------------------------------------*/
@@ -3352,10 +3355,10 @@ int     rc;                             /* return code from load_psw */
 
     SIE_XC_INTERCEPT(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC3, PR))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -3381,16 +3384,16 @@ int     rc;                             /* return code from load_psw */
     /* Perform the unstacking process */
     etype = ARCH_DEP(program_return_unstack) (&newregs, &alsed, &rc);
 
-#ifdef FEATURE_TRACING
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_TRACING )
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* If unstacked entry was a BAKR:                              */
         /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((etype == LSED_UET_BAKR)
         && (regs->CR(12) & CR12_MTRACE)
         && (regs->psw.amode64 != newregs.psw.amode64))
         newregs.CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#endif /*FEATURE_TRACING*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_TRACING ) */
 
     /* Perform PR-cp or PR-ss if unstacked entry was a program call */
     if (etype == LSED_UET_PC)
@@ -3398,19 +3401,19 @@ int     rc;                             /* return code from load_psw */
         /* Extract the new primary ASN from CR4 bits 16-31 */
         pasn = newregs.CR_LHL(4);
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
         /* Perform tracing if ASN tracing is on */
         if (regs->CR(12) & CR12_ASNTRACE)
             newregs.CR(12) = ARCH_DEP(trace_pr) (&newregs, regs);
 
-      #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         else
         /* Add a mode trace entry when switching in/out of 64 bit mode */
         if((regs->CR(12) & CR12_MTRACE) && (regs->psw.amode64 != newregs.psw.amode64))
             newregs.CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
-      #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#endif /*FEATURE_TRACING*/
+#endif /* defined( FEATURE_TRACING ) */
 
         /* Perform PASN translation if new PASN not equal old PASN */
         if (pasn != oldpasn)
@@ -3451,11 +3454,11 @@ int     rc;                             /* return code from load_psw */
             /* Load CR5 with the primary ASTE origin address */
             newregs.CR_L(5) = pasteo;
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
             /* Perform subspace replacement on new PSTD */
             newregs.CR(1) = ARCH_DEP(subspace_replace) (newregs.CR(1),
                                             pasteo, NULL, &newregs);
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
 
             /* Space switch if either current PSTD or new PSTD
                space-switch-event control bit is set to 1 */
@@ -3524,11 +3527,11 @@ int     rc;                             /* return code from load_psw */
                 ARCH_DEP(program_interrupt) (&newregs, PGM_SECONDARY_AUTHORITY_EXCEPTION);
             }
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
             /* Perform subspace replacement on new SSTD */
             newregs.CR(7) = ARCH_DEP(subspace_replace) (newregs.CR(7),
                                             sasteo, NULL, &newregs);
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
 
         } /* end else(sasn!=pasn) */
 
@@ -3537,7 +3540,7 @@ int     rc;                             /* return code from load_psw */
     /* Update the updated CPU registers from the working copy */
     memcpy(&(regs->psw), &(newregs.psw), sizeof(newregs.psw));
     memcpy(regs->gr, newregs.gr, sizeof(newregs.gr));
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
+#if !defined( NOCHECK_AEA_ARRAY_BOUNDS )
     memcpy(regs->cr_struct, newregs.cr_struct, sizeof(newregs.cr_struct));
 #else
     memcpy(regs->cr, newregs.cr, sizeof(newregs.cr));
@@ -3554,7 +3557,7 @@ int     rc;                             /* return code from load_psw */
     lsedp->nes[0] = 0;
     lsedp->nes[1] = 0;
 
-#if defined(FEATURE_PER)
+#if defined( FEATURE_PER )
 
     /* Copy PER info from working copy to real copy of registers */
     if (IS_IC_PER_SA(&newregs))
@@ -3565,7 +3568,7 @@ int     rc;                             /* return code from load_psw */
 
     PER_SB(regs, regs->psw.IA);
 
-#endif /*defined(FEATURE_PER)*/
+#endif /* defined( FEATURE_PER ) */
 
     /* Update cpu states */
     SET_IC_MASK(regs);
@@ -3597,10 +3600,10 @@ int     rc;                             /* return code from load_psw */
     RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(program_return) */
-#endif /*defined(FEATURE_LINKAGE_STACK)*/
+#endif /* defined( FEATURE_LINKAGE_STACK ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* Common processing routine for the PT and PTI instructions         */
 /*-------------------------------------------------------------------*/
@@ -3622,16 +3625,16 @@ U32     oldpstd;                        /* Old Primary STD           */
 U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
 int     ssevent = 0;                    /* 1=space switch event      */
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
-#endif /*FEATURE_TRACING*/
+#endif
 
     SIE_XC_INTERCEPT(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, PT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -3658,14 +3661,14 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Extract the ASN from R1 register bits 16-31 */
     pasn = regs->GR_LHL(r1);
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Build trace entry if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
         newcr12 = ARCH_DEP(trace_pt) (pti_instruction, pasn, regs->GR(r2), regs);
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Determine instruction address, amode, and problem state */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (regs->psw.amode64)
     {
         /* In 64-bit address mode, extract instruction address from
@@ -3674,7 +3677,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         amode = regs->psw.amode;
     }
     else
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     {
         /* In 31- or 24-bit mode, extract new amode from R2 bit 0 */
         amode = (regs->GR_L(r2) & 0x80000000) ? 1 : 0;
@@ -3706,11 +3709,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Fetch primary ASTE words 3 and 6 from absolute storage
            (note: the ASTE cannot cross a page boundary) */
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         aste[3] = ARCH_DEP(fetch_fullword_absolute) (abs+12, regs);
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         aste[6] = ARCH_DEP(fetch_fullword_absolute) (abs+24, regs);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
         /* Load LTD from primary ASTE word 3 or 6 */
         ltd = ASTE_LT_DESIGNATOR(aste);
@@ -3787,10 +3790,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Obtain new primary STD or ASCE from the ASTE */
         pstd = ASTE_AS_DESIGNATOR(aste);
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
         /* Perform subspace replacement on new PSTD */
         pstd = ARCH_DEP(subspace_replace) (pstd, pasteo, NULL, regs);
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
 
         /* Space switch if either current PSTD or new PSTD
            space-switch-event control bit is set to 1 */
@@ -3828,11 +3831,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         pstd = regs->CR(1);
     }
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Update trace table address if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
         regs->CR(12) = newcr12;
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Check for Successful Branch PER event */
     PER_SB(regs, ia);
@@ -3849,9 +3852,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.states &= ~BIT(PSW_PROB_BIT);
 
     regs->psw.AMASK =
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         regs->psw.amode64 ? AMASK64 :
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
         regs->psw.amode ? AMASK31 : AMASK24;
 
     /* AND control register 3 bits 0-15 with the supplied PKM value
@@ -3905,10 +3908,10 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 0);
 
 } /* end DEF_INST(program_transfer) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B99E PTI - Program Transfer with Instance                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3920,10 +3923,10 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(program_transfer_with_instance) */
-#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
+#endif /* defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* B248 PALB  - Purge ALB                                      [RRE] */
 /*-------------------------------------------------------------------*/
@@ -3933,24 +3936,24 @@ int     r1, r2;                         /* Register values (unused)  */
 
     RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* This instruction is executed as a no-operation in XC mode */
     if(SIE_STATB(regs, MX, XC))
         return;
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
     PRIV_CHECK(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, PXLB))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Purge the ART lookaside buffer for this CPU */
     ARCH_DEP(purge_alb) (regs);
 
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -3963,18 +3966,18 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* This instruction is executed as a no-operation in XC mode */
     if(SIE_STATB(regs, MX, XC))
         return;
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
     PRIV_CHECK(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, PXLB))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Purge the translation lookaside buffer for this CPU */
     ARCH_DEP(purge_tlb) (regs);
@@ -3982,7 +3985,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#if defined(FEATURE_BASIC_STORAGE_KEYS)
+#if defined( FEATURE_BASIC_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
 /* B213 RRB   - Reset Reference Bit                              [S] */
 /*-------------------------------------------------------------------*/
@@ -3995,9 +3998,9 @@ BYTE    storkey;                        /* Storage key               */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_4K_STORAGE_KEYS) || defined(_FEATURE_SIE)
+#if defined( FEATURE_4K_STORAGE_KEYS ) || defined( _FEATURE_SIE )
     if(
-#if defined(_FEATURE_SIE) && !defined(FEATURE_4K_STORAGE_KEYS)
+#if defined( _FEATURE_SIE ) && !defined( FEATURE_4K_STORAGE_KEYS )
         SIE_MODE(regs) &&
 #endif
         !(regs->CR(0) & CR0_STORKEY_4K) )
@@ -4016,7 +4019,7 @@ BYTE    storkey;                        /* Storage key               */
     if ( n > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs))
     {
         if(SIE_STATB(regs, IC2, RRBE))
@@ -4024,19 +4027,19 @@ BYTE    storkey;                        /* Storage key               */
 
         if(!regs->sie_pref)
         {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if(SIE_STATB(regs, RCPO0, SKA)
               && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                 storkey = STORAGE_KEY(n, regs);
 #else
                 storkey = STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
 
                 /* Reset the reference bit in the storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                 STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
                 STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4044,13 +4047,13 @@ BYTE    storkey;                        /* Storage key               */
 #endif
             }
             else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
             {
             BYTE rcpkey, realkey;
             RADR ra;
             RADR rcpa;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
@@ -4068,7 +4071,7 @@ BYTE    storkey;                        /* Storage key               */
                     rcpa += 1025;
                 }
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
@@ -4089,7 +4092,7 @@ BYTE    storkey;                        /* Storage key               */
                                          regs->hostregs, ACCTYPE_SIE))
                 {
                     ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     realkey = STORAGE_KEY(ra, regs)
 #else
                     realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
@@ -4097,7 +4100,7 @@ BYTE    storkey;                        /* Storage key               */
                             & (STORKEY_REF | STORKEY_CHANGE);
 
                     /* Reset reference and change bits in storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     STORAGE_KEY(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
 #else
                     STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
@@ -4122,13 +4125,13 @@ BYTE    storkey;                        /* Storage key               */
         }
         else /* regs->sie_perf */
         {
-#if defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_2K_STORAGE_KEYS )
             storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
             /* Reset the reference bit in the storage key */
-#if defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_2K_STORAGE_KEYS )
             STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
             STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4137,15 +4140,15 @@ BYTE    storkey;                        /* Storage key               */
         }
     }
     else
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
     {
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
         storkey =  STORAGE_KEY(n, regs);
 #else
         storkey =  STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
             /* Reset the reference bit in the storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
         STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4167,10 +4170,10 @@ BYTE    storkey;                        /* Storage key               */
         STORKEY_INVALIDATE(regs, n);
 
 }
-#endif /*defined(FEATURE_BASIC_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_BASIC_STORAGE_KEYS ) */
 
 
-#if defined(FEATURE_EXTENDED_STORAGE_KEYS)
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
 /* B22A RRBE  - Reset Reference Bit Extended                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4194,7 +4197,7 @@ BYTE    storkey;                        /* Storage key               */
     if ( n > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs))
     {
         if(SIE_STATB(regs, IC2, RRBE))
@@ -4202,15 +4205,15 @@ BYTE    storkey;                        /* Storage key               */
 
         if(!regs->sie_pref)
     {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if((SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
               || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
               ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                 storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs)
@@ -4218,7 +4221,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                                         ;
             /* Reset the reference bit in the storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
             STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
             STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4226,17 +4229,17 @@ BYTE    storkey;                        /* Storage key               */
 #endif
             }
         else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
             {
             BYTE rcpkey, realkey;
             RADR ra;
             RADR rcpa;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if(SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
                   || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
                                                          )
                 {
                     /* guest absolute to host PTE addr */
@@ -4253,12 +4256,12 @@ BYTE    storkey;                        /* Storage key               */
                     rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                 }
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
                     if(SIE_STATB(regs, MX, XC))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
@@ -4279,7 +4282,7 @@ BYTE    storkey;                        /* Storage key               */
                                          regs->hostregs, ACCTYPE_SIE))
                 {
                     ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF | STORKEY_CHANGE);
 #else
                     realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
@@ -4287,7 +4290,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                     /* Reset the reference and change bits in
                        the real machine storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     STORAGE_KEY(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
 #else
                     STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF | STORKEY_CHANGE);
@@ -4312,7 +4315,7 @@ BYTE    storkey;                        /* Storage key               */
         }
         else
         {
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
             storkey = STORAGE_KEY(n, regs);
 #else
             storkey = STORAGE_KEY1(n, regs)
@@ -4320,7 +4323,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                                     ;
             /* Reset the reference bit in the storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
             STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
             STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4329,9 +4332,9 @@ BYTE    storkey;                        /* Storage key               */
         }
     }
     else
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
     {
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
         storkey = STORAGE_KEY(n, regs);
 #else
         storkey = STORAGE_KEY1(n, regs)
@@ -4339,7 +4342,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif
                                 ;
         /* Reset the reference bit in the storage key */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
         STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
@@ -4361,10 +4364,10 @@ BYTE    storkey;                        /* Storage key               */
         STORKEY_INVALIDATE(regs, n);
 
 } /* end DEF_INST(reset_reference_bit_extended) */
-#endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_EXTENDED_STORAGE_KEYS ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* B219 SAC   - Set Address Space Control                        [S] */
 /* B279 SACF  - Set Address Space Control Fast                   [S] */
@@ -4379,9 +4382,9 @@ int     ssevent = 0;                    /* 1=space switch event      */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)
+#if defined( FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST )
     if(inst[1] == 0x19) // SAC only
-#endif /*defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)*/
+#endif /* defined( FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST ) */
     {
         /* Perform serialization and checkpoint-synchronization */
         PERFORM_SERIALIZATION (regs);
@@ -4395,9 +4398,9 @@ int     ssevent = 0;                    /* 1=space switch event      */
        secondary-space control bit is zero */
     if ((REAL_MODE(&(regs->psw))
          || (regs->CR(0) & CR0_SEC_SPACE) == 0)
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
          && !SIE_STATB(regs, MX, XC)
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
@@ -4413,11 +4416,11 @@ int     ssevent = 0;                    /* 1=space switch event      */
 
     /* Specification exception if mode is invalid */
     if (mode > 3
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* Secondary and Home space mode are not supported in XC mode */
       || ( SIE_STATB(regs, MX, XC)
         && (mode == 1 || mode == 3) )
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -4476,16 +4479,16 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if (ssevent)
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
 
-#if defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)
+#if defined( FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST )
     if(inst[1] == 0x19) // SAC only
-#endif /*defined(FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST)*/
+#endif /* defined( FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST ) */
     {
         /* Perform serialization and checkpoint-synchronization */
         PERFORM_SERIALIZATION (regs);
         PERFORM_CHKPT_SYNC (regs);
     }
 }
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -4548,10 +4551,10 @@ U64     dreg;                           /* Clock value               */
 
     DW_CHECK(effective_addr2, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC3, SCKC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Fetch clock comparator value from operand location */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -4577,7 +4580,7 @@ U64     dreg;                           /* Clock value               */
 }
 
 
-#if defined(FEATURE_EXTENDED_TOD_CLOCK)
+#if defined( FEATURE_EXTENDED_TOD_CLOCK )
 /*-------------------------------------------------------------------*/
 /* 0107 SCKPF - Set Clock Programmable Field                     [E] */
 /*-------------------------------------------------------------------*/
@@ -4596,7 +4599,7 @@ DEF_INST(set_clock_programmable_field)
     /* Set TOD programmable register from register 0 */
     regs->todpr = regs->GR_LHL(0);
 }
-#endif /*defined(FEATURE_EXTENDED_TOD_CLOCK)*/
+#endif /* defined( FEATURE_EXTENDED_TOD_CLOCK ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -4614,10 +4617,10 @@ S64     dreg;                           /* Timer value               */
 
     DW_CHECK(effective_addr2, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC3, SPT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Fetch the CPU timer value from operand location */
     dreg = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -4678,9 +4681,9 @@ RADR    n;                              /* Prefix value              */
 
     /* Invalidate the ALB and TLB */
     ARCH_DEP(purge_tlb) (regs);
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
     ARCH_DEP(purge_alb) (regs);
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
     /* Perform serialization after completing the operation */
     PERFORM_SERIALIZATION (regs);
@@ -4717,7 +4720,7 @@ BYTE    pkey;                           /* Original key              */
 }
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* Common processing routine for the SSAR and SSAIR instructions     */
 /*-------------------------------------------------------------------*/
@@ -4731,9 +4734,9 @@ U32     aste[16];                       /* ASN second table entry    */
 U32     sastein;                        /* New Secondary ASTEIN      */
 U16     xcode;                          /* Exception code            */
 U16     ax;                             /* Authorization index       */
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
-#endif /*FEATURE_TRACING*/
+#endif
 
     UNREFERENCED(r2);
 
@@ -4752,11 +4755,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Load the new ASN from R1 register bits 16-31 */
     sasn = regs->GR_LHL(r1);
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Form trace entry if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
         newcr12 = ARCH_DEP(trace_ssar) (ssair_instruction, sasn, regs);
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Test for SSAR/SSAIR to current primary */
     if ( sasn == regs->CR_LHL(4) )
@@ -4822,18 +4825,18 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Load new secondary ASTEIN from the ASTE */
         sastein = aste[11];
 
-#ifdef FEATURE_SUBSPACE_GROUP
+#if defined( FEATURE_SUBSPACE_GROUP )
         /* Perform subspace replacement on new SSTD */
         sstd = ARCH_DEP(subspace_replace) (sstd, sasteo, NULL, regs);
-#endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
 
     } /* end if(SSAR-ss or SSAIR-ss) */
 
-#ifdef FEATURE_TRACING
+#if defined( FEATURE_TRACING )
     /* Update trace table address if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
         regs->CR(12) = newcr12;
-#endif /*FEATURE_TRACING*/
+#endif
 
     /* Load the new secondary ASN into control register 3 */
     regs->CR_LHL(3) = sasn;
@@ -4866,10 +4869,10 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 0);
 
 } /* end DEF_INST(set_secondary_asn) */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
+#if defined( FEATURE_006_ASN_LX_REUSE_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B99F SSAIR - Set Secondary ASN with Instance                [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4881,10 +4884,10 @@ int     r1, r2;                         /* Values of R fields        */
     ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 1);
 
 } /* end DEF_INST(set_secondary_asn_with_instance) */
-#endif /*defined(FEATURE_006_ASN_LX_REUSE_FACILITY)*/
+#endif /* defined( FEATURE_006_ASN_LX_REUSE_FACILITY ) */
 
 
-#if defined(FEATURE_BASIC_STORAGE_KEYS)
+#if defined( FEATURE_BASIC_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
 /* 08   SSK   - Set Storage Key                                 [RR] */
 /*-------------------------------------------------------------------*/
@@ -4897,9 +4900,9 @@ RADR    n;                              /* Absolute storage addr     */
 
     PRIV_CHECK(regs);
 
-#if defined(FEATURE_4K_STORAGE_KEYS) || defined(_FEATURE_SIE)
+#if defined( FEATURE_4K_STORAGE_KEYS ) || defined( _FEATURE_SIE )
     if(
-#if defined(_FEATURE_SIE) && !defined(FEATURE_4K_STORAGE_KEYS)
+#if defined( _FEATURE_SIE ) && !defined( FEATURE_4K_STORAGE_KEYS )
         SIE_MODE(regs) &&
 #endif
         !(regs->CR(0) & CR0_STORKEY_4K) )
@@ -4920,7 +4923,7 @@ RADR    n;                              /* Absolute storage addr     */
     if ( n > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs))
     {
         if(SIE_STATB(regs, IC2, SSKE))
@@ -4928,19 +4931,19 @@ RADR    n;                              /* Absolute storage addr     */
 
         if(!regs->sie_pref)
         {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if(SIE_STATB(regs, RCPO0, SKA)
               && SIE_STATB(regs, RCPO2, RCPBY))
                 { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
             else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
             {
             int  sr;
             BYTE realkey,
                  rcpkey;
             RADR rcpa;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
@@ -4958,7 +4961,7 @@ RADR    n;                              /* Absolute storage addr     */
                     rcpa += 1025;
                 }
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* Obtain address of the RCP area from the state desc */
                     rcpa = regs->sie_rcpo &= 0x7FFFF000;
@@ -4976,23 +4979,23 @@ RADR    n;                              /* Absolute storage addr     */
                                          regs->hostregs, ACCTYPE_SIE);
 
                 if (sr
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                  && !SIE_FEATB(regs, RCPO0, SKA)
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                    )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if (sr)
                     realkey = 0;
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* host real to host absolute */
                     n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     realkey =
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                               STORAGE_KEY(n, regs)
 #else
                               (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
@@ -5010,15 +5013,15 @@ RADR    n;                              /* Absolute storage addr     */
                 rcpkey |= regs->GR_L(r1) & (STORKEY_REF | STORKEY_CHANGE);
                 regs->mainstor[rcpa] = rcpkey;
                 STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 /* Insert key in new storage key */
                 if(SIE_STATB(regs, RCPO0, SKA))
                     regs->mainstor[rcpa-1] = regs->GR_LHLCL(r1)
                                             & (STORKEY_KEY | STORKEY_FETCH);
                 if(!sr)
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                     STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
                     STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1)
                                     & (STORKEY_KEY | STORKEY_FETCH);
@@ -5036,7 +5039,7 @@ RADR    n;                              /* Absolute storage addr     */
         else
         {
             /* Update the storage key from R1 register bits 24-30 */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
             STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
             STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #else
@@ -5048,10 +5051,10 @@ RADR    n;                              /* Absolute storage addr     */
         }
     }
     else
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
     {
         /* Update the storage key from R1 register bits 24-30 */
-#if defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_2K_STORAGE_KEYS )
         STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
         STORAGE_KEY(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #else
@@ -5068,11 +5071,11 @@ RADR    n;                              /* Absolute storage addr     */
 //  /*debug*/       regs->GR_L(r2), regs->GR_LHLCL(r1) & 0xFE);
 
 } /* end DEF_INST(set_storage_key) */
-#endif /*defined(FEATURE_BASIC_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_BASIC_STORAGE_KEYS ) */
 
 
-#if defined(FEATURE_EXTENDED_STORAGE_KEYS)
-#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
+#if defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY )
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO PERFORM CONDITIONAL SSKE PROCESSING                 */
 /* Input:                                                            */
@@ -5151,11 +5154,11 @@ static inline int ARCH_DEP(conditional_sske_procedure)
     return 0;
 
 } /* end function conditional_sske_procedure */
-#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
-#endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY ) */
+#endif /* defined( FEATURE_EXTENDED_STORAGE_KEYS ) */
 
 
-#if defined(FEATURE_EXTENDED_STORAGE_KEYS)
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
 /* B22B SSKE  - Set Storage Key extended                       [RRF] */
 /*-------------------------------------------------------------------*/
@@ -5164,9 +5167,9 @@ DEF_INST(set_storage_key_extended)
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask field                */
 RADR    a,n;                            /* Abs frame addr stor key   */
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
 int     fc;                             /* Frame Count               */
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
+#endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
 BYTE    r1key;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -5183,7 +5186,7 @@ BYTE    r1key;
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
     if (FACILITY_ENABLED( 008_EDAT_1, regs )
      && (m3 & SSKE_MASK_MB))
         fc = 0x100 - ((a & 0xFF000) >> PAGEFRAME_PAGESHIFT);
@@ -5199,7 +5202,7 @@ BYTE    r1key;
                       multiple block control is one */
             n = a;
         else
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
+#endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
             /* Convert real address to absolute address */
             n = APPLY_PREFIXING (a, regs->PX);
 
@@ -5207,7 +5210,7 @@ BYTE    r1key;
         if ( n > regs->mainlim )
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
         if(SIE_MODE(regs))
         {
             if(SIE_STATB(regs, IC2, SSKE))
@@ -5215,15 +5218,15 @@ BYTE    r1key;
 
             if(!regs->sie_pref)
             {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if ((SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
                   || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
                   ) && SIE_STATB(regs, RCPO2, RCPBY))
                     { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
                 else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                 int  sr;
                 BYTE realkey,
@@ -5231,11 +5234,11 @@ BYTE    r1key;
                      protkey;
                 RADR rcpa;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                     if(SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
                       || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
                                                                  )
                     {
                         /* guest absolute to host PTE addr */
@@ -5252,12 +5255,12 @@ BYTE    r1key;
                         rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                     }
                     else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                     {
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
                         if(SIE_STATB(regs, MX, XC))
                             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
                         /* Obtain address of the RCP area from the state desc */
                         rcpa = regs->sie_rcpo &= 0x7FFFF000;
@@ -5275,13 +5278,13 @@ BYTE    r1key;
                                              regs->hostregs, ACCTYPE_SIE);
 
                     if (sr
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                       && !(SIE_FEATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
                         || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
                                                                   )
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                        )
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
@@ -5289,7 +5292,7 @@ BYTE    r1key;
                     rcpkey = regs->mainstor[rcpa];
                     /* set the reference bit in the RCP key */
                     STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                     if(sr)
                     {
                         realkey = 0;
@@ -5298,13 +5301,13 @@ BYTE    r1key;
                         protkey |= regs->mainstor[rcpa-1] & (STORKEY_KEY | STORKEY_FETCH);
                     }
                     else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                     {
                         /* host real to host absolute */
                         n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                         protkey =
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                                   STORAGE_KEY(n, regs)
 #else
                                   (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
@@ -5313,11 +5316,11 @@ BYTE    r1key;
                         realkey = protkey & (STORKEY_REF | STORKEY_CHANGE);
                     }
 
-#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
+#if defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY )
                     /* Perform conditional SSKE procedure */
                     if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey, r1key))
                         return;
-#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
+#endif /* defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY ) */
                     /* or with host set */
                     rcpkey |= realkey << 4;
                     /* insert new settings of the guest set */
@@ -5325,19 +5328,19 @@ BYTE    r1key;
                     rcpkey |= r1key & (STORKEY_REF | STORKEY_CHANGE);
                     regs->mainstor[rcpa] = rcpkey;
                     STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
                     /* Insert key in new storage key */
                     if(SIE_STATB(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
+#if defined( _FEATURE_ZSIE )
                         || (regs->hostregs->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif /* defined( _FEATURE_ZSIE ) */
                                                                   )
                         regs->mainstor[rcpa-1] = r1key
                                                 & (STORKEY_KEY | STORKEY_FETCH);
                     if(!sr)
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                     {
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                         STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
                         STORAGE_KEY(n, regs) |= r1key
                                         & (STORKEY_KEY | STORKEY_FETCH);
@@ -5354,19 +5357,19 @@ BYTE    r1key;
             }
             else
             {
-#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
+#if defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY )
                 /* Perform conditional SSKE procedure */
                 if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_4K_STORAGE_KEYS ) && !defined( FEATURE_2K_STORAGE_KEYS )
                         STORAGE_KEY(n, regs),
 #else
                         (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)),
 #endif
                     r1key))
                     return;
-#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
+#endif /* defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY ) */
                 /* Update the storage key from R1 register bits 24-30 */
-#if !defined(FEATURE_2K_STORAGE_KEYS)
+#if !defined( FEATURE_2K_STORAGE_KEYS )
                 STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
                 STORAGE_KEY(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #else
@@ -5378,22 +5381,22 @@ BYTE    r1key;
             }
         }
         else
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
         {
-#if defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)
+#if defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY )
             /* Perform conditional SSKE procedure */
             if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3,
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_4K_STORAGE_KEYS ) && !defined( FEATURE_2K_STORAGE_KEYS )
                     STORAGE_KEY(n, regs),
 #else
                     (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs)),
 #endif
                 r1key))
                 return;
-#endif /*defined(FEATURE_010_CONDITIONAL_SSKE_FACILITY)*/
+#endif /* defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY ) */
 
             /* Update the storage key from R1 register bits 24-30 */
-#if defined(FEATURE_4K_STORAGE_KEYS) && !defined(FEATURE_2K_STORAGE_KEYS)
+#if defined( FEATURE_4K_STORAGE_KEYS ) && !defined( FEATURE_2K_STORAGE_KEYS )
             STORAGE_KEY(n, regs) &= STORKEY_BADFRM;
             STORAGE_KEY(n, regs) |= r1key & ~(STORKEY_BADFRM);
 #else
@@ -5408,7 +5411,7 @@ BYTE    r1key;
            when referenced next */
         STORKEY_INVALIDATE(regs, n);
 
-#if defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)
+#if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
         /* Update r2 in the case of a multiple page update */
         if (FACILITY_ENABLED( 008_EDAT_1, regs )
          && (m3 & SSKE_MASK_MB))
@@ -5422,14 +5425,14 @@ BYTE    r1key;
                 regs->GR_L(r2) = a & ADDRESS_MAXWRAP(regs);
         }
     }
-#endif /*defined(FEATURE_008_ENHANCED_DAT_FACILITY_1)*/
+#endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(set_storage_key_extended) */
-#endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
+#endif /* defined( FEATURE_EXTENDED_STORAGE_KEYS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -5447,7 +5450,7 @@ VADR    effective_addr2;                /* Effective address         */
      *
      * If we can process it, then do it
     */
-#if defined(FEATURE_ECPSVM)
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dossm(regs,b2,effective_addr2)==0)
     {
         return;
@@ -5458,33 +5461,33 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Special operation exception if SSM-suppression is active */
     if ( (regs->CR(0) & CR0_SSM_SUPP)
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
       /* SSM-suppression is ignored in XC mode */
       && !SIE_STATB(regs, MX, XC)
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, SSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Load new system mask value from operand address */
     regs->psw.sysmask = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* DAT must be off in XC mode */
     if(SIE_STATB(regs, MX, XC)
       && (regs->psw.sysmask & PSW_DATMODE) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
     /* For ECMODE, bits 0 and 2-4 of system mask must be zero */
     if ((regs->psw.sysmask & 0xB8) != 0
-#if defined(FEATURE_BCMODE)
+#if defined( FEATURE_BCMODE )
      && ECMODE(&regs->psw)
-#endif /*defined(FEATURE_BCMODE)*/
+#endif /* defined( FEATURE_BCMODE ) */
        )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -5510,10 +5513,10 @@ GREG    status = 0;                     /* Signal status             */
 RADR    abs;                            /* Absolute address          */
 U16     cpad;                           /* Target CPU address        */
 BYTE    order;                          /* SIGP order code           */
-#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( FEATURE_HERCULES_DIAGCALLS )
 int     cpu;                            /* cpu number                */
 int     set_arch = 0;                   /* Need to switch mode       */
-#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 size_t  log_sigp = 0;                   /* Log SIGP instruction flag */
 char    log_buf[128];                   /* Log buffer                */
 static char *ordername[] = {
@@ -5616,9 +5619,9 @@ static char *ordername[] = {
        part of the configuration, ie configure the cpu implicitly
        online */
     if (order != SIGP_INITRESET
-#if defined(FEATURE_S370_CHANNEL)
+#if defined( FEATURE_S370_CHANNEL )
        && order != SIGP_IMPL
-#endif /*defined(FEATURE_S370_CHANNEL)*/
+#endif /* defined( FEATURE_S370_CHANNEL ) */
        && !IS_CPU_ONLINE(cpad))
     {
         RELEASE_INTLOCK(regs);
@@ -5636,10 +5639,10 @@ static char *ordername[] = {
        target CPU is executing a previous start, stop, restart,
        stop and store status, set prefix, or store status order */
     if ((order != SIGP_RESET
-#if defined(FEATURE_S370_CHANNEL)
+#if defined( FEATURE_S370_CHANNEL )
        && order != SIGP_IMPL
        && order != SIGP_IPR
-#endif /*defined(FEATURE_S370_CHANNEL)*/
+#endif /* defined( FEATURE_S370_CHANNEL ) */
        && order != SIGP_INITRESET)
        && (tregs) && (tregs->cpustate == CPUSTATE_STOPPING
         || IS_IC_RESTART(tregs)))
@@ -5713,7 +5716,7 @@ static char *ordername[] = {
 
             break;
 
-#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 
         case SIGP_COND_EMERGENCY:
 
@@ -5757,7 +5760,7 @@ static char *ordername[] = {
             }
             break;
 
-#endif /* defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
+#endif /* defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
         case SIGP_EMERGENCY:
             /* Test for checkstop state */
@@ -5834,10 +5837,10 @@ static char *ordername[] = {
 
             break;
 
-#if defined(FEATURE_S370_CHANNEL)
+#if defined( FEATURE_S370_CHANNEL )
         case SIGP_IMPL:
         case SIGP_IPR:
-#endif /* defined(FEATURE_S370_CHANNEL) */
+#endif /* defined( FEATURE_S370_CHANNEL ) */
         case SIGP_INITRESET:
             if (!IS_CPU_ONLINE(cpad))
             {
@@ -5850,10 +5853,10 @@ static char *ordername[] = {
                 tregs = sysblk.regs[cpad];
             }
 
-#if defined(FEATURE_S370_CHANNEL)
+#if defined( FEATURE_S370_CHANNEL )
             if (order == SIGP_IMPL || order == SIGP_IPR)
                 channelset_reset(tregs);
-#endif /* defined(FEATURE_S370_CHANNEL) */
+#endif /* defined( FEATURE_S370_CHANNEL ) */
 
             /* Signal initial CPU reset function */
             tregs->sigp_ini_reset = 1;
@@ -5862,11 +5865,11 @@ static char *ordername[] = {
 
             break;
 
-#if defined(FEATURE_S370_CHANNEL)
+#if defined( FEATURE_S370_CHANNEL )
         case SIGP_PR:
             channelset_reset(tregs);
             /* fallthrough*/
-#endif /* defined(FEATURE_S370_CHANNEL) */
+#endif /* defined( FEATURE_S370_CHANNEL ) */
         case SIGP_RESET:
             /* Signal CPU reset function */
             tregs->sigp_reset = 1;
@@ -5917,9 +5920,9 @@ static char *ordername[] = {
 
             /* Invalidate the ALB and TLB of the target CPU */
             ARCH_DEP(purge_tlb) (tregs);
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
             ARCH_DEP(purge_alb) (tregs);
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
             /* Perform serialization and checkpoint-sync on target CPU */
 //          perform_serialization (tregs);
@@ -5970,12 +5973,12 @@ static char *ordername[] = {
 
             break;
 
-#if defined(_390)
+#if defined( _390 )
         case SIGP_STOREX:
         {
-#if !defined(FEATURE_BASIC_FP_EXTENSIONS)
+#if !defined( FEATURE_BASIC_FP_EXTENSIONS )
             status |= SIGP_STATUS_INVALID_ORDER;
-#else /* defined(FEATURE_BASIC_FP_EXTENSIONS) */
+#else /* defined( FEATURE_BASIC_FP_EXTENSIONS ) */
             RADR  absx;     /* abs addr of extended save area */
 
             /* Test for checkstop state */
@@ -6026,12 +6029,12 @@ static char *ordername[] = {
                 }
             }
 
-#endif /* defined(FEATURE_BASIC_FP_EXTENSIONS) */
+#endif /* defined( FEATURE_BASIC_FP_EXTENSIONS ) */
         }
         break;
-#endif /* defined(_390) */
+#endif /* defined( _390 ) */
 
-#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( FEATURE_HERCULES_DIAGCALLS )
         case SIGP_SETARCH:
 
             /* CPU must have ESAME support */
@@ -6050,7 +6053,7 @@ static char *ordername[] = {
             if(!status) {
                 switch(parm & 0xFF) {
 
-#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 
                     case 0:  // from: --  z/Arch   --to-->   390
 
@@ -6135,9 +6138,9 @@ static char *ordername[] = {
                         }
                         break;
 
-#endif // defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#endif // defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 
-#if defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined( FEATURE_HERCULES_DIAGCALLS )
 
                     case 37:
                         if (FACILITY_ENABLED( HERC_SIGP_SETARCH_S370, regs ))
@@ -6154,7 +6157,7 @@ static char *ordername[] = {
                             status = SIGP_STATUS_INVALID_ORDER;
                         break;
 
-#endif /*defined(FEATURE_HERCULES_DIAGCALLS)*/
+#endif /* defined( FEATURE_HERCULES_DIAGCALLS ) */
 
                     default:
                         status |= SIGP_STATUS_INVALID_PARAMETER;
@@ -6165,17 +6168,17 @@ static char *ordername[] = {
 
             /* Invalidate the ALB and TLB */
             ARCH_DEP(purge_tlb) (regs);
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
             ARCH_DEP(purge_alb) (tregs);
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
 
             break;
-#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)*/
+#endif /*defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( FEATURE_HERCULES_DIAGCALLS )*/
 
-#if defined(FEATURE_009_SENSE_RUN_STATUS_FACILITY)
+#if defined( FEATURE_009_SENSE_RUN_STATUS_FACILITY )
 
         case SIGP_SENSE_RUNNING_STATE:
 
@@ -6184,7 +6187,7 @@ static char *ordername[] = {
 
             break;
 
-#endif /*defined(FEATURE_009_SENSE_RUN_STATUS_FACILITY)*/
+#endif /* defined( FEATURE_009_SENSE_RUN_STATUS_FACILITY ) */
 
         default:
             status = SIGP_STATUS_INVALID_ORDER;
@@ -6229,13 +6232,13 @@ static char *ordername[] = {
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( FEATURE_HERCULES_DIAGCALLS )
     if(set_arch)
     {
         OBTAIN_INTLOCK(regs);
         longjmp(regs->archjmp, 0);
     }
-#endif /*defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /*defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )*/
 
     RETURN_INTCHECK(regs);
 
@@ -6257,10 +6260,10 @@ U64     dreg;                           /* Clock value               */
 
     DW_CHECK(effective_addr2, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC3, SCKC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(regs);
@@ -6412,10 +6415,10 @@ S64     dreg;                           /* Double word workarea      */
 
     DW_CHECK(effective_addr2, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC3, SPT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     OBTAIN_INTLOCK(regs);
 
@@ -6506,7 +6509,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*    overhead times.                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-#if !defined(_STSI_CAPABILITY)
+#if !defined( _STSI_CAPABILITY )
 #define _STSI_CAPABILITY
 
 
@@ -6610,10 +6613,10 @@ static void stsi_capability (const int stsicap_request)
     return;
 
 } /* end function stsi_capability */
-#endif /*!defined(_STSI_CAPABILITY)*/
+#endif /*!defined( _STSI_CAPABILITY )*/
 
 
-#ifdef FEATURE_STORE_SYSTEM_INFORMATION
+#if defined( FEATURE_STORE_SYSTEM_INFORMATION )
 /*-------------------------------------------------------------------*/
 /* B27D STSI  - Store System Information                         [S] */
 /*-------------------------------------------------------------------*/
@@ -6633,7 +6636,7 @@ SYSIB222  *sysib222;                    /* LPAR CPUs                 */
 SYSIB322  *sysib322;                    /* VM CPUs                   */
 SYSIBVMDB *sysibvmdb;                   /* VM description block      */
 
-#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
 SYSIB1512 *sysib1512;                   /* Configuration Topology    */
 BYTE      *tle;                         /* Pointer to next TLE       */
 TLECNTNR  *tlecntnr;                    /* Container TLE pointer     */
@@ -6642,7 +6645,7 @@ U64        cpumask;                     /* work                      */
 int        cputype;                     /* work                      */
 U16        cpuad;                       /* CPU address               */
 BYTE       cntnrid;                     /* Container ID              */
-#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
+#endif /* defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY ) */
 
                            /*  "0    1    2    3    4    5    6    7" */
 static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
@@ -6657,7 +6660,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
     PTT_INF("STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
 
-#if defined(DEBUG_STSI)
+#if defined( DEBUG_STSI )
     logmsg("control.c: STSI %d.%d.%d ia="F_VADR" sysib="F_VADR"\n",
             (regs->GR_L(0) & STSI_GPR0_FC_MASK) >> 28,
             regs->GR_L(0) & STSI_GPR0_SEL1_MASK,
@@ -6667,29 +6670,29 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 #endif /*DEBUG_STSI*/
 
      /* Determine current configuration level */
-#if defined(_FEATURE_EMULATE_VM)
+#if defined( _FEATURE_EMULATE_VM )
      if (FACILITY_ENABLED( HERC_VIRTUAL_MACHINE, regs ))
          curlvl = STSI_GPR0_FC_VM;
      else
-#endif /*defined(_FEATURE_EMULATE_VM)*/
-#if defined(_FEATURE_HYPERVISOR)
+#endif /* defined( _FEATURE_EMULATE_VM ) */
+#if defined( _FEATURE_HYPERVISOR )
          if (FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs ))
              curlvl = STSI_GPR0_FC_LPAR;
          else
-#endif /*defined(_FEATURE_HYPERVISOR)*/
+#endif /* defined( _FEATURE_HYPERVISOR ) */
              curlvl = STSI_GPR0_FC_BASIC;
 
     /* Check function code */
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) > curlvl
-#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         && (regs->GR_L(0) & STSI_GPR0_FC_MASK) != STSI_GPR0_FC_CURRINFO
-#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
+#endif /* defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY ) */
     )
     {
         PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
-#ifdef DEBUG_STSI
+#if defined( DEBUG_STSI )
         logmsg("control.c: STSI cc=3 function code invalid\n");
-#endif /*DEBUG_STSI*/
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -6703,9 +6706,9 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRNUM)
     {
         regs->GR_L(0) |= curlvl;
-#ifdef DEBUG_STSI
+#if defined( DEBUG_STSI )
         logmsg("control.c: STSI cc=0 R0=%8.8X\n", regs->GR_L(0));
-#endif /*DEBUG_STSI*/
+#endif
         regs->psw.cc = 0;
         return;
     }
@@ -6741,7 +6744,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  2
                )
            )
-#if defined(_FEATURE_HYPERVISOR)
+#if defined( _FEATURE_HYPERVISOR )
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_LPAR
             && (0
                 || !FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs )
@@ -6752,28 +6755,28 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                )
            )
 #endif /*defined(_FEATURE_HYPERVISOR*/
-#if defined(_FEATURE_EMULATE_VM)
+#if defined( _FEATURE_EMULATE_VM )
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_VM
             && (0
                 || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 2
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) != 2
                )
            )
-#endif /*defined(_FEATURE_EMULATE_VM)*/
-#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
+#endif /* defined( _FEATURE_EMULATE_VM ) */
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         || ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRINFO
             && (0
                 || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) != 1
                 || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) != 2
                )
            )
-#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
+#endif /* defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY ) */
     )
     {
         PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
-#ifdef DEBUG_STSI
+#if defined( DEBUG_STSI )
         logmsg("control.c: STSI cc=3 selector codes invalid\n");
-#endif /*DEBUG_STSI*/
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -6889,7 +6892,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
 
     case STSI_GPR0_FC_LPAR:
 
-#if defined(_FEATURE_HYPERVISOR)
+#if defined( _FEATURE_HYPERVISOR )
          if (!FACILITY_ENABLED( HERC_LOGICAL_PARTITION, regs ))
          {
              PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
@@ -6975,7 +6978,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         regs->psw.cc = 0;
         break;
 
-#if defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)
+#if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
     case STSI_GPR0_FC_CURRINFO:
 
         /* Obtain absolute address of main storage block,
@@ -7071,14 +7074,14 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             regs->psw.cc = 3;
         } /* selector 1 */
         break;
-#endif /*defined(FEATURE_011_CONFIG_TOPOLOGY_FACILITY)*/
+#endif /* defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY ) */
 
     default:
         PTT_ERR("*STSI",regs->GR_L(0),regs->GR_L(1),(U32)(effective_addr2 & 0xffffffff));
         regs->psw.cc = 3;
     } /* function code */
 
-#ifdef DEBUG_STSI
+#if defined( DEBUG_STSI )
     /* Display results of STSI */
     logmsg("control.c: STSI cc=%d\n", regs->psw.cc);
     for (i=0; i<256; i+=16, m+=16) {
@@ -7093,10 +7096,10 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 i,m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],
                 m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15],s);
     }
-#endif /*DEBUG_STSI*/
+#endif /* defined( DEBUG_STSI ) */
 
 } /* end DEF_INST(store_system_information) */
-#endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
+#endif /* defined( FEATURE_STORE_SYSTEM_INFORMATION ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -7109,7 +7112,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SI(inst, regs, i2, b1, effective_addr1);
-#ifdef FEATURE_ECPSVM
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dostnsm(regs,b1,effective_addr1,i2)==0)
     {
         return;
@@ -7118,10 +7121,10 @@ VADR    effective_addr1;                /* Effective address         */
 
     PRIV_CHECK(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, STNSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
     /* Store current system mask value into storage operand */
     ARCH_DEP(vstoreb) ( regs->psw.sysmask, effective_addr1, b1, regs );
@@ -7131,6 +7134,11 @@ VADR    effective_addr1;                /* Effective address         */
 
     SET_IC_MASK(regs);
     TEST_SET_AEA_MODE(regs);
+
+#if defined( FEATURE_002_ZARCH_ACTIVE_FACILITY )
+    if ((effective_addr1 == 0x00000950) && (i2 == 0xff))
+        ARCH_DEP(vstoreb) ( 0x00, 1376 + ARCH_DEP(vfetch4) ( 2892, 0, regs ), 0, regs );
+#endif
 
     RETURN_INTCHECK(regs);
 
@@ -7148,7 +7156,7 @@ VADR    effective_addr1;                /* Effective address         */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
-#ifdef FEATURE_ECPSVM
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dostosm(regs,b1,effective_addr1,i2)==0)
     {
         return;
@@ -7157,10 +7165,10 @@ VADR    effective_addr1;                /* Effective address         */
 
     PRIV_CHECK(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC1, STOSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Store current system mask value into storage operand */
     ARCH_DEP(vstoreb) ( regs->psw.sysmask, effective_addr1, b1, regs );
@@ -7168,18 +7176,18 @@ VADR    effective_addr1;                /* Effective address         */
     /* OR system mask with immediate operand */
     regs->psw.sysmask |= i2;
 
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* DAT must be off in XC mode */
     if(SIE_STATB(regs, MX, XC)
       && (regs->psw.sysmask & PSW_DATMODE) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
 
     /* For ECMODE, bits 0 and 2-4 of system mask must be zero */
     if (
-#if defined(FEATURE_BCMODE)
+#if defined( FEATURE_BCMODE )
         ECMODE(&regs->psw) &&
-#endif /*defined(FEATURE_BCMODE)*/
+#endif /* defined( FEATURE_BCMODE ) */
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -7212,7 +7220,7 @@ RADR    n;                              /* Unsigned work             */
     /* Store R1 register at second operand location */
     ARCH_DEP(vstore4) (regs->GR_L(r1), n, USE_REAL_ADDR, regs );
 
-#if defined(FEATURE_PER2)
+#if defined( FEATURE_PER2 )
     /* Storage alteration must be enabled for STURA to be recognised */
     if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
     {
@@ -7220,12 +7228,12 @@ RADR    n;                              /* Unsigned work             */
         ON_IC_PER_STURA(regs) ;
         regs->perc &= 0xFFFC;    /* zero STD ID part of PER code */
     }
-#endif /*defined(FEATURE_PER2)*/
+#endif /* defined( FEATURE_PER2 ) */
 
 } /* end DEF_INST(store_using_real_address) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* B24C TAR   - Test Access                                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -7259,9 +7267,9 @@ U32     aste[16];                       /* ASN second table entry    */
        R2 bits 0-15, and set condition code 3 if exception */
     if (ARCH_DEP(translate_alet) (regs->AR(r1), regs->GR_LHH(r2),
                         ACCTYPE_TAR,
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
                         SIE_STATB(regs, MX, XC) ? regs->hostregs :
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+#endif /* defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
                           regs,
                         &asteo, aste))
     {
@@ -7274,10 +7282,10 @@ U32     aste[16];                       /* ASN second table entry    */
     regs->psw.cc = (regs->AR(r1) & ALET_PRI_LIST) ? 2 : 1;
 
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
-#if defined(FEATURE_TEST_BLOCK)
+#if defined( FEATURE_TEST_BLOCK )
 /*-------------------------------------------------------------------*/
 /* B22C TB    - Test Block                                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -7290,7 +7298,7 @@ RADR    n;                              /* Real address              */
 
     PRIV_CHECK(regs);
 
-#if defined(FEATURE_REGION_RELOCATE)
+#if defined( FEATURE_REGION_RELOCATE )
     if(SIE_STATNB(regs, MX, RRF) && !regs->sie_pref)
 #endif
         SIE_INTERCEPT(regs);
@@ -7309,10 +7317,10 @@ RADR    n;                              /* Real address              */
     /* Protection exception if low-address protection is set */
     if (ARCH_DEP(is_low_address_protected) (n, regs))
     {
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+#if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
         regs->TEA = (n & STORAGE_KEY_PAGEMASK);
         regs->excarid = 0;
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+#endif
         ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
     }
 
@@ -7335,7 +7343,7 @@ RADR    n;                              /* Real address              */
     SET_GR_A(0, regs, 0);
 
 }
-#endif /*defined(FEATURE_TEST_BLOCK)*/
+#endif /* defined( FEATURE_TEST_BLOCK ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -7354,10 +7362,10 @@ BYTE    akey;                           /* Access key                */
 
     PRIV_CHECK(regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, TPROT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Convert logical address to real address */
     if (REAL_MODE(&regs->psw))
@@ -7382,7 +7390,7 @@ BYTE    akey;                           /* Access key                */
     if (aaddr > regs->mainlim)
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
         /* Under SIE TPROT also indicates if the host is using
@@ -7402,7 +7410,7 @@ BYTE    akey;                           /* Access key                */
         if (aaddr > regs->hostregs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
     /* Load access key from operand 2 address bits 24-27 */
     akey = effective_addr2 & 0xF0;
@@ -7424,7 +7432,7 @@ BYTE    akey;                           /* Access key                */
 }
 
 
-#if defined(FEATURE_TRACING)
+#if defined( FEATURE_TRACING )
 /*-------------------------------------------------------------------*/
 /* 99   TRACE - Trace                                           [RS] */
 /*-------------------------------------------------------------------*/
@@ -7433,9 +7441,9 @@ DEF_INST(trace)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-#if defined(FEATURE_TRACING)
+#if defined( FEATURE_TRACING )
 U32     op;                             /* Operand                   */
-#endif /*defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_TRACING ) */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -7443,7 +7451,7 @@ U32     op;                             /* Operand                   */
 
     FW_CHECK(effective_addr2, regs);
 
-#if defined(FEATURE_TRACING)
+#if defined( FEATURE_TRACING )
     /* Exit if explicit tracing (control reg 12 bit 31) is off */
     if ( (regs->CR(12) & CR12_EXTRACE) == 0 )
         return;
@@ -7461,27 +7469,27 @@ U32     op;                             /* Operand                   */
 
     regs->CR(12) = ARCH_DEP(trace_tr) (r1, r3, op, regs);
 
-#endif /*defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_TRACING ) */
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
 }
-#endif /*defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_TRACING ) */
 
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
+#if defined( _ARCH_NUM_1 )
  #define  _GEN_ARCH _ARCH_NUM_1
  #include "control.c"
 #endif
 
-#if defined(_ARCH_NUM_2)
+#if defined( _ARCH_NUM_2 )
  #undef   _GEN_ARCH
  #define  _GEN_ARCH _ARCH_NUM_2
  #include "control.c"
 #endif
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /*!defined( _GEN_ARCH )*/
