@@ -98,7 +98,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         // "File %s: writing output file"
         WRMSG( HHC02740, "I", outfilename );
         hostpath(pathname, outfilename, sizeof(pathname));
-        outfd = HOPEN (pathname, O_WRONLY | O_CREAT | O_BINARY,
+        outfd = HOPEN (pathname, O_WRONLY | O_CREAT | O_BINARY | O_TRUNC,
                         S_IRUSR | S_IWUSR | S_IRGRP);
 
         if (outfd < 0)
