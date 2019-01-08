@@ -10,18 +10,19 @@
 /* a virtual DASD volume and copies each member to a flat file.      */
 /*                                                                   */
 /* The command format is:                                            */
-/*      dasdpdsu ckdfile dsname [ascii]                              */
+/*      dasdpdsu ckdfile [sf=shadow-file-name] dsname [ASCII] [odir] */
 /* where: ckdfile is the name of the CKD image file                  */
 /*        dsname is the name of the PDS to be unloaded               */
-/*        ascii is an optional keyword which will cause the members  */
-/*        to be unloaded as ASCII variable length text files.        */
+/*        ASCII is an optional keyword which will cause the members  */
+/*        to be unloaded as ASCII variable length text files         */
+/*        odir is the directory where the output should be written   */
+/*        if not specified o/p is written to the current directory   */
 /* Each member is copied to a file memname.mac in the current        */
 /* working directory. If the ascii keyword is not specified then     */
 /* the members are unloaded as fixed length binary files.            */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
-
 #include "hercules.h"
 #include "dasdblks.h"
 
@@ -35,11 +36,22 @@ static int process_dirblk( CIFBLK *, int, DSXTENT *, BYTE * );
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
+static char odir[ MAX_PATH ] = {0};     /* output directory name     */
+
+/*-------------------------------------------------------------------*/
+/* Syntax help                                                       */
+/*-------------------------------------------------------------------*/
+static int syntax( const char* pgm )
+{
+    // "Usage: %s ckdfile [sf=shadow-file-name] pdsname [ASCII] [odir]"
+    FWRMSG( stderr, HHC02975, "I", pgm );
+    return -1;
+}
 
 /*-------------------------------------------------------------------*/
 /* DASDPDSU main entry point                                         */
 /*-------------------------------------------------------------------*/
-int main (int argc, char *argv[])
+int main( int argc, char* argv[] )
 {
 char           *pgm;                    /* less any extension (.ext) */
 int             rc;                     /* Return code               */
@@ -61,11 +73,8 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pgm );
 
     /* Check the number of arguments */
-    if (argc < 3 || argc > 5)
-    {
-        FWRMSG( stderr, HHC02463, "I", pgm );
-        return -1;
-    }
+    if (argc < 3 || argc > 6)
+        return syntax( pgm );
 
     /* The first argument is the name of the CKD image file */
     fname = argv[1];
@@ -78,30 +87,52 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     }
 
     /* The second argument is the dataset name */
-    memset (dsnama, 0, sizeof(dsnama));
-    strncpy (dsnama, argv[2|+i], sizeof(dsnama)-1);
-    string_to_upper (dsnama);
+    STRLCPY( dsnama, argv[2+i] );
+    string_to_upper( dsnama );
 
     /* The third argument is an optional keyword */
-    if (argc > 3+i && argv[3+i] != NULL)
+    if (argc > (3+i) && argv[3+i])
     {
-        if (strcasecmp(argv[3+i], "ascii") == 0)
+        if (strcasecmp( argv[3+i], "ASCII" ) == 0)
             asciiflag = 1;
         else
         {
+            // "Invalid argument: %s"
             FWRMSG( stderr, HHC02465, "E", argv[3+i] );
-            FWRMSG( stderr, HHC02463, "I", argv[0] );
-            return -1;
+            return syntax( pgm );
         }
     }
 
+    /* The forth argument is an optional output directory */
+    if (argc > (4+i) && argv[4+i])
+    {
+        struct stat statbuf;
+        char pathname[MAX_PATH];
+
+        if (0
+            || stat( argv[4+i], &statbuf ) != 0
+            || !S_ISDIR( statbuf.st_mode )
+        )
+        {
+            // "Invalid argument: %s"
+            FWRMSG( stderr, HHC02465, "E", argv[4+i] );
+            return syntax( pgm );
+        }
+
+        hostpath( pathname, argv[4+i], sizeof( pathname ));
+        STRLCPY( odir, pathname );
+
+        if (odir[ strlen( odir ) - 1 ] != PATHSEPC)
+            STRLCAT( odir, PATHSEPS );
+    }
+
     /* Open the CKD image file */
-    cif = open_ckd_image (fname, sfname, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL);
-    if (cif == NULL) return -1;
+    if (!(cif = open_ckd_image( fname, sfname, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL )))
+        return -1;
 
     /* Build the extent array for the requested dataset */
-    rc = build_extent_array (cif, dsnama, extent, &noext);
-    if (rc < 0) return -1;
+    if ((rc = build_extent_array( cif, dsnama, extent, &noext )) < 0)
+        return -1;
 
     /* Calculate ending relative track */
     if (extgui)
@@ -113,12 +144,12 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         int trks;  /* total tracks in dataset   */
         int i;     /* loop control              */
 
-        for (i = 0, trks = 0; i < noext; i++)
+        for (i=0, trks = 0; i < noext; i++)
         {
-            bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
-            btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
-            ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
-            etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
+            bcyl = fetch_hw( extent[i].xtbcyl );
+            btrk = fetch_hw( extent[i].xtbtrk );
+            ecyl = fetch_hw( extent[i].xtecyl );
+            etrk = fetch_hw( extent[i].xtetrk );
 
             trks += (((ecyl * cif->heads) + etrk) - ((bcyl * cif->heads) + btrk)) + 1;
         }
@@ -136,15 +167,14 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         EXTGUIMSG( "CTRK=%d\n", trk );
 
         /* Convert relative track to cylinder and head */
-        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
-        if (rc < 0) return -1;
+        if ((rc = convert_tt( trk, noext, extent, cif->heads, &cyl, &head )) < 0)
+            return -1;
 
         /* Read a directory block */
         WRMSG( HHC02466, "I", cyl, head, rec );
 
-        rc = read_block (cif, cyl, head, rec,
-                        NULL, NULL, &blkptr, &len);
-        if (rc < 0) return -1;
+        if ((rc = read_block( cif, cyl, head, rec, NULL, NULL, &blkptr, &len )) < 0)
+            return -1;
 
         /* Move to next track if block not found */
         if (rc > 0)
@@ -155,15 +185,19 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         }
 
         /* Exit at end of directory */
-        if (len == 0) break;
+        if (!len)
+            break;
 
         /* Copy the directory block */
-        memcpy (dirblk, blkptr, sizeof(dirblk));
+        memcpy( dirblk, blkptr, sizeof( dirblk ));
 
         /* Process each member in the directory block */
-        rc = process_dirblk (cif, noext, extent, dirblk);
-        if (rc < 0) return -1;
-        if (rc > 0) break;
+        if ((rc = process_dirblk( cif, noext, extent, dirblk )) < 0)
+            return -1;
+
+        /* Exit at end of directory */
+        if (rc > 0)
+            break;
 
         /* Point to the next directory block */
         rec++;
@@ -173,7 +207,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     WRMSG( HHC02467, "I" );
 
     /* Close the CKD image file and exit */
-    rc = close_ckd_image (cif);
+    rc = close_ckd_image( cif );
     return rc;
 
 } /* end function main */
@@ -190,8 +224,8 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 /* Return value is 0 if successful, or -1 if error                   */
 /*-------------------------------------------------------------------*/
 static int
-process_member (CIFBLK *cif, int noext, DSXTENT extent[],
-                char *memname, BYTE *ttr)
+process_member( CIFBLK* cif, int noext, DSXTENT extent[],
+                char* memname, BYTE* ttr )
 {
 int             rc;                     /* Return code               */
 U16             len;                    /* Record length             */
@@ -201,44 +235,51 @@ U8              head;                   /* Head number               */
 U8              rec;                    /* Record number             */
 BYTE           *buf;                    /* -> Data block             */
 FILE           *ofp;                    /* Output file pointer       */
-char            ofname[256];            /* Output file name          */
+char            ofname[13] = {0};       /* Output file name          */
 int             offset;                 /* Offset of record in buffer*/
 char            card[81];               /* Logical record (ASCIIZ)   */
+char            workpath[MAX_PATH];     /* full path of ofname       */
 char            pathname[MAX_PATH];     /* ofname in host format     */
 
     /* Build the output file name */
-    memset (ofname, 0, sizeof(ofname));
-    strncpy (ofname, memname, 8);
-    string_to_lower (ofname);
+    strncpy( ofname, memname, 8 );
+    string_to_lower( ofname );
     STRLCAT( ofname, ".mac" );
 
+    /* Build the full path of the output filename */
+    STRLCPY( workpath, odir );
+    STRLCAT( workpath, ofname );
+
+    /* convert output path to host format */
+    hostpath( pathname, workpath, sizeof( pathname ));
+
     /* Open the output file */
-    hostpath(pathname, ofname, sizeof(pathname));
-    ofp = fopen (pathname, (asciiflag? "w" : "wb"));
-    if (ofp == NULL)
+    if (!(ofp = fopen( pathname, (asciiflag? "w" : "wb"))))
     {
+        // "File %s; %s error: %s"
         FWRMSG( stderr, HHC02468, "E", ofname, "fopen", strerror( errno ));
         return -1;
     }
 
     /* Point to the start of the member */
-    trk = (ttr[0] << 8) | ttr[1];
+    trk = fetch_hw( ttr );
     rec = ttr[2];
 
+    // "Member %s TTR %04X%02X"
     WRMSG( HHC02469, "I", memname, trk, rec );
 
     /* Read the member */
     while (1)
     {
         /* Convert relative track to cylinder and head */
-        rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
-        if (rc < 0) return -1;
+        if ((rc = convert_tt( trk, noext, extent, cif->heads, &cyl, &head )) < 0)
+            return -1;
 
         TRACE( "CCHHR=%4.4X%4.4X%2.2X\n", cyl, head, rec );
 
         /* Read a data block */
-        rc = read_block (cif, cyl, head, rec, NULL, NULL, &buf, &len);
-        if (rc < 0) return -1;
+        if ((rc = read_block( cif, cyl, head, rec, NULL, NULL, &buf, &len )) < 0)
+            return -1;
 
         /* Move to next track if record not found */
         if (rc > 0)
@@ -249,11 +290,13 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
         }
 
         /* Exit at end of member */
-        if (len == 0) break;
+        if (!len)
+            break;
 
         /* Check length of data block */
         if (len % 80 != 0)
         {
+            // "Invalid block length %d at CCHHR %04X%04X%02X"
             FWRMSG( stderr, HHC02470, "E", len, cyl, head, rec );
             return -1;
         }
@@ -263,16 +306,15 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
         {
             if (asciiflag)
             {
-                make_asciiz (card, sizeof(card), buf + offset, 72);
-                fprintf (ofp, "%s\n", card);
+                make_asciiz( card, sizeof( card ), buf + offset, 72 );
+                fprintf( ofp, "%s\n", card );
             }
             else
-            {
-                fwrite (buf+offset, 80, 1, ofp);
-            }
+                fwrite( buf+offset, 80, 1, ofp );
 
-            if (ferror(ofp))
+            if (ferror( ofp ))
             {
+                // "File %s; %s error: %s"
                 FWRMSG( stderr, HHC02468, "E",
                     ofname, "fwrite", strerror( errno ));
                 return -1;
@@ -285,7 +327,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     } /* end while */
 
     /* Close the output file and exit */
-    fclose (ofp);
+    fclose( ofp );
     return 0;
 
 } /* end function process_member */
@@ -301,7 +343,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
 /* Return value is 0 if OK, +1 if end of directory, or -1 if error   */
 /*-------------------------------------------------------------------*/
 static int
-process_dirblk (CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk)
+process_dirblk( CIFBLK* cif, int noext, DSXTENT extent[], BYTE* dirblk )
 {
 int             rc;                     /* Return code               */
 int             size;                   /* Size of directory entry   */
@@ -313,9 +355,10 @@ char            memname[9];             /* Member name (ASCIIZ)      */
 
     /* Load number of bytes in directory block */
     dirptr = dirblk;
-    dirrem = (dirptr[0] << 8) | dirptr[1];
+    dirrem = fetch_hw( dirptr );
     if (dirrem < 2 || dirrem > 256)
     {
+        // "Directory block byte count is invalid"
         FWRMSG( stderr, HHC02400, "E" );
         return -1;
     }
@@ -335,22 +378,21 @@ char            memname[9];             /* Member name (ASCIIZ)      */
             return +1;
 
         /* Extract the member name */
-        make_asciiz (memname, sizeof(memname), dirent->pds2name, 8);
+        make_asciiz( memname, sizeof( memname ), dirent->pds2name, 8 );
 
         /* Process the member */
-        rc = process_member (cif, noext, extent, memname,
-                            dirent->pds2ttrp);
-        if (rc < 0) return -1;
+        if ((rc = process_member( cif, noext, extent, memname, dirent->pds2ttrp )) < 0)
+            return -1;
 
         /* Load the user data halfword count */
         k = dirent->pds2indc & PDS2INDC_LUSR;
 
         /* Point to next directory entry */
-        size = 12 + k*2;
+        size = 12 + (k * 2);
+
         dirptr += size;
         dirrem -= size;
     }
 
     return 0;
 } /* end function process_dirblk */
-

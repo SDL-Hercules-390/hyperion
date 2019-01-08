@@ -2150,7 +2150,18 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02954 "Writing cckd64 compressed device header..."
 #define HHC02955 "Writing L1 table..."
 #define HHC02956 "Copying %s %d data..."
-//efine HHC02957 - HHC02999 (available)
+//efine HHC02957 - HHC02974 (available)
+
+// dasdpdsu
+#define HHC02975 "Usage: %s infile [sf=shadow-file] pdsname [ASCII] [odir]" "\n" \
+       "HHC02975I   infile    input file"                                   "\n" \
+       "HHC02975I   pdsname   name of PDS to be unloaded"                   "\n" \
+       "HHC02975I options:"                                                 "\n" \
+       "HHC02975I   ASCII     unload as variable length ASCII text files"   "\n" \
+       "HHC02975I             otherwise unloaded as fixed length EBCDIC"    "\n" \
+       "HHC02975I   odir      directory where files should be written to"   "\n" \
+       "HHC02975I             otherwise output is to current directory"     "\n"
+//efine HHC02976 - HHC02999 (available)
 
 // range 03000 - 03099 available
 // range 03100 - 03199 available

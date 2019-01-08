@@ -678,14 +678,16 @@ and copies each member to a file <em>memname</em>.mac in the current
 working directory.
 <p>
 The command format is:
-<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdpdsu <em>ckdfile [sf=shadow-file-name] pdsname</em> [ascii]</code>
+<p> &nbsp; &nbsp; &nbsp; &nbsp; <code>dasdpdsu <em>ckdfile [sf=shadow-file-name] pdsname</em> [ASCII] [odir]</code>
 <p>
-where <em>ckdfile</em> is the name of a Unix file containing a CKD
+where <em>ckdfile</em> is the name of a file containing a CKD
 volume, <em>shadow-file-name</em> (optional) is the name of the associated
 shadow file, and <em>pdsname</em> is the name of a PDS on that volume.
-If the optional <b>ascii</b> keyword is specified, the members will be
+If the optional <b>ASCII</b> keyword is specified, the members will be
 unloaded as ASCII variable length text files.  Otherwise the members
-are unloaded as fixed length EBCDIC binary files.
+are unloaded as fixed length EBCDIC binary files. The optional <em>odir</em>
+parameter is the name of the directory where the output files should be
+placed. Otherwise if not specified they are created in the current directory.
 
 <p><center><hr width=15% noshade></center>
 <p>
