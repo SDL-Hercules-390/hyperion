@@ -502,8 +502,8 @@ char charmac[24];
             snprintf( charmac, sizeof(charmac),
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
-            // HHC03801 "%1d:%04X %s: Register guest MAC address %s"
-            WRMSG(HHC03801, "I", LCSS_DEVNUM, dev->typname,
+            // HHC03801 "%1d:%04X %s: %s: Register guest MAC address %s"
+            WRMSG(HHC03801, "I", LCSS_DEVNUM, dev->typname, grp->ttifname,
                       charmac );
             return 0;
         }
@@ -512,8 +512,8 @@ char charmac[24];
     snprintf( charmac, sizeof(charmac),
               "%02x:%02x:%02x:%02x:%02x:%02x",
               mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
-    // HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
-    WRMSG(HHC03802, "E", LCSS_DEVNUM, dev->typname,
+    // HHC03802 "%1d:%04X %s: %s: Cannot register guest MAC address %s"
+    WRMSG(HHC03802, "E", LCSS_DEVNUM, dev->typname, grp->ttifname,
               charmac );
     return -1;
 }
@@ -540,8 +540,8 @@ UNREFERENCED(type);
             snprintf( charmac, sizeof(charmac),
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
-            // HHC03803 "%1d:%04X %s: Unregistered guest MAC address %s"
-            WRMSG(HHC03803, "I", LCSS_DEVNUM, dev->typname,
+            // HHC03803 "%1d:%04X %s: %s: Unregistered guest MAC address %s"
+            WRMSG(HHC03803, "I", LCSS_DEVNUM, dev->typname, grp->ttifname,
                       charmac );
             return 0;
         }
@@ -552,8 +552,8 @@ UNREFERENCED(type);
         snprintf( charmac, sizeof(charmac),
                   "%02x:%02x:%02x:%02x:%02x:%02x",
                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
-        // HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
-        WRMSG(HHC03804, "W", LCSS_DEVNUM, dev->typname,
+        // HHC03804 "%1d:%04X %s: %s: Cannot unregister guest MAC address %s"
+        WRMSG(HHC03804, "W", LCSS_DEVNUM, dev->typname, grp->ttifname,
                   charmac );
     }
     return 1;
@@ -622,28 +622,35 @@ int i;  /* Utility variable */
 /*    1  The IPv4 address was already in the table                   */
 static int register_ipv4(OSA_GRP* grp, DEVBLK* dev, BYTE *ipaddr4)
 {
+int i;
 char charip4[48];
     /* Check whether the IPv4 address is already registered. */
-    if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE &&
-        memcmp(grp->ipaddr4[0].addr, ipaddr4, 4) == 0)
+    for (i = 0; i < OSA_MAXIPV4; i++)
     {
-        return 1;
+        if (grp->ipaddr4[i].type == IPV4_TYPE_INUSE &&
+            memcmp(grp->ipaddr4[i].addr, ipaddr4, 4) == 0)
+        {
+            return 1;
+        }
     }
     /* Register the previously unknown IPv4 address. */
-    if (grp->ipaddr4[0].type == IPV4_TYPE_NONE)
+    for (i = 0; i < OSA_MAXIPV4; i++)
     {
-        memcpy(grp->ipaddr4[0].addr, ipaddr4, 4);
-        grp->ipaddr4[0].type = IPV4_TYPE_INUSE;
-        hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
-        // HHC03805 "%1d:%04X %s: Register guest IP address %s"
-        WRMSG(HHC03805, "I", LCSS_DEVNUM, dev->typname,
-                charip4 );
-        return 0;
+        if (grp->ipaddr4[i].type == IPV4_TYPE_NONE)
+        {
+            memcpy(grp->ipaddr4[i].addr, ipaddr4, 4);
+            grp->ipaddr4[i].type = IPV4_TYPE_INUSE;
+            hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
+            // HHC03805 "%1d:%04X %s: %s: Registered guest IP address %s"
+            WRMSG(HHC03805, "I", LCSS_DEVNUM, dev->typname, grp->ttifname,
+                    charip4 );
+            return 0;
+        }
     }
     /* Oh dear, the table of IPv4 addresses is full. */
     hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
-    // HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
-    WRMSG(HHC03806, "E", LCSS_DEVNUM, dev->typname,
+    // HHC03806 "%1d:%04X %s: %s: Cannot register guest IP address %s"
+    WRMSG(HHC03806, "E", LCSS_DEVNUM, dev->typname, grp->ttifname,
             charip4 );
     return -1;
 }
@@ -656,23 +663,27 @@ char charip4[48];
 /*    1  The IPv4 address was not in the table                       */
 static int unregister_ipv4(OSA_GRP* grp, DEVBLK* dev, BYTE *ipaddr4)
 {
+int i;
 char charip4[48];
     /* Check whether the IPv4 address is registered. */
-    if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE &&
-        memcmp(grp->ipaddr4[0].addr, ipaddr4, 4) == 0)
+    for (i = 0; i < OSA_MAXIPV4; i++)
     {
-        grp->ipaddr4[0].type = IPV4_TYPE_NONE;
-        memset(grp->ipaddr4[0].addr, 0, 4);
-        hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
-        // HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
-        WRMSG(HHC03807, "I", LCSS_DEVNUM, dev->typname,
-                charip4 );
-        return 0;
+        if (grp->ipaddr4[i].type == IPV4_TYPE_INUSE &&
+            memcmp(grp->ipaddr4[i].addr, ipaddr4, 4) == 0)
+        {
+            grp->ipaddr4[i].type = IPV4_TYPE_NONE;
+            memset(grp->ipaddr4[i].addr, 0, 4);
+            hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
+            // HHC03807 "%1d:%04X %s: s: Unregister guest IP address %s"
+            WRMSG(HHC03807, "I", LCSS_DEVNUM, dev->typname, grp->ttifname,
+                    charip4 );
+            return 0;
+        }
     }
     /* Oh dear, the IPv4 address wasn't registered. */
     hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
-    // HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
-    WRMSG(HHC03808, "W", LCSS_DEVNUM, dev->typname,
+    // HHC03808 "%1d:%04X %s: s: Cannot unregister guest IP address %s"
+    WRMSG(HHC03808, "W", LCSS_DEVNUM, dev->typname, grp->ttifname,
           charip4 );
     return 1;
 }
@@ -684,8 +695,12 @@ char charip4[48];
 /*    0  All IPv4 addresses were removed from the table              */
 static int unregister_all_ipv4(OSA_GRP* grp)
 {
-    grp->ipaddr4[0].type = IPV4_TYPE_NONE;
-    memset(grp->ipaddr4[0].addr, 0, 4);
+int i;
+    for (i = 0; i < OSA_MAXIPV4; i++)
+    {
+        grp->ipaddr4[i].type = IPV4_TYPE_NONE;
+        memset(grp->ipaddr4[i].addr, 0, 4);
+    }
     return 0;
 }
 
@@ -718,16 +733,16 @@ char charip6[48];
             memcpy(grp->ipaddr6[i].addr, ipaddr6, 16);
             grp->ipaddr6[i].type = IPV6_TYPE_INUSE;
             hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
-            // HHC03805 "%1d:%04X %s: Registered guest IP address %s"
-            WRMSG(HHC03805, "I", LCSS_DEVNUM, dev->typname,
+            // HHC03805 "%1d:%04X %s: s: Registered guest IP address %s"
+            WRMSG(HHC03805, "I", LCSS_DEVNUM, dev->typname, grp->ttifname,
                     charip6 );
             return 0;
         }
     }
     /* Oh dear, the IPv6 address table is full. */
     hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
-    // HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
-    WRMSG(HHC03806, "E", LCSS_DEVNUM, dev->typname,
+    // HHC03806 "%1d:%04X %s: s: Cannot register guest IP address %s"
+    WRMSG(HHC03806, "E", LCSS_DEVNUM, dev->typname, grp->ttifname,
           charip6 );
     return -1;
 }
@@ -751,16 +766,16 @@ char charip6[48];
             grp->ipaddr6[i].type = IPV6_TYPE_NONE;
             memset(grp->ipaddr6[i].addr, 0, 16);
             hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
-            // HHC03807 "%1d:%04X %s: Unregistered guest IP address %s"
-            WRMSG(HHC03807, "I", LCSS_DEVNUM, dev->typname,
+            // HHC03807 "%1d:%04X %s: %s: Unregistered guest IP address %s"
+            WRMSG(HHC03807, "I", LCSS_DEVNUM, dev->typname, grp->ttifname,
                     charip6 );
             return 0;
         }
     }
     /* Oh dear, the IPv6 address wasn't registered. */
     hinet_ntop( AF_INET6, ipaddr6, charip6, sizeof(charip6) );
-    // HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
-    WRMSG(HHC03808, "W", LCSS_DEVNUM, dev->typname,
+    // HHC03808 "%1d:%04X %s: %s: Cannot unregister guest IP address %s"
+    WRMSG(HHC03808, "W", LCSS_DEVNUM, dev->typname, grp->ttifname,
             charip6 );
     return 1;
 }
@@ -2593,6 +2608,7 @@ static inline int l3_cast_type_ipv4( BYTE* dest_addr, OSA_GRP* grp )
 {
 U32 dest_hbo;
 U32 mask_hbo;
+int i;
     FETCH_FW(dest_hbo, dest_addr);
     FETCH_FW(mask_hbo, grp->confpfxmask4);
     /* Note: why check for the loopback address? */
@@ -2602,10 +2618,15 @@ U32 mask_hbo;
         return HDR3_FLAGS_MULTICAST;
     if ((dest_hbo & mask_hbo) == mask_hbo)
         return HDR3_FLAGS_BROADCAST;
-    if (grp->ipaddr4[0].type == IPV4_TYPE_INUSE &&
-        memcmp(grp->ipaddr4[0].addr, dest_addr, 4) == 0)
+
+    /* Check whether the IPv4 address is in the table. */
+    for (i = 0; i < OSA_MAXIPV4; i++)
     {
-        return HDR3_FLAGS_UNICAST;
+        if (grp->ipaddr4[i].type == IPV4_TYPE_INUSE &&
+            memcmp(grp->ipaddr4[i].addr, dest_addr, 4) == 0)
+        {
+            return HDR3_FLAGS_UNICAST;
+        }
     }
     return HDR3_FLAGS_NOTFORUS;
 }

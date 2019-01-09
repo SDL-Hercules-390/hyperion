@@ -28,7 +28,7 @@
 /*-------------------------------------------------------------------*/
 #define OSA_GROUP_SIZE          3     /* Devices per OSA Adapter     */
 #define OSA_PORTNO              0     /* OSA Port Number             */
-#define OSA_MAXIPV4             1     /* Max supported IPv4 addresses*/
+#define OSA_MAXIPV4            32     /* Max supported IPv4 addresses*/
 #define OSA_MAXIPV6            32     /* Max supported IPv6 addresses*/
 #define OSA_MAXMAC             32     /* Max supported MAC addresses */
 #define OSA_TIMEOUTUS       50000     /* Read select timeout (usecs) */

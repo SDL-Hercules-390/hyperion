@@ -2174,14 +2174,14 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 // range 03800 - 03849 for qeth related messages
 //efine HHC03800 (available)
-#define HHC03801 "%1d:%04X %s: Register guest MAC address %s"
-#define HHC03802 "%1d:%04X %s: Cannot register guest MAC address %s"
-#define HHC03803 "%1d:%04X %s: Unregister guest MAC address %s"
-#define HHC03804 "%1d:%04X %s: Cannot unregister guest MAC address %s"
-#define HHC03805 "%1d:%04X %s: Register guest IP address %s"
-#define HHC03806 "%1d:%04X %s: Cannot register guest IP address %s"
-#define HHC03807 "%1d:%04X %s: Unregister guest IP address %s"
-#define HHC03808 "%1d:%04X %s: Cannot unregister guest IP address %s"
+#define HHC03801 "%1d:%04X %s: %s: Register guest MAC address %s"
+#define HHC03802 "%1d:%04X %s: %s: Cannot register guest MAC address %s"
+#define HHC03803 "%1d:%04X %s: %s: Unregister guest MAC address %s"
+#define HHC03804 "%1d:%04X %s: %s: Cannot unregister guest MAC address %s"
+#define HHC03805 "%1d:%04X %s: %s: Register guest IP address %s"
+#define HHC03806 "%1d:%04X %s: %s: Cannot register guest IP address %s"
+#define HHC03807 "%1d:%04X %s: %s: Unregister guest IP address %s"
+#define HHC03808 "%1d:%04X %s: %s: Cannot unregister guest IP address %s"
 #define HHC03809 "%1d:%04X %s: %s: Requested MTU %s too large; decreasing to %s bytes"
 #define HHC03810 "%1d:%04X %s: %s: Input dropped: %s"
 //efine HHC03811 - HHC03849 (available)
