@@ -1370,11 +1370,12 @@ the <b>cckd</b> command explained below.
                 </tr>
                 <tr>
                     <td valign="top"><b>-level &nbsp;</b></td>
-                    <td valign="top">A number 1 .. 4 indicating the level of checking / recovery:<br>
-                                         <b>1</b> &nbsp; Minimal checking (default)<br>
-                                         <b>2</b> &nbsp; Medium checking. All track headers will be read.<br>
-                                         <b>3</b> &nbsp; Maximal checking. All track images will be read and uncompressed.<br>
-                                         <b>4</b> &nbsp; Recover everything</td>
+                    <td valign="top">A number from 0 .. 4 indicating the level of checking / recovery:<br>
+                                         <b>0</b> &nbsp; Minimal checking (default): hdr, chdr, l1, l2<br>
+                                         <b>1</b> &nbsp; Normal checking: hdr, chdr, l1, l2, free spaces.<br>
+                                         <b>2</b> &nbsp; Extra  checking: hdr, chdr, l1, l2, free spaces, track hdrs.<br>
+                                         <b>3</b> &nbsp; Maximal checking: hdr, chdr, l1, l2, free spaces, track hdrs, track data.<br>
+                                         <b>4</b> &nbsp; Recover everything (without using any metadata).</td>
                 </tr>
             </table>
         </td>
