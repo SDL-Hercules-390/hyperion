@@ -233,7 +233,6 @@ static inline void store_scsw_as_csw( const REGS* regs, const SCSW* scsw )
     /* Update storage key for reference and change done by caller */
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Synchronize CPUS                                                  */
 /*-------------------------------------------------------------------*/
@@ -241,7 +240,8 @@ static inline void store_scsw_as_csw( const REGS* regs, const SCSW* scsw )
 /* Locks                                                             */
 /*      INTLOCK(regs)                                                */
 /*-------------------------------------------------------------------*/
-static inline void synchronize_cpus( REGS* regs )
+#define SYNCHRONIZE_CPUS( _regs )   synchronize_cpus( _regs, PTT_LOC )
+static inline void synchronize_cpus( REGS* regs, const char* location )
 {
     int i, n = 0;
     REGS*  i_regs;
@@ -288,12 +288,12 @@ static inline void synchronize_cpus( REGS* regs )
         sysblk.syncing   = 1;
         sysblk.intowner  = LOCK_OWNER_NONE;
 
-        wait_condition( &sysblk.sync_cond, &sysblk.intlock );
+        hthread_wait_condition( &sysblk.sync_cond, &sysblk.intlock, location );
 
         sysblk.intowner  = (regs)->hostregs->cpuad;
         sysblk.syncing   = 0;
 
-        broadcast_condition( &sysblk.sync_bc_cond );
+        hthread_broadcast_condition( &sysblk.sync_bc_cond, location );
     }
     /* All active processors other than self, are now waiting at their
      * respective sync point. We may now safely proceed doing whatever
@@ -303,18 +303,18 @@ static inline void synchronize_cpus( REGS* regs )
 
 /*-------------------------------------------------------------------*/
 
-#define WAKEUP_CPU          wakeup_cpu
-#define WAKEUP_CPU_MASK     wakeup_cpu_mask
-#define WAKEUP_CPUS_MASK    wakeup_cpus_mask
+#define WAKEUP_CPU(r)          wakeup_cpu( r, PTT_LOC )
+#define WAKEUP_CPU_MASK(m)     wakeup_cpu_mask( m, PTT_LOC )
+#define WAKEUP_CPUS_MASK(m)    wakeup_cpus_mask( m, PTT_LOC )
 
-static inline void wakeup_cpu( REGS* regs )
+static inline void wakeup_cpu( REGS* regs, const char* location )
 {
-    signal_condition( &regs->intcond );
+    hthread_signal_condition( &regs->intcond, location );
 }
 
 /*-------------------------------------------------------------------*/
 
-static inline void wakeup_cpu_mask( CPU_BITMAP mask )
+static inline void wakeup_cpu_mask( CPU_BITMAP mask, const char* location )
 {
     REGS*  current_regs;
     REGS*  lru_regs = NULL;
@@ -358,20 +358,20 @@ static inline void wakeup_cpu_mask( CPU_BITMAP mask )
         }
 
         /* Wake up the least recently used CPU */
-        wakeup_cpu( lru_regs );
+        wakeup_cpu( lru_regs, location );
     }
 }
 
 /*-------------------------------------------------------------------*/
 
-static inline void wakeup_cpus_mask( CPU_BITMAP mask )
+static inline void wakeup_cpus_mask( CPU_BITMAP mask, const char* location )
 {
     int i;
 
     for (i=0; mask; mask >>= 1, i++)
     {
         if (mask & 1)
-            wakeup_cpu( sysblk.regs[i] );
+            wakeup_cpu( sysblk.regs[i], location );
     }
 }
 
@@ -381,11 +381,11 @@ static inline void wakeup_cpus_mask( CPU_BITMAP mask )
 /*  check to see if synchronize_cpus is in progress.                 */
 /*-------------------------------------------------------------------*/
 
-#define OBTAIN_INTLOCK      Obtain_Interrupt_Lock
-#define RELEASE_INTLOCK     Release_Interrupt_Lock
-#define TRY_OBTAIN_INTLOCK  Try_Obtain_Interrupt_Lock
+#define OBTAIN_INTLOCK(r)       Obtain_Interrupt_Lock( r, PTT_LOC )
+#define RELEASE_INTLOCK(r)      Release_Interrupt_Lock( r, PTT_LOC )
+#define TRY_OBTAIN_INTLOCK(r)   Try_Obtain_Interrupt_Lock( r, PTT_LOC )
 
-static inline void Interrupt_Lock_Obtained( REGS* regs )
+static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
 {
     if (regs)
     {
@@ -394,9 +394,9 @@ static inline void Interrupt_Lock_Obtained( REGS* regs )
             sysblk.sync_mask &= ~regs->hostregs->cpubit;
 
             if (!sysblk.sync_mask)
-                signal_condition( &sysblk.sync_cond );
+                hthread_signal_condition( &sysblk.sync_cond, location );
 
-            wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock );
+            hthread_wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock, location );
         }
 
         regs->hostregs->intwait = 0;
@@ -408,33 +408,33 @@ static inline void Interrupt_Lock_Obtained( REGS* regs )
 
 /*-------------------------------------------------------------------*/
 
-static inline void Obtain_Interrupt_Lock( REGS* regs )
+static inline void Obtain_Interrupt_Lock( REGS* regs, const char* location )
 {
     if (regs)
         regs->hostregs->intwait = 1;
-    obtain_lock( &sysblk.intlock );
-    Interrupt_Lock_Obtained( regs );
+    hthread_obtain_lock( &sysblk.intlock, location );
+    Interrupt_Lock_Obtained( regs, location );
 }
 
 /*-------------------------------------------------------------------*/
 
-static inline int Try_Obtain_Interrupt_Lock( REGS* regs )
+static inline int Try_Obtain_Interrupt_Lock( REGS* regs, const char* location )
 {
     int rc;
     if (regs)
         regs->hostregs->intwait = 1;
-    if ((rc = try_obtain_lock( &sysblk.intlock )) == 0)
-        Interrupt_Lock_Obtained( regs );
+    if ((rc = hthread_try_obtain_lock( &sysblk.intlock, location )) == 0)
+        Interrupt_Lock_Obtained( regs, location );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 
-static inline void Release_Interrupt_Lock( REGS* regs )
+static inline void Release_Interrupt_Lock( REGS* regs, const char* location )
 {
     UNREFERENCED( regs );
     sysblk.intowner = LOCK_OWNER_NONE;
-    release_lock( &sysblk.intlock );
+    hthread_release_lock( &sysblk.intlock, location );
 }
 
 /*-------------------------------------------------------------------*/

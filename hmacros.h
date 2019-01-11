@@ -426,13 +426,6 @@ typedef int CMPFUNC(const void*, const void*);
 #define AT_SYNCPOINT(_regs) ((_regs)->intwait)
 
 /*-------------------------------------------------------------------*/
-/*      Synchronize CPUS                                             */
-/*      Locks used: INTLOCK(regs)                                    */
-/*-------------------------------------------------------------------*/
-#define SYNCHRONIZE_CPUS(_regs) \
-        synchronize_cpus(_regs)
-
-/*-------------------------------------------------------------------*/
 /*      Macro to check if DEVBLK is for an existing device           */
 /*-------------------------------------------------------------------*/
 

@@ -40,17 +40,17 @@ typedef struct ILOCK ILOCK;     /* Shorter name for the same thing   */
 /*-------------------------------------------------------------------*/
 /* Internal PTT trace helper macros                                  */
 /*-------------------------------------------------------------------*/
-#define PTTRACE(_type,_data1,_data2,_loc,_result)                     \
+#define PTTRACE(_msg,_data1,_data2,_loc,_result)                      \
   do {                                                                \
     if (pttclass & PTT_CL_THR)                                        \
       ptt_pthread_trace(PTT_CL_THR,                                   \
-        _type,_data1,_data2,_loc,_result,NULL);                       \
+        _msg,_data1,_data2,_loc,_result,NULL);                        \
   } while(0)
-#define PTTRACE2(_type,_data1,_data2,_loc,_result,_tv)                \
+#define PTTRACE2(_msg,_data1,_data2,_loc,_result,_tv)                 \
   do {                                                                \
     if (pttclass & PTT_CL_THR)                                        \
       ptt_pthread_trace(PTT_CL_THR,                                   \
-        _type,_data1,_data2,_loc,_result,_tv);                        \
+        _msg,_data1,_data2,_loc,_result,_tv);                         \
   } while(0)
 
 /*-------------------------------------------------------------------*/

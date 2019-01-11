@@ -189,7 +189,7 @@ int ARCH_DEP( system_reset )( const int target_mode, const bool clear,
                 regs->opinterv = TRUE;
                 regs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_INTERRUPT( regs );
-                wakeup_cpu( regs );
+                WAKEUP_CPU( regs );
             }
         }
 

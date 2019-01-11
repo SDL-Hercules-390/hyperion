@@ -445,6 +445,7 @@ int i, n;
     if (!(pttclass & PTT_CL_TMR) && !strncasecmp( loc, "timer.c:",  8)) return;
     if (!(pttclass & PTT_CL_TMR) && !strncasecmp( loc, "clock.c:",  8)) return;
     if (!(pttclass & PTT_CL_LOG) && !strncasecmp( loc, "logger.c:", 9)) return;
+    if (!(pttclass & PTT_CL_LOG) && !strncasecmp( loc, "logmsg.c:", 9)) return;
 
     /* Check for 'nowrap' */
     if (pttnowrap && pttracex + 1 >= pttracen) return;
