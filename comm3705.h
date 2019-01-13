@@ -58,7 +58,9 @@ struct COMMADPT
     int lu_lu_seqn;
 
     BYTE inpbuf[65536];
-    int inpbufl;
+    int inpbufl,
+        unitsz,                 /* I/O blocksize (default=256)              */
+        ackspeed;               /* slow down factor for unacknowledged attn */
 
     void * freeq;
     void * sendq;
