@@ -48,7 +48,8 @@ DEVBLK         *dev=&devblk;            /* -> DEVBLK                 */
             case '0':
             case '1':
             case '2':
-            case '3':  if (argv[0][2] != '\0') return syntax( pgm );
+            case '3':
+            case '4':  if (argv[0][2] != '\0') return syntax( pgm );
                        level = (argv[0][1] & 0xf);
                        break;
             case 'f':  if (argv[0][2] != '\0') return syntax( pgm );
