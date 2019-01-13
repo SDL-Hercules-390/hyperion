@@ -25,7 +25,11 @@ struct COMMADPT
     COND ipc_halt;              /* I/O <-> thread IPC HALT special EVB      */
     LOCK lock;                  /* COMMADPT lock                            */
     int pipe[2];                /* pipe used for I/O to thread signaling    */
-    U16  devnum;                /* devnum copy from DEVBLK                  */
+    char locncpnm[9],           /* name of local NCP (in EBCDIC)            */
+         rmtncpnm[9];           /* name of remote NCP (in EBCDIC)           */
+    U16  devnum,                /* devnum copy from DEVBLK                  */
+         locsuba,               /* local NCP or local 3791 node subarea number */
+         rmtsuba;               /* remote NCP subarea number                   */
     U32
         have_cthread:1,         /* the comm thread is running               */
         haltpending:1,          /* A request has been issued to halt current*/
@@ -38,7 +42,9 @@ struct COMMADPT
         is_3270:1,              /* 0=tty 1=3270                             */
         eol_flag:1,             /* 1 = CR has been received                 */
         debug_sna:1,            /* 1 = write debug messages                 */
-        emu3791:1;              /* mode (0=default=3705;1=3791)             */
+        emu3791:1,              /* mode (0=default=3705;1=3791)             */
+        idblk,                  /* IDBLK of switched PU (default=0x017)     */
+        idnum;                  /* IDNUM of switched PU (default=0x00017)   */
     U32 rlen3270;               /* amt of data in 3270 recv buf             */
     BYTE telnet_cmd;            /* telnet command */
 
