@@ -433,6 +433,7 @@
 #define CTC_CTCI                2       /* CTC link to TCP/IP stack  */
 #define CTC_PTP                 3       /* PTP link to TCP/IP stack  */
 #define CTC_CTCE                4       /* Enhanced CTC link via TCP */
+#define CTC_CTCT                6       /* CTC link via TCP          */
 
 /*-------------------------------------------------------------------*/
 /*                Script processing constants                        */

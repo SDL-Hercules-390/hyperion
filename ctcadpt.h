@@ -87,6 +87,17 @@ typedef struct  _LCSETHFRM  LCSETHFRM,  *PLCSETHFRM;
 // External Declarations
 // --------------------------------------------------------------------
 
+extern int      CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] );
+extern int      CTCX_Close( DEVBLK* pDEVBLK );
+extern void     CTCX_Query( DEVBLK* pDEVBLK, char** ppszClass,
+                            int     iBufLen, char*  pBuffer );
+extern void     CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
+                                 BYTE    bFlags,  BYTE  bChained,
+                                 U32     sCount,  BYTE  bPrevCode,
+                                 int     iCCWSeq, BYTE* pIOBuf,
+                                 BYTE*   pMore,   BYTE* pUnitStat,
+                                 U32*    pResidual );
+
 extern int      CTCE_Close( DEVBLK* pDEVBLK );
 extern void     CTCE_Query( DEVBLK* pDEVBLK, char** ppszClass,
                             int     iBufLen, char*  pBuffer );
