@@ -756,7 +756,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00921 "CTC: lcs device port %2.2X: %s Multicast assist enabled"
 #define HHC00922 "%1d:%04X CTC: lcs command packet received"
 #define HHC00933 "%1d:%04X CTC: executing command %s"
-//efine HHC00934 (available)
+#define HHC00934 "%1d:%04X CTC: sending packet to file %s"
 #define HHC00935 "CTC: lcs device port %2.2X: %s Checksum Offload enabled"
 #define HHC00936 "%1d:%04X CTC: error writing to file %s: %s"
 #define HHC00937 "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
@@ -792,11 +792,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
 #define HHC00968 "CTC: lcs device port %2.2X: read thread: port started"
 #define HHC00969 "CTC: lcs device port %2.2X: read thread: port stopped"
-//efine HHC00970 (available)
-//efine HHC00971 (available)
-//efine HHC00972 (available)
-//efine HHC00973 (available)
-//efine HHC00974 (available)
+#define HHC00970 "%1d:%04X CTC: unrecognized emulation type %s"
+#define HHC00971 "%1d:%04X CTC: connect to %s:%s failed, starting server"
+#define HHC00972 "%1d:%04X CTC: connected to %s:%s"
+#define HHC00973 "%1d:%04X CTC: error reading from file %s: %s"
+#define HHC00974 "%1d:%04X CTC: incorrect client or config error: config file %s connecting client %s"
 //efine HHC00975 (available)
 //efine HHC00976 (available)
 #define HHC00977 "%1d:%04X CTC: lcs command packet ignored (bInitiator == LGW)"

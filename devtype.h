@@ -45,6 +45,7 @@ CKD_DLL_IMPORT  DEVHND  ckd_dasd_device_hndinfo;
 FBA_DLL_IMPORT  DEVHND  fba_dasd_device_hndinfo;
 
 extern          DEVHND  ctci_device_hndinfo;
+extern          DEVHND  ctct_device_hndinfo;
 extern          DEVHND  ctce_device_hndinfo;
 extern          DEVHND  lcs_device_hndinfo;
 extern          DEVHND  ptp_device_hndinfo;

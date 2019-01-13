@@ -3407,6 +3407,7 @@ HDL_DEVICE_SECTION;
 // ZZ their own loadable modules
 
     HDL_DEVICE( CTCI, ctci_device_hndinfo );
+    HDL_DEVICE( CTCT, ctct_device_hndinfo );
     HDL_DEVICE( CTCE, ctce_device_hndinfo );
 }
 END_DEVICE_SECTION
