@@ -770,6 +770,7 @@ EXTRA_DIST =                  \
   README.AIX                  \
   README.APL360               \
   README.BSD                  \
+  README.CCKD64               \
   README.CMPSC                \
   README.COMMADPT             \
   README.DECNUMBER            \

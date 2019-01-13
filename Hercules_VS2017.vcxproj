@@ -666,6 +666,7 @@
     <None Include="README.AIX" />
     <None Include="README.APL360" />
     <None Include="README.BSD" />
+    <None Include="README.CCKD64" />
     <None Include="README.CMPSC" />
     <None Include="README.COMMADPT" />
     <None Include="README.DYNMOD" />

@@ -929,6 +929,9 @@
     <None Include="README.BSD">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="README.CCKD64">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="README.CMPSC">
       <Filter>Other Files\DOC\README</Filter>
     </None>

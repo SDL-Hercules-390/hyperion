@@ -1,11 +1,18 @@
 
-         Please update this file whenever appropriate!
+                      ===================
+                       UNRESOLVED ISSUES
+                      ===================
 
-                       Unresolved Issues
-                       =================
+Note: For a current list of know issues please refer to the GitHub Issues
+web page at:
+
+https://github.com/issues?q=is%3Aopen+is%3Aissue+user%3ASDL-Hercules-390+
+
+
 
 *** XXX ***
 Marks the functional subsystem affected
+
 
 *** TAPE DEVICE HANDLER ***
 CE+DE on tape rewind-unload:
@@ -29,6 +36,7 @@ CE+DE on tape rewind-unload:
                       On the same line, VM/370 DDR is failing on Rewind
                       unload. This could be part of the above problem.
 
+
 *** I/O SUBSYSTEM ***
 Incorrect Channel program check reporting (Ivan 2004/10/02)
 
@@ -38,6 +46,7 @@ Incorrect Channel program check reporting (Ivan 2004/10/02)
     handlers) - while it should only be presented if the control unit (device
     handler) attempts to consume data from the offending address.
 
+
 *** DEVICE HANDLERS ***
 Some units still returning CE+DE+UC on not-ready conditions (Ivan 2004/10/02)
 
@@ -45,12 +54,14 @@ Some units still returning CE+DE+UC on not-ready conditions (Ivan 2004/10/02)
     This is done at the device handler lever and has not been implemented
     in all device handlers
 
+
 *** TAPE DEVICE HANDLER ***
 AWS handler fails to read FLEX Generated AWS files (Ivan 2004/10/02)
 
     The current AWS handler is not capable of processing multi-segment
     blocks. However, this can be bypassed by forcing the use of the HET
     handler which is backward compatible.
+
 
 *** I/O SUBSYSTEM ***
 I/O Subsystem reset/Device reset not always effective (Ivan 2004/10/02)
@@ -63,6 +74,7 @@ I/O Subsystem reset/Device reset not always effective (Ivan 2004/10/02)
     effectivelly preventing an MSCH to be issued with the E bit on -
     requiring a Power On Reset (hercules stop and start).
     Only ESA/390 and ESAME are affected.
+
 
 *** Hardware panel ***
 Change to Enter key function (Ivan 2004/10/02)
