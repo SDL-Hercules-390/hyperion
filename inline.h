@@ -526,11 +526,7 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
  // This routine is mainly called by DAT in 64 bit guest mode
  // to access DAT-related values.  In most `well-behaved' OS's,
  // other CPUs should not be interfering with these values
- #if !defined(OPTION_STRICT_ALIGNMENT)
-    return CSWAP64(*(U64 *)FETCH_MAIN_ABSOLUTE(addr, regs, 8));
- #else
-    return fetch_dw(FETCH_MAIN_ABSOLUTE(addr, regs, 8));
- #endif
+  return fetch_dw(FETCH_MAIN_ABSOLUTE(addr, regs, 8));
 } /* end function fetch_doubleword_absolute */
 
 

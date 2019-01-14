@@ -4056,10 +4056,8 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
     {
         /* Boundary not crossed */
         n >>= 3;
-#if defined( OPTION_STRICT_ALIGNMENT )
         if (likely(!(((uintptr_t)effective_addr2) & 0x07)))
         {
-#endif
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
             if (regs->cpubit == regs->sysblk->started_mask)
                 for (i=0; i < n; i++, p1++)
@@ -4068,14 +4066,12 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
 #endif
             for (i=0; i < n; i++, p1++)
                 regs->GR_G( (r1 + i) & 0xF ) = fetch_dw( p1 );
-#if defined( OPTION_STRICT_ALIGNMENT )
         }
         else
         {
             for (i=0; i < n; i++, bp1 += 8)
                 regs->GR_G( (r1 + i) & 0xF ) = fetch_dw( bp1 );
         }
-#endif
     }
     else
     {
@@ -4297,10 +4293,8 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
     {
         /* Boundary not crossed */
         n >>= 3;
-#if defined( OPTION_STRICT_ALIGNMENT )
         if (likely(!(((uintptr_t)effective_addr2) & 0x07)))
         {
-#endif
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
         if (regs->cpubit == regs->sysblk->started_mask)
             for (i=0; i < n; i++)
@@ -4309,14 +4303,12 @@ BYTE   *bp1;                            /* Unaligned Mainstor ptr    */
 #endif
             for (i=0; i < n; i++)
                 store_dw( p1++, regs->GR_G( (r1 + i) & 0xF ));
-#if defined( OPTION_STRICT_ALIGNMENT )
         }
         else
         {
             for (i=0; i < n; i++, bp1 += 8)
                 store_dw( bp1, regs->GR_G( (r1 + i) & 0xF ));
         }
-#endif
     }
     if (likely( n <= m ))
     {

@@ -512,37 +512,17 @@ U32  *ptr4, val4, old4, new4;
 #endif
 
 /*-------------------------------------------------------------------
- * Decide if strict alignment is required
- *-------------------------------------------------------------------*/
-/*
-#if !defined(OPTION_STRICT_ALIGNMENT) && !defined(OPTION_NO_STRICT_ALIGNMENT)
- #if !defined(_MSVC_) && !defined(_ext_ia32) && !defined(_ext_amd64) \
-  && !defined(_ext_ppc)
-    #define OPTION_STRICT_ALIGNMENT
- #endif
-#endif
-*/
-/* Per C11 standard, unaligned storage accesses have an undefined behavior so...  */
-#define OPTION_STRICT_ALIGNMENT
-
-/*-------------------------------------------------------------------
  * fetch_hw_noswap and fetch_hw
  *-------------------------------------------------------------------*/
 #if !defined(fetch_hw_noswap)
   #if defined(fetch_hw)
     #define fetch_hw_noswap(_p) CSWAP16(fetch_hw((_p)))
   #else
-    #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ U16 fetch_hw_noswap(const void *ptr) {
-        return *(U16 *)ptr;
-      }
-    #else
-      static __inline__ U16 fetch_hw_noswap(const void *ptr) {
-        U16 value;
-        memcpy(&value, (BYTE *)ptr, 2);
-        return value;
-      }
-    #endif
+    static __inline__ U16 fetch_hw_noswap(const void *ptr) {
+      U16 value;
+      memcpy(&value, (BYTE *)ptr, 2);
+      return value;
+    }
   #endif
 #endif
 #if !defined(fetch_hw)
@@ -556,15 +536,9 @@ U32  *ptr4, val4, old4, new4;
   #if defined(store_hw)
     #define store_hw_noswap(_p, _v) store_hw((_p), CSWAP16(_v))
   #else
-    #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ void store_hw_noswap(void *ptr, U16 value) {
-        *(U16 *)ptr = value;
-      }
-    #else
-      static __inline__ void store_hw_noswap(void *ptr, U16 value) {
-        memcpy((BYTE *)ptr, (BYTE *)&value, 2);
-      }
-    #endif
+    static __inline__ void store_hw_noswap(void *ptr, U16 value) {
+      memcpy((BYTE *)ptr, (BYTE *)&value, 2);
+    }
   #endif
 #endif
 #if !defined(store_hw)
@@ -578,17 +552,11 @@ U32  *ptr4, val4, old4, new4;
   #if defined(fetch_fw)
     #define fetch_fw_noswap(_p) CSWAP32(fetch_fw((_p)))
   #else
-    #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ U32 fetch_fw_noswap(const void *ptr) {
-        return *(U32 *)ptr;
-      }
-    #else
-      static __inline__ U32 fetch_fw_noswap(const void *ptr) {
-        U32 value;
-        memcpy(&value, (BYTE *)ptr, 4);
-        return value;
-      }
-    #endif
+    static __inline__ U32 fetch_fw_noswap(const void *ptr) {
+      U32 value;
+      memcpy(&value, (BYTE *)ptr, 4);
+      return value;
+    }
   #endif
 #endif
 #if !defined(fetch_fw)
@@ -602,15 +570,9 @@ U32  *ptr4, val4, old4, new4;
   #if defined(store_fw)
     #define store_fw_noswap(_p, _v) store_fw((_p), CSWAP32(_v))
   #else
-    #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ void store_fw_noswap(void *ptr, U32 value) {
-        *(U32 *)ptr = value;
-      }
-    #else
-      static __inline__ void store_fw_noswap(void *ptr, U32 value) {
-        memcpy((BYTE *)ptr, (BYTE *)&value, 4);
-      }
-    #endif
+    static __inline__ void store_fw_noswap(void *ptr, U32 value) {
+      memcpy((BYTE *)ptr, (BYTE *)&value, 4);
+    }
   #endif
 #endif
 #if !defined(store_fw)
@@ -660,17 +622,11 @@ U32  *ptr4, val4, old4, new4;
   #if defined(fetch_dw)
     #define fetch_dw_noswap(_p) CSWAP64(fetch_dw((_p)))
   #else
-    #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ U64 fetch_dw_noswap(const void *ptr) {
-        return *(U64 *)ptr;
-      }
-    #else
-      static __inline__ U64 fetch_dw_noswap(const void *ptr) {
-        U64 value;
-        memcpy(&value, (BYTE *)ptr, 8);
-        return value;
-      }
-    #endif
+    static __inline__ U64 fetch_dw_noswap(const void *ptr) {
+      U64 value;
+      memcpy(&value, (BYTE *)ptr, 8);
+      return value;
+    }
   #endif
 #endif
 #if !defined(fetch_dw)
@@ -684,15 +640,9 @@ U32  *ptr4, val4, old4, new4;
   #if defined(store_dw)
     #define store_dw_noswap(_p, _v) store_dw((_p), CSWAP64(_v))
   #else
-    #if !defined(OPTION_STRICT_ALIGNMENT)
-      static __inline__ void store_dw_noswap(void *ptr, U64 value) {
-        *(U64 *)ptr = value;
-      }
-    #else
-      static __inline__ void store_dw_noswap(void *ptr, U64 value) {
-        memcpy((BYTE *)ptr, (BYTE *)&value, 8);
-      }
-    #endif
+    static __inline__ void store_dw_noswap(void *ptr, U64 value) {
+      memcpy((BYTE *)ptr, (BYTE *)&value, 8);
+    }
   #endif
 #endif
 #if !defined(store_dw)

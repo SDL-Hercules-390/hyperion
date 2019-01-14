@@ -33,63 +33,48 @@ typedef struct MEMBLK MEMBLK;
 
 #if defined( NOT_HERC )             // (building tool utility not Hercules?)
 
-  #if defined( OPTION_STRICT_ALIGNMENT )
-    static INLINE U16 fetch_hw_noswap( void* ptr )
-    {
-      U16 value;
-      memcpy( &value, (U8*)ptr, 2 );
-      return value;
-    }
-    static INLINE void store_hw_noswap( void* ptr, U16 value )
-    {
-      memcpy( (U8*)ptr, (U8*)&value, 2 );
-    }
-  #else
-    #define fetch_hw_noswap( p )        (*(U16*)(uintptr_t)(p))
-    #define store_hw_noswap( p, v )     (*(U16*)(uintptr_t)(p) = (U16)(v))
-  #endif
+  static INLINE U16 fetch_hw_noswap( void* ptr )
+  {
+    U16 value;
+    memcpy( &value, (U8*)ptr, 2 );
+    return value;
+  }
+  static INLINE void store_hw_noswap( void* ptr, U16 value )
+  {
+    memcpy( (U8*)ptr, (U8*)&value, 2 );
+  }
 
   #define   fetch_hw( p )               CSWAP16(fetch_hw_noswap((void*)(uintptr_t)(p)))
   #define   store_hw( p, v )            store_hw_noswap((void*)(uintptr_t)(p),CSWAP16((v)))
 
 // ----------------------------------------------------------------------------
 
-  #if defined( OPTION_STRICT_ALIGNMENT )
-    static INLINE U32 fetch_fw_noswap( void* ptr )
-    {
-      U32 value;
-      memcpy( &value, (U8*)ptr, 4 );
-      return value;
-    }
-    static INLINE void store_fw_noswap( void* ptr, U32 value )
-    {
-      memcpy( (U8*)ptr, (U8*)&value, 4 );
-    }
-  #else
-    #define fetch_fw_noswap( p )        (*(U32*)(uintptr_t)(p))
-    #define store_fw_noswap( p, v )     (*(U32*)(uintptr_t)(p) = (U32)(v))
-  #endif
+  static INLINE U32 fetch_fw_noswap( void* ptr )
+  {
+    U32 value;
+    memcpy( &value, (U8*)ptr, 4 );
+    return value;
+  }
+  static INLINE void store_fw_noswap( void* ptr, U32 value )
+  {
+    memcpy( (U8*)ptr, (U8*)&value, 4 );
+  }
 
   #define   fetch_fw( p )               CSWAP32(fetch_fw_noswap((p)))
   #define   store_fw( p, v )            store_fw_noswap((p),CSWAP32((v)))
 
 // ----------------------------------------------------------------------------
 
-  #if defined( OPTION_STRICT_ALIGNMENT )
-    static INLINE U64 fetch_dw_noswap( void* ptr )
-    {
-      U64 value;
-      memcpy( &value, (U8*)ptr, 8 );
-      return value;
-    }
-    static INLINE void store_dw_noswap( void* ptr, U64 value )
-    {
-      memcpy( (U8*)ptr, (U8*)&value, 8 );
-    }
-  #else
-    #define fetch_dw_noswap( p )        (*(U64*)(uintptr_t)(p))
-    #define store_dw_noswap( p, v )     (*(U64*)(uintptr_t)(p) = (U64)(v))
-  #endif
+  static INLINE U64 fetch_dw_noswap( void* ptr )
+  {
+    U64 value;
+    memcpy( &value, (U8*)ptr, 8 );
+    return value;
+  }
+  static INLINE void store_dw_noswap( void* ptr, U64 value )
+  {
+    memcpy( (U8*)ptr, (U8*)&value, 8 );
+  }
 
   #define   fetch_dw( p )               CSWAP64(fetch_dw_noswap((p)))
   #define   store_dw( p, v )            store_dw_noswap((p),CSWAP64((v)))

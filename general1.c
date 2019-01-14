@@ -1577,7 +1577,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
        access exceptions */
     if (0
         || len <= 4 
-        || CROSSPAGEL( addr2, cpu_length )
+        || CROSSPAGEL( addr2, (int)cpu_length )
        )
     {
         /* Fetch fullword from second operand */
@@ -4897,20 +4897,16 @@ BYTE   *bp1;                            /* Unaligned maintstor ptr   */
     {
         /* Boundary not crossed */
         n >>= 2;
-#if defined( OPTION_STRICT_ALIGNMENT )
         if (likely(!(((uintptr_t)effective_addr2) & 0x03)))
         {
-#endif
             for (i=0; i < n; i++, p1++)
                 regs->GR_L( (r1 + i) & 0xF ) = fetch_fw( p1 );
-#if defined( OPTION_STRICT_ALIGNMENT )
         }
         else
         {
             for (i=0; i < n; i++, bp1+=4)
                 regs->GR_L( (r1 + i) & 0xF ) = fetch_fw( bp1 );
         }
-#endif
     }
     else
     {
