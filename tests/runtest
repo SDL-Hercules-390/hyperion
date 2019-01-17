@@ -142,7 +142,7 @@ scanflags()
                         (-e) setvar ftype   $1 $2 ; shift ;;
                         (-f)
                                 setvar fname   $1 $2
-                                echo -n $fname|grep -q '\.'
+                                echo $fname|grep -q '\.'
                                 if [ $? -eq 1 ] ; then fname=$fname.$ftype; fi
                                 files="$files $testdir/$fname"
                                 shift ;;
@@ -209,7 +209,7 @@ ftype=tst
 hdir=.
 
 if [ $# -gt 0 ] ; then
-        echo -n $1|grep -q '^[-][a-z]$'
+        echo $1|grep -q '^[-][a-z]$'
         if [ $? -eq 0 ] ; then
                 scanflags $*
         else
