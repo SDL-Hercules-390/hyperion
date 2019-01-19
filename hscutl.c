@@ -698,16 +698,18 @@ DLL_EXPORT int timeval_add
 }
 
 /*
-  Easier to use timed_wait_condition that waits for
-  the specified relative amount of time without you
-  having to build an absolute timeout time yourself
+  Easier to use timed_wait_condition that waits for the specified
+  relative amount of time without you having to build an absolute
+  timeout time yourself. Use the "timed_wait_condition_relative_usecs"
+  macro to call it.
 */
-DLL_EXPORT int timed_wait_condition_relative_usecs
+DLL_EXPORT int timed_wait_condition_relative_usecs_impl
 (
     COND*            pCOND,     // ptr to condition to wait on
     LOCK*            pLOCK,     // ptr to controlling lock (must be held!)
     U32              usecs,     // max #of microseconds to wait
-    struct timeval*  pTV        // [OPTIONAL] ptr to tod value (may be NULL)
+    struct timeval*  pTV,       // [OPTIONAL] ptr to tod value (may be NULL)
+    const char*      loc        // (location)
 )
 {
     struct timespec timeout_timespec;
@@ -729,7 +731,8 @@ DLL_EXPORT int timed_wait_condition_relative_usecs
     }
 
     timeout_timespec.tv_nsec *= 1000;
-    return timed_wait_condition( pCOND, pLOCK, &timeout_timespec );
+//  return timed_wait_condition( pCOND, pLOCK, &timeout_timespec );
+    return hthread_timed_wait_condition( pCOND, pLOCK, &timeout_timespec, loc );
 }
 
 /*********************************************************************

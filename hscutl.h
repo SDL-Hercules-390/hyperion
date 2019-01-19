@@ -167,16 +167,21 @@ HUT_DLL_IMPORT int timeval_subtract (struct timeval *beg_timeval, struct timeval
 HUT_DLL_IMPORT int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);
 
 /*
-  Easier to use timed_wait_condition that waits for
-  the specified relative amount of time without you
-  having to build an absolute timeout time yourself
+  Easier to use timed_wait_condition that waits for the specified
+  relative amount of time without you having to build an absolute
+  timeout time yourself. Use the "timed_wait_condition_relative_usecs"
+  macro to call it.
 */
-HUT_DLL_IMPORT int timed_wait_condition_relative_usecs
+#define timed_wait_condition_relative_usecs(      plc, plk, usecs, ptv )  \
+        timed_wait_condition_relative_usecs_impl( plc, plk, usecs, ptv, PTT_LOC )
+
+HUT_DLL_IMPORT int timed_wait_condition_relative_usecs_impl
 (
     COND*            pCOND,     // ptr to condition to wait on
     LOCK*            pLOCK,     // ptr to controlling lock (must be held!)
     U32              usecs,     // max #of microseconds to wait
-    struct timeval*  pTV        // [OPTIONAL] ptr to tod value (may be NULL)
+    struct timeval*  pTV,       // [OPTIONAL] ptr to tod value (may be NULL)
+    const char*      loc        // (location)
 );
 
 /* Read/write to socket functions */
