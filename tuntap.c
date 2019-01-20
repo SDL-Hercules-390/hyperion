@@ -87,7 +87,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
     if (0 > rc && errno == EPERM && !(IFF_NO_HERCIFC & iFlags))
     {
         int             ifd[2];
-        char           *hercifc;
+        const char     *hercifc;
         pid_t           pid;
         CTLREQ          ctlreq;
         fd_set          selset;
@@ -98,7 +98,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         if (socketpair (AF_UNIX, SOCK_STREAM, 0, ifd) < 0)
             return -1;
 
-        if (!(hercifc = getenv ("HERCULES_IFC")))
+        if (!(hercifc = get_symbol ("HERCULES_IFC")))
             hercifc = HERCIFC_CMD;
 
         pid = fork();
@@ -949,7 +949,7 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
 
 static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 {
-    char*       pszCfgCmd;     // Interface config command
+    const char* pszCfgCmd;     // Interface config command
     CTLREQ      ctlreq;
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -1033,7 +1033,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         }
 
         // Obtain the name of the interface config program or default
-        if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
+        if( !( pszCfgCmd = get_symbol( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
 
         TRACE(MSG(HHC00147, "I", pszCfgCmd));

@@ -923,7 +923,8 @@ int console_beep( FILE* confp )
 
 int  get_console_dim( FILE* confp, int* rows, int* cols )
 {
-    char* env;
+    const char* sym;
+
 #if defined(TIOCGWINSZ)
     struct winsize winsize;
 #else
@@ -945,10 +946,10 @@ int  get_console_dim( FILE* confp, int* rows, int* cols )
     else
 #endif
     {
-        if (!(env = getenv( "LINES"   ))) *rows = 24;
-        else                              *rows = atoi(env);
-        if (!(env = getenv( "COLUMNS" ))) *cols = 80;
-        else                              *cols = atoi(env);
+        if (!(sym = get_symbol( "LINES"   ))) *rows = DEFAULT_CONSOLE_ROWS;
+        else                                  *rows = atoi( sym );
+        if (!(sym = get_symbol( "COLUMNS" ))) *cols = DEFAULT_CONSOLE_COLS;
+        else                                  *cols = atoi( sym );
     }
 
     if (!*rows || !*cols)

@@ -1550,7 +1550,7 @@ error:
         for (i=0; cfgorrccount > i; i++)
         {
             if (!cfgorrc[i].filename)       /* No value specified */
-                cfgorrc[i].filename = getenv( cfgorrc[i].envname );
+                cfgorrc[i].filename = get_symbol( cfgorrc[i].envname );
 
             if (!cfgorrc[i].filename)       /* No environment var */
             {

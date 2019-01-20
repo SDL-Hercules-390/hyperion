@@ -154,10 +154,10 @@ bool  enable_tt32_debug_tracing( int enable )
 
 BOOL tt32_loaddll()
 {
-    char*  pszDLLName;
-    char   tt32_dllname_in_buff  [ MAX_PATH ];
-    char   tt32_dllname_out_buff [ MAX_PATH ] = {0};
-    static int tt32_init_done = 0;
+    const char*  pszDLLName;
+    char         tt32_dllname_in_buff  [ MAX_PATH ];
+    char         tt32_dllname_out_buff [ MAX_PATH ] = {0};
+    static int   tt32_init_done = 0;
 
     if (!tt32_init_done)
     {
@@ -175,7 +175,7 @@ BOOL tt32_loaddll()
 
     // First, determine the name of the DLL we should try loading...
 
-    if ( !( pszDLLName = getenv( "HERCULES_IFC" ) ) )
+    if ( !( pszDLLName = get_symbol( "HERCULES_IFC" ) ) )
         pszDLLName = DEF_TT32_DLLNAME;
 
     ASSERT( pszDLLName && *pszDLLName );

@@ -270,36 +270,36 @@ void InitializeRexx()      // (called by impl.c at system startup)
 /*-------------------------------------------------------------------*/
 static void InitializeDefaults()
 {
-    char* envvar;
+    const char* sym;
 
     /* Retrieve and save the user's preferred default values */
 
-    if (!(envvar = getenv( "HREXX_PACKAGE" )))
+    if (!(sym = get_symbol( "HREXX_PACKAGE" )))
         DefaultPackage = strdup( DEFAULT_PACKAGE );
     else
-        DefaultPackage = strdup( envvar );
+        DefaultPackage = strdup( sym );
 
-    if (!(envvar = getenv( "HREXX_MODE" )))
+    if (!(sym = get_symbol( "HREXX_MODE" )))
         DefaultMode = DEFAULT_MODE;
     else
     {
-        if (strcasecmp( envvar, "Command" ) == 0)
+        if (strcasecmp( sym, "Command" ) == 0)
             DefaultMode = MODE_COMMAND;
-        else if (strcasecmp( envvar, "Subroutine" ) == 0)
+        else if (strcasecmp( sym, "Subroutine" ) == 0)
             DefaultMode = MODE_SUBROUTINE;
         else
             DefaultMode = DEFAULT_MODE;
     }
 
-    if (!(envvar = getenv( "HREXX_PATH" )))
+    if (!(sym = get_symbol( "HREXX_PATH" )))
         DefaultRexxPath = strdup( DEFAULT_REXXPATH );
     else
-        DefaultRexxPath = strdup( envvar );
+        DefaultRexxPath = strdup( sym );
 
-    if (!(envvar = getenv( "HREXX_EXTENSIONS" )))
+    if (!(sym = get_symbol( "HREXX_EXTENSIONS" )))
         DefaultExtensions = strdup( DEFAULT_EXTENSIONS );
     else
-        DefaultExtensions = strdup( envvar );
+        DefaultExtensions = strdup( sym );
 
     /* Initialize the defaults */
 
@@ -313,7 +313,7 @@ static void InitializeDefaults()
 /*-------------------------------------------------------------------*/
 /* InitializePaths and InitializeExtensions helper function          */
 /*-------------------------------------------------------------------*/
-static void InitArray( char* str, char* delims, char* def,
+static void InitArray( const char* str, const char* delims, const char* def,
                        BYTE empty0, /* array[0] == empty string? */
                        char** arraystr, char*** array, int* count )
 {
@@ -383,7 +383,7 @@ static void InitializePaths( char* wPath )
     InitArray( wPath, PATHDELIM, DefaultRexxPath, empty0,
         &RexxPath, &RexxPathArray, &RexxPathCount );
 
-    InitArray( getenv( "PATH" ), PATHDELIM, NULL, empty0,
+    InitArray( get_symbol( "PATH" ), PATHDELIM, NULL, empty0,
         &SysPath, &SysPathArray, &SysPathCount );
 }
 

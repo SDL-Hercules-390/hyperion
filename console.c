@@ -1867,15 +1867,13 @@ static BYTE* buffer_addsf( BYTE* bfr, size_t* buflen, size_t* alloc_len, BYTE at
 /*-------------------------------------------------------------------*/
 static void init_logo()
 {
-char   *p;            /* pointer logo filename */
-int     rc = 0;
-char    fn[FILENAME_MAX] = { 0 };
+    const char*  p; /* pointer to logo filename */
+    int          rc = 0;
+    char         fn[FILENAME_MAX] = {0};
 
     if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
     {
-        p = getenv("HERCLOGO");
-
-        if ( p == NULL)
+        if (!(p = get_symbol("HERCLOGO")))
             p = "herclogo.txt";
     }
     else

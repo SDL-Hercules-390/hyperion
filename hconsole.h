@@ -9,6 +9,9 @@
 #ifndef _HCONSOLE_H
 #define _HCONSOLE_H
 
+#define DEFAULT_CONSOLE_ROWS    24
+#define DEFAULT_CONSOLE_COLS    80
+
 //-----------------------------------------------------------------------------
 //
 //                            VT100 User Guide

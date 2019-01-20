@@ -94,7 +94,7 @@ extern char __declspec(dllimport) *__progname;
 /* This differs from the cygwin implementation, which effectively defaults to
    PC, but is consistent with the NetBSD implementation and doc's.  */
 #ifndef IS_POSIXLY_CORRECT
-#define IS_POSIXLY_CORRECT (getenv("POSIXLY_CORRECT") != NULL)
+#define IS_POSIXLY_CORRECT (get_symbol("POSIXLY_CORRECT") != NULL)
 #endif
 
 #define PERMUTE         (!IS_POSIXLY_CORRECT && !IGNORE_FIRST)

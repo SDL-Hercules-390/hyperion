@@ -183,7 +183,7 @@ static int   cons_rows = 0;             /* console height in lines   */
 static int   cons_cols = 0;             /* console width in chars    */
 static short cur_cons_row = 0;          /* current console row       */
 static short cur_cons_col = 0;          /* current console column    */
-static char *cons_term = NULL;          /* TERM env value            */
+static const char *cons_term = NULL;    /* TERM env value            */
 static char  cmdins  = 1;               /* 1==insert mode, 0==overlay*/
 
 static char  cmdline[CMD_SIZE+1];       /* Command line buffer       */
@@ -1653,7 +1653,7 @@ size_t  loopcount;                      /* Number of iterations done */
     keybfd = STDIN_FILENO;
 
     /* Initialize screen dimensions */
-    cons_term = getenv ("TERM");
+    cons_term = get_symbol ("TERM");
     get_dim (&cons_rows, &cons_cols);
 
     /* Clear the command-line buffer */
