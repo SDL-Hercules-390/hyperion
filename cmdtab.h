@@ -1857,11 +1857,9 @@ COMMAND( "rexx",                    rexx_cmd,               SYSCONFIG,          
 COMMAND( "exec",                    exec_cmd,               SYSCMD,             exec_cmd_desc,          exec_cmd_help       )
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX) */
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
 CMDABBR( "qpfkeys",         3,      qpfkeys_cmd,            SYSCMD,             qpfkeys_cmd_desc,       NULL                )
 COMMAND( "defsym",                  defsym_cmd,             SYSCMDNOPER,        defsym_cmd_desc,        defsym_cmd_help     )
 COMMAND( "delsym",                  delsym_cmd,             SYSCMDNOPER,        delsym_cmd_desc,        delsym_cmd_help     )
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 #if defined(HAVE_MLOCKALL)
 COMMAND( "memlock",                 memlock_cmd,            SYSCONFIG,          NULL,                   NULL                )

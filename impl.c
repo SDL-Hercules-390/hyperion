@@ -31,11 +31,7 @@
 
 static char shortopts[] =
 
-    "eh::f:r:db:vt::p:l:"
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-   "s:"
-#endif
-   ;
+    "eh::f:r:db:vt::p:l:s:";
 
 #if defined(HAVE_GETOPT_LONG)
 static struct option longopts[] =
@@ -50,10 +46,7 @@ static struct option longopts[] =
     { "test",     optional_argument, NULL, 't' },
     { "modpath",  required_argument, NULL, 'p' },
     { "ldmod",    required_argument, NULL, 'l' },
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     { "defsym",   required_argument, NULL, 's' },
-#endif
     { NULL,       0,                 NULL,  0  }
 };
 #endif
@@ -621,7 +614,6 @@ int     rc;
     */
     atexit( hdl_atexit );
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
     set_symbol( "VERSION", VERSION);
     set_symbol( "BDATE", __DATE__ );
     set_symbol( "BTIME", __TIME__ );
@@ -656,7 +648,6 @@ int     rc;
 
     set_symbol( "MODNAME", sysblk.hercules_pgmname );
     set_symbol( "MODPATH", sysblk.hercules_pgmpath );
-#endif
 
     sysblk.sysgroup = DEFAULT_SYSGROUP;
 
@@ -723,7 +714,6 @@ int     rc;
     sysblk.shrdport = 0;
 #endif
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     /* setup defaults for CONFIG symbols  */
     {
         char buf[8];
@@ -738,7 +728,6 @@ int     rc;
         MSGBUF( buf, "%04X", sysblk.cpumodel );
         set_symbol( "CPUMODEL", buf );
     }
-#endif
 
 #if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
     sysblk.zpbits  = DEF_CMPSC_ZP_BITS;
@@ -1408,8 +1397,6 @@ static int process_args( int argc, char* argv[] )
                 cfgorrc[ want_rc ].filename = optarg;
                 break;
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-
             case 's':
             {
                 char* sym        = NULL;
@@ -1442,7 +1429,6 @@ static int process_args( int argc, char* argv[] )
                     WRMSG( HHC01419, "E" );
             }
             break;
-#endif
 
             case 'p':
 
@@ -1547,14 +1533,8 @@ error:
         char   pgm[ MAX_PATH ];
         char*  strtok_str = NULL;
 
-        const char symsub[] =
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-            " [-s sym=val]";
-#else
-            "";
-#endif
-        const char dlsub[] = " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
+        const char symsub[] = " [-s sym=val]";
+        const char dlsub [] = " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
 
         /* Show them all of our command-line arguments... */
         STRLCPY( pgm, sysblk.hercules_pgmname );

@@ -824,9 +824,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
 
     hdl_checkpath( hdl_getpath() );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     set_symbol( "MODPATH", hdl_getpath() );
-#endif
 }
 
 /*-------------------------------------------------------------------*/
@@ -906,9 +904,7 @@ DLL_EXPORT int hdl_setpath( const char* path )
 
     // Update the MODPATH symbol
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     set_symbol( "MODPATH", hdl_getpath() );
-#endif
 
     // "HDL: loadable module directory is '%s'"
     WRMSG( HHC01508, "I", hdl_getpath() );

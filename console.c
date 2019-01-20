@@ -1563,16 +1563,12 @@ static BYTE* build_logo( char** logo_stmts, size_t num_stmts,
 
         strlcpy( stmt, logo_stmts[i], stmt_len );
 
-#if defined( ENABLE_SYSTEM_SYMBOLS )
-
         wrk = resolve_symbol_string( stmt );
         if (wrk)
         {
             free( stmt );
             stmt = wrk;
         }
-
-#endif /* defined( ENABLE_SYSTEM_SYMBOLS ) */
 
         if (stmt[0] != '@')
         {
@@ -3172,7 +3168,6 @@ size_t                  logoheight;     /* Logo file number of lines */
     {
         /* Construct display terminal logo */
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
 #if defined( _FEATURE_INTEGRATED_3270_CONSOLE )
         if  (dev == sysblk.sysgdev)
             strncpy( (char*) buf, "SYSG", sizeof( buf ));
@@ -3183,8 +3178,6 @@ size_t                  logoheight;     /* Logo file number of lines */
         MSGBUF( buf, "%3.3X", dev->devnum );           set_symbol( "CUU",     buf );
         MSGBUF( buf, "%4.4X", dev->subchan );          set_symbol( "SUBCHAN", buf );
         MSGBUF( buf, "%d", SSID_TO_LCSS( dev->ssid )); set_symbol( "CSS",     buf );
-
-#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
         if (sysblk.herclogo != NULL)
         {

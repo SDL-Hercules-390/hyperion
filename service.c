@@ -361,7 +361,6 @@ static void sclp_cpident( SCCB_HEADER* sccb )
     // "Control program identification: type %s, name %s, sysplex %s, level %"PRIX64
     WRMSG( HHC00004, "I", systype, sysname, sysplex, syslevel );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     {
         char buf[128];
 
@@ -372,7 +371,6 @@ static void sclp_cpident( SCCB_HEADER* sccb )
         set_symbol( "SYSPLEX",  sysplex );
         set_symbol( "SYSLEVEL", buf     );
     }
-#endif
 
     losc_check( systype );
 

@@ -84,17 +84,11 @@
   HUT_DLL_IMPORT int  strerror_r(int, char *, size_t);
 #endif
 
-#if defined(ENABLE_SYSTEM_SYMBOLS)
   HUT_DLL_IMPORT const char *get_symbol(const char *);
   HUT_DLL_IMPORT char *resolve_symbol_string(const char *);
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
   HUT_DLL_IMPORT void set_symbol(const char *,const char *);
   HUT_DLL_IMPORT void del_symbol(const char *);
   HUT_DLL_IMPORT void list_all_symbols(void);
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
-
-#endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
 #ifdef _MSVC_
   #ifndef HAVE_ID_T

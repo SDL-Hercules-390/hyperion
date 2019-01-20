@@ -2992,16 +2992,16 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         // Make a copy of the OAT statement
         pszStatement = strdup( szBuff );
 
-#if defined( ENABLE_SYSTEM_SYMBOLS )
+        /* Perform variable substitution */
         {
-            /* Perform variable substitution */
             char *cl;
-#if defined( ENABLE_BUILTIN_SYMBOLS )
+
             set_symbol( "CUU",  "$(CUU)"  );
             set_symbol( "CCUU", "$(CCUU)" );
             set_symbol( "DEVN", "$(DEVN)" );
-#endif /* ENABLE_BUILTIN_SYMBOLS */
+
             cl = resolve_symbol_string( pszStatement );
+
             if (cl)
             {
                 STRLCPY( szBuff, cl );
@@ -3010,7 +3010,6 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 pszStatement = strdup( szBuff );
             }
         }
-#endif /* ENABLE_SYSTEM_SYMBOLS */
 
         sPort        = 0;
         bMode        = 0;

@@ -1641,14 +1641,12 @@ size_t  loopcount;                      /* Number of iterations done */
     hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
     history_init();
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     /* Set Some Function Key Defaults */
     {
         set_symbol("PF01", "SUBST IMMED help &0");
         set_symbol("PF11", "IMMED devlist TAPE");
         set_symbol("PF10", "SUBST DELAY devinit &*");
     }
-#endif  /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
     /* Set up the input file descriptors */
     confp = stderr;
@@ -2151,13 +2149,7 @@ size_t  loopcount;                      /* Number of iterations done */
                     else szPF = NULL;
 #endif
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
-                    pf = (char*)get_symbol(szPF);
-#else
-                    pf = NULL;
-#endif
-
-                    if ( pf == NULL )
+                    if (!(pf = (char*) get_symbol( szPF )))
                     {
                         MSGBUF( msgbuf, "DELAY * %s UNDEFINED", szPF );
                         pf = msgbuf;

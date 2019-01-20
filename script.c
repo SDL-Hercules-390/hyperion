@@ -130,10 +130,7 @@ int     c;                              /* Character work area       */
 unsigned int     stmtlen;               /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
                                         /* has been seen yet in line */
-
-#if defined(ENABLE_SYSTEM_SYMBOLS)
 char   *buf1;                           /* Pointer to resolved buffer*/
-#endif
 
     while (1)
     {
@@ -190,13 +187,9 @@ char   *buf1;                           /* Pointer to resolved buffer*/
         RTRIM( buf );
         stmtlen = (int) strlen( buf );
 
-#if defined(ENABLE_SYSTEM_SYMBOLS)
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
         set_symbol("CUU","$(CUU)");
         set_symbol("CCUU","$(CCUU)");
         set_symbol("DEVN","$(DEVN)");
-#endif
 
         /* Perform variable substitution */
         buf1=resolve_symbol_string(buf);
@@ -213,7 +206,6 @@ char   *buf1;                           /* Pointer to resolved buffer*/
             free(buf1);
             stmtlen = strlen( buf );
         }
-#endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
         /* Loud comments should always be logged */
         if (stmtlen != 0 && buf[0] == '*')
@@ -253,10 +245,8 @@ int     inc_level;                      /* Current nesting level     */
 FILE   *inc_fp[MAX_INC_LEVEL];          /* Configuration file pointer*/
 BYTE    c;                              /* Work area for sscanf      */
 
-#if defined(ENABLE_CONFIG_INCLUDE)
 int     inc_ignore_errors = 0;          /* 1==ignore include errors  */
 char    pathname[MAX_PATH];             /* file path in host format  */
-#endif
 
 char    fname[MAX_PATH];                /* normalized filename       */
 int     errorcount = 0;
@@ -334,7 +324,6 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
         }
 #endif /* defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)   */
 
-#if defined( ENABLE_CONFIG_INCLUDE )
         if  (strcasecmp (addargv[0], "ignore") == 0)
         {
             if  (strcasecmp (addargv[1], "include_errors") == 0)
@@ -379,7 +368,6 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
             inc_stmtnum[inc_level] = 0;
             continue;
         }
-#endif /* #if defined( ENABLE_CONFIG_INCLUDE ) */
 
         if ( ( strlen(addargv[0]) <= 4 &&
                sscanf(addargv[0], "%"SCNx32"%c", &rc, &c) == 1 )
@@ -503,11 +491,6 @@ int     shell_flg = FALSE;              /* indicate it is has a shell
 #if defined(HAVE_OBJECT_REXX) || defined(HAVE_REGINA_REXX)
 
 rexx_done:
-
-#if !defined( ENABLE_CONFIG_INCLUDE )
-    /* close configuration file */
-    rc = fclose(inc_fp[inc_level]);
-#endif
 
     if(!sysblk.msglvl)
         sysblk.msglvl = DEFAULT_MLVL;
@@ -831,10 +814,8 @@ int     rc;                             /* (work)                    */
         return -1;
     }
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     if (!(scrname = resolve_symbol_string( script_name )))
-#endif
-    scrname = strdup( script_name );
+        scrname = strdup( script_name );
 
     if (!strcmp(scrname, "-"))    /* Standard input?             */
     {
@@ -1124,11 +1105,9 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 
     if (*args && *args != '#')
     {
-#if defined( ENABLE_BUILTIN_SYMBOLS )
         p2 = resolve_symbol_string( args );
         if (p2)
             args = p2;
-#endif
 
         if (isalpha( args[0] ))  /* [RESTART|START|<oldpsw>]? */
         {
@@ -1367,7 +1346,6 @@ do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
         return FALSE;
 
     /* Determine maximum pause duration in seconds */
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     if (pCtl) /* only if script stmt; cfg file already did this */
     {
         char *p3 = resolve_symbol_string( p2 );
@@ -1380,8 +1358,7 @@ do_special(char *fname, int *inc_stmtnum, SCRCTL *pCtl, char *p)
             secs = atof( p2 );
     }
     else
-#endif
-    secs = atof( p2 );
+        secs = atof( p2 );
 
     if (secs < MIN_PAUSE_TIMEOUT || secs > MAX_PAUSE_TIMEOUT)
     {

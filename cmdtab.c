@@ -799,20 +799,13 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
 
 #endif /* defined( _FEATURE_SYSTEM_CONSOLE ) */
 
+    /* Perform variable substitution */
     {
-
-#if defined( ENABLE_SYSTEM_SYMBOLS )
-
-        /* Perform variable substitution */
         char* cl;
-
-#if defined( ENABLE_BUILTIN_SYMBOLS )
 
         set_symbol( "CUU",  "$(CUU)"  );
         set_symbol( "CCUU", "$(CCUU)" );
         set_symbol( "DEVN", "$(DEVN)" );
-
-#endif /* ENABLE_BUILTIN_SYMBOLS */
 
         cl = resolve_symbol_string( cmd );
 
@@ -821,8 +814,6 @@ DLL_EXPORT void* the_real_panel_command( char* cmdline )
             STRLCPY( cmd, cl );
             free( cl );
         }
-
-#endif /* ENABLE_SYSTEM_SYMBOLS */
 
         if (hercecho && *cmd)
             EchoHercCmdLine( cmd );

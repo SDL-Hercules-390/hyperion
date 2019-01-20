@@ -250,9 +250,6 @@ strlcat(char *dst, const char *src, size_t siz)
 }
 #endif // !defined(HAVE_STRLCAT)
 
-#if defined(ENABLE_SYSTEM_SYMBOLS)
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
 /* The following structures are defined herein because they are private structures */
 /* that MUST be opaque to the outside world                                        */
 typedef struct _SYMBOL_TOKEN
@@ -271,9 +268,7 @@ typedef struct _SYMBOL_TOKEN
 static SYMBOL_TOKEN **symbols=NULL;
 static int symbol_count=0;
 static int symbol_max=0;
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
 /* This function retrieves or allocates a new SYMBOL_TOKEN */
 static SYMBOL_TOKEN *get_symbol_token(const char *sym, int alloc)
 {
@@ -341,9 +336,7 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym, int alloc)
     symbol_count++;
     return(tok);
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
 DLL_EXPORT void del_symbol(const char *sym)
 {
     SYMBOL_TOKEN        *tok;
@@ -372,9 +365,7 @@ DLL_EXPORT void del_symbol(const char *sym)
 
     return;
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
 DLL_EXPORT void set_symbol(const char *sym, const char *value)
 {
     SYMBOL_TOKEN *tok;
@@ -401,15 +392,12 @@ DLL_EXPORT void set_symbol(const char *sym, const char *value)
     strlcpy(tok->val,value,size);
     return;
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-#if defined(ENABLE_SYSTEM_SYMBOLS)
 DLL_EXPORT const char *get_symbol(const char *sym)
 {
 char *val;
 static char     buf[MAX_PATH];
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
 SYMBOL_TOKEN   *tok;
 
     if ( CMD(sym,DATE,4) )
@@ -437,8 +425,6 @@ SYMBOL_TOKEN   *tok;
         return(tok->val);
     }
     else
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
-
     {
         val=getenv(sym);
         MSGBUF(buf, "%s", val == NULL? "" : val );
@@ -446,9 +432,7 @@ SYMBOL_TOKEN   *tok;
     }
 
 }
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
-#if defined( ENABLE_SYSTEM_SYMBOLS )
 DLL_EXPORT char *resolve_symbol_string(const char *text)
 {
     char    buf[MAX_PATH*4];                /* Statement buffer          */
@@ -465,11 +449,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 
     char    symt = 0;                       /* Character work area       */
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
     if( strstr( text, "$(" ) == NULL && strstr( text, "${" ) == NULL )
-#else
-    if( strstr( text, "${" ) == NULL )
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
     {
         /* Malloc anyway - the caller will free() */
         return( strdup( text ) );
@@ -578,16 +558,12 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
                 {
                     /* Remember start of variable name */
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
                     if ( c == '(' )
                     {
                         symt = ')' ;
                         inc_lbrace = stmtlen + 1;
                     }
-                    else
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
-
-                    if ( c == '{' )
+                    else if ( c == '{' )
                     {
                         symt = '}' ;
                         inc_lbrace = stmtlen + 1;
@@ -619,9 +595,7 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 
     return (strdup(buf));
 }
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
-#if defined(ENABLE_BUILTIN_SYMBOLS)
 /* (called by defsym panel command) */
 DLL_EXPORT void list_all_symbols(void)
 {
@@ -635,9 +609,6 @@ DLL_EXPORT void list_all_symbols(void)
     }
     return;
 }
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
-
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
 /* Return code: success == 0, error == -1 (difference was negative) */

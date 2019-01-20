@@ -2060,12 +2060,9 @@ int parse_and_attach_devices(const char *sdevnum,
         U16         devnum;
         int         rc;
         int         numconfdev = 0;
-
-#if defined(ENABLE_SYSTEM_SYMBOLS)
         int         j;
         char        **newargv;
         char        **orig_newargv;
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
         devncount=parse_devnums(sdevnum,&dnd);
 
@@ -2079,20 +2076,14 @@ int parse_and_attach_devices(const char *sdevnum,
             numconfdev = numconfdev + ((da[i].cuu2 - da[i].cuu1) + 1);
         }
 
-#if defined(ENABLE_SYSTEM_SYMBOLS)
         newargv=malloc(MAX_ARGS*sizeof(char *));
         orig_newargv=malloc(MAX_ARGS*sizeof(char *));
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
         for(baddev=0,i=0;i<(int)devncount;i++)
         {
             da=dnd.da;
             for(devnum=da[i].cuu1;devnum<=da[i].cuu2;devnum++)
             {
-
-#if defined(ENABLE_SYSTEM_SYMBOLS)
-
-#if defined(ENABLE_BUILTIN_SYMBOLS)
                char wrkbfr[32];
                MSGBUF( wrkbfr, "%3.3X",devnum);
                set_symbol("CUU",wrkbfr);
@@ -2101,7 +2092,6 @@ int parse_and_attach_devices(const char *sdevnum,
                set_symbol("DEVN", wrkbfr);
                MSGBUF( wrkbfr, "%d",dnd.lcss);
                set_symbol("CSS",wrkbfr);
-#endif /* #if defined( ENABLE_BUILTIN_SYMBOLS ) */
 
                for(j=0;j<addargc;j++)
                {
@@ -2113,10 +2103,6 @@ int parse_and_attach_devices(const char *sdevnum,
                {
                    free(orig_newargv[j]);
                }
-#else
-               /* Build the device configuration block (no syms) */
-               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, addargv, numconfdev);
-#endif /* #if defined(ENABLE_SYSTEM_SYMBOLS) */
 
                if(rc!=0)
                {
@@ -2130,10 +2116,8 @@ int parse_and_attach_devices(const char *sdevnum,
             }
         }
 
-#if defined(ENABLE_SYSTEM_SYMBOLS)
         free(newargv);
         free(orig_newargv);
-#endif /* #if defined( ENABLE_SYSTEM_SYMBOLS ) */
 
         free(dnd.da);
         return baddev?-1:0;

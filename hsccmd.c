@@ -4481,9 +4481,7 @@ int lparname_cmd( int argc, char* argv[], char* cmdline )
 
     set_lparname( argv[1] );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     set_symbol( "LPARNAME", str_lparname() );
-#endif
 
     if (MLVL( VERBOSE ))
         // "%-14s set to %s"
@@ -4604,10 +4602,8 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
         MSGBUF(  chlparnum,  sysblk.cpuidfmt ? "%02X" : "%01X", sysblk.lparnum );
     }
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     set_symbol( "CPUIDFMT", chcpuidfmt );
     set_symbol( "LPARNUM",  chlparnum  );
-#endif
 
     if (MLVL( VERBOSE ))
     {
@@ -4660,9 +4656,7 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
 
         MSGBUF( chversion,"%02X", sysblk.cpuversion );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
         set_symbol( "CPUVERID", chversion );
-#endif
 
         if (MLVL( VERBOSE ))
             // "%-14s set to %s"
@@ -4721,9 +4715,7 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
 
         MSGBUF( chmodel, "%04X", sysblk.cpumodel );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
         set_symbol( "CPUMODEL", chmodel );
-#endif
 
         if (MLVL( VERBOSE ))
             // "%-14s set to %s"
@@ -4785,9 +4777,8 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
         cpuserial = (U32) ((sysblk.cpuid & 0x00FFFFFF00000000ULL) >> 32);
         MSGBUF( chserial, "%06X", cpuserial );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
         set_symbol( "CPUSERIAL", chserial );
-#endif
+
         if (MLVL( VERBOSE ))
             // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0], chserial );
@@ -4940,9 +4931,7 @@ int cpuidfmt_cmd( int argc, char* argv[], char* cmdline )
     else
         STRLCPY( chfmt, "BASIC" );
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
     set_symbol( "CPUIDFMT", chfmt );
-#endif
 
     if (MLVL( VERBOSE ))
     {
@@ -6778,8 +6767,6 @@ REGS *regs;
     return 0;
 }
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
-
 /*-------------------------------------------------------------------*/
 /* Helper macro to compare symbol name                               */
 /*-------------------------------------------------------------------*/
@@ -6884,9 +6871,7 @@ int defsym_cmd( int argc, char* argv[], char* cmdline )
     free( sym );
     return 0;
 }
-#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
 /*-------------------------------------------------------------------*/
 /* delsym command - delete substitution symbol                       */
 /*-------------------------------------------------------------------*/
@@ -6930,7 +6915,6 @@ int delsym_cmd( int argc, char* argv[], char* cmdline )
     free( sym );
     return 0;
 }
-#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 /*-------------------------------------------------------------------*/
 /* x+ and x- commands - turn switches on or off                      */
@@ -7921,7 +7905,6 @@ int qcpuid_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#if defined( ENABLE_BUILTIN_SYMBOLS )
 /*-------------------------------------------------------------------*/
 /* qpfkeys command                                                   */
 /*-------------------------------------------------------------------*/
@@ -7957,7 +7940,6 @@ int qpfkeys_cmd( int argc, char* argv[], char* cmdline )
 
     return 0;
 }
-#endif /* defined( ENABLE_BUILTIN_SYMBOLS ) */
 
 /*-------------------------------------------------------------------*/
 /* qpid command                                                      */
