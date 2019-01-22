@@ -1097,7 +1097,7 @@ DLL_EXPORT void set_codepage( const char* name )
         codepage_conv->name && strcasecmp(codepage_conv->name,name);
         codepage_conv++);
 
-    if( strcasecmp(codepage_conv->name,"user") == 0 && user_in_use == FALSE )
+    if( codepage_conv->name && strcasecmp(codepage_conv->name,"user") == 0 && user_in_use == FALSE )
         codepage_conv++;
 
     if(codepage_conv->name)
