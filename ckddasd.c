@@ -230,7 +230,7 @@ int             cyls;                   /* #of cylinders in CKD file */
 int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 int             cckd=0;                 /* 1 if compressed CKD       */
-char            filename[FILENAME_MAX]; /* work area for display     */
+char         filename[FILENAME_MAX+3];  /* work area for display     */
 
     dev->rcd = &dasd_build_ckd_config_data;
 
@@ -1487,9 +1487,10 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
                                    shift = 6; /* 3330-1 */
              else
                                    shift = 5; /* 3330-11 */
-        case 0x3340: case 0x3350:  shift = 5;
-        case 0x3375:               shift = 6;
-        default:                   shift = 4;
+                                   break;
+        case 0x3340: case 0x3350:  shift = 5; break;
+        case 0x3375:               shift = 6; break;
+        default:                   shift = 4; break;
        }
         dev->sense[6] = (BYTE)(( (dev->ckdcurcyl >> 8) << shift )
                         | (dev->ckdcurhead & 0x1F));
