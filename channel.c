@@ -6136,6 +6136,7 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
             /* Do NOT raise if initial power-on state */
             if (!INITIAL_POWERON_370())
                 return s370_device_attention(dev, unitstat);
+            return 3;   /* subchannel is not valid or not enabled */
 #endif
 #if defined(_390)
         case ARCH_390_IDX: return s390_device_attention(dev, unitstat);

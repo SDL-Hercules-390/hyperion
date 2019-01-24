@@ -332,7 +332,8 @@ int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int bufle
         len += display_aregs (regs, buf + len, buflen - len - 1, "HHC02272I ");
     }
 
-    if ((regs->CR(0) & CR0_AFP) && (               /* Display floating point control register if AFP enabled */
+    /* Display floating point control register if AFP enabled */
+    if ((regs->CR(0) & CR0_AFP) && (
                                 (opcode == 0x01 && inst[1] == 0x0A)          /* PFPO Perform Floating Point Operation  */
                                 || (opcode == 0xB2 && inst[1] == 0x99)       /* SRNM   Set BFP Rounding mode 2-bit     */
                                 || (opcode == 0xB2 && inst[1] == 0x9C)       /* STFPC  Store FPC                       */

@@ -707,8 +707,8 @@ int             trk;                    /* Cached track              */
 DEVBLK         *dev = data;             /* -> device block           */
 
     UNREFERENCED(answer);
-    CKD_CACHE_GETKEY(i, devnum, trk);
     UNREFERENCED( trk ); // (silence "set but not used" warning) 
+    CKD_CACHE_GETKEY(i, devnum, trk);
     if (dev->devnum == devnum)
         cache_release (ix, i, CACHE_FREEBUF);
     return 0;
@@ -1483,14 +1483,11 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
      /* 3380                     c c c c h h h h      4    */
        switch (dev->devtype) {
         case 0x3330:
-             if (dev->devid[6] == 0x01)
-                                   shift = 6; /* 3330-1 */
-             else
-                                   shift = 5; /* 3330-11 */
-                                   break;
-        case 0x3340: case 0x3350:  shift = 5; break;
-        case 0x3375:               shift = 6; break;
-        default:                   shift = 4; break;
+             if (dev->devid[6] == 0x01) shift = 6;        /* 3330-1  */
+             else                       shift = 5; break; /* 3330-11 */
+        case 0x3340: case 0x3350:       shift = 5; break;
+        case 0x3375:                    shift = 6; break;
+        default:                        shift = 4; break;
        }
         dev->sense[6] = (BYTE)(( (dev->ckdcurcyl >> 8) << shift )
                         | (dev->ckdcurhead & 0x1F));
@@ -3950,7 +3947,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             if (!(((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
                        && dev->ckdlcount ==
-                            (dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
+                           ((dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1))
                   || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
@@ -4163,7 +4160,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         {
             if (!(((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
                        && dev->ckdlcount ==
-                            (dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1)
+                           ((dev->ckdlaux & CKDLAUX_RDCNTSUF) ? 2 : 1))
                   || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK))
             {
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
