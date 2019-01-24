@@ -1083,7 +1083,7 @@ DLL_EXPORT void set_codepage( const char* name )
     if(name == NULL)
     {
         dflt = TRUE;
-        if(!(name = get_symbol("HERCULES_CP")))
+        if (!(name = get_symbol("HERCULES_CP")) || !*name)
              name = "default";
     }
 

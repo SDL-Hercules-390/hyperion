@@ -175,7 +175,7 @@ BOOL tt32_loaddll()
 
     // First, determine the name of the DLL we should try loading...
 
-    if ( !( pszDLLName = get_symbol( "HERCULES_IFC" ) ) )
+    if (!(pszDLLName = get_symbol( "HERCULES_IFC" )) || !*pszDLLName)
         pszDLLName = DEF_TT32_DLLNAME;
 
     ASSERT( pszDLLName && *pszDLLName );

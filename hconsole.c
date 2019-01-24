@@ -946,10 +946,10 @@ int  get_console_dim( FILE* confp, int* rows, int* cols )
     else
 #endif
     {
-        if (!(sym = get_symbol( "LINES"   ))) *rows = DEFAULT_CONSOLE_ROWS;
-        else                                  *rows = atoi( sym );
-        if (!(sym = get_symbol( "COLUMNS" ))) *cols = DEFAULT_CONSOLE_COLS;
-        else                                  *cols = atoi( sym );
+        if (!(sym = get_symbol( "LINES"   )) || !*sym) *rows = DEFAULT_CONSOLE_ROWS;
+        else                                           *rows = atoi( sym );
+        if (!(sym = get_symbol( "COLUMNS" )) || !*sym) *cols = DEFAULT_CONSOLE_COLS;
+        else                                           *cols = atoi( sym );
     }
 
     if (!*rows || !*cols)

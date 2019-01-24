@@ -98,7 +98,7 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         if (socketpair (AF_UNIX, SOCK_STREAM, 0, ifd) < 0)
             return -1;
 
-        if (!(hercifc = get_symbol ("HERCULES_IFC")))
+        if (!(hercifc = get_symbol ("HERCULES_IFC")) || !*hercifc)
             hercifc = HERCIFC_CMD;
 
         pid = fork();
@@ -1033,7 +1033,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         }
 
         // Obtain the name of the interface config program or default
-        if( !( pszCfgCmd = get_symbol( "HERCULES_IFC" ) ) )
+        if (!(pszCfgCmd = get_symbol( "HERCULES_IFC" )) || !*pszCfgCmd)
             pszCfgCmd = HERCIFC_CMD;
 
         TRACE(MSG(HHC00147, "I", pszCfgCmd));

@@ -413,7 +413,7 @@ static void get_dim (int *y, int *x)
    /* If running from a cygwin command prompt we do
      * better with one less row.
      */
-    if (!cons_term || strcmp(cons_term, "xterm"))
+    if (!cons_term || !*cons_term || strcmp(cons_term, "xterm"))
         (*y)--;
 #endif // defined(WIN32) && !defined( _MSVC_ )
 }
@@ -631,7 +631,7 @@ void set_console_title ( char *status )
     /* For Unix systems we set the window title by sending a special
        escape sequence (depends on terminal type) to the console.
        See http://www.faqs.org/docs/Linux-mini/Xterm-Title.html */
-    if (!cons_term) return;
+    if (!cons_term || !*cons_term) return;
     if (strcmp(cons_term,"xterm")==0
      || strcmp(cons_term,"rxvt")==0
      || strcmp(cons_term,"dtterm")==0
@@ -1653,7 +1653,7 @@ size_t  loopcount;                      /* Number of iterations done */
     keybfd = STDIN_FILENO;
 
     /* Initialize screen dimensions */
-    cons_term = get_symbol ("TERM");
+    cons_term = get_symbol( "TERM" ); // Note! result could be "" empty string!
     get_dim (&cons_rows, &cons_cols);
 
     /* Clear the command-line buffer */
@@ -2149,7 +2149,7 @@ size_t  loopcount;                      /* Number of iterations done */
                     else szPF = NULL;
 #endif
 
-                    if (!(pf = (char*) get_symbol( szPF )))
+                    if (!(pf = (char*) get_symbol( szPF )) || !*pf)
                     {
                         MSGBUF( msgbuf, "DELAY * %s UNDEFINED", szPF );
                         pf = msgbuf;

@@ -1873,7 +1873,7 @@ static void init_logo()
 
     if (sysblk.logofile == NULL) /* LogoFile NOT passed in command line */
     {
-        if (!(p = get_symbol("HERCLOGO")))
+        if (!(p = get_symbol("HERCLOGO")) || !*p)
             p = "herclogo.txt";
     }
     else

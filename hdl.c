@@ -790,7 +790,7 @@ DLL_EXPORT void hdl_initpath( const char* path )
         const char* def;
         char pathname[ MAX_PATH ];
 
-        if ((def = get_symbol("HERCULES_LIB")))
+        if ((def = get_symbol("HERCULES_LIB")) && *def)
         {
             hostpath( pathname, def, sizeof( pathname ));
             hdl_modpath = strdup( pathname );

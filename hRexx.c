@@ -274,12 +274,12 @@ static void InitializeDefaults()
 
     /* Retrieve and save the user's preferred default values */
 
-    if (!(sym = get_symbol( "HREXX_PACKAGE" )))
+    if (!(sym = get_symbol( "HREXX_PACKAGE" )) || !*sym)
         DefaultPackage = strdup( DEFAULT_PACKAGE );
     else
         DefaultPackage = strdup( sym );
 
-    if (!(sym = get_symbol( "HREXX_MODE" )))
+    if (!(sym = get_symbol( "HREXX_MODE" )) || !*sym)
         DefaultMode = DEFAULT_MODE;
     else
     {
@@ -291,12 +291,12 @@ static void InitializeDefaults()
             DefaultMode = DEFAULT_MODE;
     }
 
-    if (!(sym = get_symbol( "HREXX_PATH" )))
+    if (!(sym = get_symbol( "HREXX_PATH" )) || !*sym)
         DefaultRexxPath = strdup( DEFAULT_REXXPATH );
     else
         DefaultRexxPath = strdup( sym );
 
-    if (!(sym = get_symbol( "HREXX_EXTENSIONS" )))
+    if (!(sym = get_symbol( "HREXX_EXTENSIONS" )) || !*sym)
         DefaultExtensions = strdup( DEFAULT_EXTENSIONS );
     else
         DefaultExtensions = strdup( sym );
@@ -378,12 +378,16 @@ static void InitArray( const char* str, const char* delims, const char* def,
 /*-------------------------------------------------------------------*/
 static void InitializePaths( char* wPath )
 {
+    const char* path = get_symbol( "PATH" );
     BYTE empty0 = FALSE;
+
+    if (path && !*path)
+        path = NULL;
 
     InitArray( wPath, PATHDELIM, DefaultRexxPath, empty0,
         &RexxPath, &RexxPathArray, &RexxPathCount );
 
-    InitArray( get_symbol( "PATH" ), PATHDELIM, NULL, empty0,
+    InitArray( path, PATHDELIM, NULL, empty0,
         &SysPath, &SysPathArray, &SysPathCount );
 }
 

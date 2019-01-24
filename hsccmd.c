@@ -7930,8 +7930,8 @@ int qpfkeys_cmd( int argc, char* argv[], char* cmdline )
     for (i=1; i <= 20; i++)
 #endif
     {
-        MSGBUF( szPF, "PF%02d", i );            // (name)
-        if (!(pszVAL = get_symbol( szPF )))     // (value)
+        MSGBUF( szPF, "PF%02d", i );                    // (name)
+        if (!(pszVAL = get_symbol( szPF )) || !*pszVAL) // (value)
             pszVAL = "UNDEFINED";
 
         // "%.4s %s"
