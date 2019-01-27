@@ -231,7 +231,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int process_config (const char *cfg_name)
 {
-char buf[1024];                         /* Config statement buffer   */
+char buf[ MAX_CFG_LINELEN ];            /* Config statement buffer   */
 int  addargc;                           /* Number of additional args */
 char *addargv[MAX_ARGS];                /* Additional argument array */
 

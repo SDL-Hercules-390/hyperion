@@ -393,44 +393,38 @@ DLL_EXPORT void set_symbol(const char *sym, const char *value)
     return;
 }
 
-DLL_EXPORT const char *get_symbol(const char *sym)
+DLL_EXPORT const char* get_symbol( const char* sym )
 {
-char *val;
-static char     buf[MAX_PATH];
+    SYMBOL_TOKEN* tok;
+    char buf[ MAX_ENVVAR_LEN ];
 
-SYMBOL_TOKEN   *tok;
-
-    if ( CMD(sym,DATE,4) )
+    if (CMD( sym, DATE, 4 ))
     {
+        // Rebuild new value each time date/time symbol is retrieved
         time_t  raw_tt;
-
-        time( &raw_tt );        // YYYYMMDD
-        strftime(buf, sizeof(buf)-1, "%Y%m%d", localtime(&raw_tt) );
-        return(buf);
+        time( &raw_tt );                // YYYYMMDD
+        strftime( buf, sizeof( buf ) - 1, "%Y%m%d", localtime( &raw_tt ));
+        set_symbol( sym = "DATE", buf );
     }
-    else if ( CMD(sym,TIME,4) )
+    else if (CMD( sym, TIME, 4 ))
     {
+        // Rebuild new value each time date/time symbol is retrieved
         time_t  raw_tt;
-
         time( &raw_tt );                // HHMMSS
-        strftime(buf, sizeof(buf)-1, "%H%M%S", localtime(&raw_tt) );
-        return(buf);
-    }
-    else
-    {
-        tok=get_symbol_token(sym,0);
-    }
-    if (tok != NULL)
-    {
-        return(tok->val);
-    }
-    else
-    {
-        val=getenv(sym);
-        MSGBUF(buf, "%s", val == NULL? "" : val );
-        return(buf);
+        strftime( buf, sizeof( buf ) - 1, "%H%M%S", localtime( &raw_tt ));
+        set_symbol( sym = "TIME", buf );
     }
 
+    if (!(tok = get_symbol_token( sym, 0 )))
+    {
+        // Add this environment variable to our DEFSYM pool
+        const char* val = getenv( sym );
+        MSGBUF( buf, "%s", val ? val : "" );
+        set_symbol( sym, buf );
+        // (now try again; should succeed this time)
+        tok = get_symbol_token( sym, 0 );
+    }
+    return tok->val;
 }
 
 DLL_EXPORT char *resolve_symbol_string(const char *text)
@@ -597,17 +591,13 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 }
 
 /* (called by defsym panel command) */
-DLL_EXPORT void list_all_symbols(void)
+DLL_EXPORT void list_all_symbols()
 {
     SYMBOL_TOKEN* tok; int i;
-
-    for ( i=0; i < symbol_count; i++ )
-    {
-        tok = symbols[i];
-        if (tok)
-            WRMSG(HHC02199, "I", tok->var, tok->val ? tok->val : "");
-    }
-    return;
+    for (i=0; i < symbol_count; i++)
+        if ((tok = symbols[i]) != NULL)
+            // "Symbol %-12s %s"
+            WRMSG( HHC02199, "I", tok->var, tok->val ? tok->val : "" );
 }
 
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */

@@ -137,7 +137,18 @@
   #endif
 #endif
 
-#define PATH_SEP            "/"
+#define PATHSEPC '/'          // (character)
+#define PATHSEPS "/"          // (string)
+#define PATH_SEP "/"          // (same thing)  
+
+#define SPACE    ' '          //  <---<<<  Look close!  There's a space there!
+
+#define MAX_ENVVAR_LEN        32768     // (just a reasonable limit)
+#define MAX_CFG_LINELEN       32768     // (to support long defsyms)
+
+#if    MAX_CFG_LINELEN         <  MAX_ENVVAR_LEN
+#error MAX_CFG_LINELEN must be >= MAX_ENVVAR_LEN
+#endif
 
 #if defined( _MSVC_ )
 
@@ -333,14 +344,6 @@
 #define  KEEPALIVE_PROBE_INTERVAL   1   /* Probe timeout value       */
 #define  KEEPALIVE_PROBE_COUNT      10  /* Max probe timeouts        */
 #endif // (KEEPALIVE)
-
-/*-------------------------------------------------------------------*/
-/*          Miscellaneous Hercules-related constants                 */
-/*-------------------------------------------------------------------*/
-#define PATHSEPC '/'         /* Everyone else */
-#define PATHSEPS "/"
-
-#define SPACE   ' '    /* <---<<< Look close! There's a space there! */
 
 /*-------------------------------------------------------------------*/
 /*       Definitions for program product OS restriction flag.        */
