@@ -69,7 +69,7 @@ static const char *het_errstr[] =
     SYNOPSIS
             #include "hetlib.h"
 
-            int het_open( HETB **hetb, char *filename, int flags )
+            int het_open( HETB **hetb, const char *filename, int flags )
 
     DESCRIPTION
             The het_open() function opens the file indicated by the "filename"
@@ -139,7 +139,7 @@ static const char *het_errstr[] =
 ==DOC==*/
 
 DLL_EXPORT int
-het_open( HETB **hetb, char *filename, int flags )
+het_open( HETB **hetb, const char *filename, int flags )
 {
     HETB *thetb;
     char *omode;
