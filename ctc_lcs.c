@@ -1653,8 +1653,8 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
     if (pLCSPORT->fDoMCastAssist)  // (manual multicast assist?)
     {
-        what = SIOCADDMULTI == ioctlcode ? "MACTabAdd"
-             : SIOCDELMULTI == ioctlcode ? "MACTabRem" : "???";
+        what = (U32) SIOCADDMULTI == (U32) ioctlcode ? "MACTabAdd"
+             : (U32) SIOCDELMULTI == (U32) ioctlcode ? "MACTabRem" : "???";
 
         for (i=0, badrc=0; i < numpairs; i++)
         {
@@ -1662,7 +1662,7 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
 
             // Remember (or forget) this MAC for later
 
-            if (SIOCADDMULTI == ioctlcode)
+            if ((U32) SIOCADDMULTI == (U32) ioctlcode)
             {
                 if ((rc = MACTabAdd( pLCSPORT->MCastTab, (BYTE*) pMAC, 0 )) == 0)
                 {
@@ -1680,7 +1680,7 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
                 else
                     badrc = -rc;    // (convert to errno)
             }
-            else // (SIOCDELMULTI == ioctlcode)
+            else // ((U32) SIOCDELMULTI == (U32) ioctlcode)
             {
                 if ((rc = MACTabRem( pLCSPORT->MCastTab, (BYTE*) pMAC )) == 0)
                 {
@@ -1714,8 +1714,8 @@ static  void  LCS_DoMulticast( int ioctlcode, PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFr
     {
         // Issue ioctl for each MAC address in their request
 
-        what = SIOCADDMULTI == ioctlcode ? "SIOCADDMULTI"
-             : SIOCDELMULTI == ioctlcode ? "SIOCDELMULTI" : "???";
+        what = (U32) SIOCADDMULTI == (U32) ioctlcode ? "SIOCADDMULTI"
+             : (U32) SIOCDELMULTI == (U32) ioctlcode ? "SIOCDELMULTI" : "???";
 
         STRLCPY( ifr.ifr_name, pLCSPORT->szNetIfName );
 

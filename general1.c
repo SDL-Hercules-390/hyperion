@@ -1577,7 +1577,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
        access exceptions */
     if (0
         || len <= 4 
-        || CROSSPAGEL( addr2, (int)cpu_length )
+        || CROSSPAGEL( addr2, cpu_length )
        )
     {
         /* Fetch fullword from second operand */
