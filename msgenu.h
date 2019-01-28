@@ -1880,10 +1880,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02619 "%s %d not found"
 
 // vmfplc2
-#define HHC02620 "Usage: %s verb [outfile] tapefile\n" \
+#define HHC02620 "Usage: %s verb [ctlfile outfile] | [infile]\n" \
        "HHC02620I   verb      desired action (DUMP, LOAD or SCAN)\n" \
-       "HHC02620I   outfile   filename of output dump file (DUMP only)\n" \
-       "HHC02620I   tapefile  filename of input tape file"
+       "HHC02620I   ctlfile   filename of input control file (DUMP only)\n" \
+       "HHC02620I   outfile   filename of output tape file (DUMP only)\n" \
+       "HHC02620I   infile    filename of input tape file (LOAD/SCAN only)\n" \
+       "HHC02620I Note: LOAD and SCAN are currently unsupported."
 #define HHC02621 "Invalid function %s"
 #define HHC02622 "%s not specified"
 #define HHC02623 "%s not supported (yet)"
@@ -1891,8 +1893,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02625 "%s" // "DUMPING...", "SCANNING...", "LOADING...", etc
 #define HHC02626 "%-8s %-8s %-2s"
 #define HHC02627 "%s" // "Entry ignored", etc.
-#define HHC02628 "Invalid character in CMS file %s at position %d"
-#define HHC02629 "Expected %d bytes from file %s, but only %d file read"
+#define HHC02628 "Invalid character in CMS file \"%s\" at position %d"
+#define HHC02629 "Expected %d bytes from file \"%s\", but only %d file read"
 #define HHC02630 "%d errors encountered"
 #define HHC02631 ">>> %s"
 #define HHC02632 "    Bad entry at line %d in file \"%s\""

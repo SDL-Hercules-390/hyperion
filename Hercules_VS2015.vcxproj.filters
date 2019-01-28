@@ -1001,6 +1001,9 @@
     <None Include="README.TAPE">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="README.VMFPLC2">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="README.WIN64">
       <Filter>Other Files\DOC\README</Filter>
     </None>

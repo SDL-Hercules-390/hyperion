@@ -692,6 +692,7 @@
     <None Include="README.SETUID" />
     <None Include="README.SUN" />
     <None Include="README.TAPE" />
+    <None Include="README.VMFPLC2" />
     <None Include="README.WIN64" />
     <None Include="RELEASE.NOTES" />
     <None Include="retail-all.jobs" />

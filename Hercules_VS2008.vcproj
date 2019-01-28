@@ -2115,6 +2115,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\README.VMFPLC2"
+						>
+					</File>
+					<File
 						RelativePath=".\README.WIN64"
 						>
 					</File>

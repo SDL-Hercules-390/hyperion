@@ -1,0 +1,163 @@
+-------------------------------------------------------------------------------
+
+                              vmfplc2
+
+              Hercules VMFPLC2 (VM) formatted tape utility
+
+-------------------------------------------------------------------------------
+
+
+DESCRIPTION:
+
+  Hercules command to manipulate (create and read) VMFPLC2 formatted tapes
+  for VM/370 use.
+
+
+SYNOPSIS:
+
+                vmfplc2  DUMP  <ctlin>  <tapeout>
+                vmfplc2  SCAN  <tapein>             (currently unsupported)
+                vmfplc2  LOAD  <tapein>             (currently unsupported)
+
+
+OPTIONS:
+
+  the vmfplc2 utility requires a function (dump, scan or load) followed by
+  the name(s) of the file(s) to be processed.
+
+
+    DUMP      The DUMP function allows creating a VMFPLC2 formatted tape.
+
+    SCAN      The SCAN function allows listing the contents of a VMFPLC2
+              formatted tape. (currently unsupported)
+
+    LOAD      The LOAD function allows importing the contents of a VMFPLC2
+              formatted tape unto the system. (currently unsupported)
+
+    ctlin     The name of the control file identifying which host file(s)
+              are to be DUMPed to the tape output file.  See the "CONTROL
+              FILE" further below for the format of the control file.
+
+    tapeout   The output .HET tape file to be created by the DUMP function.
+
+    tapein    The input .HET tape file to be read by the SCAN/LOAD function.
+              (currently unsupported)
+
+
+  The input and output tape files are expected to be in "Hercules Emulated
+  Tape" (HET) file format.
+
+
+CONTROL FILE:
+
+  The control file allows the DUMP function to determine which host file(s)
+  are to be dumped to tape and how they should be interpreted on VM.  Each
+  line has the following format:
+
+
+            <fn>  <ft>  <fm>  <recfm>  <lrecl>  <type>  <hostfile>
+
+
+    fn        Is the 1 to 8 character that represents the file name. The file
+              name can be specified as lower case, but will be translated to
+              upper case to follow CMS conventions.  Characters allowed are
+              [A-Z], [0-9], $ (Dollar), # (Pound), @ (At), + (Plus), - (Hyphen),
+              : (Colon) and _ (Underscore).
+
+              The special filename "@TM" (at-sign, "T", "M") is treated as a
+              request to write a tapemark to the output file, and the rest of
+              the line is ignored.
+
+              The special filename "*" (asterisk) is treated as a comment line
+              and the rest of the line is ignored.  Blank lines are ignored.
+
+    ft        Is the 1 to 8 character that represents the file type. The file
+              type can be specified as lower case, but will be translated to
+              upper case to follow CMS conventions.  Characters allowed are
+              [A-Z], [0-9], $ (Dollar), # (Pound), @ (At), + (Plus), - (Hyphen),
+              : (Colon) and _ (Underscore).
+
+    fm        Is 1 or 2 characters that represents the file mode. The first
+              character is a letter from A to Z and represents the "original"
+              file mode when scanned on VM/370 (it does not force the file to
+              be loaded on a certain disk).  The second character is a digit
+              from 0 to 6.  The file mode number indicates specific behavior
+              for the file under CMS.
+
+    recfm     Indicates the record format, and should be F (for Fixed) or V
+              (for Variable).
+
+    lrecl     Indicates the logical record length.  This should only be spec-
+              ified for recfm F (Fixed) files.  For recfm V (variable) files
+              the lrecl should not be specified (should be left blank).
+
+    type      Indicates how the file is processed before being written to tape.
+              The value can either be B (Binary), T (Textual) or S (Structured):
+
+
+                Binary      The file is not translated.
+
+                            For RECFM F files, the file is cut into records
+                            of the size of the Logical Record length specified.
+
+                            For RECFM V files, the file is cut into records
+                            of 65535 bytes except for the last record which
+                            has a length of the remainder of the file.
+
+
+                Textual     The file is translated from ASCII to EBCDIC and
+                            the trailing line termination character (CR, LF
+                            or CRLF) is removed.
+
+                            For RECFM F files the record is truncated if it
+                            is longer than the specified lrecl or padded with
+                            EBCDIC X'40' characters (white space) if shorter.
+
+                            For RECFM V files, each record represents the
+                            length of the line up to 65535 characters.
+
+
+                Structured  The file contains structured information which
+                            indicates the 16-bit length of each record in
+                            BIG ENDIAN format.
+
+                            For RECFM F files, the record may be truncated
+                            or padded.
+
+                            For RECFM V files, the records are cut into records
+                            of the length specified in the record structure
+                            information fields.
+
+    hostfile  The name of the input host file to be DUMPed.  If a full path
+              is not specified the file is relative to the current directory.
+              Enclose the name within double quotes if it contains any blanks.
+
+
+EXAMPLES:
+
+  The following creates a VMFPLC2 formatted tape named "out.het" which contains
+  a single file named "foo.text" which can then be read as "FOO TEXT" on the
+  guest system:
+
+
+    Contents of control file "ctlfile.txt":
+
+        FOO TEXT A1  F 80  B  foo.text
+
+
+    Command:
+
+        vmfplc2  DUMP  ctlfile.txt  out.het
+
+
+SEE ALSO:
+
+    http://www.sdl-hercules-390.org/ the Hercules emulator homepage.
+
+
+HISTORY:
+
+    2010-08-07  Originally written by Ivan S. Warren
+
+    2019-01-23  Code cleaup by "Fish" (David B. Trout)
+                Any typos or bugs are mine not Ivan's.

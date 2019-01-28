@@ -797,6 +797,7 @@ EXTRA_DIST =                  \
   README.SOFTFLOAT            \
   README.SUN                  \
   README.TAPE                 \
+  README.VMFPLC2              \
   README.TELNET               \
   README.WIN64                \
   RELEASE.NOTES               \
