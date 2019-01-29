@@ -66,59 +66,6 @@ static int set_restart(const char * s);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to parse an argument string. The string that is passed */
-/* is modified in-place by inserting null characters at the end of   */
-/* each argument found. The returned array of argument pointers      */
-/* then points to each argument found in the original string. Any    */
-/* argument (except the first one) that begins with '#' character    */
-/* is considered a line comment and causes early termination of      */
-/* parsing and is not included in the argument count. If the first   */
-/* argument begins with a '#' character, it is treated as a command  */
-/* and parsing continues as normal, thus allowing comments to be     */
-/* processed as commands. Any argument beginning with a double quote */
-/* or single apostrophe causes all characters up to the next quote   */
-/* or apostrophe to be included as part of that argument. The quotes */
-/* and/or apostrophes themselves are not considered to be a part of  */
-/* the argument itself and are replaced with nulls.                  */
-/* p            Points to string to be parsed.                       */
-/* maxargc      Maximum allowable number of arguments. (Prevents     */
-/*              overflowing the pargv array)                         */
-/* pargv        Pointer to buffer for argument pointer array.        */
-/* pargc        Pointer to number of arguments integer result.       */
-/* Returns number of arguments found. (same value as at *pargc)      */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
-{
-    *pargc = 0;
-    *pargv = NULL;
-
-    while (*p && *pargc < maxargc)
-    {
-        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
-
-        if (*p == '#' && *pargc) break; // stop when line comment reached
-
-        *pargv = p; ++*pargc; // count new arg
-
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
-
-        if (*p == '\"' || *p == '\'')
-        {
-            char delim = *p;
-            if (p == *pargv) *pargv = p+1;
-            do {} while (*++p && *p != delim);
-            if (!*p) break; // find end of quoted string
-        }
-
-        *p++ = 0; // mark end of arg
-        pargv++; // next arg ptr
-    }
-
-    return *pargc;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
 /* addargc      Contains number of arguments                         */
 /* addargv      An array of pointers to each argument                */

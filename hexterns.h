@@ -47,7 +47,6 @@ BLDC_DLL_IMPORT const char* init_sysblk_netdev();
 
 /* Functions in module script.c */
 SCRI_DLL_IMPORT int process_config (const char *fname);
-SCRI_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 
 /* Functions in module config.c */
 void release_config ( void* );
