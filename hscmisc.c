@@ -2557,10 +2557,7 @@ char    regs_msg_buf[4*512] = {0};
         if (inst[1] >= 0x29 && inst[1] <= 0x2C)
             addr2 = regs->GR(b2) & ADDRESS_MAXWRAP_E(regs);
         else
-        if (inst[1] >= 0x29 && inst[1] <= 0x2C)
             addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
-        else
-        addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
     }
 
     /* Calculate the operand address for RIL_A instructions */
