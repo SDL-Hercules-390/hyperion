@@ -79,7 +79,7 @@ static char*  modnames[ MAX_MODS ] = {0};       /* ptrs to modnames  */
 static int    modcount = 0;                     /* count of modnames */
 
 /* forward define process_script_file (ISW20030220-3) */
-extern int process_script_file(char *,int);
+extern int process_script_file( const char*, bool );
 /* extern int quit_cmd(int argc, char *argv[],char *cmdline);        */
 
 /* Forward declarations:                                             */
@@ -529,29 +529,50 @@ DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 
 /*-------------------------------------------------------------------*/
 /* Process .RC file thread.                                          */
-/*                                                                   */
-/* Called synchronously when in daemon mode.                         */
+/* Called synchronously when in daemon mode. Else asynchronously.    */
 /*-------------------------------------------------------------------*/
-static void* process_rc_file (void* dummy)
+static void* process_rc_file( void* dummy )
 {
-    char  pathname[MAX_PATH];
+    char  pathname[ MAX_PATH ];
 
-    UNREFERENCED(dummy);
+    UNREFERENCED( dummy );
 
-    /* We have a .rc file to run */
-    hostpath(pathname, cfgorrc[want_rc].filename, sizeof(pathname));
+    /* Obtain the name of the hercules.rc file or default */
+    if (0
+        /* Neither '-r' nor "HERCULES_RC" environment variable given */
+        || !cfgorrc[want_rc].filename
+        || !cfgorrc[want_rc].filename[0]
+    )
+    {
+        /* Check for "hercules.rc" file in current directory */
+        struct stat st;
+        if (stat( "hercules.rc", &st ) == 0)
+            cfgorrc[want_rc].filename = "hercules.rc";
+    }
 
-    /* Wait for panel thread to engage */
-// ZZ FIXME:THIS NEEDS TO GO
-    if (!sysblk.daemon_mode)
-        while (!sysblk.panel_init)
-            usleep( 10 * 1000 );
+    /* If we have a hercules.rc file, process it */
+    if (1
+        && cfgorrc[want_rc].filename
+        && cfgorrc[want_rc].filename[0]
+        && strcasecmp( cfgorrc[want_rc].filename, "None" ) != 0
+    )
+    {
+        hostpath( pathname, cfgorrc[want_rc].filename, sizeof( pathname ));
 
-    /* Run the script processor for this file */
-    process_script_file(pathname, 1);
-        // (else error message already issued)
+#if 1 // ZZ FIXME: THIS NEEDS TO GO
 
-    return NULL;    /* End the .rc thread */
+        /* Wait for panel thread to engage */
+        if (!sysblk.daemon_mode)
+            while (!sysblk.panel_init)
+                usleep( 10 * 1000 );
+
+#endif // ZZ FIXME: THIS NEEDS TO GO
+
+        /* Run the script processor for this file */
+        process_script_file( pathname, true );
+    }
+
+    return NULL;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1194,17 +1215,14 @@ int     rc;
 
     /* Process the .rc file synchronously when in daemon mode. */
     /* Otherwise Start up the RC file processing thread.       */
-    if (cfgorrc[want_rc].filename)
+    if (sysblk.daemon_mode)
+        process_rc_file( NULL );
+    else
     {
-        if (sysblk.daemon_mode)
-            process_rc_file( NULL );
-        else
-        {
-            rc = create_thread( &rctid, DETACHED,
-                process_rc_file, NULL, "process_rc_file" );
-            if (rc)
-                WRMSG( HHC00102, "E", strerror( rc ));
-        }
+        rc = create_thread( &rctid, DETACHED,
+            process_rc_file, NULL, "process_rc_file" );
+        if (rc)
+            WRMSG( HHC00102, "E", strerror( rc ));
     }
 
     if (log_callback)
@@ -1231,7 +1249,7 @@ int     rc;
         else
         {
             /* daemon mode without any daemon_task */
-            process_script_file("-", 1);
+            process_script_file( "-", true );
 
             /* We come here only if the user did ctl-d on a tty,
                or we reached EOF on stdin.  No quit command has

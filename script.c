@@ -722,7 +722,7 @@ static int script_abort( SCRCTL* pCtl )
 /*-------------------------------------------------------------------*/
 /* Process a single script file                 (internal, external) */
 /*-------------------------------------------------------------------*/
-int process_script_file( char *script_name, const int isrcfile )
+int process_script_file( const char* script_name, bool isrcfile )
 {
 SCRCTL* pCtl;                           /* Script processing control */
 char   *scrname;                        /* Resolved script name      */
@@ -740,14 +740,13 @@ int     rc;                             /* (work)                    */
     {
         /* If not found it's probably the Hercules ".RC" file */
         ASSERT( isrcfile );
+
         /* Create a temporary working control entry */
         if (!(pCtl = NewSCRCTL( tid, script_name )))
             return -1; /* (error message already issued) */
 
-        /* Start  over again using our temporary control entry.  The */
-        /* screwy second argument is to silence the unused parameter */
-        /* warning when ASSERT does no assert (the mind boggles)     */
-        rc = process_script_file( script_name, 0 & isrcfile );
+        /* Start over again using our temporary control entry. */
+        rc = process_script_file( script_name, isrcfile );
         FreeSCRCTL( pCtl );
         return rc;
     }
@@ -918,7 +917,7 @@ static void *script_thread( void *arg )
     for (i=1; !script_abort( pCtl ) && i < argc; i++)
     {
         UpdSCRCTL( pCtl, argv[i] );
-        process_script_file( argv[i], 0 );
+        process_script_file( argv[i], false );
     }
 
     /* Remove entry from list and exit */
@@ -962,7 +961,7 @@ int script_cmd( int argc, char* argv[], char* cmdline )
         for (i=1; !script_abort( pCtl ) && i < argc; i++)
         {
             UpdSCRCTL( pCtl, argv[i] );
-            rc = process_script_file( argv[i], 0 );
+            rc = process_script_file( argv[i], false );
             if (0 <= rc2 && 0 < rc) rc2 = MAX( rc, rc2 );
             else if (0 > rc) rc2 = MIN( rc, rc2 );
         }
