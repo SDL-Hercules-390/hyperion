@@ -817,6 +817,10 @@
     <None Include="tests\bfp-023-threads.core" />
     <None Include="tests\bfp-023-threads.list" />
     <None Include="tests\bfp-023-threads.sptst" />
+    <None Include="tests\bim-001-add-sub.asm" />
+    <None Include="tests\bim-001-add-sub.core" />
+    <None Include="tests\bim-001-add-sub.list" />
+    <None Include="tests\bim-001-add-sub.tst" />
     <None Include="tests\CBUC.asm" />
     <None Include="tests\CBUC.core" />
     <None Include="tests\CBUC.list" />

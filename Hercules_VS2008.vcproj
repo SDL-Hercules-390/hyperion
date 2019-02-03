@@ -3267,6 +3267,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\bim-001-add-sub.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\CBUC.core"
 						>
 					</File>
@@ -4162,6 +4166,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\bim-001-add-sub.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CBUC.tst"
 							>
 						</File>
@@ -4510,6 +4518,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\bim-001-add-sub.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CBUC.asm"
 							>
 						</File>
@@ -4670,6 +4682,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\bfp-023-threads.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\bim-001-add-sub.list"
 								>
 							</File>
 							<File

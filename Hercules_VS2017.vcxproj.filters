@@ -1628,6 +1628,9 @@
     <None Include="tests\bfp-023-threads.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\bim-001-add-sub.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1797,6 +1800,9 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\bfp-023-threads.sptst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bim-001-add-sub.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\cipher.tst">
@@ -2000,6 +2006,9 @@
     <None Include="tests\bfp-023-threads.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\bim-001-add-sub.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2079,6 +2088,9 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-023-threads.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bim-001-add-sub.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\pfpo.list">

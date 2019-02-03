@@ -109,6 +109,10 @@ EXTRA_DIST =                    \
      bfp-023-threads.core       \
      bfp-023-threads.list       \
      bfp-023-threads.sptst      \
+     bim-001-add-sub.asm        \
+     bim-001-add-sub.core       \
+     bim-001-add-sub.list       \
+     bim-001-add-sub.tst        \
      brc.txt                    \
      CCW-ILS.asm                \
      CCW-ILS.list               \
