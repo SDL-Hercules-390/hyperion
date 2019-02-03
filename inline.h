@@ -137,42 +137,52 @@ static inline int sub_logical(U32 *result, U32 op1, U32 op2)
 /* Add two signed fullwords giving a signed fullword result          */
 /* and return the condition code for the A or AR instruction         */
 /*-------------------------------------------------------------------*/
-static inline int add_signed(U32 *result, U32 op1, U32 op2)
+static inline int add_signed( U32* result, U32 op1, U32 op2 )
 {
-    *result = (S32)op1 + (S32)op2;
+    S32 sres, sop1, sop2;
 
-    return  ((S32)*result >  0) ?
-                ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 2 :
-            ((S32)*result <  0) ?
-                ((S32)op1 >= 0 && (S32)op2 >= 0) ? 3 : 1 :
-                ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 0;
+    /* NOTE: cannot use casting here as signed fixed point overflow
+       leads to undefined behavior! (whereas unsigned doesn't)
+    */
+    *result = op1 + op2;
 
-/*    return (((S32)op1 < 0 && (S32)op2 < 0 && (S32)*result >= 0)
-      || ((S32)op1 >= 0 && (S32)op2 >= 0 && (S32)*result < 0)) ? 3 :
-                                              (S32)*result < 0 ? 1 :
-                                              (S32)*result > 0 ? 2 : 0; */
-} /* end function add_signed */
+    sres = (S32) *result;
+    sop1 = (S32) op1;
+    sop2 = (S32) op2;
+
+    return
+    (0
+        || (sop2 > 0 && sop1 > (INT_MAX - sop2))
+        || (sop2 < 0 && sop1 < (INT_MIN - sop2))
+    )
+    ? 3 : (sres < 0 ? 1 : (sres > 0 ? 2 : 0));
+}
 
 
 /*-------------------------------------------------------------------*/
 /* Subtract two signed fullwords giving a signed fullword result     */
 /* and return the condition code for the S or SR instruction         */
 /*-------------------------------------------------------------------*/
-static inline int sub_signed(U32 *result, U32 op1, U32 op2)
+static inline int sub_signed( U32* result, U32 op1, U32 op2 )
 {
-    *result = (S32)op1 - (S32)op2;
+    S32 sres, sop1, sop2;
 
-    return  ((S32)*result >  0) ?
-                ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 2 :
-            ((S32)*result <  0) ?
-                ((S32)op1 >= 0 && (S32)op2 <  0) ? 3 : 1 :
-            ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 0;
+    /* NOTE: cannot use casting here as signed fixed point overflow
+       leads to undefined behavior! (whereas unsigned doesn't)
+    */
+    *result = op1 - op2;
 
-/*    return (((S32)op1 < 0 && (S32)op2 >= 0 && (S32)*result >= 0)
-      || ((S32)op1 >= 0 && (S32)op2 < 0 && (S32)*result < 0)) ? 3 :
-                                             (S32)*result < 0 ? 1 :
-                                             (S32)*result > 0 ? 2 : 0; */
-} /* end function sub_signed */
+    sres = (S32) *result;
+    sop1 = (S32) op1;
+    sop2 = (S32) op2;
+
+    return
+    (0
+        || (sop2 < 0 && sop1 > (INT_MAX + sop2))
+        || (sop2 > 0 && sop1 < (INT_MIN + sop2))
+    )
+    ? 3 : (sres < 0 ? 1 : (sres > 0 ? 2 : 0));
+}
 
 
 /*-------------------------------------------------------------------*/
@@ -240,30 +250,52 @@ static inline int sub_logical_long(U64 *result, U64 op1, U64 op2)
 /* Add two signed doublewords giving a signed doubleword result      */
 /* and return the condition code for the AG or AGR instruction       */
 /*-------------------------------------------------------------------*/
-static inline int add_signed_long(U64 *result, U64 op1, U64 op2)
+static inline int add_signed_long( U64* result, U64 op1, U64 op2 )
 {
-    *result = (S64)op1 + (S64)op2;
+    S64 sres, sop1, sop2;
 
-    return (((S64)op1 < 0 && (S64)op2 < 0 && (S64)*result >= 0)
-      || ((S64)op1 >= 0 && (S64)op2 >= 0 && (S64)*result < 0)) ? 3 :
-                                              (S64)*result < 0 ? 1 :
-                                              (S64)*result > 0 ? 2 : 0;
-} /* end function add_signed_long */
+    /* NOTE: cannot use casting here as signed fixed point overflow
+       leads to undefined behavior! (whereas unsigned doesn't)
+    */
+    *result = op1 + op2;
+
+    sres = (S64) *result;
+    sop1 = (S64) op1;
+    sop2 = (S64) op2;
+
+    return
+    (0
+        || (sop2 > 0 && sop1 > (LLONG_MAX - sop2))
+        || (sop2 < 0 && sop1 < (LLONG_MIN - sop2))
+    )
+    ? 3 : (sres < 0 ? 1 : (sres > 0 ? 2 : 0));
+}
 
 
 /*-------------------------------------------------------------------*/
 /* Subtract two signed doublewords giving signed doubleword result   */
 /* and return the condition code for the SG or SGR instruction       */
 /*-------------------------------------------------------------------*/
-static inline int sub_signed_long(U64 *result, U64 op1, U64 op2)
+static inline int sub_signed_long( U64* result, U64 op1, U64 op2 )
 {
-    *result = (S64)op1 - (S64)op2;
+    S64 sres, sop1, sop2;
 
-    return (((S64)op1 < 0 && (S64)op2 >= 0 && (S64)*result >= 0)
-      || ((S64)op1 >= 0 && (S64)op2 < 0 && (S64)*result < 0)) ? 3 :
-                                             (S64)*result < 0 ? 1 :
-                                             (S64)*result > 0 ? 2 : 0;
-} /* end function sub_signed_long */
+    /* NOTE: cannot use casting here as signed fixed point overflow
+       leads to undefined behavior! (whereas unsigned doesn't)
+    */
+    *result = op1 - op2;
+
+    sres = (S64) *result;
+    sop1 = (S64) op1;
+    sop2 = (S64) op2;
+
+    return
+    (0
+        || (sop2 < 0 && sop1 > (LLONG_MAX + sop2))
+        || (sop2 > 0 && sop1 < (LLONG_MIN + sop2))
+    )
+    ? 3 : (sres < 0 ? 1 : (sres > 0 ? 2 : 0));
+}
 
 
 /*-------------------------------------------------------------------*/
