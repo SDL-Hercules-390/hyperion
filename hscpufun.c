@@ -425,7 +425,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
             {
                 /* PROGRAMMING NOTE: the 'PARM' option, if specified,
                    must be the last option specified on the command line
-                   as all remaining arguments are interpretted as being
+                   as all remaining arguments are interpreted as being
                    the actual parm data to be loaded into the registers.
                 */
                 int i, j, len;

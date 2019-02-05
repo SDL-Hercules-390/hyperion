@@ -338,7 +338,7 @@ int     msgcount = 22;
 
 
         // We need to convert certain characters that might
-        // possibly be erroneously interpretted as HTML code
+        // possibly be erroneously interpreted as HTML code
 
 #define  AMP_LT    "&lt;"       // (HTML code for '<')
 #define  AMP_GT    "&gt;"       // (HTML code for '>')

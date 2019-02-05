@@ -330,7 +330,7 @@
 :remlead0
 
   @REM  Removes leading zeros from a given number so that it
-  @REM  isn't unintentionally interpretted as an octal number.
+  @REM  isn't unintentionally interpreted as an octal number.
 
   set "@v=%~1"
   call :isnum "%@v%"
