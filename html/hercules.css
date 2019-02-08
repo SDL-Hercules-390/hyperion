@@ -29,6 +29,14 @@ p.lastupd
     font-size:        80%;
 }
 
+p.box
+{
+    padding:          20px;
+    border-width:     1px;
+    border-style:     solid;
+    border-color:     black;
+}
+
 p.note
 {
     background-color: #FFFFAA;

@@ -88,7 +88,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
     <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP
-    <a href="#CODEPAGE">CODEPAGE</a>   default
+    <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
@@ -377,7 +377,8 @@ a real System/390.  The configuration file is an ASCII text file.
     Specifies the codepage conversion mapping table used for ASCII/EBCDIC translation.
     <p>
 
-    <code>default</code> specifies traditional Hercules codepage mapping.
+    <code>default</code> specifies traditional Hercules codepage mapping,
+    which is non-transparent.
 
     <p>
 
@@ -473,10 +474,10 @@ a real System/390.  The configuration file is an ASCII text file.
             <td><center>YES</center></td>
         </tr>
 
-        <tr><td align="center"><code>819/1047</code></td>
-            <td>819 ISO-8859-1</td>
-            <td>1047 Open Systems Latin 1</td>
-            <td><center>YES</center></td>
+        <tr><td align="center"><b><code>819/1047</code></b></td>
+            <td><b>819 ISO-8859-1</b></td>
+            <td><b>1047 Open Systems Latin 1</b></td>
+            <td><b><center>YES</center></b></td>
         </tr>
 
         <tr><td align="center"><code>850/273</code></td>
@@ -542,6 +543,40 @@ a real System/390.  The configuration file is an ASCII text file.
     panel command (which is supported as a configuration file statement
     as well). Enter the panel command <code>help cp_updt</code> for more
     information.
+
+    <p>
+
+    The recommended code page is "<b>819/1047</b>", as it is both transparent
+    and properly translates <i><u>all</u></i> ASCII characters to their EBCDIC
+    equivalents, including all extended ASCII characters such as
+
+    '[' (left square bracket),
+    '\' (backslash),
+    ']' (right square bracket),
+    '^' (caret / circumflex),
+    '_' (underscore),
+    '`' (grave / accent),
+    '{' (left curly bracket),
+    '|' (vertical bar),
+    '}' (right curly bracket),
+    '~' (tilde),
+    '¢' (cent),
+    '£' (pound),
+    '¤' (Currency sign),
+    '¥' (yen, yuan),
+    '¦' (broken bar),
+    '§' (section sign),
+    '©' (copyright),
+    'ª' (ordinal indicator),
+    '®' (registered trademark),
+    '°' (degree),
+    '±' (plus-minus),
+    'µ' (mu),
+    '¶' (pilcrow/paragraph),
+    'º' (ordinal indicator),
+    '¿' (inverted question mark),
+    '×' (multiplication sign),
+    '÷' (obelus/divide sign).
 
     <p>
 
@@ -1154,6 +1189,19 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a> (version 3.6.0 or greater)
     for information regarding modifying Windows's "Adapter Binding Order" and/or defining
     a preferred CTCI-WIN default host network adapter.
+    <p>
+    <center>
+    <table width=95%>
+      <tr><td>
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+      </td></tr>
+    </table>
+    </center>
     <p>
 
 <a name="NUMCPU"></a>
@@ -3281,6 +3329,15 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <p>
 
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
+        <p>
+
         For technical reasons, the <code>iface</code>,&nbsp;<code>ipaddr</code>
         and <code>netmask</code> parameters are <i><u>required parameters</u></i>
         for both Windows and *nix. All other parameters however, are optional.
@@ -3461,6 +3518,15 @@ a real System/390.  The configuration file is an ASCII text file.
         the Hercules machine as either an IBM 8232 LCS device, the LCS3172
         driver of a P/390, a 3172 running ICP (Interconnect Communications
         Program), or as a simple IBM 2216 router.
+
+        <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
 
         <p>
 
@@ -3698,6 +3764,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
         <a href="herctcp.html">Hercules TCP/IP</a> page for unix details,
         in particular the use of preconfigured interfaces.
         <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
+        <p>
         The Windows implementation is different from the unix one. See
         SoftDevLab's <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
         page for further details and information.
@@ -3840,6 +3915,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
         Adapter.  CTCE devices are emulated via TCP/IP connections between
         two or more Hercules instances.
         <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
+        <p>
         A Hercules CTCE device requires two even-odd pairs of devices, one for
         reading and the other for writing.  Each individual device of the even-odd
         device pair requires and even-odd pair of port numbers.  Only the even
@@ -3920,6 +4004,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
         From the point of view of the guest image running in the Hercules
         machine it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to
         another image.
+        <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
         <p>
         For *nix systems, such as Linux, BSD, and OSX, you may use
         preconfigured interfaces or you may request Hercules to configure
