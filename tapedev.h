@@ -22,7 +22,7 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define MAX_BLKLEN              2097152 /* Maximum blocksize = 2MB   */
+#define MAX_TAPE_BLKSIZE        2097152 /* Maximum blocksize = 2MB   */
 #define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
 
 /*-------------------------------------------------------------------*/
@@ -163,7 +163,7 @@ CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h );
 
 #define BLK64       ((64 * 1024)-1)
 #define BLK256      (256 * 1024)
-#define BLKMAX      (MAX_BLKLEN)
+#define BLKMAX      (MAX_TAPE_BLKSIZE)
 
 #define FEAT1_3480  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
 #define FEAT1_3490  (TRDC_LWP | TRDC_ACL | TRDC_IDR)

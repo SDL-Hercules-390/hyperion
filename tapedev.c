@@ -802,7 +802,7 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
     dev->cdwmerge = 1;
 
     /* Request a maximum sized device I/O buffer */
-    dev->bufsize = MAX_BLKLEN;
+    dev->bufsize = MAX_TAPE_BLKSIZE;
 
     /* ISW */
     /* Build a 'clear' sense */
@@ -859,7 +859,7 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
 #endif
 
     /* Request a maximum sized device I/O buffer */
-    dev->bufsize = MAX_BLKLEN;
+    dev->bufsize = MAX_TAPE_BLKSIZE;
 
     /* Make attention pending if necessary */
     if (dev->reinit)

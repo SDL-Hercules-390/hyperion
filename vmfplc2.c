@@ -20,8 +20,8 @@
 /*-------------------------------------------------------------------*/
 /* Maximum sized tape I/O buffers...                                 */
 /*-------------------------------------------------------------------*/
-static BYTE bfr[ MAX_BLKLEN ];
-static BYTE bfr2[ MAX_BLKLEN ];
+static BYTE bfr[ MAX_TAPE_BLKSIZE ];
+static BYTE bfr2[ MAX_TAPE_BLKSIZE ];
 
 /* The blocksize of 4000 is the block size expected by VMFPLC2 */
 #define TAPE_BLOCKSIZE          4000
@@ -518,9 +518,9 @@ struct TAPE_BLOCKS *load_binary_file(char *infile,char recfm,int *recl,int *recc
     struct  RECS *recs;
 
     if(recfm=='V')
-        maxsize=MAX_BLKLEN-1;
+        maxsize=MAX_TAPE_BLKSIZE-1;
     else
-        maxsize=MAX_BLKLEN;
+        maxsize=MAX_TAPE_BLKSIZE;
 
     ifile=fopen(infile,"r");
     if(ifile==NULL)
@@ -813,7 +813,7 @@ int process_entry(struct options *opts,char *orec,int recno)
                 msg="Logical Record Length must be a numeric value";
                 break;
             }
-            if(reclen<1 || reclen>=MAX_BLKLEN)
+            if(reclen<1 || reclen>=MAX_TAPE_BLKSIZE)
             {
                 msg="Logical Record Length must be between 1 and 65535";
                 break;

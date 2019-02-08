@@ -247,7 +247,7 @@ char           *strtok_str = NULL;      /* last token position       */
             /* Check for valid fixed block length */
             if (tdfblklen == NULL
                 || sscanf(tdfblklen, "%u%c", &blklen, &c) != 1
-                || blklen < 1 || blklen > MAX_BLKLEN)
+                || blklen < 1 || blklen > MAX_TAPE_BLKSIZE)
             {
                 char buf[40];
                 MSGBUF(buf, "invalid record size %s", tdfblklen);
@@ -437,7 +437,7 @@ S32             nxthdro;                /* Offset of next header     */
                     | omahdr.prvhdro[0];
 
     /* Check for valid block header */
-    if (curblkl < -1 || curblkl == 0 || curblkl > MAX_BLKLEN
+    if (curblkl < -1 || curblkl == 0 || curblkl > MAX_TAPE_BLKSIZE
         || memcmp(omahdr.omaid, "@HDF", 4) != 0)
     {
         WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "readhdr_omaheaders()", (off_t)blkpos, "invalid block header");
@@ -652,7 +652,7 @@ BYTE            c;                      /* Character work area       */
         if (c == '\n') break;
 
         /* Ignore characters in excess of I/O buffer length */
-        if (pos >= MAX_BLKLEN) continue;
+        if (pos >= MAX_TAPE_BLKSIZE) continue;
 
         /* Translate character to EBCDIC and copy to I/O buffer */
         if (buf != NULL)

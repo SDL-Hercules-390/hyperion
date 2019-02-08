@@ -294,11 +294,11 @@ U16             seglen;                 /* Data length of segment    */
         blkpos += sizeof(awshdr) + seglen;
 
         /* Check that block length will not exceed buffer size */
-        if (blklen + seglen > MAX_BLKLEN)
+        if (blklen + seglen > MAX_TAPE_BLKSIZE)
         {
             // "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x%16.16"PRIX64
             WRMSG (HHC00202, "E", LCSS_DEVNUM, dev->filename, "aws",
-                    (int)MAX_BLKLEN, blkpos);
+                    (int)MAX_TAPE_BLKSIZE, blkpos);
 
             /* Set unit check with data check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);

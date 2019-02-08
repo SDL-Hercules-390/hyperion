@@ -34,7 +34,7 @@
 /*-------------------------------------------------------------------*/
 /* Maximum sized tape I/O buffer...                                  */
 /*-------------------------------------------------------------------*/
-static BYTE buf[ MAX_BLKLEN ];
+static BYTE buf[ MAX_TAPE_BLKSIZE ];
 
 /*
 || Local volatile data

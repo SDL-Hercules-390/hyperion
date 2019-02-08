@@ -6305,7 +6305,7 @@ BYTE     unitstat, code = 0;
         {
             if ( dev->blockid == 0 )
             {
-                BYTE *sLABEL = malloc( MAX_BLKLEN );
+                BYTE *sLABEL = malloc( MAX_TAPE_BLKSIZE );
 
                 if (!sLABEL)
                 {
