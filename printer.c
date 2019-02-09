@@ -629,7 +629,7 @@ static int onconnect_callback (DEVBLK* dev)
     TID tid;
     int rc;
 
-    rc = create_thread( &tid, DETACHED, spthread, dev, NULL );
+    rc = create_thread( &tid, DETACHED, spthread, dev, "spthread" );
     if (rc)
     {
         // "Error in function create_thread(): %s"
