@@ -9,6 +9,8 @@
 # ---------------------------------------------------------------------
 # DLL export libraries are dependent on themselves existing
 
+$(O)hdt3420.lib:    $(X)hdt3420.dll
+
 $(O)hdasd.lib:      $(X)hdasd.dll
 
 $(O)htape.lib:      $(X)htape.dll
@@ -239,7 +241,7 @@ $(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)vmfplc2.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
+$(X)vmfplc2.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hdt3420.lib $(O)herctape.res
 
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule

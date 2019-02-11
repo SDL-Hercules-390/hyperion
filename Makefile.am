@@ -678,7 +678,7 @@ dmap2hrc_LDADD     = $(tools_ADDLIBS)
 dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
 
 vmfplc2_SOURCES    = vmfplc2.c
-vmfplc2_LDADD      = $(tools_ADDLIBS)
+vmfplc2_LDADD      = $(tools_ADDLIBS) hdt3420.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------

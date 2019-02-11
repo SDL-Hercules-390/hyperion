@@ -540,7 +540,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00466 "Maximum of %u %s in %u 2GB file(s) is supported"
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
-#define HHC00469 "%1d:%04X CKD file %s: dasd image format unsupported or unrecognized"
+//efine HHC00469 (available)
 #define HHC00470 "%1d:%04X CKD64 file %s: cyls %d heads %d tracks %d trklen %d"
 #define HHC00471 "%1d:%04X CKD64 file %s: %u %s successfully written"
 #define HHC00472 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
@@ -571,8 +571,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00519 "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
 #define HHC00520 "%1d:%04X FBA file %s: positioning to 0x%"PRIX64" %"PRId64
 #define HHC00521 "Maximum of %u %s in a 2GB file"
-#define HHC00522 "%1d:%04X FBA file %s: dasd image format unsupported or unrecognized"
-//efine HHC00523 - HHC00599 (available)
+//efine HHC00522 - HHC00599 (available)
 
 // reserve 006xx for sce dasd device related messages
 #define HHC00600 "SCE file %s: error in function %s: %s"
@@ -792,7 +791,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00967 "CTC: lcs device port %2.2X: read thread: waiting for start event"
 #define HHC00968 "CTC: lcs device port %2.2X: read thread: port started"
 #define HHC00969 "CTC: lcs device port %2.2X: read thread: port stopped"
-#define HHC00970 "%1d:%04X CTC: unrecognized emulation type %s"
+//efine HHC00970 (available)
 #define HHC00971 "%1d:%04X CTC: connect to %s:%s failed, starting server"
 #define HHC00972 "%1d:%04X CTC: connected to %s:%s"
 #define HHC00973 "%1d:%04X CTC: error reading from file %s: %s"
@@ -1880,27 +1879,37 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02619 "%s %d not found"
 
 // vmfplc2
-#define HHC02620 "Usage: %s verb [ctlfile outfile] | [infile]\n" \
-       "HHC02620I   verb      desired action (DUMP, LOAD or SCAN)\n" \
-       "HHC02620I   ctlfile   filename of input control file (DUMP only)\n" \
-       "HHC02620I   outfile   filename of output tape file (DUMP only)\n" \
-       "HHC02620I   infile    filename of input tape file (LOAD/SCAN only)\n" \
-       "HHC02620I Note: LOAD and SCAN are currently unsupported."
-#define HHC02621 "Invalid function %s"
+#define HHC02620 "Usage: %s [options] VERB [<ctlfile>] <tapein> | <tapeout>\n"  \
+       "HHC02620I   VERB      desired action               (DUMP/LOAD/SCAN)\n"  \
+       "HHC02620I   ctlfile   filename of control file     (DUMP/LOAD only)\n"  \
+       "HHC02620I   tapein    filename of input tape file  (LOAD/SCAN only)\n"  \
+       "HHC02620I   tapeout   filename of output tape file (DUMP only)\n"       \
+       "HHC02620I Options:\n"                                                   \
+       "HHC02620I   -c cp     desired translation codepage\n"                   \
+       "HHC02620I   -t        read/write tape in CMS 'TAPE' DUMP format\n"      \
+       "HHC02620I   -v        don't suppress certain informational messages\n"  \
+       "HHC02620I   -u        create uncompressed .aws output\n"                \
+       "HHC02620I   -z        create compressed .het using zlib (default)\n"    \
+       "HHC02620I   -b        create compressed .het using bzip2\n"             \
+       "HHC02620I   -4        desired compression level (-1, -2 ... -9)"
+#define HHC02621 "Invalid %s \"%s\""
 #define HHC02622 "%s not specified"
-#define HHC02623 "%s not supported (yet)"
-#define HHC02624 "%s function not implemented (yet)"
-#define HHC02625 "%s" // "DUMPING...", "SCANNING...", "LOADING...", etc
-#define HHC02626 "%-8s %-8s %-2s"
-#define HHC02627 "%s" // "Entry ignored", etc.
-#define HHC02628 "Invalid character in CMS file \"%s\" at position %d"
-#define HHC02629 "Expected %d bytes from file \"%s\", but only %d file read"
+#define HHC02623 "File open error: \"%s\": %s"
+#define HHC02624 "Error in function %s: %s"
+#define HHC02625 "%s"
+#define HHC02626 ">>> %s"
+#define HHC02627 "I/O error on file \"%s\": %s"
+#define HHC02628 "lrecl %u less than %u; one or more records truncated"
+#define HHC02629 "Expected %d bytes from file \"%s\", but only %d bytes read"
 #define HHC02630 "%d errors encountered"
-#define HHC02631 ">>> %s"
+#define HHC02631 "%s complete"
 #define HHC02632 "    Bad entry at line %d in file \"%s\""
-#define HHC02633 "    \"%s\""
+#define HHC02633 "    %s"
 #define HHC02634 "INTERNAL ERROR %s"
-//efine HHC02635 - HHC02644 (available)
+#define HHC02635 "Tape \"%s\" created"
+#define HHC02636 "Invalid block encountered @ %d:%d"
+#define HHC02637 "%s tape format set to %s"
+//efine HHC02638 - HHC02644 (available)
 
 // dmap2hrc
 #define HHC02645 "Usage: %s infile\n" \
