@@ -1252,7 +1252,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
 ==DOC==*/
 
 DLL_EXPORT int
-het_write( HETB *hetb, void *sbuf, int slen )
+het_write( HETB *hetb, const void *sbuf, int slen )
 {
     int rc;
     int flags;
@@ -1297,7 +1297,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
             case HETHDR_FLAGS1_ZLIB:
                 tlen = tsiz;
 
-                rc = compress2( (unsigned char *)tbuf, &tlen, sbuf, slen, hetb->level );
+                rc = compress2( (unsigned char *)tbuf, &tlen, (void *)sbuf, slen, hetb->level );
                 if( rc != Z_OK )
                 {
                     rc = errno;
@@ -1321,7 +1321,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
                 rc = BZ2_bzBuffToBuffCompress( tbuf,
                                                (void *) &tlen,
-                                               sbuf,
+                                               (void *)sbuf,
                                                slen,
                                                hetb->level,
                                                0,

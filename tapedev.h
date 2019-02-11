@@ -609,22 +609,22 @@ extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BY
 /*-------------------------------------------------------------------*/
 /* Functions defined in AWSTAPE.C                                    */
 /*-------------------------------------------------------------------*/
-extern int  open_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern void close_awstape     (DEVBLK *dev);
-extern int  passedeot_awstape (DEVBLK *dev);
-extern int  rewind_awstape    (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  write_awsmark     (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  sync_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  readhdr_awstape   (DEVBLK *dev, off_t blkpos, AWSTAPE_BLKHDR *buf,
-                                            BYTE *unitstat, BYTE code);
-extern int  read_awstape      (DEVBLK *dev, BYTE *buf,
-                                            BYTE *unitstat, BYTE code);
-extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U32 blklen,
-                                            BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  open_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT void close_awstape     (DEVBLK *dev);
+AWSTAPE_DLL_IMPORT int  passedeot_awstape (DEVBLK *dev);
+AWSTAPE_DLL_IMPORT int  rewind_awstape    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  write_awsmark     (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  sync_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  fsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  bsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  fsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  bsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  readhdr_awstape   (DEVBLK *dev, off_t blkpos, AWSTAPE_BLKHDR *buf,
+                                           BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  read_awstape      (DEVBLK *dev, BYTE *buf,
+                                           BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  write_awstape     (DEVBLK *dev, const BYTE *buf, U32 blklen,
+                                           BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in FAKETAPE.C                                   */
@@ -653,20 +653,20 @@ extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U32 blklen,
 /*-------------------------------------------------------------------*/
 /* Functions defined in HETTAPE.C                                    */
 /*-------------------------------------------------------------------*/
-extern int  open_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern void close_het     (DEVBLK *dev);
-extern int  passedeot_het (DEVBLK *dev);
-extern int  rewind_het    (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  write_hetmark (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  sync_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  read_het      (DEVBLK *dev, BYTE *buf,
-                                        BYTE *unitstat, BYTE code);
-extern int  write_het     (DEVBLK *dev, BYTE *buf, U32 blklen,
-                                        BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  open_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT void close_het     (DEVBLK *dev);
+HETTAPE_DLL_IMPORT int  passedeot_het (DEVBLK *dev);
+HETTAPE_DLL_IMPORT int  rewind_het    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  write_hetmark (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  sync_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  fsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  bsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  fsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  bsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  read_het      (DEVBLK *dev, BYTE *buf,
+                                       BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  write_het     (DEVBLK *dev, const BYTE *buf, U32 blklen,
+                                       BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in OMATAPE.C                                    */

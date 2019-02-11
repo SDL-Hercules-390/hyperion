@@ -709,5 +709,29 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+/*                        _HDT3420_DLL_                              */
+/*-------------------------------------------------------------------*/
+
+#ifndef    _AWSTAPE_C_
+  #ifndef  _HDT3420_DLL_
+    #define AWSTAPE_DLL_IMPORT      DLL_IMPORT
+  #else
+    #define AWSTAPE_DLL_IMPORT      extern
+  #endif
+#else
+  #define   AWSTAPE_DLL_IMPORT      DLL_EXPORT
+#endif
+
+#ifndef    _HETTAPE_C_
+  #ifndef  _HDT3420_DLL_
+    #define HETTAPE_DLL_IMPORT      DLL_IMPORT
+  #else
+    #define HETTAPE_DLL_IMPORT      extern
+  #endif
+#else
+  #define   HETTAPE_DLL_IMPORT      DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
 
 #endif // _IMPEXP_H_
