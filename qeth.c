@@ -3252,8 +3252,8 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
     ETHFRM* eth;                        /* Ethernet frame header */
     U16  hwEthernetType;
     int iPktVer;
+    int iTraceLen;
     char cPktType[8];
-    int dropthisthing;
 
     sb = 0;                             /* Start w/Storage Block 0   */
 
@@ -3280,6 +3280,23 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         if (sblen < max(sizeof(OSA_HDR2),sizeof(OSA_HDR3)))
             WRMSG( HHC03983, "W", LCSS_DEVNUM,
                 dev->typname, "** FIXME ** OSA_HDR spans multiple storage blocks." );
+
+        /* Debugging */
+        if (grp->debugmask & DBGQETHDATA)
+        {
+          iTraceLen = sblen;
+
+          // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+          WRMSG(HHC00981, "D", LCSS_DEVNUM, dev->typname, iTraceLen);
+          if (iTraceLen > 256)
+          {
+            iTraceLen = 256;
+            // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+            WRMSG(HHC00980, "D", LCSS_DEVNUM, dev->typname,
+                                 iTraceLen, (sblen - iTraceLen) );
+          }
+          net_data_trace( dev, hdr, iTraceLen, FROM_GUEST, 'D', "data", 0 );
+        }
 
         /* Determine if Layer 2 Ethernet frame or Layer 3 IP packet */
         hdr_id = hdr[0];
@@ -3311,6 +3328,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         default:
             return SBALE_ERROR( QRC_EPKTYP, dev,sbal,sbalk,sb);
         }
+
 
         /* Make sure the packet/frame fits in the device buffer */
         if (pktlen > dev->bufsize)
@@ -3357,24 +3375,15 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* frames, which if sent to the tun interface, upset the tun, hence   */
         /* the dropthishing checking.                                         */
         /*                                                                    */
-        dropthisthing = FALSE;
-        if (grp->l3)
+        if (hdr_id == HDR_ID_LAYER3)
         {
-          eth = (ETHFRM*)pkt;
-          if (memcmp( &eth->bSrcMAC[0], &grp->iMAC, IFHWADDRLEN ) == 0)
-          {
-            FETCH_HW( hwEthernetType, eth->hwEthernetType );
-            if (hwEthernetType == ETH_TYPE_IP || hwEthernetType == ETH_TYPE_IPV6)
+            OSA_HDR3* o3hdr = (OSA_HDR3*)hdr;
+            if ((o3hdr->flags & HDR3_FLAGS_IPV6) && (o3hdr->flags & HDR3_FLAGS_PASSTHRU))
             {
               pkt += sizeof(ETHFRM);
               pktlen -= sizeof(ETHFRM);
-            } else {
-              dropthisthing = TRUE;
             }
-          }
         }
-
-        if (dropthisthing == TRUE) continue;
 
         /* Debugging */
         if (grp->debugmask & DBGQETHPACKET)
