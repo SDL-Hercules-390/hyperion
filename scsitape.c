@@ -434,7 +434,7 @@ int  rc;
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_scsitape (DEVBLK *dev, BYTE *buf, U32 len,
+int write_scsitape (DEVBLK *dev, const BYTE *buf, U32 len,
                     BYTE *unitstat, BYTE code)
 {
 int  rc;

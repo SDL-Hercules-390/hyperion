@@ -42,6 +42,7 @@
 
 #include "hercules.h"
 #include "tapedev.h"
+#include "ccwarn.h"
 
 #define UTILITY_NAME    "vmfplc2"
 #define UTILITY_DESC    "VM/CMS VMFPLC2/TAPE Utility"
@@ -1333,6 +1334,8 @@ static struct CMS_BLOCK* build_cms_block( const char* fn, const char* ft,
     struct  tm*  ttm;
     char         bfr[3];
 
+    UNREFERENCED( filesz );
+
     if (!(cmsb = malloc( sizeof( CMS_BLOCK ))))
         return NULL;
 
@@ -1857,7 +1860,6 @@ static int parse_ctlfile( OPTIONS* opts )
     char*   rec;
     int     recno = 0;
     int     errs  = 0;
-    int     rc    = 0;
 
     /* Open the control file */
     if (!(cfile = fopen( opts->ctlfile, "r" )))
@@ -2133,7 +2135,7 @@ static int write_rec( FILE* ofile, BYTE* p, int len,
                 while (len && ' ' == (char)(*(p + len - 1)))
                     --len;
         }
-        if (len && fwrite( p, 1, len, ofile ) != len)
+        if (len && fwrite( p, 1, (size_t) len, ofile ) != (size_t) len)
         {
             // "I/O error on file \"%s\": %s"
             FWRMSG( stderr, HHC02627, "E", name, strerror( errno ));
@@ -2283,7 +2285,7 @@ static int load_file
         }
 
         /* Write variable len recs until end of block */
-        while (rc >= 0 && *recs && rem >= sizeof( HWORD ))
+        while (rc >= 0 && *recs && rem >= (int) sizeof( HWORD ))
         {
             HWORD recsize;
             int rsz;

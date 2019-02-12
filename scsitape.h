@@ -28,24 +28,24 @@
 /*                    External TMH-vector calls                      */
 /*-------------------------------------------------------------------*/
 extern int   update_status_scsitape   ( DEVBLK *dev ); // (via "generic" vector)
-extern int   open_scsitape            ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   finish_scsitape_open     ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   open_scsitape            ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   finish_scsitape_open     ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
 extern void  close_scsitape           ( DEVBLK *dev );
-extern int   read_scsitape            ( DEVBLK *dev, BYTE *buf,          BYTE *unitstat, BYTE code );
-extern int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U32 len, BYTE *unitstat, BYTE code );
-extern int   rewind_scsitape          ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   bsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   fsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   bsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   fsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   write_scsimark           ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   sync_scsitape            ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   dse_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   erg_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
-extern int   is_tape_mounted_scsitape ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+extern int   read_scsitape            ( DEVBLK *dev,       BYTE *buf,          BYTE *unitstat, BYTE code );
+extern int   write_scsitape           ( DEVBLK *dev, const BYTE *buf, U32 len, BYTE *unitstat, BYTE code );
+extern int   rewind_scsitape          ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   bsb_scsitape             ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   fsb_scsitape             ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   bsf_scsitape             ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   fsf_scsitape             ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   write_scsimark           ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   sync_scsitape            ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   dse_scsitape             ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   erg_scsitape             ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
+extern int   is_tape_mounted_scsitape ( DEVBLK *dev,                           BYTE *unitstat, BYTE code );
 extern int   passedeot_scsitape       ( DEVBLK *dev );
 extern int   readblkid_scsitape       ( DEVBLK* dev, BYTE* logical, BYTE* physical );
-extern int   locateblk_scsitape       ( DEVBLK* dev, U32 blockid,        BYTE *unitstat, BYTE code );
+extern int   locateblk_scsitape       ( DEVBLK* dev, U32 blockid,              BYTE *unitstat, BYTE code );
 
 /*-------------------------------------------------------------------*/
 /*                     Internal functions                            */

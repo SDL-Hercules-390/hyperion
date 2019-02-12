@@ -495,21 +495,21 @@ GENTMH_PARMS;
 /*-------------------------------------------------------------------*/
 struct TAPEMEDIA_HANDLER
 {
-    int  (*generic)    (GENTMH_PARMS*);                 // (generic call)
-    int  (*open)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*generic)    (GENTMH_PARMS*);                       // (generic call)
+    int  (*open)       (DEVBLK*,                              BYTE *unitstat, BYTE code);
     void (*close)      (DEVBLK*);
-    int  (*read)       (DEVBLK*, BYTE *buf,             BYTE *unitstat, BYTE code);
-    int  (*write)      (DEVBLK*, BYTE *buf, U32 blklen, BYTE *unitstat, BYTE code);
-    int  (*rewind)     (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*bsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*fsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*bsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*fsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*wtm)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*sync)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*dse)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*erg)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*tapeloaded) (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*read)       (DEVBLK*,       BYTE *buf,             BYTE *unitstat, BYTE code);
+    int  (*write)      (DEVBLK*, const BYTE *buf, U32 blklen, BYTE *unitstat, BYTE code);
+    int  (*rewind)     (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*bsb)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*fsb)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*bsf)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*fsf)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*wtm)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*sync)       (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*dse)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*erg)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*tapeloaded) (DEVBLK*,                              BYTE *unitstat, BYTE code);
     int  (*passedeot)  (DEVBLK*);
 
     /* readblkid o/p values are returned in BIG-ENDIAN guest format  */
@@ -549,12 +549,12 @@ extern int   IsAtLoadPoint          (DEVBLK *dev);
 extern void  ReqAutoMount           (DEVBLK *dev);
 extern void  UpdateDisplay          (DEVBLK *dev);
 extern int   return_false1          (DEVBLK *dev);
-extern int   write_READONLY5        (DEVBLK *dev, BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code);
-extern int   is_tapeloaded_filename (DEVBLK *dev,             BYTE *unitstat, BYTE code);
-extern int   write_READONLY         (DEVBLK *dev,             BYTE *unitstat, BYTE code);
-extern int   no_operation           (DEVBLK *dev,             BYTE *unitstat, BYTE code);
-extern int   readblkid_virtual      (DEVBLK*, BYTE* logical,  BYTE* physical);
-extern int   locateblk_virtual      (DEVBLK*, U32 blockid,    BYTE *unitstat, BYTE code);
+extern int   write_READONLY5        (DEVBLK *dev, const BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code);
+extern int   is_tapeloaded_filename (DEVBLK *dev,                              BYTE *unitstat, BYTE code);
+extern int   write_READONLY         (DEVBLK *dev,                              BYTE *unitstat, BYTE code);
+extern int   no_operation           (DEVBLK *dev,                              BYTE *unitstat, BYTE code);
+extern int   readblkid_virtual      (DEVBLK*, BYTE* logical, BYTE* physical);
+extern int   locateblk_virtual      (DEVBLK*, U32 blockid,                     BYTE *unitstat, BYTE code);
 extern int   generic_tmhcall        (GENTMH_PARMS*);
 
 /*-------------------------------------------------------------------*/
@@ -647,7 +647,7 @@ extern int  writehdr_faketape  (DEVBLK *dev, off_t blkpos,
                                              BYTE *unitstat, BYTE code);
 extern int  read_faketape      (DEVBLK *dev, BYTE *buf,
                                              BYTE *unitstat, BYTE code);
-extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U32 blklen,
+extern int  write_faketape     (DEVBLK *dev, const BYTE *buf, U32 blklen,
                                              BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
