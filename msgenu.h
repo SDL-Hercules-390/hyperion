@@ -2195,7 +2195,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC03808 "%1d:%04X %s: %s: Cannot unregister guest IP address %s"
 #define HHC03809 "%1d:%04X %s: %s: Requested MTU %s too large; decreasing to %s bytes"
 #define HHC03810 "%1d:%04X %s: %s: Input dropped: %s"
-//efine HHC03811 - HHC03849 (available)
+#define HHC03811 "%1d:%04X %s: %s: Output dropped: %s"
+//efine HHC03812 - HHC03849 (available)
 
 //efine HHC03850 - HHC03899 (available)
 
