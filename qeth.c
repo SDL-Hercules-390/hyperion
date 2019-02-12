@@ -3239,6 +3239,8 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
 {
     U64 sba;                            /* Storage Block Address     */
     BYTE* hdr;                          /* Ptr to OSA packet header  */
+    OSA_HDR2* o2hdr;                    /* Ptr to OSA layer2 header  */
+    OSA_HDR3* o3hdr;                    /* Ptr to OSA layer3 header  */
     BYTE* pkt;                          /* Ptr to packet or frame    */
     U32 sblen;                          /* Length of Storage Block   */
     int hdrlen;                         /* Length of OSA header      */
@@ -3249,11 +3251,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
     BYTE hdr_id;                        /* OSA Header Block Id       */
     BYTE flag0;                         /* Storage Block Flag        */
 
-    ETHFRM* eth;                        /* Ethernet frame header */
+    ETHFRM* eth;                        /* Ethernet frame header     */
     U16  hwEthernetType;
     int iPktVer;
     int iTraceLen;
     char cPktType[8];
+
 
     sb = 0;                             /* Start w/Storage Block 0   */
 
@@ -3291,7 +3294,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
           if (iTraceLen > 256)
           {
             iTraceLen = 256;
-            // HHC00980 "%1d:%04X PTP: Data of size %d bytes displayed, data of size %d bytes not displayed"
+            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
             WRMSG(HHC00980, "D", LCSS_DEVNUM, dev->typname,
                                  iTraceLen, (sblen - iTraceLen) );
           }
@@ -3306,7 +3309,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         case HDR_ID_LAYER2:
         {
          /* ETHFRM* eth; */
-            OSA_HDR2* o2hdr = (OSA_HDR2*)hdr;
+            o2hdr = (OSA_HDR2*)hdr;
             hdrlen = sizeof(OSA_HDR2);
             pkt = hdr + hdrlen;
             FETCH_HW( length, o2hdr->pktlen );
@@ -3316,7 +3319,7 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         }
         case HDR_ID_LAYER3:
         {
-            OSA_HDR3* o3hdr = (OSA_HDR3*)hdr;
+            o3hdr = (OSA_HDR3*)hdr;
             hdrlen = sizeof(OSA_HDR3);
             pkt = hdr + hdrlen;
             FETCH_HW( length, o3hdr->length );
@@ -3369,19 +3372,48 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
         /* packet. Perhaps that's how OSD's actually work? IPv6 packets to    */
         /* the guest don't need to be Ethernet frames.                        */
         /*                                                                    */
-        /* Originally the whole of this section of code was surrounded by an  */
-        /* '#if defined(ENABLE_IPV6)' and '#endif'. However, implementing     */
-        /* zLinuz layer 3 support showed that zLinux emmitted IPv4 ARP        */
-        /* frames, which if sent to the tun interface, upset the tun, hence   */
-        /* the dropthishing checking.                                         */
+        /* Originally the whole of this section was surrounded by             */
+        /* '#if defined(ENABLE_IPV6)'/'#endif'. However, implementing zLinux  */
+        /* layer 3 support showed that zLinux emmitted IPv4 ARP frames, which */
+        /* if sent to the tun interface upset the tun. Subsequent exposure to */
+        /* layer 3 VSWITCH prompted a revamp to make checks less specific.    */
         /*                                                                    */
         if (hdr_id == HDR_ID_LAYER3)
         {
-            OSA_HDR3* o3hdr = (OSA_HDR3*)hdr;
-            if ((o3hdr->flags & HDR3_FLAGS_IPV6) && (o3hdr->flags & HDR3_FLAGS_PASSTHRU))
+            /* Might this be a L2 Ethernet Frame? (and not an L3 IP packet?)  */
+            o3hdr = (OSA_HDR3*)hdr;
+            if (o3hdr->flags & HDR3_FLAGS_PASSTHRU)
             {
-              pkt += sizeof(ETHFRM);
-              pktlen -= sizeof(ETHFRM);
+                if (!(o3hdr->flags & HDR3_FLAGS_IPV6))
+                {
+                    /* It probably is an L2 Ethernet Frame! */
+                    eth = (ETHFRM*)pkt;
+                    FETCH_HW( hwEthernetType, eth->hwEthernetType );
+                    if (hwEthernetType != ETH_TYPE_IP)
+                    {
+                        /* Can't write L2 Ethernet frame to L3 tun device! */
+                        dev->qdio.dropcnt++;
+                        if (grp->debugmask & DBGQETHDROP)
+                        {
+                            // "%1d:%04X %s: %s: Output dropped: %s"
+                            WRMSG( HHC03811, "W", LCSS_DEVNUM,
+                                dev->typname, grp->ttifname, "L2 frame on tun device" );
+                            iTraceLen = pktlen;
+                            if (iTraceLen > 128)
+                            {
+                              iTraceLen = 128;
+                              // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                              WRMSG(HHC00980, "D", LCSS_DEVNUM, dev->typname,
+                                                   iTraceLen, (pktlen - iTraceLen) );
+                            }
+                            net_data_trace( dev, pkt, iTraceLen, FROM_GUEST, 'D', "drop", 0 );
+                        }
+                        continue; /* (don't write this, probably ARP, packet) */
+                    }
+                }
+                /* Bump past L2 Ethernet header to actual L3 IP packet */
+                pkt += sizeof(ETHFRM);
+                pktlen -= sizeof(ETHFRM);
             }
         }
 
