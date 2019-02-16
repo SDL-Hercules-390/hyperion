@@ -49077,7 +49077,9 @@ if test -z "${hc_cv_extpkg_dir}"; then
         fi
       fi
     fi
-  done <<< "${LIBRARY_PATH}:"     # (trailing ':' to ensure last dir processed)
+  done <<'END'   # Note trailing ':' in below to ensure last dir is processed.
+${LIBRARY_PATH}:
+END
 fi
 
 ###############################################################################
