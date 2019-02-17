@@ -3240,7 +3240,7 @@ static void enable_disable_herc37X( bool enable )
 }
 
 /*-------------------------------------------------------------------*/
-/*                    facility_enable_disable              (boolean) */
+/*                    facility_enable_disable                        */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /* FACILITY ENABLE | DISABLE <facility> | bit [S/370|ESA/390|z/ARCH] */
