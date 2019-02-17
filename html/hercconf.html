@@ -3326,26 +3326,26 @@ a real System/390.  The configuration file is an ASCII text file.
 
         Emulates an OSA Express card running in QDIO mode.
         Both layer-2 and layer-3 are currently supported.
+        The mode of operation is selected by the emulated workload
+        and cannot be configured from Hercules.
+
+        </p>
+
+        <p>
+        The device/emulation type may optionally be specified as <code>OSA</code>
+        or <code>OSD</code> instead of <code>QETH</code>.
+        </p>
 
         <p>
 
         <i>
         <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
-        to your host's networking devices. If Hercules is not started with
-        <u>Administrative (root) privileges</u> then initialization of your
-        networking devices will fail and your guest's networking will not work.
+        to your host's networking devices. The easiest way to do this on Linux is
+        to enable setuid of hercifc using the <tt>--enable-setuid-hercifc</tt>
+        configure option. If that's not an option, or you're not running under
+        Linux, using Administrative (root) privileges when running Hercules will
+        work as well.
         </i>
-
-        <p>
-
-        For technical reasons, the <code>iface</code>,&nbsp;<code>ipaddr</code>
-        and <code>netmask</code> parameters are <i><u>required parameters</u></i>
-        for both Windows and *nix. All other parameters however, are optional.
-
-        <p>
-
-        The device/emulation type may optionally be specified as <code>OSA</code>
-        or <code>OSD</code> instead of <code>QETH</code>.
 
         <br><br>
 
@@ -3360,18 +3360,30 @@ a real System/390.  The configuration file is an ASCII text file.
         implemented.
         </i>
 
-        <br><br>
+        </p>
 
         <dl> <!-- begin QETH parms -->
 
-        <dt><i><u>Required</u></i> parameters for both Windows and *nix:
+        <dt>Arguments:
         <dd><p>
 
-            <dl> <!-- begin REQUIRED for both Windows and *nix -->
+            <dl>
+
+                <dt><code>ifname &nbsp;<em>interface</em></code>
+                <dd><p>
+                    <b><i>Only available on *nix</i></b><br>
+                    Specifies the interface name for the device to be created
+                    (e.g. <code>tun</code>, <code>tun0</code>, etc).
+                    <p>
+
+            </dl>
+
+            <dl> <!-- begin Optional for both *nix and Windows -->
 
                 <dt><code>ipaddr &nbsp;<em>address</em></code>
                 <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
                 <dd><p>
+                    <b><i>Required on Windows</i></b><br>
                     Specifies the IPv4 address to be assigned to your virtual
                     OSA Express card. This IP Address should match the IP
                     address in your guest's TCPIP PROFILE, although this is
@@ -3401,31 +3413,6 @@ a real System/390.  The configuration file is an ASCII text file.
                     the subnet mask is not already defined via the optional
                     prefix size parameter of the <code>ipaddr</code> option.
                     <p>
-
-            </dl> <!-- end REQUIRED for both Windows and *nix -->
-
-        <br>
-
-        <dt>Optional for *nix only:
-        <dd><p>
-
-            <dl> <!-- begin Optional for *nix -->
-
-                <dt><code>ifname &nbsp;<em>interface</em></code>
-                <dd><p>
-                    Specifies the interface name of a host interface
-                    that is already configured (e.g. <code>tun</code>,
-                    <code>tun0</code>, etc). &nbsp;(*nix only)
-                    <p>
-
-            </dl> <!-- end Optional for *nix -->
-
-        <br>
-
-        <dt>Optional for both Windows and *nix:
-        <dd><p>
-
-            <dl> <!-- begin Optional for both *nix and Windows -->
 
                 <dt><code>iface &nbsp;<em>device</em></code>
                 <dd><p>
