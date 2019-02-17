@@ -20,7 +20,7 @@ SYNOPSIS:
 
 ARGUMENTS:
 
-  the vmfplc2 utility requires a function (DUMP, SCAN or LOAD) followed by
+  The vmfplc2 utility requires a function (DUMP, SCAN or LOAD) followed by
   the name of a control file and the name of an input or output tape file.
 
 
@@ -59,7 +59,7 @@ OPTIONS:
     -z        Creates a compressed .HET output tape using zlib (default).
     -b        Creates a compressed .HET output tape using bzip2.
     -n        Desired compression level (-1, -2 ... -9).  Default is -4.
-    -v        don't suppress certain informational messages
+    -v        Verbose. (Don't suppress certain informational messages.)
 
     -t        Read input tape or create output tape in CMS 'TAPE' DUMP
               format.  The default is to use the 'VMFPLC2' DUMP format.
@@ -109,7 +109,7 @@ CONTROL FILE:
     fm        Is 1 or 2 characters that represents the file mode. The first
               character is a letter from A to Z and represents the "original"
               file mode when scanned on VM/CMS. (It does NOT cause the file
-              to be loaded on that disk.)  The second character is a digit
+              to be loaded on that cms disk.)  The second character is a digit
               from 0 to 6.  The file mode number indicates specific behavior
               for the file under CMS. Refer to CMS documentation for more info.
 
@@ -121,8 +121,8 @@ CONTROL FILE:
               record length varies from one record to the next and thus should
               NOT be specified (should be left out from the statement).
 
-    type      Indicates how the file should to be processed.  The only values
-              supported are B[inary], S[tructured] or T[extual].
+    type      Indicates how the file should be processed.  The only supported
+              values are B[inary], S[tructured] or T[extual]:
 
 
                 Binary      The file is not translated and is written as-is.
