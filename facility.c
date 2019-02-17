@@ -39,31 +39,41 @@
 
 #if   __GEN_ARCH == 370             /*    (building for S/370?)      */
 
-    #define NONE     _NONE          /* NO architectures or disabled  */
-    #define S370     _S370          /* S/370 architecture            */
-    #define E390     _NONE          /* ESA/390 architecture          */
-    #define Z900     _NONE          /* z/Arch architecture           */
-    #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
-    #define MALL     (S370|Z390)    /* All architectures             */
+    #define S370     _S370          /* S/370 only                    */
+    #define E390     _NONE          /* ESA/390 only                  */
+    #define Z900     _NONE          /* z/Arch only                   */
 
 #elif __GEN_ARCH == 390             /*    (building for S/390?)      */
 
-    #define NONE     _NONE          /* NO architectures or disabled  */
-    #define S370     _NONE          /* S/370 architecture            */
-    #define E390     _E390          /* ESA/390 architecture          */
-    #define Z900     _NONE          /* z/Arch architecture           */
-    #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
-    #define MALL     (S370|Z390)    /* All architectures             */
+    #define S370     _NONE          /* S/370 only                    */
+    #define E390     _E390          /* ESA/390 only                  */
+    #define Z900     _NONE          /* z/Arch only                   */
 
 #elif __GEN_ARCH == 900             /*    (building for z/Arch?)     */
 
+    #define S370     _NONE          /* S/370 only                    */
+    #define E390     _NONE          /* ESA/390 only                  */
+    #define Z900     _Z900          /* z/Arch only                   */
+
+#endif
+
     #define NONE     _NONE          /* NO architectures or disabled  */
-    #define S370     _NONE          /* S/370 architecture            */
-    #define E390     _NONE          /* ESA/390 architecture          */
-    #define Z900     _Z900          /* z/Arch architecture           */
     #define Z390     (E390|Z900)    /* BOTH ESA/390 and z/Arch       */
     #define MALL     (S370|Z390)    /* All architectures             */
 
+/*-------------------------------------------------------------------*/
+/*          (HERC_370_EXTENSION pseudo-facility support)             */
+/*-------------------------------------------------------------------*/
+
+#undef Z39X                         /* E390 + Z900 + optionally S370 */
+#undef Z90X                         /* Z900        + optionally S370 */
+
+#if defined( FEATURE_370_EXTENSION )
+    #define Z39X     (Z390|S370)    /* E390 + Z900 + optionally S370 */
+    #define Z90X     (Z900|S370)    /* Z900        + optionally S370 */
+#else
+    #define Z39X     (Z390|NONE)    /* E390 + Z900                   */
+    #define Z90X     (Z900|NONE)    /* Z900                          */
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -110,7 +120,7 @@ static FACTAB ARCH_DEP( facs_tab )[] =      /* Arch-DEPENDENT table  */
 /*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_000_N3_INSTR_FACILITY )
-FT( Z390, Z390, NONE, 000_N3_INSTR )
+FT( Z39X, Z390, NONE, 000_N3_INSTR )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -188,15 +198,15 @@ FT( Z900, Z900, NONE, 014_NONQ_KEY_SET )
 #endif
 
 #if defined(  FEATURE_016_EXT_TRANSL_FACILITY_2 )
-FT( Z390, Z390, NONE, 016_EXT_TRANSL_2 )
+FT( Z39X, Z390, NONE, 016_EXT_TRANSL_2 )
 #endif
 
 #if defined(  FEATURE_017_MSA_FACILITY )
-FT( Z390, Z390, NONE, 017_MSA )
+FT( Z39X, Z390, NONE, 017_MSA )
 #endif
 
 #if defined(  FEATURE_018_LONG_DISPL_INST_FACILITY )
-FT( Z900, Z900, NONE, 018_LONG_DISPL_INST )
+FT( Z90X, Z900, NONE, 018_LONG_DISPL_INST )
 #endif
 
 #if defined(  FEATURE_019_LONG_DISPL_HPERF_FACILITY )
@@ -204,19 +214,19 @@ FT( Z900, Z900, NONE, 019_LONG_DISPL_HPERF )
 #endif
 
 #if defined(  FEATURE_020_HFP_MULT_ADD_SUB_FACILITY )
-FT( Z390, Z390, NONE, 020_HFP_MULT_ADD_SUB )
+FT( Z39X, Z390, NONE, 020_HFP_MULT_ADD_SUB )
 #endif
 
 #if defined(  FEATURE_021_EXTENDED_IMMED_FACILITY )
-FT( Z900, Z900, NONE, 021_EXTENDED_IMMED )
+FT( Z90X, Z900, NONE, 021_EXTENDED_IMMED )
 #endif
 
 #if defined(  FEATURE_022_EXT_TRANSL_FACILITY_3 )
-FT( Z900, Z900, NONE, 022_EXT_TRANSL_3 )
+FT( Z90X, Z900, NONE, 022_EXT_TRANSL_3 )
 #endif
 
 #if defined(  FEATURE_023_HFP_UNNORM_EXT_FACILITY )
-FT( Z900, Z900, NONE, 023_HFP_UNNORM_EXT )
+FT( Z90X, Z900, NONE, 023_HFP_UNNORM_EXT )
 #endif
 
 #if defined(  FEATURE_024_ETF2_ENHANCEMENT_FACILITY )
@@ -228,7 +238,7 @@ FT( Z900, Z900, NONE, 025_STORE_CLOCK_FAST )
 #endif
 
 #if defined(  FEATURE_026_PARSING_ENHANCE_FACILITY )
-FT( Z900, Z900, NONE, 026_PARSING_ENHANCE )
+FT( Z90X, Z900, NONE, 026_PARSING_ENHANCE )
 #endif
 
 #if defined(  FEATURE_027_MVCOS_FACILITY )
@@ -248,7 +258,7 @@ FT( Z900, Z900, NONE, 031_EXTRACT_CPU_TIME )
 #endif
 
 #if defined(  FEATURE_032_CSS_FACILITY )
-FT( Z900, Z900, NONE, 032_CSSF )
+FT( Z90X, Z900, NONE, 032_CSSF )
 #endif
 
 #if defined(  FEATURE_033_CSS_FACILITY_2 )
@@ -256,11 +266,11 @@ FT( Z900, Z900, NONE, 033_CSSF2 )
 #endif
 
 #if defined(  FEATURE_034_GEN_INST_EXTN_FACILITY )
-FT( Z900, Z900, NONE, 034_GEN_INST_EXTN )
+FT( Z90X, Z900, NONE, 034_GEN_INST_EXTN )
 #endif
 
 #if defined(  FEATURE_035_EXECUTE_EXTN_FACILITY )
-FT( Z900, Z900, NONE, 035_EXECUTE_EXTN )
+FT( Z90X, Z900, NONE, 035_EXECUTE_EXTN )
 #endif
 
 #if defined(  FEATURE_036_ENH_MONITOR_FACILITY )
@@ -268,7 +278,7 @@ FT( Z900, Z900, NONE, 036_ENH_MONITOR )
 #endif
 
 #if defined(  FEATURE_037_FP_EXTENSION_FACILITY )
-FT( Z900, Z900, NONE, 037_FP_EXTENSION )
+FT( Z90X, Z900, NONE, 037_FP_EXTENSION )
 #endif
 
 #if defined(  FEATURE_038_OP_CMPSC_FACILITY )
@@ -283,22 +293,22 @@ FT( Z900, Z900, NONE, 040_LOAD_PROG_PARAM )
 
 #if defined(  FEATURE_041_FPS_ENHANCEMENT_FACILITY )
 
-FT( Z900, Z900, NONE, 041_FPS_ENHANCEMENT )
+FT( Z90X, Z900, NONE, 041_FPS_ENHANCEMENT )
 
 #if defined(  FEATURE_041_DFP_ROUNDING_FACILITY )
-FT( Z900, Z900, NONE, 041_DFP_ROUNDING )
+FT( Z90X, Z900, NONE, 041_DFP_ROUNDING )
 #endif
 
 #if defined(  FEATURE_041_FPR_GR_TRANSFER_FACILITY )
-FT( Z900, Z900, NONE, 041_FPR_GR_TRANSFER )
+FT( Z90X, Z900, NONE, 041_FPR_GR_TRANSFER )
 #endif
 
 #if defined(  FEATURE_041_FPS_SIGN_HANDLING_FACILITY )
-FT( Z900, Z900, NONE, 041_FPS_SIGN_HANDLING )
+FT( Z90X, Z900, NONE, 041_FPS_SIGN_HANDLING )
 #endif
 
 #if defined(  FEATURE_041_IEEE_EXCEPT_SIM_FACILITY )
-FT( Z900, Z900, NONE, 041_IEEE_EXCEPT_SIM )
+FT( Z90X, Z900, NONE, 041_IEEE_EXCEPT_SIM )
 #endif
 
 #endif /* defined(  FEATURE_041_FPS_ENHANCEMENT_FACILITY ) */
@@ -306,41 +316,41 @@ FT( Z900, Z900, NONE, 041_IEEE_EXCEPT_SIM )
 /*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_042_DFP_FACILITY )
-FT( Z900, Z900, NONE, 042_DFP )
+FT( Z90X, Z900, NONE, 042_DFP )
 #endif
 
 #if defined(  FEATURE_043_DFP_HPERF_FACILITY )
-FT( Z900, Z900, NONE, 043_DFP_HPERF )
+FT( Z90X, Z900, NONE, 043_DFP_HPERF )
 #endif
 
 #if defined(  FEATURE_044_PFPO_FACILITY )
-FT( Z900, Z900, NONE, 044_PFPO )
+FT( Z90X, Z900, NONE, 044_PFPO )
 #endif
 
 /*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_045_DISTINCT_OPERANDS_FACILITY )
-FT( Z900, Z900, NONE, 045_DISTINCT_OPERANDS )
+FT( Z90X, Z900, NONE, 045_DISTINCT_OPERANDS )
 #endif
 
 #if defined(  FEATURE_045_FAST_BCR_SERIAL_FACILITY )
-FT( Z900, Z900, NONE, 045_FAST_BCR_SERIAL )
+FT( Z90X, Z900, NONE, 045_FAST_BCR_SERIAL )
 #endif
 
 #if defined(  FEATURE_045_HIGH_WORD_FACILITY )
-FT( Z900, Z900, NONE, 045_HIGH_WORD )
+FT( Z90X, Z900, NONE, 045_HIGH_WORD )
 #endif
 
 #if defined(  FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
-FT( Z900, Z900, NONE, 045_INTERLOCKED_ACCESS_1 )
+FT( Z90X, Z900, NONE, 045_INTERLOCKED_ACCESS_1 )
 #endif
 
 #if defined(  FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )
-FT( Z900, Z900, NONE, 045_LOAD_STORE_ON_COND_1 )
+FT( Z90X, Z900, NONE, 045_LOAD_STORE_ON_COND_1 )
 #endif
 
 #if defined(  FEATURE_045_POPULATION_COUNT_FACILITY )
-FT( Z900, Z900, NONE, 045_POPULATION_COUNT )
+FT( Z90X, Z900, NONE, 045_POPULATION_COUNT )
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -440,11 +450,11 @@ FT( Z900, Z900, NONE, 075_ACC_EX_FS_INDIC )
 #endif
 
 #if defined(  FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-FT( Z900, Z900, NONE, 076_MSA_EXTENSION_3 )
+FT( Z90X, Z900, NONE, 076_MSA_EXTENSION_3 )
 #endif
 
 #if defined(  FEATURE_077_MSA_EXTENSION_FACILITY_4 )
-FT( Z900, Z900, NONE, 077_MSA_EXTENSION_4 )
+FT( Z90X, Z900, NONE, 077_MSA_EXTENSION_4 )
 #endif
 
 #if defined(  FEATURE_078_ENHANCED_DAT_FACILITY_2 )
@@ -558,11 +568,11 @@ FT( MALL, MALL, NONE, HERC_LOGICAL_PARTITION )
 FT( MALL, MALL, Z900, HERC_MOVE_INVERSE )
 
 #if defined(       FEATURE_MSA_EXTENSION_FACILITY_1 )
-FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_1 )
+FT( Z39X, Z390, NONE, HERC_MSA_EXTENSION_1 )
 #endif
 
 #if defined(       FEATURE_MSA_EXTENSION_FACILITY_2 )
-FT( Z390, Z390, NONE, HERC_MSA_EXTENSION_2 )
+FT( Z39X, Z390, NONE, HERC_MSA_EXTENSION_2 )
 #endif
 
 #if defined( FEATURE_HERCULES_DIAGCALLS )
@@ -1806,6 +1816,32 @@ FAC_MOD_OK_FUNC             ( moddfp )
 }
 
 /*-------------------------------------------------------------------*/
+/*                        ena_fac_ins                                */
+/*-------------------------------------------------------------------*/
+/* The following function is called whenever a facility is enabled   */
+/* and reverses the effects of the below dis_fac_ins function by     */
+/* deleting the chain of instruction overrides thereby restoring     */
+/* the opcode table to its default build value.                      */
+/*-------------------------------------------------------------------*/
+static void ena_fac_ins( int arch, HDLINS* hdl_ins[] )
+{
+    HDLINS* next_ins;
+
+    /* Restore original function for each instruction disabled */
+    while (hdl_ins[ arch ])
+    {
+        /* (restore original function) */
+        hdl_repins( false, hdl_ins[ arch ] );
+
+        /* (discard HDLINS entry) */
+        free( hdl_ins[ arch ]->instname );
+        next_ins = hdl_ins[ arch ]->next;
+        free( hdl_ins[ arch ] );
+        hdl_ins[ arch ] = next_ins;
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*                         dis_fac_ins                               */
 /*-------------------------------------------------------------------*/
 /* The following function is called whenever a facility is disabled  */
@@ -1918,20 +1954,7 @@ static void name( int arch, bool enable )                               \
                                                                         \
     if (enable)  /* (enable this facility's instructions?) */           \
     {                                                                   \
-        HDLINS* next_ins;                                               \
-                                                                        \
-        /* Restore original function for each instruction disabled */   \
-        while (hdl_ins[ arch ])                                         \
-        {                                                               \
-            /* (restore original function) */                           \
-            hdl_repins( false, hdl_ins[ arch ] );                       \
-                                                                        \
-            /* (discard HDLINS entry) */                                \
-            free( hdl_ins[ arch ]->instname );                          \
-            next_ins = hdl_ins[ arch ]->next;                           \
-            free( hdl_ins[ arch ] );                                    \
-            hdl_ins[ arch ] = next_ins;                                 \
-        }                                                               \
+        ena_fac_ins( arch, hdl_ins );                                   \
     }                                                                   \
     else /* (disable this facility's instructions) */                   \
     {                                                                   \
@@ -2959,16 +2982,25 @@ END_DIS_FAC_INS_FUNC()
 
 BEG_DIS_FAC_INS_FUNC( herc37X )
 {
+    DIS_FAC_INS( 0B,   "branch_and_set_mode" );
+    DIS_FAC_INS( 0C,   "branch_and_save_and_set_mode" );
+    DIS_FAC_INS( 0102, "update_tree" );
+    DIS_FAC_INS( B21A, "compare_and_form_codeword" );
+
     DIS_FAC_INS( 71,   "multiply_single" );
     DIS_FAC_INS( 84,   "branch_relative_on_index_high" );
     DIS_FAC_INS( 85,   "branch_relative_on_index_low_or_equal" );
     DIS_FAC_INS( A8,   "move_long_extended" );
     DIS_FAC_INS( A9,   "compare_logical_long_extended" );
-    DIS_FAC_INS( D0,   "translate_and_test_reverse" );
-    DIS_FAC_INS( E1,   "pack_unicode" );
-    DIS_FAC_INS( E2,   "unpack_unicode" );
-    DIS_FAC_INS( E9,   "pack_ascii" );
-    DIS_FAC_INS( EA,   "unpack_ascii" );
+
+    DIS_FAC_INS( A502, "insert_immediate_low_high" );
+    DIS_FAC_INS( A503, "insert_immediate_low_low" );
+    DIS_FAC_INS( A506, "and_immediate_low_high" );
+    DIS_FAC_INS( A507, "and_immediate_low_low" );
+    DIS_FAC_INS( A50A, "or_immediate_low_high" );
+    DIS_FAC_INS( A50B, "or_immediate_low_low" );
+    DIS_FAC_INS( A50E, "load_logical_immediate_low_high" );
+    DIS_FAC_INS( A50F, "load_logical_immediate_low_low" );
 
     DIS_FAC_INS( A700, "test_under_mask_high" );
     DIS_FAC_INS( A701, "test_under_mask_low" );
@@ -2983,20 +3015,23 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B241, "checksum" );
     DIS_FAC_INS( B244, "squareroot_float_long_reg" );
     DIS_FAC_INS( B245, "squareroot_float_short_reg" );
+
     DIS_FAC_INS( B252, "multiply_single_register" );
     DIS_FAC_INS( B255, "move_string" );
     DIS_FAC_INS( B257, "compare_until_substring_equal" );
     DIS_FAC_INS( B25D, "compare_logical_string" );
     DIS_FAC_INS( B25E, "search_string" );
+
     DIS_FAC_INS( B263, "cmpsc_2012" );
+
     DIS_FAC_INS( B299, "set_bfp_rounding_mode_2bit" );
     DIS_FAC_INS( B29C, "store_fpc" );
     DIS_FAC_INS( B29D, "load_fpc" );
+
     DIS_FAC_INS( B2A5, "translate_extended" );
     DIS_FAC_INS( B2A6, "convert_utf16_to_utf8" );
     DIS_FAC_INS( B2A7, "convert_utf8_to_utf16" );
-    DIS_FAC_INS( B2B8, "set_bfp_rounding_mode_3bit" );
-    DIS_FAC_INS( B2BD, "load_fpc_and_signal" );
+
     DIS_FAC_INS( B300, "load_positive_bfp_short_reg" );
     DIS_FAC_INS( B301, "load_negative_bfp_short_reg" );
     DIS_FAC_INS( B302, "load_and_test_bfp_short_reg" );
@@ -3013,6 +3048,7 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B30D, "divide_bfp_short_reg" );
     DIS_FAC_INS( B30E, "multiply_add_bfp_short_reg" );
     DIS_FAC_INS( B30F, "multiply_subtract_bfp_short_reg" );
+
     DIS_FAC_INS( B310, "load_positive_bfp_long_reg" );
     DIS_FAC_INS( B311, "load_negative_bfp_long_reg" );
     DIS_FAC_INS( B312, "load_and_test_bfp_long_reg" );
@@ -3029,21 +3065,14 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B31D, "divide_bfp_long_reg" );
     DIS_FAC_INS( B31E, "multiply_add_bfp_long_reg" );
     DIS_FAC_INS( B31F, "multiply_subtract_bfp_long_reg" );
+
     DIS_FAC_INS( B324, "load_lengthened_float_short_to_long_reg" );
     DIS_FAC_INS( B325, "load_lengthened_float_long_to_ext_reg" );
     DIS_FAC_INS( B326, "load_lengthened_float_short_to_ext_reg" );
-    DIS_FAC_INS( B32E, "multiply_add_float_short_reg" );
-    DIS_FAC_INS( B32F, "multiply_subtract_float_short_reg" );
+
     DIS_FAC_INS( B336, "squareroot_float_ext_reg" );
     DIS_FAC_INS( B337, "multiply_float_short_reg" );
-    DIS_FAC_INS( B338, "multiply_add_unnormal_float_long_to_ext_low_reg" );
-    DIS_FAC_INS( B339, "multiply_unnormal_float_long_to_ext_low_reg" );
-    DIS_FAC_INS( B33A, "multiply_add_unnormal_float_long_to_ext_reg" );
-    DIS_FAC_INS( B33B, "multiply_unnormal_float_long_to_ext_reg" );
-    DIS_FAC_INS( B33C, "multiply_add_unnormal_float_long_to_ext_high_reg" );
-    DIS_FAC_INS( B33D, "multiply_unnormal_float_long_to_ext_high_reg" );
-    DIS_FAC_INS( B33E, "multiply_add_float_long_reg" );
-    DIS_FAC_INS( B33F, "multiply_subtract_float_long_reg" );
+
     DIS_FAC_INS( B340, "load_positive_bfp_ext_reg" );
     DIS_FAC_INS( B341, "load_negative_bfp_ext_reg" );
     DIS_FAC_INS( B342, "load_and_test_bfp_ext_reg" );
@@ -3058,6 +3087,7 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B34B, "subtract_bfp_ext_reg" );
     DIS_FAC_INS( B34C, "multiply_bfp_ext_reg" );
     DIS_FAC_INS( B34D, "divide_bfp_ext_reg" );
+
     DIS_FAC_INS( B350, "convert_float_long_to_bfp_short_reg" );
     DIS_FAC_INS( B351, "convert_float_long_to_bfp_long_reg" );
     DIS_FAC_INS( B353, "divide_integer_bfp_short_reg" );
@@ -3066,6 +3096,7 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B359, "convert_bfp_long_to_float_long_reg" );
     DIS_FAC_INS( B35B, "divide_integer_bfp_long_reg" );
     DIS_FAC_INS( B35F, "load_fp_int_bfp_long_reg" );
+
     DIS_FAC_INS( B360, "load_positive_float_ext_reg" );
     DIS_FAC_INS( B361, "load_negative_float_ext_reg" );
     DIS_FAC_INS( B362, "load_and_test_float_ext_reg" );
@@ -3074,154 +3105,30 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( B366, "load_rounded_float_ext_to_short_reg" );
     DIS_FAC_INS( B367, "load_fp_int_float_ext_reg" );
     DIS_FAC_INS( B369, "compare_float_ext_reg" );
-    DIS_FAC_INS( B370, "load_positive_fpr_long_reg" );
-    DIS_FAC_INS( B371, "load_negative_fpr_long_reg" );
-    DIS_FAC_INS( B372, "copy_sign_fpr_long_reg" );
-    DIS_FAC_INS( B373, "load_complement_fpr_long_reg" );
+
     DIS_FAC_INS( B374, "load_zero_float_short_reg" );
     DIS_FAC_INS( B375, "load_zero_float_long_reg" );
     DIS_FAC_INS( B376, "load_zero_float_ext_reg" );
     DIS_FAC_INS( B377, "load_fp_int_float_short_reg" );
     DIS_FAC_INS( B37F, "load_fp_int_float_long_reg" );
+
     DIS_FAC_INS( B384, "set_fpc" );
-    DIS_FAC_INS( B385, "set_fpc_and_signal" );
     DIS_FAC_INS( B38C, "extract_fpc" );
-    DIS_FAC_INS( B390, "convert_u32_to_bfp_short_reg" );
-    DIS_FAC_INS( B391, "convert_u32_to_bfp_long_reg" );
-    DIS_FAC_INS( B392, "convert_u32_to_bfp_ext_reg" );
+
     DIS_FAC_INS( B394, "convert_fix32_to_bfp_short_reg" );
     DIS_FAC_INS( B395, "convert_fix32_to_bfp_long_reg" );
     DIS_FAC_INS( B396, "convert_fix32_to_bfp_ext_reg" );
     DIS_FAC_INS( B398, "convert_bfp_short_to_fix32_reg" );
     DIS_FAC_INS( B399, "convert_bfp_long_to_fix32_reg" );
     DIS_FAC_INS( B39A, "convert_bfp_ext_to_fix32_reg" );
-    DIS_FAC_INS( B39C, "convert_bfp_short_to_u32_reg" );
-    DIS_FAC_INS( B39D, "convert_bfp_long_to_u32_reg" );
-    DIS_FAC_INS( B39E, "convert_bfp_ext_to_u32_reg" );
+
     DIS_FAC_INS( B3B4, "convert_fixed_to_float_short_reg" );
     DIS_FAC_INS( B3B5, "convert_fixed_to_float_long_reg" );
     DIS_FAC_INS( B3B6, "convert_fixed_to_float_ext_reg" );
     DIS_FAC_INS( B3B8, "convert_float_short_to_fixed_reg" );
     DIS_FAC_INS( B3B9, "convert_float_long_to_fixed_reg" );
     DIS_FAC_INS( B3BA, "convert_float_ext_to_fixed_reg" );
-    DIS_FAC_INS( B91E, "compute_message_authentication_code" );
-    DIS_FAC_INS( B91F, "load_reversed_register" );
-    DIS_FAC_INS( B926, "load_byte_register" );
-    DIS_FAC_INS( B927, "load_halfword_register" );
-    DIS_FAC_INS( B928, "perform_cryptographic_key_management_operation" );
-    DIS_FAC_INS( B92A, "cipher_message_with_cipher_feedback" );
-    DIS_FAC_INS( B92B, "cipher_message_with_output_feedback" );
-    DIS_FAC_INS( B92C, "perform_cryptographic_computation" );
-    DIS_FAC_INS( B92D, "cipher_message_with_counter" );
-    DIS_FAC_INS( B92E, "cipher_message" );
-    DIS_FAC_INS( B92F, "cipher_message_with_chaining" );
-    DIS_FAC_INS( B93E, "compute_intermediate_message_digest" );
-    DIS_FAC_INS( B93F, "compute_last_message_digest" );
-    DIS_FAC_INS( B972, "compare_and_trap_register" );
-    DIS_FAC_INS( B973, "compare_logical_and_trap_register" );
-    DIS_FAC_INS( B98D, "extract_psw" );
-    DIS_FAC_INS( B990, "translate_two_to_two" );
-    DIS_FAC_INS( B991, "translate_two_to_one" );
-    DIS_FAC_INS( B992, "translate_one_to_two" );
-    DIS_FAC_INS( B993, "translate_one_to_one" );
-    DIS_FAC_INS( B994, "load_logical_character_register" );
-    DIS_FAC_INS( B995, "load_logical_halfword_register" );
-    DIS_FAC_INS( B996, "multiply_logical_register" );
-    DIS_FAC_INS( B997, "divide_logical_register" );
-    DIS_FAC_INS( B998, "add_logical_carry_register" );
-    DIS_FAC_INS( B999, "subtract_logical_borrow_register" );
-    DIS_FAC_INS( B9B0, "convert_utf8_to_utf32" );
-    DIS_FAC_INS( B9B1, "convert_utf16_to_utf32" );
-    DIS_FAC_INS( B9B2, "convert_utf32_to_utf8" );
-    DIS_FAC_INS( B9B3, "convert_utf32_to_utf16" );
-    DIS_FAC_INS( B9BD, "translate_and_test_reverse_extended" );
-    DIS_FAC_INS( B9BE, "search_string_unicode" );
-    DIS_FAC_INS( B9BF, "translate_and_test_extended" );
-    DIS_FAC_INS( B9F2, "load_on_condition_register" );
-    DIS_FAC_INS( B9F4, "and_distinct_register" );
-    DIS_FAC_INS( B9F6, "or_distinct_register" );
-    DIS_FAC_INS( B9F7, "exclusive_or_distinct_register" );
-    DIS_FAC_INS( B9F8, "add_distinct_register" );
-    DIS_FAC_INS( B9F9, "subtract_distinct_register" );
-    DIS_FAC_INS( B9FA, "add_logical_distinct_register" );
-    DIS_FAC_INS( B9FB, "subtract_logical_distinct_register" );
 
-    DIS_FAC_INS( C000, "load_address_relative_long" );
-    DIS_FAC_INS( C004, "branch_relative_on_condition_long" );
-    DIS_FAC_INS( C005, "branch_relative_and_save_long" );
-
-    DIS_FAC_INS( C201, "multiply_single_immediate_fullword" );
-    DIS_FAC_INS( C205, "subtract_logical_fullword_immediate" );
-    DIS_FAC_INS( C209, "add_fullword_immediate" );
-    DIS_FAC_INS( C20B, "add_logical_fullword_immediate" );
-    DIS_FAC_INS( C20D, "compare_fullword_immediate" );
-    DIS_FAC_INS( C20F, "compare_logical_fullword_immediate" );
-
-    DIS_FAC_INS( C402, "load_logical_halfword_relative_long" );
-    DIS_FAC_INS( C405, "load_halfword_relative_long" );
-    DIS_FAC_INS( C407, "store_halfword_relative_long" );
-    DIS_FAC_INS( C40D, "load_relative_long" );
-    DIS_FAC_INS( C40F, "store_relative_long" );
-
-    DIS_FAC_INS( C600, "execute_relative_long" );
-    DIS_FAC_INS( C602, "prefetch_data_relative_long" );
-    DIS_FAC_INS( C605, "compare_halfword_relative_long" );
-    DIS_FAC_INS( C607, "compare_logical_relative_long_halfword" );
-    DIS_FAC_INS( C60D, "compare_relative_long" );
-    DIS_FAC_INS( C60F, "compare_logical_relative_long" );
-
-    DIS_FAC_INS( C804, "load_pair_disjoint" );
-
-    DIS_FAC_INS( E312, "load_and_test" );
-    DIS_FAC_INS( E31E, "load_reversed" );
-    DIS_FAC_INS( E31F, "load_reversed_half" );
-    DIS_FAC_INS( E336, "prefetch_data" );
-    DIS_FAC_INS( E394, "load_logical_character" );
-    DIS_FAC_INS( E395, "load_logical_halfword" );
-    DIS_FAC_INS( E396, "multiply_logical" );
-    DIS_FAC_INS( E397, "divide_logical" );
-    DIS_FAC_INS( E398, "add_logical_carry" );
-    DIS_FAC_INS( E399, "subtract_logical_borrow" );
-    DIS_FAC_INS( E544, "move_halfword_from_halfword_immediate" );
-    DIS_FAC_INS( E548, "move_long_from_halfword_immediate" );
-    DIS_FAC_INS( E54C, "move_fullword_from_halfword_immediate" );
-    DIS_FAC_INS( E554, "compare_halfword_immediate_halfword_storage" );
-    DIS_FAC_INS( E555, "compare_logical_immediate_halfword_storage" );
-    DIS_FAC_INS( E558, "compare_halfword_immediate_long_storage" );
-    DIS_FAC_INS( E559, "compare_logical_immediate_long_storage" );
-    DIS_FAC_INS( E55C, "compare_halfword_immediate_storage" );
-    DIS_FAC_INS( E55D, "compare_logical_immediate_fullword_storage" );
-    DIS_FAC_INS( EB1D, "rotate_left_single_logical" );
-    DIS_FAC_INS( EB6A, "add_immediate_storage" );
-    DIS_FAC_INS( EB6E, "add_logical_with_signed_immediate" );
-    DIS_FAC_INS( EB7A, "add_immediate_long_storage" );
-    DIS_FAC_INS( EB7E, "add_logical_with_signed_immediate_long" );
-    DIS_FAC_INS( EB8E, "move_long_unicode" );
-    DIS_FAC_INS( EB8F, "compare_logical_long_unicode" );
-    DIS_FAC_INS( EBC0, "test_decimal" );
-    DIS_FAC_INS( EBDC, "shift_right_single_distinct" );
-    DIS_FAC_INS( EBDD, "shift_left_single_distinct" );
-    DIS_FAC_INS( EBDE, "shift_right_single_logical_distinct" );
-    DIS_FAC_INS( EBDF, "shift_left_single_logical_distinct" );
-    DIS_FAC_INS( EBF2, "load_on_condition" );
-    DIS_FAC_INS( EBF3, "store_on_condition" );
-    DIS_FAC_INS( EBF4, "load_and_and" );
-    DIS_FAC_INS( EBF6, "load_and_or" );
-    DIS_FAC_INS( EBF7, "load_and_exclusive_or" );
-    DIS_FAC_INS( EBF8, "load_and_add" );
-    DIS_FAC_INS( EBFA, "load_and_add_logical" );
-    DIS_FAC_INS( EC72, "compare_immediate_and_trap" );
-    DIS_FAC_INS( EC73, "compare_logical_immediate_and_trap_fullword" );
-    DIS_FAC_INS( EC76, "compare_and_branch_relative_register" );
-    DIS_FAC_INS( EC77, "compare_logical_and_branch_relative_register" );
-    DIS_FAC_INS( EC7E, "compare_immediate_and_branch_relative" );
-    DIS_FAC_INS( EC7F, "compare_logical_immediate_and_branch_relative" );
-    DIS_FAC_INS( ECD8, "add_distinct_halfword_immediate" );
-    DIS_FAC_INS( ECDA, "add_logical_distinct_signed_halfword_immediate" );
-    DIS_FAC_INS( ECF6, "compare_and_branch_register" );
-    DIS_FAC_INS( ECF7, "compare_logical_and_branch_register" );
-    DIS_FAC_INS( ECFE, "compare_immediate_and_branch" );
-    DIS_FAC_INS( ECFF, "compare_logical_immediate_and_branch" );
     DIS_FAC_INS( ED04, "load_lengthened_bfp_short_to_long" );
     DIS_FAC_INS( ED05, "load_lengthened_bfp_long_to_ext" );
     DIS_FAC_INS( ED06, "load_lengthened_bfp_short_to_ext" );
@@ -3234,6 +3141,7 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( ED0D, "divide_bfp_short" );
     DIS_FAC_INS( ED0E, "multiply_add_bfp_short" );
     DIS_FAC_INS( ED0F, "multiply_subtract_bfp_short" );
+
     DIS_FAC_INS( ED10, "test_data_class_bfp_short" );
     DIS_FAC_INS( ED11, "test_data_class_bfp_long" );
     DIS_FAC_INS( ED12, "test_data_class_bfp_ext" );
@@ -3248,24 +3156,88 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( ED1D, "divide_bfp_long" );
     DIS_FAC_INS( ED1E, "multiply_add_bfp_long" );
     DIS_FAC_INS( ED1F, "multiply_subtract_bfp_long" );
+
     DIS_FAC_INS( ED24, "load_lengthened_float_short_to_long" );
     DIS_FAC_INS( ED25, "load_lengthened_float_long_to_ext" );
     DIS_FAC_INS( ED26, "load_lengthened_float_short_to_ext" );
-    DIS_FAC_INS( ED2E, "multiply_add_float_short" );
-    DIS_FAC_INS( ED2F, "multiply_subtract_float_short" );
+
     DIS_FAC_INS( ED34, "squareroot_float_short" );
     DIS_FAC_INS( ED35, "squareroot_float_long" );
     DIS_FAC_INS( ED37, "multiply_float_short" );
-    DIS_FAC_INS( ED38, "multiply_add_unnormal_float_long_to_ext_low" );
-    DIS_FAC_INS( ED39, "multiply_unnormal_float_long_to_ext_low" );
-    DIS_FAC_INS( ED3A, "multiply_add_unnormal_float_long_to_ext" );
-    DIS_FAC_INS( ED3B, "multiply_unnormal_float_long_to_ext" );
-    DIS_FAC_INS( ED3C, "multiply_add_unnormal_float_long_to_ext_high" );
-    DIS_FAC_INS( ED3D, "multiply_unnormal_float_long_to_ext_high" );
-    DIS_FAC_INS( ED3E, "multiply_add_float_long" );
-    DIS_FAC_INS( ED3F, "multiply_subtract_float_long" );
 }
 END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+/*     Special handling for HERC_370_EXTENSION Pseudo-Facility       */
+/*-------------------------------------------------------------------*/
+static void enable_disable_herc37X( bool enable )
+{
+    unsigned int orig_msglvl;
+    char   cmdbuf[ 256 ];
+    char*  argv[ MAX_ARGS ];
+    int    argc, i;
+    static const int facils[] =      /* List of dependent facilities */
+    {
+        STFL_000_N3_INSTR,
+        STFL_016_EXT_TRANSL_2,
+        STFL_017_MSA,
+        STFL_018_LONG_DISPL_INST,
+        STFL_020_HFP_MULT_ADD_SUB,
+        STFL_021_EXTENDED_IMMED,
+        STFL_022_EXT_TRANSL_3,
+        STFL_023_HFP_UNNORM_EXT,
+        STFL_026_PARSING_ENHANCE,
+        STFL_032_CSSF,
+        STFL_034_GEN_INST_EXTN,
+        STFL_035_EXECUTE_EXTN,
+
+        // 42 must be enabled BEFORE 37 or disabled AFTER 37
+        STFL_042_DFP,
+        STFL_037_FP_EXTENSION,
+
+        STFL_041_FPS_ENHANCEMENT,
+        STFL_041_DFP_ROUNDING,
+        STFL_041_FPR_GR_TRANSFER,
+        STFL_041_FPS_SIGN_HANDLING,
+        STFL_041_IEEE_EXCEPT_SIM,
+//      STFL_042_DFP,
+        STFL_045_DISTINCT_OPERANDS,
+        STFL_045_FAST_BCR_SERIAL,
+        STFL_045_HIGH_WORD,
+        STFL_045_INTERLOCKED_ACCESS_1,
+        STFL_045_LOAD_STORE_ON_COND_1,
+        STFL_045_POPULATION_COUNT,
+        STFL_076_MSA_EXTENSION_3,
+        STFL_077_MSA_EXTENSION_4,
+    };
+
+    /* Temporarily suppress logging */
+    orig_msglvl = sysblk.msglvl;
+    sysblk.msglvl &= ~MLVL_VERBOSE;
+
+    /* Enable / disable all dependent facilities in the proper order */
+    if (enable)
+    {
+        for (i=0; i < _countof( facils ); ++i)
+        {
+            MSGBUF( cmdbuf, "facility enable %d", facils[i] );
+            parse_args( cmdbuf, MAX_ARGS, argv, &argc );
+            VERIFY( facility_enable_disable( argc, argv ) == 0);
+        }
+    }
+    else // disable
+    {
+        for (i = _countof( facils ) - 1; i >= 0; --i)
+        {
+            MSGBUF( cmdbuf, "facility disable %d", facils[i] );
+            parse_args( cmdbuf, MAX_ARGS, argv, &argc );
+            VERIFY( facility_enable_disable( argc, argv ) == 0);
+        }
+    }
+
+    /* Restore original msglevel */
+    sysblk.msglvl = orig_msglvl;
+}
 
 /*-------------------------------------------------------------------*/
 /*                    facility_enable_disable              (boolean) */
@@ -3395,22 +3367,27 @@ int facility_enable_disable( int argc, char* argv[] )
             return -1; // (error msg already issued)
     }
 
-    /* Enable (or disable if allowed) the specified facility */
-    if (enable)
+    /* If disabling, don't allow if required */
+    if (!enable && (ft->reqmask & at->amask))
     {
-        sysblk.facility_list[ at->num ][ fbyte ] |= fbit;
+        // "Facility( %s ) is required for %s"
+        WRMSG( HHC00897, "E", ft->name, at->name );
+        return -1;
     }
-    else // want to disable a facility: check if allowed
-    {
-        if (ft->reqmask & at->amask)
-        {
-            // "Facility( %s ) is required for %s"
-            WRMSG( HHC00897, "E", ft->name, at->name );
-            return -1;
-        }
 
-        sysblk.facility_list[ at->num ][ fbyte ] &= ~fbit;
+    /* Special handling for HERC_370_EXTENSION pseudo-facility */
+    if (STFL_HERC_370_EXTENSION == bitno)
+    {
+        /* Enable/disable all dependent facilities first */
+        enable_disable_herc37X( enable );
+        /* Then fall through to enable/disable 370X itself */
     }
+
+    /* Enable or disable the requested facility */
+    if (enable)
+        sysblk.facility_list[ at->num ][ fbyte ] |= fbit;
+    else
+        sysblk.facility_list[ at->num ][ fbyte ] &= ~fbit;
 
     /* Update flags */
     enabled  = sysblk.facility_list[ at->num ][ fbyte ] & fbit;

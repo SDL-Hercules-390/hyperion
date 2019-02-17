@@ -3887,7 +3887,7 @@ DEF_INST( reset_reference_bit );
 DEF_INST( set_storage_key );
 #endif
 
-#if defined( FEATURE_BIMODAL_ADDRESSING )
+#if defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )
 DEF_INST( branch_and_save_and_set_mode );
 DEF_INST( branch_and_set_mode );
 #endif

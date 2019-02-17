@@ -553,7 +553,7 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_and_save) */
 
 
-#if defined(FEATURE_BIMODAL_ADDRESSING)
+#if defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )
 /*-------------------------------------------------------------------*/
 /* 0C   BASSM - Branch and Save and Set Mode                    [RR] */
 /*-------------------------------------------------------------------*/
@@ -561,8 +561,10 @@ DEF_INST(branch_and_save_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+#if !defined( FEATURE_370_EXTENSION )
 int     xmode;                          /* 64 or 31 mode of target   */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#endif
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 BYTE    *ipsav;                         /* save for ip               */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
@@ -615,17 +617,19 @@ BYTE    *ipsav;                         /* save for ip               */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
+#if !defined( FEATURE_370_EXTENSION )
         SET_ADDRESSING_MODE(regs, newia);
+#endif
         SUCCESSFUL_BRANCH(regs, newia, 2);
     }
     else
         INST_UPDATE_PSW(regs, 2, 0);
 
 } /* end DEF_INST(branch_and_save_and_set_mode) */
-#endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
+#endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
 
 
-#if defined(FEATURE_BIMODAL_ADDRESSING)
+#if defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )
 /*-------------------------------------------------------------------*/
 /* 0B   BSM   - Branch and Set Mode                             [RR] */
 /*-------------------------------------------------------------------*/
@@ -672,14 +676,16 @@ VADR    newia;                          /* New instruction address   */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
+#if !defined( FEATURE_370_EXTENSION )
         SET_ADDRESSING_MODE(regs, newia);
+#endif
         SUCCESSFUL_BRANCH(regs, newia, 2);
     }
     else
         INST_UPDATE_PSW(regs, 2, 0);
 
 } /* end DEF_INST(branch_and_set_mode) */
-#endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
+#endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
 
 
 /*-------------------------------------------------------------------*/

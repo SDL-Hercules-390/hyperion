@@ -66,7 +66,6 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#MAINSIZE">MAINSIZE</a>   1G
     <a href="#XPNDSIZE">XPNDSIZE</a>   0
     <a href="#NUMCPU">NUMCPU</a>     4
-    <a href="#NUMVEC">NUMVEC</a>     0
     <a href="#MAXCPU">MAXCPU</a>     8
     <a href="#ENGINES">ENGINES</a>    CP,CP,AP,IP
 
@@ -1223,13 +1222,6 @@ a real System/390.  The configuration file is an ASCII text file.
     actually able to support multiple CPUs (and if you do not actually need
     multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
     compile time might even produce a slight performance advantage too).
-    <p>
-
-<a name="NUMVEC"></a>
-<dt><code>NUMVEC &nbsp; <em>nn</em></code>
-<dd><p>
-    Specifies the number of emulated vector facilities. Default is one per
-    CPU. Only available by default in ESA/390 mode.
     <p>
 
 <a name="OSTAILOR"></a>

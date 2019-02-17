@@ -3341,6 +3341,7 @@ DEPRECATED_PRIONICE_CMD( devprio_cmd  );
 DEPRECATED_PRIONICE_CMD( todprio_cmd  );
 DEPRECATED_PRIONICE_CMD( srvprio_cmd  );
 
+#if 0 /* INCOMPLETE */
 /*-------------------------------------------------------------------*/
 /* numvec command                                                    */
 /*-------------------------------------------------------------------*/
@@ -3385,6 +3386,7 @@ BYTE c;
 
     return 0;
 }
+#endif
 
 /*-------------------------------------------------------------------*/
 /* netdev command                                                    */

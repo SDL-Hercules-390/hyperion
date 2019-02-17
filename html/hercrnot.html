@@ -15,7 +15,7 @@ Hercules: Release Notes
 <a name=4.2></a>
 <hr noshade>
 
-<h2>Release notes for the SDL version of Hercules 4.2 Hyperion</h2>
+<h2>Release notes for SDL Hyperion version 4.2</h2>
 <p>
 <dl>
 
@@ -50,6 +50,35 @@ Hercules: Release Notes
     Hopefully it should execute well enough under most common situations however.
   </p>
 
+
+  <dt>VMFPLC2 VM/CMS tape utility enhanced
+  <dd>
+  <p>
+    The VMFPLC2 tape utility has been greatly enhanced and now supports the scan
+    and load functions, making it much easier to transfer files between the host
+    system and z/VM or VM/370 systems. Refer to README.VMFPLC2 for usage details.
+  </p>
+
+
+  <dt>System/370/390 Vector Facility has been disabled again
+  <dd>
+  <p>
+    It was a mistake to enable the System/370 and System/390 Vector Facility
+    set of instructions in release 4.1.  Hercules's implementation of the
+    facility only implements 26 of the required 180 instructions the facility
+    provides and thus is so incredibly incomplete as to be virtually unusable.
+    <p>
+    Given that virtually no one has every complained about its unavailability
+    beforehand (and the interference it causes internally with the desired
+    proper functioning of the Hercules S/370 Extension pseudo-facility), it has
+    once again been disabled.
+    <p>
+    This is very likely to be a permanent setting given the extreme unlikelihood
+    of the facility ever being fully coded due to its unpopularity and the extreme
+    challenges posed by trying to code all of the missing instructions for a fully
+    compliant facility.
+  </p>
+
 </dl>
 
 <!-- --------------------------------------------------------------------------------- -->
@@ -57,7 +86,7 @@ Hercules: Release Notes
 <hr>
 
 <a name=4.1></a>
-<h2>Release notes for the SDL version of Hercules 4.1 Hyperion</h2>
+<h2>Release notes for SDL Hyperion version 4.1</h2>
 <p>
 <dl>
 

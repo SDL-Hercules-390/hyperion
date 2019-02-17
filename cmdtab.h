@@ -917,7 +917,7 @@
   "(3.6.0) what you defined as your default CTCI-WIN host network adapter.\n"
 
 #define numcpu_cmd_desc         "Set numcpu parameter"
-#define numvec_cmd_desc         "Set numvec parameter"
+//#define numvec_cmd_desc         "Set numvec parameter"
 #define osa_cmd_desc            "(Synonym for 'qeth')"
 #define ostailor_cmd_desc       "Tailor trace information for specific OS"
 #define ostailor_cmd_help       \
@@ -1708,7 +1708,7 @@ COMMAND( "maxcpu",                  maxcpu_cmd,             SYSCMDNOPER,        
 CMDABBR( "mounted_tape_reinit",  9, mounted_tape_reinit_cmd,SYSCMDNOPER,        mtapeinit_cmd_desc,     mtapeinit_cmd_help  )
 COMMAND( "netdev",                  netdev_cmd,             SYSCMDNOPER,        netdev_cmd_desc,        netdev_cmd_help     )
 COMMAND( "numcpu",                  numcpu_cmd,             SYSCMDNOPER,        numcpu_cmd_desc,        NULL                )
-COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
+//COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
 COMMAND( "osa",                     qeth_cmd,               SYSCMDNOPER,        osa_cmd_desc,           qeth_cmd_help       )
 COMMAND( "ostailor",                ostailor_cmd,           SYSCMDNOPER,        ostailor_cmd_desc,      ostailor_cmd_help   )
 COMMAND( "pgmtrace",                pgmtrace_cmd,           SYSCMDNOPER,        pgmtrace_cmd_desc,      pgmtrace_cmd_help   )
