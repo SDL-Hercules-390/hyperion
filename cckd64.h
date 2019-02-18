@@ -24,9 +24,12 @@ typedef struct SPCTAB64         SPCTAB64;       // Space table
 /*                   Record layouts and sizes                        */
 /*-------------------------------------------------------------------*/
 #define CKD_R0       CKD_RECHDR         /* Record-0 count field      */
-#define CKD_EOFREC   CKD_RECHDR         /* End-of-FILE count field   */
+#define CKD_EOFREC   CKD_RECHDR         /* An END-OF-FILE record is     \
+                                           a count field with klen      \
+                                           of zero and dlen of zero,    \
+                                           i.e. a zero length record */
 static
-const   CKD_RECHDR   CKD_ENDTRK  =      /* End-of-TRACK marker is a     \
+const   CKD_RECHDR   CKD_ENDTRK  =      /* END-OF-TRACK marker is a     \
                                            count field (i.e. record     \
                                            header) consisting of...  */ \
     {{0xff,0xff},{0xff,0xff},0xff,0xff,{0xff,0xff}}; /* ...all 0xffs */

@@ -2933,7 +2933,7 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
     }
 
     /* Validate length */
-    if (bufl < CKD_NULLTRK_SIZE1)
+    if (bufl < MIN( MIN( CKD_NULLTRK_SIZE0, CKD_NULLTRK_SIZE1 ), CKD_NULLTRK_SIZE2 ))
         return 0; // (error: too small!)
 
     /* Check ha */
@@ -2972,10 +2972,10 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
         i < bufl - CKD_ENDTRK_SIZE;
 
         /* Increment buffer index by rn count + key + data */
-        i += len2,
+        i += len2,   /* (len2 is re-calculated each loop iteration) */
 
         /* Get past this record to the next possible user record */
-        bufp += len2
+        bufp += len2 /* (len2 is re-calculated each loop iteration) */
     )
     {
         /* Save rn count field */
@@ -2986,7 +2986,7 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
            Address record! They can be any value the user wants, as
            long as they're valid: the HH value MUST be < the number
            number of heads the device supports, and the R field can't
-           be 0 (there's only be one r0 and we already processed it).
+           be 0 (there can be only ONE r0 and we already processed it).
         */
         if (0
             || fetch_hw( rn.head ) >= heads
@@ -2998,16 +2998,16 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
         len2 = CKD_RECHDR_SIZE + rn.klen + fetch_hw( rn.dlen );
     }
 
-    /* Include length of end-of-track record too if requested */
+    /* Include length of END-OF-TRACK record too if requested */
     if (len < 0)
         bufl = i + CKD_ENDTRK_SIZE;
 
-    /* Validate track length and existence of EOT record */
+    /* Validate track length and existence of END-OF-TRACK record */
     if (0
         || i != (bufl - CKD_ENDTRK_SIZE)
         || memcmp( bufp, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) != 0
     )
-        return 0; // (error: missing end-of-track!)
+        return 0; // (error: missing END-OF-TRACK!)
 
     return len > 0 ? len : bufl;  // (success: return track length)
 

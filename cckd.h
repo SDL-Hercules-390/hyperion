@@ -76,14 +76,14 @@ struct CKD_RECHDR {                     /* Record header             */
 #define CKD_RECHDR_SIZE         ((ssize_t)sizeof(CKD_RECHDR))
 
 /* Null track formats */
-#define CKD_NULLTRK_FMT0        0       /* ha r0 r1 eot              */
+#define CKD_NULLTRK_FMT0        0       /* ha r0 eof eot             */
 #define CKD_NULLTRK_FMT1        1       /* ha r0 eot                 */
 #define CKD_NULLTRK_FMT2        2       /* linux (3390 only)         */
 #define CKD_NULLTRK_FMTMAX      CKD_NULLTRK_FMT2
 
-#define CKD_NULLTRK_SIZE0       (5 + 8 + 8 + 8 + 8)
-#define CKD_NULLTRK_SIZE1       (5 + 8 + 8 + 8)
-#define CKD_NULLTRK_SIZE2       (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
+#define CKD_NULLTRK_SIZE0       (CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN + CKD_EOF_SIZE + CKD_ENDTRK_SIZE)
+#define CKD_NULLTRK_SIZE1       (CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN                + CKD_ENDTRK_SIZE)
+#define CKD_NULLTRK_SIZE2       (CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN + (12 * (CKD_RECHDR_SIZE + CKD_NULL_FMT2_DLEN)) + CKD_ENDTRK_SIZE)
 
 /*-------------------------------------------------------------------*/
 /*     Structure definitions for Compressed CCKD/CFBA devices        */
