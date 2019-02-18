@@ -2933,7 +2933,7 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
     }
 
     /* Validate length */
-    if (bufl <= CKD_NULLTRK_SIZE0)
+    if (bufl < CKD_NULLTRK_SIZE1)
         return 0; // (error: too small!)
 
     /* Check ha */
