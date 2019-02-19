@@ -337,8 +337,10 @@
 #define STFL_HERC_SIGP_SETARCH_S370      ( STFL_HERC_FIRST_BIT  +  13 )
 #define STFL_HERC_SVS                    ( STFL_HERC_FIRST_BIT  +  14 )
 #define STFL_HERC_VIRTUAL_MACHINE        ( STFL_HERC_FIRST_BIT  +  15 )
+#define STFL_HERC_TCPIP_EXTENSION        ( STFL_HERC_FIRST_BIT  +  16 )
+#define STFL_HERC_TCPIP_PROB_STATE       ( STFL_HERC_FIRST_BIT  +  17 )
 
-#define STFL_HERC_LAST_BIT               ( STFL_HERC_FIRST_BIT  +  15 )
+#define STFL_HERC_LAST_BIT               ( STFL_HERC_FIRST_BIT  +  17 )
 
 #define STFL_HERC_BY_SIZE       (ROUND_UP( STFL_HERC_LAST_BIT, 8 ) / 8)
 #define STFL_HERC_DW_SIZE       (ROUND_UP( STFL_HERC_BY_SIZE, sizeof( DW )) / sizeof( DW ))

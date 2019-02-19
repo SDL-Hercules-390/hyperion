@@ -738,6 +738,9 @@
     <ClCompile Include="strsignal.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tcpip.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="timer.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -760,6 +763,9 @@
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="w32util.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="x75.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xstore.c">
@@ -999,6 +1005,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.TAPE">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="README.TCPIP">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.VMFPLC2">
@@ -2701,6 +2710,9 @@
     <ClInclude Include="targetver.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tcpip.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="version.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2714,6 +2726,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="w32util.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="x75.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decContext.h">

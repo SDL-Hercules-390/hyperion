@@ -218,8 +218,8 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	httpserv.lo ieee.lo impl.lo io.lo ipl.lo loadmem.lo \
 	loadparm.lo losc.lo machchk.lo opcode.lo panel.lo pfpo.lo \
 	plo.lo qdio.lo scedasd.lo scescsi.lo script.lo service.lo \
-	sie.lo sr.lo stack.lo strsignal.lo timer.lo trace.lo \
-	transact.lo vector.lo vm.lo vmd250.lo xstore.lo \
+	sie.lo sr.lo stack.lo strsignal.lo tcpip.lo timer.lo trace.lo \
+	transact.lo vector.lo vm.lo vmd250.lo x75.lo xstore.lo \
 	$(am__objects_1)
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -1103,12 +1103,14 @@ libherc_la_SOURCES = \
   sr.c               \
   stack.c            \
   strsignal.c        \
+  tcpip.c            \
   timer.c            \
   trace.c            \
   transact.c         \
   vector.c           \
   vm.c               \
   vmd250.c           \
+  x75.c              \
   xstore.c           \
   $(DYNSRC)
 
@@ -1387,6 +1389,7 @@ EXTRA_DIST = \
   README.SOFTFLOAT            \
   README.SUN                  \
   README.TAPE                 \
+  README.TCPIP                \
   README.VMFPLC2              \
   README.TELNET               \
   README.WIN64                \
@@ -1519,6 +1522,7 @@ noinst_HEADERS = \
   stfl.h                  \
   tapedev.h               \
   targetver.h             \
+  tcpip.h                 \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \
@@ -1530,6 +1534,7 @@ noinst_HEADERS = \
   w32mtio.h               \
   w32stape.h              \
   w32util.h               \
+  x75.h                   \
   zfcp.h
 
 all: config.h
@@ -2019,6 +2024,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tapedev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tapemap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tapesplt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpip.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trace.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transact.Plo@am__quote@
@@ -2028,6 +2034,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmd250.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmfplc2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x75.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xstore.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zfcp.Plo@am__quote@
 

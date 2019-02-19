@@ -1132,6 +1132,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tcpip.c"
+							>
+						</File>
+						<File
 							RelativePath=".\timer.c"
 							>
 						</File>
@@ -1161,6 +1165,10 @@
 						</File>
 						<File
 							RelativePath=".\w32util.c"
+							>
+						</File>
+						<File
+							RelativePath=".\x75.c"
 							>
 						</File>
 						<File
@@ -1512,6 +1520,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tcpip.h"
+							>
+						</File>
+						<File
 							RelativePath=".\version.h"
 							>
 						</File>
@@ -1533,6 +1545,10 @@
 						</File>
 						<File
 							RelativePath=".\w32util.h"
+							>
+						</File>
+						<File
+							RelativePath=".\x75.h"
 							>
 						</File>
 					</Filter>
@@ -2112,6 +2128,10 @@
 					</File>
 					<File
 						RelativePath=".\README.TAPE"
+						>
+					</File>
+					<File
+						RelativePath=".\README.TCPIP"
 						>
 					</File>
 					<File
