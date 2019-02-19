@@ -75,7 +75,7 @@ CONTROL FILE:
   on VM.  Each statement of the control file has the following format:
 
 
-       [codepage]  <fn>  <ft>  <fm>  <recfm>  <lrecl>  <type>  <hostfile>
+       [codepage]  <fn>  <ft>  <fm>  <recfm>  [lrecl]  <type>  <hostfile>
 
 
     codepage  Is an optional code page specification to be used when dumping
