@@ -140,10 +140,12 @@ hengine_OBJ = \
     $(O)sie.obj      \
     $(O)sr.obj       \
     $(O)stack.obj    \
+    $(O)tcpip.obj    \
     $(O)timer.obj    \
     $(O)trace.obj    \
     $(O)transact.obj \
     $(O)vector.obj   \
     $(O)vm.obj       \
     $(O)vmd250.obj   \
+    $(O)x75.obj      \
     $(O)xstore.obj

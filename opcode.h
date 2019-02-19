@@ -4475,6 +4475,10 @@ DEF_INST( search_string );
 DEF_INST( branch_in_subspace_group );
 #endif
 
+#if defined( FEATURE_TCPIP_EXTENSION )
+DEF_INST( tcpip );
+#endif
+
 /*-------------------------------------------------------------------*/
 /*   Instructions NOT associated with ANY facility or feature        */
 /*-------------------------------------------------------------------*/

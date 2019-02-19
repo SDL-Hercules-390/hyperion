@@ -47,6 +47,7 @@
 #define FEATURE_SEGMENT_PROTECTION
 #define FEATURE_TEST_BLOCK
 #define FEATURE_VM_BLOCKIO
+#define FEATURE_TCPIP_EXTENSION
 
 /*-------------------------------------------------------------------*/
 /*          "Hercules S/370 Instruction Extension Facility"          */

@@ -1235,6 +1235,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( set_vector_summary )
 #endif
 
+#if !defined( FEATURE_TCPIP_EXTENSION )
+ UNDEF_INST( tcpip )
+#endif
+
 /*----------------------------------------------------------------------------*/
 /* The following execute_xxxx routines can be optimized by the compiler to    */
 /* an indexed jump, leaving the stack frame untouched as the called routine   */
@@ -2059,7 +2063,7 @@ static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*72*/   GENx___x___x___ ,
  /*73*/   GENx___x___x___ ,
  /*74*/   GENx___x___x___ ,
- /*75*/   GENx___x___x___ ,
+ /*75*/   GENx370x390x900 (tcpip,RX,"TCPIP"),
  /*76*/   GENx___x___x___ ,
  /*77*/   GENx___x___x___ ,
  /*78*/   GENx370x390x900 (load_float_short,RX,"LE"),

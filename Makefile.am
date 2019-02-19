@@ -472,12 +472,14 @@ libherc_la_SOURCES = \
   sr.c               \
   stack.c            \
   strsignal.c        \
+  tcpip.c            \
   timer.c            \
   trace.c            \
   transact.c         \
   vector.c           \
   vm.c               \
   vmd250.c           \
+  x75.c              \
   xstore.c           \
   $(DYNSRC)
 
@@ -797,6 +799,7 @@ EXTRA_DIST =                  \
   README.SOFTFLOAT            \
   README.SUN                  \
   README.TAPE                 \
+  README.TCPIP                \
   README.VMFPLC2              \
   README.TELNET               \
   README.WIN64                \
@@ -929,6 +932,7 @@ noinst_HEADERS =          \
   stfl.h                  \
   tapedev.h               \
   targetver.h             \
+  tcpip.h                 \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \
@@ -940,6 +944,7 @@ noinst_HEADERS =          \
   w32mtio.h               \
   w32stape.h              \
   w32util.h               \
+  x75.h                   \
   zfcp.h
 
 ###############################################################################

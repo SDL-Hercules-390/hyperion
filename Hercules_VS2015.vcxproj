@@ -444,6 +444,7 @@
     <ClCompile Include="tapemap.c" />
     <ClCompile Include="tapesplt.c" />
     <ClCompile Include="timer.c" />
+    <ClCompile Include="tcpip.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="transact.c" />
     <ClCompile Include="tuntap.c" />
@@ -455,6 +456,7 @@
     <ClCompile Include="w32ctca.c" />
     <ClCompile Include="w32stape.c" />
     <ClCompile Include="w32util.c" />
+    <ClCompile Include="x75.c" />
     <ClCompile Include="xstore.c" />
     <ClCompile Include="zfcp.c" />
   </ItemGroup>
@@ -692,6 +694,7 @@
     <None Include="README.SETUID" />
     <None Include="README.SUN" />
     <None Include="README.TAPE" />
+    <None Include="README.TCPIP" />
     <None Include="README.VMFPLC2" />
     <None Include="README.WIN64" />
     <None Include="RELEASE.NOTES" />
@@ -1111,6 +1114,7 @@
     <ClInclude Include="stfl.h" />
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="tcpip.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tt32if.h" />
     <ClInclude Include="tuntap.h" />
@@ -1123,6 +1127,7 @@
     <ClInclude Include="w32mtio.h" />
     <ClInclude Include="w32stape.h" />
     <ClInclude Include="w32util.h" />
+    <ClInclude Include="x75.h" />
     <ClInclude Include="zfcp.h" />
   </ItemGroup>
   <ItemGroup>

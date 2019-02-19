@@ -605,6 +605,11 @@ FT( Z390, Z390, NONE, HERC_SVS )
 FT( MALL, NONE, NONE, HERC_VIRTUAL_MACHINE )
 #endif
 
+#if defined( FEATURE_TCPIP_EXTENSION )
+FT( MALL, NONE, NONE, HERC_TCPIP_EXTENSION )
+FT( MALL, NONE, NONE, HERC_TCPIP_PROB_STATE )
+#endif
+
 };
 
 /*-------------------------------------------------------------------*/
@@ -722,6 +727,7 @@ static void instr146 ( int arch, bool enable );
 static void hercmvcin( int arch, bool enable );
 static void hercsvs  ( int arch, bool enable );
 static void herc37X  ( int arch, bool enable );
+static void herctcp  ( int arch, bool enable );
 
 /*-------------------------------------------------------------------*/
 /* The ACTUAL facilities table, initialized by init_facilities_lists */
@@ -841,6 +847,8 @@ FT2( NULL,      NULL,      HERC_QEBSM,                 "Hercules QDIO Enhanced B
 FT2( NULL,      NULL,      HERC_SIGP_SETARCH_S370,     "Hercules SIGP Set Architecture S/370 Support" )
 FT2( NULL,      hercsvs,   HERC_SVS,                   "Hercules SVS Set Vector Summary Instruction Support" )
 FT2( NULL,      NULL,      HERC_VIRTUAL_MACHINE,       "Hercules Emulate Virtual Machine Support" )
+FT2( NULL,      herctcp,   HERC_TCPIP_EXTENSION,       "Hercules Access Host TCP/IP Stack Through X'75' Instruction" )
+FT2( NULL,      NULL,      HERC_TCPIP_PROB_STATE,      "Hercules Enable X'75' As Problem State Instruction" )
 };
 
 /*-------------------------------------------------------------------*/
@@ -3164,6 +3172,14 @@ BEG_DIS_FAC_INS_FUNC( herc37X )
     DIS_FAC_INS( ED34, "squareroot_float_short" );
     DIS_FAC_INS( ED35, "squareroot_float_long" );
     DIS_FAC_INS( ED37, "multiply_float_short" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( herctcp )
+{
+    DIS_FAC_INS( 75,   "TCPIP   75    TCPIP" );
 }
 END_DIS_FAC_INS_FUNC()
 
