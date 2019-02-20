@@ -671,6 +671,7 @@ static  bool  modbit42  ( bool enable, int bitno, int archnum, const char* actio
 static  bool  moddfphi  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modfpx    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  moddfp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modtcp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 
 /*-------------------------------------------------------------------*/
 /*   Facility Update Opcode Table Functions forward references       */
@@ -847,8 +848,8 @@ FT2( NULL,      NULL,      HERC_QEBSM,                 "Hercules QDIO Enhanced B
 FT2( NULL,      NULL,      HERC_SIGP_SETARCH_S370,     "Hercules SIGP Set Architecture S/370 Support" )
 FT2( NULL,      hercsvs,   HERC_SVS,                   "Hercules SVS Set Vector Summary Instruction Support" )
 FT2( NULL,      NULL,      HERC_VIRTUAL_MACHINE,       "Hercules Emulate Virtual Machine Support" )
-FT2( NULL,      herctcp,   HERC_TCPIP_EXTENSION,       "Hercules Access Host TCP/IP Stack Through X'75' Instruction" )
-FT2( NULL,      NULL,      HERC_TCPIP_PROB_STATE,      "Hercules Enable X'75' As Problem State Instruction" )
+FT2( modtcp,    herctcp,   HERC_TCPIP_EXTENSION,       "Hercules Access Host TCP/IP Stack Through X'75' Instruction" )
+FT2( modtcp,    NULL,      HERC_TCPIP_PROB_STATE,      "Hercules Enable X'75' As Problem State Instruction" )
 };
 
 /*-------------------------------------------------------------------*/
@@ -1817,6 +1818,33 @@ FAC_MOD_OK_FUNC             ( moddfp )
 
             if (FACILITY_ENABLED_ARCH( 080_DFP_PACK_CONV, archnum ))
                 return HHC00890E( STFL_080_DFP_PACK_CONV );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                            modtcp                                 */
+/*-------------------------------------------------------------------*/
+/*     'HERC_TCPIP_PROB_STATE' implies 'HERC_TCPIP_EXTENSION'        */
+/*-------------------------------------------------------------------*/
+FAC_MOD_OK_FUNC             ( modtcp )
+{
+    if (enable)
+    {
+        if (bitno == STFL_HERC_TCPIP_PROB_STATE)
+        {
+            if (!FACILITY_ENABLED_ARCH( HERC_TCPIP_EXTENSION, archnum ))
+                return HHC00890E(  STFL_HERC_TCPIP_EXTENSION );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_HERC_TCPIP_EXTENSION)
+        {
+            if (FACILITY_ENABLED_ARCH( HERC_TCPIP_PROB_STATE, archnum ))
+                return HHC00890E( STFL_HERC_TCPIP_PROB_STATE );
         }
     }
 
