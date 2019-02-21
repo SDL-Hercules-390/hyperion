@@ -79,6 +79,19 @@ Hercules: Release Notes
     compliant facility.
   </p>
 
+  <dt>TCPIP (X'75') instruction integrated
+  <dd>
+  <p>
+    This instructions was developed by Jason Winter to allow the guest OS access
+    to the IP stack of the host OS. It is of particular importance to older
+    operating systems that do not support their own IP stack. It provides full
+    IPv4 networking capabilities to those systems.
+    <p>
+    Note that the TCPIP instruction doesn't fully comply with IBM's S/3x0, ESA/390
+    or z/Architecture specifications. For this reason it is not enabled by default.
+    File README.TCPIP provides the information needed to enable the instruction.
+  </p>
+
 </dl>
 
 <!-- --------------------------------------------------------------------------------- -->
