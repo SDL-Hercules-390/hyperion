@@ -4524,7 +4524,9 @@ DEF_INST(test_addressing_mode)
 /*-------------------------------------------------------------------*/
 DEF_INST( set_addressing_mode_24 )
 {
+#if !defined( FEATURE_370_EXTENSION )
 VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
+#endif
 
     E( inst, regs );
 
@@ -4559,12 +4561,13 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 /*-------------------------------------------------------------------*/
 DEF_INST( set_addressing_mode_31 )
 {
+#if !defined( FEATURE_370_EXTENSION )
 VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
+#endif
 
     E( inst, regs );
 
     UNREFERENCED( inst );
-
 
 #if !defined( FEATURE_370_EXTENSION )
     /* Set the bear register */
@@ -4608,7 +4611,12 @@ DEF_INST(set_addressing_mode_64)
 #endif
 
     regs->psw.amode = regs->psw.amode64 = 1;
+
+#if defined( FEATURE_370_EXTENSION )
+    regs->psw.AMASK = (U32) AMASK64;
+#else
     regs->psw.AMASK = AMASK64;
+#endif
 
 } /* end DEF_INST(set_addressing_mode_64) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */

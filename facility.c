@@ -3262,7 +3262,7 @@ static void enable_disable_herc37X( bool enable )
     /* Enable / disable all dependent facilities in the proper order */
     if (enable)
     {
-        for (i=0; i < _countof( facils ); ++i)
+        for (i=0; i < (int) _countof( facils ); ++i)
         {
             MSGBUF( cmdbuf, "facility enable %d", facils[i] );
             parse_args( cmdbuf, MAX_ARGS, argv, &argc );

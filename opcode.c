@@ -1344,7 +1344,9 @@ static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS];
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS];
+#endif
 static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS];
 
@@ -1449,7 +1451,7 @@ DISASM_ROUTE(edxx,[5])
 
 /*----------------------------------------------------------------------------*/
 
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 
  #define opcode_a4xx        v_opcode_a4xx
  DISASM_ROUTE(  a4xx,[1])
@@ -1463,13 +1465,13 @@ DISASM_ROUTE(edxx,[5])
  DISASM_ROUTE(  e4xx,[1])
  #undef  opcode_e4xx
 
-#else /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+#else /* !defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
  #define disasm_a4xx    disasm_none
  #define disasm_a6xx    disasm_none
  #define disasm_e4xx    disasm_none
 
-#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+#endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 /*----------------------------------------------------------------------------*/
 
@@ -5234,6 +5236,7 @@ static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
  /*A4FF*/ GENx___x___x___
 };
 
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A500*/ GENx___x___x___ , /* VAER */
@@ -5493,6 +5496,7 @@ static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
  /*A5FE*/ GENx___x___x___ ,
  /*A5FF*/ GENx___x___x___
 };
+#endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
 {
