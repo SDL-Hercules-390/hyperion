@@ -1,32 +1,80 @@
-* CSST test
+*
+*-------------------------------------------------------------------------------
+*                         Simple CSST test
+*-------------------------------------------------------------------------------
+*
 sysclear
-archmode esame
-r 1a0=00000000000000000000000000000200 # z/Arch restart PSW
-r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
-r 200=58000314     # L R0,CODE8        R0=SC,FC      
-r 204=E31003400004 # LG R1,PLPTR       R1=Parameter list pointer
-r 20A=E34003480004 # LG R4,CMPVA       R4=Compare value
-r 210=C84203700378 # CSST AREA1,AREA2,R4   Compare and Swap and Store
-r 216=58000310     # L R0,CODE4        R0=SC,FC      
-r 21A=E31003400004 # LG R1,PLPTR       R1=Parameter list pointer
-r 220=E34003480004 # LG R4,CMPVA       R4=Compare value
-r 226=C84203700378 # CSST AREA1,AREA2,R4   Compare and Swap and Store
-r 22C=58000318     # L R0,CODE16       R0=SC,FC      
-r 230=E31003400004 # LG R1,PLPTR       R1=Parameter list pointer
-r 236=E34003480004 # LG R4,CMPVA       R4=Compare value
-r 23C=C84203700378 # CSST AREA1,AREA2,R4   Compare and Swap and Store
-r 242=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
-r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
-r 310=12340300     # CODE4  DC X'12340300'  SC=03,FC=00
-r 314=12340101     # CODE8  DC X'12340101'  SC=01,FC=01
-r 318=12340402     # CODE16 DC X'12340402'  SC=04,FC=02 CSST FAC-2 TEST
-r 340=A5A5A5A5A500035F # PLPTR DC A(PLIST)
-r 348=FFFFFFFFA5A6A7A8 # CMPVA Compare value
-r 350=1234567890ABCDEF # PLIST Replacement value     
-r 358=0000000000000000 #   "   Reserved
-r 360=9FEDCBA087654321 #   "   Store value
-r 368=0000000000000000 #   "   Reserved
-r 370=A5A6A7A812345678 # AREA1 First operand
-r 378=FFFFFFFFFFFFFFFF # AREA2 Second operand
-s+
+*
+archlvl z/Arch
+*
+#-------------------------------------------------------------------------------
+*
+r 1A0=0000000000000000  # z/Arch restart PSW
+r 1A8=0000000000000200  #         "
+*
+r 1D0=0002000000000000  # z/Arch pgm new PSW
+r 1D8=000000000000DEAD  #         "
+*
+#-------------------------------------------------------------------------------
+*
+r 200=58000310          #  L      R0,CODE4          R0: SC=03 (DW), FC=00 (FW)
+r 204=E31003400004      #  LG     R1,PLPTR          R1: Parameter list pointer
+r 20A=E34003480004      #  LG     R4,CMPVA          R4: Comparison value
+r 210=C84203700380      #  CSST   AREA1,AREA2,R4    Compare and Swap and Store
+*
+r 216=58000314          #  L      R0,CODE8          R0: SC=01 (HW), FC=01 (DW)
+r 21A=E31003400004      #  LG     R1,PLPTR          R1: Parameter list pointer
+r 220=E34003480004      #  LG     R4,CMPVA          R4: Comparison value
+r 226=C84203700380      #  CSST   AREA1,AREA2,R4    Compare and Swap and Store
+*
+r 22C=58000318          #  L      R0,CODE16         R0: SC=04 (QW), FC=02 (QW)
+r 230=E31003400004      #  LG     R1,PLPTR          R1: Parameter list pointer
+r 236=E34003480004      #  LG     R4,CMPVA          R4: Comparison value
+r 23C=C84203700380      #  CSST   AREA1,AREA2,R4    Compare and Swap and Store
+*
+r 242=B2B20300          #  LPSWE  GOODPSW           Load Success PSW
+*
+#-------------------------------------------------------------------------------
+*
+r 300=0002000000000000  # GOODPSW Successful Completion Disabled Wait PSW
+r 308=0000000000000000  #    "
+*
+r 310=00000300          # CODE4  SC=03 (DW), FC=00 (FW)
+r 314=00000101          # CODE8  SC=01 (HW), FC=01 (DW)
+r 318=00000402          # CODE16 SC=04 (QW), FC=02 (QW)
+*
+r 340=A5A5A5A5A5000350  # PLPTR  DC  A(PLIST)
+r 348=FFFFFFFFA5A6A7A8  # CMPVA  Compare value
+*
+r 350=1234567890ABCDEF  # PLIST  Replacement value
+r 358=0000000000000000  #   "    Replacement value
+r 360=9FEDCBA087654321  #   "    Store value
+r 368=0000000000000000  #   "    Store value
+*
+r 370=A5A6A7A812345678  # AREA1  First  operand
+r 378=A5A6A7A812345678  #   "
+r 380=FFFFFFFFFFFFFFFF  # AREA2  Second operand
+r 388=FFFFFFFFFFFFFFFF  #   "
+*
+#-------------------------------------------------------------------------------
+*
+*
+u 200-242
+*
+*
+r 370.20
+*
+*
+traceopt regsfirst
+*
+t+
+*
 restart
+*
+pause 0.1
+*
+*
+r 370.20
+*
+*
+#-------------------------------------------------------------------------------

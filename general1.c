@@ -2000,24 +2000,7 @@ U64     old, new;                       /* old, new values           */
 }
 
 
-#if defined(FEATURE_032_CSS_FACILITY)
-
-#if defined(FEATURE_033_CSS_FACILITY_2)
-#ifndef MAX_CSST_FC
-#define MAX_CSST_FC 2
-#endif /*#ifndef MAX_CSST_FC*/
-#ifndef MAX_CSST_SC
-#define MAX_CSST_SC 4
-#endif /*#ifndef MAX_CSST_SC*/
-#else
-#ifndef MAX_CSST_FC
-#define MAX_CSST_FC 1
-#endif /*#ifndef MAX_CSST_FC*/
-#ifndef MAX_CSST_SC
-#define MAX_CSST_SC 3
-#endif /*#ifndef MAX_CSST_SC*/
-#endif
-
+#if defined( FEATURE_032_CSS_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C8x2 CSST  - Compare and Swap and Store                     [SSF] */
 /*-------------------------------------------------------------------*/
@@ -2052,11 +2035,22 @@ BYTE    sc;                             /* Store characteristic      */
     /* Extract store characteristic from register 0 bits 48-55 */
     sc = regs->GR_LHLCH(0);
 
-    /* Program check if function code is not 0 or 1 */
+#undef  MAX_CSST_FC
+#undef  MAX_CSST_SC
+
+#if defined( FEATURE_033_CSS_FACILITY_2 )
+#define MAX_CSST_FC     2
+#define MAX_CSST_SC     4
+#else
+#define MAX_CSST_FC     1
+#define MAX_CSST_SC     3
+#endif
+
+    /* Program check if function code is greater than 1 or 2 */
     if (fc > MAX_CSST_FC)
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Program check if store characteristic is not 0, 1, 2, or 3 */
+    /* Program check if store characteristic is greater than 3 or 4 */
     if (sc > MAX_CSST_SC)
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -2237,7 +2231,7 @@ BYTE    sc;                             /* Store characteristic      */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(compare_and_swap_and_store) */
-#endif /*defined(FEATURE_032_CSS_FACILITY)*/
+#endif /* defined( FEATURE_032_CSS_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
