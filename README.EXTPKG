@@ -1,6 +1,6 @@
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
                     HERCULES "External Packages" README
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
                               OVERVIEW
@@ -65,7 +65,7 @@ The procedure for building each of the external packages is outlined further
 below.  More information about each of the packages can be found in a README
 document within each of their respective repositories.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
                           LINUX (non-Windows)
@@ -81,7 +81,7 @@ document within each of their respective repositories.
   "--enable-extpkgs=DIR" configure option.
 
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
                       BUILDING THE EXTERNAL PACKAGES
@@ -110,6 +110,9 @@ For the purposes of this example, it is presumed that you have downloaded the
 Hyperion repository and placed it into the \hyperion directory.  Then we will
 follow the process to build the external packages and have them all installed
 into the common \extpkgs installation directory.
+
+
+--------------------------------------------------------------------------------
 
 
                             DETAILED INSTRUCTIONS
@@ -185,4 +188,4 @@ rebuild the external packages ever again (unless they are updated of course).
 (*)  Use "extpkgs --help" (Linux) or "extpkgs /?" (Windows) to obtain more
      information regarding the extpkgs script's parameters.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
