@@ -49077,7 +49077,17 @@ if test -z "${hc_cv_extpkg_dir}"; then
         fi
       fi
     fi
-  done <<< "${LIBRARY_PATH}:"     # (trailing ':' to ensure last dir processed)
+
+    # Note the trailing ':' in the below LIBRARY_PATH statement
+    # to ensure that the last directory in the list is always
+    # processed.  Also note that the statements being passed to
+    # the while loop (i.e. those between the "<<END" clause and
+    # the "END" statement) should not have any # line comments
+    # either, since they too would be passed to the while loop.
+
+  done <<END
+${LIBRARY_PATH}:
+END
 fi
 
 ###############################################################################
