@@ -1567,29 +1567,33 @@ error:
 
         for (i=0; cfgorrccount > i; i++)
         {
-            if (!cfgorrc[i].filename)       /* No value specified */
+            /* If no value explicitly specified, try env. default */
+            if (!cfgorrc[i].filename)
                 cfgorrc[i].filename = get_symbol( cfgorrc[i].envname );
 
-            if (!cfgorrc[i].filename)       /* No environment var */
+            /* If no env. default, try hard coded default */
+            if (0
+                || !cfgorrc[i].filename
+                || !cfgorrc[i].filename[0]
+            )
             {
-                if (!(rv = stat( cfgorrc[i].defaultfile, &st )))
+                /* Use default from current directory if it exists */
+                if ((rv = stat( cfgorrc[i].defaultfile, &st )) == 0)
                     cfgorrc[i].filename = cfgorrc[i].defaultfile;
                 continue;
             }
 
-            if (0
-                || !cfgorrc[i].filename[0]     /* Null name */
-                || !strcasecmp( cfgorrc[i].filename, "None" )
-            )
+            /* Explicit request for no file use at all? */
+            if (strcasecmp( cfgorrc[i].filename, "None" ) == 0)
             {
                cfgorrc[i].filename = NULL;  /* Suppress file */
                continue;
             }
 
-            /* File specified explicitly or by environment */
-            if (-1 == (rv = stat(cfgorrc[i].filename, &st)))
+            /* File specified explicitly or by env; check existence */
+            if ((rv = stat( cfgorrc[i].filename, &st )) != 0)
             {
-                // "%s file %s not found:  %s"
+                // "%s file %s not found: %s"
                 WRMSG( HHC02342, "S", cfgorrc[i].whatfile,
                     cfgorrc[i].filename, strerror( errno ));
                 arg_error++;

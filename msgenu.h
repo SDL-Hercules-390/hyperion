@@ -1424,7 +1424,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02339 "Script %d: test: duration limit: %"PRId32".%06"PRId32" seconds"
 //efine HHC02340 (available)
 #define HHC02341 "Script %d: test: unknown runtest keyword: %s"
-#define HHC02342 "%s file '%s' not found:  %s"
+#define HHC02342 "%s file '%s' not found: %s"
 #define HHC02343 "Terminating due to %d argument errors"
 #define HHC02344 "%s device %1d:%04X group has registered MAC address %s"
 #define HHC02345 "%s device %1d:%04X group has registered IP address %s"
