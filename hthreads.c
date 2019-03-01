@@ -792,7 +792,8 @@ static void* hthread_func( void* arg2 )
     TID           tid  = hthread_self();
     void*         rc;
     free( arg2 );
-    SET_THREAD_NAME_ID( tid, name );
+    if (name)
+        SET_THREAD_NAME_ID( tid, name );
     rc = pfn( arg );
     hthread_list_abandoned_locks( tid, NULL );
     return rc;
