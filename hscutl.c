@@ -1605,7 +1605,7 @@ DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
     int rc = 0;
     char threadname[16];
 
-    if (!name) return;              /* (ignore premature calls) */
+    if (!name) return 0;            /* (ignore premature calls) */
     STRLCPY( threadname, name );
 
     /* Some platforms (e.g. Mac) can only set name of current thread */
