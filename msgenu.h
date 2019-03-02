@@ -1594,10 +1594,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02438I   -blks n  size of output file"
 #define HHC02439 "Usage: %s [-options] ifile [sf=sfile] ofile\n" \
        "HHC02439I Copy a dasd file to another dasd file\n" \
-       "HHC02439I   ifile    input dasd file\n" \
-       "HHC02439I   sfile    input shadow file [optional]\n" \
-       "HHC02439I   ofile    output dasd file\n" \
-       "HHC02439I options:\n" \
+       "HHC02439I   ifile    input dasd file   (required)\n" \
+       "HHC02439I   sfile    input shadow file (optional) (see note)\n" \
+       "HHC02439I   ofile    output dasd file  (required)\n" \
+       "HHC02439I Options:\n" \
        "HHC02439I   -h       display this help and quit\n" \
        "HHC02439I   -q       quiet mode, don't display status\n" \
        "HHC02439I   -r       replace the output file if it exists\n" \
@@ -1608,7 +1608,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02439I   -cyls n  size of output ckd file\n" \
        "HHC02439I   -a       output ckd file will have alt cyls\n" \
        "%s" \
-       "HHC02439I   -o type  output file type (%s)"
+       "HHC02439I   -o type  output file type (%s)\n" \
+       "HHC02439I\n" \
+       "HHC02439I Note: input shadow files will, as part of the copy\n" \
+       "HHC02439I operation, have their data automatically merged into\n" \
+       "HHC02439I the resulting output file."
 
 // dasdinit.c
 //efine HHC02440 (available)
