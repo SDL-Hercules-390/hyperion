@@ -82,6 +82,13 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     /* The next argument may be the shadow file name */
     if (!memcmp (argv[2], "sf=", 3))
     {
+        if (argc < 4)
+        {
+            // "%s missing"
+            FWRMSG( stderr, HHC02578, "E", "required 'pdsname' argument" );
+            return syntax( pgm );
+        }
+
         sfname = argv[2];
         i = 1;
     }
