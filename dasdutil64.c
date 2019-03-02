@@ -209,8 +209,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
+        // "%1d:%04X CKD file %s: initialization failed"
         FWRMSG( stderr, HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname );
+            cif->devblk.devnum, cif->fname ? cif->fname : "(null)" );
         free (cif);
         return NULL;
     }
@@ -312,8 +313,9 @@ int             argc=0;                 /*  device open              */
     rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
+        // "%1d:%04X CKD file %s: initialization failed"
         FWRMSG( stderr, HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, fname );
+            cif->devblk.devnum, fname ? fname : "(null)" );
         free (cif);
         return NULL;
     }

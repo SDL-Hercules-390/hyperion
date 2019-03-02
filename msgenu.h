@@ -416,15 +416,15 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00330 "%1d:%04X CCKD file: checking level %d..."
 #define HHC00331 "%1d:%04X CCKD file[%d] %s: shadow file check failed, sf command busy on device"
 #define HHC00332 "%1d:%04X CCKD file: display cckd statistics"
-#define HHC00333 "%1d:%04X            size free  nbr st   reads  writes l2reads    hits switches"
-#define HHC00334 "%1d:%04X                                                   readaheads   misses"
-#define HHC00335 "%1d:%04X ---------------------------------------------------------------------"
-#define HHC00336 "%1d:%04X [*] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64"    %7.7d %7.7d %7.7d %7.7d  %7.7d"
-#define HHC00337 "%1d:%04X                                                      %7.7d  %7.7d"
+#define HHC00333 "%1d:%04X   32/64       size free  nbr st   reads  writes l2reads    hits switches"
+#define HHC00334 "%1d:%04X                                                      readaheads   misses"
+#define HHC00335 "%1d:%04X ------------------------------------------------------------------------"
+#define HHC00336 "%1d:%04X [*] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64"    %7.7d %7.7d %7.7d %7.7d  %7.7d"
+#define HHC00337 "%1d:%04X                                                         %7.7d  %7.7d"
 #define HHC00338 "%1d:%04X %s"
-#define HHC00339 "%1d:%04X [0] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
+#define HHC00339 "%1d:%04X [0] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
 #define HHC00340 "%1d:%04X %s"
-#define HHC00341 "%1d:%04X [%d] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
+#define HHC00341 "%1d:%04X [%d] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
 #define HHC00342 "%1d:%04X CCKD file[%d] %s: offset 0x%16.16"PRIx64" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00343 "%1d:%04X CCKD file[%d] %s: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x"
 #define HHC00344 "%1d:%04X CCKD file[%d] %s: compression %s not supported"
@@ -434,7 +434,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00348 "CCKD file: invalid value %d for %s"
 #define HHC00349 "CCKD file: invalid cckd keyword: %s"
 #define HHC00350 "CCKD file: invalid numeric value %s"
-//efine HHC00351 (available)
+#define HHC00351 "%1d:%04X CCKD file[%d] %s: cckd/64 format differs from base"
 #define HHC00352 "%1d:%04X CCKD file %s: opened bit is on, use -f"
 #define HHC00353 "%1d:%04X CCKD file %s: check disk errors"
 #define HHC00354 "%1d:%04X CCKD file %s: error in function %s: %s"
@@ -1835,7 +1835,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02592 "VTOC pointer [%02X%02X%02X%02X%02X] updated"
 #define HHC02593 "VOL1 record not readable or locatable"
 #define HHC02594 "Syntax error: %s"
-//efine HHC02595 (available)
+#define HHC02595 "Shadow file data successfully merged into output"
 //efine HHC02596 (available)
 //efine HHC02597 (available)
 //efine HHC02598 (available)

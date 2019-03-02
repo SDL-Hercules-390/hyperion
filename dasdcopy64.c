@@ -527,6 +527,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (!quiet)
             printf ( "\r" );
 
+    if (sfile)
+        // "Shadow file data successfully merged into output"
+        WRMSG( HHC02595, "I" );
+
     // "DASD operation completed"
     WRMSG( HHC02423, "I" );
     return 0;

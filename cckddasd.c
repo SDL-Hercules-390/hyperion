@@ -3812,6 +3812,7 @@ void cckd_sf_parse_sfn( DEVBLK* dev, char* sfn )
 /*-------------------------------------------------------------------*/
 int cckd_sf_init (DEVBLK *dev)
 {
+CKD_DEVHDR      devhdr;                 /* Device header             */
 CCKD_EXT       *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 int             i;                      /* Index                     */
@@ -3853,21 +3854,32 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* open all existing shadow files */
     for (cckd->sfn = 1; cckd->sfn <= CCKD_MAX_SF; cckd->sfn++)
     {
-        hostpath(pathname, cckd_sf_name (dev, cckd->sfn), sizeof(pathname));
-        if (stat (pathname, &st) < 0)
+        /* If no more shadow files remaining then we're done */
+        hostpath( pathname, cckd_sf_name( dev, cckd->sfn ), sizeof( pathname ));
+        if (stat( pathname, &st ) < 0)
             break;
 
         /* Try to open the shadow file read-write then read-only */
-        if (cckd_open (dev, cckd->sfn, O_RDWR|O_BINARY, 1) < 0)
-            if (cckd_open (dev, cckd->sfn, O_RDONLY|O_BINARY, 0) < 0)
+        if (    cckd_open( dev, cckd->sfn, O_RDWR   | O_BINARY, 1 ) < 0)
+            if (cckd_open( dev, cckd->sfn, O_RDONLY | O_BINARY, 0 ) < 0)
                 break;
 
+        /* Make sure shadow file type matches base image type */
+        if (cckd_read( dev, cckd->sfn, 0, &devhdr, CKD_DEVHDR_SIZE ) < 0)
+            return -1;
+        if (!is_dh_devid_typ( devhdr.dh_devid, ANY32_SF_TYP ))
+        {
+            // "%1d:%04X CCKD file[%d] %s: cckd/64 format differs from base"
+            WRMSG( HHC00351, "E", LCSS_DEVNUM, cckd->sfn, pathname );
+            return -1;
+        }
+
         /* Call the chkdsk function */
-        rc = cckd_chkdsk (dev, 0);
-        if (rc < 0) return -1;
+        if ((rc = cckd_chkdsk( dev, 0 )) < 0)
+            return -1;
 
         /* Perform initial read */
-        rc = cckd_read_init (dev);
+        rc = cckd_read_init( dev );
     }
 
     /* Backup to the last opened file number */
@@ -4670,30 +4682,32 @@ int             free_count=0;           /* Total number free spaces  */
     }
 
     /* header */
-    // "%1d:%04X            size free  nbr st   reads  writes l2reads    hits switches"
+    // "%1d:%04X   32/64       size free  nbr st   reads  writes l2reads    hits switches"
     WRMSG (HHC00333, "I", LCSS_DEVNUM);
     if (cckd->readaheads || cckd->misses)
-    // "%1d:%04X                                                   readaheads   misses"
+    // "%1d:%04X                                                      readaheads   misses"
     WRMSG (HHC00334, "I", LCSS_DEVNUM);
-    // "%1d:%04X ---------------------------------------------------------------------"
+    // "%1d:%04X ------------------------------------------------------------------------"
     WRMSG (HHC00335, "I", LCSS_DEVNUM);
 
     /* total statistics */
-    // "%1d:%04X [*] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64"    %7.7d %7.7d %7.7d %7.7d  %7.7d"
+    // "%1d:%04X [*] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64"    %7.7d %7.7d %7.7d %7.7d  %7.7d"
     WRMSG (HHC00336, "I", LCSS_DEVNUM,
+            dev->cckd64 ? "64" : "32",
             usize, (ufree * 100) / usize, (S64)free_count,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
-    // "%1d:%04X                                                      %7.7d  %7.7d"
+    // "%1d:%04X                                                         %7.7d  %7.7d"
     WRMSG (HHC00337, "I", LCSS_DEVNUM,
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
     // "%1d:%04X %s"
     WRMSG (HHC00338, "I", LCSS_DEVNUM, dev->filename);
-    // "%1d:%04X [0] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
+    // "%1d:%04X [0] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
     WRMSG (HHC00339, "I", LCSS_DEVNUM,
+            dev->cckd64 ? "64" : "32",
             st.st_size,
             ((S64)(cckd->cdevhdr[0].free_total * 100) / st.st_size),
             (S64)cckd->cdevhdr[0].free_num, ost[cckd->open[0]],
@@ -4706,9 +4720,11 @@ int             free_count=0;           /* Total number free spaces  */
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        // "%1d:%04X [%d] %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
+        // "%1d:%04X [%d] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
         WRMSG (HHC00341, "I", LCSS_DEVNUM,
-                i, (S64)cckd->cdevhdr[i].cdh_size,
+                i,
+                dev->cckd64 ? "64" : "32",
+                (S64)cckd->cdevhdr[i].cdh_size,
                 ((S64)(cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].cdh_size),
                 (S64)cckd->cdevhdr[i].free_num, ost[cckd->open[i]],
                 cckd->reads[i], cckd->writes[i], cckd->L2_reads[i]);
