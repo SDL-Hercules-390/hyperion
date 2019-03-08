@@ -1943,7 +1943,7 @@ BYTE            buf2[ 64*1024 ];        /* 64K Compress buffer       */
     /* Schedule the garbage collector */
     obtain_lock( &cckdblk.gclock );/* ensure read integrity for gc count */
     {
-        if (cckdblk.gcs < cckdblk.gcmax)
+        if (cckdblk.gcint > 0 && cckdblk.gcs < cckdblk.gcmax)
         {
             /* Schedule a new garbage collector thread */
 
@@ -4798,10 +4798,10 @@ void cckd_gcstart()
     {
         for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
         {
+            cckd = dev->cckd_ext;
+
             if (dev->cckd64)
                 continue;
-
-            cckd = dev->cckd_ext;
 
             obtain_lock( &cckd->filelock );
             {
@@ -4921,7 +4921,11 @@ struct timespec tm;                     /* Time-of-day to wait       */
         }
         cckd_unlock_devchain();
 
-        /* wait a bit */
+        /* If we're in manual on-demand mode, then we're done. */
+        if (cckdblk.gcint <= 0)
+            break;
+
+        /* Otherwise, wait a bit before starting the next cycle */
 
         // Get the time of day again for cckd_gcol_dev's file sync check
         gettimeofday (&tv_now, NULL);
@@ -5779,7 +5783,7 @@ void cckd_command_help()
         , "  debug=<n>     Enable CCW tracing debug messages      (0 or 1)"
         , "  freepend=<n>  Set free pending cycles              (-1 ... 4)"
         , "  fsync=<n>     Enable fsync                           (0 or 1)"
-        , "  gcint=<n>     Set garbage collector interval (sec) ( 1 .. 60)"
+        , "  gcint=<n>     Set garbage collector interval (sec) ( 0 .. 60)"
         , "  gcparm=<n>    Set garbage collector parameter      (-8 ... 8)"
         , "  gcstart=<n>   Start garbage collector                (0 or 1)"
         , "  linuxnull=<n> Check for null linux tracks            (0 or 1)"

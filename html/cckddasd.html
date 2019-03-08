@@ -1077,7 +1077,7 @@ the <b>cckd</b> command explained below.
     </td>
 
 <tr><td valign="top"><b>gcint=</b>n</td><td> &nbsp; </td>
-    <td>Number of seconds the garbage collector thread waits durinng an interval.
+    <td>Number of seconds the garbage collector thread waits during an interval.
         At the end of an interval, the garbage collector performs space recovery,
         flushes the cache, and optionally <em>fsync</em>s the emulation file.
         (However, the file will not be <em>fsync</em>ed unless at least 5
@@ -1085,7 +1085,16 @@ the <b>cckd</b> command explained below.
         <p>
         The default is <b>10</b> seconds.
         <p>
-        You can specify a number between <b>1</b> and <b>60</b>.
+        You can specify a number between <b>0</b> and <b>60</b>. A value of 0
+        disables the default automatic behavior of the garbage collector,
+        converting it to manual on-demand mode instead. When in manual mode,
+        the garbage will only run by specific demand via the 'gcstart' option,
+        and once started, will only run through one garbage collection cycle
+        and then exit, requiring you to manually start it again when desired.
+        In automatic mode (gcint > 0), the garbage collector will start itself
+        automatically and remain idle (but still running) between each garbage
+        collection cycle, automatically starting the next cycle every 'gcint'
+        seconds.
         <br /><br />
     </td>
 
@@ -1095,17 +1104,18 @@ the <b>cckd</b> command explained below.
         space to move based on the ratio of free space to used space in an
         emulation file, and on the number of free spaces in the file.  (The
         garbage collector wants to reduce the free space to used space ratio
-        and the number of free spaces).  The value is logarithmic; a value
-        of 8 means moving 2<sup>8</sup> the selected value while a negative
-        value similarly decreases the amount to be moved.  Normally, 256K
-        will be moved for a file in an interval.  Specifying a value of 8 can
-        increase the amount to 64M.  At least 64K will be moved.  Interestingly,
-        specifying a large value (such as 8) may not increase the garbage
-        collection efficiency correspondingly.
+        and the number of free spaces).
+        <p>
+        The value is logarithmic; a value of 8 means moving 2<sup>8</sup> the
+        selected value, while a negative value similarly decreases the amount
+        to be moved.  Normally, 256K will be moved for a file in an interval.
+        Specifying a value of +8 can increase the amount to 64M.  At least 64K
+        will always be moved.  Interestingly, specifying a large value (such as
+        +8) may not increase the garbage collection efficiency correspondingly.
         <p>
         The default is <b>0</b>.
         <p>
-        You can specify a number between <b>-8</b> and <b>8</b>.
+        You can specify any number between <b>-8</b> and <b>+8</b>.
         <br /><br />
     </td>
 

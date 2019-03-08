@@ -4066,10 +4066,10 @@ void cckd64_gcstart()
     {
         for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
         {
+            cckd = dev->cckd_ext;
+
             if (!dev->cckd64)
                 continue;
-
-            cckd = dev->cckd_ext;
 
             obtain_lock( &cckd->filelock );
             {
