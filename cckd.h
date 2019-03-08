@@ -316,6 +316,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         U64              stats_gcolmoves;      /* Spaces moved       */
         U64              stats_gcolbytes;      /* Bytes moved        */
 
+        LOCK             trclock;       /* Internal trace table lock */
         CCKD_ITRACE     *itrace;        /* Internal trace table      */
         CCKD_ITRACE     *itracep;       /* Current pointer           */
         CCKD_ITRACE     *itracex;       /* End of trace table        */
@@ -324,6 +325,9 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
 
         int              bytemsgs;      /* Limit for `byte 0' msgs   */
 };
+
+#define OBTAIN_TRACE_LOCK()     obtain_lock(  &cckdblk.trclock )
+#define RELEASE_TRACE_LOCK()    release_lock( &cckdblk.trclock )
 
 #define CCKD_TRACE( dev, fmt, ... ) \
     cckd_trace( __FUNCTION__, __LINE__, dev, fmt, ## __VA_ARGS__ )

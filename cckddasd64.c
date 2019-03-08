@@ -4270,8 +4270,11 @@ BYTE            buf[256*1024];          /* Buffer                    */
     size = size << 10;
 
     /* Debug */
+    OBTAIN_TRACE_LOCK();
     if (cckdblk.itracen)
     {
+        RELEASE_TRACE_LOCK();
+
         CCKD_TRACE (dev, "gcperc size %d 1st 0x%"PRIx64" nbr %"PRId64" largest %"PRIu64,
                     size, cckd->cdevhdr[cckd->sfn].free_off,
                     cckd->cdevhdr[cckd->sfn].free_num,
@@ -4289,6 +4292,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
             fpos = cckd->ifb[i].ifb_offnxt;
         }
     }
+    else
+        RELEASE_TRACE_LOCK();
 
     if (!cckd->L2ok)
         cckd64_gc_l2(dev, buf);

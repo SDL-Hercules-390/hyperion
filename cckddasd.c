@@ -61,6 +61,7 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
     initialize_lock( &cckdblk.ralock  );
     initialize_lock( &cckdblk.wrlock  );
     initialize_lock( &cckdblk.devlock );
+    initialize_lock( &cckdblk.trclock );
 
     initialize_condition( &cckdblk.gccond   );
     initialize_condition( &cckdblk.racond   );
@@ -5092,8 +5093,11 @@ BYTE            buf[256*1024];          /* Buffer                    */
     size = size << 10;
 
     /* Debug */
+    OBTAIN_TRACE_LOCK();
     if (cckdblk.itracen)
     {
+        RELEASE_TRACE_LOCK();
+
         CCKD_TRACE( dev, "gcperc size %d 1st 0x%x nbr %d largest %u",
                     size, cckd->cdevhdr[cckd->sfn].free_off,
                     cckd->cdevhdr[cckd->sfn].free_num,
@@ -5111,6 +5115,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
             fpos = cckd->ifb[i].ifb_offnxt;
         }
     }
+    else
+        RELEASE_TRACE_LOCK();
 
     if (!cckd->L2ok)
         cckd_gc_l2(dev, buf);
@@ -6206,6 +6212,7 @@ int   rc;
             }
             else
             {
+                OBTAIN_TRACE_LOCK();
                 {
                     CCKD_ITRACE* itrace = cckdblk.itrace;
 
@@ -6243,6 +6250,7 @@ int   rc;
                     cckdblk.itracec = 0;
                     opts = 1;
                 }
+                RELEASE_TRACE_LOCK();
             }
         }
         // Number writer threads
@@ -6287,6 +6295,7 @@ DLL_EXPORT void cckd_print_itrace()
     // "CCKD file: internal cckd trace"
     WRMSG( HHC00399, "I" );
 
+    OBTAIN_TRACE_LOCK();
     if (cckdblk.itracen)                    // have trace table?
     {
         CCKD_ITRACE*  pbeg;                 // start of trace table
@@ -6314,6 +6323,7 @@ DLL_EXPORT void cckd_print_itrace()
         cckdblk.itracep = pbeg;
         cckdblk.itrace  = pbeg;
     }
+    RELEASE_TRACE_LOCK();
 
 } /* end function cckd_print_itrace */
 
@@ -6336,6 +6346,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
     va_end( vl );
 
     /* Add the message to our internal trace table (if we have one) */
+    OBTAIN_TRACE_LOCK();
     if (cckdblk.itracen)
     {
         CCKD_ITRACE*    itracep;            // (trace table entry ptr)
@@ -6376,6 +6387,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
         snprintf( (char*) itracep, CCKD_TRACE_SIZE, "%s%s(%d): %s",
             trcpfx, func, line, trcmsg );
     }
+    RELEASE_TRACE_LOCK();
 
     /* Log the trace entry if requested */
     if (cckdblk.debug)

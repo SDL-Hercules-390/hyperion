@@ -465,8 +465,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00379 "%1d:%04X CCKD file %s: starting %s level %d%s..."
 #define HHC00380 "%1d:%04X CCKD file %s: %s level %d complete; rc=%d"
 //efine HHC00381 - HHC00395 (available)
-#define HHC00396 "%1d:%04X %s"
-#define HHC00397 "CCKD file: internal cckd trace table is empty"
+#define HHC00396 "%1d:%04X %s" // (cckd_trace)
+//efine HHC00397 (available)
 #define HHC00398 "%s"
 #define HHC00399 "CCKD file: internal cckd trace"
 
