@@ -81,7 +81,7 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
     cckdblk.ramax      = CCKD_DEF_RA;
     cckdblk.wrmax      = CCKD_DEF_WRITER;
     cckdblk.gcmax      = CCKD_DEF_GCOL;
-    cckdblk.gcwait     = CCKD_DEF_GCOLWAIT;
+    cckdblk.gcint      = CCKD_DEF_GCOLWAIT;
     cckdblk.gcparm     = CCKD_DEF_GCOLPARM;
     cckdblk.readaheads = CCKD_DEF_READAHEADS;
     cckdblk.freepend   = CCKD_DEF_FREEPEND;
@@ -4930,9 +4930,9 @@ struct timespec tm;                     /* Time-of-day to wait       */
         gettimeofday (&tv_now, NULL);
         tt_now = tv_now.tv_sec + ((tv_now.tv_usec + 500000)/1000000);
         cckd_trace (dev, CCKD_GC_THREAD_NAME " wait %d seconds at %s",
-                    cckdblk.gcwait, ctime (&tt_now));
+                    cckdblk.gcint, ctime (&tt_now));
 
-        tm.tv_sec = tv_now.tv_sec + cckdblk.gcwait;
+        tm.tv_sec = tv_now.tv_sec + cckdblk.gcint;
         tm.tv_nsec = tv_now.tv_usec * 1000;
         timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, &tm);
     }
@@ -5809,7 +5809,7 @@ void cckd_command_opts()
         , cckdblk.debug
         , cckdblk.freepend
         , cckdblk.fsync
-        , cckdblk.gcwait
+        , cckdblk.gcint
         , cckdblk.gcparm
     );
     WRMSG( HHC00346, "I", msgbuf );
@@ -6063,7 +6063,7 @@ int   rc;
             }
             else
             {
-                cckdblk.gcwait = val;
+                cckdblk.gcint = val;
                 opts = 1;
             }
         }

@@ -251,7 +251,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              gcs;           /* Number garbage collector threads started */
         int              gca;           /* Number garbage collector threads active */
         int              gcmax;         /* Max garbage collectors    */
-        int              gcwait;        /* Wait time in seconds      */
+        int              gcint;         /* Wait time in seconds      */
         int              gcparm;        /* Adjustment parm           */
 
         LOCK             wrlock;        /* I/O lock                  */
