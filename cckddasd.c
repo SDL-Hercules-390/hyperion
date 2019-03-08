@@ -5098,17 +5098,20 @@ BYTE            buf[256*1024];          /* Buffer                    */
     /* Debug */
     if (cckdblk.itracen)
     {
-        cckd_trace (dev, "gcperc size %d 1st 0x%x nbr %d largest %u",
+        cckd_trace( dev, "gcperc size %d 1st 0x%x nbr %d largest %u",
                     size, cckd->cdevhdr[cckd->sfn].free_off,
                     cckd->cdevhdr[cckd->sfn].free_num,
-                    cckd->cdevhdr[cckd->sfn].free_largest);
-        fpos = (off_t)cckd->cdevhdr[cckd->sfn].free_off;
+                    cckd->cdevhdr[cckd->sfn].free_largest );
+
+        fpos = (off_t) cckd->cdevhdr[cckd->sfn].free_off;
+
         for (i = cckd->free_idx1st; i >= 0; i = cckd->ifb[i].ifb_idxnxt)
         {
-            cckd_trace (dev, "gcperc free[%4d]:%8.8x end %8.8x len %10d%cpend %d",
+            cckd_trace( dev, "gcperc free[%4d]:%8.8x end %8.8x len %10d%cpend %d",
                         i,(int)fpos,(int)(fpos+cckd->ifb[i].ifb_len),(int)cckd->ifb[i].ifb_len,
                         fpos+(int)cckd->ifb[i].ifb_len == (int)cckd->ifb[i].ifb_offnxt ?
-                                '*' : ' ',cckd->ifb[i].ifb_pending);
+                                '*' : ' ',cckd->ifb[i].ifb_pending );
+
             fpos = cckd->ifb[i].ifb_offnxt;
         }
     }
@@ -5395,49 +5398,57 @@ off_t           pos, fpos;              /* File offsets              */
 
     do {
         /* Find a level 2 table to relocate */
+
         i = cckd->free_idx1st;
-        fpos = (off_t)cckd->cdevhdr[sfx].free_off;
-        cckd_trace (dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d",
+        fpos = (off_t) cckd->cdevhdr[sfx].free_off;
+        cckd_trace( dev, "gc_l2 first free[%d] pos 0x%x len %d pending %d",
                     i, (int)fpos, i >= 0 ? (int)cckd->ifb[i].ifb_len : -1,
-                    i >= 0 ? cckd->ifb[i].ifb_pending : -1);
-        if (i < 0 || (U64)fpos >= cckd->L2_bounds || cckd->ifb[i].ifb_pending)
+                    i >= 0 ? cckd->ifb[i].ifb_pending : -1 );
+
+        if (i < 0 || (U64) fpos >= cckd->L2_bounds || cckd->ifb[i].ifb_pending)
             goto cckd_gc_l2_exit;
 
         if ( cckd->ifb[i].ifb_len <  CCKD_L2TAB_SIZE
          || (cckd->ifb[i].ifb_len != CCKD_L2TAB_SIZE
-          && cckd->ifb[i].ifb_len <  CCKD_L2TAB_SIZE + CCKD_FREEBLK_SIZE
-            )
-           )
+          && cckd->ifb[i].ifb_len <  CCKD_L2TAB_SIZE + CCKD_FREEBLK_SIZE)
+        )
         {
-            for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            for (i=0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            {
                 if (fpos + cckd->ifb[i].ifb_len == (off_t)cckd->L1tab[sfx][i])
                     break;
+            }
         }
         else
         {
-            for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            for (i=0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            {
                 if (cckd->L2_bounds - CCKD_L2TAB_SIZE < (U64)cckd->L1tab[sfx][i]
                  && cckd->L1tab[sfx][i] != UINT_MAX)
                     break;
+            }
         }
 
         if (i < cckd->cdevhdr[sfx].num_L1tab)
         {
-            cckd_trace (dev, "gc_l2 relocate l2[%d] pos 0x%x",
-                        i, cckd->L1tab[sfx][i]);
-            if (cckd_read_l2 (dev, sfx, i) < 0)
+            cckd_trace( dev, "gc_l2 relocate l2[%d] pos 0x%x",
+                        i, cckd->L1tab[sfx][i] );
+
+            if (cckd_read_l2( dev, sfx, i ) < 0)
                 goto cckd_gc_l2_exit;
-            if (cckd_write_l2 (dev) < 0)
+
+            if (cckd_write_l2( dev ) < 0)
                 goto cckd_gc_l2_exit;
         }
-    } while (i < cckd->cdevhdr[sfx].num_L1tab);
+    }
+    while (i < cckd->cdevhdr[sfx].num_L1tab);
 
 cckd_gc_l2_exit:
     release_lock (&cckd->filelock);
     return 0;
 
 cckd_gc_l2_exit_ok:
-    cckd_trace (dev, "gc_l2 ok%s", "");
+    cckd_trace( dev, "gc_l2 ok%s", "" );
     cckd->L2ok = 1;
     goto cckd_gc_l2_exit;
 }
@@ -5888,16 +5899,16 @@ void cckd_command_stats()
 /*-------------------------------------------------------------------*/
 /* cckd command processor                                            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int cckd_command(char *op, int cmd)
+DLL_EXPORT int cckd_command( char* op, int cmd )
 {
 char  *kw, *p, c, buf[256];
 int   val, opts = 0;
 int   rc;
 
     /* Display help for null operand */
-    if (op == NULL)
+    if (!op)
     {
-        if (memcmp (&cckdblk.id, CCKDBLK_ID, sizeof(cckdblk.id)) == 0 && cmd)
+        if (cmd && memcmp( &cckdblk.id, CCKDBLK_ID, sizeof( cckdblk.id )) == 0)
             cckd_command_help();
         return 0;
     }
@@ -5906,22 +5917,22 @@ int   rc;
     op = buf;
 
     /* Initialize the global cckd block if necessary */
-    if (memcmp (&cckdblk.id, CCKDBLK_ID, sizeof(cckdblk.id)))
-        cckd_dasd_init (0, NULL);
+    if (memcmp( &cckdblk.id, CCKDBLK_ID, sizeof( cckdblk.id )))
+        cckd_dasd_init( 0, NULL );
 
     while (op)
     {
         /* Operands are delimited by commas */
         kw = op;
-        op = strchr (op, ',');
-        if (op) *op++ = '\0';
+        op = strchr( op, ',' );
+        if (op) *op++ = 0;
 
         /* Check for "keyword=value" */
-        if ((p = strchr (kw, '=')))
+        if ((p = strchr( kw, '=' )))
         {
-            *p++ = '\0';
+            *p++ = 0;
             c = 0;
-            rc = sscanf (p, "%d%c", &val, &c);
+            rc = sscanf( p, "%d%c", &val, &c );
         }
 
         /* If p == NULL, then just keyword syntax (no "=value") */
@@ -5930,19 +5941,19 @@ int   rc;
             /* Parse the keyword... */
 
             // Display cckd help
-            if ( CMD(kw,help,4 ) )
+            if (CMD( kw, HELP, 4 ))
             {
                 if (!cmd) return 0;
                 cckd_command_help();
             }
             // Display current cckd statistics
-            else if ( CMD(kw,stats,4) )
+            else if (CMD( kw, STATS, 4 ))
             {
                 if (!cmd) return 0;
-                cckd_command_stats ();
+                cckd_command_stats();
             }
             // Display current cckd options
-            else if ( CMD(kw,opts,4) )
+            else if (CMD( kw, OPTS, 4 ))
             {
                 if (!cmd) return 0;
                 cckd_command_opts();
@@ -5951,7 +5962,7 @@ int   rc;
             {
                 // "CCKD file: invalid cckd keyword: %s"
                 WRMSG( HHC00349, "E", kw );
-                cckd_command_help ();
+                cckd_command_help();
                 return -1;
             }
         }
@@ -5969,12 +5980,12 @@ int   rc;
         /* Please keep the below tests in alphabetical order! */
 
         // Compression to be used
-        else if ( CMD(kw,comp,4) )
+        else if (CMD( kw, COMP, 4 ))
         {
             if (val < -1 || (val > 0 && (val & ~cckdblk.comps)))
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else switch (val)
@@ -5988,17 +5999,17 @@ int   rc;
                 break;
             default: /* unsupported algorithm */
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
         }
         // Compression parameter to be used
-        else if ( CMD(kw,compparm,8) )
+        else if (CMD( kw, COMPPARM, 8 ))
         {
             if (val < -1 || val > 9)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6008,12 +6019,12 @@ int   rc;
             }
         }
         // Turn CCW tracing debug messages on or off
-        else if ( CMD(kw,debug,5) )
+        else if (CMD( kw, DEBUG, 5 ))
         {
             if (val < 0 || val > 1)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6023,12 +6034,12 @@ int   rc;
             }
         }
         // Set the free pending value
-        else if ( CMD(kw,freepend,8) )
+        else if (CMD( kw, FREEPEND, 8 ))
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6038,12 +6049,12 @@ int   rc;
             }
         }
         // Turn fsync on or off
-        else if ( CMD(kw,fsync,5) )
+        else if (CMD( kw, FSYNC, 5 ))
         {
             if (val < 0 || val > 1)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6053,12 +6064,12 @@ int   rc;
             }
         }
         // Garbage collection interval
-        else if ( CMD(kw,gcint,5) )
+        else if (CMD( kw, GCINT, 5 ))
         {
             if (val < 1 || val > 60)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6068,12 +6079,12 @@ int   rc;
             }
         }
         // Garbage collection parameter
-        else if ( CMD(kw,gcparm,6) )
+        else if (CMD( kw, GCPARM, 6 ))
         {
             if (val < -8 || val > 8)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6083,12 +6094,12 @@ int   rc;
             }
         }
         // Start garbage collector
-        else if ( CMD(kw,gcstart,7) )
+        else if (CMD( kw, GCSTART, 7 ))
         {
             if (val < 0 || val > 1)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else if (val == 1)
@@ -6098,12 +6109,12 @@ int   rc;
             }
         }
         // Check for null linux tracks
-        else if ( CMD(kw,linuxnull,5) )
+        else if (CMD( kw, LINUXNULL, 5 ))
         {
             if (val < 0 || val > 1)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6113,12 +6124,12 @@ int   rc;
             }
         }
         // Turn off stats report at close
-        else if ( CMD(kw,nosfd,5) )
+        else if (CMD( kw, NOSFD, 5 ))
         {
             if (val < 0 || val > 1)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6128,12 +6139,12 @@ int   rc;
             }
         }
         // Turn stress writes on or off
-        else if ( CMD(kw,nostress,8) )
+        else if (CMD( kw, NOSTRESS, 8 ))
         {
             if (val < 0 || val > 1)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6143,12 +6154,12 @@ int   rc;
             }
         }
         // Number readahead threads
-        else if ( CMD(kw,ra,2) )
+        else if (CMD( kw, RA, 2 ))
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6158,12 +6169,12 @@ int   rc;
             }
         }
         // Readahead queue size
-        else if ( CMD(kw,raq,3) )
+        else if (CMD( kw, RAQ, 3 ))
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6173,12 +6184,12 @@ int   rc;
             }
         }
         // Number of tracks to readahead
-        else if ( CMD(kw,rat,3) )
+        else if (CMD( kw, RAT, 3 ))
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6188,12 +6199,12 @@ int   rc;
             }
         }
         // Number of trace table entries
-        else if ( CMD(kw,trace,5) )
+        else if (CMD( kw, TRACE, 5 ))
         {
             if (val < 0 || val > CCKD_MAX_TRACE)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6232,12 +6243,12 @@ int   rc;
             }
         }
         // Number writer threads
-        else if ( CMD(kw,wr,2) )
+        else if (CMD( kw, WR, 2 ))
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER)
             {
                 // "CCKD file: value %d invalid for %s"
-                WRMSG(HHC00348, "E", val, kw);
+                WRMSG( HHC00348, "E", val, kw );
                 return -1;
             }
             else
@@ -6250,9 +6261,9 @@ int   rc;
         else
         {
             // "CCKD file: invalid cckd keyword: %s"
-            WRMSG(HHC00349, "E", kw);
+            WRMSG( HHC00349, "E", kw );
             if (!cmd) return -1;
-            cckd_command_help ();
+            cckd_command_help();
             op = NULL;
         }
     }
@@ -6317,7 +6328,7 @@ DLL_EXPORT void cckd_print_itrace()
 /*-------------------------------------------------------------------*/
 /* Write internal trace entry                                        */
 /*-------------------------------------------------------------------*/
-void cckd_trace( DEVBLK* dev, char* msg, ... )
+void cckd_trace( DEVBLK* dev, char* fmt, ... )
 {
     va_list  vl;
 
@@ -6331,11 +6342,11 @@ void cckd_trace( DEVBLK* dev, char* msg, ... )
         int rc, sz = 1024;
 
         bfr = malloc( sz );
-        va_start( vl, msg );
+        va_start( vl, fmt );
 
         while (1)
         {
-            if ((rc = vsnprintf( bfr, sz, msg, vl )) < 0)
+            if ((rc = vsnprintf( bfr, sz, fmt, vl )) < 0)
             {
                 free( bfr );
                 bfr = NULL;
@@ -6391,13 +6402,14 @@ void cckd_trace( DEVBLK* dev, char* msg, ... )
 
             if (pfxlen < CCKD_TRACE_SIZE)
             {
-                va_start( vl, msg );
+                va_start( vl, fmt );
                 vsnprintf( (char*) itracep         + pfxlen,
-                                   CCKD_TRACE_SIZE - pfxlen, msg, vl );
+                                   CCKD_TRACE_SIZE - pfxlen, fmt, vl );
                 va_end( vl );
             }
         }
     }
+
 } /* end function cckd_trace */
 
 DLL_EXPORT DEVHND cckd_dasd_device_hndinfo = {

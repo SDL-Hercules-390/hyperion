@@ -4276,13 +4276,16 @@ BYTE            buf[256*1024];          /* Buffer                    */
                     size, cckd->cdevhdr[cckd->sfn].free_off,
                     cckd->cdevhdr[cckd->sfn].free_num,
                     cckd->cdevhdr[cckd->sfn].free_largest);
+
         fpos = cckd->cdevhdr[cckd->sfn].free_off;
+
         for (i = cckd->free_idx1st; i >= 0; i = cckd->ifb[i].ifb_idxnxt)
         {
             cckd_trace (dev, "gcperc free[%4d]:%16.16"PRIx64" end %16.16"PRIx64" len %10"PRId64"%cpend %d",
                         i, fpos, (fpos+cckd->ifb[i].ifb_len), cckd->ifb[i].ifb_len,
                         fpos+cckd->ifb[i].ifb_len == cckd->ifb[i].ifb_offnxt ?
                                 '*' : ' ', cckd->ifb[i].ifb_pending);
+
             fpos = cckd->ifb[i].ifb_offnxt;
         }
     }
@@ -4569,49 +4572,57 @@ U64             pos, fpos;              /* File offsets              */
 
     do {
         /* Find a level 2 table to relocate */
+
         i = cckd->free_idx1st;
         fpos = cckd->cdevhdr[sfx].free_off;
-        cckd_trace (dev, "gc_l2 first free[%d] pos 0x%"PRIx64" len %"PRId64" pending %d",
+        cckd_trace( dev, "gc_l2 first free[%d] pos 0x%"PRIx64" len %"PRId64" pending %d",
                     i, fpos, (U64)(i >= 0 ? cckd->ifb[i].ifb_len : -1),
-                    (int)(i >= 0 ? cckd->ifb[i].ifb_pending : -1));
+                    (int)(i >= 0 ? cckd->ifb[i].ifb_pending : -1 ));
+
         if (i < 0 || fpos >= cckd->L2_bounds || cckd->ifb[i].ifb_pending)
             goto cckd_gc_l2_exit;
 
         if ( cckd->ifb[i].ifb_len <  CCKD64_L2TAB_SIZE
          || (cckd->ifb[i].ifb_len != CCKD64_L2TAB_SIZE
-          && cckd->ifb[i].ifb_len <  CCKD64_L2TAB_SIZE + CCKD64_FREEBLK_SIZE
-            )
-           )
+          && cckd->ifb[i].ifb_len <  CCKD64_L2TAB_SIZE + CCKD64_FREEBLK_SIZE)
+        )
         {
-            for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            for (i=0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            {
                 if (fpos + cckd->ifb[i].ifb_len == cckd->L1tab[sfx][i])
                     break;
+            }
         }
         else
         {
-            for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            for (i=0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
+            {
                 if (cckd->L2_bounds - CCKD64_L2TAB_SIZE < cckd->L1tab[sfx][i]
                  && cckd->L1tab[sfx][i] != ULLONG_MAX)
                     break;
+            }
         }
 
         if (i < cckd->cdevhdr[sfx].num_L1tab)
         {
-            cckd_trace (dev, "gc_l2 relocate l2[%d] pos 0x%"PRIx64,
-                        i, cckd->L1tab[sfx][i]);
-            if (cckd64_read_l2 (dev, sfx, i) < 0)
+            cckd_trace( dev, "gc_l2 relocate l2[%d] pos 0x%"PRIx64,
+                        i, cckd->L1tab[sfx][i] );
+
+            if (cckd64_read_l2( dev, sfx, i ) < 0)
                 goto cckd_gc_l2_exit;
-            if (cckd64_write_l2 (dev) < 0)
+
+            if (cckd64_write_l2( dev ) < 0)
                 goto cckd_gc_l2_exit;
         }
-    } while (i < cckd->cdevhdr[sfx].num_L1tab);
+    }
+    while (i < cckd->cdevhdr[sfx].num_L1tab);
 
 cckd_gc_l2_exit:
     release_lock (&cckd->filelock);
     return 0;
 
 cckd_gc_l2_exit_ok:
-    cckd_trace (dev, "gc_l2 ok%s", "");
+    cckd_trace( dev, "gc_l2 ok%s", "" );
     cckd->L2ok = 1;
     goto cckd_gc_l2_exit;
 }

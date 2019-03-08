@@ -249,7 +249,7 @@ CCKD_DLL_IMPORT   int     cckd_command(char *op, int cmd);
                   void    cckd_command_help();
                   void    cckd_command_opts();
                   void    cckd_command_stats();
-                  void    cckd_trace(DEVBLK *dev, char *msg, ...);
+                  void    cckd_trace(DEVBLK *dev, char *fmt, ...);
 CCKD_DLL_IMPORT   void    cckd_print_itrace();
 /*-------------------------------------------------------------------*/
 //KD64_DLL_IMPORT int     cckd64_command(char *op, int cmd);
