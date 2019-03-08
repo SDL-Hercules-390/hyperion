@@ -699,7 +699,7 @@ int rc = 0;
     }
     else
     {
-        display_version( stdout, 0, "Hercules" );
+        display_version( stdout, 0, NULL );
         display_build_options( stdout, 0 );
         display_extpkg_vers  ( stdout, 0 );
     }

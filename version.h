@@ -67,6 +67,8 @@
 #define HDL_VERS_HERCULES   "SDL " QSTR( VERS_MAJ ) "." QSTR( VERS_INT ) QSTR( VERS_MIN )
 #define HDL_SIZE_HERCULES   sizeof( HDL_VERS_HERCULES ) - 1
 
+VER_DLL_IMPORT void init_sysblk_version_str_arrays();
+
 VER_DLL_IMPORT void display_version       ( FILE* f, int httpfd, char* prog );
 VER_DLL_IMPORT void display_build_options ( FILE* f, int httpfd );
 VER_DLL_IMPORT void display_extpkg_vers   ( FILE* f, int httpfd );

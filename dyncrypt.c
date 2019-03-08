@@ -5080,15 +5080,10 @@ HDL_REGISTER_SECTION;
 {
   /* Display copyright, version and level of support information */
 
-  char pkgvers[ 80 ];
-
   UNREFERENCED( regsym );   // (HDL_REGISTER_SECTION parameter)
 
   // "%s module loaded%s"
   WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2016 by Bernard van der Helm");
-  MSGBUF( pkgvers, "Built with crypto external package version %s", crypto_version() );
-  // "%s"
-  WRMSG( HHC01417, "I", pkgvers );
 
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");

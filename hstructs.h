@@ -468,7 +468,7 @@ enum OPERATION_MODE
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
 #define HDL_NAME_SYSBLK   "SYSBLK"
-#define HDL_VERS_SYSBLK   "SDL 4.00"    /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "SDL 4.2"     /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         BLOCK_HEADER;                   /* Name of block - SYSBLK    */
         char   *hercules_pgmname;       /* Starting program name     */
@@ -476,6 +476,10 @@ struct SYSBLK {
         char   *hercules_cmdline;       /* Hercules Command line     */
         char   *netdev;                 /* Network device name       */
 #define DEF_NETDEV init_sysblk_netdev() /* Retrieve sysblk.netdev    */
+
+  const char  **vers_info;              /* Version information       */
+  const char  **bld_opts;               /* Build options             */
+  const char  **extpkg_vers;            /* External Package versions */
 
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */

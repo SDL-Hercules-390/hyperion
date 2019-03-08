@@ -741,7 +741,21 @@ DLL_EXPORT int  get_buildinfo_strings(const char*** pppszBldInfoStr)
 }
 
 /*-------------------------------------------------------------------*/
-/* Display version, copyright and build date                         */
+/*                     (helper function)                             */
+/*-------------------------------------------------------------------*/
+static void display_str( FILE* f, int httpfd, const char* str )
+{
+    if (f != stdout)
+        if (httpfd)
+            hprintf( httpfd, "%s\n", str );
+        else
+            fprintf( f, "%s\n", str );
+    else
+        LOGMSG( "%s\n", str );
+}
+
+/*-------------------------------------------------------------------*/
+/*              Display "prog" version information                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
 {
@@ -751,138 +765,189 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
     */
     if (extgui)
     {
-        setvbuf(stderr, NULL, _IONBF, 0);
-        setvbuf(stdout, NULL, _IONBF, 0);
+        setvbuf( stderr, NULL, _IONBF, 0 );
+        setvbuf( stdout, NULL, _IONBF, 0 );
     }
 
-    /* Log version */
+    if (!prog) // (display Hercules version?)
+    {
+        const char** p;
 
-    // "%s version %s (%u.%u.%u.%u)"
+        for (p = sysblk.vers_info; *p; ++p)
+            display_str( f, httpfd, *p );
+    }
+    else // (display Utility version)
+    {
+        char buf[256];
 
-    if (f != stdout)
-        if (httpfd)
-            hprintf( httpfd, MSG( HHC01413, "I", prog, VERSION,
-                VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
-        else
-            fprintf( f, MSG( HHC01413, "I", prog, VERSION,
-                VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
-    else
-        WRMSG( HHC01413, "I", prog, VERSION,
-            VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD );
+        MSGBUF( buf, MSG( HHC01413, "I", prog, VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+        display_str( f, httpfd, RTRIM( buf ));
 
-    /* Log Copyright */
+        MSGBUF( buf, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
+        display_str( f, httpfd, RTRIM( buf ));
 
-    // "%s"
-
-    if (f != stdout)
-        if (httpfd)
-            hprintf( httpfd, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
-        else
-            fprintf( f, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
-    else
-        WRMSG( HHC01414, "I", HERCULES_COPYRIGHT );
-
-    /* Log custom title, if any */
-
-#if defined(CUSTOM_BUILD_STRING)
-
-    if (f != stdout)
-        if (httpfd)
-            hprintf( httpfd, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
-        else
-            fprintf( f, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
-    else
-        WRMSG( HHC01417, "I", CUSTOM_BUILD_STRING );
+#if defined( CUSTOM_BUILD_STRING )
+        MSGBUF( buf, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
+        display_str( f, httpfd, RTRIM( buf ));
 #endif
+        MSGBUF( buf, MSG( HHC01415, "I", __DATE__, __TIME__ ));
+        display_str( f, httpfd, RTRIM( buf ));
+    }
+}
 
-    /* Log build date/time */
+/*-------------------------------------------------------------------*/
+/*                   Display build options                           */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void display_build_options( FILE* f, int httpfd )
+{
+    const char** p;
 
-    // "Build date: %s at %s"
+    for (p = sysblk.bld_opts; *p; ++p)
+        display_str( f, httpfd, *p );
 
-    if (f != stdout)
-        if (httpfd)
-            hprintf( httpfd, MSG( HHC01415, "I", __DATE__, __TIME__ ));
-        else
-            fprintf( f, MSG( HHC01415, "I", __DATE__, __TIME__ ));
-    else
-        WRMSG( HHC01415, "I", __DATE__, __TIME__ );
-
-} /* end function display_version */
+}
 
 /*-------------------------------------------------------------------*/
 /*              Display External Package versions                    */
 /*-------------------------------------------------------------------*/
 
-//nclude "crypto_version.h"             (handled by dyncrypt.c)
+#include "crypto_version.h"
 #include "decnumber_version.h"
 #include "softfloat_version.h"
 #include "telnet_version.h"
 
-static void _do_display_extpkg_vers( FILE* f, int httpfd,
-                                     const char* pkg,
-                                     const char* vers )
-{
-    char pkgvers[ 80 ];
-
-    MSGBUF( pkgvers, "Built with %s external package version %s", pkg, vers );
-
-    if (f != stdout)
-        if (httpfd)
-            hprintf( httpfd, MSG( HHC01417, "I", pkgvers ));
-        else
-            fprintf( f, MSG( HHC01417, "I", pkgvers ));
-    else
-        WRMSG( HHC01417, "I", pkgvers );
-}
-
 DLL_EXPORT void display_extpkg_vers( FILE* f, int httpfd )
 {
-//  _do_display_extpkg_vers( f, httpfd, "decNumber", crypto_version()    );   (handled by dyncrypt.c)
-    _do_display_extpkg_vers( f, httpfd, "decNumber", decnumber_version() );
-    _do_display_extpkg_vers( f, httpfd, "SoftFloat", softfloat_version() );
-    _do_display_extpkg_vers( f, httpfd, "telnet",    telnet_version()    );
+    const char** p;
+
+    for (p = sysblk.extpkg_vers; *p; ++p)
+        display_str( f, httpfd, *p );
 }
 
 /*-------------------------------------------------------------------*/
-/* Display build options                                             */
+/*             Initialize SYSBLK info strings arrays                 */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void display_build_options( FILE* f, int httpfd )
+
+static void init_hercver_strings();     // (fwd ref)
+static void init_bldopts_strings();     // (fwd ref)
+static void init_extpkgs_strings();     // (fwd ref)
+
+DLL_EXPORT void init_sysblk_version_str_arrays()
 {
-    unsigned int i;
-    const char** ppszBldInfoStr = NULL;
+    init_hercver_strings();
+    init_bldopts_strings();
+    init_extpkgs_strings();
+}
 
-    if (!(i = get_buildinfo_strings( &ppszBldInfoStr )))
+/*-------------------------------------------------------------------*/
+
+#define APPEND_STR( ptr ) \
+            append_ptr_to_array( &count, (void***) array, (void*) ptr );
+
+static void append_ptr_to_array( int* count, void*** array, void* ptr )
+{
+    *array = realloc( *array, ((*count) + 1) * sizeof( void* ));
+    (*array)[ *count ] = ptr;
+    ++*count;
+}
+
+/*-------------------------------------------------------------------*/
+
+static void init_hercver_strings()
+{
+    int count = 0; const char*** array = &sysblk.vers_info;
+    char buf[256]; if (*array) return; // (already built)
+
     {
-        if (f != stdout)
-            if (httpfd)
-                hprintf( httpfd, MSG( HHC01417, "I", "(none)" ));
-            else
-                fprintf( f, MSG( HHC01417, "I", "(none)" ));
-        else
-            WRMSG( HHC01417, "I", "(none)" );
+        /* "Version" */
+
+        MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+        APPEND_STR( strdup( RTRIM( buf )));
+
+        /* "(C) Copyright" */
+
+        MSGBUF( buf, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
+        APPEND_STR( strdup( RTRIM( buf )));
+
+#if defined( CUSTOM_BUILD_STRING )
+
+        /* (custom title) */
+
+        MSGBUF( buf, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
+        APPEND_STR( strdup( RTRIM( buf )));
+#endif
+
+        // "Build date: %s at %s"
+
+        MSGBUF( buf, MSG( HHC01415, "I", __DATE__, __TIME__ ));
+        APPEND_STR( strdup( RTRIM( buf )));
     }
-    else
+
+    APPEND_STR( NULL );
+}
+
+/*-------------------------------------------------------------------*/
+
+static void init_bldopts_strings()
+{
+    int count = 0; const char*** array = &sysblk.bld_opts;
+    char buf[256]; if (*array) return; // (already built)
+
     {
-        for(; i; i--, ppszBldInfoStr++ )
+        unsigned int i;
+        const char** ppszBldInfoStr = NULL;
+        char hibuf[256];
+
+        /* "Built with:" */
+
+        i = get_buildinfo_strings( &ppszBldInfoStr );
+
+        for (; i; i--, ppszBldInfoStr++ )
         {
-            if (f != stdout)
-                if (httpfd)
-                    hprintf( httpfd, MSG( HHC01417, "I", *ppszBldInfoStr ));
-                else
-                    fprintf( f, MSG( HHC01417, "I", *ppszBldInfoStr ));
-            else
-                WRMSG( HHC01417, "I", *ppszBldInfoStr );
+            MSGBUF( buf, MSG( HHC01417, "I", *ppszBldInfoStr ));
+            APPEND_STR( strdup( RTRIM( buf )));
         }
+
+        /* "Running on:" */
+
+        init_hostinfo( &hostinfo );
+        get_hostinfo_str( &hostinfo, hibuf, sizeof( hibuf ));
+
+        MSGBUF( buf, MSG( HHC01417, "I", hibuf ));
+        APPEND_STR( strdup( RTRIM( buf )));
     }
 
-    /* "Running on ..." */
+    APPEND_STR( NULL );
+}
 
-    if (f != stdout)
-        if (httpfd)
-            display_hostinfo( &hostinfo, NULL, httpfd );
-        else
-            display_hostinfo( &hostinfo, f, 0 );
-    else
-        display_hostinfo( &hostinfo, f, 0 );
+/*-------------------------------------------------------------------*/
 
-} /* end function display_build_options */
+static void init_extpkgs_strings()
+{
+    int count = 0; const char*** array = &sysblk.extpkg_vers;
+    char buf[256]; if (*array) return; // (already built)
+
+    {
+        char pkgbuf[256];
+
+        MSGBUF( pkgbuf, "Built with %s external package version %s", "crypto", crypto_version());
+        MSGBUF( buf, MSG( HHC01417, "I", pkgbuf ));
+        APPEND_STR( strdup( RTRIM( buf )));
+
+        MSGBUF( pkgbuf, "Built with %s external package version %s", "decNumber", decnumber_version());
+        MSGBUF( buf, MSG( HHC01417, "I", pkgbuf ));
+        APPEND_STR( strdup( RTRIM( buf )));
+
+        MSGBUF( pkgbuf, "Built with %s external package version %s", "SoftFloat", softfloat_version());
+        MSGBUF( buf, MSG( HHC01417, "I", pkgbuf ));
+        APPEND_STR( strdup( RTRIM( buf )));
+
+        MSGBUF( pkgbuf, "Built with %s external package version %s", "telnet", telnet_version());
+        MSGBUF( buf, MSG( HHC01417, "I", pkgbuf ));
+        APPEND_STR( strdup( RTRIM( buf )));
+    }
+
+    APPEND_STR( NULL );
+}
+
+/*-------------------------------------------------------------------*/

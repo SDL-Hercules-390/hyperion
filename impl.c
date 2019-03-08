@@ -606,8 +606,9 @@ int     rc;
 
     sysblk.msglvl = DEFAULT_MLVL;
 
-    /* Initialize program name */
+    /* Initialize program name and version strings arrays */
     init_progname( argc, argv );
+    init_sysblk_version_str_arrays();
 
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
@@ -893,7 +894,7 @@ int     rc;
        cepted and handled by the logger facility thereby allowing the
        panel thread or external gui to "see" it and thus display it.
     */
-    display_version       ( stdout, 0, "Hercules" );
+    display_version       ( stdout, 0, NULL );
     display_build_options ( stdout, 0 );
     display_extpkg_vers   ( stdout, 0 );
 
@@ -1377,7 +1378,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "version" ) == 0
                     )
                     {
-                        display_version( stdout, 0, "Hercules" );
+                        display_version( stdout, 0, NULL );
                     }
                     else if (0
                         || strcasecmp( optarg, "build"   ) == 0
@@ -1391,7 +1392,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "full" ) == 0
                     )
                     {
-                        display_version( stdout, 0, "Hercules" );
+                        display_version( stdout, 0, NULL );
                         display_build_options( stdout, 0 );
                         display_extpkg_vers  ( stdout, 0 );
                     }
