@@ -110,7 +110,7 @@ typedef  U64          CCKD64_L1ENT;     /* Level 1 table entry       */
 typedef  CCKD64_L1ENT CCKD64_L1TAB[];   /* Level 1 table             */
 typedef  CCKD64_L2ENT CCKD64_L2TAB[256];/* Level 2 table             */
 
-#define CCKD_TRACE_SIZE        ((S64)sizeof(CCKD_TRACE))
+#define CCKD_TRACE_SIZE        ((S64)sizeof(CCKD_ITRACE))
 #define CCKD64_DEVHDR_SIZE     ((S64)sizeof(CCKD64_DEVHDR))
 #define CCKD64_L1ENT_SIZE      ((S64)sizeof(CCKD64_L1ENT))
 #define CCKD64_L2ENT_SIZE      ((S64)sizeof(CCKD64_L2ENT))

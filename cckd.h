@@ -178,7 +178,7 @@ struct CCKD_RA {                        /* Readahead queue entry     */
 typedef  U32          CCKD_L1ENT;       /* Level 1 table entry       */
 typedef  CCKD_L1ENT   CCKD_L1TAB[];     /* Level 1 table             */
 typedef  CCKD_L2ENT   CCKD_L2TAB[256];  /* Level 2 table             */
-typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
+typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 
 #define CCKD_DEVHDR_SIZE       ((ssize_t)sizeof(CCKD_DEVHDR))
 #define CCKD_L1ENT_SIZE        ((ssize_t)sizeof(CCKD_L1ENT))
@@ -316,13 +316,16 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         U64              stats_gcolmoves;      /* Spaces moved       */
         U64              stats_gcolbytes;      /* Bytes moved        */
 
-        CCKD_TRACE      *itrace;        /* Internal trace table      */
-        CCKD_TRACE      *itracep;       /* Current pointer           */
-        CCKD_TRACE      *itracex;       /* End of trace table        */
-        int              itracen;       /* Number of entries         */
+        CCKD_ITRACE     *itrace;        /* Internal trace table      */
+        CCKD_ITRACE     *itracep;       /* Current pointer           */
+        CCKD_ITRACE     *itracex;       /* End of trace table        */
+        int              itracen;       /* Table size in #of entries */
 
         int              bytemsgs;      /* Limit for `byte 0' msgs   */
 };
+
+#define CCKD_TRACE( dev, fmt, ... ) \
+    cckd_trace( dev, fmt, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /*                   CCKD Extension Block                            */
