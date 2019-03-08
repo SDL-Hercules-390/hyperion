@@ -20,10 +20,13 @@
 
 #if !defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
-/* For Unix-like platforms, the main() function:                     */
-/* - sets the privilege level                                        */
-/* - initializes the LIBTOOL environment                             */
-/* - passes control to the impl() function in impl.c                 */
+/*                                                                   */
+/*  For Unix-like platforms, the main() function:                    */
+/*                                                                   */
+/*   - Sets the privilege level                                      */
+/*   - Initializes the LIBTOOL environment                           */
+/*   - Passes control to the impl() function in impl.c               */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 int main( int ac, char* av[] )
 {
@@ -38,25 +41,30 @@ int main( int ac, char* av[] )
 
 #else // defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
-/* For Windows platforms, the main() function:                       */
-/* - disables the standard CRT invalid parameter handler             */
-/* - requests a minimum resolution for periodic timers               */
-/* - sets up an exception trap                                       */
-/* - passes control to the impl() function in impl.c                 */
 /*                                                                   */
-/* The purpose of the exception trap is to call a function which     */
-/* will write a minidump file in the event of a Hercules crash.      */
+/*  For Windows platforms, the main() function:                      */
+/*                                                                   */
+/*   - Disables the standard CRT invalid parameter handler           */
+/*   - Requests a minimum resolution for periodic timers             */
+/*   - Sets up an exception trap                                     */
+/*   - Passes control to the impl() function in impl.c               */
+/*                                                                   */
+/*  The purpose of the exception trap is to call a function which    */
+/*  will create a minidump in the event of a Hercules crash (which   */
+/*  can then be analyzed offline to determine where Herc crashed).   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*          ******************************************               */
+/*                                                                   */
+/*          **--------------------------------------**               */
 /*          **       IMPORTANT!  PLEASE NOTE!       **               */
-/*          ******************************************               */
+/*          **--------------------------------------**               */
 /*                                                                   */
-/*  Without a compatible version of DBGHELP.dll to use, the below    */
-/*  exception handling logic accomplishes absolutely *NOTHING*.      */
 /*                                                                   */
-/*  The below exception handling requires DBGHELP.DLL version 6.1    */
+/*  Without a compatible version of DbgHelp.dll to use, the below    */
+/*  exception handling logic accomplishes absolutely *NOTHING*!      */
+/*                                                                   */
+/*  The below exception handling requires DbgHelp.dll version 6.1    */
 /*  or greater. Windows XP is known to ship a version of DbgHelp     */
 /*  that is too old (version 5.1). Hercules *SHOULD* be shipping     */
 /*  DbgHelp.DLL as part of its distribution. The latest version      */
@@ -68,8 +76,11 @@ int main( int ac, char* av[] )
 /*  http://go.microsoft.com/FWLink/?LinkId=84137                     */
 /*  http://www.microsoft.com/whdc/devtools/debugging/default.mspx    */
 /*                                                                   */
-/*  The DbgHelp.dll that ships in Windows is *NOT* redistributable.  */
-/*  The "Debugging Tools for Windows" DbgHelp *IS* redistributable.  */
+/*                                                                   */
+/*                        ** NOTE **                                 */
+/*                                                                   */
+/*  The DbgHelp.dll that ships in Windows is *NOT* redistributable!  */
+/*  The "Debugging Tools for Windows" DbgHelp *IS* redistributable!  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -165,11 +176,17 @@ int main( int ac, char* av[] )
 
     if (!IsDebuggerPresent())
     {
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO )) // (normal panel mode?)
+        // Normal panel mode?
+
+        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
         {
+            // Then disable the [x] Close button for safety
+
             EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
                             SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
         }
+
+        // Load the debugging helper library...
 
         if (1
             && (g_hDbgHelpDll = LoadLibrary(_T("DbgHelp.dll")))
@@ -180,6 +197,8 @@ int main( int ac, char* av[] )
             GetModuleFileNameW( NULL, g_wszHercPath, _countof( g_wszHercPath ) );
             _wsplitpath( g_wszHercPath, g_wszHercDrive, g_wszHercDir, NULL, NULL );
         }
+
+        // Enable exception handling...
 
         SetUnhandledExceptionFilter( HerculesUnhandledExceptionFilter );
         SetErrorMode( SEM_NOGPFAULTERRORBOX );
@@ -193,8 +212,12 @@ int main( int ac, char* av[] )
 
     if (!IsDebuggerPresent())
     {
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO )) // (normal panel mode?)
+        // Normal panel mode?
+
+        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
         {
+            // Re-enable the [x] Close button
+
             EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
                         SC_CLOSE, MF_BYCOMMAND | MF_ENABLED );
         }
@@ -218,7 +241,9 @@ static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExcept
     bDidThis = TRUE;
     SetErrorMode( 0 );                          // (reset back to default handling)
 
-    if (sysblk.daemon_mode)                     // (is an external GUI in control?)
+    // Is an external GUI in control?
+
+    if (sysblk.daemon_mode)
     {
         fflush( stdout );
         fflush( stderr );
@@ -351,6 +376,7 @@ static inline int MsgBox( HWND hWnd, LPCTSTR pszText, LPCTSTR pszCaption,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Create a minidump
 
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 {
@@ -496,7 +522,7 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 ///////////////////////////////////////////////////////////////////////////////
 // Build User Stream Arrays...
 
-#define MAX_MINIDUMP_USER_STREAMS  (64)
+#define MAX_MINIDUMP_USER_STREAMS   (256)   // (just an arbitrary value)
 
 static  char                  g_host_info_str [ 1024 ];
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
@@ -562,7 +588,7 @@ static BOOL CALLBACK MyMiniDumpCallback
     PMINIDUMP_CALLBACK_OUTPUT        pOutput
 )
 {
-    BOOL bRet = FALSE;
+    BOOL bRet = FALSE;      // (default unless we decide otherwise)
 
     if ( !pInput || !pOutput )
         return FALSE;
@@ -613,33 +639,39 @@ static BOOL CALLBACK MyMiniDumpCallback
         }
         break;
 
-/* NOTE About MemoryCallback :
- * This is defined for DbgHelp > 6.1..
- * Since "false" is returned, it has been commented out.
- *
- * Additionally, false is now returned by default. This
- * ensures that the callback function will operate correctly
- * even with future versions of the DbhHelp DLL.
- * -- Ivan
- */
-//        case MemoryCallback:
-//        {
-//            // We do not include any information here -> return FALSE
-//            bRet = FALSE;
-//        }
-//        break;
+        //-------------------------------------------------------------
+        //
+        //                  PROGRAMMING NOTE
+        //
+        // MemoryCallback is defined only for DbgHelp > 6.1.  Since we
+        // were returning FALSE for this callback anyway (which is our
+        // default), it was commented out altogether.
+        //
+        // This ensures our callback function will operate correctly
+        // even with future versions of DbgHelp DLL.
+        //
+        // -- Ivan
+        //
+        //-------------------------------------------------------------
 
-// Following default block added by ISW 2005/05/06
-          default:
-            {
-                // Do not return any information for unrecognized
-                // callback types.
-                bRet=FALSE;
-            }
-            break;
+//      case MemoryCallback:
+//      {
+//          // We do not include any information here -> return FALSE
+//          bRet = FALSE;
+//      }
+//      break;
 
-//      case CancelCallback:
-//          break;
+
+        // Following default block added by ISW 2005/05/06
+
+        default:
+        {
+            // Do not return any information for
+            // any unrecognized callback types.
+
+            bRet = FALSE;
+        }
+        break;
     }
 
     return bRet;
