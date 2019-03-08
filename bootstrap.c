@@ -17,6 +17,8 @@
 #if defined(HDL_USE_LIBTOOL)
 #include "ltdl.h"
 #endif
+#include "cckd.h"
+#include "cckddasd.h"
 
 #if !defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
@@ -114,6 +116,8 @@ static WCHAR  g_wszFileName  [ 4 * _MAX_FNAME ]  = {0};
 
 static TCHAR    g_szSaveTitle[ 512 ] = {0};
 static LPCTSTR  g_pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
+
+static int g_itracen = 0;   // (saved cckdblk.itracen value)
 
 ///////////////////////////////////////////////////////////////////////////////
 // (forward references)
@@ -240,6 +244,11 @@ static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExcept
         return EXCEPTION_EXECUTE_HANDLER;       // (quick exit to prevent loop)
     bDidThis = TRUE;
     SetErrorMode( 0 );                          // (reset back to default handling)
+
+    // Stop CCKD tracing right away to preserve existing trace entries
+
+    g_itracen = cckdblk.itracen;                // (save existing value)
+    cckdblk.itracen = 0;                        // (set table size to 0)
 
     // Is an external GUI in control?
 
@@ -487,14 +496,18 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
         mci.CallbackRoutine     = (MINIDUMP_CALLBACK_ROUTINE) MyMiniDumpCallback;
         mci.CallbackParam       = 0;
 
+        // Ref: "EFFECTIVE MINIDUMPS"
+        //      http://www.debuginfo.com/articles/effminidumps.html
+        //      http://www.debuginfo.com/articles/effminidumps2.html
+
         mdt = (MINIDUMP_TYPE)
         (0
-            | MiniDumpWithPrivateReadWriteMemory
-            | MiniDumpWithDataSegs
-            | MiniDumpWithHandleData
-//          | MiniDumpWithFullMemoryInfo
-//          | MiniDumpWithThreadInfo
-            | MiniDumpWithUnloadedModules
+            | MiniDumpWithPrivateReadWriteMemory        // Needed to also dump heap
+            | MiniDumpWithIndirectlyReferencedMemory    // Dump portions of the heap
+                                                        // only if referenced in stack
+            | MiniDumpWithDataSegs                      // Include global variables
+            | MiniDumpWithHandleData                    // Dump all file handles too
+            | MiniDumpWithUnloadedModules               // Tell us about unloaded DLLs
         );
 
         bSuccess = g_pfnMiniDumpWriteDumpFunc( GetCurrentProcess(), GetCurrentProcessId(),
@@ -523,59 +536,69 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 // Build User Stream Arrays...
 
 #define MAX_MINIDUMP_USER_STREAMS   (256)   // (just an arbitrary value)
+#define NUM_CCKD_TRACE_STRINGS       (64)   // (enough to debug cckd?)
 
 static  char                  g_host_info_str [ 1024 ];
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
 
+#define BUILD_SYSBLK_USER_STREAM( sysblk_xxx )                                 \
+                                                                               \
+    for (pstr = sysblk_xxx;                                                    \
+        *pstr && StreamNum < MAX_MINIDUMP_USER_STREAMS; ++pstr, ++StreamNum)   \
+    {                                                                          \
+        UserStreamArray[ StreamNum ].Type       = CommentStreamA;              \
+        UserStreamArray[ StreamNum ].Buffer     = (PVOID)         *pstr;       \
+        UserStreamArray[ StreamNum ].BufferSize = (ULONG) strlen( *pstr ) + 1; \
+    }
+
 static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 {
-    const char** ppszBldInfoStr;
-    int nNumBldInfoStrs;
-    ULONG UserStreamCount;
+    const char** pstr;
+    ULONG StreamNum = 0;
 
     _ASSERTE( pMDUSI );
 
-    get_hostinfo_str( NULL, g_host_info_str, sizeof(g_host_info_str) );
-    nNumBldInfoStrs = get_buildinfo_strings( &ppszBldInfoStr );
-
-    UserStreamCount = min( (3+nNumBldInfoStrs), MAX_MINIDUMP_USER_STREAMS );
-
-    pMDUSI->UserStreamCount = UserStreamCount;
     pMDUSI->UserStreamArray = UserStreamArray;
 
-    UserStreamCount = 0;
+    BUILD_SYSBLK_USER_STREAM( sysblk.vers_info   );
+    BUILD_SYSBLK_USER_STREAM( sysblk.bld_opts    );
+    BUILD_SYSBLK_USER_STREAM( sysblk.extpkg_vers );
 
-    if ( UserStreamCount < pMDUSI->UserStreamCount )
+    // CCKD internal trace table strings (only the last few entries)
+
+    if (g_itracen && cckdblk.itrace)    // (do we have a table?)
     {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        VERSION;
-        UserStreamArray[UserStreamCount].BufferSize = sizeof(VERSION);
-        UserStreamCount++;
+        // itrace       ptr to beginning of table (first entry)
+        // itracep      ptr to "current" entry" (ptr to the entry that
+        //              should be used next, i.e. the "oldest" entry)
+        // itracex      ptr to end of table (i.e. points to the entry
+        //              just PAST the very last entry in the table)
+        // itracen      the number of entries there are in the table
+        // itracec      how many of those entries are actively in use
+
+        int i, k = min( NUM_CCKD_TRACE_STRINGS, cckdblk.itracec );
+        CCKD_ITRACE* p = cckdblk.itracep;
+
+        // Backup 'k' entries...   (note ptr arithmetic)
+
+        for (i=0; i < k; ++i)
+            if (--p < cckdblk.itrace)
+                p = cckdblk.itracex - 1;
+
+        // Dump 'k' entries starting from there...
+
+        for (i=0; i < k && StreamNum < MAX_MINIDUMP_USER_STREAMS; ++i, ++p, ++StreamNum)
+        {
+            if (p >= cckdblk.itracex)
+                p = cckdblk.itrace;
+
+            UserStreamArray[ StreamNum ].Type       = CommentStreamA;
+            UserStreamArray[ StreamNum ].Buffer     = (PVOID)                      p;
+            UserStreamArray[ StreamNum ].BufferSize = (ULONG) (strlen((const char*)p)+1);
+        }
     }
 
-    if ( UserStreamCount < pMDUSI->UserStreamCount )
-    {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        HERCULES_COPYRIGHT;
-        UserStreamArray[UserStreamCount].BufferSize = sizeof(HERCULES_COPYRIGHT);
-        UserStreamCount++;
-    }
-
-    if ( UserStreamCount < pMDUSI->UserStreamCount )
-    {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        g_host_info_str;
-        UserStreamArray[UserStreamCount].BufferSize = (ULONG)strlen(g_host_info_str)+1;
-        UserStreamCount++;
-    }
-
-    for (; nNumBldInfoStrs && UserStreamCount < pMDUSI->UserStreamCount;
-        nNumBldInfoStrs--, UserStreamCount++, ppszBldInfoStr++ )
-    {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     = (PVOID)*ppszBldInfoStr;
-        UserStreamArray[UserStreamCount].BufferSize = (ULONG)strlen(*ppszBldInfoStr)+1;
-    }
+    pMDUSI->UserStreamCount = StreamNum;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
