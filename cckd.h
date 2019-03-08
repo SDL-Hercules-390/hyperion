@@ -204,29 +204,39 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 #define CCKD_MAX_SF            8        /* Maximum number of shadow
                                            files: 0 to 9 [0 disables
                                            shadow file support]      */
-#define CCKD_MAX_READAHEADS    16       /* Max readahead trks        */
-#define CCKD_MAX_RA_SIZE       16       /* Readahead queue size      */
-#define CCKD_MAX_RA            9        /* Max readahead threads     */
-#define CCKD_MAX_WRITER        9        /* Max writer threads        */
-#define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
-#define CCKD_DEF_TRACE         3        /* Def nbr trace entries     */
-#define CCKD_MAX_TRACE         200000   /* Max nbr trace entries     */
-#define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
 #define CCKD_MIN_READAHEADS    0        /* Min readahead trks        */
-#define CCKD_MIN_RA            0        /* Min readahead threads     */
-#define CCKD_MIN_WRITER        1        /* Min writer threads        */
-#define CCKD_MIN_GCOL          0        /* Min garbage collectors    */
+#define CCKD_DEF_READAHEADS    2        /* Def readahead trks        */
+#define CCKD_MAX_READAHEADS    16       /* Max readahead trks        */
 
 #define CCKD_DEF_RA_SIZE       4        /* Readahead queue size      */
-#define CCKD_DEF_RA            2        /* Default number readaheads */
-#define CCKD_DEF_WRITER        2        /* Default number writers    */
-#define CCKD_DEF_GCOL          1        /* Default number garbage
-                                              collectors             */
-#define CCKD_DEF_GCOLWAIT     10        /* Default wait (seconds)    */
-#define CCKD_DEF_GCOLPARM      0        /* Default adjustment parm   */
-#define CCKD_DEF_READAHEADS    2        /* Default nbr to read ahead */
-#define CCKD_DEF_FREEPEND     -1        /* Default freepend cycles   */
+#define CCKD_MAX_RA_SIZE       16       /* Readahead queue size      */
+
+#define CCKD_MIN_RA            0        /* Min readahead threads     */
+#define CCKD_DEF_RA            2        /* Def readahead threads     */
+#define CCKD_MAX_RA            9        /* Max readahead threads     */
+
+#define CCKD_MIN_WRITER        1        /* Min writer threads        */
+#define CCKD_DEF_WRITER        2        /* Def writer threads        */
+#define CCKD_MAX_WRITER        9        /* Max writer threads        */
+
+#define CCKD_MIN_GCOL          0        /* Min garbage collectors    */
+#define CCKD_DEF_GCOL          1        /* Def garbage collectors    */
+#define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
+
+#define CCKD_MIN_GCINT         0        /* Min collection interval   */
+#define CCKD_DEF_GCINT         10       /* Def collection interval   */
+#define CCKD_MAX_GCINT         60       /* Max collection interval   */
+
+#define CCKD_MIN_GCPARM       -8        /* Min gcol adjustment parm  */
+#define CCKD_DEF_GCPARM        0        /* Def gcol adjustment parm  */
+#define CCKD_MAX_GCPARM       +8        /* max gcol adjustment parm  */
+
+#define CCKD_DEF_NUM_TRACE     64       /* Def nbr of trace entries  */
+#define CCKD_MAX_NUM_TRACE     262144   /* Max nbr of trace entries  */
+
+#define CCKD_DEF_FREEPEND     -1        /* Def free pending cycles   */
+#define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
 /*-------------------------------------------------------------------*/
 /*                   Global CCKD dasd block                          */

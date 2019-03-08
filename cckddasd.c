@@ -70,10 +70,10 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
 
     /* Initialize trace table */
 
-    cckdblk.itrace     = calloc( CCKD_DEF_TRACE, sizeof( CCKD_TRACE ));
+    cckdblk.itrace     = calloc( CCKD_DEF_NUM_TRACE, sizeof( CCKD_TRACE ));
     cckdblk.itracep    = cckdblk.itrace;
-    cckdblk.itracex    = cckdblk.itrace + CCKD_DEF_TRACE;
-    cckdblk.itracen    = CCKD_DEF_TRACE;
+    cckdblk.itracex    = cckdblk.itrace + CCKD_DEF_NUM_TRACE;
+    cckdblk.itracen    = CCKD_DEF_NUM_TRACE;
 
     /* Initialize some other variables */
 
@@ -81,8 +81,8 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
     cckdblk.ramax      = CCKD_DEF_RA;
     cckdblk.wrmax      = CCKD_DEF_WRITER;
     cckdblk.gcmax      = CCKD_DEF_GCOL;
-    cckdblk.gcint      = CCKD_DEF_GCOLWAIT;
-    cckdblk.gcparm     = CCKD_DEF_GCOLPARM;
+    cckdblk.gcint      = CCKD_DEF_GCINT;
+    cckdblk.gcparm     = CCKD_DEF_GCPARM;
     cckdblk.readaheads = CCKD_DEF_READAHEADS;
     cckdblk.freepend   = CCKD_DEF_FREEPEND;
 
@@ -6066,7 +6066,7 @@ int   rc;
         // Garbage collection interval
         else if (CMD( kw, GCINT, 5 ))
         {
-            if (val < 1 || val > 60)
+            if (val < CCKD_MIN_GCINT || val > CCKD_MAX_GCINT)
             {
                 // "CCKD file: value %d invalid for %s"
                 WRMSG( HHC00348, "E", val, kw );
@@ -6081,7 +6081,7 @@ int   rc;
         // Garbage collection parameter
         else if (CMD( kw, GCPARM, 6 ))
         {
-            if (val < -8 || val > 8)
+            if (val < CCKD_MIN_GCPARM || val > CCKD_MAX_GCPARM)
             {
                 // "CCKD file: value %d invalid for %s"
                 WRMSG( HHC00348, "E", val, kw );
@@ -6201,7 +6201,7 @@ int   rc;
         // Number of trace table entries
         else if (CMD( kw, TRACE, 5 ))
         {
-            if (val < 0 || val > CCKD_MAX_TRACE)
+            if (val < 0 || val > CCKD_MAX_NUM_TRACE)
             {
                 // "CCKD file: value %d invalid for %s"
                 WRMSG( HHC00348, "E", val, kw );
