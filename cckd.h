@@ -320,12 +320,13 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         CCKD_ITRACE     *itracep;       /* Current pointer           */
         CCKD_ITRACE     *itracex;       /* End of trace table        */
         int              itracen;       /* Table size in #of entries */
+        int              itracec;       /* How many entries are used */
 
         int              bytemsgs;      /* Limit for `byte 0' msgs   */
 };
 
 #define CCKD_TRACE( dev, fmt, ... ) \
-    cckd_trace( dev, fmt, ## __VA_ARGS__ )
+    cckd_trace( __FUNCTION__, __LINE__, dev, fmt, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /*                   CCKD Extension Block                            */

@@ -74,6 +74,7 @@ int cckd_dasd_init( int argc, BYTE* argv[] )
     cckdblk.itracep    = cckdblk.itrace;
     cckdblk.itracex    = cckdblk.itrace + CCKD_DEF_NUM_TRACE;
     cckdblk.itracen    = CCKD_DEF_NUM_TRACE;
+    cckdblk.itracec    = 0;
 
     /* Initialize some other variables */
 
@@ -6205,37 +6206,43 @@ int   rc;
             }
             else
             {
-                /* Disable tracing in case it's already active */
-                CCKD_ITRACE *p = cckdblk.itrace;
-                cckdblk.itrace = NULL;
-                if (p)
                 {
-                    SLEEP (1);
-                    cckdblk.itrace = cckdblk.itracep = cckdblk.itracex = NULL;
-                    cckdblk.itracen = 0;
-                    free (p);
-                }
+                    CCKD_ITRACE* itrace = cckdblk.itrace;
 
-                /* Get a new trace table */
-                if (val > 0)
-                {
-                    p = calloc (val, sizeof(CCKD_ITRACE));
-                    if (p)
+                    /* Tell others there is no table anymore */
+                    cckdblk.itracen = 0;
+                    cckdblk.itracec = 0;
+                    cckdblk.itrace  = NULL;
+                    cckdblk.itracep = NULL;
+                    cckdblk.itracex = NULL;
+
+                    /* Discard existing trace table */
+                    free( itrace );
+
+                    /* Allocate new table (if requested) */
+                    if (val > 0)
                     {
-                        cckdblk.itracen = val;
-                        cckdblk.itracex = p + val;
-                        cckdblk.itracep = p;
-                        cckdblk.itrace  = p;
+                        if (!(itrace = calloc( val, sizeof( CCKD_ITRACE ))))
+                        {
+                            char buf[64];
+                            MSGBUF( buf, "calloc( %d, %d )",
+                                val, (int) sizeof( CCKD_ITRACE ));
+                            // "%1d:%04X CCKD file: error in function %s: %s"
+                            WRMSG( HHC00303, "E", 0,0, buf, strerror( errno ));
+                            val = 0;
+                        }
                     }
                     else
-                    {
-                        char buf[64];
-                        MSGBUF( buf, "calloc(%d, %d)", val, (int)sizeof(CCKD_ITRACE));
-                        // "%1d:%04X CCKD file: error in function %s: %s"
-                        WRMSG (HHC00303, "E", 0, 0, buf, strerror(errno));
-                    }
+                        itrace = NULL;
+
+                    /* Update global variables */
+                    cckdblk.itrace  = itrace;
+                    cckdblk.itracep = itrace;
+                    cckdblk.itracex = itrace + val;
+                    cckdblk.itracen = val;
+                    cckdblk.itracec = 0;
+                    opts = 1;
                 }
-                opts = 1;
             }
         }
         // Number writer threads
@@ -6276,134 +6283,106 @@ int   rc;
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void cckd_print_itrace()
 {
-    CCKD_ITRACE* i;                     /* Start of trace table      */
-    CCKD_ITRACE* p;                     /* Current working entry     */
-    int          n;                     /* number of entries printed */
 
     // "CCKD file: internal cckd trace"
     WRMSG( HHC00399, "I" );
 
-    // Trace table not allocated thus tracing not active
-    if (!cckdblk.itrace)
-        return;
-
-    i = cckdblk.itrace;                 // save beginning of table
-    cckdblk.itrace = NULL;              // temporarily disable tracing
-    SLEEP( 1 );
-    p = cckdblk.itracep;                // "current" (oldest) entry
-
-    if (p >= cckdblk.itracex)           // past end of table?
-        p = i;                          // then wrap to begin
-
-    n = 0;                              // nothing printed yet
-    do
+    if (cckdblk.itracen)                    // have trace table?
     {
-        if (strlen( *p ) > 0)           // print entry if not empty
+        CCKD_ITRACE*  pbeg;                 // start of trace table
+        CCKD_ITRACE*  pcur;                 // current working entry
+
+        pbeg = cckdblk.itrace;              // save beginning of table
+        pcur = cckdblk.itracep;             // "current" (oldest) entry
+
+        if (pcur >= cckdblk.itracex)        // past end of table?
+            pcur = pbeg;                    // then wrap to begin
+
+        do
         {
-            // "%s"
-            n++;
-            WRMSG( HHC00398, "I", (char*) p );
+            if (*(const char*)pcur)         // print entry if not empty
+                // "%s"
+                WRMSG( HHC00398, "I", (const char*) pcur );
+
+            if (++pcur >= cckdblk.itracex)  // next entry; if past end
+                pcur = pbeg;                // then wrap to begin
         }
+        while (pcur != cckdblk.itracep);    // until all entries printed
 
-        if (++p >= cckdblk.itracex)     // next entry; if past end
-            p = i;                      // then wrap to begin
+        // Clear all table entries and reset pointers
+        memset( pbeg, 0, cckdblk.itracen * sizeof( CCKD_ITRACE ));
+        cckdblk.itracep = pbeg;
+        cckdblk.itrace  = pbeg;
     }
-    while (p != cckdblk.itracep);       // until all entries printed
-
-    if (!n)
-        // "CCKD file: internal cckd trace table is empty"
-        WRMSG( HHC00397, "I" );
-
-    // Clear all table entries and reset pointers
-    memset( i, 0, cckdblk.itracen * sizeof( CCKD_ITRACE ));
-    cckdblk.itracep = i;
-    cckdblk.itrace  = i;
 
 } /* end function cckd_print_itrace */
 
 /*-------------------------------------------------------------------*/
 /* Write internal trace entry                                        */
 /*-------------------------------------------------------------------*/
-void cckd_trace( DEVBLK* dev, char* fmt, ... )
+void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
 {
-    va_list  vl;
+    va_list vl;
+    char trcmsg[ CCKD_TRACE_SIZE ];
 
-    if (1
-        && dev
-        && (dev->ccwtrace || dev->ccwstep)
-        && cckdblk.debug
-    )
+    /* Quick exit if trace messages not enabled or no trace table */
+    if (!(dev && (cckdblk.debug || cckdblk.itrace)))
+        return;
+
+    /* Build the cckd trace message */
+    va_start( vl, fmt );
+    if (vsnprintf( trcmsg, sizeof( trcmsg ), fmt, vl ) < 0)
+        return;
+    va_end( vl );
+
+    /* Add the message to our internal trace table (if we have one) */
+    if (cckdblk.itracen)
     {
-        char *bfr;
-        int rc, sz = 1024;
+        CCKD_ITRACE*    itracep;            // (trace table entry ptr)
+        struct timeval  timeval;            // (microsecond accuracy)
+        time_t          todsecs;            // (#of secs since epoch)
+        char            todwrk[32];         // (work)
+        char            trcpfx[32];         // "hh:mm:ss.uuuuuu n:CCUU> "
 
-        bfr = malloc( sz );
-        va_start( vl, fmt );
+        /* Build TOD+CUU "hh:mm:ss.uuuuuu n:CCUU> " prefix string */
 
-        while (1)
+        gettimeofday( &timeval, NULL );     // (microsecond accuracy)
+
+        todsecs = timeval.tv_sec;
+        STRLCPY( todwrk, ctime( &todsecs ));// "Day Mon dd hh:mm:ss yyyy\n"
+        todwrk[19] = 0;                     // "Day Mon dd hh:mm:ss"
+
+        snprintf( trcpfx, sizeof( trcpfx ),
+
+            "%s.%6.6ld %1d:%04X> ",         // "hh:mm:ss.uuuuuu n:CCUU> "
+            todwrk + 11,                    // "hh:mm:ss" (%s)
+            timeval.tv_usec,                // "uuuuuu"   (%6.6ld
+            LCSS_DEVNUM                     // "n:CCUU"   (%1d:%04X)
+        );
+
+        /* Print trace message directly into trace table entry */
+
+        itracep = cckdblk.itracep++;        // (grab table entry)
+
+        if (itracep >= cckdblk.itracex)     // (past end of table?)
         {
-            if ((rc = vsnprintf( bfr, sz, fmt, vl )) < 0)
-            {
-                free( bfr );
-                bfr = NULL;
-                break;
-            }
-            if ( rc < sz)
-                break;
-
-            sz += 256;
-            bfr = realloc( bfr, sz );
+            itracep = cckdblk.itrace;       // (wrap to beginning)
+            cckdblk.itracep = itracep + 1;  // (curr = next entry)
         }
 
-        if (bfr)
-            // "%1d:%04X %s"
-            WRMSG( HHC00396, "I", LCSS_DEVNUM, bfr );
+        if (cckdblk.itracec < cckdblk.itracen) // (less than all used?)
+            cckdblk.itracec++;                 // (count entries used)
 
-        va_end( vl );
+        snprintf( (char*) itracep, CCKD_TRACE_SIZE, "%s%s(%d): %s",
+            trcpfx, func, line, trcmsg );
     }
 
-    if (cckdblk.itrace)                           // (have trace table?)
+    /* Log the trace entry if requested */
+    if (cckdblk.debug)
     {
-        CCKD_ITRACE* itracep = cckdblk.itracep++; // (grab table entry)
-
-        if (itracep >= cckdblk.itracex)           // (past end of table?)
-        {
-            itracep = cckdblk.itrace;             // (wrap to beginning)
-            cckdblk.itracep = itracep + 1;        // (curr = next entry)
-        }
-
-        if (itracep)                              // (have trace table?)
-        {
-            struct timeval  timeval;              // (microsecond accuracy)
-            time_t          todsecs;              // (#of secs since epoch)
-            char            prefix[64];           // (usec TOD, LCSS_DEVNUM)
-            int             pfxlen;               // (usec TOD, LCSS_DEVNUM)
-
-            gettimeofday( &timeval, NULL );       // (microsecond accuracy)
-
-            todsecs = timeval.tv_sec;
-            STRLCPY( prefix, ctime( &todsecs ));  // "Day Mon dd hh:mm:ss yyyy\n"
-            prefix[19] = 0;                       // "Day Mon dd hh:mm:ss"
-
-            pfxlen = snprintf ((char*)itracep, CCKD_TRACE_SIZE,
-
-                "%s.%6.6ld %1d:%04X> ",           // "hh:mm:ss.uuuuuu n:CCUU> "
-
-                prefix + 11,                      // "hh:mm:ss"
-                timeval.tv_usec,                  // "uuuuuu" (microseconds)
-
-                dev ? SSID_TO_LCSS( dev->ssid ) : 0,  // LCSS
-                dev ? dev->devnum               : 0   // DEVNUM
-            );
-
-            if (pfxlen < CCKD_TRACE_SIZE)
-            {
-                va_start( vl, fmt );
-                vsnprintf( (char*) itracep         + pfxlen,
-                                   CCKD_TRACE_SIZE - pfxlen, fmt, vl );
-                va_end( vl );
-            }
-        }
+        if (dev && (dev->ccwtrace || dev->ccwstep))
+            // "%1d:%04X %s"
+            WRMSG( HHC00396, "I", LCSS_DEVNUM, trcmsg );
     }
 
 } /* end function cckd_trace */
