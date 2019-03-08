@@ -4588,6 +4588,9 @@ U64             pos, fpos;              /* File offsets              */
         if (i < 0 || fpos >= cckd->L2_bounds || cckd->ifb[i].ifb_pending)
             goto cckd_gc_l2_exit;
 
+        CCKD_TRACE( dev, "gc_l2 bounds 0x%"PRIx64" sfx %d num_L1tab %d",
+            cckd->L2_bounds, sfx, cckd->cdevhdr[sfx].num_L1tab );
+
         if ( cckd->ifb[i].ifb_len <  CCKD64_L2TAB_SIZE
          || (cckd->ifb[i].ifb_len != CCKD64_L2TAB_SIZE
           && cckd->ifb[i].ifb_len <  CCKD64_L2TAB_SIZE + CCKD64_FREEBLK_SIZE)
