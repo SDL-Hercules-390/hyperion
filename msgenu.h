@@ -1740,7 +1740,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02497I   -2      intermediate checking\n" \
        "HHC02497I   -3      maximal checking"
 //efine HHC02498 (available)
-#define HHC02499 "Hercules utility %s - %s;"
+#define HHC02499 "Hercules utility %s - version %s"
 
 // reserve 025xx for dasd utilities
 #define HHC02500 "Volume serial statement missing from %s"

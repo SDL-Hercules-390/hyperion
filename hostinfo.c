@@ -236,9 +236,9 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
 /* Build a host system information string for displaying purposes    */
 /*      (the returned string does NOT end with a newline)            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
-                                    char*       pszHostInfoStrBuff,
-                                    size_t      nHostInfoStrBuffSiz )
+DLL_EXPORT char* format_hostinfo ( HOST_INFO*  pHostInfo,
+                                   char*       pszHostInfoStrBuff,
+                                   size_t      nHostInfoStrBuffSiz )
 {
     if ( pszHostInfoStrBuff && nHostInfoStrBuffSiz )
     {
@@ -285,28 +285,4 @@ DLL_EXPORT char* get_hostinfo_str ( HOST_INFO*  pHostInfo,
         *(pszHostInfoStrBuff + nHostInfoStrBuffSiz - 1) = 0;
     }
     return pszHostInfoStrBuff;
-}
-
-/*-------------------------------------------------------------------*/
-/* Display host system information on the indicated stream           */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void display_hostinfo ( HOST_INFO* pHostInfo, FILE* f, int httpfd )
-{
-    char host_info_str[256]; init_hostinfo( pHostInfo );
-
-    get_hostinfo_str(pHostInfo, host_info_str, sizeof(host_info_str));
-
-    /* "Running on ..." */
-
-    if (httpfd)
-        hprintf( httpfd, MSG( HHC01417, "I", host_info_str ));
-    else
-    {
-        if (!f)
-            f = stdout;
-        if (f == stdout)
-            WRMSG( HHC01417, "I", host_info_str );
-        else
-             fprintf( f, MSG( HHC01417, "I", host_info_str ));
-    }
 }

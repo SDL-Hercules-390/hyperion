@@ -757,8 +757,10 @@ static void display_str( FILE* f, int httpfd, const char* str )
 /*-------------------------------------------------------------------*/
 /*              Display "prog" version information                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
+DLL_EXPORT void display_version( FILE* f, int httpfd, const char* prog )
 {
+    const char** p = sysblk.vers_info;
+
     /* If external gui being used, set stdout & stderr streams
        to unbuffered so we don't have to flush them all the time
        in order to ensure consistent sequence of log messages.
@@ -769,30 +771,16 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
         setvbuf( stdout, NULL, _IONBF, 0 );
     }
 
-    if (!prog) // (display Hercules version?)
-    {
-        const char** p;
-
-        for (p = sysblk.vers_info; *p; ++p)
-            display_str( f, httpfd, *p );
-    }
-    else // (display Utility version)
+    if (prog)  // called from e.g. "cgibin_debug_version_info()"?
     {
         char buf[256];
-
         MSGBUF( buf, MSG( HHC01413, "I", prog, VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
         display_str( f, httpfd, RTRIM( buf ));
-
-        MSGBUF( buf, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
-        display_str( f, httpfd, RTRIM( buf ));
-
-#if defined( CUSTOM_BUILD_STRING )
-        MSGBUF( buf, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
-        display_str( f, httpfd, RTRIM( buf ));
-#endif
-        MSGBUF( buf, MSG( HHC01415, "I", __DATE__, __TIME__ ));
-        display_str( f, httpfd, RTRIM( buf ));
+        ++p; // (skip past first str)
     }
+
+    for (; *p; ++p)
+        display_str( f, httpfd, *p );
 }
 
 /*-------------------------------------------------------------------*/
@@ -801,10 +789,8 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, char* prog )
 DLL_EXPORT void display_build_options( FILE* f, int httpfd )
 {
     const char** p;
-
     for (p = sysblk.bld_opts; *p; ++p)
         display_str( f, httpfd, *p );
-
 }
 
 /*-------------------------------------------------------------------*/
@@ -819,7 +805,6 @@ DLL_EXPORT void display_build_options( FILE* f, int httpfd )
 DLL_EXPORT void display_extpkg_vers( FILE* f, int httpfd )
 {
     const char** p;
-
     for (p = sysblk.extpkg_vers; *p; ++p)
         display_str( f, httpfd, *p );
 }
@@ -828,13 +813,15 @@ DLL_EXPORT void display_extpkg_vers( FILE* f, int httpfd )
 /*             Initialize SYSBLK info strings arrays                 */
 /*-------------------------------------------------------------------*/
 
-static void init_hercver_strings();     // (fwd ref)
-static void init_bldopts_strings();     // (fwd ref)
-static void init_extpkgs_strings();     // (fwd ref)
+static void init_hercver_strings( const char* prog );   // (fwd ref)
+static void init_bldopts_strings();                     // (fwd ref)
+static void init_extpkgs_strings();                     // (fwd ref)
 
-DLL_EXPORT void init_sysblk_version_str_arrays()
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT void init_sysblk_version_str_arrays( const char* prog )
 {
-    init_hercver_strings();
+    init_hercver_strings( prog );
     init_bldopts_strings();
     init_extpkgs_strings();
 }
@@ -842,9 +829,9 @@ DLL_EXPORT void init_sysblk_version_str_arrays()
 /*-------------------------------------------------------------------*/
 
 #define APPEND_STR( ptr ) \
-            append_ptr_to_array( &count, (void***) array, (void*) ptr );
+            append_ptr_to_array( (int*) &count, (void***) array, (void*) ptr );
 
-static void append_ptr_to_array( int* count, void*** array, void* ptr )
+static void append_ptr_to_array(  int*   count,  void***  array,  void*  ptr )
 {
     *array = realloc( *array, ((*count) + 1) * sizeof( void* ));
     (*array)[ *count ] = ptr;
@@ -853,35 +840,27 @@ static void append_ptr_to_array( int* count, void*** array, void* ptr )
 
 /*-------------------------------------------------------------------*/
 
-static void init_hercver_strings()
+static void init_hercver_strings( const char* prog )
 {
     int count = 0; const char*** array = &sysblk.vers_info;
     char buf[256]; if (*array) return; // (already built)
 
-    {
-        /* "Version" */
+    // prog = Utility (HHC02499), NULL = Hercules (HHC01413).
+    if (prog) MSGBUF( buf, MSG( HHC02499, "I",   prog,     VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+    else      MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
 
-        MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
-        APPEND_STR( strdup( RTRIM( buf )));
+    APPEND_STR( strdup( RTRIM( buf )));
 
-        /* "(C) Copyright" */
-
-        MSGBUF( buf, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
-        APPEND_STR( strdup( RTRIM( buf )));
+    MSGBUF( buf, MSG( HHC01414, "I", HERCULES_COPYRIGHT ));
+    APPEND_STR( strdup( RTRIM( buf )));
 
 #if defined( CUSTOM_BUILD_STRING )
-
-        /* (custom title) */
-
-        MSGBUF( buf, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
-        APPEND_STR( strdup( RTRIM( buf )));
+    MSGBUF( buf, MSG( HHC01417, "I", CUSTOM_BUILD_STRING ));
+    APPEND_STR( strdup( RTRIM( buf )));
 #endif
 
-        // "Build date: %s at %s"
-
-        MSGBUF( buf, MSG( HHC01415, "I", __DATE__, __TIME__ ));
-        APPEND_STR( strdup( RTRIM( buf )));
-    }
+    MSGBUF( buf, MSG( HHC01415, "I", __DATE__, __TIME__ ));
+    APPEND_STR( strdup( RTRIM( buf )));
 
     APPEND_STR( NULL );
 }
@@ -894,26 +873,22 @@ static void init_bldopts_strings()
     char buf[256]; if (*array) return; // (already built)
 
     {
-        unsigned int i;
+        unsigned int num_strs;
         const char** ppszBldInfoStr = NULL;
-        char hibuf[256];
+        char wrkbuf[256];
 
-        /* "Built with:" */
+        num_strs = get_buildinfo_strings( &ppszBldInfoStr );
 
-        i = get_buildinfo_strings( &ppszBldInfoStr );
-
-        for (; i; i--, ppszBldInfoStr++ )
+        for (; num_strs; num_strs--, ppszBldInfoStr++ )
         {
             MSGBUF( buf, MSG( HHC01417, "I", *ppszBldInfoStr ));
             APPEND_STR( strdup( RTRIM( buf )));
         }
 
-        /* "Running on:" */
-
         init_hostinfo( &hostinfo );
-        get_hostinfo_str( &hostinfo, hibuf, sizeof( hibuf ));
+        format_hostinfo( &hostinfo, wrkbuf, sizeof( wrkbuf ));
 
-        MSGBUF( buf, MSG( HHC01417, "I", hibuf ));
+        MSGBUF( buf, MSG( HHC01417, "I", wrkbuf ));
         APPEND_STR( strdup( RTRIM( buf )));
     }
 

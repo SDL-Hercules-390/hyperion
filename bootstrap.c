@@ -538,7 +538,6 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 #define MAX_MINIDUMP_USER_STREAMS   (256)   // (just an arbitrary value)
 #define NUM_CCKD_TRACE_STRINGS       (64)   // (enough to debug cckd?)
 
-static  char                  g_host_info_str [ 1024 ];
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
 
 #define BUILD_SYSBLK_USER_STREAM( sysblk_xxx )                                 \

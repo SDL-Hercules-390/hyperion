@@ -608,7 +608,7 @@ int     rc;
 
     /* Initialize program name and version strings arrays */
     init_progname( argc, argv );
-    init_sysblk_version_str_arrays();
+    init_sysblk_version_str_arrays( NULL );
 
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
@@ -1392,7 +1392,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "full" ) == 0
                     )
                     {
-                        display_version( stdout, 0, NULL );
+                        display_version      ( stdout, 0, NULL );
                         display_build_options( stdout, 0 );
                         display_extpkg_vers  ( stdout, 0 );
                     }

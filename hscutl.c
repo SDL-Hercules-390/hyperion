@@ -1362,13 +1362,14 @@ int initialize_utility( int argc, char* argv[],
         *pgm = strdup( nameonly );
 
     /* Format the program identification message */
-    MSGBUF( namedesc, MSG_C( HHC02499, "I", nameonly, desc ) );
+    MSGBUF( namedesc, "%s - %s", nameonly, desc );
 
     /* Now it's safe to discard exename */
     free( exename );
 
     /* Display version, copyright, and build date */
-    display_version( stdout, 0, namedesc+10 );
+    init_sysblk_version_str_arrays( namedesc );
+    display_version( stdout, 0, NULL );
 
     return argc;
 }

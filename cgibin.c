@@ -1167,17 +1167,13 @@ int i,j;
 /*-------------------------------------------------------------------*/
 /*                 cgibin_debug_version_info                         */
 /*-------------------------------------------------------------------*/
-void cgibin_debug_version_info(WEBBLK *webblk)
+void cgibin_debug_version_info( WEBBLK* webblk )
 {
-    html_header(webblk);
-
-    hprintf(webblk->sock,"<h1>Hercules Version Information</h1>\n"
-                          "<pre>\n");
+    html_header( webblk );
+    hprintf( webblk->sock, "<h1>Hercules Version Information</h1>\n<pre>\n" );
     display_version( NULL, webblk->sock, "Hercules HTTP Server" );
-    hprintf(webblk->sock,"</pre>\n");
-
-    html_footer(webblk);
-
+    hprintf( webblk->sock, "</pre>\n" );
+    html_footer( webblk );
 }
 
 /*-------------------------------------------------------------------*/

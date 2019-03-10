@@ -69,8 +69,7 @@ typedef struct HOST_INFO
 
 HI_DLL_IMPORT HOST_INFO     hostinfo;
 HI_DLL_IMPORT void     init_hostinfo ( HOST_INFO* pHostInfo );
-HI_DLL_IMPORT void  display_hostinfo ( HOST_INFO* pHostInfo, FILE* f, int httpfd );
-HI_DLL_IMPORT char* get_hostinfo_str ( HOST_INFO* pHostInfo,
+HI_DLL_IMPORT char*  format_hostinfo ( HOST_INFO* pHostInfo,
                                        char*      pszHostInfoStrBuff,
                                        size_t     nHostInfoStrBuffSiz );
 
