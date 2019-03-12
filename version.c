@@ -846,7 +846,7 @@ static void init_hercver_strings( const char* prog )
     char buf[256]; if (*array) return; // (already built)
 
     // prog = Utility (HHC02499), NULL = Hercules (HHC01413).
-    if (prog) MSGBUF( buf, MSG( HHC02499, "I",   prog,     VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+    if (prog) MSGBUF( buf, MSG( HHC02499, "I",   prog,     VERSION ));
     else      MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
 
     APPEND_STR( strdup( RTRIM( buf )));
