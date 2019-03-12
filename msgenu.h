@@ -1293,7 +1293,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02208 "Uptime %02u:%02u:%02u"
 #define HHC02209 "%1d:%04X device is not a %s"
 #define HHC02210 "%1d:%04X %s"
-//efine HHC02211 (available)
+#define HHC02211 "Invalid argument(s). Type 'help %s' for assistance."
 #define HHC02212 "%1d:%04X device started"
 #define HHC02213 "%1d:%04X device not started%s"
 #define HHC02214 "%1d:%04X device stopped"
@@ -1311,7 +1311,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC02226 (available)
 #define HHC02227 "Shell/Exec commands are disabled"
 #define HHC02228 "%s key pressed"
-#define HHC02229 "Instruction %s %s %s"
+#define HHC02229 "Instruction %s %s%s%s"
 #define HHC02230 "%1d:%04X attention request raised"
 #define HHC02231 "%1d:%04X busy or interrupt pending"
 #define HHC02232 "%1d:%04X attention request rejected"

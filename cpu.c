@@ -1866,16 +1866,17 @@ int     aswitch;
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(process_trace)(REGS *regs)
 {
-int     shouldtrace = 0;                /* 1=Trace instruction       */
-int     shouldstep = 0;                 /* 1=Wait for start command  */
+    bool shouldtrace = false;           /* true == Trace instruction */
+    bool shouldstep  = false;           /* true == Wait for 'start'  */
 
     /* Test for trace */
-    if (CPU_TRACING(regs, 0))
-        shouldtrace = 1;
+    if (CPU_TRACING( regs, 0 ))
+        shouldtrace = true;
 
     /* Test for step */
-    if (CPU_STEPPING(regs, 0))
-        shouldstep = 1;
+    if (CPU_STEPPING( regs, 0 ))
+        shouldstep = !sysblk.stepasid
+            || regs->CR_LHL(4) == sysblk.stepasid;
 
     /* Display the instruction */
     if (shouldtrace || shouldstep)

@@ -96,6 +96,22 @@ Hercules: Release Notes
     provides the information needed to enable the instruction.
   </p>
 
+  <dt>Breakpoint/Stepping commands optional ASID parameter
+  <dd>
+  <p>
+    The <code>b</code> (breakpoint) and <code>s</code> (stepping) commands
+    now support an optional <b><code>asid</code></b> (<b>A</b>ddress <b>S</b>pace
+    <b>ID</b>entifier) parameter. If specified, the breakpoint or stepping
+    will only occur if the instruction being executed is <i>both</i> within
+    the specified address range <i><u>and</u></i> are being executed by the
+    specified address space. The breakpoint or stepping will <i>not</i>
+    occur for any other address spaces even if they are within the specified
+    address range.
+    <p>
+    For more information refer to the <code>help</code> command display
+    for the <code>b</code> and/or <code>s</code> commands.
+  </p>
+
 </dl>
 
 <!-- --------------------------------------------------------------------------------- -->

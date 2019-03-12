@@ -760,8 +760,9 @@ struct SYSBLK {
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
-        U64     traceaddr[2];           /* Tracing address range     */
+        U16     stepasid;               /* Stepping ASID             */
         U64     stepaddr[2];            /* Stepping address range    */
+        U64     traceaddr[2];           /* Tracing address range     */
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */

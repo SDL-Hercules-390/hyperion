@@ -912,82 +912,162 @@ REGS *regs;
 
 
 /*-------------------------------------------------------------------*/
-/* tracing commands: t, t+, t-, t?, s, s+, s-, s?, b                 */
+/* tracing commands: x, x+, x-, x?, where 'x' is either t, s or b.   */
 /*-------------------------------------------------------------------*/
 int trace_cmd( int argc, char* argv[], char* cmdline )
 {
-    U64   addr[2];
-    char  range[128] = {0};
-    int   rc;
-    BYTE  c[2];
-    bool  trace = false, on = false, off = false, query = false;
+    U64   addr[2]         =  {0};       /* Parsed address range      */
+    BYTE  c[2]            =  {0};       /* [0]=range sep, [1]=sscanf */
+    U16   stepasid        =   0;        /* Optional asid argument    */
 
-    trace = (cmdline[0] == 't');
+    char  rangemsg [128]  =  {0};       /* MSGBUF work buffer        */
+    char  asidmsg  [128]  =  {0};       /* MSGBUF work buffer        */
 
-    /* Save whether this is a on/off "t+" or "t-" command,
-       or a "t?" query command
+    bool  trace   =  false;             /* Whether command was 't'   */
+    bool  step    =  false;             /* Whether command was 's'   */
+    bool  breakp  =  false;             /* Whether command was 'b'   */
+    bool  on      =  false;             /* Whether + was specified   */
+    bool  off     =  false;             /* Whether - was specified   */
+    bool  query   =  false;             /* Whether ? was specified   */
+    bool  update  =  false;             /* Whether parms were given  */
+
+    trace  = (cmdline[0] == 't');       // trace command
+    step   = (cmdline[0] == 's');       // stepping command
+    breakp = (cmdline[0] == 'b');       // breakpoint command
+
+    on     = (cmdline[1] == '+');       // explicit set
+    off    = (cmdline[1] == '-');       // explicit unset
+    query  = (cmdline[1] == '?');       // explicit query
+    update = (argc > 1);                // parameters specified
+
+    /* NOTE: normally, a "trace" type of command by itself (without
+       an explicit +, -, or ?) means you only want to query/update
+       the current parameters, but you don't want to enable tracing
+       or stepping or set a breakpoint. Specifying the 't' or 's'
+       command by itself without any parameters is identical to the
+       't?' and 's?' query commands.
+
+       The 'b' (breakpoint) command is different however. It's an
+       exception to the rule. The b command means that you DO want
+       to enable a breakpoint using the parameters specified. Thus
+       the b and b+ commands ALWAYS require at least one parameter.
+
+       It also goes without saying that the '-' syntax to disable
+       tracing or stepping or to remove a breakpoint (as well as
+       the explicit '?' syntax to query the current settings) is
+       NOT allowed to have any parameters. Note too that the '-'
+       syntax only disables tracing or stepping or breakpoints
+       but does NOT clear/reset the current settings (range, etc).
+
+       The '+' syntax to enable tracing or stepping or define (set)
+       a breakpoint however, is allowed to also specify parameters.
+       If specified, they will be used to update the current values
+       before actually activating tracing/stepping or breakpoints.
+       If no parameters are specified on the '+' command, then the
+       tracing/stepping/breakpoint is activated without modifying
+       the current settings (i.e. the current values as previously
+       established are used instead).
     */
-    if (strlen( cmdline ) > 1)
-    {
-        on =    cmdline[1] == '+'
-           ||  (cmdline[0] == 'b' && cmdline[1] == ' ');
-        off =   cmdline[1] == '-';
-        query = cmdline[1] == '?';
-    }
 
-    /* Check for correct number of arguments */
+    /* Plain 'b' command is an implied 'set' */
+    if (breakp && !(on || off || query))
+        on = true;
+
+    /* Plain 't' or 's' command is an implied 'query' */
+    if ((trace || step) && !(on || off || update))
+        query = true;
+
+    /* Check for invalid number of arguments */
     if (0
-        ||           argc > 2
-        || (off   && argc > 1)
-        || (query && argc > 1)
+        // No more than 3 arguments allowed (cmd, range, asid)
+        || (argc > 3)
+
+        // If explicit - or ? then can't change settings
+        || ((off || query) && update)
+
+        // If setting breakpoint, parameters are required
+        || (breakp && on && !update)
+
+        // Optional asid parameter not allowed for trace
+        || (trace && argc > 2)
     )
     {
-        // "Invalid argument %s%s"
-        WRMSG( HHC02205, "E", argv[1], "" );
+        // "Invalid argument(s). Type 'help %s' for assistance."
+        WRMSG( HHC02211, "E", argv[0] );
         return -1;
     }
 
-    /* Get address range */
-    if (argc == 2)
+    /* (quick sanity check) */
+    ASSERT
+    (1
+        && (on || off || query || update)
+        && !(on && off)
+        && !(query && (on || off))
+        && !((query || off) && update)
+    );
+
+    /* Parse arguments, if specified */
+    if (update)
     {
+        int rc;
+
+        /* Parse the address range */
         rc = sscanf( argv[1], "%"SCNx64"%c%"SCNx64"%c",
                     &addr[0], &c[0], &addr[1], &c[1] );
         if (rc == 1)
         {
+            // (only a single address was specified)
             c[0] = '-';
-            addr[1] = addr[0];
+            addr[1] = addr[0]; // (end-of-range = begin-of-range)
         }
         else if (rc != 3 || (c[0] != '-' && c[0] != ':' && c[0] != '.'))
         {
-            // Invalid argument %s%s"
+            // "Invalid argument %s%s"
             WRMSG( HHC02205, "E", argv[1], "" );
             return -1;
         }
 
+        /* Adjust ending address if ".len" format was used */
         if (c[0] == '.')
             addr[1] += addr[0] - 1;
 
-        if (trace)
+        /* Parse optional ASID, if specified */
+        if (argc >= 3)
         {
-            sysblk.traceaddr[0] = addr[0];
-            sysblk.traceaddr[1] = addr[1];
-        }
-        else
-        {
-            sysblk.stepaddr[0] = addr[0];
-            sysblk.stepaddr[1] = addr[1];
+            char* endptr;   // (strtoul work)
+            U32 asid;       // (strtoul result)
+            errno = 0;      // (reset to detect if error)
+
+            asid = strtoul( argv[2], &endptr, 16 );
+
+            if (0
+                || trace              // (not supported for t command)
+                || argv[2][0] == 0    // (no value specified at all)
+                || *endptr != 0       // (invalid characters found)
+                || ERANGE == errno    // (value too big or too small
+                || asid == 0          // (can't be zero)
+                || asid > USHRT_MAX   // (16 bit maximum)
+            )
+            {
+                // Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "" );
+                return -1;
+            }
+
+            stepasid = (U16) (asid & 0xFFFF);
         }
     }
     else
         c[0] = '-';
 
-    /* Set tracing/stepping bit on or off */
-    if (on || off)
+    /* Process their request */
+    OBTAIN_INTLOCK( NULL );
     {
-        bool auto_disabled = false;
-
-        OBTAIN_INTLOCK( NULL );
+        /* Update and/or enable/disable tracing/stepping */
+        if (on || off || update)
         {
+            bool auto_disabled = false;
+
             /* Explicit tracing overrides automatic tracing */
             if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
             {
@@ -997,55 +1077,81 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             }
 
             if (trace)
-                sysblk.insttrace = on;
-            else
-                sysblk.inststep  = on;
+            {
+                if (update)
+                {
+                    sysblk.traceaddr[0] = addr[0];
+                    sysblk.traceaddr[1] = addr[1];
+                    sysblk.stepasid     = 0;
+                }
+
+                if (on || off)
+                    sysblk.insttrace = on;
+            }
+            else // (step || breakp)
+            {
+                if (update)
+                {
+                    sysblk.stepaddr[0] = addr[0];
+                    sysblk.stepaddr[1] = addr[1];
+                    sysblk.stepasid    = stepasid;
+                }
+
+                if (on || off)
+                    sysblk.inststep = on;
+            }
+
             SET_IC_TRACE;
-        }
-        RELEASE_INTLOCK( NULL );
 
-        if (auto_disabled)
+            if (auto_disabled)
+            {
+                // "Automatic tracing disabled"
+                WRMSG( HHC02373, "I" );
+            }
+        }
+
+        /* Save (possibly updated) settings for user feedback */
+        if (trace)
         {
-            // "Automatic tracing disabled"
-            WRMSG( HHC02373, "I" );
+            addr[0]  = sysblk.traceaddr[0];
+            addr[1]  = sysblk.traceaddr[1];
+            stepasid = 0;
+            on       = sysblk.insttrace;
+        }
+        else // (step || breakp)
+        {
+            addr[0]  = sysblk.stepaddr[0];
+            addr[1]  = sysblk.stepaddr[1];
+            stepasid = sysblk.stepasid;
+            on       = sysblk.inststep;
         }
     }
+    RELEASE_INTLOCK( NULL );
 
-    /* Build range for message */
-
-    range[0] = '\0';
-
-    if (trace && (sysblk.traceaddr[0] != 0 || sysblk.traceaddr[1] != 0))
+    /* Build range and asid message fragments, if appropriate */
+    if (addr[0] || addr[1])
     {
-        MSGBUF( range, "range %"PRIx64"%c%"PRIx64
+        MSGBUF( rangemsg, " range %"PRIx64"%c%"PRIx64,
 
-            , sysblk.traceaddr[0]
-            , c[0]
-            , c[0] != '.' ? sysblk.traceaddr[1]
-                          : sysblk.traceaddr[1] - sysblk.traceaddr[0] + 1
-        );
-    }
-    else if (!trace && (sysblk.stepaddr[0] != 0 || sysblk.stepaddr[1] != 0))
-    {
-        MSGBUF( range, "range %"PRIx64"%c%"PRIx64
-
-            , sysblk.stepaddr[0]
-            , c[0]
-            , c[0] != '.' ? sysblk.stepaddr[1]
-                          : sysblk.stepaddr[1] - sysblk.stepaddr[0] + 1
+            addr[0], c[0], ('.' == c[0]) ?
+                           (addr[1] - addr[0]) + 1
+                         :  addr[1]
         );
     }
 
-    /* Determine if this trace is on or off for message */
-    on = (trace && sysblk.insttrace) || (!trace && sysblk.inststep);
+    if (stepasid)
+        MSGBUF( asidmsg, " asid x'%04.4"PRIx16"'", stepasid );
 
-    // "Instruction %s %s %s"
+    /* Display (current or new) settings */
+
     WRMSG( HHC02229, "I",
 
-           cmdline[0] == 't' ? "tracing"  :
-           cmdline[0] == 's' ? "stepping" : "break",
-           on ? "on" : "off",
-           range
+        // "Instruction %s %s%s%s"
+
+        trace ? "tracing" : step  ? "stepping" : breakp ? "break" : "(ERR)",
+        on ? "on" : "off",
+        rangemsg,
+        asidmsg
     );
 
     /* Also show automatic tracing settings if enabled */
