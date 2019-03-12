@@ -593,12 +593,6 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
     /* Restore the last character of the file name */
     *sfxptr = sfxchar;
 
-    /* Log the device geometry */
-    if (!dev->quiet)
-        // "%1d:%04X CKD file %s: cyls %d heads %d tracks %d trklen %d"
-        WRMSG( HHC00414, "I", LCSS_DEVNUM, filename,
-               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
-
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
@@ -608,6 +602,12 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
                filename, dev->devtype );
         return -1;
     }
+
+    /* Log the device geometry */
+    if (!dev->quiet)
+        // "%1d:%04X CKD file %s: model %s cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00414, "I", LCSS_DEVNUM, filename, dev->ckdtab->name,
+               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Locate the CKD control unit dasd table entry */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);

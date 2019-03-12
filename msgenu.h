@@ -470,7 +470,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00398 "%s"
 #define HHC00399 "CCKD file: internal cckd trace"
 
-// reserve 004xx for dasd device related
+// reserve 004xx for ckd dasd device related
 #define HHC00400 "%1d:%04X CKD file: name missing or invalid filename length"
 #define HHC00401 "%1d:%04X CKD file %s: open error: not found"
 #define HHC00402 "%1d:%04X CKD file: parameter %s in argument %d is invalid"
@@ -485,7 +485,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00411 "%1d:%04X CKD file %s: ckd header inconsistent with file size"
 #define HHC00412 "%1d:%04X CKD file %s: ckd header high cylinder incorrect"
 #define HHC00413 "%1d:%04X CKD file %s: maximum CKD files exceeded: %d"
-#define HHC00414 "%1d:%04X CKD file %s: cyls %d heads %d tracks %d trklen %d"
+#define HHC00414 "%1d:%04X CKD file %s: model %s cyls %d heads %d tracks %d trklen %d"
 #define HHC00415 "%1d:%04X CKD file %s: device type %4.4X not found in dasd table"
 #define HHC00416 "%1d:%04X CKD file %s: control unit %s not found in dasd table"
 #define HHC00417 "%1d:%04X CKD file %s: cache hits %d, misses %d, waits %d"
@@ -541,7 +541,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00467 "Maximum %s supported is %u"
 #define HHC00468 "For larger capacity DASD volumes, use %s"
 //efine HHC00469 (available)
-#define HHC00470 "%1d:%04X CKD64 file %s: cyls %d heads %d tracks %d trklen %d"
+#define HHC00470 "%1d:%04X CKD64 file %s: model %s cyls %d heads %d tracks %d trklen %d"
 #define HHC00471 "%1d:%04X CKD64 file %s: %u %s successfully written"
 #define HHC00472 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
 #define HHC00473 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
