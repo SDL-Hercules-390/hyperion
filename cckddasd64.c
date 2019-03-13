@@ -4196,8 +4196,8 @@ int             gctab[5]= {             /* default gcol parameters   */
         else if (cckdblk.gcparm < 0) size = gctab[gc] >> abs(cckdblk.gcparm);
         else size = gctab[gc];
 
-        if (size > cckd->cdevhdr[cckd->sfn].cdh_used >> 10)
-            size = cckd->cdevhdr[cckd->sfn].cdh_used >> 10;
+        if (size > cckd->cdevhdr[cckd->sfn].cdh_used >> SHIFT_1K)
+            size = cckd->cdevhdr[cckd->sfn].cdh_used >> SHIFT_1K;
         if (size < 64)
             size = 64;
     }
@@ -4267,7 +4267,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         return cckd_gc_percolate( dev, size );
 
     cckd = dev->cckd_ext;
-    size = size << 10;
+    size = size << SHIFT_1K;
 
     /* Debug */
     OBTAIN_TRACE_LOCK();

@@ -124,7 +124,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /* helper macro for device messages                                  */
 /*-------------------------------------------------------------------*/
 
-#define LCSS_DEVNUM             SSID_TO_LCSS( dev->ssid ), dev->devnum
+#define LCSS_DEVNUM         dev ? SSID_TO_LCSS( dev->ssid ) : 0,   \
+                            dev ? dev->devnum : 0
 
 /*-------------------------------------------------------------------*/
 /* ckddasd.c/fbadasd.c dasd I/O tracing helper macro                 */

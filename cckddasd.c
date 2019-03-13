@@ -5023,8 +5023,8 @@ int             gctab[5]= {             /* default gcol parameters   */
         else if (cckdblk.gcparm < 0) size = gctab[gc] >> abs(cckdblk.gcparm);
         else size = gctab[gc];
 
-        if (size > cckd->cdevhdr[cckd->sfn].cdh_used >> 10)
-            size = cckd->cdevhdr[cckd->sfn].cdh_used >> 10;
+        if (size > cckd->cdevhdr[cckd->sfn].cdh_used >> SHIFT_1K)
+            size = cckd->cdevhdr[cckd->sfn].cdh_used >> SHIFT_1K;
         if (size < 64)
             size = 64;
     }
@@ -5094,7 +5094,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         return cckd64_gc_percolate( dev, size );
 
     cckd = dev->cckd_ext;
-    size = size << 10;
+    size = size << SHIFT_1K;
 
     /* Debug */
     OBTAIN_TRACE_LOCK();
@@ -5872,11 +5872,11 @@ void cckd_command_stats()
     WRMSG( HHC00347, "I", "cckd stats:" );
 
     MSGBUF( msgbuf, "  reads....%10"PRId64" Kbytes...%10"PRId64,
-                    cckdblk.stats_reads, cckdblk.stats_readbytes >> 10 );
+                    cckdblk.stats_reads, cckdblk.stats_readbytes >> SHIFT_1K );
     WRMSG( HHC00347, "I", msgbuf );
 
     MSGBUF( msgbuf, "  writes...%10"PRId64" Kbytes...%10"PRId64,
-                    cckdblk.stats_writes, cckdblk.stats_writebytes >> 10 );
+                    cckdblk.stats_writes, cckdblk.stats_writebytes >> SHIFT_1K );
     WRMSG( HHC00347, "I", msgbuf );
 
     MSGBUF( msgbuf, "  readaheads%9"PRId64" misses...%10"PRId64,
@@ -5900,7 +5900,7 @@ void cckd_command_stats()
     WRMSG( HHC00347, "I", msgbuf );
 
     MSGBUF( msgbuf, "  garbage collector   moves....%10"PRId64" Kbytes...%10"PRId64,
-                    cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> 10 );
+                    cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> SHIFT_1K );
     WRMSG( HHC00347, "I", msgbuf );
 
     return;
