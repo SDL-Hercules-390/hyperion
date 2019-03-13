@@ -44,7 +44,7 @@ int             fdflags;                /* File flags                */
         cckd_dasd_init (0, NULL);
 
     /* Obtain area for cckd extension */
-    dev->cckd_ext = cckd = cckd64_calloc (dev, "ext", 1, sizeof(CCKD64_EXT));
+    dev->cckd_ext = cckd = cckd_calloc (dev, "ext", 1, sizeof(CCKD64_EXT));
     if (cckd == NULL)
         return -1;
 
@@ -525,50 +525,6 @@ CCKD64_EXT     *cckd;                   /* -> cckd extension         */
     return 0;
 
 } /* end function cckd_ftruncate */
-
-/*-------------------------------------------------------------------*/
-/* malloc                                                            */
-/*-------------------------------------------------------------------*/
-void *cckd64_malloc (DEVBLK *dev, char *id, U64 size)
-{
-void           *p;                      /* Pointer                   */
-
-    p = malloc((size_t)size);
-    CCKD_TRACE (dev, "%s malloc %p len %"PRIu64, id, p, size);
-
-    if (p == NULL)
-    {
-        char buf[64];
-        MSGBUF( buf, "malloc(%"PRIu64")", size);
-        WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
-        cckd_print_itrace ();
-    }
-
-    return p;
-
-} /* end function cckd_malloc */
-
-/*-------------------------------------------------------------------*/
-/* calloc                                                            */
-/*-------------------------------------------------------------------*/
-void *cckd64_calloc (DEVBLK *dev, char *id, U64 n, U64 size)
-{
-void           *p;                      /* Pointer                   */
-
-    p = calloc ((size_t)n, (size_t)size);
-    CCKD_TRACE (dev, "%s calloc %p len %"PRIu64, id, p, (n*size));
-
-    if (p == NULL)
-    {
-        char buf[64];
-        MSGBUF( buf, "calloc(%"PRIu64", %"PRIu64")", (U64)n, (U64)size);
-        WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
-        cckd_print_itrace ();
-    }
-
-    return p;
-
-} /* end function cckd_calloc */
 
 /*-------------------------------------------------------------------*/
 /* Compressed ckd read track image                                   */
@@ -1985,7 +1941,7 @@ int             i;                      /* Work integer              */
 
     /* Allocate the level 1 table */
     len = cckd->cdevhdr[sfx].num_L1tab * CCKD64_L1ENT_SIZE;
-    if ((cckd->L1tab[sfx] = cckd64_malloc (dev, "l1", len)) == NULL)
+    if ((cckd->L1tab[sfx] = cckd_malloc (dev, "l1", len)) == NULL)
         return -1;
     if ( sfx )
         memset(cckd->L1tab[sfx], 0xFF, len);
@@ -2146,7 +2102,7 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
      */
     cckd->free_count = (cckd->cdevhdr[sfx].free_num + 1023) & ~0x3FF;
     if (cckd->free_count)
-        if ((cckd->ifb = cckd64_calloc (dev, "free", cckd->free_count, CCKD64_IFREEBLK_SIZE)) == NULL)
+        if ((cckd->ifb = cckd_calloc (dev, "free", cckd->free_count, CCKD64_IFREEBLK_SIZE)) == NULL)
             return -1;
 
     /* Build the doubly linked internal free space chain */
@@ -2165,7 +2121,7 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
             CCKD64_FREEBLK *fsp;
             U64 ofree = cckd->cdevhdr[sfx].free_off;
             S64 n = cckd->cdevhdr[sfx].free_num * CCKD64_FREEBLK_SIZE;
-            if ((fsp = cckd64_malloc (dev, "fsp", n)) == NULL)
+            if ((fsp = cckd_malloc (dev, "fsp", n)) == NULL)
                 return -1;
             fpos += CCKD64_FREEBLK_SIZE;
             if (cckd64_read (dev, sfx, fpos, fsp, (unsigned int) n) < 0)
@@ -2280,7 +2236,7 @@ CCKD64_FREEBLK *fsp = NULL;             /* -> new format free space  */
         if (fpos == 0 && cckd->cckd_maxsize - cckd->cdevhdr[sfx].cdh_size >= (U64)n)
             fpos = cckd->cdevhdr[sfx].cdh_size;
 
-        if (fpos && (fsp = cckd64_malloc (dev, "fsp", n)) == NULL)
+        if (fpos && (fsp = cckd_malloc (dev, "fsp", n)) == NULL)
             fpos = 0;
 
         if (fpos)
@@ -3290,7 +3246,7 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
     cckd->cdevhdr[cckd->sfn+1].free_imbed = 0;
 
     /* Init the level 1 table */
-    if ((cckd->L1tab[cckd->sfn+1] = cckd64_malloc (dev, "l1", l1size)) == NULL)
+    if ((cckd->L1tab[cckd->sfn+1] = cckd_malloc (dev, "l1", l1size)) == NULL)
         goto sf_new_error;
     memset (cckd->L1tab[cckd->sfn+1], 0xff, l1size);
 
@@ -4659,7 +4615,7 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     /* Get a buffer to uncompress into */
     if (comp != CCKD_COMPRESS_NONE && cckd->newbuf == NULL)
     {
-        cckd->newbuf = cckd64_malloc (dev, "newbuf", maxlen);
+        cckd->newbuf = cckd_malloc (dev, "newbuf", maxlen);
         if (cckd->newbuf == NULL)
             return NULL;
     }
@@ -4701,7 +4657,7 @@ static char    *compress[] = {"none", "zlib", "bzip2"};
     /* Get a buffer now if we haven't gotten one */
     if (cckd->newbuf == NULL)
     {
-        cckd->newbuf = cckd64_malloc (dev, "newbuf2", maxlen);
+        cckd->newbuf = cckd_malloc (dev, "newbuf2", maxlen);
         if (cckd->newbuf == NULL)
             return NULL;
     }
