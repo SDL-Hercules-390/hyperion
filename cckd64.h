@@ -164,13 +164,13 @@ struct CCKD64_EXT {                     /* Ext for compressed ckd    */
 
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
-        unsigned int     freemin;       /* Minimum free space size   */
-        CCKD64_IFREEBLK *ifb;           /* Internal free space chain */
 
-        int              free_count;    /* Number free space entries */
+        CCKD64_IFREEBLK *ifb;           /* Internal free space chain */
+        int              free_count;    /* Number of entries in chain*/
         int              free_idx1st;   /* Index of 1st entry        */
         int              free_idxlast;  /* Index of last entry       */
         int              free_idxavail; /* Index of available entry  */
+        unsigned int     free_minsize;  /* Minimum free space size   */
 
         int              lastsync;      /* Time of last sync         */
 

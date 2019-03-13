@@ -1588,7 +1588,7 @@ cckd_get_space_atend:
      * If `CCKD_SIZE_ANY' bit is set and the left over space is small
      * enough, then use the entire free space
      */
-    if ((flags & CCKD_SIZE_ANY) && flen <= cckd->freemin)
+    if ((flags & CCKD_SIZE_ANY) && flen <= cckd->free_minsize)
         *size = (int)flen;
 
     /* Remove the new space from free space */
@@ -1712,7 +1712,7 @@ U64             fsize = size;           /* Free space size           */
             for (i = cckd->free_idxavail; i < cckd->free_count; i++)
                 cckd->ifb[i].ifb_idxnxt = i + 1;
             cckd->ifb[i-1].ifb_idxnxt = -1;
-            cckd->freemin = CCKD_FREE_MIN_SIZE + ((cckd->free_count >> 10) * CCKD_FREE_MIN_INCR);
+            cckd->free_minsize = CCKD_MIN_FREESIZE( cckd->free_count );
         }
 
         /* Get an available free space entry */
@@ -2219,7 +2219,7 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
     }
 
     /* Set minimum free space size */
-    cckd->freemin = CCKD_FREE_MIN_SIZE + ((cckd->free_count >> 10) * CCKD_FREE_MIN_INCR);
+    cckd->free_minsize = CCKD_MIN_FREESIZE( cckd->free_count );
     return 0;
 
 } /* end function cckd_read_fsp */

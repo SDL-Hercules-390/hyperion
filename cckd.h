@@ -195,10 +195,12 @@ typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 #define CCKD_SIZE_ANY          0x02     /* Space can be any size     */
 #define CCKD_L2SPACE           0x04     /* Space for a l2 table      */
 
-/* adjustable values */
+/* Adjustable values */
 
+#define CCKD_IFB_ENTS_INCR     1024     /* ifb entries per (re)alloc */
 #define CCKD_FREE_MIN_SIZE     96       /* Minimum free space size   */
-#define CCKD_FREE_MIN_INCR     32       /* Added for each 1024 spaces*/
+#define CCKD_FREE_MIN_INCR     32       /* Added for each ifb incr   */
+
 #define CCKD_COMPRESS_MIN      512      /* Track images smaller than
                                            this won't be compressed  */
 #define CCKD_MAX_SF            8        /* Maximum number of shadow
@@ -371,13 +373,13 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
 
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
-        unsigned int     freemin;       /* Minimum free space size   */
-        CCKD_IFREEBLK   *ifb;           /* Internal free space chain */
 
-        int              free_count;    /* Number free space entries */
+        CCKD_IFREEBLK   *ifb;           /* Internal free space chain */
+        int              free_count;    /* Number of entries in chain*/
         int              free_idx1st;   /* Index of 1st entry        */
         int              free_idxlast;  /* Index of last entry       */
         int              free_idxavail; /* Index of available entry  */
+        unsigned int     free_minsize;  /* Minimum free space size   */
 
         int              lastsync;      /* Time of last sync         */
 
@@ -403,6 +405,10 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
         CCKD_L1ENT      *L1tab[CCKD_MAX_SF+1];   /* Level 1 tables   */
         CCKD_DEVHDR      cdevhdr[CCKD_MAX_SF+1]; /* cckd device hdr  */
 };
+
+#define CCKD_MIN_FREESIZE( free_count )     (CCKD_FREE_MIN_SIZE +   \
+      free_count < CCKD_IFB_ENTS_INCR ? 0 :                         \
+     (free_count / CCKD_IFB_ENTS_INCR) * CCKD_FREE_MIN_INCR)
 
 #define CCKD_OPEN_NONE         0
 #define CCKD_OPEN_RO           1
