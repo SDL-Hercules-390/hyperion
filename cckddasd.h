@@ -99,6 +99,7 @@ int     cckd64_ftruncate(DEVBLK *dev, int sfx, U64 off);
 /*-------------------------------------------------------------------*/
 void   *cckd_malloc(DEVBLK *dev, char *id, size_t size);
 void   *cckd_calloc(DEVBLK *dev, char *id, size_t n, size_t size);
+void   *cckd_realloc( DEVBLK *dev, char *id, void* p, size_t size );
 void   *cckd_free(DEVBLK *dev, char *id,void *p);
 int     cckd_read_track(DEVBLK *dev, int trk, BYTE *unitstat);
 int     cckd_update_track(DEVBLK *dev, int trk, int off,

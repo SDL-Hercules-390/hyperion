@@ -1663,7 +1663,7 @@ U64             fsize = size;           /* Free space size           */
         if (cckd->free_idxavail < 0)
         {
             cckd->free_idxavail = cckd->free_count;
-            cckd->free_count += 1024;
+            cckd->free_count += CCKD_IFB_ENTS_INCR;
             cckd->ifb = realloc ( cckd->ifb, cckd->free_count * CCKD64_IFREEBLK_SIZE);
             for (i = cckd->free_idxavail; i < cckd->free_count; i++)
                 cckd->ifb[i].ifb_idxnxt = i + 1;

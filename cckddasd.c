@@ -684,58 +684,83 @@ CCKD_EXT       *cckd;                   /* -> cckd extension         */
 } /* end function cckd_ftruncate */
 
 /*-------------------------------------------------------------------*/
-/* malloc                                                            */
+/*                          malloc                                   */
 /*-------------------------------------------------------------------*/
-void *cckd_malloc (DEVBLK *dev, char *id, size_t size)
+void* cckd_malloc( DEVBLK* dev, char* id, size_t size )
 {
-void           *p;                      /* Pointer                   */
+    void* p = NULL;
 
-    p = malloc (size);
-    CCKD_TRACE (dev, "%s malloc %p len %ld", id, p, (long)size);
+    if (size)
+        p = malloc( size );
+    CCKD_TRACE( dev, "%s malloc %p len %ld", id, p, (long) size );
 
-    if (p == NULL)
+    if (!p)
     {
         char buf[64];
-        MSGBUF( buf, "malloc(%d)", (int)size);
-        WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
-        cckd_print_itrace ();
+        MSGBUF( buf, "malloc( %d )", (int) size );
+        // "%1d:%04X CCKD file: error in function %s: %s"
+        WRMSG( HHC00303, "E", LCSS_DEVNUM, buf, strerror( errno ));
+        cckd_print_itrace();
     }
 
     return p;
-
-} /* end function cckd_malloc */
+}
 
 /*-------------------------------------------------------------------*/
-/* calloc                                                            */
+/*                          calloc                                   */
 /*-------------------------------------------------------------------*/
-void *cckd_calloc (DEVBLK *dev, char *id, size_t n, size_t size)
+void* cckd_calloc( DEVBLK* dev, char* id, size_t n, size_t size )
 {
-void           *p;                      /* Pointer                   */
+    void* p = NULL;
 
-    p = calloc (n, size);
-    CCKD_TRACE (dev, "%s calloc %p len %ld", id, p, n*(long)size);
+    if (n && size)
+        p = calloc( n, size );
+    CCKD_TRACE( dev, "%s calloc %p len %ld", id, p, n * (long) size );
 
-    if (p == NULL)
+    if (!p)
     {
         char buf[64];
-        MSGBUF( buf, "calloc(%d, %d)", (int)n, (int)size);
-        WRMSG (HHC00303, "E", dev ? SSID_TO_LCSS(dev->ssid) : 0, dev ? dev->devnum : 0, buf, strerror(errno));
-        cckd_print_itrace ();
+        MSGBUF( buf, "calloc( %d, %d )", (int) n, (int) size );
+        // "%1d:%04X CCKD file: error in function %s: %s"
+        WRMSG( HHC00303, "E", LCSS_DEVNUM, buf, strerror( errno ));
+        cckd_print_itrace();
     }
 
     return p;
-
-} /* end function cckd_calloc */
+}
 
 /*-------------------------------------------------------------------*/
-/* free                                                              */
+/*                          realloc                                  */
 /*-------------------------------------------------------------------*/
-void *cckd_free (DEVBLK *dev, char *id, void *p)
+void* cckd_realloc( DEVBLK *dev, char *id, void* p, size_t size )
 {
-    CCKD_TRACE (dev, "%s free %p", id, p);
-    if (p) free (p);
-    return (void*)NULL;
-} /* end function cckd_free */
+    void* p2 = NULL;
+
+    if (size)
+        p2 = realloc( p, size );
+    CCKD_TRACE( dev, "%s realloc %p len %ld", id, p, (long) size );
+
+    if (!p2)
+    {
+        char buf[64];
+        MSGBUF( buf, "realloc( %p, %d )", p, (int) size );
+        // "%1d:%04X CCKD file: error in function %s: %s"
+        WRMSG( HHC00303, "E", LCSS_DEVNUM, buf, strerror( errno ));
+        cckd_print_itrace();
+    }
+
+    return p2;
+}
+
+/*-------------------------------------------------------------------*/
+/*                          free                                     */
+/*-------------------------------------------------------------------*/
+void* cckd_free( DEVBLK* dev, char* id, void* p )
+{
+    CCKD_TRACE( dev, "%s free %p", id, p );
+    if (p) free( p );
+    return NULL;
+}
 
 /*-------------------------------------------------------------------*/
 /* Compressed ckd read track image                                   */
@@ -2287,7 +2312,7 @@ int             fsize = size;           /* Free space size           */
         if (cckd->free_idxavail < 0)
         {
             cckd->free_idxavail = cckd->free_count;
-            cckd->free_count += 1024;
+            cckd->free_count += CCKD_IFB_ENTS_INCR;
             cckd->ifb = realloc ( cckd->ifb, cckd->free_count * CCKD_IFREEBLK_SIZE);
             for (i = cckd->free_idxavail; i < cckd->free_count; i++)
                 cckd->ifb[i].ifb_idxnxt = i + 1;
