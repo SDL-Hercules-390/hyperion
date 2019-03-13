@@ -1662,9 +1662,11 @@ U64             fsize = size;           /* Free space size           */
         /* Increase the size of the free space array if necessary */
         if (cckd->free_idxavail < 0)
         {
+            int new_free_count = cckd->free_count + CCKD_IFB_ENTS_INCR;
+            if (!(cckd->ifb = cckd_realloc( dev, "ifb", cckd->ifb, new_free_count * CCKD_IFREEBLK_SIZE )))
+                return;
             cckd->free_idxavail = cckd->free_count;
-            cckd->free_count += CCKD_IFB_ENTS_INCR;
-            cckd->ifb = realloc ( cckd->ifb, cckd->free_count * CCKD64_IFREEBLK_SIZE);
+            cckd->free_count = new_free_count;
             for (i = cckd->free_idxavail; i < cckd->free_count; i++)
                 cckd->ifb[i].ifb_idxnxt = i + 1;
             cckd->ifb[i-1].ifb_idxnxt = -1;
@@ -2077,7 +2079,7 @@ int cckd64_read_init (DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Read free space                                                   */
 /*-------------------------------------------------------------------*/
-int cckd64_read_fsp (DEVBLK *dev)
+int cckd64_read_fsp( DEVBLK* dev )
 {
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
 U64             fpos;                   /* Free space offset         */
@@ -2091,19 +2093,24 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    CCKD_TRACE (dev, "file[%d] read_fsp number %"PRId64,
-                sfx, cckd->cdevhdr[sfx].free_num);
+    CCKD_TRACE( dev, "file[%d] read_fsp number %"PRId64,
+                sfx, cckd->cdevhdr[sfx].free_num );
 
-    cckd->ifb = cckd_free (dev, "free", cckd->ifb);
-    cckd->free_idx1st = cckd->free_idxlast = cckd->free_idxavail = -1;
+    cckd->ifb = cckd_free( dev, "ifb", cckd->ifb );
+
+    cckd->free_count    =  0;
+    cckd->free_idx1st   = -1;
+    cckd->free_idxlast  = -1;
+    cckd->free_idxavail = -1;
 
     /* Get storage for the internal free space chain
      * in a multiple of 1024 entries
      */
-    cckd->free_count = (cckd->cdevhdr[sfx].free_num + 1023) & ~0x3FF;
-    if (cckd->free_count)
-        if ((cckd->ifb = cckd_calloc (dev, "free", cckd->free_count, CCKD64_IFREEBLK_SIZE)) == NULL)
-            return -1;
+    i = (int) ROUND_UP( cckd->cdevhdr[sfx].free_num, CCKD_IFB_ENTS_INCR );
+    if (!(cckd->ifb = cckd_calloc( dev, "ifb", i, CCKD_IFREEBLK_SIZE )))
+        return -1;
+
+    cckd->free_count = i;
 
     /* Build the doubly linked internal free space chain */
     if (cckd->cdevhdr[sfx].free_num)
@@ -2269,7 +2276,7 @@ CCKD64_FREEBLK *fsp = NULL;             /* -> new format free space  */
     } /* if (cckd->cdevhdr[sfx].free_off) */
 
     /* Free the free space array */
-    cckd->ifb = cckd_free (dev, "free", cckd->ifb);
+    cckd->ifb = cckd_free (dev, "ifb", cckd->ifb);
     cckd->free_count = 0;
     cckd->free_idx1st = cckd->free_idxlast = cckd->free_idxavail = -1;
 
