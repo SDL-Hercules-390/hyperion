@@ -422,20 +422,24 @@ struct SPCTAB
 {
     BYTE        spc_typ;                /* Type of space             */
     int         spc_val;                /* Value for space           */
+    int         spc_val2;               /* Another value for space   */
     U32         spc_off;                /* Space offset              */
     U32         spc_len;                /* Space length              */
     U32         spc_siz;                /* Space size                */
 };
 
-#define SPCTAB_NONE     0               /* Ignore this space entry   */
-#define SPCTAB_DEVHDR   1               /* Space is device header    */
-#define SPCTAB_CDEVHDR  2               /* Space is compressed hdr   */
-#define SPCTAB_L1       3               /* Space is level 1 table    */
-#define SPCTAB_L2       4               /* Space is level 2 table    */
-#define SPCTAB_TRK      5               /* Space is track image      */
-#define SPCTAB_BLKGRP   6               /* Space is blkgrp image     */
-#define SPCTAB_FREE     7               /* Space is free block       */
-#define SPCTAB_EOF      8               /* Space is end-of-file      */
+#define SPCTAB_NONE            0        /* Ignore this space entry   */
+#define SPCTAB_DEVHDR          1        /* Space is device header    */
+#define SPCTAB_CDEVHDR         2        /* Space is compressed hdr   */
+#define SPCTAB_L1              3        /* Space is level 1 table    */
+#define SPCTAB_L2              4        /* Space is level 2 table    */
+#define SPCTAB_TRK             5        /* Space is track image      */
+#define SPCTAB_BLKGRP          6        /* Space is blkgrp image     */
+#define SPCTAB_FREE            7        /* Space is free block       */
+#define SPCTAB_EOF             8        /* Space is end-of-file      */
+#define SPCTAB_L2LOWER         9        /* Space is L2 lower bound   */
+#define SPCTAB_L2UPPER        10        /* Space is L2 upper bound   */
+#define SPCTAB_DATA           11        /* Space is track/block data */
 
 /*-------------------------------------------------------------------*/
 /*                 CCKD64 structs and definitions                    */

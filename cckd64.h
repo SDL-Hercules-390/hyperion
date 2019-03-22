@@ -204,6 +204,7 @@ struct SPCTAB64
 {
     BYTE        spc_typ;                /* Type of space             */
     int         spc_val;                /* Value for space           */
+    int         spc_val2;               /* Another value for space   */
     U64         spc_off;                /* Space offset              */
     U64         spc_len;                /* Space length              */
     U64         spc_siz;                /* Space size                */

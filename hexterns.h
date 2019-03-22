@@ -319,6 +319,9 @@ int     cfba64_read_block (DEVBLK *, int, BYTE *);
 int     cfba64_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 
 /* Functions in module cckdutil.c/cckdutil64.c */
+CCDU_DLL_IMPORT const char* comp_to_str( BYTE comp );
+CCDU_DLL_IMPORT const char* spc_typ_to_str( BYTE spc_typ );
+
 CCDU_DLL_IMPORT   int   cckd_swapend (DEVBLK *);
 CCDU_DLL_IMPORT   void  cckd_swapend_chdr ( CCKD_DEVHDR* );
 CCDU_DLL_IMPORT   void  cckd_swapend_l1   ( CCKD_L1ENT*, int num_L1tab );

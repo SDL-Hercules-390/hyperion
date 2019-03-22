@@ -28,13 +28,50 @@ static int  cdsk_spctab_sort(const void *a, const void *b);
 static int  cdsk_build_free_space(SPCTAB *spctab, int s);
 
 /*-------------------------------------------------------------------*/
-/* Static data areas                                                 */
+/* Helper macro                                                      */
 /*-------------------------------------------------------------------*/
-static char *spaces[] = { "none", "devhdr", "cdevhdr", "l1",  "l2",
-                          "trk",  "blkgrp", "free",    "eof" };
-static char *comps[]  = { "none", "zlib",   "bzip2" };
-
 #define  gui_fprintf        if (extgui) fprintf
+
+/*-------------------------------------------------------------------*/
+/* Return compression type string                                    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* comp_to_str( BYTE comp )
+{
+    static const char* comp_types[] =
+    {
+        "none",
+        "zlib",
+        "bzip2"
+    };
+
+    return (comp < _countof( comp_types )) ?
+        comp_types[ comp ] : "?????";
+}
+
+/*-------------------------------------------------------------------*/
+/* Return space type string                                          */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* spc_typ_to_str( BYTE spc_typ )
+{
+    static const char* spc_types[] =
+    {
+        "none",             //  SPCTAB_NONE       0
+        "devhdr",           //  SPCTAB_DEVHDR     1
+        "cdevhdr",          //  SPCTAB_CDEVHDR    2
+        "l1",               //  SPCTAB_L1         3
+        "l2",               //  SPCTAB_L2         4
+        "trk",              //  SPCTAB_TRK        5
+        "blkgrp",           //  SPCTAB_BLKGRP     6
+        "free",             //  SPCTAB_FREE       7
+        "eof",              //  SPCTAB_EOF        8
+        "L2LOWER",          //  SPCTAB_L2LOWER    9
+        "L2UPPER",          //  SPCTAB_L2UPPER   10
+        "data",             //  SPCTAB_DATA      11
+    };
+
+    return (spc_typ < _countof( spc_types )) ?
+        spc_types[ spc_typ ] : "???????";
+}
 
 /*-------------------------------------------------------------------*/
 /* Toggle the endianess of a compressed file                         */
@@ -1527,10 +1564,10 @@ BYTE            buf[4*65536];           /* buffer                    */
             recovery = 1;
 
             /* issue error message */
-            j = MSGBUF(space1, "%s", spaces[spctab[i].spc_typ]);
+            j = MSGBUF(space1, "%s", spc_typ_to_str( spctab[i].spc_typ ));
             if (spctab[i].spc_val >= 0)
                 sprintf(space1+j, "[%d]", spctab[i].spc_val);
-            j = MSGBUF(space2, "%s", spaces[spctab[i+1].spc_typ]);
+            j = MSGBUF(space2, "%s", spc_typ_to_str( spctab[i+1].spc_typ ));
             if (spctab[i+1].spc_val >= 0)
                 sprintf(space2+j, "[%d]", spctab[i+1].spc_val);
 
@@ -1589,11 +1626,11 @@ BYTE            buf[4*65536];           /* buffer                    */
             if(dev->batch)
                 // "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
                 FWRMSG( stdout, HHC00367, "W", LCSS_DEVNUM, dev->filename,
-                        spaces[trktyp], spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
+                        spc_typ_to_str( trktyp ), spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
             else
                 // "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
                 WRMSG( HHC00367, "W", LCSS_DEVNUM, dev->filename,
-                      spaces[trktyp], spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
+                      spc_typ_to_str( trktyp ), spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
 
             /* setup recovery */
             rcvtab[spctab[i].spc_val] = 1;
@@ -1758,11 +1795,11 @@ cdsk_space_check:
             {
                 if(dev->batch)
                     FWRMSG( stdout, HHC00369, "W", LCSS_DEVNUM, dev->filename,
-                            spaces[trktyp], spctab[i].spc_val, off,
+                            spc_typ_to_str( trktyp ), spctab[i].spc_val, off,
                             buf[0],buf[1],buf[2],buf[3],buf[4]);
                 else
                     WRMSG( HHC00369, "W", LCSS_DEVNUM, dev->filename,
-                          spaces[trktyp], spctab[i].spc_val, off,
+                          spc_typ_to_str( trktyp ), spctab[i].spc_val, off,
                           buf[0],buf[1],buf[2],buf[3],buf[4]);
 
                 /* recover this track */
@@ -1789,10 +1826,10 @@ cdsk_space_check:
                 comperrs = 1;
                 if(dev->batch)
                     FWRMSG( stdout, HHC00370, "W", LCSS_DEVNUM, dev->filename,
-                            spaces[trktyp], trk, comps[compmask[comp]]);
+                            spc_typ_to_str( trktyp ), trk, comp_to_str( compmask[ comp ]));
                 else
                     WRMSG( HHC00370, "W", LCSS_DEVNUM, dev->filename,
-                          spaces[trktyp], trk, comps[compmask[comp]]);
+                          spc_typ_to_str( trktyp ), trk, comp_to_str( compmask[ comp ]));
                 continue;
             }
 
@@ -1804,11 +1841,11 @@ cdsk_space_check:
                     if(dev->batch)
                         // "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
                         FWRMSG( stdout, HHC00371, "W", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], trk, off, (S64)len);
+                                spc_typ_to_str( trktyp ), trk, off, (S64)len);
                     else
                         // "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
                         WRMSG( HHC00371, "W", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], trk, off, (S64)len);
+                              spc_typ_to_str( trktyp ), trk, off, (S64)len);
 
                     /* recover this track */
                     rcvtab[trk] = recovery = 1;
@@ -2012,11 +2049,11 @@ cdsk_ckd_recover:
                     if(dev->batch)
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         FWRMSG( stdout, HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], trk, off + i, (S64)l);
+                                spc_typ_to_str( trktyp ), trk, off + i, (S64)l);
                     else
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         WRMSG( HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], trk, off + i, (S64)l);
+                              spc_typ_to_str( trktyp ), trk, off + i, (S64)l);
                     n--;
                     rcvtab[trk] = 2;
 
@@ -2242,11 +2279,11 @@ cdsk_fba_recover:
                     if(dev->batch)
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         FWRMSG( stdout, HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], blkgrp, off + i, (S64)l);
+                                spc_typ_to_str( trktyp ), blkgrp, off + i, (S64)l);
                     else
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         WRMSG( HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], blkgrp, off + i, (S64)l);
+                              spc_typ_to_str( trktyp ), blkgrp, off + i, (S64)l);
                     n--;
                     rcvtab[blkgrp] = 2;
 
@@ -2284,11 +2321,11 @@ cdsk_fba_recover:
         if(dev->batch)
             // "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
             FWRMSG( stdout, HHC00373, "I", LCSS_DEVNUM, dev->filename,
-                    (S64)n, spaces[trktyp]);
+                    (S64)n, spc_typ_to_str( trktyp ));
         else
             // "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
             WRMSG( HHC00373, "I", LCSS_DEVNUM, dev->filename,
-                  (S64)n, spaces[trktyp]);
+                  (S64)n, spc_typ_to_str( trktyp ));
 
         /*-----------------------------------------------------------
          * Phase 2 -- rebuild affected l2 tables
