@@ -443,8 +443,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00356 "%1d:%04X CCKD file %s: not a compressed dasd file"
 #define HHC00357 "%1d:%04X CCKD file %s: converting to %s"
 #define HHC00358 "%1d:%04X CCKD file %s: file already compressed"
-#define HHC00359 "%1d:%04X CCKD file %s: compress succesful, %"PRId64" bytes released"
-#define HHC00360 "%1d:%04X CCKD file %s: compress succesful, L2 tables relocated"
+#define HHC00359 "%1d:%04X CCKD file %s: compress successful, %"PRId64" bytes released"
+#define HHC00360 "%1d:%04X CCKD file %s: compress successful, L2 tables relocated"
 #define HHC00361 "%1d:%04X CCKD file %s: dasd lookup error type %02X cylinders %d"
 #define HHC00362 "%1d:%04X CCKD file %s: bad %s %"PRId64", expecting %"PRId64
 #define HHC00363 "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"

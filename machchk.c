@@ -314,98 +314,98 @@ int rc = 0;
 /*-------------------------------------------------------------------*/
 /*                   sync_mck_interrupt                              */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(sync_mck_interrupt) (REGS *regs)
+void ARCH_DEP( sync_mck_interrupt )( REGS* regs )
 {
-int     rc;                             /* Return code               */
-PSA    *psa;                            /* -> Prefixed storage area  */
+int   rc;
+U32   xdmg = 0;             /* External Damage Code                  */
+RADR  fsta = 0;             /* Failing Storage Address               */
+PSA*  psa  = NULL;          /* -> Prefixed storage area              */
+U64   mcic =                /* Machine Check Interruption Code       */
+             0
+             | MCIC_P       // Instruction proc damage
+             | MCIC_WP      // PSW-MWP validity
+             | MCIC_MS      // PSW mask and key validity
+             | MCIC_PM      // PSW pm and cc validity
+             | MCIC_IA      // PSW ia validity
+             | MCIC_GR      // General register validity
+             | MCIC_CR      // Control register validity
+             | MCIC_ST      // Storage logical validity
+             | MCIC_CT      // CPU timer validity
+             | MCIC_CC      // Clock comparator validity
 
-U64     mcic = MCIC_P  |  /* Instruction processing damage */
-               MCIC_WP |
-               MCIC_MS |
-               MCIC_PM |
-               MCIC_IA |
-#ifdef FEATURE_HEXADECIMAL_FLOATING_POINT
-               MCIC_FP |
-#endif /*FEATURE_HEXADECIMAL_FLOATING_POINT*/
-               MCIC_GR |
-               MCIC_CR |
-               MCIC_ST |
-#ifdef FEATURE_ACCESS_REGISTERS
-               MCIC_AR |
-#endif /*FEATURE_ACCESS_REGISTERS*/
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_EXTENDED_TOD_CLOCK)
-               MCIC_PR |
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) && defined(FEATURE_EXTENDED_TOD_CLOCK)*/
-#if defined(FEATURE_BINARY_FLOATING_POINT)
-               MCIC_XF |
-#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
-               MCIC_CT |
-               MCIC_CC ;
-U32     xdmg = 0;
-RADR    fsta = 0;
-
+#if defined( FEATURE_HEXADECIMAL_FLOATING_POINT )
+             | MCIC_FP      // Floating point reg val.
+#endif
+#if defined( FEATURE_ACCESS_REGISTERS )
+             | MCIC_AR      // Access register validity
+#endif
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_EXTENDED_TOD_CLOCK )
+             | MCIC_PR      // TOD prog. reg. validity
+#endif
+#if defined( FEATURE_BINARY_FLOATING_POINT )
+             | MCIC_XF      // Extended float reg val.
+#endif
+             ;
 
     /* Release intlock if held */
     if (regs->cpuad == sysblk.intowner)
-        RELEASE_INTLOCK(regs);
+        RELEASE_INTLOCK( regs );
 
     /* Release mainlock if held */
     if (regs->cpuad == sysblk.mainowner)
-        RELEASE_MAINLOCK(regs);
+        RELEASE_MAINLOCK( regs );
 
     /* Exit SIE when active */
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
-    if(regs->sie_active)
-        ARCH_DEP(sie_exit) (regs, SIE_HOST_INTERRUPT);
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
-
+    if (regs->sie_active)
+        ARCH_DEP( sie_exit )( regs, SIE_HOST_INTERRUPT );
+#endif
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY( regs->PX, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Point to the PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);
 
     /* Store registers in machine check save area */
-    ARCH_DEP(store_status) (regs, regs->PX);
+    ARCH_DEP( store_status )( regs, regs->PX );
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-// ZZ
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Set the extended logout area to zeros */
-    memset(psa->storepsw, 0, 16);
+    memset( psa->storepsw, 0, 16 );
 #endif
 
     /* Store the machine check interrupt code at PSA+232 */
-    STORE_DW(psa->mckint, mcic);
+    STORE_DW( psa->mckint, mcic );
 
     /* Trace the machine check interrupt */
-    if (CPU_STEPPING_OR_TRACING(regs, 0))
-#if defined(_FEATURE_SIE)
-        WRMSG (HHC00824, "I", regs->sie_active ? "IE" : PTYPSTR(regs->cpuad),
-            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad, mcic);
+    if (CPU_STEPPING_OR_TRACING( regs, 0 ))
+        // "Processor %s%02X: machine check code %16.16"PRIX64
+#if defined( _FEATURE_SIE )
+        WRMSG( HHC00824, "I", regs->sie_active ? "IE" : PTYPSTR( regs->cpuad ),
+            regs->sie_active ? regs->guestregs->cpuad : regs->cpuad, mcic );
 #else
-        WRMSG (HHC00824, "I", PTYPSTR(regs->cpuad), regs->cpuad, mcic);
+        WRMSG( HHC00824, "I", PTYPSTR( regs->cpuad ), regs->cpuad, mcic );
 #endif
 
     /* Store the external damage code at PSA+244 */
-    STORE_FW(psa->xdmgcode, xdmg);
+    STORE_FW( psa->xdmgcode, xdmg );
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     /* Store the failing storage address at PSA+248 */
-    STORE_DW(psa->mcstorad, fsta);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    /* Store the failing storage address at PSA+248 */
-    STORE_FW(psa->mcstorad, fsta);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+    STORE_DW( psa->mcstorad, fsta );
+#else
+    STORE_FW( psa->mcstorad, fsta );
+#endif
 
     /* Store current PSW at PSA+X'30' */
-    ARCH_DEP(store_psw) ( regs, psa->mckold );
+    ARCH_DEP( store_psw )( regs, psa->mckold );
 
     /* Load new PSW from PSA+X'70' */
-    rc = ARCH_DEP(load_psw) ( regs, psa->mcknew );
+    rc = ARCH_DEP( load_psw )( regs, psa->mcknew );
 
-    if ( rc )
-        ARCH_DEP(program_interrupt) (regs, rc);
+    if (rc)
+        ARCH_DEP( program_interrupt )( regs, rc );
 } /* end function sync_mck_interrupt */
 
 
