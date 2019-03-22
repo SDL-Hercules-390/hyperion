@@ -347,14 +347,6 @@ U64   mcic =                /* Machine Check Interruption Code       */
 #endif
              ;
 
-    /* Release intlock if held */
-    if (regs->cpuad == sysblk.intowner)
-        RELEASE_INTLOCK( regs );
-
-    /* Release mainlock if held */
-    if (regs->cpuad == sysblk.mainowner)
-        RELEASE_MAINLOCK( regs );
-
     /* Exit SIE when active */
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if (regs->sie_active)
@@ -504,6 +496,14 @@ void sigabend_handler( int signo )
         raise( signo );
         return;
     }
+
+    /* Release intlock if held */
+    if (regs->cpuad == sysblk.intowner)
+        RELEASE_INTLOCK( regs );
+
+    /* Release mainlock if held */
+    if (regs->cpuad == sysblk.mainowner)
+        RELEASE_MAINLOCK( regs );
 
     /* Is the PSW enabled for Machine Checks? */
     if (MACHMASK( &regs->psw ))
