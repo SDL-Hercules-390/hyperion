@@ -4469,6 +4469,15 @@ cckd_gc_perc_error:
 /*-------------------------------------------------------------------*/
 int cckd64_gc_l2(DEVBLK *dev, BYTE *buf)
 {
+#if 1 // (deprecate this function!)
+
+    UNREFERENCED( dev );
+    UNREFERENCED( buf );
+
+    return 0;
+
+#else // (deprecate this function!)
+
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
 int             sfx;                    /* Shadow file index         */
 int             i, j;                   /* Work variables            */
@@ -4597,6 +4606,8 @@ cckd_gc_l2_exit_ok:
     CCKD_TRACE( dev, "gc_l2 ok%s", "" );
     cckd->L2ok = 1;
     goto cckd_gc_l2_exit;
+
+#endif // (deprecate this function!)
 }
 
 /*-------------------------------------------------------------------*/
