@@ -2154,11 +2154,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC02917 - HHC02949 (available)
 
 // convto64
-#define HHC02950 "Usage: %s [-q] [-v] infile outfile\n" \
-       "HHC02950I   infile    input file\n" \
-       "HHC02950I   outfile   output file\n" \
-       "HHC02950I options:\n" \
-       "HHC02950I   -q     Minimal progress messages\n" \
+#define HHC02950 "Usage: %s [-r] [-c] [-q] [-v] infile outfile"             "\n" \
+       "HHC02950I   infile    input file"                                   "\n" \
+       "HHC02950I   outfile   output file"                                  "\n" \
+       "HHC02950I options:"                                                 "\n" \
+       "HHC02950I   -r     Replace output file"                             "\n" \
+       "HHC02950I   -c     Write contiguous L2 tables"                      "\n" \
+       "HHC02950I   -q     Minimal progress messages"                       "\n" \
        "HHC02950I   -v     Report every track copied"
 #define HHC02951 "Gathering L2 tables..."
 #define HHC02952 "Copying L2 tables and associated track data..."
@@ -2166,7 +2168,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02954 "Writing cckd64 compressed device header..."
 #define HHC02955 "Writing L1 table..."
 #define HHC02956 "Copying %s %d data..."
-//efine HHC02957 - HHC02974 (available)
+#define HHC02957 "%"PRIu32" tracks copied"
+#define HHC02958 "Error in function %s: %s"
+#define HHC02959 "Syntax error: %s"
+#define HHC02960 "Dasd image file format unsupported or unrecognized: %s"
+#define HHC02961 "DASD operation completed"
+#define HHC02962 "Converting \"%s\" to CCKD64 file format..."
+//efine HHC02963 - HHC02974 (available)
 
 // dasdpdsu
 #define HHC02975 "Usage: %s infile [sf=shadow-file] pdsname [ASCII] [odir]" "\n" \
