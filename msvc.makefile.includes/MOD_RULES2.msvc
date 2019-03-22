@@ -181,6 +181,8 @@ $(X)dasdcopy64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)h
 
 $(X)convto64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
+$(X)cckdmap.exe:   $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
 $(X)ckd2cckd.exe: $(X)dasdcopy.exe
     copy /b /v /y $(X)dasdcopy.exe $(X)ckd2cckd.exe > NUL
 

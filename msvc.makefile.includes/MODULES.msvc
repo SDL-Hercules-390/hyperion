@@ -36,6 +36,7 @@ EXECUTABLES = \
     $(X)cckdswap64.exe  \
     $(X)conspawn.exe    \
     $(X)convto64.exe    \
+    $(X)cckdmap.exe     \
     $(X)dasdcat.exe     \
     $(X)dasdconv.exe    \
     $(X)dasdconv64.exe  \

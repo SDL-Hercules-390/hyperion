@@ -249,6 +249,9 @@
     <ClCompile Include="cckdswap64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClCompile Include="cckdmap.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
     <ClCompile Include="convto64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>

@@ -2179,7 +2179,52 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02975I             otherwise output is to current directory"     "\n"
 //efine HHC02976 - HHC02999 (available)
 
-// range 03000 - 03099 available
+// cckdmap
+#define HHC03000 "Usage: %s [ -t | -v ] infile"                             "\n" \
+       "HHC03000I   infile   Input file"                                    "\n" \
+       "HHC03000I options:"                                                 "\n" \
+       "HHC03000I   -t       report consolidated track data"                "\n" \
+       "HHC03000I   -v       verbose (report detailed track data)"
+#define HHC03001 "Unrecognized option: %s"
+#define HHC03002 "Missing input-file specification"
+#define HHC03003 "Extraneous parameter: %s"
+#define HHC03004 "Unsupported dasd image file format"
+#define HHC03005 "Device type %4.4X not found in dasd table"
+#define HHC03006 "%s error: %s"
+//efine HHC03007 - HHC03019 (available)
+#define HHC03020 "" // (blank line)
+#define HHC03021 "%s of:     \"%s\""
+#define HHC03022                                                            "\n" \
+       "HHC03022I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \
+       "HHC03022I   dh_heads:      %u"                                      "\n" \
+       "HHC03022I   dh_trksize:    %u"                                      "\n" \
+       "HHC03022I   dh_devtyp:     0x%02.2X            (%s)"                "\n" \
+       "HHC03022I   dh_fileseq:    0x%02.2X"                                "\n" \
+       "HHC03022I   dh_highcyl:    %u"
+#define HHC03023                                                            "\n" \
+       "HHC03023I   cdh_vrm:       %u.%u.%u"                                "\n" \
+       "HHC03023I   cdh_opts:      0x%02.2X"                                "\n" \
+       "HHC03023I   num_L1tab:     %"PRId32                                 "\n" \
+       "HHC03023I   num_L2tab:     %"PRId32                                 "\n" \
+       "HHC03023I   cdh_cyls:      %"PRIu32"            (%"PRIu32" tracks)" "\n" \
+       "HHC03023I   cdh_size:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   cdh_used:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   free_off:      0x%10.10"PRIX64                          "\n" \
+       "HHC03023I   free_total:    0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   free_largest:  0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   free_num:      %"PRId64                                 "\n" \
+       "HHC03023I   free_imbed:    %"PRIu64                                 "\n" \
+       "HHC03023I   cdh_nullfmt:   %u               (%s)"                   "\n" \
+       "HHC03023I   cmp_algo:      %u               (%s)"                   "\n" \
+       "HHC03023I   cmp_parm:      %"PRId16"              %s(%s)"
+//efine HHC03024 - HHC03039 (available)
+#define HHC03040 "         File offset    Size (hex)         Size  track(s)"
+#define HHC03041 "***********************************************************"
+#define HHC03042 "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
+#define HHC03043 "Total active tracks      = %"PRIu32" tracks"
+#define HHC03044 "Average L2-to-track seek = %.3f MB"
+//efine HHC03045 - HHC03099 (available)
+
 // range 03100 - 03199 available
 // range 03200 - 03299 available
 // range 03300 - 03399 available

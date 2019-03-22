@@ -216,6 +216,7 @@ bin_PROGRAMS = \
   cckddiag64   \
   cckdswap64   \
   convto64     \
+  cckdmap      \
   dasdcat      \
   dasdconv     \
   dasdcopy     \
@@ -654,6 +655,10 @@ cckdswap64_SOURCES = cckdswap64.c
 cckdswap64_LDADD   = $(tools_ADDLIBS)
 cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
 
+cckdmap_SOURCES    = cckdmap.c
+cckdmap_LDADD      = $(tools_ADDLIBS)
+cckdmap_LDFLAGS    = $(tools_LD_FLAGS)
+
 convto64_SOURCES   = convto64.c
 convto64_LDADD     = $(tools_ADDLIBS)
 convto64_LDFLAGS   = $(tools_LD_FLAGS)
@@ -976,6 +981,7 @@ cckd:                   \
 	cckdcomp64$(EXEEXT) \
 	cckddiag64$(EXEEXT) \
 	cckdswap64$(EXEEXT) \
+	cckdmap$(EXEEXT)    \
 	convto64$(EXEEXT)   \
 	cckd2ckd$(EXEEXT)   \
 	dasdcopy$(EXEEXT)   \
