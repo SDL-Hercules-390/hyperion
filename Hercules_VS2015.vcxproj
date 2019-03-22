@@ -394,7 +394,6 @@
     <ClCompile Include="hscmisc.c" />
     <ClCompile Include="hscpufun.c" />
     <ClCompile Include="hscutl.c" />
-    <ClCompile Include="hscutl2.c" />
     <ClCompile Include="hsocket.c" />
     <ClCompile Include="hsys.c" />
     <ClCompile Include="hthreads.c" />

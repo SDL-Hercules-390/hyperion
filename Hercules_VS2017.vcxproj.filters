@@ -636,9 +636,6 @@
     <ClCompile Include="hscutl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hscutl2.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hsocket.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>

@@ -102,9 +102,6 @@
   #endif
 #endif // _MSVC_
 
-/* Set the PROCESS "nice" value (NOT thread priority!) */
-HU2_DLL_IMPORT int set_herc_nice( int which, id_t who, int nice );
-
 #if !defined(HAVE_STRLCPY)
 /* $OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $ */
 /*
@@ -221,6 +218,11 @@ HUT_DLL_IMPORT char* FormatTIMEVAL( const TIMEVAL* pTV, char* buf, int bufsz );
 HUT_DLL_IMPORT char* fmt_memsize    ( const U64 memsize,   char* buf, const size_t bufsz );
 HUT_DLL_IMPORT char* fmt_memsize_KB ( const U64 memsizeKB, char* buf, const size_t bufsz );
 HUT_DLL_IMPORT char* fmt_memsize_MB ( const U64 memsizeMB, char* buf, const size_t bufsz );
+
+/*-------------------------------------------------------------------*/
+/* Pretty format S64 value with thousand separators. Returns length. */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT size_t fmt_S64( char dst[32], S64 num );
 
 /*-------------------------------------------------------------------*/
 /* Standard Utility Initialization                                   */

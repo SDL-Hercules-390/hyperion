@@ -1269,6 +1269,41 @@ DLL_EXPORT char* fmt_memsize_KB( const U64 memsizeKB, char* buf, const size_t bu
 DLL_EXPORT char* fmt_memsize_MB( const U64 memsizeMB, char* buf, const size_t bufsz ) { return _fmt_memsize( memsizeMB, 2, buf, bufsz ); }
 
 /*-------------------------------------------------------------------*/
+/* Pretty format S64 value with thousand separators. Returns length. */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT size_t fmt_S64( char dst[32], S64 num )
+{
+    char  src[32];
+    char* p_src     = src;
+    char* p_dst     = dst;
+
+    const char separator = ',';     // (FIXME)
+    int num_len, commas;
+
+    num_len = snprintf( src, sizeof( src ), "%"PRId64, num );
+
+    if (*p_src == '-')
+    {
+        *p_dst++ = *p_src++;
+        num_len--;
+    }
+
+    for (commas = 2 - num_len % 3;
+         *p_src;
+         commas = (commas + 1) % 3)
+    {
+        *p_dst++ = *p_src++;
+        if (commas == 1) {
+            *p_dst++ = separator;
+        }
+    }
+
+    *--p_dst = 0;
+
+    return (size_t) (p_dst - dst);
+}
+
+/*-------------------------------------------------------------------*/
 /*                Standard Utility Initialization                    */
 /*-------------------------------------------------------------------*/
 /* Performs standard utility initialization as follows: determines   */

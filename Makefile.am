@@ -380,7 +380,6 @@ libhercu_la_SOURCES = \
   hexdumpe.c          \
   hostinfo.c          \
   hscutl.c            \
-  hscutl2.c           \
   hsocket.c           \
   hthreads.c          \
   logger.c            \
@@ -655,7 +654,7 @@ cckdswap64_SOURCES = cckdswap64.c
 cckdswap64_LDADD   = $(tools_ADDLIBS)
 cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
 
-cconto64_SOURCES   = convto64.c
+convto64_SOURCES   = convto64.c
 convto64_LDADD     = $(tools_ADDLIBS)
 convto64_LDFLAGS   = $(tools_LD_FLAGS)
 
@@ -968,7 +967,7 @@ noinst_HEADERS =          \
 ###############################################################################
 
 
-cckd:                 \
+cckd:                   \
 	cckdcdsk$(EXEEXT)   \
 	cckdcomp$(EXEEXT)   \
 	cckddiag$(EXEEXT)   \
