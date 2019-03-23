@@ -2128,7 +2128,7 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
             CCKD64_FREEBLK *fsp;
             U64 ofree = cckd->cdevhdr[sfx].free_off;
             S64 n = cckd->cdevhdr[sfx].free_num * CCKD64_FREEBLK_SIZE;
-            if ((fsp = cckd_malloc (dev, "fsp", n)) == NULL)
+            if (!(fsp = cckd_malloc( dev, "fsp", (size_t) n )))
                 return -1;
             fpos += CCKD64_FREEBLK_SIZE;
             if (cckd64_read (dev, sfx, fpos, fsp, (unsigned int) n) < 0)
@@ -2243,7 +2243,7 @@ CCKD64_FREEBLK *fsp = NULL;             /* -> new format free space  */
         if (fpos == 0 && cckd->cckd_maxsize - cckd->cdevhdr[sfx].cdh_size >= (U64)n)
             fpos = cckd->cdevhdr[sfx].cdh_size;
 
-        if (fpos && (fsp = cckd_malloc (dev, "fsp", n)) == NULL)
+        if (fpos && !(fsp = cckd_malloc( dev, "fsp", (size_t) n )))
             fpos = 0;
 
         if (fpos)
