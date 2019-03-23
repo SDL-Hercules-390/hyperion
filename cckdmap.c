@@ -497,8 +497,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
         , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
         , cdevhdr.free_off
-        , cdevhdr.free_total,   max( len_total, len_largest ), str_total
-        , cdevhdr.free_largest, max( len_total, len_largest ), str_largest
+        , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
+        , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
         , cdevhdr.free_num
         , cdevhdr.free_imbed
         , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :

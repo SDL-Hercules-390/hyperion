@@ -45,15 +45,15 @@ target_triplet = @target@
 bin_PROGRAMS = cckdcdsk$(EXEEXT) cckdcomp$(EXEEXT) cckddiag$(EXEEXT) \
 	cckdswap$(EXEEXT) cckdcdsk64$(EXEEXT) cckdcomp64$(EXEEXT) \
 	cckddiag64$(EXEEXT) cckdswap64$(EXEEXT) convto64$(EXEEXT) \
-	dasdcat$(EXEEXT) dasdconv$(EXEEXT) dasdcopy$(EXEEXT) \
-	dasdinit$(EXEEXT) dasdconv64$(EXEEXT) dasdcopy64$(EXEEXT) \
-	dasdinit64$(EXEEXT) dasdisup$(EXEEXT) dasdload$(EXEEXT) \
-	dasdload64$(EXEEXT) dasdls$(EXEEXT) dasdpdsu$(EXEEXT) \
-	dasdseq$(EXEEXT) dmap2hrc$(EXEEXT) hercules$(EXEEXT) \
-	hetget$(EXEEXT) hetinit$(EXEEXT) hetmap$(EXEEXT) \
-	hetupd$(EXEEXT) maketape$(EXEEXT) tapecopy$(EXEEXT) \
-	tapemap$(EXEEXT) tapesplt$(EXEEXT) vmfplc2$(EXEEXT) \
-	$(am__EXEEXT_1) $(am__EXEEXT_2)
+	cckdmap$(EXEEXT) dasdcat$(EXEEXT) dasdconv$(EXEEXT) \
+	dasdcopy$(EXEEXT) dasdinit$(EXEEXT) dasdconv64$(EXEEXT) \
+	dasdcopy64$(EXEEXT) dasdinit64$(EXEEXT) dasdisup$(EXEEXT) \
+	dasdload$(EXEEXT) dasdload64$(EXEEXT) dasdls$(EXEEXT) \
+	dasdpdsu$(EXEEXT) dasdseq$(EXEEXT) dmap2hrc$(EXEEXT) \
+	hercules$(EXEEXT) hetget$(EXEEXT) hetinit$(EXEEXT) \
+	hetmap$(EXEEXT) hetupd$(EXEEXT) maketape$(EXEEXT) \
+	tapecopy$(EXEEXT) tapemap$(EXEEXT) tapesplt$(EXEEXT) \
+	vmfplc2$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
 EXTRA_PROGRAMS = hercifc$(EXEEXT)
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(noinst_HEADERS) \
@@ -250,15 +250,15 @@ libherct_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 libhercu_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	libhercs.la
 am__libhercu_la_SOURCES_DIST = codepage.c hdl.c hexdumpe.c hostinfo.c \
-	hscutl.c hscutl2.c hsocket.c hthreads.c logger.c logmsg.c \
-	memrchr.c parser.c pttrace.c version.c fthreads.c ltdl.c
+	hscutl.c hsocket.c hthreads.c logger.c logmsg.c memrchr.c \
+	parser.c pttrace.c version.c fthreads.c ltdl.c
 am__objects_2 = fthreads.lo
 @BUILD_FTHREADS_TRUE@am__objects_3 = $(am__objects_2)
 am__objects_4 = ltdl.lo
 am_libhercu_la_OBJECTS = codepage.lo hdl.lo hexdumpe.lo hostinfo.lo \
-	hscutl.lo hscutl2.lo hsocket.lo hthreads.lo logger.lo \
-	logmsg.lo memrchr.lo parser.lo pttrace.lo version.lo \
-	$(am__objects_3) $(am__objects_4)
+	hscutl.lo hsocket.lo hthreads.lo logger.lo logmsg.lo \
+	memrchr.lo parser.lo pttrace.lo version.lo $(am__objects_3) \
+	$(am__objects_4)
 libhercu_la_OBJECTS = $(am_libhercu_la_OBJECTS)
 libhercu_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -303,6 +303,12 @@ cckddiag64_DEPENDENCIES = $(am__DEPENDENCIES_3)
 cckddiag64_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cckddiag64_LDFLAGS) $(LDFLAGS) -o $@
+am_cckdmap_OBJECTS = cckdmap.$(OBJEXT)
+cckdmap_OBJECTS = $(am_cckdmap_OBJECTS)
+cckdmap_DEPENDENCIES = $(am__DEPENDENCIES_3)
+cckdmap_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(cckdmap_LDFLAGS) $(LDFLAGS) -o $@
 am_cckdswap_OBJECTS = cckdswap.$(OBJEXT)
 cckdswap_OBJECTS = $(am_cckdswap_OBJECTS)
 cckdswap_DEPENDENCIES = $(am__DEPENDENCIES_3)
@@ -315,8 +321,8 @@ cckdswap64_DEPENDENCIES = $(am__DEPENDENCIES_3)
 cckdswap64_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cckdswap64_LDFLAGS) $(LDFLAGS) -o $@
-convto64_SOURCES = convto64.c
-convto64_OBJECTS = convto64.$(OBJEXT)
+am_convto64_OBJECTS = convto64.$(OBJEXT)
+convto64_OBJECTS = $(am_convto64_OBJECTS)
 convto64_DEPENDENCIES = $(am__DEPENDENCIES_3)
 convto64_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -516,8 +522,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(libhercu_la_SOURCES) $(cckdcdsk_SOURCES) \
 	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
-	$(cckddiag64_SOURCES) $(cckdswap_SOURCES) \
-	$(cckdswap64_SOURCES) convto64.c $(dasdcat_SOURCES) \
+	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
+	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
 	$(dasdconv_SOURCES) $(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
 	$(dasdcopy64_SOURCES) $(dasdinit_SOURCES) \
 	$(dasdinit64_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) \
@@ -540,8 +546,8 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(am__libhercu_la_SOURCES_DIST) $(cckdcdsk_SOURCES) \
 	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
-	$(cckddiag64_SOURCES) $(cckdswap_SOURCES) \
-	$(cckdswap64_SOURCES) convto64.c $(dasdcat_SOURCES) \
+	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
+	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
 	$(dasdconv_SOURCES) $(dasdconv64_SOURCES) $(dasdcopy_SOURCES) \
 	$(dasdcopy64_SOURCES) $(dasdinit_SOURCES) \
 	$(dasdinit64_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) \
@@ -1012,7 +1018,6 @@ libhercu_la_SOURCES = \
   hexdumpe.c          \
   hostinfo.c          \
   hscutl.c            \
-  hscutl2.c           \
   hsocket.c           \
   hthreads.c          \
   logger.c            \
@@ -1252,7 +1257,10 @@ dasdcopy64_LDFLAGS = $(tools_LD_FLAGS)
 cckdswap64_SOURCES = cckdswap64.c
 cckdswap64_LDADD = $(tools_ADDLIBS)
 cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
-cconto64_SOURCES = convto64.c
+cckdmap_SOURCES = cckdmap.c
+cckdmap_LDADD = $(tools_ADDLIBS)
+cckdmap_LDFLAGS = $(tools_LD_FLAGS)
+convto64_SOURCES = convto64.c
 convto64_LDADD = $(tools_ADDLIBS)
 convto64_LDFLAGS = $(tools_LD_FLAGS)
 hetget_SOURCES = hetget.c
@@ -1767,6 +1775,9 @@ cckddiag$(EXEEXT): $(cckddiag_OBJECTS) $(cckddiag_DEPENDENCIES)
 cckddiag64$(EXEEXT): $(cckddiag64_OBJECTS) $(cckddiag64_DEPENDENCIES) 
 	@rm -f cckddiag64$(EXEEXT)
 	$(AM_V_CCLD)$(cckddiag64_LINK) $(cckddiag64_OBJECTS) $(cckddiag64_LDADD) $(LIBS)
+cckdmap$(EXEEXT): $(cckdmap_OBJECTS) $(cckdmap_DEPENDENCIES) 
+	@rm -f cckdmap$(EXEEXT)
+	$(AM_V_CCLD)$(cckdmap_LINK) $(cckdmap_OBJECTS) $(cckdmap_LDADD) $(LIBS)
 cckdswap$(EXEEXT): $(cckdswap_OBJECTS) $(cckdswap_DEPENDENCIES) 
 	@rm -f cckdswap$(EXEEXT)
 	$(AM_V_CCLD)$(cckdswap_LINK) $(cckdswap_OBJECTS) $(cckdswap_LDADD) $(LIBS)
@@ -1878,6 +1889,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckddasd64.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckddiag.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckddiag64.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckdmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckdswap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckdswap64.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cckdutil.Plo@am__quote@
@@ -1974,7 +1986,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscmisc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscpufun.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscutl.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscutl2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hsocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hsys.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hthreads.Plo@am__quote@
@@ -2583,7 +2594,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES \
 #
 ###############################################################################
 
-cckd:                 \
+cckd:                   \
 	cckdcdsk$(EXEEXT)   \
 	cckdcomp$(EXEEXT)   \
 	cckddiag$(EXEEXT)   \
@@ -2592,6 +2603,7 @@ cckd:                 \
 	cckdcomp64$(EXEEXT) \
 	cckddiag64$(EXEEXT) \
 	cckdswap64$(EXEEXT) \
+	cckdmap$(EXEEXT)    \
 	convto64$(EXEEXT)   \
 	cckd2ckd$(EXEEXT)   \
 	dasdcopy$(EXEEXT)   \
