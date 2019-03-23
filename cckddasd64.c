@@ -1663,7 +1663,7 @@ U64             fsize = size;           /* Free space size           */
         if (cckd->free_idxavail < 0)
         {
             int new_free_count = cckd->free_count + CCKD_IFB_ENTS_INCR;
-            if (!(cckd->ifb = cckd_realloc( dev, "ifb", cckd->ifb, new_free_count * CCKD_IFREEBLK_SIZE )))
+            if (!(cckd->ifb = cckd_realloc( dev, "ifb", cckd->ifb, new_free_count * CCKD64_IFREEBLK_SIZE )))
                 return;
             cckd->free_idxavail = cckd->free_count;
             cckd->free_count = new_free_count;
@@ -2107,7 +2107,7 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
      * in a multiple of 1024 entries
      */
     i = (int) ROUND_UP( cckd->cdevhdr[sfx].free_num, CCKD_IFB_ENTS_INCR );
-    if (!(cckd->ifb = cckd_calloc( dev, "ifb", i, CCKD_IFREEBLK_SIZE )))
+    if (!(cckd->ifb = cckd_calloc( dev, "ifb", i, CCKD64_IFREEBLK_SIZE )))
         return -1;
 
     cckd->free_count = i;
