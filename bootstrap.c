@@ -535,7 +535,8 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 ///////////////////////////////////////////////////////////////////////////////
 // Build User Stream Arrays...
 
-#define MAX_MINIDUMP_USER_STREAMS   (256)   // (just an arbitrary value)
+#define MAX_MINIDUMP_USER_STREAMS  (1024)   // (just an arbitrary value)
+#define NUM_LOGFILE_MESSAGES        (128)   // (just an arbitrary value)
 #define NUM_CCKD_TRACE_STRINGS       (64)   // (enough to debug cckd?)
 
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
@@ -559,13 +560,37 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 
     pMDUSI->UserStreamArray = UserStreamArray;
 
+    // Save version information
+
     BUILD_SYSBLK_USER_STREAM( sysblk.vers_info   );
     BUILD_SYSBLK_USER_STREAM( sysblk.bld_opts    );
     BUILD_SYSBLK_USER_STREAM( sysblk.extpkg_vers );
 
-    // CCKD internal trace table strings (only the last few entries)
+    // Save last few log messages
 
-    if (g_itracen && cckdblk.itrace)    // (do we have a table?)
+    if (StreamNum < MAX_MINIDUMP_USER_STREAMS)
+    {
+        char* logbuf_ptr;
+        int   logbuf_idx;
+        int   logbuf_bytes;
+
+        logbuf_idx = log_line( NUM_LOGFILE_MESSAGES );
+
+        if ((logbuf_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
+        {
+            UserStreamArray[ StreamNum ].Type       = CommentStreamA;
+            UserStreamArray[ StreamNum ].Buffer     = (PVOID) logbuf_ptr;
+            UserStreamArray[ StreamNum ].BufferSize = (ULONG) logbuf_bytes;
+            StreamNum++;
+        }
+    }
+
+    // Save last few entries of CCKD internal trace table
+
+    if (1
+        && StreamNum < MAX_MINIDUMP_USER_STREAMS
+        && g_itracen && cckdblk.itrace    // (do we have a table?)
+    )
     {
         // itrace       ptr to beginning of table (first entry)
         // itracep      ptr to "current" entry" (ptr to the entry that
@@ -578,7 +603,7 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
         int i, k = min( NUM_CCKD_TRACE_STRINGS, cckdblk.itracec );
         CCKD_ITRACE* p = cckdblk.itracep;
 
-        // Backup 'k' entries...   (note ptr arithmetic)
+        // Backup 'k' entries...   (note pointer arithmetic)
 
         for (i=0; i < k; ++i)
             if (--p < cckdblk.itrace)
