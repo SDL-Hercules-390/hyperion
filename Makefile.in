@@ -203,6 +203,15 @@ hdtzfcp_la_OBJECTS = $(am_hdtzfcp_la_OBJECTS)
 hdtzfcp_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdtzfcp_la_LDFLAGS) $(LDFLAGS) -o $@
+libhdt3420_not_mod_la_DEPENDENCIES = $(am__DEPENDENCIES_1) libherct.la \
+	libhercs.la libhercu.la libherc.la libherct.la
+am_libhdt3420_not_mod_la_OBJECTS = tapedev.lo tapeccws.lo awstape.lo \
+	faketape.lo hettape.lo omatape.lo scsitape.lo scsiutil.lo
+libhdt3420_not_mod_la_OBJECTS = $(am_libhdt3420_not_mod_la_OBJECTS)
+libhdt3420_not_mod_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libhdt3420_not_mod_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 libherc_la_DEPENDENCIES = libhercs.la libhercu.la libherct.la \
 	libhercd.la $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__objects_1 =
@@ -479,7 +488,7 @@ tapesplt_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(tapesplt_LDFLAGS) $(LDFLAGS) -o $@
 am_vmfplc2_OBJECTS = vmfplc2.$(OBJEXT)
 vmfplc2_OBJECTS = $(am_vmfplc2_OBJECTS)
-vmfplc2_DEPENDENCIES = $(am__DEPENDENCIES_3) hdt3420.la
+vmfplc2_DEPENDENCIES = $(am__DEPENDENCIES_3) libhdt3420_not_mod.la
 vmfplc2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(vmfplc2_LDFLAGS) $(LDFLAGS) -o $@
@@ -516,11 +525,11 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
 	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
-	$(hdtzfcp_la_SOURCES) $(libherc_la_SOURCES) \
-	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
-	$(libhercs_la_SOURCES) $(libherct_la_SOURCES) \
-	$(libhercu_la_SOURCES) $(cckdcdsk_SOURCES) \
-	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
+	$(hdtzfcp_la_SOURCES) $(libhdt3420_not_mod_la_SOURCES) \
+	$(libherc_la_SOURCES) $(EXTRA_libherc_la_SOURCES) \
+	$(libhercd_la_SOURCES) $(libhercs_la_SOURCES) \
+	$(libherct_la_SOURCES) $(libhercu_la_SOURCES) \
+	$(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
 	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
@@ -540,11 +549,11 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
 	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
-	$(hdtzfcp_la_SOURCES) $(libherc_la_SOURCES) \
-	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
-	$(libhercs_la_SOURCES) $(libherct_la_SOURCES) \
-	$(am__libhercu_la_SOURCES_DIST) $(cckdcdsk_SOURCES) \
-	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
+	$(hdtzfcp_la_SOURCES) $(libhdt3420_not_mod_la_SOURCES) \
+	$(libherc_la_SOURCES) $(EXTRA_libherc_la_SOURCES) \
+	$(libhercd_la_SOURCES) $(libhercs_la_SOURCES) \
+	$(libherct_la_SOURCES) $(am__libhercu_la_SOURCES_DIST) \
+	$(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
 	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
@@ -877,11 +886,12 @@ LIB_LD_FLAGS = \
 #------------------------------------------------------------------------------
 HERCLIBS = 
 HERCLIBS2 = \
-  libhercs.la \
-  libhercu.la \
-  libherct.la \
-  libhercd.la \
-  libherc.la
+  libhercs.la   \
+  libhercu.la   \
+  libherct.la   \
+  libhercd.la   \
+  libherc.la    \
+  libhdt3420_not_mod.la
 
 HERCMODS = \
   dyncrypt.la   \
@@ -1031,9 +1041,28 @@ libhercu_la_SOURCES = \
 
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD = \
-  $(extpkg_ldadd)    \
-  $(ldadd)           \
+  $(extpkg_ldadd)     \
+  $(ldadd)            \
   libhercs.la
+
+libhdt3420_not_mod_la_SOURCES = \
+  tapedev.c                       \
+  tapeccws.c                      \
+  awstape.c                       \
+  faketape.c                      \
+  hettape.c                       \
+  omatape.c                       \
+  scsitape.c                      \
+  scsiutil.c
+
+libhdt3420_not_mod_la_LDFLAGS = $(LIB_LD_FLAGS)
+libhdt3420_not_mod_la_LIBADD = \
+  $(ldadd)                        \
+  libherct.la                     \
+  libhercs.la                     \
+  libhercu.la                     \
+  libherc.la                      \
+  libherct.la
 
 
 #--------------------------------------------
@@ -1279,7 +1308,7 @@ dmap2hrc_SOURCES = dmap2hrc.c
 dmap2hrc_LDADD = $(tools_ADDLIBS)
 dmap2hrc_LDFLAGS = $(tools_LD_FLAGS)
 vmfplc2_SOURCES = vmfplc2.c
-vmfplc2_LDADD = $(tools_ADDLIBS) hdt3420.la
+vmfplc2_LDADD = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
@@ -1704,6 +1733,8 @@ hdtqeth.la: $(hdtqeth_la_OBJECTS) $(hdtqeth_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(hdtqeth_la_LINK) -rpath $(modexecdir) $(hdtqeth_la_OBJECTS) $(hdtqeth_la_LIBADD) $(LIBS)
 hdtzfcp.la: $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdtzfcp_la_LINK) -rpath $(modexecdir) $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_LIBADD) $(LIBS)
+libhdt3420_not_mod.la: $(libhdt3420_not_mod_la_OBJECTS) $(libhdt3420_not_mod_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libhdt3420_not_mod_la_LINK) -rpath $(libdir) $(libhdt3420_not_mod_la_OBJECTS) $(libhdt3420_not_mod_la_LIBADD) $(LIBS)
 libherc.la: $(libherc_la_OBJECTS) $(libherc_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libherc_la_LINK) -rpath $(libdir) $(libherc_la_OBJECTS) $(libherc_la_LIBADD) $(LIBS)
 libhercd.la: $(libhercd_la_OBJECTS) $(libhercd_la_DEPENDENCIES) 
