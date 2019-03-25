@@ -172,12 +172,13 @@ LIB_LD_FLAGS =      \
 
 HERCLIBS =
 
-HERCLIBS2 =   \
-  libhercs.la \
-  libhercu.la \
-  libherct.la \
-  libhercd.la \
-  libherc.la
+HERCLIBS2 =     \
+  libhercs.la   \
+  libhercu.la   \
+  libherct.la   \
+  libhercd.la   \
+  libherc.la    \
+  libhdt3420_not_mod.la
 
 HERCMODS =      \
   dyncrypt.la   \
@@ -324,9 +325,7 @@ hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
 #--------------------------------------------
 
 libhercs_la_SOURCES = hsys.c
-
 libhercs_la_LDFLAGS = $(LIB_LD_FLAGS)
-
 libhercs_la_LIBADD  = $(ldadd)
 
 #--------------------------------------------
@@ -391,13 +390,29 @@ libhercu_la_SOURCES = \
   version.c           \
   $(FTHREADS)         \
   $(LTDL)
-
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
-
-libhercu_la_LIBADD = \
-  $(extpkg_ldadd)    \
-  $(ldadd)           \
+libhercu_la_LIBADD =  \
+  $(extpkg_ldadd)     \
+  $(ldadd)            \
   libhercs.la
+
+libhdt3420_not_mod_la_SOURCES  =  \
+  tapedev.c                       \
+  tapeccws.c                      \
+  awstape.c                       \
+  faketape.c                      \
+  hettape.c                       \
+  omatape.c                       \
+  scsitape.c                      \
+  scsiutil.c
+libhdt3420_not_mod_la_LDFLAGS  =  $(LIB_LD_FLAGS)
+libhdt3420_not_mod_la_LIBADD   =  \
+  $(ldadd)                        \
+  libherct.la                     \
+  libhercs.la                     \
+  libhercu.la                     \
+  libherc.la                      \
+  libherct.la
 
 #--------------------------------------------
 # Core Hercules (shared) library
@@ -684,7 +699,7 @@ dmap2hrc_LDADD     = $(tools_ADDLIBS)
 dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
 
 vmfplc2_SOURCES    = vmfplc2.c
-vmfplc2_LDADD      = $(tools_ADDLIBS) hdt3420.la
+vmfplc2_LDADD      = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
