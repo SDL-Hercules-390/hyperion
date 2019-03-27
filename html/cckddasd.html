@@ -958,9 +958,11 @@ eventually remove all free space from the file.  However, it is not
 intended to be a replacement for the cckdcomp utility; rather, the intent
 is to provide sufficient free space to prevent excessive file growth.
 <p>
+<strike>
 Another function performed by space recovery is to relocate <em>L2</em> (secondary
 lookup) tables towards the beginning of the file.  This simplifies <i>chkdsk</i>
 recovery and enables the chkdsk function to complete more quickly during initialization.
+</strike>
 
 <a name=cckdcommand></a>
 <hr noshade>
@@ -996,11 +998,11 @@ the <b>cckd</b> command explained below.
 <tr><td>&nbsp;</td><td><b>linuxnull=</b>n</td> <td> &nbsp; Check for null linux tracks</td>
 <tr><td>&nbsp;</td><td><b>nosfd=</b>n</td>     <td> &nbsp; Turn off stats report at close</td>
 <tr><td>&nbsp;</td><td><b>nostress=</b>n</td>  <td> &nbsp; Turn stress writes on or off</td>
-<tr><td>&nbsp;</td><td><b>ra=</b>n</td>        <td> &nbsp; Number readahead threads</td>
+<tr><td>&nbsp;</td><td><b>ra=</b>n</td>        <td> &nbsp; Number of readahead threads</td>
 <tr><td>&nbsp;</td><td><b>raq=</b>n</td>       <td> &nbsp; Readahead queue size</td>
 <tr><td>&nbsp;</td><td><b>rat=</b>n</td>       <td> &nbsp; Number of tracks to readahead</td>
 <tr><td>&nbsp;</td><td><b>trace=</b>n</td>     <td> &nbsp; Number of trace table entries</td>
-<tr><td>&nbsp;</td><td><b>wr=</b>n</td>        <td> &nbsp; Number writer threads</td>
+<tr><td>&nbsp;</td><td><b>wr=</b>n</td>        <td> &nbsp; Number of writer threads</td>
 
 <!-- ----------------------------------------------------------------------------- -->
 </table>
@@ -1088,7 +1090,7 @@ the <b>cckd</b> command explained below.
         You can specify a number between <b>0</b> and <b>60</b>. A value of 0
         disables the default automatic behavior of the garbage collector,
         converting it to manual on-demand mode instead. When in manual mode,
-        the garbage will only run by specific demand via the 'gcstart' option,
+        the garbage collector will only run by specific demand via the 'gcstart' option,
         and once started, will only run through one garbage collection cycle
         and then exit, requiring you to manually start it again when desired.
         In automatic mode (gcint > 0), the garbage collector will start itself
@@ -1150,10 +1152,12 @@ the <b>cckd</b> command explained below.
 <tr><td valign="top"><b>nostress=</b>n</td><td> &nbsp; </td>
     <td>Indicates whether <em>stress</em> writes will occur or not.  A track
         or block group may be written under stress when a high percentage of
-        the cache is pending write or when a device i/o thread is waiting for
+        the cache is pending write or when a device I/O thread is waiting for
         a cache entry.  When a stressed write occurs, the compression algorithm
         and/or compression parm may be relaxed, resulting in faster compression
-        but usually a larger compressed image.  If <em>nostress</em> is set
+        but at the expense of a slightly larger compressed image.
+        <p>
+        If <em>nostress</em> is set
         to one, then a stressed situation is ignored.  You would typically
         set this value to one when you want create the smallest emulation file
         possible in exchange for a possible performance degradation.
@@ -1206,7 +1210,7 @@ the <b>cckd</b> command explained below.
         problem occurs, you should enter the <b>k</b> Hercules console command
         which will print the trace table entries.
         <p>
-        The default is <b>0</b>.
+        The default is <b>64</b>.
         <p>
         You can specify a number between <b>0</b> and <b>200000</b>.
         Each entry represents 128 bytes.  Normally, for debugging, I use
@@ -1219,7 +1223,7 @@ the <b>cckd</b> command explained below.
         cache entries are marked write pending and a writer thread is signalled.
         The writer thread compresses the track or block group and writes the
         compressed image to the emulation file.  A writer thread is cpu-intensive
-        while compressing the track or block group and i/o-intensive while writing
+        while compressing the track or block group and I/O-intensive while writing
         the compressed image.  The writer thread runs one <em>nicer</em> than
         the CPU thread(s).
         <p>
