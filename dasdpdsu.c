@@ -114,10 +114,29 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     if (argc > (4+i) && argv[4+i])
     {
         struct stat statbuf;
-        char pathname[MAX_PATH];
+        char pathname[MAX_PATH], c = 0;
+        int dirlen = 0;
 
+        /* Copy argument to work */
+        STRLCPY( odir, argv[4+i] );
+
+#if defined( _MSVC_ )
+        /* stat(): If path contains the location of a directory,
+           it cannot contain a trailing backslash.  If it does,
+           -1 will be returned and errno will be set to ENOENT. */
+        dirlen = (int) strlen( odir );
         if (0
-            || stat( argv[4+i], &statbuf ) != 0
+            || odir[ dirlen - 1 ] == '/'
+            || odir[ dirlen - 1 ] == '\\'
+        )
+        {
+            c = odir[ dirlen - 1 ];   // (remember)
+            odir[ dirlen - 1 ] = 0;   // (remove it)
+        }
+#endif
+        /* Valid directory name specified? */
+        if (0
+            || stat( odir, &statbuf ) != 0
             || !S_ISDIR( statbuf.st_mode )
         )
         {
@@ -126,9 +145,15 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
             return syntax( pgm );
         }
 
-        hostpath( pathname, argv[4+i], sizeof( pathname ));
+        /* (restore trailing path separator if removed) */
+        if (c)
+            odir[ dirlen - 1 ] = c;
+
+        /* Convert output directory to host format */
+        hostpath( pathname, odir, sizeof( pathname ));
         STRLCPY( odir, pathname );
 
+        /* Append path separator if needed */
         if (odir[ strlen( odir ) - 1 ] != PATHSEPC)
             STRLCAT( odir, PATHSEPS );
     }
@@ -257,7 +282,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
     STRLCPY( workpath, odir );
     STRLCAT( workpath, ofname );
 
-    /* convert output path to host format */
+    /* Convert output path to host format */
     hostpath( pathname, workpath, sizeof( pathname ));
 
     /* Open the output file */
