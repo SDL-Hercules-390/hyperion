@@ -120,6 +120,11 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir=""
         ;;
 
+    aarch64*)
+        hc_cv_cpu_arch=aarch64
+        hc_cv_pkg_lib_subdir="/aarch64"
+        ;;
+
     arm*)
         hc_cv_cpu_arch=arm
         hc_cv_pkg_lib_subdir="/arm"
@@ -1250,7 +1255,7 @@ else
 
     case "$target_cpu-$GCC" in
 
-        arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
+        aarch64*-yes|arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
 
             hc_cv_byte_structs_always_aligned_and_rounded=no
             ;;
@@ -2716,6 +2721,11 @@ if test "$hc_cv_auto_optimize" = "yes"; then
                    fi
                 fi
             fi
+            ;;
+
+        aarch64-yes)
+
+            hc_cv_is_intel_x86_arch=no
             ;;
 
         arm-yes)
