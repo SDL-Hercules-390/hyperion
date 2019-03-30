@@ -1671,14 +1671,14 @@ static int parse_ctlfile_stmt( OPTIONS* opts, const char* orec, int recno )
     /*     0        1     2     3       4        5       6         7      */
     /* [codepage]  <FN>  <FT>  <FM>  <recfm>  <lrecl>  <type>  <hostfile> */
 
-    codepage = argc >= 1 ?                    argv[0]   : NULL;
-    fn       = argc >= 2 ? strupper( argv[1], argv[1] ) : NULL;
-    ft       = argc >= 3 ? strupper( argv[2], argv[2] ) : NULL;
-    fm       = argc >= 4 ? strupper( argv[3], argv[3] ) : NULL;
-    recfm    = argc >= 5 ?                    argv[4]   : NULL;
-    lrecl    = argc >= 6 ?                    argv[5]   : NULL;
-    filefmt  = argc >= 7 ?                    argv[6]   : NULL;
-    infile   = argc >= 8 ?                    argv[7]   : NULL;
+    codepage = argc >= 1 ? argv[0] : NULL;
+    fn       = argc >= 2 ? argv[1] : NULL;
+    ft       = argc >= 3 ? argv[2] : NULL;
+    fm       = argc >= 4 ? argv[3] : NULL;
+    recfm    = argc >= 5 ? argv[4] : NULL;
+    lrecl    = argc >= 6 ? argv[5] : NULL;
+    filefmt  = argc >= 7 ? argv[6] : NULL;
+    infile   = argc >= 8 ? argv[7] : NULL;
 
     /* Was codepage specified? */
     if (codepage && strchr( codepage, '/' ))
@@ -1727,6 +1727,10 @@ static int parse_ctlfile_stmt( OPTIONS* opts, const char* orec, int recno )
         msg = "File mode missing";
         goto process_entry_error;
     }
+
+    strupper( fn, fn );
+    strupper( ft, ft );
+    strupper( fm, fm );
 
     if ((msg = validate_cmsfile( fn, ft, fm )) != NULL)
         goto process_entry_error;
