@@ -103,7 +103,7 @@ int unix_socket( char* path )
 
     if (0
         || bind( sd, (struct sockaddr*) &addr, sizeof( addr )) < 0
-        || listen( sd, 0 ) < 0
+        || listen( sd, 1 ) < 0
         )
     {
         // "COMM: error in function %s: %s"
@@ -197,7 +197,7 @@ int inet_socket( char* spec )
 
     if (0
         || bind( sd, (struct sockaddr*) &sin, sizeof( sin )) < 0
-        || listen( sd, 0 ) < 0
+        || listen( sd, 1 ) < 0
         )
     {
         // "COMM: error in function %s: %s"
