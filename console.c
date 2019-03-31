@@ -2496,25 +2496,6 @@ static void constty_input( TELNET* tn, const BYTE* buffer, U32 size )
             return;
         }
 
-        /* Check for Ctrl-C */
-        if (buffer[i] == 0x03)
-        {
-            tn->got_break = TRUE;
-            dev->keybdrem = 0;
-            return;
-        }
-
-        /* Check for ASCII backspace/delete */
-        if (0
-            || buffer[i] == 0x08    // BS
-            || buffer[i] == 0x7F    // DEL
-        )
-        {
-            if (dev->keybdrem > 0)
-                dev->keybdrem--;
-            continue;
-        }
-
         /* Copy character to keyboard buffer */
         dev->buf[ dev->keybdrem++ ] = buffer[i];
 
@@ -4281,11 +4262,8 @@ BYTE    stat;                           /* Unit status               */
         for (len = 0; len < num; len++)
         {
             c = guest_to_host( iobuf[len] );
-            /* Replace any non-printable characters with a blank
-               except keep carriage returns and newlines as-is. */
-            if (!isprint(c) && c != '\r' && c!= '\n')
-                c = ' ';
-            iobuf[len] = c;   /* only printable or CR/LF allowed */
+            /* Leave it up to guest OS to filter characters. */
+            iobuf[len] = c;
         } /* end for(len) */
 
         ASSERT(len == num);
