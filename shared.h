@@ -418,13 +418,15 @@ typedef struct _SHRD_HDR {
         BYTE    cmd;                    /* 0 Command                 */
         BYTE    code;                   /* 1 Flags and Codes         */
         U16     devnum;                 /* 2 Device number           */
-        U16     id;                     /* 4 Identifier              */
-        U16     len;                    /* 6 Data length             */
+        U16     len;                    /* 4 Data length             */
+        U16     id;                     /* 6 Identifier              */
 } SHRD_HDR;
+
 /* Size must be 8 bytes */
 #define SHRD_HDR_SIZE sizeof(DBLWRD)
+CASSERT( sizeof( SHRD_HDR ) == SHRD_HDR_SIZE, shared_h );
 
-#define SHRD_SET_HDR(_buf, _cmd, _code, _devnum, _len, _id) \
+#define SHRD_SET_HDR(_buf, _cmd, _code, _devnum, _id, _len) \
 do { \
   SHRD_HDR *shdr = (SHRD_HDR *)(_buf); \
   shdr->cmd = (_cmd); \
@@ -434,7 +436,7 @@ do { \
   store_hw (&shdr->id, (_id)); \
 } while (0)
 
-#define SHRD_GET_HDR(_buf, _cmd, _code, _devnum, _len, _id) \
+#define SHRD_GET_HDR(_buf, _cmd, _code, _devnum, _id, _len) \
 do { \
   SHRD_HDR *shdr = (SHRD_HDR *)(_buf); \
   (_cmd) = shdr->cmd; \

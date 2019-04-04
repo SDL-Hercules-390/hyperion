@@ -154,7 +154,7 @@ The client sends an 8 byte request header and maybe some data:
 
 <pre>
     +-----+-----+-----+-----+-----+-----+-----+-----+
-    | cmd |flag |  devnum   |    id     |   length  |
+    | cmd |flag |  devnum   |   length  |    id     |
     +-----+-----+-----+-----+-----+-----+-----+-----+
 
                 <-------- length --------->
@@ -391,7 +391,7 @@ The server sends an 8 byte response header and maybe some data:
 
 <pre>
     +-----+-----+-----+-----+-----+-----+-----+-----+
-    |code |stat |  devnum   |    id     |  length   |
+    |code |stat |  devnum   |  length   |    id     |
     +-----+-----+-----+-----+-----+-----+-----+-----+
 
                 <-------- length --------->
