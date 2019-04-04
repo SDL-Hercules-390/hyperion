@@ -1,26 +1,3 @@
-*
-*
-*
-*   Shared Device Server test:
-*
-*   THIS instance is the server
-*   The client is my CentOS 6.10 VMware virtual machine
-*
-*   THIS Hercules has the shared.h patch with the SHRD_HDR patch
-*   (where the id, len are reversed to accomodate the swapped
-*   SHRD_SET_HDR and SHRD_GET_HDR macro arguments)
-*
-*   The CentOS client system does NOT have the patch, so its
-*   macro arguments and SHRD_HDR fields are still "wrong".
-*
-*   BUT... If my patch is sane, things should still work OK.
-*
-*   Let's see if that's true!!
-*
-*
-*
-
-
 --------------------------------------------------------------------------------
 
 
