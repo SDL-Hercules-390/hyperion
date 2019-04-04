@@ -112,6 +112,25 @@ Hercules: Release Notes
     for the <code>b</code> and/or <code>s</code> commands.
   </p>
 
+  <dt>Integrated Regina REXX support no longer provided by default
+  <dd>
+  <p>
+    For those who want integrated Regina rexx support in Hercules, you will
+    now have to explicitly request such support on your <code>./configure</code>
+    command by specifying the <code>'--enable-regina-rexx'</code> option.  For
+    everyone else, integrated support for Regina rexx will <i>no longer</i> be
+    automatically provided by Hercules, even if it is installed in their system.
+    <p>
+    In other words, you can still have Regina rexx installed on your system
+    and use it as you normally would, but simply having it installed on your
+    system will now <i>no longer</i> cause Hercules to also provide integrated
+    support for it.
+    <p>
+    For more information refer to the
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.REXX">README.REXX</a>
+    document in the source code distribution.
+  </p>
+
 </dl>
 
 <!-- --------------------------------------------------------------------------------- -->

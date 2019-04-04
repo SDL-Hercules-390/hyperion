@@ -2124,12 +2124,7 @@ AC_ARG_ENABLE( regina-rexx,
         esac
     ],
     [
-     if test "$hc_cv_have_rexxsaa_h"        = "yes"  ||
-        test "$hc_cv_have_regina_rexxsaa_h" = "yes"; then
-         hc_cv_ena_regina_rexx=yes
-     else
-         hc_cv_ena_regina_rexx=no
-     fi
+        hc_cv_ena_regina_rexx=no
     ]
 )
 
