@@ -590,7 +590,7 @@ BYTE    termchar;                       /* Terminating character     */
             dist = cpu_length;
 
         } /* end while */
-    
+
         /* The CPU determine number of bytes has been reached. Set R2
            to point to next character of operand, set CC=3 and exit */
         SET_GR_A( r2, regs, addr2 );

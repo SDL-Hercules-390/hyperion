@@ -139,7 +139,7 @@
 
 #define PATHSEPC '/'          // (character)
 #define PATHSEPS "/"          // (string)
-#define PATH_SEP "/"          // (same thing)  
+#define PATH_SEP "/"          // (same thing)
 
 #define SPACE    ' '          //  <---<<<  Look close!  There's a space there!
 

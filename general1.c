@@ -1578,11 +1578,11 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
     cpu_length = min(4, len);
 
     /* Should the second operand cross a page boundary with the minimum
-       length or if the specified length is within the minimum, process 
-       the remaining length byte by byte so as to observe possible 
+       length or if the specified length is within the minimum, process
+       the remaining length byte by byte so as to observe possible
        access exceptions */
     if (0
-        || len <= 4 
+        || len <= 4
         || CROSSPAGEL( addr2, cpu_length )
        )
     {
@@ -1621,13 +1621,13 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
             dreg++;
         }
 
-    } 
+    }
     else
     {
-        /* Here if a page boundary would not be crossed with the 
+        /* Here if a page boundary would not be crossed with the
            minimum length and if the specified length is more than the
-           minimum.  Extend the CPU determined length out to the end 
-           of the page, but not longer than the specified length in 
+           minimum.  Extend the CPU determined length out to the end
+           of the page, but not longer than the specified length in
            register r2+1  */
         cpu_length = PAGEFRAME_PAGESIZE - ( addr2 & PAGEFRAME_BYTEMASK );
         cpu_length = min( cpu_length, len );
@@ -1657,7 +1657,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
             }
         } /* end for(j) */
 
-        /* Adjust the operand address and remaining length for the 
+        /* Adjust the operand address and remaining length for the
            number of bytes processed */
         addr2 += cpu_length;
         addr2 &= ADDRESS_MAXWRAP( regs );
@@ -5645,10 +5645,10 @@ BYTE    termchar;                       /* Terminating character     */
        any number above zero. Set the CPU determined length to
        the nearest end of page of either operand.
     */
-    
+
     dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-    
+
     cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
 
     main1 = MADDR( addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );

@@ -707,7 +707,7 @@ int             trk;                    /* Cached track              */
 DEVBLK         *dev = data;             /* -> device block           */
 
     UNREFERENCED(answer);
-    UNREFERENCED( trk ); // (silence "set but not used" warning) 
+    UNREFERENCED( trk ); // (silence "set but not used" warning)
     CKD_CACHE_GETKEY(i, devnum, trk);
     if (dev->devnum == devnum)
         cache_release (ix, i, CACHE_FREEBUF);
@@ -4639,7 +4639,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             dev->ckdloper = iobuf[44];
             /* Bytes 2-3 contain the extent block size */
             xblksz = (iobuf[14] << 8) | iobuf[15];
-        
+
             /* If extent block size is zero then use the maximum R0
                record length (as returned in device characteristics
                bytes 44 and 45) plus 8 */
@@ -4809,7 +4809,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             memcpy(cchhr, iobuf + 8, 5);
         else
             memcpy(cchhr, iobuf + 52, 5);
-        
+
         /* Byte 13 contains the sector number */
         sector = iobuf[13];
 

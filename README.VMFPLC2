@@ -81,7 +81,7 @@ CONTROL FILE:
     codepage  Is an optional code page specification to be used when dumping
               or loading the specified file. If the first word contains a '/'
               slash character anywhere in its name it is interpreted as a code
-              page specification.  Otherwise the first word is intrepretted
+              page specification.  Otherwise the first word is interpreted
               as the 'fn' filename argument and the codepage specified on the
               command line is used instead.  Code pages are only used to DUMP
               or LOAD Text files (refer to the "type" argument further below).
@@ -148,7 +148,7 @@ CONTROL FILE:
                             further above.
 
                             Trailing CR, LF, CRLF line termination characters
-                            are removed.
+                            are removed by DUMP and added by LOAD.
 
                             For RECFM F files the record is truncated if it
                             is longer than the specified lrecl or padded with
@@ -202,7 +202,7 @@ BUG REPORTS:
     Bug reports (together with your diagnosis of the fault please) should
     be reported to either the main hercules-390 discussion group on Yahoo
     or preferably, entered into the SDL Hyperion Github issue tracker at:
-    
+
         https://github.com/SDL-Hercules-390/hyperion/issues/
 
 
