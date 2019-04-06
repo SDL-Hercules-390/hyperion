@@ -551,12 +551,14 @@ U32   code;
         CRASH();
         break;
 
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
     case 0xFF4:
     /*---------------------------------------------------------------*/
     /* Diagnose FF4: Simulate BUS Error                              */
     /*---------------------------------------------------------------*/
-        raise(SIGBUS);
+        raise( SIGBUS );
         break;
+#endif
 
     case 0xFF8:
     /*---------------------------------------------------------------*/

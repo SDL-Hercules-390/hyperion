@@ -17,26 +17,35 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "inline.h"
 #include "service.h"
 
-#if defined(_FEATURE_HARDWARE_LOADER)
+#if defined( _FEATURE_HARDWARE_LOADER )
 
-#if !defined(_SCEHWL_C)
+/*-------------------------------------------------------------------*/
+/*                non-ARCH_DEP helper functions                      */
+/*              compiled only once, the first time                   */
+/*-------------------------------------------------------------------*/
 
+#ifndef _SCEHWL_C
 #define _SCEHWL_C
+
 #define BOOT_PARM_ADDR             0x01FFD000
 #define SDIAS_STORE_STATUS_MAXSIZE 0x02000000
 #define HWL_MAXFILETYPE            8    /* Number of supported files */
 
-
-/* Store Status data retrieval request */
-typedef struct _SCSI_BOOT_BK {
+/*-------------------------------------------------------------------*/
+/*                     SCSI Boot Request                             */
+/*-------------------------------------------------------------------*/
+typedef struct _SCSI_BOOT_BK
+{
 /*000*/ FWORD   xml_off;                /* Offset to XML data        */
 /*004*/ FWORD   resv004;
 /*008*/ FWORD   scp_off;                /* Offset to SCP data        */
 /*00C*/ FWORD   resv00c;
 /*010*/ FWORD   resv010[78];
 /*148*/ BYTE    ldind;                  /* Load/Dump indicator       */
+
 #define SCSI_BOOT_LDIND_LOAD     0x10
 #define SCSI_BOOT_LDIND_DUMP     0x20
+
 /*149*/ BYTE    resv149[3];
 /*14C*/ HWORD   resv14c;
 /*14E*/ HWORD   devno;                  /* Device Number             */
@@ -48,27 +57,40 @@ typedef struct _SCSI_BOOT_BK {
 /*174*/ DBLWRD  brlba;                  /* br_lba                    */
 /*17C*/ FWORD   scp_len;                /* Length of SCP Data        */
 /*180*/ FWORD   resv180[65];
-    } SCSI_BOOT_BK;
+}
+SCSI_BOOT_BK;
 
-
-/* Store Status data retrieval request */
-typedef struct _SCCB_SDIAS_BK {
+/*-------------------------------------------------------------------*/
+/*                Store Data In Absolute Storage                     */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_SDIAS_BK
+{
 /*006*/ BYTE    event_qual;
+
 #define SCCB_SDIAS_ENVENTQUAL_EQ_INFO 0x01
 #define SCCB_SDIAS_ENVENTQUAL_EQ_READ 0x00
+
 /*007*/ BYTE    data_id;
+
 #define SCCB_SDIAS_DATAID_FCPDUMP     0x00
+
 /*008*/ DBLWRD  reserved2;
 /*010*/ FWORD   event_id;
+
 #define SCCB_SDIAS_ENVENTID_4712      4712
+
 /*014*/ HWORD   reserved3;
 /*016*/ BYTE    asa_size;
+
 #define SCCB_SDIAS_ASASIZE_32         0x00
 #define SCCB_SDIAS_ASASIZE_64         0x01
+
 /*017*/ BYTE    event_status;
+
 #define SCCB_SDIAS_STATUS_ALL_STORED  0x00
 #define SCCB_SDIAS_STATUS_PART_STORED 0x03
 #define SCCB_SDIAS_STATUS_NO_DATA     0x10
+
 /*018*/ FWORD   reserved4;
 /*01C*/ FWORD   blk_cnt;
 /*020*/ DBLWRD  asa;
@@ -78,18 +100,26 @@ typedef struct _SCCB_SDIAS_BK {
 /*034*/ FWORD   lbn;
 /*038*/ HWORD   reserved7;
 /*03A*/ HWORD   dbs;
+
 #define SCCB_SDIAS_DBS_1              0x01
-    } SCCB_SDIAS_BK;
+}
+SCCB_SDIAS_BK;
 
-
-/* Hardware load request */
-typedef struct _SCCB_HWL_BK {
+/*-------------------------------------------------------------------*/
+/*                   Hardware load request                           */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_HWL_BK
+{
 /*006*/ BYTE    type;
+
 #define SCCB_HWL_TYPE_LOAD      0x00    /* Load request              */
 #define SCCB_HWL_TYPE_RESET     0x01    /* Reset request             */
 #define SCCB_HWL_TYPE_INFO      0x02    /* Load info request         */
+
 /*007*/ BYTE    file;
+
 #define SCCB_HWL_FILE_SCSIBOOT  0x02    /* SCSI Boot Loader          */
+
 /*008*/ FWORD   resv1[2];
 /*010*/ FWORD   hwl;                    /* Pointer to HWL BK         */
 /*014*/ HWORD   resv2;
@@ -98,39 +128,58 @@ typedef struct _SCCB_HWL_BK {
 /*018*/ DBLWRD  sto;                    /* Segment Table Origin      */
 /*020*/ FWORD   resv4[3];
 /*02C*/ FWORD   size;                   /* Length in 4K pages        */
-    } SCCB_HWL_BK;
+}
+SCCB_HWL_BK;
 
+/*-------------------------------------------------------------------*/
 
-struct name2file {
-    char *name;
-    unsigned int file;
-    };
+struct name2file
+{
+    const char*   name;
+    unsigned int  file;
+};
 
-
-struct name2file n2flist[] = {
+struct name2file  n2flist[]  =
+{
     { "scsiboot", SCCB_HWL_FILE_SCSIBOOT },
+
 #if 0
     { "netboot",  7 }, // Hercules implementation of PXE style netboot for OSA
 #endif
-    { NULL, 0 } };
 
+    { NULL, 0 }     // (end of list)
+};
 
-static U64 scsi_lddev_wwpn[2];
-static U64 scsi_lddev_lun[2];
-static U32 scsi_lddev_prog[2];
-static U64 scsi_lddev_brlba[2];
-static BYTE *scsi_lddev_scpdata[2];
+/*-------------------------------------------------------------------*/
 
-static TID   hwl_tid;                   /* Thread id of the hardware
-                                           loader                    */
-static char  *hwl_fn[HWL_MAXFILETYPE];  /* Files by type             */
+static U64    scsi_lddev_wwpn    [2];
+static U64    scsi_lddev_lun     [2];
+static U32    scsi_lddev_prog    [2];
+static U64    scsi_lddev_brlba   [2];
+static BYTE*  scsi_lddev_scpdata [2];
 
-#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+static TID    hwl_tid;                  /* Thread id of HW loader    */
+static char*  hwl_fn [HWL_MAXFILETYPE]; /* Files by type             */
 
-#endif /*!defined(_SCEHWL_C)*/
+#endif /* #ifndef _SCEHWL_C */
 
+#endif /* defined( _FEATURE_HARDWARE_LOADER ) */
 
-#if defined(FEATURE_HARDWARE_LOADER)
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+#if defined( FEATURE_HARDWARE_LOADER )
 /*-------------------------------------------------------------------*/
 /* Funtion to load file to main storage                              */
 /*-------------------------------------------------------------------*/
@@ -501,10 +550,11 @@ U16 evd_len;
     sccb->resp = SCCB_RESP_BACKOUT;
 #endif
 }
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
+#endif /* defined( FEATURE_HARDWARE_LOADER ) */
 
 
-#if defined(_FEATURE_HARDWARE_LOADER)
+#if defined( _FEATURE_HARDWARE_LOADER )
+
 static BYTE *sdias_hsa;
 static U32   sdias_size;
 
@@ -541,10 +591,10 @@ void ARCH_DEP(sdias_store_status)(REGS *regs)
     else
         LOGMSG( "HHCSB010 Store Status save to HSA failed\n" );
 }
-#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+#endif /* defined( _FEATURE_HARDWARE_LOADER ) */
 
 
-#if defined(_FEATURE_SCSI_IPL)
+#if defined( _FEATURE_SCSI_IPL )
 /*-------------------------------------------------------------------*/
 /* Function to store boot parameters in main storage                 */
 /*-------------------------------------------------------------------*/
@@ -648,26 +698,46 @@ int bootfile;
     return ARCH_DEP(common_load_finish)(regs);
 }
 
-
-#endif /*defined(_FEATURE_SCSI_IPL)*/
-
-
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "scescsi.c"
-#endif
-
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "scescsi.c"
-#endif
+#endif /* defined( _FEATURE_SCSI_IPL ) */
 
 
-#if defined(_FEATURE_HARDWARE_LOADER)
-static char *file2name(unsigned int file)
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "scescsi.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "scescsi.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+
+#if defined( _FEATURE_HARDWARE_LOADER )
+static const char *file2name(unsigned int file)
 {
 struct name2file *ntf;
 static char name[8];
@@ -739,9 +809,10 @@ int n;
 
     return 0;
 }
-#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+#endif /* defined( _FEATURE_HARDWARE_LOADER ) */
 
-#if defined(_FEATURE_SCSI_IPL)
+
+#if defined( _FEATURE_SCSI_IPL )
 /*-------------------------------------------------------------------*/
 /* loaddv / dumpdev commands to specify boot parameters              */
 /*-------------------------------------------------------------------*/
@@ -885,6 +956,6 @@ int load_boot (DEVBLK *dev, int cpu, int clear, int ldind)
     return -1;
 }
 
-#endif /*defined(_FEATURE_SCSI_IPL)*/
+#endif /* defined( _FEATURE_SCSI_IPL ) */
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */

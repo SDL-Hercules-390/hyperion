@@ -902,7 +902,8 @@ int     cpu;
 
 } /* end function release_config */
 
-#ifdef OPTION_SHARED_DEVICES
+#if defined( OPTION_SHARED_DEVICES )
+
 /*-------------------------------------------------------------------*/
 /*                    shrdport_connecting_thread                     */
 /*-------------------------------------------------------------------*/
@@ -916,7 +917,7 @@ static void* shrdport_connecting_thread(void* arg)
 /*-------------------------------------------------------------------*/
 /*                       configure_shrdport                          */
 /*-------------------------------------------------------------------*/
-int configure_shrdport(U16 shrdport)
+int configure_shrdport( U16 shrdport )
 {
 int rc;
 
@@ -966,7 +967,7 @@ int rc;
     }
     return 0;
 }
-#endif
+#endif /* defined( OPTION_SHARED_DEVICES ) */
 
 /*-------------------------------------------------------------------*/
 /* Check if we're a CPU thread or not.       (boolean function)      */

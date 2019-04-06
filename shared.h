@@ -488,4 +488,7 @@ static void   *serverConnect (void *psock);
 static void    shrdtrc (DEVBLK *dev, char *msg, ...) ATTR_PRINTF(2,3);
 #endif /* _SHARED_C_ */
 
+#define SHRDTRACE( fmt, ... ) \
+    shrdtrc( dev, fmt, ## __VA_ARGS__ )
+
 #endif /* _HERCULES_SHARED_H */

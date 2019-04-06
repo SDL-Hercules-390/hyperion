@@ -859,7 +859,7 @@ int  ptp_close( DEVBLK* pDEVBLK )
 //FIXME signal_thread not working for non-MSVC platforms
 #if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
-#endif /* defined(_MSVC_) */
+#endif
         detach_thread( tid );           // (wait for thread to end)
     }
 
