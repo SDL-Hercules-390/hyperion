@@ -905,9 +905,9 @@ int     cpu;
 #if defined( OPTION_SHARED_DEVICES )
 
 /*-------------------------------------------------------------------*/
-/*                    shrdport_connecting_thread                     */
+/*            shrd_devinit                                           */
 /*-------------------------------------------------------------------*/
-static void* shrdport_connecting_thread(void* arg)
+static void* shrd_devinit( void* arg )
 {
     DEVBLK* dev = (DEVBLK*) arg;
     dev->hnd->init( dev, 0, NULL );
@@ -919,52 +919,61 @@ static void* shrdport_connecting_thread(void* arg)
 /*-------------------------------------------------------------------*/
 int configure_shrdport( U16 shrdport )
 {
-int rc;
+    int      rc;
+    DEVBLK*  dev;
+    TID      tid;
 
-    if(sysblk.shrdport && shrdport)
+    obtain_lock( &sysblk.shrdlock );
+
+    if (shrdport && sysblk.shrdport)
     {
-        WRMSG(HHC00744, "E");
+        release_lock( &sysblk.shrdlock );
+        // "Shared: Server already active"
+        WRMSG( HHC00744, "E" );
         return -1;
     }
 
-    /* Start the shared server */
-    if ((sysblk.shrdport = shrdport))
-    {
-        rc = create_thread (&sysblk.shrdtid, DETACHED,
-                            shared_server, NULL, "shared_server");
-        if (rc)
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            sysblk.shrdport = 0;
-            return(1);
-        }
+    /* Set requested shared port number */
+    sysblk.shrdport = shrdport;
 
-    }
-    else
+    /* Terminate the shared_server thread if requested */
+    if (!sysblk.shrdport)
     {
-        /* Terminate the shared device listener thread */
-        if (sysblk.shrdtid)
-            signal_thread (sysblk.shrdtid, SIGUSR2);
+        shutdown_shared_server_locked( NULL );
+        release_lock( &sysblk.shrdlock );
         return 0;
     }
 
-    /* Retry pending connections */
+    /* Start the shared server thread */
+    rc = create_thread( &sysblk.shrdtid, DETACHED,
+                        shared_server, NULL, "shared_server" );
+    if (rc)
     {
-        DEVBLK *dev;
-        TID     tid;
-
-        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if (dev->connecting)
-            {
-                rc = create_thread (&tid, DETACHED,
-                           shrdport_connecting_thread, dev, "device connecting thread");
-                if (rc)
-                {
-                    WRMSG(HHC00102, "E", strerror(rc));
-                    return(1);
-                }
-            }
+        sysblk.shrdport = 0;
+        release_lock( &sysblk.shrdlock );
+        // "Error in function create_thread(): %s"
+        WRMSG( HHC00102, "E", strerror( rc ));
+        return -1;
     }
+
+    release_lock( &sysblk.shrdlock );
+
+    /* Retry any pending connections */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    {
+        if (dev->connecting)
+        {
+            rc = create_thread( &tid, DETACHED,
+                       shrd_devinit, dev, "shrd_devinit" );
+            if (rc)
+            {
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror( rc ));
+                return -1;
+            }
+        }
+    }
+
     return 0;
 }
 #endif /* defined( OPTION_SHARED_DEVICES ) */

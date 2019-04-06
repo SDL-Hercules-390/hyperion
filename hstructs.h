@@ -795,7 +795,9 @@ struct SYSBLK {
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
         COND    sync_cond;              /* COND for syncing CPU      */
         COND    sync_bc_cond;           /* COND for other CPUs       */
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
+        LOCK    shrdlock;               /* shrdport LOCK             */
+        COND    shrdcond;               /* shrdport COND             */
         TID     shrdtid;                /* Shared device listener    */
         U16     shrdport;               /* Shared device server port */
         U32     shrdcount;              /* IO count                  */

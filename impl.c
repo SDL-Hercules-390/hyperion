@@ -779,6 +779,11 @@ int     rc;
     initialize_condition( &sysblk.scrcond );
     initialize_condition( &sysblk.ioqcond );
 
+#if defined( OPTION_SHARED_DEVICES )
+    initialize_lock( &sysblk.shrdlock );
+    initialize_condition( &sysblk.shrdcond );
+#endif
+
     sysblk.mainowner = LOCK_OWNER_NONE;
     sysblk.intowner  = LOCK_OWNER_NONE;
 

@@ -2264,11 +2264,7 @@ char            threadname[16] = {0};
     /* Return if device thread already active */
     if (dev->shrdtid)
     {
-        if (dev->shrdwait)
-        {
-            signal_thread (dev->shrdtid, SIGUSR2);
-        }
-        release_lock (&dev->lock);
+        release_lock( &dev->lock );
         return NULL;
     }
 
@@ -2332,7 +2328,7 @@ char            threadname[16] = {0};
                 continue;
 
             /* Wait for a file descriptor to become busy */
-            wait.tv_sec = 10; /*SHARED_SELECT_WAIT;*/
+            wait.tv_sec = SHARED_SELECT_WAIT;
             wait.tv_usec = 0;
 
             release_lock( &dev->lock );
@@ -2468,30 +2464,33 @@ va_list         vl;
 
 } /* shrdtrc */
 
+/*-------------------------------------------------------------------
+ *              shutdown_shared_server
+ *-------------------------------------------------------------------*/
+DLL_EXPORT void shutdown_shared_server( void* unused )
+{
+    obtain_lock( &sysblk.shrdlock );
+    {
+        shutdown_shared_server_locked( unused );
+    }
+    release_lock( &sysblk.shrdlock );
+}
 
 /*-------------------------------------------------------------------
- * Shared device server
+ *              shutdown_shared_server_locked
  *-------------------------------------------------------------------*/
-LOCK shrdlock;
-COND shrdcond;
-
-static void shared_device_manager_shutdown(void * unused)
+DLL_EXPORT void shutdown_shared_server_locked( void* unused )
 {
-    UNREFERENCED(unused);
+    UNREFERENCED( unused );
 
-    if(sysblk.shrdport)
+    if (sysblk.shrdport || sysblk.shrdtid)
     {
         sysblk.shrdport = 0;
 
         if (sysblk.shrdtid)
-        {
-            signal_thread (sysblk.shrdtid, SIGUSR2);
-
-            obtain_lock(&shrdlock);
-            timed_wait_condition_relative_usecs(&shrdcond,&shrdlock,2*1000*1000,NULL);
-            release_lock(&shrdlock);
-        }
+            wait_condition( &sysblk.shrdcond, &sysblk.shrdlock );
     }
+    ASSERT( !sysblk.shrdport && !sysblk.shrdtid );
 }
 
 /*-------------------------------------------------------------------
@@ -2499,6 +2498,7 @@ static void shared_device_manager_shutdown(void * unused)
  *-------------------------------------------------------------------*/
 DLL_EXPORT void* shared_server( void* arg )
 {
+bool                    shutdown=false; /* shutdown flag             */
 int                     rc = -32767;    /* Return code               */
 int                     hi;             /* Hi fd for select          */
 int                     lsock;          /* inet socket for listening */
@@ -2514,6 +2514,7 @@ int                     optval;         /* Argument for setsockopt   */
 fd_set                  selset;         /* Read bit map for select   */
 TID                     tid;            /* Negotiation thread id     */
 char                    threadname[16] = {0};
+struct timeval          timeout = {0};
 
     // We are the "sysblk.shrdtid" thread...
 
@@ -2629,14 +2630,22 @@ char                    threadname[16] = {0};
     // "Shared: waiting for shared device requests on port %u"
     WRMSG( HHC00737, "I", sysblk.shrdport );
 
-    initialize_lock (&shrdlock);
-    initialize_condition(&shrdcond);
-
-    hdl_addshut("shared_device_manager_shutdown",shared_device_manager_shutdown, NULL);
+    /* Define shared server thread  shutdown routine */
+    hdl_addshut( "shutdown_shared_server", shutdown_shared_server, NULL );
 
     /* Handle connection requests and attention interrupts */
-    while (sysblk.shrdport)
+    while (1)
     {
+        /* Continue running (looping) as long as shrdport is defined */
+        obtain_lock( &sysblk.shrdlock );
+        {
+            shutdown = (sysblk.shrdport ? false : true);
+        }
+        release_lock( &sysblk.shrdlock );
+
+        if (shutdown)
+            break;
+
         /* Initialize the select parameters */
         FD_ZERO( &selset );
         FD_SET( lsock, &selset );
@@ -2645,7 +2654,9 @@ char                    threadname[16] = {0};
             FD_SET( usock, &selset );
 
         /* Wait for a file descriptor to become ready */
-        rc = select ( hi, &selset, NULL, NULL, NULL );
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 500000;  // 0.5 seconds
+        rc = select( hi, &selset, NULL, NULL, &timeout );
 
         if (rc == 0)
             continue;
@@ -2700,8 +2711,11 @@ char                    threadname[16] = {0};
 
         } /* end if(rsock) */
 
+    } /* end while (1) */
 
-    } /* end while */
+    /* Remove shut entry so we can do a new 'hdl_addshut' next time */
+    if (!sysblk.shutdown)
+        hdl_delshut( shutdown_shared_server, NULL );
 
     /* Close the listening sockets */
     close_socket( lsock );
@@ -2714,12 +2728,13 @@ char                    threadname[16] = {0};
     }
 #endif
 
-    signal_condition(&shrdcond);
-
-    if ( !sysblk.shutdown )
-        hdl_delshut(shared_device_manager_shutdown, NULL);
-
-    sysblk.shrdtid = 0;
+    /* Notify "shutdown_shared_server" that we've exited */
+    obtain_lock( &sysblk.shrdlock );
+    {
+        sysblk.shrdtid = 0;
+        signal_condition( &sysblk.shrdcond );
+    }
+    release_lock( &sysblk.shrdlock );
 
     WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), threadname );
 
