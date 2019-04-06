@@ -56,8 +56,6 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #define FBAOPER_WRTVRFY         0x05    /* ...write data and verify  */
 #define FBAOPER_READ            0x06    /* ...read data              */
 
-#define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
-
 static int fba_read (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat);
 
 /*-------------------------------------------------------------------*/
@@ -367,12 +365,12 @@ static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
 {
 off_t   offset;                         /* Offset of block group     */
 
-    offset = blkgrp *          FBA_BLKGRP_SIZE;
+    offset = blkgrp *          CFBA_BLKGRP_SIZE;
 
-    if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
+    if (dev->fbaend - offset < CFBA_BLKGRP_SIZE)
         return (int)(dev->fbaend - offset);
     else
-        return                 FBA_BLKGRP_SIZE;
+        return                 CFBA_BLKGRP_SIZE;
 }
 
 /*-------------------------------------------------------------------*/
@@ -397,12 +395,12 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Read the block group */
-    blkgrp = (int)(dev->fbarba / FBA_BLKGRP_SIZE);
+    blkgrp = (int)(dev->fbarba / CFBA_BLKGRP_SIZE);
     rc = (dev->hnd->read) (dev, blkgrp, unitstat);
     if (rc < 0)
         return -1;
 
-    off = dev->fbarba % FBA_BLKGRP_SIZE;
+    off = dev->fbarba % CFBA_BLKGRP_SIZE;
     blklen = dev->buflen - off;
 
     /* Initialize target buffer offset and length to copy */
@@ -461,12 +459,12 @@ int     copylen;                        /* Length left to copy       */
     }
 
     /* Read the block group */
-    blkgrp = (int)(dev->fbarba / FBA_BLKGRP_SIZE);
+    blkgrp = (int)(dev->fbarba / CFBA_BLKGRP_SIZE);
     rc = (dev->hnd->read) (dev, blkgrp, unitstat);
     if (rc < 0)
         return -1;
 
-    off = dev->fbarba % FBA_BLKGRP_SIZE;
+    off = dev->fbarba % CFBA_BLKGRP_SIZE;
     blklen = dev->buflen - off;
 
     /* Initialize source buffer offset and length to copy */
@@ -519,7 +517,7 @@ off_t           offset;                 /* File offsets              */
         dev->bufupd = 0;
 
         /* Seek to the old block group offset */
-        offset = (off_t)(((S64)dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
+        offset = (off_t)(((S64)dev->bufcur * CFBA_BLKGRP_SIZE) + dev->bufupdlo);
         offset = lseek (dev->fd, offset, SEEK_SET);
         if (offset < 0)
         {
@@ -619,11 +617,11 @@ fba_read_blkgrp_retry:
     cache_setkey (CACHE_DEVBUF, o, FBA_CACHE_SETKEY(dev->devnum, blkgrp));
     cache_setflag(CACHE_DEVBUF, o, 0, FBA_CACHE_ACTIVE|DEVBUF_TYPE_FBA);
     cache_setage (CACHE_DEVBUF, o);
-    dev->buf = cache_getbuf(CACHE_DEVBUF, o, FBA_BLKGRP_SIZE);
+    dev->buf = cache_getbuf(CACHE_DEVBUF, o, CFBA_BLKGRP_SIZE);
     cache_unlock (CACHE_DEVBUF);
 
     /* Get offset and length */
-    offset = (off_t)((S64)blkgrp * FBA_BLKGRP_SIZE);
+    offset = (off_t)((S64)blkgrp * CFBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
     // "%1d:%04X FBA file %s: read blkgrp %d offset %"PRId64" len %d"
