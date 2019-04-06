@@ -574,14 +574,37 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00521 "Maximum of %u %s in a 2GB file"
 //efine HHC00522 - HHC00599 (available)
 
-// reserve 006xx for sce dasd device related messages
+// scedasd.c
 #define HHC00600 "SCE file %s: error in function %s: %s"
 #define HHC00601 "SCE file %s: load from file failed: %s"
 #define HHC00602 "SCE file %s: load from path failed: %s"
 #define HHC00603 "SCE file %s: load main terminated at end of mainstor"
 #define HHC00604 "SCE file %s: access error on image %s: %s"
 #define HHC00605 "SCE file %s: access error: %s"
-//efine HHC00606 - HHC00699 (available)
+//efine HHC00606 - HHC00649 (available)
+
+// scescsi.c
+#define HHC00650 "%s open error: %s"
+#define HHC00651 "Loading %s"
+#define HHC00652 "Hardware loader %s: %s"
+#define HHC00653 "Hardware loader file type %d not not supported"
+#define HHC00654 "Unknown hardware loader request type %2.2X"
+#define HHC00655 "Store Status save to HSA failed"
+#define HHC00656 "Cannot load bootstrap loader %s: %s"
+#define HHC00657 "Invalid file %s"
+//efine HHC00658 (available)
+//efine HHC00659 (available)
+#define HHC00660 "%-8s %s"
+//efine HHC00661 - HHC00669 (available)
+#define HHC00670 "Invalid %s"
+#define HHC00671 "Invalid option %s"
+//efine HHC00672 - HHC00679 (available)
+#define HHC00680 "portname %16.16"PRIx64
+#define HHC00681 "lun      %16.16"PRIx64
+#define HHC00682 "bootprog %8.8x"
+#define HHC00683 "br_lba   %16.16"PRIx64
+#define HHC00684 "scpdata  %s"
+//efine HHC00685 - HHC00699 (available)
 
 // reserve 007xx for shared device related messages
 #define HHC00700 "Shared: parameter %s in argument %d is invalid"
