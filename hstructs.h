@@ -606,8 +606,8 @@ struct SYSBLK {
         int     cnslrpipe;              /* fd for receiving signal   */
         LOCK    sockpipe_lock;          /* signaled flag access lock */
         int     sockpipe_flag;          /* 1 == already signaled     */
-        int     sockwpipe;              /* Sockdev signaling pipe Wr */
-        int     sockrpipe;              /* Sockdev signaling pipe Rd */
+        int     sockwpipe;              /* fd for sending signal     */
+        int     sockrpipe;              /* fd for receiving signal   */
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */

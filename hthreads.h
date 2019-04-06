@@ -231,18 +231,12 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 /* Relative priority 3, for example, is one priority unit (one host  */
 /* priority "slot") above relative priority 2, etc.                  */
 
-//efine DEFAULT_XXX_PRIO        1       /* WatchDog thread priority  */
 #define DEFAULT_CPU_PRIO        2       /* CPU threads priority      */
 #define DEFAULT_DEV_PRIO        3       /* Device threads priority   */
 #define DEFAULT_SRV_PRIO        4       /* Server threads priority   */
 #define DEFAULT_HERC_PRIO       5       /* Main Herc thread priority */
 //efine DEFAULT_XXX_PRIO        6       /* (not used)                */
 #define DEFAULT_TOD_PRIO        7       /* TOD Clock/Timer priority  */
-
-/* (not really part of hthreads but a convenient place for #define)  */
-
-#define MIN_NICE_VALUE        -20       /* Minimum 'nice' value      */
-#define MAX_NICE_VALUE        +19       /* Maximum 'nice' value      */
 
 /*-------------------------------------------------------------------*/
 /*                       Thread Names                                */

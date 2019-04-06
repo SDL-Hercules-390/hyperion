@@ -469,19 +469,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*-------------------------------------------------------------------*/
 /*      CRASH                       (with hopefully a dump)          */
 /*-------------------------------------------------------------------*/
-
-#ifdef _MSVC_
-  #define CRASH() \
-    do { \
-      BYTE *p = NULL; \
-      *p=0; \
-    } while (0)
-#else
-  #define CRASH() \
-    do { \
-      abort(); \
-    } while (0)
-#endif
+#define CRASH()         do { BYTE* p=NULL; *p=0; } while (0)
 
 /*-------------------------------------------------------------------*/
 /*      Perform standard utility initialization                      */

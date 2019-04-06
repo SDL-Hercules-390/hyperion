@@ -120,18 +120,23 @@ static void delayed_exit (int exit_code)
 }
 
 /*-------------------------------------------------------------------*/
-/* Signal handler for SIGINT signal                                  */
+/*                   SIGINT signal handler                           */
 /*-------------------------------------------------------------------*/
-static void sigint_handler (int signo)
+/*                                                                   */
+/*  The SIGINT signal is sent to a process by its controlling        */
+/*  terminal when a user wishes to interrupt the process. This       */
+/*  is typically initiated by pressing Ctrl+C, but on some           */
+/*  systems the "delete" character or "break" key can be used.       */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static void sigint_handler( int signo )
 {
-//  logmsg ("impl.c: sigint handler entered for thread %lu\n",/*debug*/
-//          thread_id());                                     /*debug*/
+    UNREFERENCED( signo );
 
-    UNREFERENCED(signo);
+    signal( SIGINT, sigint_handler );
 
-    signal(SIGINT, sigint_handler);
     /* Ignore signal unless presented on console thread */
-    if ( !equal_threads( thread_id(), sysblk.cnsltid ) )
+    if (!equal_threads( thread_id(), sysblk.cnsltid ))
         return;
 
     /* Exit if previous SIGINT request was not actioned */
@@ -148,29 +153,33 @@ static void sigint_handler (int signo)
     /* Activate instruction stepping */
     sysblk.inststep = 1;
     SET_IC_TRACE;
-    return;
-} /* end function sigint_handler */
+}
 
 /*-------------------------------------------------------------------*/
-/* Signal handler for SIGTERM signal                                 */
+/*                    SIGTERM signal handler                         */
 /*-------------------------------------------------------------------*/
-static void sigterm_handler (int signo)
+/*                                                                   */
+/*  The SIGTERM signal is sent to a process to request its           */
+/*  termination. Unlike the SIGKILL signal, it can be caught         */
+/*  and interpreted or ignored by the process. This allows the       */
+/*  process to perform nice termination releasing resources          */
+/*  and saving state if appropriate. SIGINT is nearly identical      */
+/*  to SIGTERM.                                                      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static void sigterm_handler( int signo )
 {
-//  logmsg ("impl.c: sigterm handler entered for thread %lu\n",/*debug*/
-//          thread_id());                                      /*debug*/
+    UNREFERENCED( signo );
 
-    UNREFERENCED(signo);
+    signal( SIGTERM, sigterm_handler );
 
-    signal(SIGTERM, sigterm_handler);
     /* Ignore signal unless presented on main program (impl) thread */
-    if ( !equal_threads( thread_id(), sysblk.impltid ) )
+    if (!equal_threads( thread_id(), sysblk.impltid ))
         return;
 
     /* Initiate system shutdown */
     do_shutdown();
-
-    return;
-} /* end function sigterm_handler */
+}
 
 #if defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
@@ -1074,6 +1083,19 @@ int     rc;
         }
     }
 
+    /* The SIGINT signal is sent to a process by its controlling
+       terminal when a user wishes to interrupt the process. This
+       is typically initiated by pressing Ctrl+C, but on some
+       systems, the "delete" character or "break" key can be used.
+
+       The SIGTERM signal is sent to a process to request its
+       termination. Unlike the SIGKILL signal, it can be caught
+       and interpreted or ignored by the process. This allows
+       the process to perform nice termination releasing resources
+       and saving state if appropriate. SIGINT is nearly identical
+       to SIGTERM.
+    */
+
     /* Register the SIGINT handler */
     if (signal( SIGINT, sigint_handler ) == SIG_ERR)
     {
@@ -1099,6 +1121,11 @@ int     rc;
         TID dummy;
         BOOL bSuccess = FALSE;
 
+        /* The Windows the console_ctrl_handler function
+           accomplishes the same thing as what a SIGINT or
+           SIGTERM signal handler does on Unix systems: it
+           handles Ctrl+C and Close events.
+        */
         if (!SetConsoleCtrlHandler( console_ctrl_handler, TRUE ))
         {
             // "Cannot register %s handler: %s"
@@ -1135,12 +1162,13 @@ int     rc;
     }
 #endif
 
-#if defined(HAVE_DECL_SIGPIPE) && HAVE_DECL_SIGPIPE
+#if defined( HAVE_DECL_SIGPIPE ) && HAVE_DECL_SIGPIPE
     /* Ignore the SIGPIPE signal, otherwise Hercules may terminate with
        Broken Pipe error if the printer driver writes to a closed pipe */
-    if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
+    if (signal( SIGPIPE, SIG_IGN ) == SIG_ERR)
     {
-        WRMSG(HHC01411, "E", strerror(errno));
+        // "Cannot suppress SIGPIPE signal: %s"
+        WRMSG( HHC01411, "E", strerror( errno ));
     }
 #endif
 

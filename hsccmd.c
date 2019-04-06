@@ -4415,41 +4415,45 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #if defined( OPTION_SHARED_DEVICES )
-static int default_shrdport = 3390;
 /*-------------------------------------------------------------------*/
 /* shrdport - shared dasd port number                                */
 /*-------------------------------------------------------------------*/
-int shrdport_cmd(int argc, char *argv[], char *cmdline)
+int shrdport_cmd( int argc, char* argv[], char* cmdline )
 {
-U16  shrdport;
-BYTE c;
+    static int default_shrdport = SHARED_DEFAULT_PORT;
+    U16  shrdport;
+    BYTE c;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     /* Update shared device port number */
     if (argc == 2)
     {
-        if ( CMD( argv[1], start, 5))
-            configure_shrdport(default_shrdport);
+        if (CMD( argv[1], START, 5 ))
+            configure_shrdport( default_shrdport );
         else
-        if( CMD( argv[1], stop, 4))
-            configure_shrdport( 0);
+        if (CMD( argv[1], STOP, 4 ))
+            configure_shrdport( 0 );
         else
-        if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
-          && (shrdport >= 1024 || shrdport == 0))
+        if (1
+            && strlen(  argv[1] ) >= 1
+            && sscanf( argv[1], "%hu%c", &shrdport, &c ) == 1
+            && (shrdport >= 1024 || shrdport == 0)
+        )
         {
-            if(!configure_shrdport(shrdport))
+            if (!configure_shrdport( shrdport ))
                 default_shrdport = shrdport;
         }
         else
         {
+            // "Invalid value %s specified for %s"
             WRMSG( HHC01451, "E", argv[1], argv[0] );
             return 1;
         }
     }
     else
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return 1;
     }

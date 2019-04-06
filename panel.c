@@ -696,7 +696,7 @@ static void NP_screen_redraw (REGS *regs)
     draw_text ("| ");
     set_color (COLOR_WHITE, COLOR_BLUE);
 
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
 
     /* Center "Peripherals" on the right-hand-side */
     i = 40 + snprintf(buf, sizeof(buf),
@@ -709,7 +709,7 @@ static void NP_screen_redraw (REGS *regs)
     draw_text (buf);
     fill_text (' ', (short)cons_cols);
 
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
 
     /* Line 2 - peripheral headings */
     set_pos (2, 41);
@@ -2996,9 +2996,9 @@ FinishShutdown:
 
                     if (0
                         || ( sysblk.hicpu && (cnt_stopped == 0 && cnt_disabled == 0))
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
                         || (!sysblk.hicpu && (sysblk.shrdport))
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
                     )
                         state = "GREEN";
                     set_console_title(state);
@@ -3097,9 +3097,9 @@ FinishShutdown:
                     && (len + i + (numcpu ? 13 : 11)) < cons_cols
                     && (0
                         ||   numcpu
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
                         || (!numcpu && sysblk.shrdport)
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
                        )
                 )
                 {
