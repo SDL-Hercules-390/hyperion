@@ -789,8 +789,6 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             }
             PTT_DEBUG(         "REL  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             release_lock( &pLCSPORT->PortEventLock );
-            PTT_DEBUG( "signal_thread     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
-            signal_thread( tid, SIGUSR2 );
             PTT_DEBUG( "join_thread       ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             join_thread( tid, NULL );
             PTT_DEBUG( "detach_thread     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );

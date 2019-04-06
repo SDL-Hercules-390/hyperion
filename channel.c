@@ -1787,12 +1787,6 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
             OBTAIN_INTLOCK( NULL );
             obtain_lock( &dev->lock );
         }
-#if !defined( NO_SIGABEND_HANDLER )
-        else if (dev->ctctype)
-        {
-            signal_thread( dev->tid, SIGUSR2 );
-        }
-#endif
     }
 
     /* Perform clear subchannel operation and queue interrupt */
@@ -1868,12 +1862,8 @@ perform_halt_and_release_lock (DEVBLK *dev)
          * provided by the handler code at init; SCSW has not yet been
          * reset to permit device handlers to see HALT condition.
          */
-        if(dev->hnd->halt!=NULL)
-            dev->hnd->halt(dev);
-#if !defined(NO_SIGABEND_HANDLER)
-        else if( dev->ctctype && dev->tid)
-            signal_thread(dev->tid, SIGUSR2);
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
+        if (dev->hnd->halt != NULL)
+            dev->hnd->halt( dev );
 
         /* Mark pending interrupt */
         dev->scsw.flag3 |= SCSW3_SC_PEND;
