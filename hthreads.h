@@ -127,7 +127,6 @@ typedef fthread_mutex_t         HLOCK;
 #define hthread_create( pt, pa, fn, ar )        fthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
 #define hthread_detach( tid )                   fthread_detach( (hthread_t)(tid) )
 #define hthread_join( tid, prc )                fthread_join( (hthread_t)(tid), (prc) )
-#define hthread_kill( tid, sig )                fthread_kill( (hthread_t)(tid), (sig) )
 #define hthread_exit( rc )                      fthread_exit( rc )
 #define hthread_self()                          fthread_self()
 #define hthread_equal( tid1, tid2 )             fthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
@@ -191,7 +190,6 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_create( pt, pa, fn, ar )        pthread_create( (hthread_t*)(pt), (pa), (fn), (ar) )
 #define hthread_detach( tid )                   pthread_detach( (hthread_t)(tid) )
 #define hthread_join( tid, prc )                pthread_join( (hthread_t)(tid), (prc) )
-#define hthread_kill( tid, sig )                pthread_kill( (hthread_t)(tid), (sig) )
 #define hthread_exit( rc )                      pthread_exit( rc )
 #define hthread_self()                          pthread_self()
 #define hthread_equal( tid1, tid2 )             pthread_equal( (hthread_t)(tid1), (hthread_t)(tid2) )
@@ -315,7 +313,6 @@ HT_DLL_IMPORT int  hthread_initialize_detach_attr ( ATTR* pat, const char* locat
 HT_DLL_IMPORT int  hthread_create_thread          ( TID* ptid, ATTR* pat, THREAD_FUNC* pfn, void* arg, const char* name, const char* location );
 HT_DLL_IMPORT int  hthread_join_thread            ( TID tid, void** prc, const char* location );
 HT_DLL_IMPORT int  hthread_detach_thread          ( TID tid, const char* location );
-HT_DLL_IMPORT int  hthread_signal_thread          ( TID tid, int sig, const char* location );
 HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
 HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
@@ -355,7 +352,6 @@ HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* locatio
 #define create_thread( pt, pa, fn, ar, nm )     hthread_create_thread( (pt), (pa), (fn), (ar), (nm), PTT_LOC )
 #define join_thread( tid, prc )                 hthread_join_thread( (tid), (prc), PTT_LOC )
 #define detach_thread( tid )                    hthread_detach_thread( tid, PTT_LOC )
-#define signal_thread( tid, sig )               hthread_signal_thread( (tid), (sig), PTT_LOC )
 #define thread_id()                             hthread_thread_id( PTT_LOC )
 #define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )
 #define equal_threads( tid1, tid2 )             hthread_equal_threads( (tid1), (tid2), PTT_LOC )

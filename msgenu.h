@@ -677,11 +677,11 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00819 "Processor %s%02X: online"
 #define HHC00820 "Processor %s%02X: offline"
 #define HHC00821 "Processor %s%02X: vector facility configured %s"
-#define HHC00822 "Processor %s%02X: machine check due to host error: %s"
-#define HHC00823 "Processor %s%02X: check-stop due to host error: %s"
-#define HHC00824 "Processor %s%02X: machine check code %16.16"PRIX64
-#define HHC00825 "USR2 signal received for undetermined device"
-#define HHC00826 "%1d:%04X: USR2 signal received"
+//efine HHC00822 (available)
+//efine HHC00823 (available)
+//efine HHC00824 (available)
+//efine HHC00825 (available)
+//efine HHC00826 (available)
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
 //efine HHC00830 (available)

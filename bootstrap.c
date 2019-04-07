@@ -21,10 +21,96 @@
 #include "cckddasd.h"
 
 #if !defined( _MSVC_ )
+
+struct termios stdin_attrs    = {0};    // (saved stdin  term settings)
+struct termios stdout_attrs   = {0};    // (saved stdout term settings)
+struct termios stderr_attrs   = {0};    // (saved stderr term settings)
+
+static void save_term_attrs()
+{
+    tcgetattr( STDIN_FILENO,  &stdin_attrs  );
+    tcgetattr( STDOUT_FILENO, &stdout_attrs );
+    tcgetattr( STDERR_FILENO, &stderr_attrs );
+}
+
+static void restore_term_attrs()
+{
+    tcsetattr( STDIN_FILENO,  TCSANOW, &stdin_attrs  );
+    tcsetattr( STDOUT_FILENO, TCSANOW, &stdout_attrs );
+    tcsetattr( STDERR_FILENO, TCSANOW, &stderr_attrs );
+}
+
+#if defined( HAVE_SIGNAL_HANDLING )
+
+int crash_signo = -1;                   // Saved signal number of crash
+
+struct sigaction  sa_CRASH    = {0};    // (for catching exceptions)
+struct sigaction  sa_SIGFPE   = {0};    // (original SIGFPE  action)
+struct sigaction  sa_SIGILL   = {0};    // (original SIGILL  action)
+struct sigaction  sa_SIGSEGV  = {0};    // (original SIGSEGV action)
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+struct sigaction  sa_SIGBUS   = {0};    // (original SIGBUS  action)
+#endif
+
+static void crash_signal_handler( int signo );
+
+static void install_crash_handler()
+{
+    /* Install our crash signal handler */
+    sa_CRASH.sa_handler = &crash_signal_handler;
+    sigaction( SIGFPE,  &sa_CRASH, &sa_SIGFPE  );
+    sigaction( SIGILL,  &sa_CRASH, &sa_SIGILL  );
+    sigaction( SIGSEGV, &sa_CRASH, &sa_SIGSEGV );
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+    sigaction( SIGBUS,  &sa_CRASH, &sa_SIGBUS  );
+#endif
+}
+
+static void uninstall_crash_handler()
+{
+    /* Restore original signal handlers */
+    sigaction( SIGFPE,  &sa_SIGFPE,  0 );
+    sigaction( SIGILL,  &sa_SIGILL,  0 );
+    sigaction( SIGSEGV, &sa_SIGSEGV, 0 );
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+    sigaction( SIGBUS,  &sa_SIGBUS,  0 );
+#endif
+}
+
+static void log_crashed_msg( FILE* stream )
+{
+    fprintf
+    (
+        stream,
+
+        "\n"
+        "\n"
+        "\n"
+        "    +++ OOPS! +++\n"
+        "\n"
+        "Hercules has crashed! (%s)\n"
+        "\n"
+
+        , strsignal( crash_signo )
+    );
+    fflush( stream );
+}
+
+static void crash_signal_handler( int signo )
+{
+    crash_signo = signo;
+    uninstall_crash_handler();
+    restore_term_attrs();
+    log_crashed_msg( stderr );
+    log_crashed_msg( stdout );
+}
+#endif /* defined( HAVE_SIGNAL_HANDLING ) */
+
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*  For Unix-like platforms, the main() function:                    */
 /*                                                                   */
+/*   - Installs a crash handler if signal handling is available      */
 /*   - Sets the privilege level                                      */
 /*   - Initializes the LIBTOOL environment                           */
 /*   - Passes control to the impl() function in impl.c               */
@@ -32,13 +118,19 @@
 /*-------------------------------------------------------------------*/
 int main( int ac, char* av[] )
 {
+    int rc = 0;
+    save_term_attrs();
     DROP_PRIVILEGES( CAP_SYS_NICE );
     SET_THREAD_NAME( BOOTSTRAP_NAME );
-
 #if defined( HDL_USE_LIBTOOL )
     LTDL_SET_PRELOADED_SYMBOLS();
 #endif
-    exit( impl( ac, av ));
+#if defined( HAVE_SIGNAL_HANDLING )
+    install_crash_handler();
+#endif
+    rc = impl( ac, av );
+    restore_term_attrs();
+    return rc;
 }
 
 #else // defined( _MSVC_ )

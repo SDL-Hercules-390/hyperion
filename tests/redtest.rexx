@@ -182,7 +182,7 @@ Call SetVar 'rexx_supported'    FALSE
 Call SetVar 'rexx_SysPath'      FALSE
 Call SetVar 'rexx_VERSION'      ''
 Call SetVar 'shared_devices'    FALSE
-Call SetVar 'SIGABEND'          FALSE
+Call SetVar 'sighandling'       FALSE
 Call SetVar 'sqrtl'             FALSE
 Call SetVar 'store_dw'          FALSE
 Call SetVar 'syncio'            FALSE
@@ -368,7 +368,7 @@ Select
          When rest = 'Shared Devices support'        Then Call SetVar 'shared_devices' YesOrNo
          When rest = 'Dynamic loading support'       Then Call SetVar 'HDL'            YesOrNo
          When rest = 'External GUI support'          Then Call SetVar 'externalgui'    YesOrNo
-         When rest = 'SIGABEND handler'              Then Call SetVar 'SIGABEND'       YesOrNo
+         When rest = 'Signal handling'               Then Call SetVar 'sighandling'    YesOrNo
          When rest = 'National Language Support'     Then Call SetVar 'NLS'            YesOrNo
          When rest = 'Automatic Operator support'    Then Call SetVar 'HAO'            YesOrNo
          When rest = 'Regular Expressions support'   Then Call SetVar 'regex'          YesOrNo

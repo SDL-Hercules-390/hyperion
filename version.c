@@ -628,10 +628,10 @@ static const char *build_info[] = {
     #endif
 #endif
 
-#if defined(NO_SIGABEND_HANDLER)
-    "Without SIGABEND handler",
+#if defined( HAVE_SIGNAL_HANDLING )
+    "With    Signal handling",
 #else
-    "With    SIGABEND handler",
+    "Without Signal handling",
 #endif
 
 #if defined( CCKD_BZIP2 )

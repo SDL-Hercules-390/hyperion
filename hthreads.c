@@ -842,17 +842,6 @@ DLL_EXPORT int  hthread_detach_thread( TID tid, const char* location )
 }
 
 /*-------------------------------------------------------------------*/
-/* Send a signal to a thread                                         */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_signal_thread( TID tid, int sig, const char* location )
-{
-    int rc;
-    PTTRACE( "kill", (void*) tid, (void*)(long)sig, location, PTT_MAGIC );
-    rc = hthread_kill( tid, sig );
-    return rc;
-}
-
-/*-------------------------------------------------------------------*/
 /* Return calling thread's ID                                        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT TID  hthread_thread_id( const char* location )

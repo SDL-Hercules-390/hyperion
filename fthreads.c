@@ -1210,21 +1210,6 @@ int  fthread_attr_getstacksize
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
-
-DLL_EXPORT
-int  fthread_kill       // FIXME: TODO:
-(
-    int  dummy1,
-    int  dummy2
-)
-{
-    UNREFERENCED ( dummy1 );
-    UNREFERENCED ( dummy2 );
-    return RC(ENOTSUP);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
 // Return thread-id...
 
 DLL_EXPORT

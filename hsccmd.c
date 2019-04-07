@@ -131,22 +131,33 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     if (sysblk.scrtest)
     {
+        // "%s%s"
         WRMSG( HHC00001, "E", "", "WRONG! Perhaps you meant 'runtest' instead?");
         return -1;
     }
 
     if (argc > 1)
     {
-        if ( CMD(argv[1],crash,5) )
-            CRASH();
-        else if (CMD( argv[1], locks, 5 ))
+        if      (CMD( argv[1], CRASH,   5 )) CRASH();
+#if defined( HAVE_SIGNAL_HANDLING )
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+        else if (CMD( argv[1], SIGBUS,  6 )) raise( SIGBUS  );
+#endif
+        else if (CMD( argv[1], SIGFPE,  6 )) raise( SIGFPE  );
+        else if (CMD( argv[1], SIGILL,  6 )) raise( SIGILL  );
+        else if (CMD( argv[1], SIGSEGV, 7 )) raise( SIGSEGV );
+#endif
+        else if (CMD( argv[1], LOCKS,   5 ))
         {
             // test thread exit with lock still held
             static TID tid;
             VERIFY( create_thread( &tid, DETACHED,
                 test_locks_thread, 0, "test_locks_thread" ) == 0);
-            return 0;
         }
+        else
+            // "%s%s"
+            WRMSG( HHC00001, "E", argv[1], ": unsupported $test argument");
+        return 0;
     }
 
     /*-------------------------------------------*/

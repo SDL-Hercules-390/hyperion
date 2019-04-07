@@ -3174,14 +3174,12 @@ int lddev_cmd (int, char **, char *);
 
 /* Functions in module machchk.c */
 int  ARCH_DEP( present_mck_interrupt ) (REGS *regs, U64 *mcic, U32 *xdmg, RADR *fsta);
-void ARCH_DEP( sync_mck_interrupt ) (REGS *regs);
 void machine_check_crwpend (void);
 void build_attach_chrpt( DEVBLK *dev );
 void build_detach_chrpt( DEVBLK *dev );
 void build_chp_reset_chrpt( BYTE chpid, int solicited, int found );
 int  queue_channel_report( U32* crwarray, U32 crwcount );
 U32  get_next_channel_report_word( REGS * );
-void sigabend_handler (int signo);
 
 
 /* Functions in module opcode.c */
