@@ -807,27 +807,6 @@ static int scedio_pending;
     }
     else
     {
-#if !defined(NO_SIGABEND_HANDLER)
-        switch(scedio_bk->flag1) {
-            case SCCB_SCEDIO_FLG1_IOV:
-                scediov_bk = (SCCB_SCEDIOV_BK*)(scedio_bk + 1);
-                switch(scediov_bk->type) {
-                    case SCCB_SCEDIOV_TYPE_INIT:
-                        /* Kill the scedio thread if it is active */
-                        if( scedio_tid )
-                        {
-                            OBTAIN_INTLOCK(NULL);
-                            signal_thread(scedio_tid, SIGKILL);
-                            scedio_tid = 0;
-                            scedio_pending = 0;
-                            RELEASE_INTLOCK(NULL);
-                        }
-                        break;
-                }
-                break;
-        }
-#endif
-
         /* Take a copy of the scedio_bk in the SCCB */
         static_scedio_bk.scedio_bk = *scedio_bk;
         switch(scedio_bk->flag1) {

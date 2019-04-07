@@ -314,9 +314,6 @@ U64     dreg;
         {
             // "Processor %s%02X: error in function %s: %s"
             WRMSG( HHC00813, "E", PTYPSTR( regs->cpuad ), regs->cpuad, "calloc()", strerror( errno ));
-#if !defined(NO_SIGABEND_HANDLER)
-            signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
-#endif
             return;
         }
         cpu_init( regs->cpuad, GUESTREGS, regs );

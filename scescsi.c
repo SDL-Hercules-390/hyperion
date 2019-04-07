@@ -393,23 +393,6 @@ static int hwl_pending;
 
         return 0;
 
-
-#if !defined(NO_SIGABEND_HANDLER)
-    case SCCB_HWL_TYPE_RESET:
-
-        /* Kill the hwl thread if it is active */
-        if( hwl_tid )
-        {
-            OBTAIN_INTLOCK(NULL);
-            signal_thread(hwl_tid, SIGKILL);
-            hwl_tid = 0;
-            hwl_pending = 0;
-            RELEASE_INTLOCK(NULL);
-        }
-        return 0;
-#endif
-
-
     default:
         // "Unknown hardware loader request type %2.2X"
         WRMSG( HHC00654, "E", hwl_bk->type );

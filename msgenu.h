@@ -2574,10 +2574,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90512 "%s COMM: Received IAC %s"
 //efine HHC90513 - HHC90549 (available)
 
-// range 90550 - 90599 Processing/Processor Damage messages
-#define HHC90550 "MACHINE CHECK: Instruction Processing Damage: %2.2x R[x]SBG"
-//efine HHC90551 - HHC90599 (available)
-
+// range 90550 - 90599 available
 // range 90600 - 90699 available
 // range 90700 - 90799 available
 // range 90800 - 90899 available
