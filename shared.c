@@ -18,7 +18,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-#if 1 // defined( OPTION_SHARED_DEVICES )
+#if defined( OPTION_SHARED_DEVICES )
 
 /*-------------------------------------------------------------------
  *                    Global variables
