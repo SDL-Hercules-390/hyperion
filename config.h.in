@@ -131,14 +131,6 @@
    don't. */
 #undef HAVE_DECL_SIGPIPE
 
-/* Define to 1 if you have the declaration of `SIGUSR1', and to 0 if you
-   don't. */
-#undef HAVE_DECL_SIGUSR1
-
-/* Define to 1 if you have the declaration of `SIGUSR2', and to 0 if you
-   don't. */
-#undef HAVE_DECL_SIGUSR2
-
 /* Define to 1 if you have the declaration of `SIOCADDRT', and to 0 if you
    don't. */
 #undef HAVE_DECL_SIOCADDRT
@@ -498,6 +490,9 @@
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
+
+/* Define to if signal handling is available */
+#undef HAVE_SIGNAL_HANDLING
 
 /* Define to 1 if you have the `sleep' function. */
 #undef HAVE_SLEEP
