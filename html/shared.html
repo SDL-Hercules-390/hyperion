@@ -12,10 +12,10 @@ Hercules: Shared Device Server
 <h2>Contents</h2>
 <ul>
 <li><a href="#overview">     Overview      </a>
+<li><a href="#commands">     Commands      </a>
 <li><a href="#technical">    Technical BS  </a>
 <li><a href="#caching">      Caching       </a>
 <li><a href="#compression">  Compression   </a>
-<li><a href="#todo">         To Do         </a>
 </ul>
 
 <p>
@@ -68,11 +68,11 @@ Interestingly, the instance on the local host listening on 3990
 could have a statement:
 
 <pre class="jcl">
-    0100  3350  192.168.200.1::0200
+    0100  3350  192.168.200.1:<b>:0200</b>
 </pre>
 
 <p>
-which means that instance in turn will use device 0200 on the
+which means that instance in turn will use device <b>0200</b> on the
 server at 192.168.200.1 listening on port 3990.  The original
 instance will have to 'hop' thru the second instance to get
 to the real device.
@@ -83,8 +83,8 @@ Device sharing can be 'split' between multiple instances.
 For example, suppose instance A has:
 
 <pre class="jcl">
-    SHRDPORT 3990
-    0100  3350  localhost:3991
+    SHRDPORT <b>3990</b>
+    0100  3350  localhost<b>:3991</b>
     0101  3350  mvscat
 </pre>
 
@@ -92,7 +92,7 @@ For example, suppose instance A has:
 and instance B has:
 
 <pre class="jcl">
-    SHRDPORT 3991
+    SHRDPORT <b>3991</b>
     0100  3350  mvsres
     0101  3350  localhost
 </pre>
@@ -110,6 +110,33 @@ to access a server gets the 'connecting' bit set on in the DEVBLK
 and the device still needs to initialize.  After the shared server
 is started, a thread is attached for each device that is connecting
 to complete the connection (which is the device init handler).
+
+<p><br>
+
+<h2><a NAME="commands">Commands</a></h2>
+
+<p><pre class="jcl">
+    <b>SHRDPORT</b>   [0 | <b>3990</b> | nnnn | START | STOP]
+</pre>
+
+The <code>shrdport</code> command defines the port number that the Shared
+Device Server is to use to listen for remote connections on.  The default
+is <b>3990</b>.  Setting <code>shrdport</code> to <b>0</b> stops the server
+and resets the port number back to the default. Using the <code>STOP</code>
+command also stops the server, but preserves the currently established
+port number so that entering the <code>START</code> command will start
+the server again using the same port number.  Entering the command
+without any argument displays the current value.
+
+<p><pre class="jcl">
+    <b>SHRD</b>   [TRACE[=nnnn]]
+</pre>
+
+The <code>shrd</code> command defines the desired number of trace table
+entries. Specifying a non-zero value enables debug tracing of the Shared
+Device Server.  Specifying a value of 0 disables tracing. Entering the
+command with no arguments displays the current setting. Use the command
+<code>SHRD TRACE</code> to print the current trace table.
 
 <p><br>
 
@@ -551,17 +578,6 @@ compressed then the data is sent as is, unless the client has indicated
 that it does not support that compression algorithm.
 
 <p><br>
-
-<h2><a NAME="todo">To Do</a></h2>
-
-<ol>
-    <li>More doc (sorry, I got winded)
-    <li>Delays observed during short transfers (redrive select ?)
-    <li>Better server side behaviour due to disconnect
-    <li>etc.
-</ol>
-
-<p>
 
 Greg Smith
 <a href="mailto:gsmith@nc.rr.com"><em>gsmith</em>&#064;<em>nc.rr.com</em></a>

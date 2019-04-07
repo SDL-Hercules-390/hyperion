@@ -449,8 +449,8 @@ do { \
 int    shared_update_notify (DEVBLK *dev, int block);
 int    shared_ckd_init (DEVBLK *dev, int argc, char *argv[] );
 int    shared_fba_init (DEVBLK *dev, int argc, char *argv[] );
-SHR_DLL_IMPORT void  *shared_server (void *arg);
-SHR_DLL_IMPORT int    shared_cmd(int argc, char *argv[], char *cmdline);
+SHR_DLL_IMPORT void* shared_server( void* arg );
+SHR_DLL_IMPORT int   shrd_cmd( int argc, char* argv[], char* cmdline );
 
 #ifdef _SHARED_C_
 static int     shared_ckd_close ( DEVBLK *dev );
@@ -485,7 +485,7 @@ static void    serverDisconnect (DEVBLK *dev, int ix);
 static char   *clientip (int sock);
 static DEVBLK *findDevice (U16 devnum);
 static void   *serverConnect (void *psock);
-static void    shrdtrc (DEVBLK *dev, char *msg, ...) ATTR_PRINTF(2,3);
+static void    shrdtrc( DEVBLK* dev, char* fmt, ... ) ATTR_PRINTF(2,3);
 #endif /* _SHARED_C_ */
 
 #define SHRDTRACE( fmt, ... ) \

@@ -1435,8 +1435,33 @@
   "is specified, it's possible for Hercules guest operating systems to issue\n" \
   "commands directly to your host operating system.\n"
 
+#if defined( OPTION_SHARED_DEVICES )
+
 #define shrd_cmd_desc           "shrd command"
+#define shrd_cmd_help           \
+                                \
+  "Format: \"SHRD [TRACE[=nnnn]]\" where 'nnnn' is the desired number of\n"     \
+  "trace table entries. Specifying a non-zero value enables debug tracing\n"    \
+  "of the Shared Device Server.  Specifying a value of 0 disables tracing.\n"   \
+  "Entering the command with no arguments displays the current setting.\n"      \
+  "Use 'SHRD TRACE' by itself to print the current table.\n"                    \
+  "SEE ALSO: 'shrdport' command.\n"
+
 #define shrdport_cmd_desc       "Set shrdport value"
+#define shrdport_cmd_help       \
+                                \
+  "Format:  \"SHRDPORT   [0 | 3990 | nnnn | START | STOP]\"   where nnnn\n"     \
+  "is the port number that the Shared Device Server is to use to listen\n"      \
+  "for remote connections on.  The default port is 3990.  Setting shrdport\n"   \
+  "to 0 stops the server and resets port number back to the default.  Using\n"  \
+  "the 'STOP' command also stops the server, but preserves the currently\n"     \
+  "established port number so that entering the 'START' command will start\n"   \
+  "the server again using the same port number.  Entering the command\n"        \
+  "without any argument displays the current value.\n"                          \
+  "SEE ALSO: 'shrd' command.\n"
+
+#endif // defined( OPTION_SHARED_DEVICES )
+
 #define sizeof_cmd_desc         "Display size of structures"
 #define spm_cmd_desc            "SIE performance monitor"
 #define ssd_cmd_desc            "Signal shutdown"
@@ -1752,7 +1777,6 @@ COMMAND( "s+",                      trace_cmd,              SYSCMDNOPER,        
 COMMAND( "savecore",                savecore_cmd,           SYSCMDNOPER,        savecore_cmd_desc,      savecore_cmd_help   )
 COMMAND( "script",                  script_cmd,             SYSCMDNOPER,        script_cmd_desc,        script_cmd_help     )
 COMMAND( "sh",                      sh_cmd,                 SYSCMDNOPER,        sh_cmd_desc,            sh_cmd_help         )
-COMMAND( "shrd",                    EXTCMD(shared_cmd),     SYSCMDNOPER,        shrd_cmd_desc,          NULL                )
 COMMAND( "suspend",                 suspend_cmd,            SYSCMDNOPER,        suspend_cmd_desc,       NULL                )
 COMMAND( "symptom",                 traceopt_cmd,           SYSCMDNOPER,        symptom_cmd_desc,       NULL                )
 
@@ -1914,7 +1938,8 @@ COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )
 #endif
 #if defined( OPTION_SHARED_DEVICES )
-COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      NULL                )
+COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      shrdport_cmd_help   )
+COMMAND( "shrd",                    EXTCMD(shrd_cmd),       SYSCMDNOPER,        shrd_cmd_desc,          shrd_cmd_help       )
 #endif
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_cmd_desc,          quit_cmd_help       )
 #if defined( OPTION_W32_CTCI )
