@@ -9,9 +9,9 @@
  * Shared device support           (c)Copyright Greg Smith, 2002-2009
  *
  * Shared device support allows multiple Hercules instances to share
- * devices.  The device will be `local' to one instance and `remote'
- * to all other instances.  The local instance is the  * `server' for
- * that device and the remote instance is the `client'.  You do not
+ * devices.  The device will be 'local' to one instance and 'remote'
+ * to all other instances.  The local instance is the  * 'server' for
+ * that device and the remote instance is the 'client'.  You do not
  * have to IPL an operating system on the device server.  Any number
  * of Hercules instances can act as a server in a Hercplex ;-)
  *
@@ -31,7 +31,7 @@
  *
  *     0100 3350 localhost
  *
- * instead, providing we don't actually have a file `localhost'.
+ * instead, providing we don't actually have a file 'localhost'.
  * Interestingly, the instance on the local host listening on 3990
  * could have a statement
  *
@@ -39,10 +39,10 @@
  *
  * which means that instance in turn will use device 0200 on the
  * server at 192.168.200.1 listening on port 3990.  The original
- * instance will have to `hop' thru the second instance to get
+ * instance will have to 'hop' thru the second instance to get
  * to the real device.
  *
- * Device sharing can be `split' between multiple instances.
+ * Device sharing can be 'split' between multiple instances.
  * For example, suppose instance A has
  *
  *     SHRDPORT 3990
@@ -57,11 +57,11 @@
  *
  * Then each instance acts as both a client and as a server.
  *
- * When `SHRDPORT' is specified, thread `shared_server' is started
+ * When 'SHRDPORT' is specified, thread 'shared_server' is started
  * at the end of Hercules initialization.  In the example above,
  * neither Hercules instance can initialize their devices until the
  * server is started on each system.  In this case, the device trying
- * to access a server gets the `connecting' bit set on in the DEVBLK
+ * to access a server gets the 'connecting' bit set on in the DEVBLK
  * and the device still needs to initialize.  After the shared server
  * is started, a thread is attached for each device that is connecting
  * to complete the connection (which is the device init handler).
@@ -77,7 +77,7 @@
  * system makes requests to the server system to read and write data.
  *
  * The second approach is currently implemented.  The first approach
- * arguably emulates `more correctly'.  However, an advantage of the
+ * arguably emulates 'more correctly'.  However, an advantage of the
  * implemented approach is that it is easier because only the
  * client sends requests and only the server sends responses.
  *
@@ -102,7 +102,7 @@
  *             |          data           |
  *             +----- .  .  .  .  . -----+
  *
- * `cmd' identifies the client request.  The requests are:
+ * 'cmd' identifies the client request.  The requests are:
  *
  * 0xe0  CONNECT        Connect to the server.  This requires
  *                      the server to allocate resources to
@@ -135,17 +135,17 @@
  *                      after the next END request.
  *                      *Must* be issued within the scope of
  *                      START/END.
- * 0xe8  READ           Read from a device.  A 4-byte `record'
+ * 0xe8  READ           Read from a device.  A 4-byte 'record'
  *                      identifier is specified in the request
  *                      data to identify what data to read in the
  *                      device context.
  *                      *Must* be issued within the scope of START/END.
- * 0xe9  WRITE          Write to a device. A 2-byte `offset' and
- *                      a 4-byte `record' is specified in the request
+ * 0xe9  WRITE          Write to a device. A 2-byte 'offset' and
+ *                      a 4-byte 'record' is specified in the request
  *                      data, followed by the data to be written.
- *                      `record' identifies what data is to be written
- *                      in the device context and `offset' and `length'
- *                      identify what to update in `record'.
+ *                      'record' identifies what data is to be written
+ *                      in the device context and 'offset' and 'length'
+ *                      identify what to update in 'record'.
  *                      *Must* be issued within the scope of START/END.
  * 0xea  SENSE          Retrieves the sense information after an i/o
  *                      error has occurred on the server side.  This
@@ -165,7 +165,7 @@
  *                      some such; it was just easier to code a COMPRESS
  *                      specific SETOPT (less code).
  *
- * `flag' qualifies the client request and varies by the request.
+ * 'flag' qualifies the client request and varies by the request.
  *
  * 0x80  NOWAIT         For START, if the device is unavailable then
  *                      return BUSY instead of waiting for the device.
@@ -177,27 +177,27 @@
  * 0x4c  FBAORIGIN          Origin block for FBA
  * 0x4d  FBANUMBLK          Number of FBA blocks
  * 0x4e  FBABLKSIZ          Size of an FBA block
- * 0x3x  COMP           For WRITE, data is compressed at offset `x':
+ * 0x3x  COMP           For WRITE, data is compressed at offset 'x':
  * 0x2x  BZIP2              using bzip2
  * 0x1x  LIBZ               using zlib
  * 0xxy                 For COMPRESS, identifies the compression
  *                      algorithms supported by the client (0x2y for bzip2,
  *                      0x1y for zlib, 0x3y for both) and the zlib compression
- *                      parameter `y' for sending otherwise uncompressed data
- *                      back and forth.  If `y' is zero (default) then no
+ *                      parameter 'y' for sending otherwise uncompressed data
+ *                      back and forth.  If 'y' is zero (default) then no
  *                      uncompressed data is compressed between client & server.
  *
- * `devnum' identifies the device by number on the server instance.
+ * 'devnum' identifies the device by number on the server instance.
  *                     The device number may be different than the
  *                     device number on the client instance.
- * `id' identifies the client to the server.  Each client has a unique
+ * 'id' identifies the client to the server.  Each client has a unique
  *                     positive (non-zero) identifier.  For the initial
- *                     CONNECT request `id' is zero.  After a successful
+ *                     CONNECT request 'id' is zero.  After a successful
  *                     CONNECT, the server returns in the response header
  *                     the identifier to be used for all other requests
  *                     (including subsequent CONNECT requests).  This is
  *                     saved in dev->rmtid.
- * `length' specifies the length of the data following the request header.
+ * 'length' specifies the length of the data following the request header.
  *                     Currently length is non-zero for READ/WRITE requests.
  *
  * The server sends an 8 byte response header and maybe some data:
@@ -211,13 +211,13 @@
  *             |          data           |
  *             +----- .  .  .  .  . -----+
  *
- * `code' indicates the response to the request.  OK (0x00) indicates
+ * 'code' indicates the response to the request.  OK (0x00) indicates
  *                     success however other codes also indicate success
  *                     but qualified in some manner:
  * 0x80  ERROR         An error occurred.  The server provides an error
  *                     message in the data section.
  * 0x40  IOERR         An i/o error occurred during a READ/WRITE
- *                     request.  The status byte has the `unitstat'
+ *                     request.  The status byte has the 'unitstat'
  *                     data.  This should signal the client to issue the
  *                     SENSE request to obtain the current sense data.
  * 0x20  BUSY          Device was not available for a START request and
@@ -226,28 +226,28 @@
  *                     indicates how the data is compressed (zlib or
  *                     bzip2) and at what offset the compressed data
  *                     starts (0 .. 15).  This bit is only turned on
- *                     when both the `code' and `status' bytes would
+ *                     when both the 'code' and 'status' bytes would
  *                     otherwise be zero.
  * 0x08  PURGE         START request was issued by the client.  A list
- *                     of `records' to be purged from local cache is
- *                     returned.  These are `records' that have been
+ *                     of 'records' to be purged from local cache is
+ *                     returned.  These are 'records' that have been
  *                     updated since the last START/END request from
  *                     the client by other systems.  Each record identifier
  *                     is a 4-byte field in the data segment.  The number
- *                     of records then is `length'/4.  If the number of
- *                     records exceeds a threshold (16) then `length'
+ *                     of records then is 'length'/4.  If the number of
+ *                     records exceeds a threshold (16) then 'length'
  *                     will be zero indicating that the client should
  *                     purge all locally cached records for the device.
  *
- * `stat' contains status information as a result of the request.
- *                     For READ/WRITE requests this contains the `unitstat'
+ * 'stat' contains status information as a result of the request.
+ *                     For READ/WRITE requests this contains the 'unitstat'
  *                     information if an IOERR occurred.
  *
- * `devnum' specifies the server device number
+ * 'devnum' specifies the server device number
  *
- * `id' specifies the system identifier for the request.
+ * 'id' specifies the system identifier for the request.
  *
- * `length' is the size of the data returned.
+ * 'length' is the size of the data returned.
  *
  *
  * CACHING
@@ -263,19 +263,19 @@
  * COMPRESSION
  *
  * Data that would normally be transferred uncompressed between client
- * and host can optionally be compressed by specifying the `comp='
+ * and host can optionally be compressed by specifying the 'comp='
  * keyword on the device configuration statement or attach command.
  * For example
  *
  *     0100 3350 192.168.2.12 comp=3
  *
- * The value of the `comp=' keyword is the zlib compression parameter
+ * The value of the 'comp=' keyword is the zlib compression parameter
  * which should be a number between 1 .. 9.  A value closer to 1 means
  * less compression but less processor time to perform the compression.
  * A value closer to 9 means the data is compressed more but more processor
  * time is required.
  *
- * If the server is on `localhost' then you should not specify `comp='.
+ * If the server is on 'localhost' then you should not specify 'comp='.
  * Otherwise you are just stealing processor time to do compression/
  * uncompression from hercules.  If the server is on a local network
  * then I would recommend specifying a low value such as 1, 2 or 3.
@@ -283,8 +283,8 @@
  * to derive an optimal throughput.
  *
  * If the devices on the server are compressed devices (eg CCKD or CFBA)
- * then the `records' (eg. track images or block groups) may be transferred
- * compressed regardless of the `comp=' setting.  This depends on whether
+ * then the 'records' (eg. track images or block groups) may be transferred
+ * compressed regardless of the 'comp=' setting.  This depends on whether
  * the client supports the compression type (zlib or bzip2) of the record
  * on the server and whether the record is actually compressed in the
  * server cache.
@@ -301,7 +301,7 @@
  * the track image so data in it can be updated.  When the client next
  * reads from the track image, the track image is uncompressed.
  *
- * Specifying `comp=' means that uncompressed data sent to the client
+ * Specifying 'comp=' means that uncompressed data sent to the client
  * will be compressed.  If the data to be sent to the client is already
  * compressed then the data is sent as is, unless the client has indicated
  * that it does not support that compression algorithm.
@@ -316,15 +316,13 @@
  *
  *-------------------------------------------------------------------*/
 
-#ifndef _HERCULES_SHARED_H
-#define _HERCULES_SHARED_H 1
+#ifndef _SHARED_H
+#define _SHARED_H
 
-#include "hercules.h"
-
-/*
- * Differing version levels are NOT compatible!
- * (Differing release levels ARE compatible.)
- */
+/*-------------------------------------------------------------------*/
+/*  NOTE:  Differing Shared VERSION levels are NOT compatible!       */
+/*         Differing Shared RELEASE levels ARE     compatible.       */
+/*-------------------------------------------------------------------*/
 
 #define SHARED_VERSION              0   /* Version level  (0 .. 15)  */
 #define SHARED_RELEASE              1   /* Release level  (0 .. 15)  */
@@ -337,8 +335,6 @@
 #define SHARED_SELECT_WAIT         10   /* Select timeout (sec)      */
 #define SHARED_COMPRESS_MINLEN    512   /* Min length for compression*/
 #define SHARED_MAX_SYS              8   /* Max number connections    */
-
-#include "hercules.h"
 
 /* Requests                                                          */
 #define SHRD_CONNECT             0xe0   /* Connect                   */
@@ -393,6 +389,7 @@
 
 typedef char SHRD_TRACE[128];           /* Trace entry               */
 
+/*-------------------------------------------------------------------*/
 struct SHRD                             /* Device Sharing ctl. blk.  */
 {
         int     id;                     /* Identifier                */
@@ -410,7 +407,7 @@ struct SHRD                             /* Device Sharing ctl. blk.  */
         int     purgen;                 /* Number purge entries      */
         FWORD   purge[SHARED_PURGE_MAX];/* Purge list                */
 };
-
+/*-------------------------------------------------------------------*/
 struct SHRD_HDR                         /* Device Sharing msg header */
 {
         BYTE    cmd;                    /* 0 Command                 */
@@ -418,40 +415,60 @@ struct SHRD_HDR                         /* Device Sharing msg header */
         U16     devnum;                 /* 2 Device number           */
         U16     len;                    /* 4 Data length             */
         U16     id;                     /* 6 Identifier              */
+                                        /* length is 8 bytes EXACTLY */
 };
+/*-------------------------------------------------------------------*/
 
 typedef struct SHRD       SHRD;         /* (just a shorter name)     */
 typedef struct SHRD_HDR   SHRD_HDR;     /* (just a shorter name)     */
 
-/* Size must be 8 bytes */
-#define SHRD_HDR_SIZE sizeof(DBLWRD)
-CASSERT( sizeof( SHRD_HDR ) == SHRD_HDR_SIZE, shared_h );
+#define SHRD_HDR_SIZE          sizeof( DBLWRD )
+CASSERT( sizeof( SHRD_HDR ) == sizeof( DBLWRD ), shared_h );
 
-#define SHRD_SET_HDR(_buf, _cmd, _code, _devnum, _id, _len) \
-do { \
-  SHRD_HDR *shdr = (SHRD_HDR *)(_buf); \
-  shdr->cmd = (_cmd); \
-  shdr->code = (_code); \
-  store_hw (&shdr->devnum, (_devnum)); \
-  store_hw (&shdr->len, (_len)); \
-  store_hw (&shdr->id, (_id)); \
-} while (0)
+/*-------------------------------------------------------------------*/
 
-#define SHRD_GET_HDR(_buf, _cmd, _code, _devnum, _id, _len) \
-do { \
-  SHRD_HDR *shdr = (SHRD_HDR *)(_buf); \
-  (_cmd) = shdr->cmd; \
-  (_code) = shdr->code; \
-  (_devnum) = (U16)fetch_hw (&shdr->devnum); \
-  (_len) = (int)fetch_hw (&shdr->len); \
-  (_id) = (int)fetch_hw (&shdr->id); \
-} while (0)
+#define SHRD_SET_HDR( _buf, _cmd, _code, _devnum, _id, _len )        \
+                                                                     \
+    do                                                               \
+    {                                                                \
+        SHRD_HDR* shdr = (SHRD_HDR*) (_buf);                         \
+                                                                     \
+        shdr->cmd  =                 (_cmd);                         \
+        shdr->code =                 (_code);                        \
+                                                                     \
+        store_hw( &shdr->devnum,     (_devnum) );                    \
+        store_hw( &shdr->len,        (_len)    );                    \
+        store_hw( &shdr->id,         (_id)     );                    \
+    }                                                                \
+    while (0)
+
+/*-------------------------------------------------------------------*/
+
+#define SHRD_GET_HDR( _buf, _cmd, _code, _devnum, _id, _len )        \
+                                                                     \
+    do                                                               \
+    {                                                                \
+        SHRD_HDR* shdr = (SHRD_HDR*) (_buf);                         \
+                                                                     \
+        (_cmd)    = shdr->cmd;                                       \
+        (_code)   = shdr->code;                                      \
+                                                                     \
+        (_devnum) = (U16) fetch_hw( &shdr->devnum );                 \
+        (_len)    = (int) fetch_hw( &shdr->len    );                 \
+        (_id)     = (int) fetch_hw( &shdr->id     );                 \
+    }                                                                \
+    while (0)
+
+/*-------------------------------------------------------------------*/
 
 int    shared_update_notify (DEVBLK *dev, int block);
 int    shared_ckd_init (DEVBLK *dev, int argc, char *argv[] );
 int    shared_fba_init (DEVBLK *dev, int argc, char *argv[] );
+
 SHR_DLL_IMPORT void* shared_server( void* arg );
 SHR_DLL_IMPORT int   shrd_cmd( int argc, char* argv[], char* cmdline );
+
+/*-------------------------------------------------------------------*/
 
 #ifdef _SHARED_C_
 static int     shared_ckd_close ( DEVBLK *dev );
@@ -486,16 +503,24 @@ static void    serverDisconnect (DEVBLK *dev, int ix);
 static char   *clientip (int sock);
 static DEVBLK *findDevice (U16 devnum);
 static void   *serverConnect (void *psock);
-static void    shrdtrc( DEVBLK* dev, char* fmt, ... ) ATTR_PRINTF(2,3);
+static void    shrdhdrtrc( DEVBLK* dev, const char* msg, const BYTE* hdr,
+                          const char* msg2 );
+static void    shrdtrc( DEVBLK* dev, const char* fmt, ... ) ATTR_PRINTF(2,3);
+static const char* shrdcmd2str( const BYTE cmd );
 #endif /* _SHARED_C_ */
 
-#define OBTAIN_SHRDLOCK()           obtain_lock(  &sysblk.shrdlock )
-#define RELEASE_SHRDLOCK()          release_lock( &sysblk.shrdlock )
+/*-------------------------------------------------------------------*/
 
-#define SHRDTRACE( fmt, ... ) \
-    shrdtrc( dev, fmt, ## __VA_ARGS__ )
+#define OBTAIN_SHRDLOCK()               obtain_lock(  &sysblk.shrdlock )
+#define RELEASE_SHRDLOCK()              release_lock( &sysblk.shrdlock )
 
-#define OBTAIN_SHRDTRACE_LOCK()     obtain_lock(  &sysblk.shrdtracelock )
-#define RELEASE_SHRDTRACE_LOCK()    release_lock( &sysblk.shrdtracelock )
+#define SHRDTRACE( fmt, ... )           shrdtrc( dev, fmt, ## __VA_ARGS__ )
+#define SHRDHDRTRACE( msg, hdr )        shrdhdrtrc( dev, msg, hdr, 0    )
+#define SHRDHDRTRACE2( msg, hdr, msg2 ) shrdhdrtrc( dev, msg, hdr, msg2 )
 
-#endif /* _HERCULES_SHARED_H */
+#define OBTAIN_SHRDTRACE_LOCK()         obtain_lock(  &sysblk.shrdtracelock )
+#define RELEASE_SHRDTRACE_LOCK()        release_lock( &sysblk.shrdtracelock )
+
+/*-------------------------------------------------------------------*/
+
+#endif /* _SHARED_H */

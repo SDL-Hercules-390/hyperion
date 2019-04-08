@@ -15,6 +15,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "hercules.h"
 #include "opcode.h"
 #include "devtype.h"
+#include "ccwarn.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -696,7 +697,7 @@ BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
         return 0;
     }
 
-    SHRDTRACE("ckd_read trk %d",trk);
+    SHRDTRACE( "ckd read trk %d", trk );
 
     /* Write the previous active entry if it was updated */
     if (dev->bufupd)
@@ -732,21 +733,21 @@ cache_retry:
         dev->bufoffhi = dev->ckdtrksz;
         dev->buflen = shared_ckd_trklen (dev, dev->buf);
         dev->bufsize = cache_getlen (CACHE_DEVBUF, cache);
-        SHRDTRACE("ckd_read trk %d cache hit %d",trk,dev->cache);
+        SHRDTRACE( "ckd read trk %d cache hit %d", trk, dev->cache );
         return 0;
     }
 
     /* Special processing if no available cache entry */
     if (lru < 0)
     {
-        SHRDTRACE("ckd_read trk %d cache wait",trk);
+        SHRDTRACE( "ckd read trk %d cache wait", trk );
         dev->cachewaits++;
         cache_wait (CACHE_DEVBUF);
         goto cache_retry;
     }
 
     /* Process cache miss */
-    SHRDTRACE("ckd_read trk %d cache miss %d",trk,dev->cache);
+    SHRDTRACE( "ckd read trk %d cache miss %d", trk, dev->cache );
     dev->cachemisses++;
     cache_setflag (CACHE_DEVBUF, lru, 0, SHRD_CACHE_ACTIVE|DEVBUF_TYPE_SCKD);
     cache_setkey (CACHE_DEVBUF, lru, SHRD_CACHE_SETKEY(dev->devnum, trk));
@@ -822,7 +823,7 @@ int      rc;                            /* Return code               */
         return -1;
     }
 
-    SHRDTRACE("ckd_write trk %d off %d len %d",trk,off,len);
+    SHRDTRACE( "ckd write trk %d off %d len %d", trk, off, len );
 
     /* If the track is not current then read it */
     if (trk != dev->bufcur)
@@ -1175,8 +1176,7 @@ retry:
 
     /* Send the request */
     SHRD_SET_HDR(hdr, cmd, flags, dev->rmtnum, dev->rmtid, 0);
-    SHRDTRACE("client_request %2.2x %2.2x %2.2x %d",
-            cmd,flags,dev->rmtnum,dev->rmtid);
+    SHRDHDRTRACE( "client request", hdr );
     rc = clientSend (dev, hdr, NULL, 0);
     if (rc < 0) return rc;
 
@@ -1197,8 +1197,8 @@ retry:
 
     /* Set code and status */
     SHRD_GET_HDR(hdr, rcode, rstatus, rdevnum, rid, rlen);
-    SHRDTRACE("client_response %2.2x %2.2x %4.4x %d %d",
-            rcode,rstatus,rdevnum,rid,rlen);
+    SHRDHDRTRACE( "client response", hdr );
+
     if (code)   *code   = rcode;
     if (status) *status = rstatus;
 
@@ -1240,8 +1240,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
     /* Calculate length of header, may contain additional data */
     SHRD_GET_HDR(hdr, cmd, flag, devnum, id, len);
-    SHRDTRACE("client_send %2.2x %2.2x %4.4x %d %d",
-             cmd,flag,devnum,id,len);
+    SHRDHDRTRACE( "client send", hdr );
+
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
     off = len - buflen;
 
@@ -1291,8 +1291,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     SHRD_SET_HDR(sendbuf, cmd, flag, devnum, id, (U16)(sendlen - SHRD_HDR_SIZE));
 
     if (cmd & SHRD_COMP)
-        SHRDTRACE("client_send %2.2x %2.2x %2.2x %d %d (compressed)",
-                cmd, flag, devnum, id, (int)(sendlen - SHRD_HDR_SIZE));
+        SHRDHDRTRACE2( "client send", sendbuf, "(compressed)" );
 
 retry:
 
@@ -1348,10 +1347,9 @@ int      len;                           /* Response length           */
             WRMSG( HHC00725, "E", LCSS_DEVNUM, strerror( -rc ));
         return rc;
     }
-    SHRD_GET_HDR(hdr, code, status, devnum, id, len);
 
-    SHRDTRACE("client_recv %2.2x %2.2x %4.4x %d %d",
-             code,status,devnum,id,len);
+    SHRD_GET_HDR(hdr, code, status, devnum, id, len);
+    SHRDHDRTRACE( "client recv", hdr );
 
     /* Handle remote logical error */
     if (code & SHRD_ERROR)
@@ -1403,10 +1401,9 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         else if (rc == 0)
             return -HSO_ENOTCONN;
     }
-    SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
 
-    SHRDTRACE("recvData    %2.2x %2.2x %4.4x %d %d",
-             cmd, flag, devnum, id, len);
+    SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
+    SHRDHDRTRACE( "recvData", hdr );
 
     /* Return if no data */
     if (len == 0) return 0;
@@ -1501,13 +1498,36 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     {
         SHRD_SET_HDR (hdr, cmd, flag, devnum, id, recvlen);
         if (comp)
-            SHRDTRACE("recvData    %2.2x %2.2x %2.2x %d %d (uncompressed)",
-                     cmd, flag, devnum, id, recvlen);
+            SHRDHDRTRACE2( "recvData", hdr, "(uncompressed)" );
     }
 
     return recvlen;
 
 } /* recvData */
+
+/*-------------------------------------------------------------------
+ * Convert shared command code to string for tracing purposes
+ *-------------------------------------------------------------------*/
+static const char* shrdcmd2str( const BYTE cmd )
+{
+    switch (cmd)
+    {
+    case SHRD_CONNECT:    return "CONN";
+    case SHRD_DISCONNECT: return "DISC";
+    case SHRD_START:      return "STAR";
+    case SHRD_END:        return "END ";
+    case SHRD_RESUME:     return "RESU";
+    case SHRD_SUSPEND:    return "SUSP";
+    case SHRD_RESERVE:    return "RESE";
+    case SHRD_RELEASE:    return "RELE";
+    case SHRD_READ:       return "READ";
+    case SHRD_WRITE:      return "WRIT";
+    case SHRD_SENSE:      return "SENS";
+    case SHRD_QUERY:      return "QUER";
+    case SHRD_COMPRESS:   return "COMP";
+    default:              return "????";
+    }
+}
 
 /*-------------------------------------------------------------------
  * Process a request (server side)
@@ -1524,15 +1544,17 @@ int      len;                           /* Header length             */
 int      code;                          /* Response code             */
 int      rcd;                           /* Record to read/write      */
 int      off;                           /* Offset into record        */
+char     trcmsg[32];
 
     /* Extract header information */
     SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
+    MSGBUF( trcmsg, "server request [%d]", ix );
+    SHRDHDRTRACE( trcmsg, hdr );
 
-    SHRDTRACE("server_request [%d] %2.2x %2.2x %4.4x %d %d",
-             ix, cmd, flag, devnum, id, len);
+    /* Save time of last request (for connection timeout purposes) */
+    dev->shrd[ix]->time = time( NULL );
 
-    dev->shrd[ix]->time = time (NULL);
-
+    /* Process the request */
     switch (cmd) {
 
     case SHRD_CONNECT:
@@ -1590,8 +1612,8 @@ int      off;                           /* Offset into record        */
         /* Check if the device is busy */
         if (dev->shioactive != id && dev->shioactive != DEV_SYS_NONE)
         {
-            SHRDTRACE("server_request busy id=%d shioactive=%d reserved=%d",
-                    id,dev->shioactive,dev->reserved);
+            SHRDTRACE( "server request busy id=%d shioactive=%d reserved=%d",
+                    id, dev->shioactive, dev->reserved );
             /* If the 'nowait' bit is on then respond 'busy' */
             if (flag & SHRD_NOWAIT)
             {
@@ -1625,7 +1647,7 @@ int      off;                           /* Offset into record        */
         dev->shioactive = id;
         dev->busy = 1;
         sysblk.shrdcount++;
-        SHRDTRACE("server_request active id=%d", id);
+        SHRDTRACE( "server request active id=%d", id );
 
         release_lock(&dev->lock);
 
@@ -1696,7 +1718,7 @@ int      off;                           /* Offset into record        */
             if (dev->shiowaiters)
                 signal_condition (&dev->shiocond);
         }
-        SHRDTRACE("server_request inactive id=%d", id);
+        SHRDTRACE( "server request inactive id=%d", id );
 
         release_lock (&dev->lock);
 
@@ -1718,7 +1740,7 @@ int      off;                           /* Offset into record        */
         dev->reserved = 1;
         release_lock (&dev->lock);
 
-        SHRDTRACE("server_request reserved id=%d", id);
+        SHRDTRACE( "server request reserved id=%d", id );
 
         /* Call the I/O reserve exit */
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
@@ -1745,7 +1767,7 @@ int      off;                           /* Offset into record        */
         dev->reserved = 0;
         release_lock (&dev->lock);
 
-        SHRDTRACE("server_request released id=%d", id);
+        SHRDTRACE( "server request released id=%d", id );
 
         /* Send response back */
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
@@ -1769,8 +1791,8 @@ int      off;                           /* Offset into record        */
         /* Call the I/O read exit */
         rcd = (int)fetch_fw (buf);
         rc = (dev->hnd->read) (dev, rcd, &flag);
-        SHRDTRACE("server_request read rcd %d flag %2.2x rc=%d",
-                rcd, flag, rc);
+        SHRDTRACE( "server request read rcd %d flag %2.2x rc=%d",
+                rcd, flag, rc );
 
         if (rc < 0)
             code = SHRD_IOERR;
@@ -1802,8 +1824,8 @@ int      off;                           /* Offset into record        */
         rcd = fetch_fw (buf + 2);
 
         rc = (dev->hnd->write) (dev, rcd, off, buf + 6, len - 6, &flag);
-        SHRDTRACE("server_request write rcd %d off %d len %d flag %2.2x rc=%d",
-                rcd, off, len - 6, flag, rc);
+        SHRDTRACE( "server request write rcd %d off %d len %d flag %2.2x rc=%d",
+                rcd, off, len - 6, flag, rc );
 
         if (rc < 0)
             code = SHRD_IOERR;
@@ -1977,7 +1999,7 @@ static int serverError (DEVBLK *dev, int ix, int code, int status,
     SHRD_SET_HDR( hdr, code, status, dev ? dev->devnum : 0,
                   ix < 0 ? 0 : dev->shrd[ix]->id, (U16) len );
 
-    SHRDTRACE("server_error %2.2x %2.2x: %s", code, status, msg );
+    SHRDTRACE( "SERVER ERROR! %2.2x %2.2x: %s", code, status, msg );
 
     rc = serverSend( dev, ix, hdr, (BYTE*) msg, (int) len );
     return rc;
@@ -2031,8 +2053,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         dev = NULL;
     }
 
-    SHRDTRACE("server_send %2.2x %2.2x %2.2x %d %d",
-            code, status, devnum, id, len);
+    SHRDHDRTRACE( "server send", hdr );
 
 #if defined( HAVE_ZLIB )
     /* Compress the buf */
@@ -2055,9 +2076,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
             buflen = 0;
             code = SHRD_COMP;
             status = (SHRD_LIBZ << 4) | off;
-            SHRD_SET_HDR (cbuf, code, status, devnum, id, newlen + off);
-            SHRDTRACE("server_send %2.2x %2.2x %2.2x %d %d (compressed)",
-                   code,status,devnum,id,(int)newlen+off);
+            SHRD_SET_HDR (cbuf, code, status, devnum, id, (U16)(newlen + off));
+            SHRDHDRTRACE2( "server send", cbuf, "(compressed)" );
         }
     }
 #endif
@@ -2217,7 +2237,7 @@ char            threadname[16] = {0};
     free( psock );
     ipaddr = clientip( csock );
 
-    SHRDTRACE("server_connect %s sock %d", ipaddr, csock );
+    SHRDTRACE( "server connect %s sock %d", ipaddr, csock );
 
     rc = recvData( csock, hdr, buf, 65536, 1 );
     if (rc < 0)
@@ -2352,7 +2372,7 @@ char            threadname[16] = {0};
                     if (dev->shrd[ix]->fd >= maxfd)
                         maxfd = dev->shrd[ix]->fd + 1;
 
-                    SHRDTRACE("select   set %d id=%d",
+                    SHRDTRACE( "select set %d id=%d",
                         dev->shrd[ix]->fd, dev->shrd[ix]->id );
                 }
             }
@@ -2483,9 +2503,23 @@ char            threadname[16] = {0};
 } /* serverConnect */
 
 /*-------------------------------------------------------------------
+ * Trace routine for tracing SHRD_HDR
+ *-------------------------------------------------------------------*/
+static void shrdhdrtrc( DEVBLK* dev, const char* msg, const BYTE* hdr,
+                                     const char* msg2 )
+{
+    BYTE cmd, code; U16 devnum; int id, len; char buf[4];
+    SHRD_GET_HDR( hdr, cmd, code, devnum, id, len );
+    MSGBUF( buf, "%2.2x", cmd );
+    SHRDTRACE( "%s: %s(%2.2x) %2.2x dev %4.4x id %d len %d%s%s",
+        msg, shrdcmd2str( cmd ), cmd, code, devnum, id, len,
+        msg2 ? " " : "", msg2 ? msg2 : "" );
+}
+
+/*-------------------------------------------------------------------
  * General trace routine for shared devices
  *-------------------------------------------------------------------*/
-static void shrdtrc( DEVBLK* dev, char* fmt, ... )
+static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
 {
     bool            tracing_or_stepping;
     struct timeval  tv;
