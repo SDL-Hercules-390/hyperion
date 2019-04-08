@@ -99,7 +99,7 @@ char    *strtok_str = NULL;             /* last position             */
             return -1;
         STRLCPY( buf, argv[0] );
 
-        /* First argument is `ipname:port:devnum' */
+        /* First argument is 'ipname:port:devnum' */
         ipname = buf;
         if (strchr(ipname,'/') || strchr(ipname,'\\'))
             return -1;
@@ -381,7 +381,7 @@ char    *strtok_str = NULL;             /* last token                */
             return -1;
         STRLCPY( buf, argv[0] );
 
-        /* First argument is `ipname:port:devnum' */
+        /* First argument is 'ipname:port:devnum' */
         ipname = buf;
         p = strchr (buf, ':');
         if (p)
@@ -1124,8 +1124,8 @@ HWORD              comp;                /* Returned compression parm */
              * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
              * 00110000 -> both) and the bottom 4 bits indicates the
              * libz parm we want to use when sending data back & forth.
-             * If the server returns `0' back, then we won't use libz to
-             * compress data to the server.  What the `compression
+             * If the server returns '0' back, then we won't use libz to
+             * compress data to the server.  What the 'compression
              * algorithms we support' means is that if the data source is
              * cckd or cfba then the server doesn't have to uncompress
              * the data for us if we support the compression algorithm.
@@ -1138,7 +1138,6 @@ HWORD              comp;                /* Returned compression parm */
                 if (rc >= 0)
                     dev->rmtcomp = fetch_hw (comp);
             }
-
         }
         else if (!retry)
             // "%1d:%04X Shared: error in connect to file %s: %s"
@@ -1159,7 +1158,7 @@ HWORD              comp;                /* Returned compression parm */
  * If an uncorrectable connection error occurs -1 is returned.
  * Otherwise *code and *status is set from the response header
  *
- * Since `buf' may be NULL or not very long, response data is
+ * Since 'buf' may be NULL or not very long, response data is
  * received in a temporary buffer.  This enables us to receive
  * an error message from the remote system.
  *-------------------------------------------------------------------*/
@@ -1217,12 +1216,12 @@ retry :
 /*-------------------------------------------------------------------
  * Send a request to the host
  *
- * `buf' may be NULL
- * `buflen' is the length in `buf' (should be 0 if `buf' is NULL)
- * `hdr' may contain additional data; this is detected by the
- *       difference between `buflen' and the length in the header
+ * 'buf' may be NULL
+ * 'buflen' is the length in 'buf' (should be 0 if 'buf' is NULL)
+ * 'hdr' may contain additional data; this is detected by the
+ *       difference between 'buflen' and the length in the header
  *
- * If `buf' is adjacent to `hdr' then `buf' should be NULL
+ * If 'buf' is adjacent to 'hdr' then 'buf' should be NULL
  *
  *-------------------------------------------------------------------*/
 static int clientSend (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen)
@@ -1395,7 +1394,7 @@ int                     id;             /* Header identifier         */
 int                     len;            /* Header length             */
 int                     comp = 0;       /* Compression type          */
 int                     off = 0;        /* Offset to compressed data */
-DEVBLK                 *dev = NULL;     /* For `SHRDTRACE'             */
+DEVBLK                 *dev = NULL;     /* For 'SHRDTRACE'             */
 BYTE                    cbuf[65536];    /* Compressed buffer         */
 
 
@@ -1597,7 +1596,7 @@ int      off;                           /* Offset into record        */
         {
             SHRDTRACE("server_request busy id=%d shioactive=%d reserved=%d",
                     id,dev->shioactive,dev->reserved);
-            /* If the `nowait' bit is on then respond `busy' */
+            /* If the 'nowait' bit is on then respond 'busy' */
             if (flag & SHRD_NOWAIT)
             {
                 release_lock (&dev->lock);
@@ -1616,7 +1615,7 @@ int      off;                           /* Offset into record        */
                 dev->shiowaiters--;
             }
 
-            /* Return with the `waiting' bit on if busy by a remote system */
+            /* Return with the 'waiting' bit on if busy by a remote system */
             if (dev->shioactive != DEV_SYS_NONE && dev->shioactive != DEV_SYS_LOCAL)
             {
                 release_lock (&dev->lock);
@@ -1692,7 +1691,7 @@ int      off;                           /* Offset into record        */
                 dev->busy = 0;
             }
 
-            /* Reset any `waiting' bits */
+            /* Reset any 'waiting' bits */
             for (i = 0; i < SHARED_MAX_SYS; i++)
                 if (dev->shrd[i])
                     dev->shrd[i]->waiting = 0;
@@ -2024,10 +2023,10 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         buflen = 0;
     }
 
-    /* Send only the header buffer if `buf' is empty */
+    /* Send only the header buffer if 'buf' is empty */
     if (buflen == 0)  sendbuf = hdr;
 
-    /* Get socket number; if `ix' < 0 we don't have a device yet */
+    /* Get socket number; if 'ix' < 0 we don't have a device yet */
     if (ix >= 0)
         sock = dev->shrd[ix]->fd;
     else
@@ -2131,7 +2130,7 @@ int i;                                  /* Loop index                */
         if (dev->hnd->end)
             (dev->hnd->end) (dev);
 
-        /* Reset any `waiting' bits */
+        /* Reset any 'waiting' bits */
         for (i = 0; i < SHARED_MAX_SYS; i++)
             if (dev->shrd[i])
                 dev->shrd[i]->waiting = 0;
@@ -2442,7 +2441,7 @@ char            threadname[16] = {0};
 
         obtain_lock( &dev->lock );
 
-        /* If the `waiting' bit is on then the start/resume request
+        /* If the 'waiting' bit is on then the start/resume request
            failed because the device is busy on some other remote
            system.  We only need to save the header because the data
            is ignored for start/resume.

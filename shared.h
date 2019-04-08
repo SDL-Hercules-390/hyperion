@@ -94,7 +94,7 @@
  * The client sends an 8 byte request header and maybe some data:
  *
  * +-----+-----+-----+-----+-----+-----+-----+-----+
- * | cmd |flag |  devnum   |    id     |   length  |
+ * | cmd |flag |  devnum   |   length  |    id     |
  * +-----+-----+-----+-----+-----+-----+-----+-----+
  *
  *             <-------- length --------->
@@ -203,7 +203,7 @@
  * The server sends an 8 byte response header and maybe some data:
  *
  * +-----+-----+-----+-----+-----+-----+-----+-----+
- * |code |stat |  devnum   |    id     |  length   |
+ * |code |stat |  devnum   |   length  |    id     |
  * +-----+-----+-----+-----+-----+-----+-----+-----+
  *
  *             <-------- length --------->
@@ -310,12 +310,9 @@
  * TODO
  *
  *  1.  More doc (sorry, I got winded)
- *  2.  Delays observed during short transfers (redrive select ?)
+ *  2.  Delays observed during short transfers (redrive select?)
  *  3.  Better server side behaviour due to disconnect
- *  3.  etc.
- *
- *
- *
+ *  4.  etc.
  *
  *-------------------------------------------------------------------*/
 
@@ -332,8 +329,14 @@
 #define SHARED_VERSION              0   /* Version level  (0 .. 15)  */
 #define SHARED_RELEASE              1   /* Release level  (0 .. 15)  */
 
+/* Constraints                                                       */
+#define SHARED_DEFAULT_PORT      3990   /* Default shared port       */
+#define SHARED_PURGE_MAX           16   /* Max size of purge list    */
+#define SHARED_MAX_MSGLEN         255   /* Max message length        */
+#define SHARED_TIMEOUT            120   /* Disconnect timeout (sec)  */
+#define SHARED_SELECT_WAIT         10   /* Select timeout (sec)      */
+#define SHARED_COMPRESS_MINLEN    512   /* Min length for compression*/
 #define SHARED_MAX_SYS              8   /* Max number connections    */
-typedef char SHRD_TRACE[128];           /* Trace entry               */
 
 #include "hercules.h"
 
@@ -388,16 +391,10 @@ typedef char SHRD_TRACE[128];           /* Trace entry               */
 #define SHRD_FBANUMBLK           0x4d   /* FBA number blocks         */
 #define SHRD_FBABLKSIZ           0x4e   /* FBA block size            */
 
-/* Constraints                                                       */
-#define SHARED_DEFAULT_PORT      3990   /* Default shared port       */
-#define SHARED_PURGE_MAX           16   /* Max size of purge list    */
-#define SHARED_MAX_MSGLEN         255   /* Max message length        */
-#define SHARED_TIMEOUT            120   /* Disconnect timeout (sec)  */
-#define SHARED_FORCE_TIMEOUT      300   /* Force disconnect (sec)    */
-#define SHARED_SELECT_WAIT         10   /* Select timeout (sec)      */
-#define SHARED_COMPRESS_MINLEN    512   /* Min length for compression*/
+typedef char SHRD_TRACE[128];           /* Trace entry               */
 
-struct SHRD {
+struct SHRD                             /* Device Sharing ctl. blk.  */
+{
         int     id;                     /* Identifier                */
         int     fd;                     /* Socket                    */
         char   *ipaddr;                 /* IP addr of connected peer */
@@ -414,13 +411,17 @@ struct SHRD {
         FWORD   purge[SHARED_PURGE_MAX];/* Purge list                */
 };
 
-typedef struct _SHRD_HDR {
+struct SHRD_HDR                         /* Device Sharing msg header */
+{
         BYTE    cmd;                    /* 0 Command                 */
         BYTE    code;                   /* 1 Flags and Codes         */
         U16     devnum;                 /* 2 Device number           */
         U16     len;                    /* 4 Data length             */
         U16     id;                     /* 6 Identifier              */
-} SHRD_HDR;
+};
+
+typedef struct SHRD       SHRD;         /* (just a shorter name)     */
+typedef struct SHRD_HDR   SHRD_HDR;     /* (just a shorter name)     */
 
 /* Size must be 8 bytes */
 #define SHRD_HDR_SIZE sizeof(DBLWRD)

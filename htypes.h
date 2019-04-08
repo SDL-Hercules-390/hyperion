@@ -182,7 +182,6 @@ typedef struct GSYSINFO  GSYSINFO;  // Ebcdic machine information
 typedef struct DEVDATA   DEVDATA;   // xxxxxxxxx
 typedef struct DEVGRP    DEVGRP;    // xxxxxxxxx
 typedef struct DEVHND    DEVHND;    // xxxxxxxxx
-typedef struct SHRD      SHRD;      // xxxxxxxxx
 
 typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 
