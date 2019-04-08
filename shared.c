@@ -90,10 +90,8 @@ FWORD    cyls;                          /* Remote number cylinders   */
 char    *p, buf[1024];                  /* Work buffer               */
 char    *strtok_str = NULL;             /* last position             */
 
-    retry = dev->connecting;
-
     /* Process the arguments */
-    if (!retry)
+    if (!(retry = dev->connecting))
     {
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
@@ -369,10 +367,8 @@ char    *p, buf[1024];                  /* Work buffer               */
 char    *strtok_str = NULL;             /* last token                */
 #endif /*HAVE_ZLIB*/
 
-    retry = dev->connecting;
-
     /* Process the arguments */
-    if (!retry)
+    if (!(retry = dev->connecting))
     {
 
         kw = op = NULL;
@@ -1175,7 +1171,7 @@ int      rlen;                          /* Request return length     */
 BYTE     hdr[SHRD_HDR_SIZE];            /* Header                    */
 BYTE     temp[256];                     /* Temporary buffer          */
 
-retry :
+retry:
 
     /* Send the request */
     SHRD_SET_HDR(hdr, cmd, flags, dev->rmtnum, dev->rmtid, 0);
@@ -1201,7 +1197,7 @@ retry :
 
     /* Set code and status */
     SHRD_GET_HDR(hdr, rcode, rstatus, rdevnum, rid, rlen);
-    SHRDTRACE("client_response %2.2x %2.2x %2.2x %d %d",
+    SHRDTRACE("client_response %2.2x %2.2x %4.4x %d %d",
             rcode,rstatus,rdevnum,rid,rlen);
     if (code)   *code   = rcode;
     if (status) *status = rstatus;
@@ -1244,7 +1240,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 
     /* Calculate length of header, may contain additional data */
     SHRD_GET_HDR(hdr, cmd, flag, devnum, id, len);
-    SHRDTRACE("client_send %2.2x %2.2x %2.2x %d %d",
+    SHRDTRACE("client_send %2.2x %2.2x %4.4x %d %d",
              cmd,flag,devnum,id,len);
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
     off = len - buflen;
@@ -1354,7 +1350,7 @@ int      len;                           /* Response length           */
     }
     SHRD_GET_HDR(hdr, code, status, devnum, id, len);
 
-    SHRDTRACE("client_recv %2.2x %2.2x %2.2x %d %d",
+    SHRDTRACE("client_recv %2.2x %2.2x %4.4x %d %d",
              code,status,devnum,id,len);
 
     /* Handle remote logical error */
@@ -1409,7 +1405,7 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     }
     SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
 
-    SHRDTRACE("recvData    %2.2x %2.2x %2.2x %d %d",
+    SHRDTRACE("recvData    %2.2x %2.2x %4.4x %d %d",
              cmd, flag, devnum, id, len);
 
     /* Return if no data */
@@ -1532,7 +1528,7 @@ int      off;                           /* Offset into record        */
     /* Extract header information */
     SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
 
-    SHRDTRACE("server_request [%d] %2.2x %2.2x %2.2x %d %d",
+    SHRDTRACE("server_request [%d] %2.2x %2.2x %4.4x %d %d",
              ix, cmd, flag, devnum, id, len);
 
     dev->shrd[ix]->time = time (NULL);
@@ -2092,14 +2088,15 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 /*-------------------------------------------------------------------
  * Determine if a client can be disconnected (server side)
  *-------------------------------------------------------------------*/
-static int serverDisconnectable (DEVBLK *dev, int ix) {
-
-    if (dev->shrd[ix]->waiting || dev->shrd[ix]->pending
-     || dev->shioactive == dev->shrd[ix]->id)
-        return 0;
-    else
-        return 1;
-} /* serverDisconnectable */
+static bool serverDisconnectable( DEVBLK* dev, int ix )
+{
+    return
+    (1
+        && !dev->shrd[ix]->waiting
+        && !dev->shrd[ix]->pending
+        && dev->shioactive != dev->shrd[ix]->id
+    );
+}
 
 /*-------------------------------------------------------------------
  * Disconnect a client (server side)
@@ -2313,6 +2310,7 @@ char            threadname[16] = {0};
     MSGBUF( threadname, "shrd dev %1d:%04X", LCSS_DEVNUM );
     WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), threadname );
 
+    /* Keep looping while there are still clients connected to our device */
     while (dev->shrdconn)
     {
         FD_ZERO( &selset );
@@ -2321,13 +2319,15 @@ char            threadname[16] = {0};
         /* Get the current time */
         now = time( NULL );
 
+        /* For each remote system connected to our device... */
         for (ix = 0; ix < SHARED_MAX_SYS; ix++)
         {
+            /* Is there a client at this slot? */
             if (dev->shrd[ix])
             {
-                /* Exit loop if pending and not waiting */
+                /* Stop as soon as we find a pending request */
                 if (dev->shrd[ix]->pending && !dev->shrd[ix]->waiting)
-                    break;
+                    break; // (go process pending request)
 
                 /* Disconnect if not a valid socket */
                 if (!socket_is_socket( dev->shrd[ix]->fd ))
@@ -2358,14 +2358,19 @@ char            threadname[16] = {0};
             }
         }
 
-        /* Wait for a request if no pending requests */
+        /* Wait for request if all pending requests were processed */
         if (ix >= SHARED_MAX_SYS)
         {
-            /* Exit thread if nothing to select */
-            if (maxfd < 0)
-                continue;
+            /* If our select set is empty, there are not any clients
+               connected to our device (and dev->shrdconn SHOULD now
+               be zero) and thus we have nothing to do. If we don't
+               have any clients connected to our device then we are
+               serving no purpose so we should just exit our thread.
+            */
+            if (maxfd < 0)      // (if nothing to select)
+                continue;       // (then exit our thread)
 
-            /* Wait for a file descriptor to become busy */
+            /* Wait for a client to send us a request */
             wait.tv_sec = SHARED_SELECT_WAIT;
             wait.tv_usec = 0;
 
@@ -2373,7 +2378,7 @@ char            threadname[16] = {0};
             {
                 dev->shrdwait = 1;
                 {
-                    rc = select ( maxfd, &selset, NULL, NULL, &wait );
+                    rc = select( maxfd, &selset, NULL, NULL, &wait );
                 }
                 dev->shrdwait = 0;
             }
@@ -2381,33 +2386,44 @@ char            threadname[16] = {0};
 
             SHRDTRACE("select rc %d", rc );
 
+            /* Timeout; no one has any requests for us at this time */
             if (rc == 0)
                 continue;
 
+            /* Did the select fail? */
             if (rc < 0 )
             {
+                /* Try again if temporary error */
                 if (HSO_errno == HSO_EINTR || HSO_errno == HSO_EBADF)
                     continue;
 
                 // "Shared: error in function %s: %s"
                 WRMSG( HHC00735, "E", "select()", strerror( HSO_errno ));
-                break;
+                break; // (exit our thread)
             }
 
-            /* Find any pending requests */
+            /* One or more sockets in our select set is ready, meaning
+               one or more remote clients connected to our device has
+               a request it needs us to process. Loop through our list
+               of connected clients and set the 'pending' request bit
+               for each one whose socket that select said is FD_ISSET.
+            */
             for (ix = 0; ix < SHARED_MAX_SYS; ix++)
             {
                 if (1
+                    /* Is there a client at this slot? */
                     && dev->shrd[ix]
+                    /* Did select() say its socket is set? */
                     && FD_ISSET( dev->shrd[ix]->fd, &selset )
                 )
                 {
+                    /* Indicate this client has a pending request */
                     dev->shrd[ix]->pending = 1;
                     SHRDTRACE("select isset %d id=%d",
                         dev->shrd[ix]->fd, dev->shrd[ix]->id );
                 }
             }
-            continue;
+            continue; // (re-iterate to process all pending requests)
         }
 
         /* Found a pending request */
@@ -2420,7 +2436,8 @@ char            threadname[16] = {0};
         {
             /* Copy the saved start/resume packet */
             memcpy( hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE );
-            dev->shrd[ix]->havehdr = dev->shrd[ix]->waiting = 0;
+            dev->shrd[ix]->havehdr = 0;
+            dev->shrd[ix]->waiting = 0;
         }
         else
         {
@@ -2563,7 +2580,7 @@ DLL_EXPORT void shutdown_shared_server_locked( void* unused )
 }
 
 /*-------------------------------------------------------------------
- * Shared device server
+ * Shared device server thread: accept connect from remote client
  *-------------------------------------------------------------------*/
 DLL_EXPORT void* shared_server( void* arg )
 {
@@ -2699,7 +2716,7 @@ struct timeval          timeout = {0};
     // "Shared: waiting for shared device requests on port %u"
     WRMSG( HHC00737, "I", sysblk.shrdport );
 
-    /* Define shared server thread  shutdown routine */
+    /* Define shared server thread shutdown routine */
     hdl_addshut( "shutdown_shared_server", shutdown_shared_server, NULL );
 
     /* Handle connection requests and attention interrupts */

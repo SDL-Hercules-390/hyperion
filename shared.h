@@ -322,8 +322,8 @@
 #include "hercules.h"
 
 /*
- * Differing version levels are not compatible
- * Differing release levels are compatible
+ * Differing version levels are NOT compatible!
+ * (Differing release levels ARE compatible.)
  */
 
 #define SHARED_VERSION              0   /* Version level  (0 .. 15)  */
@@ -481,7 +481,7 @@ static int     serverError (DEVBLK *dev, int ix, int code, int status,
                       char *msg);
 static int     serverSend (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf,
                       int buflen);
-static int     serverDisconnectable (DEVBLK *dev, int ix);
+static bool    serverDisconnectable (DEVBLK *dev, int ix);
 static void    serverDisconnect (DEVBLK *dev, int ix);
 static char   *clientip (int sock);
 static DEVBLK *findDevice (U16 devnum);
