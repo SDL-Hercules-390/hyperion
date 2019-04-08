@@ -800,6 +800,7 @@ struct SYSBLK {
         TID     shrdtid;                /* Shared device listener    */
         U16     shrdport;               /* Shared device server port */
         U32     shrdcount;              /* IO count                  */
+        LOCK    shrdtracelock;          /* Trace table LOCK          */
         SHRD_TRACE  *shrdtrace;         /* Internal trace table      */
         SHRD_TRACE  *shrdtracep;        /* Current pointer           */
         SHRD_TRACE  *shrdtracex;        /* End of trace table        */

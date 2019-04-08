@@ -675,6 +675,7 @@ int     rc;
 #if defined( OPTION_SHARED_DEVICES )
     initialize_lock( &sysblk.shrdlock );
     initialize_condition( &sysblk.shrdcond );
+    initialize_lock( &sysblk.shrdtracelock );
 #endif
 
     sysblk.mainowner = LOCK_OWNER_NONE;

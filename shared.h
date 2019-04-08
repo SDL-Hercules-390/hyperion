@@ -488,7 +488,13 @@ static void   *serverConnect (void *psock);
 static void    shrdtrc( DEVBLK* dev, char* fmt, ... ) ATTR_PRINTF(2,3);
 #endif /* _SHARED_C_ */
 
+#define OBTAIN_SHRDLOCK()           obtain_lock(  &sysblk.shrdlock )
+#define RELEASE_SHRDLOCK()          release_lock( &sysblk.shrdlock )
+
 #define SHRDTRACE( fmt, ... ) \
     shrdtrc( dev, fmt, ## __VA_ARGS__ )
+
+#define OBTAIN_SHRDTRACE_LOCK()     obtain_lock(  &sysblk.shrdtracelock )
+#define RELEASE_SHRDTRACE_LOCK()    release_lock( &sysblk.shrdtracelock )
 
 #endif /* _HERCULES_SHARED_H */

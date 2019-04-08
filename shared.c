@@ -2486,8 +2486,13 @@ static void shrdtrc( DEVBLK* dev, char* fmt, ... )
     */
     tracing_or_stepping = (dev && (dev->ccwtrace || dev->ccwstep));
 
+    OBTAIN_SHRDTRACE_LOCK();
+
     if (!tracing_or_stepping && !sysblk.shrdtrace)
+    {
+        RELEASE_SHRDTRACE_LOCK();
         return;  // (nothing for us to do!)
+    }
 
     ASSERT( tracing_or_stepping || sysblk.shrdtrace );
 
@@ -2525,6 +2530,8 @@ static void shrdtrc( DEVBLK* dev, char* fmt, ... )
         /* Copy message (WITH timestamp) into trace table */
         strlcpy( (char*) currmsg, (const char*) tracemsg, sizeof( SHRD_TRACE ));
     }
+
+    RELEASE_SHRDTRACE_LOCK();
 }
 
 /*-------------------------------------------------------------------
@@ -2532,11 +2539,11 @@ static void shrdtrc( DEVBLK* dev, char* fmt, ... )
  *-------------------------------------------------------------------*/
 DLL_EXPORT void shutdown_shared_server( void* unused )
 {
-    obtain_lock( &sysblk.shrdlock );
+    OBTAIN_SHRDLOCK();
     {
         shutdown_shared_server_locked( unused );
     }
-    release_lock( &sysblk.shrdlock );
+    RELEASE_SHRDLOCK();
 }
 
 /*-------------------------------------------------------------------
@@ -2700,11 +2707,11 @@ struct timeval          timeout = {0};
     while (1)
     {
         /* Continue running (looping) as long as shrdport is defined */
-        obtain_lock( &sysblk.shrdlock );
+        OBTAIN_SHRDLOCK();
         {
             shutdown = (sysblk.shrdport ? false : true);
         }
-        release_lock( &sysblk.shrdlock );
+        RELEASE_SHRDLOCK();
 
         if (shutdown)
             break;
@@ -2793,12 +2800,12 @@ struct timeval          timeout = {0};
 #endif
 
     /* Notify "shutdown_shared_server" that we've exited */
-    obtain_lock( &sysblk.shrdlock );
+    OBTAIN_SHRDLOCK();
     {
         sysblk.shrdtid = 0;
         signal_condition( &sysblk.shrdcond );
     }
-    release_lock( &sysblk.shrdlock );
+    RELEASE_SHRDLOCK();
 
     WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), threadname );
 
@@ -2833,8 +2840,12 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
 
     if (argc < 2)
     {
+        OBTAIN_SHRDTRACE_LOCK();
+        {
+            MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
+        }
+        RELEASE_SHRDTRACE_LOCK();
         // "%-14s: %s"
-        MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
         WRMSG( HHC02203, "I", argv[0], buf );
         return 0;
     }
@@ -2860,6 +2871,8 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
         int n, shrdtracen;
         SHRD_TRACE *shrdtrace, *shrdtracep, *shrdtracex, *current;
 
+        OBTAIN_SHRDTRACE_LOCK();
+
         shrdtrace  = sysblk.shrdtrace;       // (ptr to beginning of table)
         shrdtracep = sysblk.shrdtracep;      // (ptr to current/next entry)
         shrdtracex = sysblk.shrdtracex;      // (ptr past the end of table)
@@ -2872,20 +2885,15 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
             {
                 // "Shared: invalid or missing value %s"
                 WRMSG( HHC00740, "E", op );
+                RELEASE_SHRDTRACE_LOCK();
                 return -1;
             }
 
             /* Free existing table */
+            free( sysblk.shrdtrace );
             sysblk.shrdtrace  = NULL;
             sysblk.shrdtracex = NULL;
             sysblk.shrdtracep = NULL;
-
-            if (shrdtrace)
-            {
-                SLEEP( 1 );
-                free( shrdtrace );
-            }
-
             sysblk.shrdtracen = 0;
 
             /* Allocate a new table */
@@ -2897,10 +2905,10 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
                     MSGBUF( buf, "calloc(%d, %d)", (int) shrdtracen, (int) sizeof( SHRD_TRACE ));
                     // "Shared: error in function %s: %s"
                     WRMSG( HHC00735, "E", buf, strerror( errno ));
+                    RELEASE_SHRDTRACE_LOCK();
                     return -1;
                 }
 
-                // NOTE WELL the specific sequence of assignment!
                 sysblk.shrdtracen = shrdtracen;
                 sysblk.shrdtracex = shrdtrace + shrdtracen;
                 sysblk.shrdtrace  = shrdtrace;
@@ -2912,24 +2920,14 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
                 MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
                 WRMSG( HHC02204, "I", argv[0], buf );
 
+            RELEASE_SHRDTRACE_LOCK();
             return 0;
         }
 
         /* Print the current table if it exists */
-        if (shrdtracen <= 0)
+        if (shrdtrace)
         {
-            // "Shared: %s"
-            WRMSG( HHC00743, "I", "(NULL)" );
-        }
-        else
-        {
-            /* Freeze the table by preventing any new entries */
-            sysblk.shrdtrace  = NULL;
-            sysblk.shrdtracex = NULL;
-            sysblk.shrdtracep = NULL;
-            SLEEP(1);
-
-            /* Print the current frozen table */
+            /* Print the current table */
             n = 0;
             current = shrdtracep;
             do
@@ -2956,14 +2954,12 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
                 /* Reset the table to completely empty */
                 memset( shrdtrace, 0, shrdtracen * sizeof( SHRD_TRACE ));
             }
-
-            /* Unfreeze the table to allow new entries to be added */
-            // NOTE WELL the specific sequence of assignment!
-            sysblk.shrdtracen = shrdtracen;
-            sysblk.shrdtracex = shrdtracex;
-            sysblk.shrdtrace  = shrdtrace;
-            sysblk.shrdtracep = shrdtrace;
         }
+        else
+            // "Shared: %s"
+            WRMSG( HHC00743, "I", "(NULL)" );
+
+        RELEASE_SHRDTRACE_LOCK();
     }
     else
     {
