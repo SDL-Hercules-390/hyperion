@@ -1862,7 +1862,7 @@ int      off;                           /* Offset into record        */
             break;
 
         case SHRD_FBAORIGIN:
-            store_fw (buf, dev->fbaorigin);
+            store_dw( buf, dev->fbaorigin );
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
             serverSend (dev, ix, hdr, buf, 4);
             break;
