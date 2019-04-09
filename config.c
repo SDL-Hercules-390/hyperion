@@ -1052,13 +1052,16 @@ int configure_cpu( int target_cpu )
         /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
         /* provided the _POSIX_THREAD_CPUTIME is supported.                       */
         pthread_getcpuclockid( sysblk.cputid[ target_cpu ], &sysblk.cpuclockid[ target_cpu ]);
-        WRMSG( HHC00111, "I", _POSIX_THREAD_CPUTIME );
+        if (!sysblk.hhc_111_112)
+            WRMSG( HHC00111, "I", _POSIX_THREAD_CPUTIME );
 #else
         /* When not supported, we zero the cpuclockid, which will trigger a       */
         /* different approach to obtain the thread CPU time in clock.c            */
         sysblk.cpuclockid[ target_cpu ] = 0;
-        WRMSG( HHC00112, "W" );
+        if (!sysblk.hhc_111_112)
+            WRMSG( HHC00112, "W" );
 #endif
+        sysblk.hhc_111_112 = true;
 
         /* Find out if we are a cpu thread */
         arecpu = are_cpu_thread( &ourcpu );

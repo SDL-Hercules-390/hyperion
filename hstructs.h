@@ -532,6 +532,8 @@ struct SYSBLK {
         U32     cpacap;                 /* Dynamic CP alternate cap. */
         U8      cpccr;                  /* Dynamic CP change reason  */
         U8      cpcai;                  /* Dynamic CP capacity adj.  */
+        U8      hhc_111_112;            /* HHC00111/HHC00112 issued  */
+        U8      unused1;                /* (pad/align/unused/avail)  */
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
