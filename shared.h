@@ -431,14 +431,14 @@ CASSERT( sizeof( SHRD_HDR ) == sizeof( DBLWRD ), shared_h );
                                                                      \
     do                                                               \
     {                                                                \
-        SHRD_HDR* shdr = (SHRD_HDR*) (_buf);                         \
+        SHRD_HDR* shdr = (SHRD_HDR*)  (_buf);                        \
                                                                      \
-        shdr->cmd  =                 (_cmd);                         \
-        shdr->code =                 (_code);                        \
+        shdr->cmd  =                  (_cmd);                        \
+        shdr->code =                  (_code);                       \
                                                                      \
-        store_hw( &shdr->devnum,     (_devnum) );                    \
-        store_hw( &shdr->len,        (_len)    );                    \
-        store_hw( &shdr->id,         (_id)     );                    \
+        store_hw( &shdr->devnum, (U16)(_devnum) );                   \
+        store_hw( &shdr->len,    (U16)(_len)    );                   \
+        store_hw( &shdr->id,     (U16)(_id)     );                   \
     }                                                                \
     while (0)
 

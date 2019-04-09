@@ -622,7 +622,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00712 "%1d:%04X Shared: file %s: model %s origin %"PRId64" blks %d"
 #define HHC00713 "%1d:%04X Shared: error during channel program start"
 #define HHC00714 "%1d:%04X Shared: error during channel program end"
-#define HHC00715 "%1d:%04X Shared: error reading track %d"
+#define HHC00715 "%1d:%04X Shared: remote error reading track %d"
 //efine HHC00716 (available)
 #define HHC00717 "%1d:%04X Shared: error retrieving usage information"
 #define HHC00718 "%1d:%04X Shared: error writing track %d"
@@ -650,7 +650,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00740 "Shared: invalid or missing value %s"
 #define HHC00741 "Shared: invalid or missing keyword %s"
 #define HHC00742 "Shared: OPTION_SHARED_DEVICES not defined"
-#define HHC00743 "Shared: %s"
+#define HHC00743 "Shared:  %s" // (trace message)
 #define HHC00744 "Shared: Server already active"
 //efine HHC00745 - HHC00799 (available)
 
