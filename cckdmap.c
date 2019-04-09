@@ -113,13 +113,14 @@ static void L1tab_to_64()
 {
     if (!cckd64)
     {
-        CCKD_L1ENT*    L32  = L1tab32;
-        CCKD64_L1ENT*  L64  = L1tab;
+        CCKD_L1ENT*    L32  = L1tab32;      // input 32
+        CCKD64_L1ENT*  L64  = L1tab;        // input 64
 
         S32  i;
         for (i=0; i < num_L1tab; ++i)
         {
-            if (L32[i] == ULONG_MAX)
+            // 'ULONG' (ULONG_MAX) is 64-bits on non-LLP64 systems
+            if (L32[i] == (U32)ULONG_MAX)
                 L64[i] = ULLONG_MAX;
             else
                 L64[i] = L32[i];
@@ -133,7 +134,8 @@ static void L2tab_to_64()
         int  i;
         for (i=0; i < 256; ++i)
         {
-            if (L2tab32[i].L2_trkoff == ULONG_MAX)
+            // 'ULONG' (ULONG_MAX) is 64-bits on non-LLP64 systems
+            if (L2tab32[i].L2_trkoff == (U32)ULONG_MAX)
                 L2tab[i].L2_trkoff = ULLONG_MAX;
             else
                 L2tab[i].L2_trkoff = L2tab32[i].L2_trkoff;
