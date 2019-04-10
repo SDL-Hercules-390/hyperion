@@ -848,12 +848,12 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // "L1 index %d = L2TAB offset %"PRId64" (0x%16.16"PRIX64")"
         WRMSG( HHC02610, "I", L1ndx, L2taboff, L2taboff );
 
-        // Programming Note: for whatever reason, base dasd image files
+        // PROGRAMMING NOTE: for whatever reason, base dasd image files
         // use a L2_trkoff value of zero in their L1tab entry for non-
         // existent tracks, whereas shadow files use a value of -1, so
         // we need to check for both.
 
-        if (!L2taboff || L2taboff == ULLONG_MAX)
+        if (!L2taboff || L2taboff == CCKD64_MAXSIZE)
         {
             // "L2tab for %s %d not found"
             FWRMSG( stderr, HHC02618, "S", ckddasd ? "track" : "block", trk );
@@ -861,8 +861,8 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
             ErrExit( EXIT_DATA_NOTFOUND );
         }
 
-        L2tab = makbuf(              cdevhdr.num_L2tab * CCKD64_L2ENT_SIZE, "L2TAB64");
-        readpos(fd, L2tab, L2taboff, cdevhdr.num_L2tab * CCKD64_L2ENT_SIZE);
+        L2tab = makbuf(               cdevhdr.num_L2tab * CCKD64_L2ENT_SIZE, "L2TAB64" );
+        readpos( fd, L2tab, L2taboff, cdevhdr.num_L2tab * CCKD64_L2ENT_SIZE );
 
         if (cmd_l2tab)
         {

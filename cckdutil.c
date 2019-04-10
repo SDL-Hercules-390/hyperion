@@ -157,9 +157,14 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     /* l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0    || l1[i] == UINT_MAX
-         || l1[i] < lopos || l1[i] > hipos - CCKD_L2TAB_SIZE)
+        if (0
+            || l1[i] == CCKD_NOSIZE
+            || l1[i] == CCKD_MAXSIZE
+            || l1[i] < lopos
+            || l1[i] > hipos - CCKD_L2TAB_SIZE
+        )
             continue;
+
         off = (off_t)l1[i];
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
@@ -529,7 +534,7 @@ comp_restart:
      *---------------------------------------------------------------*/
     n = 1 + 1 + 1 + cdevhdr.num_L1tab + 1;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
             n += 256;
     len = sizeof(SPCTAB);
     if ((spctab = calloc (n, len)) == NULL)
@@ -561,7 +566,7 @@ comp_restart:
     s++;
 
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
         {
             spctab[s].spc_typ = SPCTAB_L2;
             spctab[s].spc_val = i;
@@ -594,7 +599,7 @@ comp_restart:
             goto comp_read_error;
         for (j = 0; j < 256; j++)
         {
-            if (l2[l][j].L2_trkoff == 0 || l2[l][j].L2_trkoff == UINT_MAX)
+            if (l2[l][j].L2_trkoff == CCKD_NOSIZE || l2[l][j].L2_trkoff == CCKD_MAXSIZE)
                 continue;
             spctab[s].spc_typ = SPCTAB_TRK;
             spctab[s].spc_val = spctab[i].spc_val*256 + j;
@@ -607,7 +612,7 @@ comp_restart:
         if (memcmp (l2[l], &zero_l2, CCKD_L2TAB_SIZE) == 0
          || memcmp (l2[l], &ff_l2,   CCKD_L2TAB_SIZE) == 0)
         {
-            l1[l] = l2[l][0].L2_trkoff; /* 0 or UINT_MAX */
+            l1[l] = l2[l][0].L2_trkoff; /* CCKD_NOSIZE or CCKD_MAXSIZE */
             spctab[i].spc_typ = SPCTAB_NONE;
             free (l2[l]);
             l2[l] = NULL;
@@ -628,7 +633,8 @@ comp_restart:
     l2area = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
+        if (l1[i] == CCKD_NOSIZE || l1[i] == CCKD_MAXSIZE)
+            continue;
         if (l1[i] != l2area)
             relocate = 1;
         l2area += CCKD_L2TAB_SIZE;
@@ -696,7 +702,8 @@ comp_restart:
     off = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
+        if (l1[i] == CCKD_NOSIZE || l1[i] == CCKD_MAXSIZE)
+            continue;
         spctab[s].spc_typ = SPCTAB_L2;
         spctab[s].spc_val = i;
         spctab[s].spc_off = (U32)off;
@@ -848,7 +855,7 @@ comp_restart:
 
     /* write l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
         {
             off = (off_t)l1[i];
             if (lseek (fd, off, SEEK_SET) < 0)
@@ -1071,7 +1078,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_fstat_error;
     gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
     hipos = (U32)fst.st_size;
-    cckd_maxsize = 0xffffffffull;
+    cckd_maxsize = CCKD_MAXSIZE;
     fdflags = get_file_accmode_flags(fd);
     ro = (fdflags & O_RDWR) == 0;
 
@@ -1366,7 +1373,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* find number of non-null l1 entries */
     for (i = n = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
             n++;
 
     if (level >= 4) n = cdevhdr.num_L1tab;
@@ -1410,7 +1417,8 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab && level < 4; i++)
     {
-        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
+        if (l1[i] == CCKD_NOSIZE || l1[i] == CCKD_MAXSIZE)
+            continue;
         spctab[s].spc_typ = SPCTAB_L2;
         spctab[s].spc_val = i;
         spctab[s].spc_off = l1[i];
@@ -1490,7 +1498,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         /* add trks/blkgrps to the space table */
         for (j = 0; j < 256; j++)
         {
-            if (l2tab[j].L2_trkoff != 0 && l2tab[j].L2_trkoff != UINT_MAX)
+            if (l2tab[j].L2_trkoff != CCKD_NOSIZE && l2tab[j].L2_trkoff != CCKD_MAXSIZE)
             {
                 spctab[s].spc_typ = trktyp;
                 spctab[s].spc_val = spctab[i].spc_val * 256 + j;
@@ -2355,7 +2363,7 @@ cdsk_fba_recover:
             {
                 if ((l2[L1idx] = malloc (len)) == NULL)
                     goto cdsk_malloc_error;
-                l1[L1idx] = shadow ? UINT_MAX : 0;
+                l1[L1idx] = shadow ? CCKD_SHADOW_NO_OFFSET : CCKD_BASE_NO_OFFSET;
                 memcpy (l2[L1idx], &empty_l2, len);
             }
         }

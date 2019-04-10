@@ -348,6 +348,8 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define   HOPEN(_p,_o,...)    hopen     ((_p),(_o), ## __VA_ARGS__)
 #endif
 
+#define MAX_OFFSET_T            ((off_t)(ULLONG_MAX))
+
 /*-------------------------------------------------------------------*/
 /*      Macro for command parsing with variable length               */
 /*-------------------------------------------------------------------*/

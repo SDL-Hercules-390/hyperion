@@ -161,9 +161,8 @@ static void L1tab_to_64()
         S32  i;
         for (i=0; i < num_L1tab; ++i)
         {
-            // 'ULONG' (ULONG_MAX) is 64-bits on non-LLP64 systems
-            if (L32[i] == (U32)ULONG_MAX)
-                L64[i] = ULLONG_MAX;
+            if (L32[i] == CCKD_MAXSIZE)
+                L64[i] = CCKD64_MAXSIZE;
             else
                 L64[i] = L32[i];
         }
@@ -178,9 +177,8 @@ static void L2tabs_to_64()
         {
             for (i=0; i < 256; ++i)
             {
-                // 'ULONG' (ULONG_MAX) is 64-bits on non-LLP64 systems
-                if (iL2tab32[(n*256)+i].L2_trkoff == (U32)ULONG_MAX)
-                    iL2tab[(n*256)+i].L2_trkoff = ULLONG_MAX;
+                if (iL2tab32[(n*256)+i].L2_trkoff == CCKD_MAXSIZE)
+                    iL2tab[(n*256)+i].L2_trkoff = CCKD64_MAXSIZE;
                 else
                     iL2tab[(n*256)+i].L2_trkoff = iL2tab32[(n*256)+i].L2_trkoff;
 
@@ -233,7 +231,7 @@ static int  process_L2_tab( int trkblk, int ifd, CCKD64_L2ENT* iL2,
                                         int ofd, CCKD64_L2ENT* oL2 );
 
 /*-------------------------------------------------------------------*/
-/* Convert a cckd shadow file to cckd64 format                       */
+/* Convert a cckd base or shadow file image to cckd64 format         */
 /*-------------------------------------------------------------------*/
 int main( int argc, char* argv[] )
 {

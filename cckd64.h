@@ -11,6 +11,20 @@
 #include "cckd.h"           // (need CCKD_MAX_SF, etc)
 
 /*-------------------------------------------------------------------*/
+/*  IMPORTANT PROGRAMMING NOTE: for whatever reason, base dasd       */
+/*  image files use a L2_trkoff value of zero in their L1tab entry   */
+/*  for non-existent tracks, whereas shadow files use a value of -1. */
+/*  To ensure we remain 100% compatible with all non-CCKD64 versions */
+/*  of Hercules, we MUST enforce this same inconsistent use design.  */
+/*-------------------------------------------------------------------*/
+
+#define CCKD64_NOSIZE               ((U64)0)
+#define CCKD64_MAXSIZE              ((U64)MAX_OFFSET_T)
+
+#define CCKD64_BASE_NO_OFFSET       CCKD64_NOSIZE
+#define CCKD64_SHADOW_NO_OFFSET     CCKD64_MAXSIZE
+
+/*-------------------------------------------------------------------*/
 /*                    struct typedefs                                */
 /*-------------------------------------------------------------------*/
 typedef struct CCKD64_DEVHDR    CCKD64_DEVHDR;  // Compress device header

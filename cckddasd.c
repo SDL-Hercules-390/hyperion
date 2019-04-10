@@ -222,7 +222,7 @@ int             fdflags;                /* File flags                */
         cckd->fd[i] = -1;
         cckd->open[i] = CCKD_OPEN_NONE;
     }
-    cckd->cckd_maxsize = 0xffffffffull;
+    cckd->cckd_maxsize = CCKD_MAXSIZE;
 
     /* call the chkdsk function */
     if (cckd_chkdsk (dev, 0) < 0)
@@ -935,7 +935,7 @@ CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
     for (L1idx = cckd->cdevhdr[0].num_L1tab - 1; L1idx > 0; L1idx--)
     {
         sfx = cckd->sfn;
-        while (cckd->L1tab[sfx][L1idx] == UINT_MAX && sfx > 0) sfx--;
+        while (cckd->L1tab[sfx][L1idx] == CCKD_MAXSIZE && sfx > 0) sfx--;
         if (cckd->L1tab[sfx][L1idx]) break;
     }
 
@@ -1105,7 +1105,7 @@ CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
     for (L1idx = cckd->cdevhdr[0].num_L1tab - 1; L1idx > 0; L1idx--)
     {
         sfx = cckd->sfn;
-        while (cckd->L1tab[sfx][L1idx] == UINT_MAX && sfx > 0) sfx--;
+        while (cckd->L1tab[sfx][L1idx] == CCKD_MAXSIZE && sfx > 0) sfx--;
         if (cckd->L1tab[sfx][L1idx]) break;
     }
 
@@ -2273,7 +2273,7 @@ int             fsize = size;           /* Free space size           */
         return;
     }
 
-    if (len <= CKD_NULLTRK_FMTMAX || pos == 0 || pos == UINT_MAX)
+    if (len <= CKD_NULLTRK_FMTMAX || pos == CCKD_NOSIZE || pos == CCKD_MAXSIZE)
         return;
 
     cckd = dev->cckd_ext;
@@ -2608,13 +2608,13 @@ int             i;                      /* Work integer              */
     /* Determine bounds */
     cckd->L2_bounds = CCKD_L1TAB_POS + len;
     for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
-        if (cckd->L1tab[sfx][i] != 0 && cckd->L1tab[sfx][i] != UINT_MAX)
+        if (cckd->L1tab[sfx][i] != CCKD_NOSIZE && cckd->L1tab[sfx][i] != CCKD_MAXSIZE)
             cckd->L2_bounds += CCKD_L2TAB_SIZE;
 
     /* Check if all l2 tables are within bounds */
     cckd->L2ok = 1;
     for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab && cckd->L2ok; i++)
-        if (cckd->L1tab[sfx][i] != 0 && cckd->L1tab[sfx][i] != UINT_MAX)
+        if (cckd->L1tab[sfx][i] != CCKD_NOSIZE && cckd->L1tab[sfx][i] != CCKD_MAXSIZE)
             if (cckd->L1tab[sfx][i] > cckd->L2_bounds - CCKD_L2TAB_SIZE)
                 cckd->L2ok = 0;
 
@@ -3005,7 +3005,7 @@ int             nullfmt;                /* Null track format         */
                 buf[i].L2_len = buf[i].L2_size = nullfmt;
         CCKD_TRACE (dev, "l2[%d,%d] cache[%d] null fmt[%d]", sfx, L1idx, lru, nullfmt);
     }
-    else if (cckd->L1tab[sfx][L1idx] == UINT_MAX)
+    else if (cckd->L1tab[sfx][L1idx] == CCKD_MAXSIZE)
     {
         memset(buf, 0xff, CCKD_L2TAB_SIZE);
         CCKD_TRACE (dev, "l2[%d,%d] cache[%d] null 0xff", sfx, L1idx, lru);
@@ -3141,7 +3141,7 @@ int             fix;                    /* Null format type          */
 
     old_off = (off_t)cckd->L1tab[sfx][L1idx];
 
-    if (cckd->L1tab[sfx][L1idx] == 0 || cckd->L1tab[sfx][L1idx] == UINT_MAX)
+    if (cckd->L1tab[sfx][L1idx] == CCKD_NOSIZE || cckd->L1tab[sfx][L1idx] == CCKD_MAXSIZE)
         cckd->L2_bounds += CCKD_L2TAB_SIZE;
 
     /* Write the L2 table if it's not empty */
@@ -3195,7 +3195,7 @@ int             sfx,L1idx,l2x;          /* Lookup table indices      */
                     sfx, L1idx, l2x, trk, cckd->L1tab[sfx][L1idx]);
 
         /* Continue if l2 table not in this file */
-        if (cckd->L1tab[sfx][L1idx] == UINT_MAX)
+        if (cckd->L1tab[sfx][L1idx] == CCKD_MAXSIZE)
             continue;
 
         /* Read l2 table from this file */
@@ -3203,7 +3203,7 @@ int             sfx,L1idx,l2x;          /* Lookup table indices      */
             return -1;
 
         /* Exit loop if track is in this file */
-        if (cckd->L2tab[l2x].L2_trkoff != UINT_MAX)
+        if (cckd->L2tab[l2x].L2_trkoff != CCKD_MAXSIZE)
             break;
     }
 
@@ -3252,7 +3252,7 @@ off_t           off;                    /* L2 entry offset           */
                 cckd->L2tab[l2x].L2_trkoff, cckd->L2tab[l2x].L2_len, cckd->L2tab[l2x].L2_size);
 
     /* If no level 2 table for this file, then write a new one */
-    if (cckd->L1tab[sfx][L1idx] == 0 || cckd->L1tab[sfx][L1idx] == UINT_MAX)
+    if (cckd->L1tab[sfx][L1idx] == CCKD_NOSIZE || cckd->L1tab[sfx][L1idx] == CCKD_MAXSIZE)
         return cckd_write_l2 (dev);
 
     /* Write the level 2 table entry */
@@ -3369,7 +3369,11 @@ int             size;                   /* Size of new track         */
         l2.L2_len    = (U16)len;
         l2.L2_size   = (U16)size;
 
-        if (oldl2.L2_trkoff != 0 && oldl2.L2_trkoff != UINT_MAX && oldl2.L2_trkoff < l2.L2_trkoff)
+        if (1
+            && oldl2.L2_trkoff != CCKD_NOSIZE
+            && oldl2.L2_trkoff != CCKD_MAXSIZE
+            && oldl2.L2_trkoff < l2.L2_trkoff
+        )
             after = 1;
 
         /* Write the track image */
@@ -4283,7 +4287,7 @@ BYTE            buf[64*1024];           /* Buffer                    */
         {
             l2updated = 0;
             /* Continue if from L2 doesn't exist */
-            if (cckd->L1tab[from_sfx][i] == UINT_MAX
+            if (cckd->L1tab[from_sfx][i] == CCKD_MAXSIZE
              || (cckd->L1tab[from_sfx][i] == 0 && cckd->L1tab[to_sfx][i] == 0))
                 continue;
 
@@ -4302,7 +4306,7 @@ BYTE            buf[64*1024];           /* Buffer                    */
             /* Read `to' l2 table */
             if (cckd->L1tab[to_sfx][i] == 0)
                 memset( &to_l2, 0, CCKD_L2TAB_SIZE );
-            else if (cckd->L1tab[to_sfx][i] == UINT_MAX)
+            else if (cckd->L1tab[to_sfx][i] == CCKD_MAXSIZE)
                 memset (&to_l2, 0xff, CCKD_L2TAB_SIZE);
             else
             {
@@ -4316,7 +4320,7 @@ BYTE            buf[64*1024];           /* Buffer                    */
             {
                 trk = i*256 + j;
                 /* Continue if from L2 entry doesn't exist */
-                if (from_l2[j].L2_trkoff == UINT_MAX
+                if (from_l2[j].L2_trkoff == CCKD_MAXSIZE
                  || (from_l2[j].L2_trkoff == 0 && to_l2[j].L2_trkoff == 0))
                     continue;
 
@@ -4371,7 +4375,7 @@ BYTE            buf[64*1024];           /* Buffer                    */
                 else
                 {
                     size = CCKD_L2TAB_SIZE;
-                    if (pos == 0 || pos == (off_t)UINT_MAX)
+                    if (pos == CCKD_NOSIZE || pos == CCKD_MAXSIZE)
                         if ((pos = cckd_get_space( dev, &size, CCKD_L2SPACE )) < 0)
                             goto sf_merge_error;
                     if (cckd_write( dev, to_sfx, pos, &to_l2, CCKD_L2TAB_SIZE ) < 0)
@@ -4448,7 +4452,7 @@ sf_merge_error:
         // "%1d:%04X CCKD file[%d] %s: shadow file not merged, error processing trk(%d)"
         WRMSG( HHC00327, "E", LCSS_DEVNUM, from_sfx, cckd_sf_name( dev, from_sfx ), trk );
 
-    if (l2updated && cckd->L1tab[ to_sfx ][i] && cckd->L1tab[ to_sfx ][i] != UINT_MAX)
+    if (l2updated && cckd->L1tab[ to_sfx ][i] && cckd->L1tab[ to_sfx ][i] != CCKD_SHADOW_NO_OFFSET)
     {
         l2updated = 0;
         pos = (off_t)cckd->L1tab[to_sfx][i];
@@ -5394,7 +5398,7 @@ off_t           pos, fpos;              /* File offsets              */
 
     /* Find any level 2 table out of bounds */
     for (i = 0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
-        if (cckd->L1tab[sfx][i] != 0 && cckd->L1tab[sfx][i] != UINT_MAX
+        if (cckd->L1tab[sfx][i] != CCKD_NOSIZE && cckd->L1tab[sfx][i] != CCKD_MAXSIZE
          && cckd->L2_bounds - CCKD_L2TAB_SIZE < (U64)cckd->L1tab[sfx][i])
             break;
 
@@ -5475,7 +5479,7 @@ off_t           pos, fpos;              /* File offsets              */
             for (i=0; i < cckd->cdevhdr[sfx].num_L1tab; i++)
             {
                 if (cckd->L2_bounds - CCKD_L2TAB_SIZE < (U64)cckd->L1tab[sfx][i]
-                 && cckd->L1tab[sfx][i] != UINT_MAX)
+                 && cckd->L1tab[sfx][i] != CCKD_MAXSIZE)
                     break;
             }
         }

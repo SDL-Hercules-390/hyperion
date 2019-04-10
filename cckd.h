@@ -9,6 +9,20 @@
 #define _CCKD_H_
 
 /*-------------------------------------------------------------------*/
+/*  IMPORTANT PROGRAMMING NOTE: for whatever reason, base dasd       */
+/*  image files use a L2_trkoff value of zero in their L1tab entry   */
+/*  for non-existent tracks, whereas shadow files use a value of -1. */
+/*  To ensure we remain 100% compatible with all non-CCKD64 versions */
+/*  of Hercules, we MUST enforce this same inconsistent use design.  */
+/*-------------------------------------------------------------------*/
+
+#define CCKD_NOSIZE                 ((U32)0)
+#define CCKD_MAXSIZE                ((U32)MAX_OFFSET_T)
+
+#define CCKD_BASE_NO_OFFSET         CCKD_NOSIZE
+#define CCKD_SHADOW_NO_OFFSET       CCKD_MAXSIZE
+
+/*-------------------------------------------------------------------*/
 /*                    struct typedefs                                */
 /*-------------------------------------------------------------------*/
 typedef struct CKD_DEVHDR       CKD_DEVHDR;     // Device header

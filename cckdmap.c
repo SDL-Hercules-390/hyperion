@@ -119,9 +119,8 @@ static void L1tab_to_64()
         S32  i;
         for (i=0; i < num_L1tab; ++i)
         {
-            // 'ULONG' (ULONG_MAX) is 64-bits on non-LLP64 systems
-            if (L32[i] == (U32)ULONG_MAX)
-                L64[i] = ULLONG_MAX;
+            if (L32[i] == CCKD_MAXSIZE)
+                L64[i] = CCKD64_MAXSIZE;
             else
                 L64[i] = L32[i];
         }
@@ -134,9 +133,8 @@ static void L2tab_to_64()
         int  i;
         for (i=0; i < 256; ++i)
         {
-            // 'ULONG' (ULONG_MAX) is 64-bits on non-LLP64 systems
-            if (L2tab32[i].L2_trkoff == (U32)ULONG_MAX)
-                L2tab[i].L2_trkoff = ULLONG_MAX;
+            if (L2tab32[i].L2_trkoff == CCKD_MAXSIZE)
+                L2tab[i].L2_trkoff = CCKD64_MAXSIZE;
             else
                 L2tab[i].L2_trkoff = L2tab32[i].L2_trkoff;
 
