@@ -1218,7 +1218,7 @@ static void *commadpt_thread(void *vca)
     devnum=ca->devnum;
 
     MSGBUF(threadname, "3705 device(%1d:%04X) thread", ca->dev->ssid, devnum);
-    WRMSG(HHC00100, "I", thread_id(), get_thread_priority(), threadname);
+    LOG_THREAD_BEGIN( threadname );
 
     while (!sysblk.shutdown) {
         release_lock(&ca->lock);
@@ -1242,7 +1242,7 @@ static void *commadpt_thread(void *vca)
     }
     // end while(!sysblk.shutdown)
 
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
+    LOG_THREAD_END( threadname );
     release_lock(&ca->lock);
     return NULL;
 }

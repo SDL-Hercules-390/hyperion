@@ -403,7 +403,7 @@ void* socket_thread( void* arg )
     set_thread_priority( sysblk.srvprio );
 
     /* Display thread started message on control panel */
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SOCKET_THREAD_NAME );
+    LOG_THREAD_BEGIN( SOCKET_THREAD_NAME  );
 
     for (;;)
     {
@@ -442,7 +442,7 @@ void* socket_thread( void* arg )
         check_socket_devices_for_connections( &sockset );
     }
 
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), SOCKET_THREAD_NAME );
+    LOG_THREAD_END( SOCKET_THREAD_NAME  );
 
     return NULL;
 }

@@ -210,7 +210,7 @@ static void* ptt_timeout( void* arg )
     SET_THREAD_NAME( thread_name );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
+    LOG_THREAD_BEGIN( thread_name  );
 
     hthread_mutex_lock( &ptttolock );
 
@@ -234,7 +234,7 @@ static void* ptt_timeout( void* arg )
     hthread_mutex_unlock( &ptttolock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
+    LOG_THREAD_END( thread_name  );
 
     return NULL;
 }
@@ -522,13 +522,14 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                     else
                         MSGBUF(retcode, "%d", pttrace[i].rc);
                 }
+                // "%-18s %s "TIDPAT" %-18s "PTR_FMTx" "PTR_FMTx" %s"
                 WRMSG( HHC90021, "I"
                     , pttrace[i].loc                    // File name (string; 18 chars)
                     , &tod[11]                          // Time of day (HH:MM:SS.usecs)
-                    , pttrace[i].tid                    // Thread id
+                    , TID_CAST( pttrace[i].tid )        // Thread id
                     , pttrace[i].msg                    // Trace message (string; 18 chars)
-                    , (uintptr_t)pttrace[i].data1       // Data value 1
-                    , (uintptr_t)pttrace[i].data2       // Data value 2
+                    , PTR_CAST( pttrace[i].data1 )      // Data value 1
+                    , PTR_CAST( pttrace[i].data2 )      // Data value 2
                     , retcode                           // Return code (or empty string)
                 );
                 count++;

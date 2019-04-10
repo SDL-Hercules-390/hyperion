@@ -866,7 +866,7 @@ struct timeval      timeout;            /* timeout value             */
     set_thread_priority( sysblk.srvprio);
 
     /* Display thread started message on control panel */
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), HTTP_SRVR_THREAD_NAME );
+    LOG_THREAD_BEGIN( HTTP_SRVR_THREAD_NAME  );
 
     /* make sure root path is built */
     if ( http_root() == NULL )
@@ -986,7 +986,7 @@ http_server_stop:
         hdl_delshut(http_shutdown, NULL);
 
     /* Display thread ended message on control panel */
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), HTTP_SRVR_THREAD_NAME );
+    LOG_THREAD_END( HTTP_SRVR_THREAD_NAME  );
 
     sysblk.httptid = 0;
 

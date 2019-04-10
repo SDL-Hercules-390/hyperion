@@ -3233,7 +3233,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     set_thread_priority( sysblk.srvprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), CON_CONN_THREAD_NAME );
+    LOG_THREAD_BEGIN( CON_CONN_THREAD_NAME  );
 
     /* Get information about this system */
     init_hostinfo( NULL );
@@ -3754,7 +3754,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     close_socket( lsock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), CON_CONN_THREAD_NAME );
+    LOG_THREAD_END( CON_CONN_THREAD_NAME  );
 
     return NULL;
 

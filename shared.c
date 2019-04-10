@@ -2357,7 +2357,7 @@ char            threadname[16] = {0};
 
     MSGBUF( threadname, "shrd dev %1d:%04X", LCSS_DEVNUM );
     if (MLVL( VERBOSE ))
-        WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), threadname );
+        LOG_THREAD_BEGIN( threadname  );
 
     /* Keep looping while there are still clients connected to our device */
     while (dev->shrdconn)
@@ -2526,7 +2526,7 @@ char            threadname[16] = {0};
     release_lock( &dev->lock );
 
     if (MLVL( VERBOSE ))
-        WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), threadname );
+        LOG_THREAD_END( threadname  );
 
     return NULL;
 
@@ -2672,7 +2672,7 @@ struct timeval          timeout = {0};
 
     /* Display thread started message on control panel */
     MSGBUF( threadname, "shrd srvr %d.%d", SHARED_VERSION, SHARED_RELEASE );
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), threadname );
+    LOG_THREAD_BEGIN( threadname  );
 
     /* Obtain a internet socket */
     if ((lsock = socket( AF_INET, SOCK_STREAM, 0 )) < 0)
@@ -2887,7 +2887,7 @@ struct timeval          timeout = {0};
     }
     RELEASE_SHRDLOCK();
 
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), threadname );
+    LOG_THREAD_END( threadname  );
 
     return NULL;
 

@@ -586,7 +586,7 @@ static void ListScriptsIds()
         if (!pCtl->scr_tid) continue; /* (inactive) */
         // "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
         WRMSG( HHC02315, "I", pCtl->scr_id,
-            pCtl->scr_tid, pCtl->scr_recursion,
+            TID_CAST( pCtl->scr_tid ), pCtl->scr_recursion,
             pCtl->scr_name ? pCtl->scr_name : "" );
     }
 
@@ -893,19 +893,17 @@ static void *script_thread( void *arg )
     char*    argv[MAX_ARGS];            /* Command arguments array   */
     int      argc;                      /* Number of cmd arguments   */
     int      i;                         /* (work)                    */
-    TID      tid   = thread_id();
     SCRCTL*  pCtl  = NULL;
 
     UNREFERENCED(arg);
 
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' started"
-    WRMSG( HHC00100, "I", (u_long) tid,
-        get_thread_priority(), SCRIPT_THREAD_NAME );
+    LOG_THREAD_BEGIN( SCRIPT_THREAD_NAME );
 #endif
 
     /* Retrieve our control entry */
-    pCtl = FindSCRCTL( tid );
+    pCtl = FindSCRCTL( thread_id() );
     ASSERT( pCtl && pCtl->scr_cmdline ); /* (sanity check) */
 
     /* Parse the command line into its individual arguments...
@@ -925,8 +923,7 @@ static void *script_thread( void *arg )
 
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' ended"
-    WRMSG( HHC00101, "I", (u_long) tid,
-        get_thread_priority(), SCRIPT_THREAD_NAME );
+    LOG_THREAD_BEGIN( SCRIPT_THREAD_NAME );
 #endif
 
     return NULL;

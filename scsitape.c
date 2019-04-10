@@ -1724,7 +1724,7 @@ static void* get_stape_status_thread( void* notused )
     set_thread_priority( sysblk.devprio + 1 );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SCSISTAT_THREAD_NAME );
+    LOG_THREAD_BEGIN( SCSISTAT_THREAD_NAME  );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -1818,7 +1818,7 @@ static void* get_stape_status_thread( void* notused )
     }
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), SCSISTAT_THREAD_NAME );
+    LOG_THREAD_END( SCSISTAT_THREAD_NAME  );
 
     sysblk.stape_getstat_busy = 0;
     sysblk.stape_getstat_tid = 0;
@@ -2108,7 +2108,7 @@ void *scsi_tapemountmon_thread( void *notused )
     UNREFERENCED( notused );
 
     // "Thread id "TIDPAT", prio %d, name '%s' started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), SCSIMOUNT_THREAD_NAME );
+    LOG_THREAD_BEGIN( SCSIMOUNT_THREAD_NAME  );
 
     obtain_lock( &sysblk.stape_lock );
 
@@ -2249,7 +2249,7 @@ void *scsi_tapemountmon_thread( void *notused )
     }
 
     // "Thread id "TIDPAT", prio %d, name '%s' ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), SCSIMOUNT_THREAD_NAME );
+    LOG_THREAD_END( SCSIMOUNT_THREAD_NAME  );
 
     sysblk.stape_mountmon_tid = 0;  // (we're going away)
     release_lock( &sysblk.stape_lock );

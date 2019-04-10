@@ -99,9 +99,9 @@ static void* test_thread( void* parg)
     sched_yield();
 
     /* Do nanosleep for the specified number of seconds */
-    logmsg("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
+    LOGMSG("*** $test thread "TIDPAT": sleeping for %d seconds...\n", TID_CAST( tid ), secs );
     rc = nanosleep( &ts, NULL );
-    logmsg("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
+    LOGMSG("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", TID_CAST( tid ), secs, rc );
 
     return NULL;
 }

@@ -1471,12 +1471,13 @@ int             rc;
             signal_condition(&cckdblk.termcond);
             if (!cckdblk.batch || cckdblk.batchml > 1)
                 // "Thread id "TIDPAT", prio %d, name '%s' ended"
-                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
+                LOG_THREAD_END( threadname );
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
                 // "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
-                WRMSG(HHC00108, "W", thread_id(), threadname, get_thread_priority(), ra, cckdblk.ramax);
+                WRMSG( HHC00108, "W", TID_CAST( thread_id()), threadname,
+                    get_thread_priority(), ra, cckdblk.ramax );
 
         release_lock(&cckdblk.ralock);
         return NULL;
@@ -1484,7 +1485,7 @@ int             rc;
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
         // "Thread id "TIDPAT", prio %d, name '%s' started"
-        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), threadname);
+        LOG_THREAD_BEGIN( threadname );
 
     while (ra <= cckdblk.ramax)   /* continue until ramax=0 (shutdown) or max reduced by command line */
     {
@@ -1561,7 +1562,7 @@ int             rc;
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
         // "Thread id "TIDPAT", prio %d, name '%s' ended"
-        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), threadname);
+        LOG_THREAD_END( threadname );
 
     --cckdblk.ras;
     --cckdblk.raa;
@@ -1746,12 +1747,13 @@ int             rc;
 
             if (!cckdblk.batch || cckdblk.batchml > 1)
               // "Thread id "TIDPAT", prio %d, name '%s' ended"
-              WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), threadname );
+              LOG_THREAD_END( threadname  );
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
                 // "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
-                WRMSG( HHC00108, "W", thread_id(), threadname, get_thread_priority(), writer, cckdblk.wrmax );
+                WRMSG( HHC00108, "W", TID_CAST( thread_id()), threadname,
+                get_thread_priority(), writer, cckdblk.wrmax );
 
         release_lock( &cckdblk.wrlock );
         return NULL;
@@ -1759,7 +1761,7 @@ int             rc;
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
         // "Thread id "TIDPAT", prio %d, name '%s' started"
-        WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), threadname );
+        LOG_THREAD_BEGIN( threadname  );
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
     {
@@ -1842,7 +1844,7 @@ int             rc;
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
         // "Thread id "TIDPAT", prio %d, name '%s' ended"
-        WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), threadname );
+        LOG_THREAD_END( threadname  );
 
     cckdblk.wrs--;
     cckdblk.wra--;
@@ -4929,12 +4931,13 @@ struct timespec tm;                     /* Time-of-day to wait       */
             signal_condition(&cckdblk.termcond);  /* signal if last gcol thread ending before init. */
             if (!cckdblk.batch || cckdblk.batchml > 1)
                 // "Thread id "TIDPAT", prio %d, name '%s' ended"
-                WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), CCKD_GC_THREAD_NAME );
+                LOG_THREAD_END( CCKD_GC_THREAD_NAME  );
         }
         else
             if (!cckdblk.batch || cckdblk.batchml > 0)
                 // "Ending thread "TIDPAT" %s, pri=%d, started=%d, max=%d exceeded"
-                WRMSG(HHC00108, "W", thread_id(), CCKD_GC_THREAD_NAME, get_thread_priority(), cckdblk.gcs, cckdblk.gcmax);
+                WRMSG( HHC00108, "W", TID_CAST( thread_id()), CCKD_GC_THREAD_NAME,
+                    get_thread_priority(), cckdblk.gcs, cckdblk.gcmax );
 
         release_lock (&cckdblk.gclock);
         return NULL;        /* back to the shadows again  */
@@ -4942,7 +4945,7 @@ struct timespec tm;                     /* Time-of-day to wait       */
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
         // "Thread id "TIDPAT", prio %d, name '%s' started"
-        WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), CCKD_GC_THREAD_NAME );
+        LOG_THREAD_BEGIN( CCKD_GC_THREAD_NAME  );
 
     while (gcol <= cckdblk.gcmax)
     {
@@ -4976,7 +4979,7 @@ struct timespec tm;                     /* Time-of-day to wait       */
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
         // "Thread id "TIDPAT", prio %d, name '%s' ended"
-        WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), CCKD_GC_THREAD_NAME );
+        LOG_THREAD_END( CCKD_GC_THREAD_NAME  );
 
     cckdblk.gcs--;
     cckdblk.gca--;

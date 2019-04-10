@@ -3178,7 +3178,7 @@ FinishShutdown:
 
     sysblk.panel_init = 0;
 
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), PANEL_THREAD_NAME );
+    LOG_THREAD_END( PANEL_THREAD_NAME  );
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 

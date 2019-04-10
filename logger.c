@@ -266,7 +266,8 @@ static void logger_term(void *arg)
         if (!daemon_task)
         {
             // "Thread id "TIDPAT", prio %2d, name %s ended"
-            FWRMSG( stderr, HHC00101, "I", thread_id(), get_thread_priority(), LOGGER_THREAD_NAME );
+            FWRMSG( stderr, HHC00101, "I", TID_CAST( thread_id()),
+                get_thread_priority(), LOGGER_THREAD_NAME );
             fflush( stderr );
         }
     }
@@ -487,7 +488,8 @@ static void* logger_thread( void* arg )
         {
             char buf[128];
             // "Thread id "TIDPAT", prio %2d, name %s ended"
-            MSGBUF( buf, MSG( HHC00101, "I", thread_id(), get_thread_priority(), LOGGER_THREAD_NAME ));
+            MSGBUF( buf, MSG( HHC00101, "I", TID_CAST( thread_id()),
+                get_thread_priority(), LOGGER_THREAD_NAME ));
             logger_timestamped_logfile_write( buf, strlen( buf ));
         }
 

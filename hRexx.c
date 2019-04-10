@@ -674,7 +674,7 @@ static void ListSCRCTLs()
         WRMSG( HHC17515, "I"
             , &tod[ 11 ] // HH:MM:SS
             , PkgNum2Name( pCtl->scr_pkg )
-            , pCtl->scr_tid
+            , TID_CAST( pCtl->scr_tid )
             , pCtl->scr_mode == MODE_COMMAND    ? "cmd" :
               pCtl->scr_mode == MODE_SUBROUTINE ? "sub" : "???"
             , pCtl->scr_name
@@ -1423,7 +1423,7 @@ static BYTE CancelRexxExec( TID tid )
         if (!(pCtl = FindSCRCTL( tid )))
         {
             // "Asynchronous Rexx script "TIDPAT" not found"
-            WRMSG( HHC17517, "E", tid );
+            WRMSG( HHC17517, "E", TID_CAST( tid ));
             release_lock( &scr_lock );
             return FALSE;
         }
@@ -1445,7 +1445,7 @@ static BYTE CancelRexxExec( TID tid )
             {
                 // "REXX(%s) Signal HALT "TIDPAT" %s"
                 WRMSG( HHC17520, "E", PkgNum2Name( pCtl->scr_pkg ),
-                    pCtl->scr_tid, "failed" );
+                    TID_CAST( pCtl->scr_tid ), "failed" );
                 rc = FALSE;
             }
         }
@@ -1494,7 +1494,7 @@ static BYTE CancelAllRexxExecs()
                 {
                     // "REXX(%s) Signal HALT "TIDPAT" %s"
                     WRMSG( HHC17520, "E", PkgNum2Name( pCtl->scr_pkg ),
-                        pCtl->scr_tid, "failed" );
+                        TID_CAST( pCtl->scr_tid ), "failed" );
                     rc = FALSE;
                 }
             }

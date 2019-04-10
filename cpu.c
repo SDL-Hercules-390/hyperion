@@ -1299,7 +1299,7 @@ int   rc;
     /* Display thread started message on control panel */
 
     MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
+    LOG_THREAD_BEGIN( thread_name  );
     SET_THREAD_NAME( thread_name );
 
     /* Execute the program in specified mode */
@@ -1324,7 +1324,7 @@ int   rc;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    WRMSG(HHC00101, "I", thread_id(),  get_thread_priority(), thread_name);
+    LOG_THREAD_END( thread_name );
 
     RELEASE_INTLOCK(NULL);
 

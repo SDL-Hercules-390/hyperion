@@ -81,12 +81,13 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
 
     // "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
     WRMSG( HHC90013, "E", calltype, ilk->name, rc, err_desc,
-        hthread_self(), TRIMLOC( err_loc ));
+        TID_CAST( hthread_self() ), TRIMLOC( err_loc ));
 
     if (ilk->tid)
     {
         // "lock %s was obtained by thread "TIDPAT" at %s"
-        WRMSG( HHC90014, "I", ilk->name, ilk->tid, TRIMLOC( ilk->location ));
+        WRMSG( HHC90014, "I", ilk->name, TID_CAST( ilk->tid ),
+            TRIMLOC( ilk->location ));
     }
 }
 
@@ -767,13 +768,13 @@ static void hthread_list_abandoned_locks( TID tid, const char* exit_loc )
             if (exit_loc)
             {
                 // "Thread "TIDPAT" has abandoned at %s lock %s obtained on %s at %s"
-                WRMSG( HHC90016, "E", tid, TRIMLOC( exit_loc ),
+                WRMSG( HHC90016, "E", TID_CAST( tid ), TRIMLOC( exit_loc ),
                     ilk->name, &tod[11], TRIMLOC( ilk->location ));
             }
             else
             {
                 // "Thread "TIDPAT" has abandoned lock %s obtained on %s at %s"
-                WRMSG( HHC90015, "E", tid,
+                WRMSG( HHC90015, "E", TID_CAST( tid ),
                     ilk->name, &tod[11], TRIMLOC( ilk->location ));
             }
         }
@@ -1074,7 +1075,8 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
                         c=1;
                         FormatTIMEVAL( &ilk[i].time, tod, sizeof( tod ));
                         // "Lock=%s, tid="TIDPAT", tod=%s, loc=%s"
-                        WRMSG( HHC90017, "I", ilk[i].name, ilk[i].tid, &tod[11], TRIMLOC( ilk[i].location ));
+                        WRMSG( HHC90017, "I", ilk[i].name, TID_CAST( ilk[i].tid ),
+                            &tod[11], TRIMLOC( ilk[i].location ));
                     }
                 }
 
@@ -1088,7 +1090,7 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
             if (!c)
             {
                 // "No locks found for thread "TIDPAT"."
-                WRMSG( HHC90019, "W", tid );
+                WRMSG( HHC90019, "W", TID_CAST( tid ));
             }
             else if (!tid)
             {

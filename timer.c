@@ -189,7 +189,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     set_thread_priority( sysblk.todprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), TIMER_THREAD_NAME );
+    LOG_THREAD_BEGIN( TIMER_THREAD_NAME  );
 
     then = host_tod();
 
@@ -281,7 +281,7 @@ const U64   period = ETOD_SEC;          /* MIPS calculation period   */
     sysblk.todtid = 0;
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), TIMER_THREAD_NAME );
+    LOG_THREAD_END( TIMER_THREAD_NAME  );
 
     return NULL;
 

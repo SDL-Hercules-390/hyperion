@@ -772,12 +772,11 @@ int     rc;
        is the logger that processes all WRMSG() calls.
     */
     /* Log our own thread started message (better late than never) */
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), IMPL_THREAD_NAME );
+    LOG_THREAD_BEGIN( IMPL_THREAD_NAME  );
 
     /* Set the priority of the logger thread and log its started msg */
     set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
-    WRMSG( HHC00100, "I", sysblk.loggertid,
-        get_thread_priority_id( sysblk.loggertid ), LOGGER_THREAD_NAME );
+    LOG_TID_BEGIN( sysblk.loggertid, LOGGER_THREAD_NAME );
 
     /* Process command-line arguments. Exit if any serious errors. */
     if ((rc = process_args( argc, argv )) != 0)
