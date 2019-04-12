@@ -2959,108 +2959,147 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
 
     if (strcasecmp( kw, "TRACE" ) == 0)
     {
-        int n, shrdtracen;
-        SHRD_TRACE *shrdtrace, *shrdtracep, *shrdtracex, *current;
+        SHRD_TRACE*  shrdtrace;
+        SHRD_TRACE*  shrdtracep;
+        SHRD_TRACE*  shrdtracex;
+        int          shrdtracen;
 
         OBTAIN_SHRDTRACE_LOCK();
 
         shrdtrace  = sysblk.shrdtrace;       // (ptr to beginning of table)
         shrdtracep = sysblk.shrdtracep;      // (ptr to current/next entry)
         shrdtracex = sysblk.shrdtracex;      // (ptr past the end of table)
-        shrdtracen = sysblk.shrdtracen;      // (table size in #of entries)
 
-        /* Get a new trace table if an operand was specified */
-        if (op)
+        /* Print trace table if no TRACE operand was specified */
+        if (!op)
         {
-            if (sscanf( op, "%d%c", &shrdtracen, &c ) != 1)
-            {
-                // "Shared: invalid or missing value %s"
-                WRMSG( HHC00740, "E", op );
-                RELEASE_SHRDTRACE_LOCK();
-                return -1;
-            }
-
-            /* Free existing table */
-            free( sysblk.shrdtrace );
-            sysblk.shrdtrace  = NULL;
-            sysblk.shrdtracex = NULL;
-            sysblk.shrdtracep = NULL;
-            sysblk.shrdtracen = 0;
-
-            /* Allocate a new table */
-            if (shrdtracen > 0)
-            {
-                if (!(shrdtrace = calloc( (size_t) shrdtracen, sizeof( SHRD_TRACE ))))
-                {
-                    char buf[40];
-                    MSGBUF( buf, "calloc(%d, %d)", (int) shrdtracen, (int) sizeof( SHRD_TRACE ));
-                    // "Shared: error in function %s: %s"
-                    WRMSG( HHC00735, "E", buf, strerror( errno ));
-                    RELEASE_SHRDTRACE_LOCK();
-                    return -1;
-                }
-
-                sysblk.shrdtracen = shrdtracen;
-                sysblk.shrdtracex = shrdtrace + shrdtracen;
-                sysblk.shrdtrace  = shrdtrace;
-                sysblk.shrdtracep = shrdtrace;
-            }
-
-            if (MLVL( VERBOSE ))
-            {
-                // "%-14s set to %s"
-                MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
-                WRMSG( HHC02204, "I", argv[0], buf );
-            }
-
+            shared_print_trace_table_locked();
             RELEASE_SHRDTRACE_LOCK();
             return 0;
         }
 
-        /* Print the current table if it exists */
-        if (shrdtrace)
+        /* Operand specified: get size of requested table */
+        if (sscanf( op, "%d%c", &shrdtracen, &c ) != 1)
         {
-            /* Print the current table */
-            n = 0;
-            current = shrdtracep;
-            do
-            {
-                if (current[0][0])
-                {
-                    // "Shared:  %s"
-                    WRMSG( HHC00743, "I", (char*) current );
-                    n++;
-                }
-
-                if (++current >= shrdtracex)
-                    current = shrdtrace;
-            }
-            while (current != shrdtracep);
-
-            if (!n)
-            {
-                // "Shared:  %s"
-                WRMSG( HHC00743, "I", "(none)" );
-            }
-            else
-            {
-                /* Reset the table to completely empty */
-                memset( shrdtrace, 0, shrdtracen * sizeof( SHRD_TRACE ));
-            }
+            // "Shared: invalid or missing value %s"
+            WRMSG( HHC00740, "E", op );
+            RELEASE_SHRDTRACE_LOCK();
+            return -1;
         }
-        else
-            // "Shared:  %s"
-            WRMSG( HHC00743, "I", "(NULL)" );
+
+        /* Free existing table */
+        free( sysblk.shrdtrace );
+        sysblk.shrdtrace  = NULL;
+        sysblk.shrdtracex = NULL;
+        sysblk.shrdtracep = NULL;
+        sysblk.shrdtracen = 0;
+
+        /* Allocate new table */
+        if (shrdtracen > 0)
+        {
+            if (!(shrdtrace = calloc( (size_t) shrdtracen, sizeof( SHRD_TRACE ))))
+            {
+                char buf[40];
+                MSGBUF( buf, "calloc(%d, %d)", (int) shrdtracen, (int) sizeof( SHRD_TRACE ));
+                // "Shared: error in function %s: %s"
+                WRMSG( HHC00735, "E", buf, strerror( errno ));
+                RELEASE_SHRDTRACE_LOCK();
+                return -1;
+            }
+
+            sysblk.shrdtracen = shrdtracen;
+            sysblk.shrdtracex = shrdtrace + shrdtracen;
+            sysblk.shrdtrace  = shrdtrace;
+            sysblk.shrdtracep = shrdtrace;
+        }
+
+        if (MLVL( VERBOSE ))
+        {
+            // "%-14s set to %s"
+            MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
+            WRMSG( HHC02204, "I", argv[0], buf );
+        }
 
         RELEASE_SHRDTRACE_LOCK();
+        return 0;
+    }
+
+    if (strcasecmp( kw, "DTAX" ) == 0)  // Dump Table At Exit
+    {
+        int dtax;
+        if (!op)
+        {
+            // "Shared: invalid or missing value %s"
+            WRMSG( HHC00740, "E", kw );
+            RELEASE_SHRDTRACE_LOCK();
+            return -1;
+        }
+        if (sscanf( op, "%d%c", &dtax, &c ) != 1)
+        {
+            // "Shared: invalid or missing value %s"
+            WRMSG( HHC00740, "E", op );
+            RELEASE_SHRDTRACE_LOCK();
+            return -1;
+        }
+        sysblk.shrddtax = dtax ? true : false;
+        RELEASE_SHRDTRACE_LOCK();
+        return 0;
+    }
+
+    // "Shared: invalid or missing keyword %s"
+    WRMSG( HHC00741, "E", kw );
+    return -1;
+}
+
+/*-------------------------------------------------------------------
+ * Print Shared Device Server trace table entries
+ *-------------------------------------------------------------------*/
+DLL_EXPORT void shared_print_trace_table()
+{
+    OBTAIN_SHRDTRACE_LOCK();
+    {
+        shared_print_trace_table_locked();
+    }
+    RELEASE_SHRDTRACE_LOCK();
+}
+
+/*-------------------------------------------------------------------
+ * Print Shared Device Server trace table entries
+ *-------------------------------------------------------------------*/
+static void shared_print_trace_table_locked()
+{
+    /* Does a trace table exist? */
+    if (sysblk.shrdtrace)
+    {
+        SHRD_TRACE* current = sysblk.shrdtracep;
+        bool printed = false;
+
+        do
+        {
+            if (current[0][0])
+            {
+                // "Shared:  %s"
+                WRMSG( HHC00743, "I", (char*) current );
+                printed = true;
+            }
+
+            if (++current >= sysblk.shrdtracex)
+                current = sysblk.shrdtrace;
+        }
+        while (current != sysblk.shrdtracep);
+
+        if (!printed)
+        {
+            // "Shared:  %s"
+            WRMSG( HHC00743, "I", "(none)" );
+        }
+
+        /* Now that it's been printed, reset it to empty */
+        memset( sysblk.shrdtrace, 0, sysblk.shrdtracen * sizeof( SHRD_TRACE ));
     }
     else
-    {
-        // "Shared: invalid or missing keyword %s"
-        WRMSG( HHC00741, "E", kw );
-        return -1;
-    }
-    return 0;
+        // "Shared:  %s"
+        WRMSG( HHC00743, "I", "(NULL)" );
 }
 
 DEVHND shared_ckd_device_hndinfo = {

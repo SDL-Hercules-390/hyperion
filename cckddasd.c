@@ -5957,6 +5957,14 @@ void cckd_command_stats()
 } /* end function cckd_command_stats */
 
 /*-------------------------------------------------------------------*/
+/* cckd_dtax return Dump Table At Exit setting                       */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool cckd_dtax()
+{
+    return cckdblk.dtax ? true : false;
+}
+
+/*-------------------------------------------------------------------*/
 /* cckd command processor                                            */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_command( char* op, int cmd )
@@ -6090,6 +6098,21 @@ int   rc;
             else
             {
                 cckdblk.debug = val;
+                opts = 1;
+            }
+        }
+        // Dump Table At Exit
+        else if (CMD( kw, DTAX, 4 ))
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG( HHC00348, "E", val, kw );
+                return -1;
+            }
+            else
+            {
+                cckdblk.dtax = val;
                 opts = 1;
             }
         }
@@ -6423,7 +6446,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
 
         snprintf( trcpfx, sizeof( trcpfx ),
 
-            "%s.%6.6ld %1d:%04X> ",         // "hh:mm:ss.uuuuuu n:CCUU> "
+            "%s.%6.6ld %1d:%04X ",          // "hh:mm:ss.uuuuuu n:CCUU "
             todwrk + 11,                    // "hh:mm:ss" (%s)
             timeval.tv_usec,                // "uuuuuu"   (%6.6ld
             LCSS_DEVNUM                     // "n:CCUU"   (%1d:%04X)

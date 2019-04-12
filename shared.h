@@ -468,6 +468,7 @@ int    shared_fba_init (DEVBLK *dev, int argc, char *argv[] );
 
 SHR_DLL_IMPORT void* shared_server( void* arg );
 SHR_DLL_IMPORT int   shrd_cmd( int argc, char* argv[], char* cmdline );
+SHR_DLL_IMPORT void  shared_print_trace_table();
 
 /*-------------------------------------------------------------------*/
 
@@ -508,6 +509,7 @@ static void    shrdhdrtrc( DEVBLK* dev, const char* msg, const BYTE* hdr,
                           const char* msg2 );
 static void    shrdtrc( DEVBLK* dev, const char* fmt, ... ) ATTR_PRINTF(2,3);
 static const char* shrdcmd2str( const BYTE cmd );
+static void    shared_print_trace_table_locked();
 #endif /* _SHARED_C_ */
 
 /*-------------------------------------------------------------------*/

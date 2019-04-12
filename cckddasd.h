@@ -217,6 +217,7 @@ CCKD_DLL_IMPORT   int     cckd_command(char *op, int cmd);
                   void    cckd_trace( const char* func, int line,
                                       DEVBLK* dev, char* fmt, ...);
 CCKD_DLL_IMPORT   void    cckd_print_itrace();
+CCKD_DLL_IMPORT   bool    cckd_dtax(); // Dump Table At Exit
 /*-------------------------------------------------------------------*/
 //KD64_DLL_IMPORT int     cckd64_command(char *op, int cmd);
 //                void    cckd64_command_help();

@@ -263,6 +263,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         unsigned int     batch:1,       /* 1=called in batch mode    */
                          debug:1,       /* 1=CCW trace debug msgs    */
+                         dtax:1,        /* 1=Dump Table At Exit      */
                          sfmerge:1,     /* 1=sf-* merge              */
                          sfforce:1;     /* 1=sf-* force              */
         int              sflevel;       /* sfk xxxx level            */

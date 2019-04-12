@@ -19,6 +19,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "hercules.h"
 #include "opcode.h"
 #include "chsc.h"
+#include "cckddasd.h"
 
 /*-------------------------------------------------------------------*/
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
@@ -874,6 +875,16 @@ int     cpu;
             deconfigure_cpu(cpu);
     RELEASE_INTLOCK(NULL);
 
+    /* Dump trace tables at exit */
+#if defined( OPTION_SHARED_DEVICES )
+    if (sysblk.shrddtax)
+        shared_print_trace_table();
+#endif
+    if (cckd_dtax())
+        cckd_print_itrace();
+    if (ptt_dtax())
+        ptt_pthread_print();
+
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->allocated)
@@ -899,7 +910,6 @@ int     cpu;
     WRMSG( HHC01427, "I", "Expanded", !configure_xstorage(~0ULL) ? "" : "not ");
 
     WRMSG(HHC01422, "I");
-
 } /* end function release_config */
 
 #if defined( OPTION_SHARED_DEVICES )

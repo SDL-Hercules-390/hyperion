@@ -807,6 +807,7 @@ struct SYSBLK {
         SHRD_TRACE  *shrdtracep;        /* Current pointer           */
         SHRD_TRACE  *shrdtracex;        /* End of trace table        */
         int          shrdtracen;        /* Number of entries         */
+        bool         shrddtax;          /* true=dump table at exit   */
 #endif
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/

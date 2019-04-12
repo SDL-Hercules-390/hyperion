@@ -55,6 +55,7 @@ PTT_TRACE *pttrace       = NULL;        /* Pointer to current entry  */
 int        pttnolock     = 0;           /* 1=no table locking        */
 int        pttnotod      = 0;           /* 1=don't call gettimeofday */
 int        pttnowrap     = 0;           /* 1=don't wrap              */
+bool       pttdtax       = false;       /* true=dump table at exit   */
 int        pttto         = 0;           /* timeout in seconds        */
 COND       ptttocond;                   /* timeout thread condition  */
 HLOCK      ptttolock;                   /* timeout thread lock       */
@@ -240,6 +241,14 @@ static void* ptt_timeout( void* arg )
 }
 
 /*-------------------------------------------------------------------*/
+/* ptt_dtax return Dump Table At Exit setting                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool ptt_dtax()
+{
+    return pttdtax; // Dump Table At Exit
+}
+
+/*-------------------------------------------------------------------*/
 /* Process 'ptt' tracing command                                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
@@ -279,6 +288,11 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
             else if (strcasecmp("?", argv[0]) == 0)
             {
                 showparms = 1;
+            }
+            else if (strcasecmp("dtax", argv[0]) == 0)
+            {
+                pttdtax = true; // Dump Table At Exit
+                continue;
             }
             else if (strcasecmp("lock", argv[0]) == 0)
             {
