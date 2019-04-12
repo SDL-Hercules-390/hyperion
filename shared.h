@@ -359,6 +359,7 @@
 #define SHRD_COMP                0x10   /* Data is compressed        */
 #define SHRD_PURGE               0x08   /* Purge list provided       */
 
+/* Error responses                                                   */
 #define SHRD_ERROR_INVALID       0xf0   /* Invalid request           */
 #define SHRD_ERROR_BADVERS       0xf1   /* Version mismatch          */
 #define SHRD_ERROR_NOTINIT       0xf2   /* Device not initialized    */

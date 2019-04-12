@@ -366,7 +366,7 @@ FWORD    blksiz;                        /* FBA block size            */
 char    *p, buf[1024];                  /* Work buffer               */
 #if defined( HAVE_ZLIB )
 char    *strtok_str = NULL;             /* last token                */
-#endif /*HAVE_ZLIB*/
+#endif
 
     /* Process the arguments */
     if (!(retry = dev->connecting))
@@ -1065,9 +1065,9 @@ HWORD              comp;                /* Returned compression parm */
         {
 #if defined( HAVE_SYS_UN_H )
             dev->fd = dev->ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
-#else // !defined( HAVE_SYS_UN_H )
+#else
             dev->fd = dev->ckdfd[0] = -1;
-#endif // defined( HAVE_SYS_UN_H )
+#endif
             if (dev->fd < 0)
             {
                 // "%1d:%04X Shared: error in function %s: %s"
@@ -1079,7 +1079,7 @@ HWORD              comp;                /* Returned compression parm */
             sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport);
             server = (struct sockaddr *)&userver;
             len = sizeof(userver);
-#endif // !defined( HAVE_SYS_UN_H )
+#endif
         }
         else
         {
@@ -1100,7 +1100,7 @@ HWORD              comp;                /* Returned compression parm */
         /* Connect to the server */
         store_hw (id, dev->rmtid);
         rc = connect (dev->fd, server, len);
-        SHRDTRACE("connect rc=%d errno=%d",rc, HSO_errno);
+        SHRDTRACE( "connect rc=%d errno=%d %s", rc, HSO_errno, strerror( HSO_errno ));
         if (rc >= 0)
         {
             if (!dev->batch)
@@ -1528,29 +1528,40 @@ static const char* shrdcmd2str( const BYTE cmd )
     switch (cmd)
     {
         // Requests
-        case SHRD_CONNECT:    return "CONN";
-        case SHRD_DISCONNECT: return "DISC";
-        case SHRD_START:      return "STAR";
-        case SHRD_END:        return "END ";
-        case SHRD_RESUME:     return "RESU";
-        case SHRD_SUSPEND:    return "SUSP";
-        case SHRD_RESERVE:    return "RESE";
-        case SHRD_RELEASE:    return "RELE";
-        case SHRD_READ:       return "READ";
-        case SHRD_WRITE:      return "WRIT";
-        case SHRD_SENSE:      return "SENS";
-        case SHRD_QUERY:      return "QUER";
-        case SHRD_COMPRESS:   return "COMP";
+        case SHRD_CONNECT:          return "CONNECT ";
+        case SHRD_DISCONNECT:       return "DISCONNE";
+        case SHRD_START:            return "START   ";
+        case SHRD_END:              return "END     ";
+        case SHRD_RESUME:           return "RESUME  ";
+        case SHRD_SUSPEND:          return "SUSPEND ";
+        case SHRD_RESERVE:          return "RESERVE ";
+        case SHRD_RELEASE:          return "RELEASE ";
+        case SHRD_READ:             return "READ    ";
+        case SHRD_WRITE:            return "WRITE   ";
+        case SHRD_SENSE:            return "SENSE   ";
+        case SHRD_QUERY:            return "QUERY   ";
+        case SHRD_COMPRESS:         return "COMPRESS";
 
         // Response codes
-        case SHRD_OK:         return "OK  ";
-        case SHRD_ERROR:      return "ERRO";
-        case SHRD_IOERR:      return "IOER";
-        case SHRD_BUSY:       return "BUSY";
-        case SHRD_COMP:       return "COMP";
-        case SHRD_PURGE:      return "PURG";
+        case SHRD_OK:               return "OK      ";
+        case SHRD_ERROR:            return "ERROR   ";
+        case SHRD_IOERR:            return "IOERR   ";
+        case SHRD_BUSY:             return "BUSY    ";
+        case SHRD_COMP:             return "COMP    ";
+        case SHRD_PURGE:            return "PURGE   ";
 
-        default:              return "????";
+        // Error responses
+        case SHRD_ERROR_INVALID:    return "INVALID ";
+        case SHRD_ERROR_BADVERS:    return "BADVERS ";
+        case SHRD_ERROR_NOTINIT:    return "NOTINIT ";
+        case SHRD_ERROR_NOTCONN:    return "NOTCONN ";
+        case SHRD_ERROR_NOTAVAIL:   return "NOTAVAIL";
+        case SHRD_ERROR_NOMEM:      return "NOMEM   ";
+        case SHRD_ERROR_NOTACTIVE:  return "NOTACTIV";
+        case SHRD_ERROR_NODEVICE:   return "NODEVICE";
+        case SHRD_ERROR_CONNECTED:  return "ECONNECT";
+
+        default:                    return "????????";
     }
 }
 
@@ -2930,7 +2941,7 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
         return 0;
     }
 
-    // Format: "shrd [trace[=nnnn]]" where nnnn is #of table entries.
+    // Format: "SHRD [TRACE[=nnnn]]" where nnnn is #of table entries.
     // Enter the command with no argument to display the current value.
     // Use "shrd trace" by itself to print the current table.
 
