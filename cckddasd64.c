@@ -116,7 +116,7 @@ int             fdflags;                /* File flags                */
 int cckd64_dasd_close_device (DEVBLK *dev)
 {
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
-int             i;                      /* Index                     */
+int             rc, i;                  /* Return code, Loop index   */
 
     if (!dev->cckd64)
         return cckd_dasd_close_device( dev );
@@ -135,21 +135,43 @@ int             i;                      /* Index                     */
     release_lock(&cckdblk.ralock);
 
     /* Flush the cache and wait for the writes to complete */
-    obtain_lock (&cckd->cckdiolock);
-    cckd->stopping = 1;
-    cckd64_flush_cache (dev);
-    while (cckd->wrpending || cckd->cckdioact)
+    obtain_lock( &cckd->cckdiolock );
     {
-        cckd->cckdwaiters++;
-        wait_condition (&cckd->cckdiocond, &cckd->cckdiolock);
-        cckd->cckdwaiters--;
-        cckd64_flush_cache (dev);
+        cckd->stopping = 1;
+        cckd64_flush_cache( dev );
+        while (cckd->wrpending || cckd->cckdioact)
+        {
+            cckd->cckdwaiters++;
+            rc = timed_wait_condition_relative_usecs(
+                &cckd->cckdiocond, &cckd->cckdiolock, 1000000, NULL );
+            cckd->cckdwaiters--;
+            cckd64_flush_cache( dev );
+            if (EINTR == rc)
+                continue;
+            /* Prevent rare but possible hang at shutdown */
+            if (1
+                && ETIMEDOUT == rc
+                && (cckd->wrpending || cckd->cckdioact)
+                && sysblk.shutdown
+            )
+            {
+                CCKD_TRACE( dev, "closing device while wrpending=%d cckdioact=%d",
+                    cckd->wrpending, cckd->cckdioact );
+                // "%1d:%04X CCKD file %s: closing device while wrpending=%d cckdioact=%d"
+                WRMSG( HHC00381, "W", LCSS_DEVNUM, dev->filename,
+                    cckd->wrpending, cckd->cckdioact );
+                break;
+            }
+        }
+        broadcast_condition( &cckd->cckdiocond );
+        cckd64_purge_cache( dev );
+        cckd64_purge_l2( dev );
+        dev->bufcur = -1;
+        dev->cache  = -1;
+        if (cckd->newbuf)
+            cckd_free( dev, "newbuf", cckd->newbuf );
     }
-    broadcast_condition (&cckd->cckdiocond);
-    cckd64_purge_cache (dev); cckd64_purge_l2 (dev);
-    dev->bufcur = dev->cache = -1;
-    if (cckd->newbuf) cckd_free (dev, "newbuf", cckd->newbuf);
-    release_lock (&cckd->cckdiolock);
+    release_lock( &cckd->cckdiolock );
 
     /* Remove the device from the cckd queue */
     cckd_lock_devchain(1);
