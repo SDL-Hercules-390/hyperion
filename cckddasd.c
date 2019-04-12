@@ -6357,6 +6357,7 @@ DLL_EXPORT void cckd_print_itrace()
     {
         CCKD_ITRACE*  pbeg;                 // start of trace table
         CCKD_ITRACE*  pcur;                 // current working entry
+        int i;                              // loop counter
 
         pbeg = cckdblk.itrace;              // save beginning of table
         pcur = cckdblk.itracep;             // "current" (oldest) entry
@@ -6364,7 +6365,7 @@ DLL_EXPORT void cckd_print_itrace()
         if (pcur >= cckdblk.itracex)        // past end of table?
             pcur = pbeg;                    // then wrap to begin
 
-        do
+        for (i=0; i < cckdblk.itracec; ++i) // print all used entries
         {
             if (*(const char*)pcur)         // print entry if not empty
                 // "%s"
@@ -6373,12 +6374,12 @@ DLL_EXPORT void cckd_print_itrace()
             if (++pcur >= cckdblk.itracex)  // next entry; if past end
                 pcur = pbeg;                // then wrap to begin
         }
-        while (pcur != cckdblk.itracep);    // until all entries printed
 
         // Clear all table entries and reset pointers
         memset( pbeg, 0, cckdblk.itracen * sizeof( CCKD_ITRACE ));
         cckdblk.itracep = pbeg;
         cckdblk.itrace  = pbeg;
+        cckdblk.itracec = 0;
     }
     RELEASE_TRACE_LOCK();
 
