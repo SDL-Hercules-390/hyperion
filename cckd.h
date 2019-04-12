@@ -346,7 +346,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
 #define OBTAIN_TRACE_LOCK()     obtain_lock(  &cckdblk.trclock )
 #define RELEASE_TRACE_LOCK()    release_lock( &cckdblk.trclock )
 
-#define CCKD_TRACE( dev, fmt, ... ) \
+#define CCKD_TRACE( fmt, ... ) \
     cckd_trace( __FUNCTION__, __LINE__, dev, fmt, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
