@@ -35,6 +35,47 @@ Hercules: Release Notes
   </p>
 
 
+  <dt>SIGABEND Machine Check handler on Linux builds replaced with Crash handler
+  <dd>
+  <p>
+    The original designed "SIGABEND" handler on Linux builds that intercepted Hercules
+    abends (e.g. SIGSEGV, i.e. Hercules crashes, etc) and presented a Machine Check
+    Interruption to the guest in an attempt to allow Hercules and the guest to continue
+    running (in the hope that the guest would be able to either recover from the Machine
+    Check or be able to gracefully shutdown) has been removed since it served no valid
+    purpose other than to hide/mask otherwise very serious bugs in the Hercules emulator
+    making it nearly impossible to find or fix them.
+    <p>
+    Now, if Hercules crashes (due to a SIGSEGV, etc), the guest is no longer notified
+    of the event (a Machine Check Interruption does not occur) and Hercules makes no
+    attempt to recover or otherwise continue. Instead, it attempts to issue a message
+    to the Hercules user informing them of the crash and then requests that the host
+    perform default handling of the event (which is usually to create a "core" dump file
+    which can then be analyzed by gdb or by some other means to determine the cause of
+    the crash).
+  </p>
+
+
+  <dt>Integrated Regina REXX support no longer provided by default
+  <dd>
+  <p>
+    For those who want integrated Regina rexx support in Hercules, you will
+    now have to explicitly request such support on your <code>./configure</code>
+    command by specifying the <code>'--enable-regina-rexx'</code> option.  For
+    everyone else, integrated support for Regina rexx will <i>no longer</i> be
+    automatically provided by Hercules, even if it is installed in their system.
+    <p>
+    In other words, you can still have Regina rexx installed on your system
+    and use it as you normally would, but simply having it installed on your
+    system will now <i>no longer</i> cause Hercules to also provide integrated
+    support for it.
+    <p>
+    For more information refer to the
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.REXX">README.REXX</a>
+    document in the source code distribution.
+  </p>
+
+
   <dt>Partial implementation of PFPO (Perform Floating Point Operation) instruction
   <dd>
   <p>
@@ -81,6 +122,7 @@ Hercules: Release Notes
     compliant facility.
   </p>
 
+
   <dt>TCPIP (X'75') instruction integrated
   <dd>
   <p>
@@ -95,6 +137,7 @@ Hercules: Release Notes
     <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.TCPIP">README.TCPIP</a>
     provides the information needed to enable the instruction.
   </p>
+
 
   <dt>Breakpoint/Stepping commands optional ASID parameter
   <dd>
@@ -112,24 +155,6 @@ Hercules: Release Notes
     for the <code>b</code> and/or <code>s</code> commands.
   </p>
 
-  <dt>Integrated Regina REXX support no longer provided by default
-  <dd>
-  <p>
-    For those who want integrated Regina rexx support in Hercules, you will
-    now have to explicitly request such support on your <code>./configure</code>
-    command by specifying the <code>'--enable-regina-rexx'</code> option.  For
-    everyone else, integrated support for Regina rexx will <i>no longer</i> be
-    automatically provided by Hercules, even if it is installed in their system.
-    <p>
-    In other words, you can still have Regina rexx installed on your system
-    and use it as you normally would, but simply having it installed on your
-    system will now <i>no longer</i> cause Hercules to also provide integrated
-    support for it.
-    <p>
-    For more information refer to the
-    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.REXX">README.REXX</a>
-    document in the source code distribution.
-  </p>
 
 </dl>
 
