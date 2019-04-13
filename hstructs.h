@@ -1185,6 +1185,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #endif // defined( OPTION_SHARED_DEVICES )
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
+                                        /* 1=Connected to remote dev */
                 readpending:2,          /* 1=Console read pending    */
                 connecting:1,           /* 1=Connecting to remote    */
                 localhost:1,            /* 1=Remote is local         */

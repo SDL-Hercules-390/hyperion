@@ -94,6 +94,8 @@ char    *strtok_str = NULL;             /* last position             */
     /* Process the arguments */
     if (!(retry = dev->connecting))
     {
+        dev->connected = 0;             /* SHRD_CONNECT not done yet */
+
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
         STRLCPY( buf, argv[0] );
@@ -371,6 +373,7 @@ char    *strtok_str = NULL;             /* last token                */
     /* Process the arguments */
     if (!(retry = dev->connecting))
     {
+        dev->connected = 0;             /* SHRD_CONNECT not done yet */
 
         kw = op = NULL;
 
@@ -1041,33 +1044,37 @@ DEVBLK         *dev = data;             /* -> device block           */
 /*-------------------------------------------------------------------
  * Connect to the server (client side)
  *-------------------------------------------------------------------*/
-static int clientConnect (DEVBLK *dev, int retry)
+static int clientConnect( DEVBLK* dev, int retry )
 {
 int                rc;                  /* Return code               */
-struct sockaddr   *server;              /* -> server descriptor      */
-int                flag;                /* Flags (version | release) */
+struct sockaddr*   server;              /* -> Server descriptor      */
 int                len;                 /* Length server descriptor  */
 struct sockaddr_in iserver;             /* inet server descriptor    */
 #if defined( HAVE_SYS_UN_H )
-struct sockaddr_un userver;             /* unix server descriptor    */
+struct sockaddr_un userver;             /* Unix server descriptor    */
 #endif
 int                retries = 10;        /* Number of retries         */
 HWORD              id;                  /* Returned identifier       */
 HWORD              comp;                /* Returned compression parm */
 
-    do {
+    SHRDTRACE( "Beg clientConnect sequence for dev %4.4x retry=%d", dev->devnum, retry );
 
+    do
+    {
         /* Close previous connection */
-        if (dev->fd >= 0) close_socket (dev->fd);
+        if (dev->fd >= 0)
+            close_socket( dev->fd );
 
-        /* Get a socket */
+        /* Get a new socket */
         if (dev->localhost)
         {
 #if defined( HAVE_SYS_UN_H )
-            dev->fd = dev->ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
+            dev->fd = socket( AF_UNIX, SOCK_STREAM, 0 );
 #else
-            dev->fd = dev->ckdfd[0] = -1;
+            dev->fd = -1;
 #endif
+            dev->ckdfd[0] = dev->fd;
+
             if (dev->fd < 0)
             {
                 // "%1d:%04X Shared: error in function %s: %s"
@@ -1076,74 +1083,88 @@ HWORD              comp;                /* Returned compression parm */
             }
 #if defined( HAVE_SYS_UN_H )
             userver.sun_family = AF_UNIX;
-            sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport);
-            server = (struct sockaddr *)&userver;
-            len = sizeof(userver);
+            sprintf( userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport );
+            server = (struct sockaddr*) &userver;
+            len = sizeof( userver );
 #endif
         }
         else
         {
-            dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
+            dev->fd = socket( AF_INET, SOCK_STREAM, 0 );
+            dev->ckdfd[0] = dev->fd;
+
             if (dev->fd < 0)
             {
                 // "%1d:%04X Shared: error in function %s: %s"
                 WRMSG( HHC00720, "E", LCSS_DEVNUM, "socket()", strerror( HSO_errno ));
                 return -1;
             }
-            iserver.sin_family      = AF_INET;
-            iserver.sin_port        = htons(dev->rmtport);
-            memcpy(&iserver.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
-            server = (struct sockaddr *)&iserver;
-            len = sizeof(iserver);
+
+            iserver.sin_family = AF_INET;
+            iserver.sin_port   = htons( dev->rmtport );
+            memcpy( &iserver.sin_addr.s_addr, &dev->rmtaddr, sizeof( struct in_addr ));
+            server = (struct sockaddr*) &iserver;
+            len = sizeof( iserver );
         }
 
         /* Connect to the server */
-        store_hw (id, dev->rmtid);
-        rc = connect (dev->fd, server, len);
-        SHRDTRACE( "connect rc=%d errno=%d %s", rc, HSO_errno, strerror( HSO_errno ));
+        store_hw( id, dev->rmtid );
+        rc = connect( dev->fd, server, len );
+
+        if (rc < 0)
+            SHRDTRACE( "connect rc=%d errno=%d %s", rc, HSO_errno, strerror( HSO_errno ));
+        else
+            SHRDTRACE( "connect rc=%d", rc );
+
         if (rc >= 0)
         {
-            if (!dev->batch)
-                if (MLVL( VERBOSE ))
-                    // "%1d:%04X Shared: connected to file %s"
-                    WRMSG( HHC00721, "I", LCSS_DEVNUM, dev->filename );
-
-            /* Request device connection */
-            flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
-            rc = clientRequest (dev, id, 2, SHRD_CONNECT, flag, NULL, &flag);
-            if (rc >= 0)
+            /* Request device connection (if we haven't done so yet) */
+            if (!dev->connected)
             {
-                dev->rmtid = fetch_hw (id);
-                dev->rmtrel = flag & 0x0f;
-            }
-
-            /*
-             * Negotiate compression - top 4 bits have the compression
-             * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
-             * 00110000 -> both) and the bottom 4 bits indicates the
-             * libz parm we want to use when sending data back & forth.
-             * If the server returns '0' back, then we won't use libz to
-             * compress data to the server.  What the 'compression
-             * algorithms we support' means is that if the data source is
-             * cckd or cfba then the server doesn't have to uncompress
-             * the data for us if we support the compression algorithm.
-             */
-
-            if (rc >= 0 && (dev->rmtcomp || dev->rmtcomps))
-            {
-                rc = clientRequest (dev, comp, 2, SHRD_COMPRESS,
-                           (dev->rmtcomps << 4) | dev->rmtcomp, NULL, NULL);
+                int flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
+                rc = clientRequest( dev, id, 2, SHRD_CONNECT, flag, NULL, &flag );
                 if (rc >= 0)
-                    dev->rmtcomp = fetch_hw (comp);
+                {
+                    dev->connected = 1;             // (SHRD_CONNECT success)
+                    dev->rmtid  = fetch_hw( id );   // (must only do ONCE!!!)
+                    dev->rmtrel = flag & 0x0f;
+
+                    if (!dev->batch)
+                        if (MLVL( VERBOSE ))
+                            // "%1d:%04X Shared: connected to file %s"
+                            WRMSG( HHC00721, "I", LCSS_DEVNUM, dev->filename );
+                    /*
+                     * Negotiate compression - top 4 bits have the compression
+                     * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
+                     * 00110000 -> both) and the bottom 4 bits indicates the
+                     * libz parm we want to use when sending data back & forth.
+                     * If the server returns '0' back, then we won't use libz to
+                     * compress data to the server.  What the 'compression
+                     * algorithms we support' means is that if the data source is
+                     * cckd or cfba then the server doesn't have to uncompress
+                     * the data for us if we support the compression algorithm.
+                     */
+
+                    if (dev->rmtcomp || dev->rmtcomps)
+                    {
+                        rc = clientRequest( dev, comp, 2, SHRD_COMPRESS,
+                                   (dev->rmtcomps << 4) | dev->rmtcomp, NULL, NULL );
+                        if (rc >= 0)
+                            dev->rmtcomp = fetch_hw( comp );
+                    }
+                }
             }
         }
         else if (!retry)
             // "%1d:%04X Shared: error in connect to file %s: %s"
             WRMSG( HHC00722, "E", LCSS_DEVNUM, dev->filename, strerror( HSO_errno ));
 
-        if (rc < 0 && retry) usleep (20000);
+        if (rc < 0 && retry)
+            usleep( 20000 );    // (20ms between connect retries?!)
+    }
+    while (rc < 0 && retry && retries--);
 
-    } while (retry && retries-- && rc < 0);
+    SHRDTRACE( "end clientConnect sequence for dev %4.4x retry=%d", dev->devnum, retry );
 
     return rc;
 
@@ -1225,50 +1246,60 @@ retry:
  * If 'buf' is adjacent to 'hdr' then 'buf' should be NULL
  *
  *-------------------------------------------------------------------*/
-static int clientSend (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen)
+static int clientSend( DEVBLK* dev, BYTE* hdr, BYTE* buf, int buflen )
 {
 int      rc;                            /* Return code               */
 BYTE     cmd;                           /* Header command            */
 BYTE     flag;                          /* Header flags              */
-U16      devnum;                        /* Header device nu          */
+U16      devnum;                        /* Header device number      */
 int      len;                           /* Header length             */
 int      id;                            /* Header identifier         */
 int      hdrlen;                        /* Header length + other data*/
 int      off;                           /* Offset to buffer data     */
-BYTE    *sendbuf;                       /* Send buffer               */
+BYTE*    sendbuf;                       /* Send buffer               */
 int      sendlen;                       /* Send length               */
 BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
+const char* trcmsg;                     /* Header trace message      */
+
+    /* Save original hdr values */
+    SHRD_GET_HDR( hdr, cmd, flag, devnum, id, len );
+
+    /* Connect to remote device on server if needed */
+    if (dev->fd < 0)
+    {
+        if (SHRD_DISCONNECT == cmd)
+            return -1; // (already disconnected!)
+
+        if ((rc = clientConnect( dev, 1 )) < 0)
+            return -1;
+
+        /* Update values due to clientConnect */
+        id = dev->rmtid;
+        SHRD_SET_HDR( hdr, cmd, flag, devnum, id, len );
+    }
 
     /* Make buf, buflen consistent if no additional data to be sent  */
     if (buf == NULL) buflen = 0;
     else if (buflen == 0) buf = NULL;
 
     /* Calculate length of header, may contain additional data */
-    SHRD_GET_HDR(hdr, cmd, flag, devnum, id, len);
-    SHRDHDRTRACE( "client send", hdr );
-
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
     off = len - buflen;
 
-    if (dev->fd < 0)
-    {
-        if (SHRD_DISCONNECT == cmd)
-            return -1; // (already disconnected!)
-        rc = clientConnect (dev, 1);
-        if (rc < 0) return -1;
-    }
-
 #if defined( HAVE_ZLIB )
     /* Compress the buf */
-    if (dev->rmtcomp != 0
-     && flag == 0 && off <= SHRD_COMP_MAX_OFF
-     && buflen >= SHARED_COMPRESS_MINLEN)
+    if (1
+        && dev->rmtcomp != 0
+        && flag == 0
+        && off <= SHRD_COMP_MAX_OFF
+        && buflen >= SHARED_COMPRESS_MINLEN
+    )
     {
         unsigned long newlen;
         newlen = 65536 - hdrlen;
-        memcpy (cbuf, hdr, hdrlen);
-        rc = compress2 (cbuf + hdrlen, &newlen,
-                        buf, buflen, dev->rmtcomp);
+        memcpy( cbuf, hdr, hdrlen );
+        rc = compress2( cbuf + hdrlen, &newlen,
+                        buf, buflen, dev->rmtcomp );
         if (rc == Z_OK && (int)newlen < buflen)
         {
             cmd |= SHRD_COMP;
@@ -1289,23 +1320,32 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     }
     else
     {
-        memcpy (cbuf, hdr, hdrlen);
-        memcpy (cbuf + hdrlen, buf, buflen);
+        memcpy( cbuf, hdr, hdrlen );
+        memcpy( cbuf + hdrlen, buf, buflen );
         sendbuf = cbuf;
         sendlen = hdrlen + buflen;
     }
 
-    SHRD_SET_HDR(sendbuf, cmd, flag, devnum, id, (U16)(sendlen - SHRD_HDR_SIZE));
-
-    if (cmd & SHRD_COMP)
-        SHRDHDRTRACE2( "client send", sendbuf, "(compressed)" );
+    len = (sendlen - SHRD_HDR_SIZE);
+    trcmsg = "client send";
 
 retry:
 
+    /* Update hdr with final values */
+    SHRD_SET_HDR( sendbuf, cmd, flag, devnum, id, len );
+
+    /* Trace what we'll be sending */
+    if (cmd & SHRD_COMP)
+        SHRDHDRTRACE2( trcmsg, sendbuf, "(compressed)" );
+    else
+        SHRDHDRTRACE(  trcmsg, sendbuf );
+
     /* Send the header and data */
-    rc = send (dev->fd, sendbuf, sendlen, 0);
-    if (rc < 0)
+    if ((rc = send( dev->fd, sendbuf, sendlen, 0 )) < 0)
     {
+        /* Trace the socket error */
+        SHRDTRACE( "send rc=%d errno=%d %s", rc, HSO_errno, strerror( HSO_errno ));
+
         /* If the request we're trying to send to the server
            is a disconnect request, it doesn't make much sense
            to go to the time and effort to re-connect to the
@@ -1313,8 +1353,13 @@ retry:
         */
         if (SHRD_DISCONNECT != cmd)
         {
-            rc = clientConnect (dev, 0);
-            if (rc >= 0) goto retry;
+            if ((rc = clientConnect( dev, 0 )) >= 0)
+            {
+                /* Pickup new rmtid due to clientConnect */
+                id = dev->rmtid;
+                trcmsg = "client send retry";
+                goto retry;
+            }
         }
     }
 
