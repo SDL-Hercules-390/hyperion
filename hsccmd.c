@@ -146,6 +146,8 @@ int test_cmd(int argc, char *argv[],char *cmdline)
         else if (CMD( argv[1], SIGFPE,  6 )) raise( SIGFPE  );
         else if (CMD( argv[1], SIGILL,  6 )) raise( SIGILL  );
         else if (CMD( argv[1], SIGSEGV, 7 )) raise( SIGSEGV );
+        else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
+        else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
 #endif
         else if (CMD( argv[1], LOCKS,   5 ))
         {

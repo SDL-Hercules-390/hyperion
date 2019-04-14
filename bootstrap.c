@@ -90,6 +90,8 @@ static void log_crashed_msg( FILE* stream )
         "\n"
         "Hercules has crashed! (%s)\n"
         "\n"
+        "Creating crash dump... This may take a while...\n"
+        "\n"
 
         , strsignal( crash_signo )
     );
