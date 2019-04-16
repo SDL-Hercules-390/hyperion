@@ -652,10 +652,17 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
     if (cmd_devhdr)
     {
+        BYTE* p = (BYTE*) &devhdr;
+
         // "%s - %d (decimal) bytes:"
         printf("\n");
         WRMSG( HHC02614, "I", "DEVHDR", (int) CKD_DEVHDR_SIZE );
-        data_dump( &devhdr, CKD_DEVHDR_SIZE );
+
+        // Note: first 8 bytes of DEVHDR is in ASCII, but
+        // the data_dump function dumps 16 bytes per line.
+        data_dump_ascii ( p,                       16 );
+        data_dump_offset( p + 16, CKD_DEVHDR_SIZE, 16 );
+
         printf("\n");
     }
 
