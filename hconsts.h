@@ -162,6 +162,10 @@
   #define   S_IWGRP           0
 #endif
 
+#ifndef     SIGUSR1
+  #define   SIGUSR1           30
+#endif
+
 #ifndef     SIGUSR2
   #define   SIGUSR2           31
 #endif
