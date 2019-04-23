@@ -190,7 +190,7 @@ static void dbgtrc( const char* file, int line, const char* func,
     net_data_trace( dev, _adr, _len, _dir, 'D', _str, 0 );
 #else
   #define MPC_DUMP_DATA(...)    // (do nothing)
-#endif // QETH_DUMP_DATA
+#endif
 
 /* DBGUPD statements controlled by "debugupdown" option */
 static void dbgupd( const char* file, int line, const char* func,
@@ -259,10 +259,10 @@ static U32      makepfxmask4( char* ttpfxlen );
 static void     makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 );
 static void     qeth_init_queues(DEVBLK *dev);
 static void     qeth_init_queue(DEVBLK *dev, int output);
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
 static void     process_l3_icmpv6_packet(DEVBLK*, OSA_GRP*, IP6FRM*);
 static void     calculate_icmpv6_checksum(IP6FRM*, BYTE*, int);
-#endif /*defined(ENABLE_IPV6)*/
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Configuration Data Constants                                      */
@@ -423,7 +423,7 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
 /* Macro wrapper */
 #define STORCHK(_addr,_len,_key,_acc,_dev) qeth_storage_access_check_and_update(_addr,_len,_key,_acc,_dev)
 
-#if defined(_FEATURE_QDIO_THININT)
+#if defined( _FEATURE_QDIO_THININT )
 /*-------------------------------------------------------------------*/
 /* Set Adapter Local Summary Indicator bits                          */
 /*-------------------------------------------------------------------*/
@@ -463,12 +463,12 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
 }
 #define SET_DSCI(_dev,_bits)    set_dsci((_dev),(_bits))
 
-#else /*!defined(_FEATURE_QDIO_THININT)*/
+#else /* !defined( _FEATURE_QDIO_THININT ) */
 
 #define SET_ALSI(_dev,_bits)    /* (do nothing) */
 #define SET_DSCI(_dev,_bits)    /* (do nothing) */
 
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+#endif /* defined( _FEATURE_QDIO_THININT ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -963,7 +963,7 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
             grp->ttifname, not, "MTU", grp->ttmtu );
     }
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
     if (grp->l3 && grp->enabled)
     {
         // HHC03997 "%1d:%04X %s: Interface %s %susing %s %s"
@@ -973,7 +973,7 @@ static void qeth_report_using( DEVBLK *dev, OSA_GRP *grp )
         WRMSG( HHC03997, "I", LCSS_DEVNUM, dev->typname,
             grp->ttifname, not, "drive IP address", grp->szDriveLLAddr6 );
     }
-#endif /* defined(ENABLE_IPV6) */
+#endif
 }
 
 
@@ -992,12 +992,12 @@ static int qeth_enable_interface (DEVBLK *dev, OSA_GRP *grp)
             | IFF_UP
             | IFF_ALLMULTI
             | IFF_BROADCAST
-#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
             | IFF_RUNNING
-#endif /* defined(TUNTAP_IFF_RUNNING_NEEDED) */
-#if defined(OPTION_W32_CTCI)
+#endif
+#if defined( OPTION_W32_CTCI )
             | (grp->debugmask ? IFF_DEBUG : 0)
-#endif /*defined(OPTION_W32_CTCI)*/
+#endif
             | (grp->promisc ? IFF_PROMISC : 0)
             );
 
@@ -1028,7 +1028,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
     if (!grp->enabled)
         return 0;
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
     {
         int rc;
         int flags;
@@ -1036,9 +1036,9 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
         flags = ( 0
                 | IFF_ALLMULTI
                 | IFF_BROADCAST
-#if defined(TUNTAP_IFF_RUNNING_NEEDED)
+#if defined( TUNTAP_IFF_RUNNING_NEEDED )
                 | IFF_RUNNING
-#endif /* defined(TUNTAP_IFF_RUNNING_NEEDED) */
+#endif
                 | (grp->debugmask ? IFF_DEBUG : 0)
                 | (grp->promisc ? IFF_PROMISC : 0)
                 );
@@ -1051,7 +1051,7 @@ static int qeth_disable_interface (DEVBLK *dev, OSA_GRP *grp)
             return rc;
         }
     }
-#endif /*defined(OPTION_W32_CTCI)*/
+#endif /* defined( OPTION_W32_CTCI ) */
 
     grp->enabled = 0;
     qeth_report_using( dev, grp );
@@ -1159,7 +1159,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             }
         }
     }
-#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
+#endif
 
     /* Make sure the interface has a valid MAC address.      */
     /* TUN's of course don't have MAC addresses, only TAP's, */
@@ -1196,7 +1196,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
     if(
 #if defined( OPTION_W32_CTCI )
        grp->l3 &&
-#endif /*defined( OPTION_W32_CTCI )*/
+#endif
                   grp->ttnetmask)
     {
         if ((rc = TUNTAP_SetNetMask( grp->ttifname, grp->ttnetmask )) != 0)
@@ -1205,14 +1205,14 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             return QERRMSG( dev, grp, errno, "E", buf );
         }
     }
-#endif /*defined( OPTION_TUNTAP_SETNETMASK )*/
+#endif /* defined( OPTION_TUNTAP_SETNETMASK ) */
 
     /* Assign it an IPv6 address too, if possible */
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
     if(
 #if defined( OPTION_W32_CTCI )
        grp->l3 &&
-#endif /*defined( OPTION_W32_CTCI )*/
+#endif
                   grp->ttipaddr6)
     {
         if((rc = TUNTAP_SetIPAddr6(grp->ttifname, grp->ttipaddr6, grp->ttpfxlen6)) != 0)
@@ -1221,7 +1221,7 @@ static int qeth_create_interface (DEVBLK *dev, OSA_GRP *grp)
             return QERRMSG( dev, grp, errno, "E", buf );
         }
     }
-#endif /*defined(ENABLE_IPV6)*/
+#endif /* defined( ENABLE_IPV6 ) */
 
     return 0;
 }
@@ -1475,10 +1475,10 @@ U16 offph;
                 {
                 MPC_IPA_MAC *ipa_mac = (MPC_IPA_MAC*)(ipa+1);
                 int rc = 0;
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
                 char tthwaddr[32] = {0}; // 11:22:33:44:55:66
                 BYTE was_enabled;
-#endif /*defined(OPTION_W32_CTCI)*/
+#endif
 
                     strcat( dev->dev_data, ": IPA_CMD_SETVMAC" );  /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -1496,7 +1496,7 @@ U16 offph;
                         STORE_HW(ipa->rc, IPA_RC_SUCCESS);
                     }
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
 #if defined( OPTION_TUNTAP_SETMACADDR )
                     // PROGRAMMING NOTE: normally one should not change
                     // tuntap's MAC but due to the way Windows CTCI-WIN
@@ -1548,8 +1548,8 @@ U16 offph;
                         }
 
                     }
-#endif /*defined( OPTION_TUNTAP_SETMACADDR )*/
-#endif /*defined(OPTION_W32_CTCI)*/
+#endif /* defined( OPTION_TUNTAP_SETMACADDR ) */
+#endif /* defined( OPTION_W32_CTCI ) */
 
                 }
                 /* end case IPA_CMD_SETVMAC:  0x21 */
@@ -1660,9 +1660,9 @@ U16 offph;
                 U32  flags;
                 char ipaddr[16] = {0};
                 char ipmask[16] = {0};
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
                 BYTE was_enabled;
-#endif // defined(OPTION_W32_CTCI)
+#endif
 
                     strcat( dev->dev_data, ": IPA_CMD_SETIP" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );             /* Prepare the contentstring */
@@ -1710,7 +1710,7 @@ U16 offph;
                                                       ipa_sip->data.ip4.mask[2],
                                                       ipa_sip->data.ip4.mask[3]);
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
                           /* If the interface is already enabled/up we need to temporarily */
                           /* bring it down (disable it) so we can change the IP address    */
                           /* and then afterwards bring it back up again (enable it).       */
@@ -1718,11 +1718,11 @@ U16 offph;
 
                           if (was_enabled)
                               VERIFY( qeth_disable_interface( dev, grp ) == 0);
-#endif // defined(OPTION_W32_CTCI)
+#endif
 
                           rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
                           if (rc == 0)
                           {
                               free( grp->ttipaddr );
@@ -1736,7 +1736,7 @@ U16 offph;
 
                           if (was_enabled)
                               VERIFY( qeth_enable_interface( dev, grp ) == 0);
-#endif // defined(OPTION_W32_CTCI)
+#endif
 
                           if (rc != 0)
                           {
@@ -1751,7 +1751,7 @@ U16 offph;
                         ipadatasize = (4 + 4 + 4);
                       }
                     }
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
                     else if (proto == IPA_PROTO_IPV6)
                     {
 
@@ -1777,7 +1777,7 @@ U16 offph;
                         ipadatasize = (16 + 16 + 4);
                       }
                     }
-#endif /*defined(ENABLE_IPV6)*/
+#endif /* defined( ENABLE_IPV6 ) */
                     else
                     {
                         retcode = IPA_RC_INVALID_IP_VERSION;
@@ -1995,7 +1995,7 @@ U16 offph;
 
                       }
                     }
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
                     else if (proto == IPA_PROTO_IPV6)
                     {
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
@@ -2012,7 +2012,7 @@ U16 offph;
 
                       }
                     }
-#endif /*defined(ENABLE_IPV6)*/
+#endif /* defined( ENABLE_IPV6 ) */
                     else
                     {
                       retcode = IPA_RC_INVALID_IP_VERSION;
@@ -2399,11 +2399,11 @@ U16 reqtype;
 
         memcpy( grp->gtissue, iea->token, MPC_TOKEN_LENGTH );  /* Remember guest token issuer */
         grp->ipas4 = IPA_SUPP_IPv4;
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
         grp->ipas6 = IPA_SUPP_IPv6;
 #else
         grp->ipas6 = 0;
-#endif /* defined(ENABLE_IPV6) */
+#endif
         grp->ipae0 = 0;
         grp->ipae4 = 0;
         grp->ipae6 = 0;
@@ -3945,13 +3945,13 @@ U32 mask4;
             grp->ttdev = strdup(argv[++i]);
             continue;
         }
-#if !defined(OPTION_W32_CTCI)
+#if !defined( OPTION_W32_CTCI )
         else if(!strcasecmp("ifname",argv[i]) && (i+1) < argc)
         {
             STRLCPY( grp->ttifname, argv[++i] );
             continue;
         }
-#endif /*!defined(OPTION_W32_CTCI)*/
+#endif
         else if(!strcasecmp("hwaddr",argv[i]) && (i+1) < argc)
         {
             free( grp->tthwaddr );
@@ -3978,7 +3978,7 @@ U32 mask4;
             grp->ttnetmask = strdup(argv[++i]);
             continue;
         }
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
         else if(!strcasecmp("ipaddr6",argv[i]) && (i+1) < argc)
         {
             char  *slash, *prfx;
@@ -3996,7 +3996,7 @@ U32 mask4;
             grp->ttipaddr6 = strdup(argv[++i]);
             continue;
         }
-#endif /*defined(ENABLE_IPV6)*/
+#endif /* defined( ENABLE_IPV6 ) */
         else if(!strcasecmp("mtu",argv[i]) && (i+1) < argc)
         {
             free( grp->ttmtu );
@@ -4068,7 +4068,7 @@ U32 mask4;
             WRMSG( HHC00917, "E", LCSS_DEVNUM, dev->typname, "netmask" );
             retcode = -1;
         }
-#endif /*defined( OPTION_W32_CTCI )*/
+#endif
 
         /* If no tuntap device was specified use the defined default */
         if (!grp->ttdev)
@@ -4129,7 +4129,7 @@ U32 mask4;
             grp->ttnetmask = strdup("255.255.255.255");
             grp->ttpfxlen = strdup("32");
         }
-#endif /*defined( OPTION_W32_CTCI )*/
+#endif
 
         if (grp->ttnetmask)
         {
@@ -4198,7 +4198,7 @@ U32 mask4;
             }
         }
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
         /* Check the grp->ttipaddr6 and grp->ttpfxlen6 values */
         if (grp->ttipaddr6)
         {
@@ -4244,7 +4244,7 @@ U32 mask4;
                 grp->ttipaddr6 = NULL;
             }
         }
-#endif /*defined(ENABLE_IPV6)*/
+#endif /* defined( ENABLE_IPV6 ) */
 
         /* Check the MTU value */
         if (grp->ttmtu)
@@ -4435,7 +4435,7 @@ OSA_GRP *grp = (OSA_GRP*)(group ? group->grp_data : NULL);
 } /* end function qeth_close_device */
 
 
-#if defined(_FEATURE_QDIO_THININT)
+#if defined( _FEATURE_QDIO_THININT )
 /*-------------------------------------------------------------------*/
 /* QDIO Set Subchannel Indicator                                     */
 /*-------------------------------------------------------------------*/
@@ -4480,7 +4480,7 @@ U16 opc;
 
     return 0;
 }
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+#endif /* defined( _FEATURE_QDIO_THININT ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -4499,18 +4499,18 @@ static int qeth_ssqd_desc ( DEVBLK *dev, void *desc )
         rsp24->qdioac1 |= ( AC1_SIGA_INPUT_NEEDED | AC1_SIGA_OUTPUT_NEEDED );
         rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_OUT_PCI;
 
-#if defined(_FEATURE_QEBSM)
+#if defined( _FEATURE_QEBSM )
         if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
         {
             STORE_DW(rsp24->sch_token, IOID2TKN((dev->ssid << 16) | dev->subchan));
             rsp24->qdioac1 |= ( AC1_SC_QEBSM_AVAILABLE | AC1_SC_QEBSM_ENABLED );
         }
-#endif /*defined(_FEATURE_QEBSM)*/
+#endif
 
-#if defined(_FEATURE_QDIO_THININT)
+#if defined( _FEATURE_QDIO_THININT )
         if (FACILITY_ENABLED_DEV( HERC_QDIO_THININT ))
             rsp24->qdioac1 |= AC1_AUTOMATIC_SYNC_ON_THININT;
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+#endif
 
         rsp24->icnt = QETH_QDIO_READQ;
         rsp24->ocnt = QETH_QDIO_WRITEQ;
@@ -5014,10 +5014,10 @@ U32 num;                                /* Number of bytes to move   */
         {
         QDIO_QIB *qib = (QDIO_QIB*)(dev->mainstor + dev->qdio.qiba);
             qib->ac |= QIB_AC_PCI; // Incidate PCI on output is supported
-#if defined(_FEATURE_QEBSM)
+#if defined( _FEATURE_QEBSM )
             if (FACILITY_ENABLED_DEV( HERC_QEBSM ))
                 qib->rflags |= QIB_RFLAGS_QEBSM;
-#endif /*defined(_FEATURE_QEBSM)*/
+#endif
         }
 
         /* Check input Queue Descriptor Entry storage */
@@ -6319,10 +6319,10 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
     BYTE iMAC[ IFHWADDRLEN ];
     char szMAC[3*IFHWADDRLEN] = {0};
     int rc = 0;
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
     int j;
     struct in6_addr addr6;
-#endif /* defined(ENABLE_IPV6) */
+#endif
 
     /* Do different things for TAP's (layer 2) and TUN's (layer 3) */
     if (!grp->l3) {
@@ -6350,10 +6350,10 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         free( tthwaddr );
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
         memset( &grp->iaDriveLLAddr6, 0, sizeof(grp->iaDriveLLAddr6) );
         memset( grp->szDriveLLAddr6, 0, sizeof(grp->szDriveLLAddr6) );
-#endif /* defined(ENABLE_IPV6) */
+#endif
 
     } else {
 
@@ -6375,7 +6375,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
             memcpy( grp->iMAC, iMAC, IFHWADDRLEN );
         }
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
         /* Create a Driver MAC address using pseudo-random numbers */
         for (j = 0; j < 6; j++)
             iMAC[j] = (int)((rand()/(RAND_MAX+1.0))*256);
@@ -6395,7 +6395,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         memcpy( &addr6.s6_addr[13], &iMAC[3], 3 );
         memcpy( &grp->iaDriveLLAddr6, &addr6, sizeof(grp->iaDriveLLAddr6) );
         hinet_ntop( AF_INET6, &addr6, grp->szDriveLLAddr6, sizeof(grp->szDriveLLAddr6) );
-#endif /* defined(ENABLE_IPV6) */
+#endif /* defined( ENABLE_IPV6 ) */
     }
 }
 
@@ -6523,7 +6523,7 @@ static void makepfxmask6( char* ttpfxlen6, BYTE* pfxmask6 )
 }
 
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
 /*-------------------------------------------------------------------*/
 /* Process layer 3 ICMPv6 packet                                     */
 /* Note: the ICMPv6 data follows the IPv6 header.                    */
@@ -6625,10 +6625,10 @@ static void process_l3_icmpv6_packet(DEVBLK* dev, OSA_GRP* grp, IP6FRM* ip6)
     // Hmm... an ICMPv6 message sent by the guest
     // that we don't handle.
 }
-#endif /* defined(ENABLE_IPV6) */
+#endif /* defined( ENABLE_IPV6 ) */
 
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
 /* ------------------------------------------------------------------ */
 /*                 calculate_icmpv6_checksum()                        */
 /* ------------------------------------------------------------------ */
@@ -6716,8 +6716,7 @@ void  calculate_icmpv6_checksum( IP6FRM* pIP6FRM, BYTE* pIcmpHdr, int iIcmpLen )
     STORE_HW( pIcmpHdr+2, uTwobytes );
 
 }   /* End function  calculate_icmpv6_checksum() */
-#endif /* defined(ENABLE_IPV6) */
-
+#endif /* defined( ENABLE_IPV6 ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -6748,11 +6747,11 @@ static DEVHND qeth_device_hndinfo =
         &qeth_do_sync,                 /* Signal Adapter Sync        */
         &qeth_initiate_output_mult,    /* Signal Adapter Output Mult */
         &qeth_ssqd_desc,               /* QDIO subsys desc           */
-#if defined(_FEATURE_QDIO_THININT)
+#if defined( _FEATURE_QDIO_THININT )
         &qeth_set_sci,                 /* QDIO set subchan ind       */
-#else /*defined(_FEATURE_QDIO_THININT)*/
+#else
         NULL,                          /* QDIO set subchan ind       */
-#endif /*defined(_FEATURE_QDIO_THININT)*/
+#endif
         NULL,                          /* Hercules suspend           */
         NULL                           /* Hercules resume            */
 };
