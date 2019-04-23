@@ -58,6 +58,11 @@ $(X)hdteq.dll:    $(O)hdteq.obj \
     $(linkdll)
     $(MT_DLL_CMD)
 
+$(X)hdt2880.dll:  $(O)hchan.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
 $(X)hdt2703.dll:  $(O)commadpt.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)

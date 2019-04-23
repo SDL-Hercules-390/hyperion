@@ -115,6 +115,8 @@ static  int     hchan_init_int(DEVBLK *dev,int ac,char **av)
 static void hchan_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char       filename[ PATH_MAX + 1 ];/* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "CHAN", dev, devclass, buflen, buffer );
 
     snprintf(buffer,buflen,"** CONTROL UNIT OFFLINE **");
