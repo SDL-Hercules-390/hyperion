@@ -84,8 +84,10 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CCKD">CCKD</a>       NOSFD=1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
-    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+    <a href="#PANOPT">PANOPT</a>     NAMEONLY
     <a href="#PANRATE">PANRATE</a>    FAST
+    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+
     <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270
@@ -1246,6 +1248,15 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     Use the <code>ostailor</code> or <code>pgmtrace</code> panel
     commands to display or alter the current settings.
+    <p>
+
+<a name="PANOPT"></a>
+<dt><code>PANOPT &nbsp; <u>FULLPATH</u> &#124; NAMEONLY </code>
+<dd><p>
+    Defines panel options. The only supported options at this time are
+    <code>NAMEONLY</code> or <code>FULLPATH</code>. The <code>NAMEONLY</code>
+    option requests the panel to display only the emulated device's base
+    filename instead of the fullpath filename, which is the default.
     <p>
 
 <a name="PANRATE"></a>

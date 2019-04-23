@@ -623,6 +623,8 @@ int i;
 static void zfcp_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "FCP", dev, devclass, buflen, buffer );
 
     snprintf( buffer, buflen, "%s%s"

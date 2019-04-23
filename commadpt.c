@@ -2699,6 +2699,8 @@ static char *commadpt_lnctl_names[]={
 static void commadpt_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, devclass, buflen, buffer );
 
     snprintf(buffer,buflen,"%s STA=%s CN=%s, EIB=%s OP=%s IO[%"PRIu64"]",

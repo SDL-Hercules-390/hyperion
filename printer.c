@@ -1493,10 +1493,12 @@ int   fcbsize;                          /* FCB size for this devtype */
 static void printer_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, devclass, buflen, buffer );
 
     snprintf (buffer, buflen, "%s%s%s%s%s IO[%"PRIu64"]",
-                 dev->filename,
+                 filename,
                 (dev->bs      ? " sockdev"   : ""),
                 (dev->crlf    ? " crlf"      : ""),
                 (dev->append  ? " append"    : ""),

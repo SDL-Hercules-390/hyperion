@@ -2076,6 +2076,8 @@ static int  loc3270_hresume( DEVBLK* dev, void* file )
 static void constty_query_device( DEVBLK* dev, char** devclass,
                                   int buflen, char* buffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
 
     if (dev->connected)
@@ -2109,13 +2111,13 @@ static void constty_query_device( DEVBLK* dev, char** devclass,
         else
             acc[0] = 0;
 
-        if (dev->filename[0])
+        if (filename[0])
         {
             snprintf( buffer, buflen,
 
                 "GROUP=%s%s%s%s IO[%"PRIu64"]",
 
-                dev->filename,
+                filename,
                 !dev->prompt1052 ? " noprompt" : "",
                 acc[0] ? " " : "", acc,
                 dev->excps );
@@ -2159,6 +2161,8 @@ static void constty_query_device( DEVBLK* dev, char** devclass,
 static void loc3270_query_device( DEVBLK* dev, char** devclass,
                                   int buflen, char* buffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, devclass, buflen, buffer );
 
     if (dev->connected)
@@ -2187,11 +2191,11 @@ static void loc3270_query_device( DEVBLK* dev, char** devclass,
         else
             acc[0] = 0;
 
-        if (dev->filename[0])
+        if (filename[0])
         {
             snprintf( buffer, buflen,
                 "GROUP=%s%s%s IO[%"PRIu64"]",
-                dev->filename, acc[0] ? " " : "", acc, dev->excps );
+                filename, acc[0] ? " " : "", acc, dev->excps );
         }
         else
         {

@@ -935,6 +935,15 @@
   "them. SEE ALSO the 'pgmtrace' command which allows you to further fine\n"    \
   "tune the tracing of program interrupt exceptions.\n"
 
+#define panopt_cmd_desc         "Display or set panel options"
+#define panopt_cmd_help         \
+                                \
+  "Format: \"panopt [NAMEONLY|FULLPATH]\". Sets or displays panel options.\n"   \
+  "The only supported options at this time are 'NAMEONLY' or 'FULLPATH'.\n"     \
+  "NAMEONLY requests the panel to display only the emulated device's base\n"    \
+  "filename instead of the fullpath filename which is the default. Enter\n"    \
+  "the command with no arguments to display the current settings.\n"
+
 #define panrate_cmd_desc        "Display or set rate at which console refreshes"
 #define panrate_cmd_help        \
                                 \
@@ -1712,6 +1721,8 @@ COMMAND( "loadparm",                loadparm_cmd,           SYSCMD,             
 COMMAND( "log",                     log_cmd,                SYSCMD,             log_cmd_desc,           log_cmd_help        )
 COMMAND( "logopt",                  logopt_cmd,             SYSCMD,             logopt_cmd_desc,        logopt_cmd_help     )
 COMMAND( "mt",                      mt_cmd,                 SYSCMD,             mt_cmd_desc,            mt_cmd_help         )
+COMMAND( "panopt",                  panopt_cmd,             SYSCMD,             panopt_cmd_desc,        panopt_cmd_help     )
+COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       panrate_cmd_help    )
 COMMAND( "pantitle",                pantitle_cmd,           SYSCMD,             pantitle_cmd_desc,      pantitle_cmd_help   )
 CMDABBR( "qcpuid",          5,      qcpuid_cmd,             SYSCMD,             qcpuid_cmd_desc,        qcpuid_cmd_help     )
 COMMAND( "qpid",                    qpid_cmd,               SYSCMD,             qpid_cmd_desc,          NULL                )
@@ -1944,9 +1955,6 @@ COMMAND( "shrd",                    EXTCMD(shrd_cmd),       SYSCMDNOPER,        
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_cmd_desc,          quit_cmd_help       )
 #if defined( OPTION_W32_CTCI )
 COMMAND( "tt32",                    tt32_cmd,               SYSCMDNOPER,        tt32_cmd_desc,          tt32_cmd_help       )
-#endif
-#if defined( PANEL_REFRESH_RATE )
-COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       panrate_cmd_help    )
 #endif
 #if defined( SIE_DEBUG_PERFMON )
 COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        spm_cmd_desc,           NULL                )

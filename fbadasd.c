@@ -332,7 +332,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 void fba_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    CCKD_EXT    *cckd;
+    char       filename[ PATH_MAX + 1 ];/* full path or just name    */
+    CCKD_EXT*  cckd;                    /* CCKD Extension Block      */
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
@@ -342,7 +343,7 @@ void fba_dasd_query_device (DEVBLK *dev, char **devclass,
     {
         snprintf( buffer, buflen, "%s%s [%"PRId64",%d] IO[%"PRIu64"]",
                   dev->cckd64 ? "*64* " : "",
-                  dev->filename,
+                  filename,
                   dev->fbaorigin, dev->fbanumblk,
                   dev->excps);
     }
@@ -350,7 +351,7 @@ void fba_dasd_query_device (DEVBLK *dev, char **devclass,
     {
         snprintf( buffer, buflen, "%s%s [%"PRId64",%d] [%d sfs] IO[%"PRIu64"]",
                   dev->cckd64 ? "*64* " : "",
-                  dev->filename,
+                  filename,
                   dev->fbaorigin, dev->fbanumblk,
                   cckd->sfn,
                   dev->excps);

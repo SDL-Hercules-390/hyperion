@@ -619,9 +619,11 @@ void  CTCX_Query( DEVBLK* pDEVBLK,
                   int     iBufLen,
                   char*   pBuffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 
-    snprintf( pBuffer, iBufLen, "%s IO[%"PRIu64"]", pDEVBLK->filename, pDEVBLK->excps );
+    snprintf( pBuffer, iBufLen, "%s IO[%"PRIu64"]", filename, pDEVBLK->excps );
 }
 
 // -------------------------------------------------------------------
@@ -1400,9 +1402,11 @@ void  CTCE_Query( DEVBLK* pDEVBLK,
                   int     iBufLen,
                   char*   pBuffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 
-    snprintf( pBuffer, iBufLen, "%s IO[%"PRIu64"]", pDEVBLK->filename, pDEVBLK->excps );
+    snprintf( pBuffer, iBufLen, "%s IO[%"PRIu64"]", filename, pDEVBLK->excps );
 }
 
 // -------------------------------------------------------------------

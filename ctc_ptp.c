@@ -876,6 +876,8 @@ int  ptp_close( DEVBLK* pDEVBLK )
 void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                  int     iBufLen, char*  pBuffer )
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     PTPATH*   pPTPATH;
     PTPBLK*   pPTPBLK;
     char*     pGuestIP4;
@@ -884,7 +886,6 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     char*     pGuestIP6;
     char*     pDriveIP6;
 #endif
-
 
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 

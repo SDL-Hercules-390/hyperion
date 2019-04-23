@@ -628,7 +628,8 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
 void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    CCKD_EXT    *cckd;
+    char       filename[ PATH_MAX + 1 ];/* full path or just name    */
+    CCKD_EXT*  cckd;                    /* CCKD Extension Block      */
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
@@ -640,7 +641,7 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
         {
             snprintf( buffer, buflen, "%s%s [%d cyls] [%d segs] IO[%"PRIu64"]",
                       dev->cckd64 ? "*64* " : "",
-                      dev->filename,
+                      filename,
                       dev->ckdcyls,
                       dev->ckdnumfd,
                       dev->excps );
@@ -649,7 +650,7 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
         {
             snprintf( buffer, buflen, "%s%s [%d cyls] IO[%"PRIu64"]",
                       dev->cckd64 ? "*64* " : "",
-                      dev->filename,
+                      filename,
                       dev->ckdcyls,
                       dev->excps );
         }
@@ -658,7 +659,7 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
     {
         snprintf( buffer, buflen, "%s%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
                   dev->cckd64 ? "*64* " : "",
-                  dev->filename,
+                  filename,
                   dev->ckdcyls,
                   cckd->sfn,
                   dev->excps );

@@ -866,6 +866,8 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
                  int     iBufLen, char*  pBuffer )
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     char *sType[] = { "", " Pri", " Sec" };
 
     LCSDEV*  pLCSDEV;

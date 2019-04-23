@@ -1756,11 +1756,11 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
 /*-------------------------------------------------------------------*/
 static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, char *buffer )
 {
-    char devparms[ MAX_PATH+1 + 128 ];
+    char filename[ PATH_MAX + 1 ];     /* full path or just name    */
+    char devparms[ MAX_PATH + 1 + 128 ];
     char dispmsg [ 256 ];
     char fmt_mem [ 128 ];    // Max of 21 bytes used for U64
     char fmt_eot [ 128 ];    // Max of 21 bytes used for U64
-
 
     BEGIN_DEVICE_CLASS_QUERY( "TAPE", dev, devclass, buflen, buffer );
 
@@ -1772,9 +1772,9 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
 
     GetDisplayMsg( dev, dispmsg, sizeof(dispmsg) );
 
-    if (strchr(dev->filename,' ')) STRLCAT( devparms, "\""          );
-                                   STRLCAT( devparms, dev->filename );
-    if (strchr(dev->filename,' ')) STRLCAT( devparms, "\""          );
+    if (strchr(filename,' ')) STRLCAT( devparms, "\""     );
+                              STRLCAT( devparms, filename );
+    if (strchr(filename,' ')) STRLCAT( devparms, "\""     );
 
     if (dev->noautomount)
         STRLCAT( devparms, " noautomount" );
@@ -1814,7 +1814,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **devclass, int buflen, cha
         MSGBUF( fmt_eot, " eotmargin=%"PRIu64"%c", mem, suffix[i]);
     }
 
-    if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
+    if ( strcmp( filename, TAPE_UNLOADED ) == 0 )
     {
 #if defined(OPTION_SCSI_TAPE)
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )

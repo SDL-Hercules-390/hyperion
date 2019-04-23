@@ -27,7 +27,6 @@
 
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
 
-#define PANEL_REFRESH_RATE              /* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
 

@@ -135,10 +135,12 @@ static int con1052_close_device( DEVBLK *dev )
 static void con1052_query_device( DEVBLK *dev, char **devclass,
                                   int buflen, char *buffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
 
     snprintf( buffer, buflen, "*syscons cmdpref(%s)%s IO[%"PRIu64"]",
-        dev->filename, !dev->prompt1052 ? " noprompt" : "", dev->excps );
+        filename, !dev->prompt1052 ? " noprompt" : "", dev->excps );
 
 }
 

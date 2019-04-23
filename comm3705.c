@@ -1486,6 +1486,8 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 static void commadpt_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "LINE", dev, class, buflen, buffer );
 
     snprintf(buffer,buflen,"Read count=%d, Write count=%d IO[%"PRIu64"]",

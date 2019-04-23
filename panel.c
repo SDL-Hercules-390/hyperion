@@ -1738,14 +1738,8 @@ size_t  loopcount;                      /* Number of iterations done */
     {
 #if defined( _MSVC_ )
         /* Wait for keyboard input */
-        for (i=
-#if defined(PANEL_REFRESH_RATE)
-               sysblk.panrate
-#else
-               500
-#endif
-                             /WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS; i && !kbhit(); i--)
-            Sleep(WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS);
+        for (i = sysblk.panrate / WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS; i && !kbhit(); i--)
+            Sleep(                WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS );
 
         ADJ_SCREEN_SIZE();
 
@@ -1771,20 +1765,8 @@ size_t  loopcount;                      /* Number of iterations done */
 
         /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
-        tv.tv_sec =
-#if defined(PANEL_REFRESH_RATE)
-                    sysblk.panrate
-#else
-                    500
-#endif
-                                   / 1000;
-        tv.tv_usec = (
-#if defined(PANEL_REFRESH_RATE)
-                      sysblk.panrate
-#else
-                      500
-#endif
-                                     * 1000) % 1000000;
+        tv.tv_sec  =  sysblk.panrate / 1000;
+        tv.tv_usec = (sysblk.panrate * 1000) % 1000000;
         rc = select (maxfd + 1, &readset, NULL, NULL, &tv);
         if (rc < 0 )
         {

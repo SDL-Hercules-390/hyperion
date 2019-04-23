@@ -186,6 +186,14 @@ typedef struct _OSA_GRP {
 
     char *ttchpid;              /* chpid                             */
 
+
+
+
+
+
+
+
+
     BYTE  confipaddr4[4];       /* IPv4 address of the interface in  */
                                 /* host byte order. This variable    */
                                 /* contains the binary equivalent of */
@@ -196,6 +204,13 @@ typedef struct _OSA_GRP {
                                 /* contains the binary equivalent of */
                                 /* the ttipaddr6 string.             */
     BYTE  confpfxmask6[16];     /* IPv6 prefix mask (zeroes then ff) */
+
+
+
+
+
+
+
 
  OSA_IPV4 ipaddr4[OSA_MAXIPV4]; /* Locally recognised IPv4 address   */
  OSA_IPV6 ipaddr6[OSA_MAXIPV6]; /* Locally recognised IPv6 addresses */

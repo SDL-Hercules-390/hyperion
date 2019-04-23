@@ -37,9 +37,21 @@ struct DEVHND
         DEVSR  *hresume;               /* Hercules resume            */
 };
 
-#define BEGIN_DEVICE_CLASS_QUERY( _classname, _dev, _class, _buflen, _buffer ) \
-    if (_class) *_class = _classname; \
-    if (!_dev || !_class || !_buflen || !_buffer) return
+#define BEGIN_DEVICE_CLASS_QUERY( _classname, _dev, _class, _buflen, _buffer )  \
+                                                                                \
+    if (_class) *_class = _classname;                                           \
+    if (!_dev || !_class || !_buflen || !_buffer) return;                       \
+    if (sysblk.devnameonly)                                                     \
+    {                                                                           \
+        STRLCPY( filename, basename( _dev->filename ));                         \
+        if (strcmp( filename, "." ) == 0)                                       \
+            filename[0] = 0;                                                    \
+    }                                                                           \
+    else                                                                        \
+        STRLCPY( filename, _dev->filename )
+
+
+
 
 CKD_DLL_IMPORT  DEVHND  ckd_dasd_device_hndinfo;
 FBA_DLL_IMPORT  DEVHND  fba_dasd_device_hndinfo;

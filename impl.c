@@ -620,6 +620,8 @@ int     rc;
     sysblk.cpuid = createCpuId( sysblk.cpumodel, sysblk.cpuversion,
                                 sysblk.cpuserial, 0 );
 
+    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
+
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_DEFAULT;
 
@@ -628,10 +630,6 @@ int     rc;
 #if defined( _FEATURE_ECPSVM )
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
-#endif
-
-#if defined( PANEL_REFRESH_RATE )
-    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
 #if defined( OPTION_SHARED_DEVICES )

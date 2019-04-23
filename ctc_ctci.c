@@ -626,6 +626,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
                   int     iBufLen, char*  pBuffer )
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     CTCBLK*  pCTCBLK;
     char*    pGuestIP;
     char*    pDriveIP;

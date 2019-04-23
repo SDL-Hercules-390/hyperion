@@ -3781,45 +3781,80 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#if defined( PANEL_REFRESH_RATE )
+/*-------------------------------------------------------------------*/
+/* panopt command - display or set panel option(s)                   */
+/*-------------------------------------------------------------------*/
+int panopt_cmd( int argc, char* argv[], char* cmdline)
+{
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0(  argv   );
+
+    if (argc < 2)
+    {
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], sysblk.devnameonly ?
+            "NAMEONLY" : "FULLPATH" );
+        return 0;
+    }
+    else if (argc == 2)
+    {
+        if      (CMD( argv[1], NAMEONLY, 4 )) sysblk.devnameonly = 1;
+        else if (CMD( argv[1], FULLPATH, 4 )) sysblk.devnameonly = 0;
+        else // error
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], "" );
+            return -1;
+        }
+
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
+
+        return 0;
+    }
+
+    // "Invalid command usage. Type 'help %s' for assistance."
+    WRMSG( HHC02299, "E", argv[0] );
+    return -1;
+}
+
 /*-------------------------------------------------------------------*/
 /* panrate command - display or set rate at which console refreshes  */
 /*-------------------------------------------------------------------*/
-int panrate_cmd(int argc, char *argv[], char *cmdline)
+int panrate_cmd( int argc, char* argv[], char* cmdline )
 {
     char msgbuf[16];
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0(  argv   );
 
-    UPPER_ARGV_0( argv );
-
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
-        if ( CMD(argv[1],fast,4) )
-            sysblk.panrate = PANEL_REFRESH_RATE_FAST;
-        else if ( CMD(argv[1],slow,4) )
-            sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
+        if      (CMD( argv[1], FAST, 4 )) sysblk.panrate = PANEL_REFRESH_RATE_FAST;
+        else if (CMD( argv[1], SLOW, 4 )) sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
         else
         {
             int trate = 0;
             int rc;
 
-            rc = sscanf(argv[1],"%d", &trate);
+            rc = sscanf( argv[1], "%d", &trate );
 
             if (rc > 0 && trate >= (1000 / CLK_TCK) && trate < 5001)
                 sysblk.panrate = trate;
-            else
+            else // error
             {
                 char buf[20];
                 char buf2[64];
 
-                if ( rc == 0 )
+                if (rc == 0)
                 {
                     MSGBUF( buf, "%s", argv[1] );
                     MSGBUF( buf2, "; not numeric value" );
@@ -3827,37 +3862,41 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 else
                 {
                     MSGBUF( buf, "%d", trate );
-                    MSGBUF( buf2, "; not within range %d to 5000 inclusive", (1000/(int)CLK_TCK) );
+                    MSGBUF( buf2, "; not within range %d to 5000 inclusive",
+                        (1000 / (int) CLK_TCK ));
                 }
 
+                // "Invalid argument %s%s"
                 WRMSG( HHC02205, "E", buf, buf2 );
                 return -1;
             }
         }
-        if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], argv[1] );
+
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
     }
     else
     {
         MSGBUF( msgbuf, "%d", sysblk.panrate );
-        WRMSG(HHC02203, "I", argv[0], msgbuf );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
 
     return 0;
 }
-#endif /* defined( PANEL_REFRESH_RATE ) */
 
 /*-------------------------------------------------------------------*/
 /* pantitle xxxxxxxx command - set console title                     */
 /*-------------------------------------------------------------------*/
-int pantitle_cmd(int argc, char *argv[], char *cmdline)
+int pantitle_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0(  argv   );
 
-    UPPER_ARGV_0( argv );
-
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
@@ -3865,19 +3904,21 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
     /* Update pantitle if operand is specified */
     if (argc == 2)
     {
-        if (sysblk.pantitle)
-            free(sysblk.pantitle);
+        free( sysblk.pantitle );
 
-        sysblk.pantitle = (strlen(argv[1]) == 0 ) ? NULL : strdup(argv[1]);
+        sysblk.pantitle = (strlen( argv[1] ) == 0) ? NULL : strdup( argv[1] );
 
-        if ( MLVL(VERBOSE) )
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0],
-                   (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
+                sysblk.pantitle ? sysblk.pantitle : "(none)" );
 
         set_console_title( NULL );
     }
     else
-        WRMSG(HHC02203, "I", argv[0], (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0],
+            sysblk.pantitle ? sysblk.pantitle : "(none)" );
 
     return 0;
 }

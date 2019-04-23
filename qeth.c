@@ -4310,6 +4310,8 @@ U32 mask4;
 static void qeth_query_device (DEVBLK *dev, char **devclass,
                                int buflen, char *buffer)
 {
+char filename[ PATH_MAX + 1 ];          /* full path or just name    */
+
 char qdiostat[80] = {0};
 char incomplete[16] = {0};
 char status[sizeof(qdiostat)] = {0};
