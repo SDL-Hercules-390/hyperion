@@ -1,11 +1,11 @@
-/* TT32API.H (C) Copyright Software Development Laboratories, 2002-2017 */
+/* TT32API.H (C) Copyright Software Development Laboratories, 2002-2019 */
 /*              TunTap32 DLL exported functions interface            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-// Copyright (C) 2002-2017, Software Development Laboratories, "Fish" (David B. Trout)
+// Copyright (C) 2002-2019, Software Development Laboratories, "Fish" (David B. Trout)
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //  TT32API.h  --  TunTap32 DLL exported functions interface
@@ -87,24 +87,30 @@ extern "C"
 #define TT32MAXMTU      ((64*1024)-14)      // maximum MTU value  (14 == eth_hdr_size)
 
 #define TT32_MAX_MULTICAST_LIST_ENTRIES   (32)
+#define TT32_MAX_IPADDRESS_LIST_ENTRIES   (32)
 
 // ioctl codes...
 
 #define TUNSETNOCSUM    _IOW('T', 200, int)     // (UNSUPPORTED)
 #define TUNSETDEBUG     _IOW('T', 201, int)     // Set debugging flags
-#define TUNSETIFF       _IOW('T', 202, int)     // Set TUN/TAP Flags (*)
+#define TUNSETIFF       _IOW('T', 202, int)     // Set TUN/TAP Flags       (*)
 #define TUNSETPERSIST   _IOW('T', 203, int)     // (UNSUPPORTED)
 #define TUNSETOWNER     _IOW('T', 204, int)     // (UNSUPPORTED)
 
-#define TT32SDEVBUFF    _IOW('T', 220, int)     // Set Kernel buffer size (*)
+#define TT32SDEVBUFF    _IOW('T', 220, int)     // Set Kernel buffer size  (*)
 #define TT32GDEVBUFF    _IOR('T', 220, int)     // Get Kernel buffer size
-#define TT32SIOBUFF     _IOW('T', 221, int)     // Set Read buffer size (*)
+#define TT32SIOBUFF     _IOW('T', 221, int)     // Set Read buffer size    (*)
 #define TT32GIOBUFF     _IOR('T', 221, int)     // Get Read buffer size
-#define TT32STIMEOUT    _IOW('T', 222, int)     // Set Read timeout value (*)
+#define TT32STIMEOUT    _IOW('T', 222, int)     // Set Read timeout value  (*)
 #define TT32GTIMEOUT    _IOR('T', 222, int)     // Get Read timeout value
 #define TT32GSTATS      _IOR('T', 223, int)     // Retrieve statistics
 
-// (*) Rejected if interface is already IFF_UP.
+//                                          (*)  Rejected if interface is already IFF_UP.
+
+#define TT32AIFDSTADDR  _IOW('T', 224, int)     // Add    Interface Destination Address
+#define TT32DIFDSTADDR  _IOW('T', 225, int)     // Delete Interface Destination Address
+#define TT32QIFDSTADDRS _IOR('T', 226, int)     // Query  Interface Destination Addresses
+
 
 struct tt32ctl                          // ioctl request structure
 {

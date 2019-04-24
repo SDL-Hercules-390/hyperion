@@ -613,6 +613,28 @@ int i;  /* Utility variable */
 }
 
 
+#if defined( OPTION_W32_CTCI )
+/*-------------------------------------------------------------------*/
+/*         Check if CTCI-WIN supports multiple IP addresses          */
+/*-------------------------------------------------------------------*/
+static bool tt32_multiple_ip_support()
+{
+    static bool didthis = false;       // (only need to do this once)
+    static bool multiple_ip_support;   // (boolean we're determining)
+
+    if (!didthis)
+    {
+        int major, inter, minor, build;
+        tt32_version_numbers( &major, &inter, &minor, &build );
+        // CTCI-WIN v3.7 or greater?
+        multiple_ip_support = (((major * 100) + inter) >= 307);
+        didthis = true;
+    }
+    return multiple_ip_support;
+}
+#endif
+
+
 /*-------------------------------------------------------------------*/
 /* Register local IPv4 address                                       */
 /*-------------------------------------------------------------------*/
@@ -638,6 +660,13 @@ char charip4[48];
     {
         if (grp->ipaddr4[i].type == IPV4_TYPE_NONE)
         {
+#if defined( OPTION_W32_CTCI )
+            if (tt32_multiple_ip_support())
+            {
+                if (TT32_AddIPAddr( grp->ttfd, ipaddr4 ) < 0)
+                    break; // (fail)
+            }
+#endif
             memcpy(grp->ipaddr4[i].addr, ipaddr4, 4);
             grp->ipaddr4[i].type = IPV4_TYPE_INUSE;
             hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
@@ -671,6 +700,13 @@ char charip4[48];
         if (grp->ipaddr4[i].type == IPV4_TYPE_INUSE &&
             memcmp(grp->ipaddr4[i].addr, ipaddr4, 4) == 0)
         {
+#if defined( OPTION_W32_CTCI )
+            if (tt32_multiple_ip_support())
+            {
+                if (TT32_DelIPAddr( grp->ttfd, ipaddr4 ) < 0)
+                    break; // (fail)
+            }
+#endif
             grp->ipaddr4[i].type = IPV4_TYPE_NONE;
             memset(grp->ipaddr4[i].addr, 0, 4);
             hinet_ntop( AF_INET, ipaddr4, charip4, sizeof(charip4) );
@@ -1675,11 +1711,9 @@ U16 offph;
 
                     if (proto == IPA_PROTO_IPV4)
                     {
-
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
                       if (flags == IPA_SIP_DEFAULT)
                       {
-
                         /* Register the IPv4 address */
                         rc = register_ipv4(grp, dev, (BYTE*)ipa_sip->data.ip4.addr);
                         if (rc == -1) {          /* IP table full */
@@ -1711,33 +1745,36 @@ U16 offph;
                                                       ipa_sip->data.ip4.mask[3]);
 
 #if defined( OPTION_W32_CTCI )
-                          /* If the interface is already enabled/up we need to temporarily */
-                          /* bring it down (disable it) so we can change the IP address    */
-                          /* and then afterwards bring it back up again (enable it).       */
-                          was_enabled = grp->enabled ? TRUE : FALSE;
+                          if (tt32_multiple_ip_support())
+                              rc = 0; // 'register_ipv4' did it for us
+                          else
+                          {
+                              /* If the interface is already enabled/up we need to temporarily */
+                              /* bring it down (disable it) so we can change the IP address    */
+                              /* and then afterwards bring it back up again (enable it).       */
+                              was_enabled = grp->enabled ? TRUE : FALSE;
 
-                          if (was_enabled)
-                              VERIFY( qeth_disable_interface( dev, grp ) == 0);
+                              if (was_enabled)
+                                  VERIFY( qeth_disable_interface( dev, grp ) == 0);
 #endif
-
-                          rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
+                              rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
 
 #if defined( OPTION_W32_CTCI )
-                          if (rc == 0)
-                          {
-                              free( grp->ttipaddr );
-                              grp->ttipaddr = strdup( ipaddr );
-                              memcpy( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 );
+                              if (rc == 0)
+                              {
+                                  free( grp->ttipaddr );
+                                  grp->ttipaddr = strdup( ipaddr );
+                                  memcpy( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 );
 
-                              free( grp->ttnetmask );
-                              grp->ttnetmask = strdup( ipmask );
-                              memcpy( grp->confpfxmask4, ipa_sip->data.ip4.mask, 4 );
+                                  free( grp->ttnetmask );
+                                  grp->ttnetmask = strdup( ipmask );
+                                  memcpy( grp->confpfxmask4, ipa_sip->data.ip4.mask, 4 );
+                              }
+
+                              if (was_enabled)
+                                  VERIFY( qeth_enable_interface( dev, grp ) == 0);
                           }
-
-                          if (was_enabled)
-                              VERIFY( qeth_enable_interface( dev, grp ) == 0);
 #endif
-
                           if (rc != 0)
                           {
                               char buf[64];
@@ -1745,7 +1782,6 @@ U16 offph;
                               QERRMSG( dev, grp, errno, "E", buf );
                               retcode = IPA_RC_FFFF;
                           }
-
                         }
 
                         ipadatasize = (4 + 4 + 4);
@@ -1754,11 +1790,9 @@ U16 offph;
 #if defined( ENABLE_IPV6 )
                     else if (proto == IPA_PROTO_IPV6)
                     {
-
                       FETCH_FW(flags,ipa_sip->data.ip6.flags);
                       if (flags == IPA_SIP_DEFAULT)
                       {
-
                         /* Register the IPv6 address */
                         rc = register_ipv6(grp, dev, (BYTE*)ipa_sip->data.ip6.addr);
                         if (rc == -1) {          /* IP table full */
@@ -1985,7 +2019,7 @@ U16 offph;
                       if (flags == IPA_SIP_DEFAULT)
                       {
 
-                        /* Register the IPv4 address */
+                        /* Unregister the IPv4 address */
                         rc = unregister_ipv4(grp, dev, (BYTE*)ipa_sip->data.ip4.addr);
                         if (rc == 1) {           /* IP address not in table */
                           retcode = IPA_RC_UNREGISTERED_ADDR;

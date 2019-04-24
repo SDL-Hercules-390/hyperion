@@ -8,14 +8,14 @@
 #ifndef _W32CTCA_H_
 #define _W32CTCA_H_
 
-#if defined(OPTION_W32_CTCI)
+#if defined( OPTION_W32_CTCI )
 
 #include "tt32api.h"                            // (#define TUNTAP32_DLLNAME)
 
 #define MAX_TT32_DLLNAMELEN  (512)
 #define DEF_TT32_DLLNAME     TUNTAP32_DLLNAME   // (from tt32api.h)
 
-extern char   g_tt32_dllname   [MAX_TT32_DLLNAMELEN];
+extern char   g_tt32_dllname [ MAX_TT32_DLLNAMELEN ];
 
 extern void         tt32_init                 ();
 extern int          tt32_open                 ( char* pszGatewayDevice, int iFlags );
@@ -27,9 +27,10 @@ extern int          tt32_close                ( int fd );
 extern int          tt32_ioctl                ( int fd, int iRequest, char* argp );
 extern const char*  tt32_get_default_iface    ();
 extern int          tt32_build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );
+extern void         tt32_version_numbers      ( int* major, int* inter, int* minor, int* build );
 
 extern int   display_tt32_stats         ( int fd );
 extern bool  enable_tt32_debug_tracing  ( int enable );
 
-#endif // defined(OPTION_W32_CTCI)
+#endif // defined( OPTION_W32_CTCI )
 #endif // _W32CTCA_H_
