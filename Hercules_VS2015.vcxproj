@@ -841,6 +841,11 @@
     <None Include="tests\CLCL-et-al.list" />
     <None Include="tests\CLCL-et-al.pdf" />
     <None Include="tests\CLCL-et-al.tst" />
+    <None Include="tests\CLCL.asm" />
+    <None Include="tests\CLCL.core" />
+    <None Include="tests\CLCL.list" />
+    <None Include="tests\CLCL.pdf" />
+    <None Include="tests\CLCL.tst" />
     <None Include="tests\cipher.assemble" />
     <None Include="tests\cipher.listing" />
     <None Include="tests\cipher.tst" />

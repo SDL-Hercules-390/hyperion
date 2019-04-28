@@ -125,6 +125,11 @@ EXTRA_DIST =                    \
      CLCL-et-al.list            \
      CLCL-et-al.pdf             \
      CLCL-et-al.tst             \
+     CLCL.asm                   \
+     CLCL.core                  \
+     CLCL.list                  \
+     CLCL.pdf                   \
+     CLCL.tst                   \
      cdfr.txt                   \
      cdgr.txt                   \
      cdsg.txt                   \

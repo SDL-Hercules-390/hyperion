@@ -2501,7 +2501,7 @@ int ARCH_DEP( mem_pad_cmp )
         rc = memcmp( m1, m2, neqlen = len1 );
         if (rc == 0)
         {
-            neqidx = neqlen;
+            neqidx += neqlen;
             m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
             rc = memcmp( m1, neq2 = m2, neqlen = len - len1 );
@@ -2634,7 +2634,7 @@ int ARCH_DEP( mem_cmp )
             rc = memcmp( m1, m2, neqlen = len2 );
             if (rc == 0)
             {
-                neqidx = neqlen;
+                neqidx += neqlen;
                 m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
                                     b2, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( neq1 = m1 + len2, m2, neqlen = len - len2 );
@@ -2651,7 +2651,7 @@ int ARCH_DEP( mem_cmp )
             rc = memcmp( m1, m2, neqlen = len1 );
             if (rc == 0)
             {
-                neqidx = neqlen;
+                neqidx += neqlen;
                 m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                     b1, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( m1, neq2 = m2 + len1, neqlen = len - len1 );
@@ -2667,7 +2667,7 @@ int ARCH_DEP( mem_cmp )
                 rc = memcmp( m1, m2, neqlen = len1 );
                 if (rc == 0)
                 {
-                    neqidx = neqlen;
+                    neqidx += neqlen;
                     m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                         b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     m2 = neq2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
@@ -2682,13 +2682,13 @@ int ARCH_DEP( mem_cmp )
                 rc = memcmp( m1, m2, neqlen = len1 );
                 if (rc == 0)
                 {
-                    neqidx = neqlen;
+                    neqidx += neqlen;
                     m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                         b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, neq2 = m2 + len1, neqlen = len2 - len1 );
                     if (rc == 0)
                     {
-                        neqidx = neqlen;
+                        neqidx += neqlen;
                         m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
                                             b2, regs, ACCTYPE_READ, regs->psw.pkey );
                         rc = memcmp( neq1 = m1 + len2 - len1, m2, neqlen = len - len2 );
@@ -2702,13 +2702,13 @@ int ARCH_DEP( mem_cmp )
                 rc = memcmp( m1, m2, neqlen = len2 );
                 if (rc == 0)
                 {
-                    neqidx = neqlen;
+                    neqidx += neqlen;
                     m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
                                         b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( neq1 = m1 + len2, m2, neqlen = len1 - len2 );
                     if (rc == 0)
                     {
-                        neqidx = neqlen;
+                        neqidx += neqlen;
                         m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                             b1, regs, ACCTYPE_READ, regs->psw.pkey );
                         rc = memcmp( m1, neq2 = m2 + len1 - len2, neqlen = len - len1 );

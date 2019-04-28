@@ -2336,6 +2336,21 @@
     <None Include="tests\CLCL-et-al.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\CLCL.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCL.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCL.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCL.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCL.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="Hercules_VS2017.sln">
       <Filter>Other Files\Build\msvc\VS2017</Filter>
     </None>
