@@ -1125,7 +1125,7 @@ static int REXX_DEP( HaltExec )( pid_t pid, TID tid )
     if (RXARI_OK == rexx_rc)  // NOTE: "RXARI_OK", not "RXAPI_OK"!!
     {
         // "REXX(%s) Signal HALT "TIDPAT" %s"
-        WRMSG( HHC17520, "I", REXX_DEP( PackageName ), tid, "success" );
+        WRMSG( HHC17520, "I", REXX_DEP( PackageName ), TID_CAST( tid ), "success" );
         return 0;
     }
 

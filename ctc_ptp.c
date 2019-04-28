@@ -855,11 +855,9 @@ int  ptp_close( DEVBLK* pDEVBLK )
 
         TID tid = pPTPBLK->tid;
         pPTPBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-        signal_thread( tid, SIGUSR2 );  // (for non-Win32 platforms)
-//FIXME signal_thread not working for non-MSVC platforms
 #if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
-#endif /* defined(_MSVC_) */
+#endif
         detach_thread( tid );           // (wait for thread to end)
     }
 
@@ -878,6 +876,8 @@ int  ptp_close( DEVBLK* pDEVBLK )
 void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
                  int     iBufLen, char*  pBuffer )
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     PTPATH*   pPTPATH;
     PTPBLK*   pPTPBLK;
     char*     pGuestIP4;
@@ -886,7 +886,6 @@ void  ptp_query( DEVBLK* pDEVBLK, char** ppszClass,
     char*     pGuestIP6;
     char*     pDriveIP6;
 #endif
-
 
     BEGIN_DEVICE_CLASS_QUERY( "CTCA", pDEVBLK, ppszClass, iBufLen, pBuffer );
 

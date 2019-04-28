@@ -156,7 +156,7 @@ static void same_as_above( int* firstsame, int* lastsame,
 /*-------------------------------------------------------------------*/
 /* Subroutine to print a data block in hex and character format.     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void data_dump ( void* addr, unsigned int len )
+static void do_data_dump( bool ascii, void* addr, unsigned int len, unsigned int begoffset )
 {
     #define  DD_BPL      16     // bytes per line
     #define  MAX_DD    2048     // must be multiple of DD_BPL
@@ -164,7 +164,7 @@ DLL_EXPORT void data_dump ( void* addr, unsigned int len )
     CASSERT( MAX_DD == ROUND_UP( MAX_DD, DD_BPL ), dasdutil_c );
 
     unsigned int  maxoffset = len > MAX_DD ? MAX_DD : len;
-    unsigned int  i, xi, offset, lineoff = 0;
+    unsigned int  i, xi, offset, lineoff = begoffset;
 
     int   firstsame = 0, lastsame = 0;
     BYTE  c = 0, *pchar = NULL;
@@ -175,9 +175,9 @@ DLL_EXPORT void data_dump ( void* addr, unsigned int len )
 
     pchar = (BYTE*)addr;    /* init pointer to char being processed */
 
-    for (offset=0; offset < maxoffset; )
+    for (offset = begoffset; offset < maxoffset; )
     {
-        if (offset > 0) /* (only if NOT first time) */
+        if (offset > begoffset) /* (only if NOT first time) */
         {
             /* Current line same as previous line? */
             if (strcmp( hex_chars, prev_hex ) == 0)
@@ -212,10 +212,8 @@ DLL_EXPORT void data_dump ( void* addr, unsigned int len )
                 sprintf( hex_chars+xi, "%2.2X", c );
                 print_chars[i] = '.';
 
-                if (isprint(c))
-                    print_chars[i] = c;
-
-                c = guest_to_host(c);
+                if (!ascii)
+                    c = guest_to_host(c);
 
                 if (isprint(c))
                     print_chars[i] = c;
@@ -239,6 +237,26 @@ DLL_EXPORT void data_dump ( void* addr, unsigned int len )
         printf( "Lines %4.4X to %4.4X suppressed\n", offset, len-1 );
 
 } /* end function data_dump */
+
+DLL_EXPORT void data_dump( void* addr, unsigned int len )
+{
+    do_data_dump( false, addr, len, 0 );
+}
+
+DLL_EXPORT void data_dump_ascii( void* addr, unsigned int len )
+{
+    do_data_dump( true, addr, len, 0 );
+}
+
+DLL_EXPORT void data_dump_offset( void* addr, unsigned int len, unsigned int offset )
+{
+    do_data_dump( false, addr, len, offset );
+}
+
+DLL_EXPORT void data_dump_offset_ascii( void* addr, unsigned int len, unsigned int offset )
+{
+    do_data_dump( true, addr, len, offset );
+}
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a track from the CKD DASD image                */
@@ -734,8 +752,9 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
+        // "%1d:%04X CKD file %s: initialization failed"
         FWRMSG( stderr, HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, cif->fname );
+            cif->devblk.devnum, cif->fname ? cif->fname : "(null)" );
         free (cif);
         return NULL;
     }
@@ -882,8 +901,9 @@ int             argc=0;                 /*  device open              */
     rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
+        // "%1d:%04X CKD file %s: initialization failed"
         FWRMSG( stderr, HHC00452, "E", SSID_TO_LCSS(cif->devblk.ssid),
-            cif->devblk.devnum, fname );
+            cif->devblk.devnum, fname ? fname : "(null)" );
         free (cif);
         return NULL;
     }

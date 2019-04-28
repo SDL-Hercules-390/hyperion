@@ -22,7 +22,7 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define MAX_BLKLEN              2097152 /* Maximum blocksize = 2MB   */
+#define MAX_TAPE_BLKSIZE        2097152 /* Maximum blocksize = 2MB   */
 #define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
 
 /*-------------------------------------------------------------------*/
@@ -163,7 +163,7 @@ CASSERT( sizeof(TAPERDC) == sizeof(((DEVBLK*)0)->devchar), tapedev_h );
 
 #define BLK64       ((64 * 1024)-1)
 #define BLK256      (256 * 1024)
-#define BLKMAX      (MAX_BLKLEN)
+#define BLKMAX      (MAX_TAPE_BLKSIZE)
 
 #define FEAT1_3480  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
 #define FEAT1_3490  (TRDC_LWP | TRDC_ACL | TRDC_IDR)
@@ -495,21 +495,21 @@ GENTMH_PARMS;
 /*-------------------------------------------------------------------*/
 struct TAPEMEDIA_HANDLER
 {
-    int  (*generic)    (GENTMH_PARMS*);                 // (generic call)
-    int  (*open)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*generic)    (GENTMH_PARMS*);                       // (generic call)
+    int  (*open)       (DEVBLK*,                              BYTE *unitstat, BYTE code);
     void (*close)      (DEVBLK*);
-    int  (*read)       (DEVBLK*, BYTE *buf,             BYTE *unitstat, BYTE code);
-    int  (*write)      (DEVBLK*, BYTE *buf, U32 blklen, BYTE *unitstat, BYTE code);
-    int  (*rewind)     (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*bsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*fsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*bsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*fsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*wtm)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*sync)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*dse)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*erg)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
-    int  (*tapeloaded) (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*read)       (DEVBLK*,       BYTE *buf,             BYTE *unitstat, BYTE code);
+    int  (*write)      (DEVBLK*, const BYTE *buf, U32 blklen, BYTE *unitstat, BYTE code);
+    int  (*rewind)     (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*bsb)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*fsb)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*bsf)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*fsf)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*wtm)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*sync)       (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*dse)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*erg)        (DEVBLK*,                              BYTE *unitstat, BYTE code);
+    int  (*tapeloaded) (DEVBLK*,                              BYTE *unitstat, BYTE code);
     int  (*passedeot)  (DEVBLK*);
 
     /* readblkid o/p values are returned in BIG-ENDIAN guest format  */
@@ -549,12 +549,12 @@ extern int   IsAtLoadPoint          (DEVBLK *dev);
 extern void  ReqAutoMount           (DEVBLK *dev);
 extern void  UpdateDisplay          (DEVBLK *dev);
 extern int   return_false1          (DEVBLK *dev);
-extern int   write_READONLY5        (DEVBLK *dev, BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code);
-extern int   is_tapeloaded_filename (DEVBLK *dev,             BYTE *unitstat, BYTE code);
-extern int   write_READONLY         (DEVBLK *dev,             BYTE *unitstat, BYTE code);
-extern int   no_operation           (DEVBLK *dev,             BYTE *unitstat, BYTE code);
-extern int   readblkid_virtual      (DEVBLK*, BYTE* logical,  BYTE* physical);
-extern int   locateblk_virtual      (DEVBLK*, U32 blockid,    BYTE *unitstat, BYTE code);
+extern int   write_READONLY5        (DEVBLK *dev, const BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code);
+extern int   is_tapeloaded_filename (DEVBLK *dev,                              BYTE *unitstat, BYTE code);
+extern int   write_READONLY         (DEVBLK *dev,                              BYTE *unitstat, BYTE code);
+extern int   no_operation           (DEVBLK *dev,                              BYTE *unitstat, BYTE code);
+extern int   readblkid_virtual      (DEVBLK*, BYTE* logical, BYTE* physical);
+extern int   locateblk_virtual      (DEVBLK*, U32 blockid,                     BYTE *unitstat, BYTE code);
 extern int   generic_tmhcall        (GENTMH_PARMS*);
 
 /*-------------------------------------------------------------------*/
@@ -609,22 +609,22 @@ extern void  build_sense_Streaming  (int ERCode, DEVBLK *dev, BYTE *unitstat, BY
 /*-------------------------------------------------------------------*/
 /* Functions defined in AWSTAPE.C                                    */
 /*-------------------------------------------------------------------*/
-extern int  open_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern void close_awstape     (DEVBLK *dev);
-extern int  passedeot_awstape (DEVBLK *dev);
-extern int  rewind_awstape    (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  write_awsmark     (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  sync_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  readhdr_awstape   (DEVBLK *dev, off_t blkpos, AWSTAPE_BLKHDR *buf,
-                                            BYTE *unitstat, BYTE code);
-extern int  read_awstape      (DEVBLK *dev, BYTE *buf,
-                                            BYTE *unitstat, BYTE code);
-extern int  write_awstape     (DEVBLK *dev, BYTE *buf, U32 blklen,
-                                            BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  open_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT void close_awstape     (DEVBLK *dev);
+AWSTAPE_DLL_IMPORT int  passedeot_awstape (DEVBLK *dev);
+AWSTAPE_DLL_IMPORT int  rewind_awstape    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  write_awsmark     (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  sync_awstape      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  fsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  bsb_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  fsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  bsf_awstape       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  readhdr_awstape   (DEVBLK *dev, off_t blkpos, AWSTAPE_BLKHDR *buf,
+                                           BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  read_awstape      (DEVBLK *dev, BYTE *buf,
+                                           BYTE *unitstat, BYTE code);
+AWSTAPE_DLL_IMPORT int  write_awstape     (DEVBLK *dev, const BYTE *buf, U32 blklen,
+                                           BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in FAKETAPE.C                                   */
@@ -647,26 +647,26 @@ extern int  writehdr_faketape  (DEVBLK *dev, off_t blkpos,
                                              BYTE *unitstat, BYTE code);
 extern int  read_faketape      (DEVBLK *dev, BYTE *buf,
                                              BYTE *unitstat, BYTE code);
-extern int  write_faketape     (DEVBLK *dev, BYTE *buf, U32 blklen,
+extern int  write_faketape     (DEVBLK *dev, const BYTE *buf, U32 blklen,
                                              BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in HETTAPE.C                                    */
 /*-------------------------------------------------------------------*/
-extern int  open_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern void close_het     (DEVBLK *dev);
-extern int  passedeot_het (DEVBLK *dev);
-extern int  rewind_het    (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  write_hetmark (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  sync_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  fsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  bsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
-extern int  read_het      (DEVBLK *dev, BYTE *buf,
-                                        BYTE *unitstat, BYTE code);
-extern int  write_het     (DEVBLK *dev, BYTE *buf, U32 blklen,
-                                        BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  open_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT void close_het     (DEVBLK *dev);
+HETTAPE_DLL_IMPORT int  passedeot_het (DEVBLK *dev);
+HETTAPE_DLL_IMPORT int  rewind_het    (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  write_hetmark (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  sync_het      (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  fsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  bsb_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  fsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  bsf_het       (DEVBLK *dev, BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  read_het      (DEVBLK *dev, BYTE *buf,
+                                       BYTE *unitstat, BYTE code);
+HETTAPE_DLL_IMPORT int  write_het     (DEVBLK *dev, const BYTE *buf, U32 blklen,
+                                       BYTE *unitstat, BYTE code);
 
 /*-------------------------------------------------------------------*/
 /* Functions defined in OMATAPE.C                                    */

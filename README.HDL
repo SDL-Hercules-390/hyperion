@@ -697,7 +697,6 @@ new source member. Be sure to update BOTH files, e.g.:
 
       libhercu_la_SOURCES = version.c    \
                             hscutl.c     \
-                            hscutl2.c    \
                             codepage.c   \
                             logger.c     \
                             logmsg.c     \
@@ -722,7 +721,6 @@ new source member. Be sure to update BOTH files, e.g.:
             $(O)hdl.obj      \
             $(O)hostinfo.obj \
             $(O)hscutl.obj   \
-            $(O)hscutl2.obj  \
             $(O)logger.obj   \
             $(O)logmsg.obj   \
             $(O)memrchr.obj  \

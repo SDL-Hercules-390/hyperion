@@ -1,0 +1,704 @@
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               2 ***********************************************************************
+                                               3 *
+                                               4 *Testcase bim-001-add-sub
+                                               5 *  Test case capability includes condition codes and fixed point
+                                               6 *  overflow interruptions.
+                                               7 *
+                                               8 ***********************************************************************
+
+
+                                              10 ***********************************************************************
+                                              11 *
+                                              12 *                        bim-001-add-sub.asm
+                                              13 *
+                                              14 * Copyright 2018 by Stephen R Orso.
+                                              15 *
+                                              16 * Distributed under the Boost Software License, Version 1.0.  See
+                                              17 * accompanying file BOOST_LICENSE_1_0.txt or a copy at:
+                                              18 *
+                                              19 *      http://www.boost.org/LICENSE_1_0.txt)
+                                              20 *
+                                              21 * Adapted from the original bim-001-add by Peter J. Jansen.
+                                              22 *
+                                              23 ***********************************************************************
+
+
+                                              25 ***********************************************************************
+                                              26 *
+                                              27 * Tests the following ADD and SUB instructions, except those marked (*)
+                                              28 * as these are not (yet) implemented.
+                                              29 *   ADD REGISTER RR    AR   32-bit sum, augend, addend
+                                              30 *            (*) RRF-a ARK  32-bit sum, augend, addend, 3 operand
+                                              31 *                RRE   AGR  64-bit sum, augend, addend
+                                              32 *            (*) RRF-a ARGK 64-bit sum, augend, addend, 3 operand
+                                              33 *            (*) RRE   AGFR 64-bit augend, sum, 32-bit addend
+                                              34 *   ADD      (*) RX-a  A    32-bit sum, augend, addend
+                                              35 *            (*) RXY-a AY   32-bit sum, augend, addend
+                                              36 *            (*) RXY-a AG   64-bit sum, augend, addend
+                                              37 *            (*) RXY-a AGF  64-bit augend, sum, 32-bit addend
+                                              38 *   SUB REGISTER RR    SR   32-bit sum, minuend, subtrahend
+                                              39 *            (*) RRF-a SRK  32-bit sum, minuend, subtrahend, 3 operand
+                                              40 *                RRE   SGR  64-bit sum, minuend, subtrahend
+                                              41 *            (*) RRF-a SRGK 64-bit sum, minuend, subtrahend, 3 operand
+                                              42 *            (*) RRE   SGFR 64-bit minuend, sum, 32-bit subtrahend
+                                              43 *   SUB      (*) RX-a  S    32-bit sum, minuend, subtrahend
+                                              44 *            (*) RXY-a SY   32-bit sum, minuend, subtrahend
+                                              45 *            (*) RXY-a SG   64-bit sum, minuend, subtrahend
+                                              46 *            (*) RXY-a SGF  64-bit minuend, sum, 32-bit subtrahend
+                                              47 *
+                                              48 * Instructions are test against the definition in the z/Architecture
+                                              49 *   Principles of Operation, SA22-7832-11 (September, 2017), p. 7-27
+                                              50 *   and p. 7-387
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     2
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                              52 *
+                                              53 * Test data is compiled into this program.  The test script that runs
+                                              54 * this program can provide alternative test data through Hercules R
+                                              55 * commands.
+                                              56 *
+                                              57 * Basic 32-bit test data is:    2147483647(=M), 0, 1, -1,
+                                              58 *            -2147483647(=-M), -2147483648(=-M-1=-(M+1))
+                                              59 *
+                                              60 * Basic 64-bit test data is:    9223372036854775807(=G) , 0, 1, -1,
+                                              61 *   -9223372036854775807(=-G), -9223372036854775808(=-G-1=-(G+1))
+                                              62 *
+                                              63 * Test Case Order
+                                              64 * 1) AR,  RR, 32-bit addition
+                                              65 * 2) AGR, RR, 64-bit addition
+                                              66 * 3) SR,  RR, 32-bit subtraction
+                                              67 * 4) SGR, RR, 64-bit subtraction
+                                              68 *
+                                              69 * Routines have not been coded for the other ADD / SUB instructions.
+                                              70 *   It would not be hard, and no additional test data would be needed.
+                                              71 *
+                                              72 * Each value is added / subtracted to every value twice, once with
+                                              73 *   interruptions suppressed, once with interruptions enabled.
+                                              74 *   72 results are generated for each such test case.
+                                              75 *
+                                              76 * Opportunities for future development:
+                                              77 * - Use SIGP to change the processor mode and verify correct operation
+                                              78 *   in 390 and 370 mode, including verification that ADD varients
+                                              79 *   unsupported generate opreeation exceptions
+                                              80 * - Add the remaining RR* and the RX* instructions.
+                                              81 *
+                                              82 ***********************************************************************
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     3
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                              84 *
+                            000000  000627    85 BIMADSUB START 0
+                            000000  000001    86 STRTLABL EQU   *
+                            000000  000001    87 R0       EQU   0                   Work register for cc extraction
+                                              88 *                                  ..also augend / minuend and result
+                                              89 *                                  ..register for two-operand add and
+                                              90 *                                  ..subtract
+                            000001  000001    91 R1       EQU   1                   addend / subtrahend register for
+                                              92 *                                  ..RR two-operand variants.
+                            000002  000001    93 R2       EQU   2                   Count of test augends / minuends
+                                              94 *                                  ..remaining
+                            000003  000001    95 R3       EQU   3                   Pointer to next test augend /
+                                              96 *                                  ..minuend
+                            000004  000001    97 R4       EQU   4                   Count of test addends /
+                                              98 *                                  ..subtrahends remaining
+                            000005  000001    99 R5       EQU   5                   Pointer to next test addend /
+                                             100 *                                  ..subtrahend
+                            000006  000001   101 R6       EQU   6                   Size of each augend / minuend and
+                                             102 *                                  ..addend / subtrahend
+                            000007  000001   103 R7       EQU   7                   Pointer to next result value(s)
+                            000008  000001   104 R8       EQU   8                   Pointer to next cc/fixed point ovfl
+                            000009  000001   105 R9       EQU   9                   Top of inner loop address in tests
+                            00000A  000001   106 R10      EQU   10                  Pointer to test address list
+                            00000B  000001   107 R11      EQU   11                  **Reserved for z/CMS test rig
+                            00000C  000001   108 R12      EQU   12                  Top of outer loop address in tests
+                            00000D  000001   109 R13      EQU   13                  Return address to mainline
+                            00000E  000001   110 R14      EQU   14                  **Return address for z/CMS test rig
+                            00000F  000001   111 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                             112
+                                             113 *
+000000                      000000           114          USING *,R15
+                                             115 *
+                                             116 * Above is assumed to works on real iron (R15=0 after sysclear) and in
+                                             117 * John's z/CMS test rig (R15 points to start of load module).
+                                             118 *
+                                             119 * Selective z/Arch low core layout
+                                             120 *
+000000                      000000  00008C   121          ORG   STRTLABL+X'8C'      Program check interrution code
+00008C  00000000                             122 PCINTCD  DS    F
+                                             123 *
+                            000150  000001   124 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                             125 *
+000090                      000090  0001A0   126          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+0001A0  00000001 80000000                    127          DC    X'0000000180000000',AD(START)
+                                             128 *
+0001B0                      0001B0  0001D0   129          ORG   STRTLABL+X'1D0'     z/Arch Program check old PSW
+0001D0  00000000 00000000                    130          DC    X'0000000000000000',AD(PROGCHK)
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     4
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             132 *
+                                             133 * Program check routine.  If Data Exception, continue execution at
+                                             134 * the instruction following the program check.  Otherwise, hard wait.
+                                             135 * No need to collect data.
+                                             136 *
+0001E0                      0001E0  000200   137          ORG   STRTLABL+X'200'
+000200                                       138 PROGCHK  DS    0H               Program check occured...
+000200  9508 F08F                   00008F   139          CLI   PCINTCD+3,X'08'  Fixed Point Overflow?
+000204  A774 0004                   00020C   140          JNE   PCNOTDTA         ..no, hardwait
+000208  B2B2 F150                   000150   141          LPSWE PCOLDPSW         ..yes, resume program execution
+00020C                                       142 PCNOTDTA DS    0H
+                                             143
+00020C  B2B2 F258                   000258   144          LPSWE HARDWAIT         Not fixed point o'flow, disabled wait
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     5
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             146 ***********************************************************************
+                                             147 *
+                                             148 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                             149 *
+000210                                       150 START    DS    0H
+                                             151 *
+                                             152 * Prolog: Ensure result pages are mapped in TLB.
+                                             153 *
+000210  E310 F000 0171              001000   154          LAY   R1,ARSUM      Point to first result area
+000216  920F 1000                   000000   155          MVI   0(R1),X'F'    Make a dummy change to the page
+                                             156 *                            ..this forces page into TLB, sets R&C
+00021A  E310 F000 0271              002000   157          LAY   R1,ARFLG      Point to second result area
+000220  920F 1000                   000000   158          MVI   0(R1),X'F'    Make a dummy change to the page
+                                             159 *
+                                             160 * ADD REGISTER (32-bit operands, two operand)
+                                             161 *
+000224  41A0 F300                   000300   162          LA    R10,ARTABL    32-bit test table
+000228  4DD0 F360                   000360   163          BAS   R13,ARTEST    AR, add register 32-bit
+                                             164 *
+                                             165 * ADD REGISTER (64-bit operands, two operand)
+                                             166 *
+00022C  41A0 F318                   000318   167          LA    R10,AGRTABL   64-bit test table
+000230  4DD0 F3F6                   0003F6   168          BAS   R13,AGRTEST   AGR, add register 64-bit
+                                             169 *
+                                             170 * SUB REGISTER (32-bit operands, two operand)
+                                             171 *
+000234  41A0 F330                   000330   172          LA    R10,SRTABL    32-bit test table
+000238  4DD0 F49C                   00049C   173          BAS   R13,SRTEST    SR, subtract register 32-bit
+                                             174 *
+                                             175 * SUB REGISTER (64-bit operands, two operand)
+                                             176 *
+00023C  41A0 F348                   000348   177          LA    R10,SGRTABL   64-bit test table
+000240  4DD0 F532                   000532   178          BAS   R13,SGRTEST   SGR, subtract register 64-bit
+                                             179 *
+                                             180 * Epilog:
+                                             181 *
+000244  B2B2 F248                   000248   182          LPSWE WAITPSW        EOJ, load disabled wait PSW
+                                             183 *
+000248                                       184          DS    0D             Ensure correct alignment for psw
+000248  00020000 00000000                    185 WAITPSW  DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+000258  00020000 00000000                    186 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                             187 *
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     6
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             189 *
+                                             190 * Input values parameter list, six fullwords:
+                                             191 *      1) Count of augends / minuends (and addends / subtrahends)
+                                             192 *      2) Address of augends / minuends
+                                             193 *      3) Address of addends / subtrahends
+                                             194 *      4) Address to place sums / differences
+                                             195 *      5) Address to place condition code and interruption code
+                                             196 *      6) Size of augends / minuends, addends / subtrahends
+                                             197 *         ..and sums / differences
+                                             198 *
+000268                      000268  000300   199          ORG   STRTLABL+X'300'
+000300                                       200 ARTABL   DS    0F           Inputs for 32-bit/32-bit tests
+000300  00000006                             201          DC    A(VALCT/4)
+000304  000005E0                             202          DC    A(A32VALS)   Address of augends
+000308  000005E0                             203          DC    A(A32VALS)   Address of addends
+00030C  00001000                             204          DC    A(ARSUM)     Address to store sums
+000310  00002000                             205          DC    A(ARFLG)     Address to store cc, int code
+000314  00000004                             206          DC    A(4)         4 byte augends, addends and sums
+                                             207 *
+000318                                       208 AGRTABL  DS    0F           Inputs for 64-bit/64-bit tests
+000318  00000006                             209          DC    A(VALCT64/8)
+00031C  000005F8                             210          DC    A(A64VALS)   Address of augends
+000320  000005F8                             211          DC    A(A64VALS)   Address of addends
+000324  00001400                             212          DC    A(AGRSUM)    Address to store sums
+000328  00002400                             213          DC    A(AGRFLG)    Address to store cc, int code
+00032C  00000008                             214          DC    A(8)         8 byte augends, addends and sums
+                                             215 *
+000330                                       216 SRTABL   DS    0F           Inputs for 32-bit/32-bit tests
+000330  00000006                             217          DC    A(VALCT/4)
+000334  000005E0                             218          DC    A(A32VALS)   Address of minuends
+000338  000005E0                             219          DC    A(A32VALS)   Address of subtrahends
+00033C  00001800                             220          DC    A(SRSUM)     Address to store differences
+000340  00002800                             221          DC    A(SRFLG)     Address to store cc, int code
+000344  00000004                             222          DC    A(4)         4 byte minuends, subtrahends and
+                                             223 *                           ..differences
+                                             224 *
+000348                                       225 SGRTABL  DS    0F           Inputs for 64-bit/64-bit tests
+000348  00000006                             226          DC    A(VALCT64/8)
+00034C  000005F8                             227          DC    A(A64VALS)   Address of minuends
+000350  000005F8                             228          DC    A(A64VALS)   Address of addends
+000354  00001C00                             229          DC    A(SGRSUM)    Address to store differences
+000358  00002C00                             230          DC    A(SGRFLG)    Address to store cc, int code
+00035C  00000008                             231          DC    A(8)         8 byte minuends, subtrahends and
+                                             232 *                           ..differences
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     7
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             234 ***********************************************************************
+                                             235 *
+                                             236 * ADD REGISTER (AR, RRE) - 32-bit addend, 32-augend, 32-bit sum.
+                                             237 * Result replaces augend in operand 1.
+                                             238 *
+                                             239 ***********************************************************************
+
+
+000360  B222 0000                            241 ARTEST   IPM   R0            Get cc, program mask
+000364  5000 F5D8                   0005D8   242          ST    R0,ARCCPM     Save for later disable of ints
+000368  5000 F5DC                   0005DC   243          ST    R0,ARCCPMOV   Save for overflow enablement
+00036C  9608 F5DC                   0005DC   244          OI    ARCCPMOV,X'08'  Enable fixed point overflow ints
+000370  9823 A000                   000000   245          LM    R2,R3,0(R10)  Get count and addresses of augends
+000374  9878 A00C                   00000C   246          LM    R7,R8,12(R10) Get address of result area and flag area.
+000378  5860 A014                   000014   247          L     R6,20(,R10)   Get size of augends, addends and results.
+00037C  1222                                 248          LTR   R2,R2         Any test cases?
+00037E  078D                                 249          BZR   R13           ..No, return to caller
+000380  0DC0                                 250          BASR  R12,0         Set top of loop
+                                             251 *
+                                             252 * Top of outer loop.  Process next augend
+                                             253 *
+000382  5840 A000                   000000   254          L     R4,0(,R10)    Get count of addends
+000386  5850 A008                   000008   255          L     R5,8(,R10)    Get address of addend table
+00038A  0D90                                 256          BASR  R9,0          Set top of loop
+                                             257 *
+00038C  5800 3000                   000000   258          L     R0,0(,R3)     Initialize augend
+000390  5810 5000                   000000   259          L     R1,0(,R5)     Initialize addend
+000394  1A01                                 260          AR    R0,R1         Replace augend with sum
+000396  5000 7000                   000000   261          ST    R0,0(,R7)     Store sum
+00039A  B222 0000                            262          IPM   R0            Retrieve condition code
+00039E  8800 001C                   00001C   263          SRL   R0,28         Move CC to low-order r0
+0003A2  4200 8000                   000000   264          STC   R0,0(,R8)     Store condition code
+0003A6  4176 7000                   000000   265          LA    R7,0(R6,R7)   Point to next sum slot
+0003AA  4180 8004                   000004   266          LA    R8,4(,R8)     Point to next cc-int code slot
+                                             267 *
+                                             268 * Repeat the instruction with Fixed Point Overflow interruptions
+                                             269 * enabled.
+                                             270 *
+0003AE  5800 F5DC                   0005DC   271          L     R0,ARCCPMOV   Get cc/program mask for overflow ints
+0003B2  0400                                 272          SPM   R0            Enable Fixed Point Overflow inter.
+0003B4  D703 F08C F08C      00008C  00008C   273          XC    PCINTCD,PCINTCD    Zero out PC interruption code
+                                             274 *
+0003BA  5800 3000                   000000   275          L     R0,0(,R3)     Initialize augend
+0003BE  5810 5000                   000000   276          L     R1,0(,R5)     Initialize addend
+0003C2  1A01                                 277          AR    R0,R1         Replace augend with sum
+0003C4  5000 7000                   000000   278          ST    R0,0(,R7)     Store sum
+0003C8  D202 8001 F08D      000001  00008D   279          MVC   1(3,R8),PCINTCD+1   Save interruption code
+0003CE  B222 0000                            280          IPM   R0            Retrieve condition code
+0003D2  8800 001C                   00001C   281          SRL   R0,28         Move CC to low-order r0
+0003D6  4200 8000                   000000   282          STC   R0,0(,R8)     Store condition code
+                                             283 *
+0003DA  5800 F5D8                   0005D8   284          L     R0,ARCCPM     Get cc/program mask for no o'flow ints
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     8
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0003DE  0400                                 285          SPM   R0            Disable Fixed Point Overflow inter.
+                                             286 *
+0003E0  4156 5000                   000000   287          LA    R5,0(R6,R5)   Point to next addend
+0003E4  4176 7000                   000000   288          LA    R7,0(R6,R7)   Point to next sum slot
+0003E8  4180 8004                   000004   289          LA    R8,4(,R8)     Point to next cc-int code slot
+0003EC  0649                                 290          BCTR  R4,R9         Loop through addends
+                                             291 *
+                                             292 * End of addends.  Process next augend
+                                             293 *
+0003EE  4136 3000                   000000   294          LA    R3,0(R6,R3)   Point to next augend
+0003F2  062C                                 295          BCTR  R2,R12        Loop through augends
+                                             296 *
+0003F4  07FD                                 297          BR    R13           All converted; return.
+                                             298 *
+                                             299 ***********************************************************************
+                                             300 *
+                                             301 * ADD REGISTER (AGR, RRE) - 64-bit addend, 64-augend, 64-bit sum.
+                                             302 * Result replaces augend in operand 1.
+                                             303 *
+                                             304 ***********************************************************************
+
+
+0003F6  B222 0000                            306 AGRTEST  IPM   R0            Get cc, program mask
+0003FA  5000 F5D8                   0005D8   307          ST    R0,ARCCPM     Save for later disable of ints
+0003FE  5000 F5DC                   0005DC   308          ST    R0,ARCCPMOV   Save for overflow enablement
+000402  9608 F5DC                   0005DC   309          OI    ARCCPMOV,X'08'  Enable fixed point overflow ints
+000406  9823 A000                   000000   310          LM    R2,R3,0(R10)  Get count and addresses of augends
+00040A  9878 A00C                   00000C   311          LM    R7,R8,12(R10) Get address of result area and flag area.
+00040E  5860 A014                   000014   312          L     R6,20(,R10)   Get size of augends, addends and results.
+000412  1222                                 313          LTR   R2,R2         Any test cases?
+000414  078D                                 314          BZR   R13           ..No, return to caller
+000416  0DC0                                 315          BASR  R12,0         Set top of loop
+                                             316 *
+                                             317 * Top of outer loop.  Process next augend
+                                             318 *
+000418  5840 A000                   000000   319          L     R4,0(,R10)    Get count of addends
+00041C  5850 A008                   000008   320          L     R5,8(,R10)    Get address of addend table
+000420  0D90                                 321          BASR  R9,0          Set top of loop
+                                             322 *
+000422  E300 3000 0004              000000   323          LG    R0,0(,R3)     Initialize augend
+000428  E310 5000 0004              000000   324          LG    R1,0(,R5)     Initialize addend
+00042E  B908 0001                            325          AGR   R0,R1         Replace augend with sum
+000432  E300 7000 0024              000000   326          STG   R0,0(,R7)     Store sum
+000438  B222 0000                            327          IPM   R0            Retrieve condition code
+00043C  8800 001C                   00001C   328          SRL   R0,28         Move CC to low-order r0
+000440  4200 8000                   000000   329          STC   R0,0(,R8)     Store condition code
+000444  4176 7000                   000000   330          LA    R7,0(R6,R7)   Point to next sum slot
+000448  4180 8004                   000004   331          LA    R8,4(,R8)     Point to next cc-int code slot
+                                             332 *
+                                             333 * Repeat the instruction with Fixed Point Overflow interruptions
+                                             334 * enabled.
+                                             335 *
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page     9
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+00044C  5800 F5DC                   0005DC   336          L     R0,ARCCPMOV   Get cc/program mask for overflow ints
+000450  0400                                 337          SPM   R0            Enable Fixed Point Overflow inter.
+000452  D703 F08C F08C      00008C  00008C   338          XC    PCINTCD,PCINTCD    Zero out PC interruption code
+                                             339 *
+000458  E300 3000 0004              000000   340          LG    R0,0(,R3)     Initialize augend
+00045E  E310 5000 0004              000000   341          LG    R1,0(,R5)     Initialize addend
+000464  B908 0001                            342          AGR   R0,R1         Replace augend with sum
+000468  E300 7000 0024              000000   343          STG   R0,0(,R7)     Store sum
+00046E  D202 8001 F08D      000001  00008D   344          MVC   1(3,R8),PCINTCD+1   Save interruption code
+000474  B222 0000                            345          IPM   R0            Retrieve condition code
+000478  8800 001C                   00001C   346          SRL   R0,28         Move CC to low-order r0
+00047C  4200 8000                   000000   347          STC   R0,0(,R8)     Store condition code
+                                             348 *
+000480  5800 F5D8                   0005D8   349          L     R0,ARCCPM     Get cc/program mask for no o'flow ints
+000484  0400                                 350          SPM   R0            Disable Fixed Point Overflow inter.
+                                             351 *
+000486  4156 5000                   000000   352          LA    R5,0(R6,R5)   Point to next addend
+00048A  4176 7000                   000000   353          LA    R7,0(R6,R7)   Point to next sum slot
+00048E  4180 8004                   000004   354          LA    R8,4(,R8)     Point to next cc-int code slot
+000492  0649                                 355          BCTR  R4,R9         Loop through addends
+                                             356 *
+                                             357 * End of addends.  Process next augend
+                                             358 *
+000494  4136 3000                   000000   359          LA    R3,0(R6,R3)   Point to next augend
+000498  062C                                 360          BCTR  R2,R12        Loop through augends
+                                             361 *
+00049A  07FD                                 362          BR    R13           All converted; return.
+                                             363 *
+                                             364 ***********************************************************************
+                                             365 *
+                                             366 * SUB REGISTER (SR, RRE) - 32-bit subtrahend, 32-minuend, 32-bit sum.
+                                             367 * Result replaces subtrahend in operand 1.
+                                             368 *
+                                             369 ***********************************************************************
+
+
+00049C  B222 0000                            371 SRTEST   IPM   R0            Get cc, program mask
+0004A0  5000 F5D8                   0005D8   372          ST    R0,ARCCPM     Save for later disable of ints
+0004A4  5000 F5DC                   0005DC   373          ST    R0,ARCCPMOV   Save for overflow enablement
+0004A8  9608 F5DC                   0005DC   374          OI    ARCCPMOV,X'08'  Enable fixed point overflow ints
+0004AC  9823 A000                   000000   375          LM    R2,R3,0(R10)  Get count and addresses of minuends
+0004B0  9878 A00C                   00000C   376          LM    R7,R8,12(R10) Get address of result area and flag area.
+0004B4  5860 A014                   000014   377          L     R6,20(,R10)   Get size of minuends, subtrahends
+                                             378 *                            ..and results.
+0004B8  1222                                 379          LTR   R2,R2         Any test cases?
+0004BA  078D                                 380          BZR   R13           ..No, return to caller
+0004BC  0DC0                                 381          BASR  R12,0         Set top of loop
+                                             382 *
+                                             383 * Top of outer loop.  Process next minuend
+                                             384 *
+0004BE  5840 A000                   000000   385          L     R4,0(,R10)    Get count of subtrahends
+0004C2  5850 A008                   000008   386          L     R5,8(,R10)    Get address of subtrahend table
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    10
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0004C6  0D90                                 387          BASR  R9,0          Set top of loop
+                                             388 *
+0004C8  5800 3000                   000000   389          L     R0,0(,R3)     Initialize minuend
+0004CC  5810 5000                   000000   390          L     R1,0(,R5)     Initialize subtrahend
+0004D0  1B01                                 391          SR    R0,R1         Replace minuend with difference
+0004D2  5000 7000                   000000   392          ST    R0,0(,R7)     Store difference
+0004D6  B222 0000                            393          IPM   R0            Retrieve condition code
+0004DA  8800 001C                   00001C   394          SRL   R0,28         Move CC to low-order r0
+0004DE  4200 8000                   000000   395          STC   R0,0(,R8)     Store condition code
+0004E2  4176 7000                   000000   396          LA    R7,0(R6,R7)   Point to next sum slot
+0004E6  4180 8004                   000004   397          LA    R8,4(,R8)     Point to next cc-int code slot
+                                             398 *
+                                             399 * Repeat the instruction with Fixed Point Overflow interruptions
+                                             400 * enabled.
+                                             401 *
+0004EA  5800 F5DC                   0005DC   402          L     R0,ARCCPMOV   Get cc/program mask for overflow ints
+0004EE  0400                                 403          SPM   R0            Enable Fixed Point Overflow inter.
+0004F0  D703 F08C F08C      00008C  00008C   404          XC    PCINTCD,PCINTCD    Zero out PC interruption code
+                                             405 *
+0004F6  5800 3000                   000000   406          L     R0,0(,R3)     Initialize minuend
+0004FA  5810 5000                   000000   407          L     R1,0(,R5)     Initialize subtrahend
+0004FE  1B01                                 408          SR    R0,R1         Replace minuend with difference
+000500  5000 7000                   000000   409          ST    R0,0(,R7)     Store difference
+000504  D202 8001 F08D      000001  00008D   410          MVC   1(3,R8),PCINTCD+1   Save interruption code
+00050A  B222 0000                            411          IPM   R0            Retrieve condition code
+00050E  8800 001C                   00001C   412          SRL   R0,28         Move CC to low-order r0
+000512  4200 8000                   000000   413          STC   R0,0(,R8)     Store condition code
+                                             414 *
+000516  5800 F5D8                   0005D8   415          L     R0,ARCCPM     Get cc/program mask for no o'flow ints
+00051A  0400                                 416          SPM   R0            Disable Fixed Point Overflow inter.
+                                             417 *
+00051C  4156 5000                   000000   418          LA    R5,0(R6,R5)   Point to next subtrahend
+000520  4176 7000                   000000   419          LA    R7,0(R6,R7)   Point to next difference slot
+000524  4180 8004                   000004   420          LA    R8,4(,R8)     Point to next cc-int code slot
+000528  0649                                 421          BCTR  R4,R9         Loop through subtrahends
+                                             422 *
+                                             423 * End of subtrahends.  Process next minuend
+                                             424 *
+00052A  4136 3000                   000000   425          LA    R3,0(R6,R3)   Point to next minuend
+00052E  062C                                 426          BCTR  R2,R12        Loop through minuends
+                                             427 *
+000530  07FD                                 428          BR    R13           All converted; return.
+                                             429 *
+                                             430 ***********************************************************************
+                                             431 *
+                                             432 * SUB REGISTER (SGR, RRE) - 64-bit subtrahend, 64-minuend, 64-bit sum.
+                                             433 * Result replaces subtrahend in operand 1.
+                                             434 *
+                                             435 ***********************************************************************
+
+
+000532  B222 0000                            437 SGRTEST  IPM   R0            Get cc, program mask
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    11
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000536  5000 F5D8                   0005D8   438          ST    R0,ARCCPM     Save for later disable of ints
+00053A  5000 F5DC                   0005DC   439          ST    R0,ARCCPMOV   Save for overflow enablement
+00053E  9608 F5DC                   0005DC   440          OI    ARCCPMOV,X'08'  Enable fixed point overflow ints
+000542  9823 A000                   000000   441          LM    R2,R3,0(R10)  Get count and addresses of minuends
+000546  9878 A00C                   00000C   442          LM    R7,R8,12(R10) Get address of result area and flag area.
+00054A  5860 A014                   000014   443          L     R6,20(,R10)   Get size of minuends, subtrahends and
+                                             444 *                            ..and results.
+00054E  1222                                 445          LTR   R2,R2         Any test cases?
+000550  078D                                 446          BZR   R13           ..No, return to caller
+000552  0DC0                                 447          BASR  R12,0         Set top of loop
+                                             448 *
+                                             449 * Top of outer loop.  Process next minuend
+                                             450 *
+000554  5840 A000                   000000   451          L     R4,0(,R10)    Get count of subtrahends
+000558  5850 A008                   000008   452          L     R5,8(,R10)    Get address of subtrahend table
+00055C  0D90                                 453          BASR  R9,0          Set top of loop
+                                             454 *
+00055E  E300 3000 0004              000000   455          LG    R0,0(,R3)     Initialize minuend
+000564  E310 5000 0004              000000   456          LG    R1,0(,R5)     Initialize subtrahend
+00056A  B909 0001                            457          SGR   R0,R1         Replace minuend with difference
+00056E  E300 7000 0024              000000   458          STG   R0,0(,R7)     Store difference
+000574  B222 0000                            459          IPM   R0            Retrieve condition code
+000578  8800 001C                   00001C   460          SRL   R0,28         Move CC to low-order r0
+00057C  4200 8000                   000000   461          STC   R0,0(,R8)     Store condition code
+000580  4176 7000                   000000   462          LA    R7,0(R6,R7)   Point to next difference slot
+000584  4180 8004                   000004   463          LA    R8,4(,R8)     Point to next cc-int code slot
+                                             464 *
+                                             465 * Repeat the instruction with Fixed Point Overflow interruptions
+                                             466 * enabled.
+                                             467 *
+000588  5800 F5DC                   0005DC   468          L     R0,ARCCPMOV   Get cc/program mask for overflow ints
+00058C  0400                                 469          SPM   R0            Enable Fixed Point Overflow inter.
+00058E  D703 F08C F08C      00008C  00008C   470          XC    PCINTCD,PCINTCD    Zero out PC interruption code
+                                             471 *
+000594  E300 3000 0004              000000   472          LG    R0,0(,R3)     Initialize minuend
+00059A  E310 5000 0004              000000   473          LG    R1,0(,R5)     Initialize subtrahend
+0005A0  B909 0001                            474          SGR   R0,R1         Replace minuend with difference
+0005A4  E300 7000 0024              000000   475          STG   R0,0(,R7)     Store difference
+0005AA  D202 8001 F08D      000001  00008D   476          MVC   1(3,R8),PCINTCD+1   Save interruption code
+0005B0  B222 0000                            477          IPM   R0            Retrieve condition code
+0005B4  8800 001C                   00001C   478          SRL   R0,28         Move CC to low-order r0
+0005B8  4200 8000                   000000   479          STC   R0,0(,R8)     Store condition code
+                                             480 *
+0005BC  5800 F5D8                   0005D8   481          L     R0,ARCCPM     Get cc/program mask for no o'flow ints
+0005C0  0400                                 482          SPM   R0            Disable Fixed Point Overflow inter.
+                                             483 *
+0005C2  4156 5000                   000000   484          LA    R5,0(R6,R5)   Point to next subtrahend
+0005C6  4176 7000                   000000   485          LA    R7,0(R6,R7)   Point to next difference slot
+0005CA  4180 8004                   000004   486          LA    R8,4(,R8)     Point to next cc-int code slot
+0005CE  0649                                 487          BCTR  R4,R9         Loop through subtrahends
+                                             488 *
+                                             489 * End of subtrahends.  Process next minuend
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    12
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             490 *
+0005D0  4136 3000                   000000   491          LA    R3,0(R6,R3)   Point to next minuend
+0005D4  062C                                 492          BCTR  R2,R12        Loop through minuends
+                                             493 *
+0005D6  07FD                                 494          BR    R13           All converted; return.
+                                             495 *
+0005D8  00000000                             496 ARCCPM   DC    F'0'          Savearea for cc/program mask
+0005DC  00000000                             497 ARCCPMOV DC    F'0'          cc/program mask with interupts enabled
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    13
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                             499 ***********************************************************************
+                                             500 *
+                                             501 * Integer inputs.  The same values are used for 32-bit addends /
+                                             502 * subtrahends and augends / minuends.  Each addend is added to each
+                                             503 * augend, and each subtrahend is subtracted from ean minuend.
+                                             504 *
+                                             505 * N.B., the number of 32-bit and 64-bit test values must be the same.
+                                             506 *
+                                             507 ***********************************************************************
+
+
+                                             509 *
+                                             510 * 32-bit test inputs.
+                                             511 *
+0005E0                                       512 A32VALS  DS    0D                      32-bit operands
+0005E0  7FFFFFFF                             513          DC    F'2147483647'           32-bit max pos. int.     ( M)
+0005E4  00000001                             514          DC    F'1'
+0005E8  00000000                             515          DC    F'0'
+0005EC  FFFFFFFF                             516          DC    F'-1'
+0005F0  80000001                             517          DC    F'-2147483647'          32-bit max neg. int. + 1 (-M)
+0005F4  80000000                             518          DC    F'-2147483648'          32-bit max neg. int.     (-M-1)
+                                             519 *
+                            000018  000001   520 VALCT    EQU   *-A32VALS               Count of integers in list * 4
+
+
+
+                                             522 *
+                                             523 * 64-bit test inputs.
+                                             524 *
+0005F8                                       525 A64VALS  DS    0D                      64-bit operands
+0005F8  7FFFFFFF FFFFFFFF                    526          DC    D'9223372036854775807'  64-bit max pos. int.     ( G)
+000600  00000000 00000001                    527          DC    D'1'
+000608  00000000 00000000                    528          DC    D'0'
+000610  FFFFFFFF FFFFFFFF                    529          DC    D'-1'
+000618  80000000 00000001                    530          DC    D'-9223372036854775807' 64-bit max neg. int. + 1 (-G)
+000620  80000000 00000000                    531          DC    D'-9223372036854775808' 64-bit max neg. int.     (-G-1)
+                            000030  000001   532 VALCT64  EQU   *-A64VALS               Count of integers in list * 8
+                                             533 *
+000628                                       534          LTORG ,
+                                             535 *
+                                             536 *  Locations for results
+                                             537 *
+                            001000  000001   538 ARSUM    EQU   STRTLABL+X'1000'    AR results
+                                             539 *                                  ..72 results used
+                            002000  000001   540 ARFLG    EQU   STRTLABL+X'2000'    Condition and interrupt codes
+                                             541 *                                  ..72 results used
+                            001400  000001   542 AGRSUM   EQU   STRTLABL+X'1400'    AGR results
+                                             543 *                                  ..72 results used
+                            002400  000001   544 AGRFLG   EQU   STRTLABL+X'2400'    Condition and interrupt codes
+                                             545 *                                  ..72 results used
+                            001800  000001   546 SRSUM    EQU   STRTLABL+X'1800'    SR results
+                                             547 *                                  ..72 results used
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    14
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                            002800  000001   548 SRFLG    EQU   STRTLABL+X'2800'    Condition and interrupt codes
+                                             549 *                                  ..72 results used
+                            001C00  000001   550 SGRSUM   EQU   STRTLABL+X'1C00'    SGR results
+                                             551 *                                  ..72 results used
+                            002C00  000001   552 SGRFLG   EQU   STRTLABL+X'2C00'    Condition and interrupt codes
+                                             553 *                                  ..72 results used
+                            003000  000001   554 ENDRES   EQU   STRTLABL+X'3000'    next location for results
+                                             555 *
+                                             556 *
+                                             557          END
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    15
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+A32VALS             D    0005E0       8   512  520  202  203  218  219
+A64VALS             D    0005F8       8   525  532  210  211  227  228
+AGRFLG              U    002400       1   544  213
+AGRSUM              U    001400       1   542  212
+AGRTABL             F    000318       4   208  167
+AGRTEST             I    0003F6       4   306  168
+ARCCPM              F    0005D8       4   496  242  284  307  349  372  415  438  481
+ARCCPMOV            F    0005DC       4   497  243  244  271  308  309  336  373  374  402  439  440  468
+ARFLG               U    002000       1   540  157  205
+ARSUM               U    001000       1   538  154  204
+ARTABL              F    000300       4   200  162
+ARTEST              I    000360       4   241  163
+BIMADSUB            J    000000    1576    85
+ENDRES              U    003000       1   554
+HARDWAIT            X    000258       8   186  144
+IMAGE               1    000000    1576     0
+PCINTCD             F    00008C       4   122  139  273  279  338  344  404  410  470  476
+PCNOTDTA            H    00020C       2   142  140
+PCOLDPSW            U    000150       1   124  141
+PROGCHK             H    000200       2   138  130
+R0                  U    000000       1    87  241  242  243  258  260  261  262  263  264  271  272  275  277  278  280  281  282
+                                               284  285  306  307  308  323  325  326  327  328  329  336  337  340  342  343  345
+                                               346  347  349  350  371  372  373  389  391  392  393  394  395  402  403  406  408
+                                               409  411  412  413  415  416  437  438  439  455  457  458  459  460  461  468  469
+                                               472  474  475  477  478  479  481  482
+R1                  U    000001       1    91  154  155  157  158  259  260  276  277  324  325  341  342  390  391  407  408  456
+                                               457  473  474
+R10                 U    00000A       1   106  162  167  172  177  245  246  247  254  255  310  311  312  319  320  375  376  377
+                                               385  386  441  442  443  451  452
+R11                 U    00000B       1   107
+R12                 U    00000C       1   108  250  295  315  360  381  426  447  492
+R13                 U    00000D       1   109  163  168  173  178  249  297  314  362  380  428  446  494
+R14                 U    00000E       1   110
+R15                 U    00000F       1   111  114
+R2                  U    000002       1    93  245  248  295  310  313  360  375  379  426  441  445  492
+R3                  U    000003       1    95  245  258  275  294  310  323  340  359  375  389  406  425  441  455  472  491
+R4                  U    000004       1    97  254  290  319  355  385  421  451  487
+R5                  U    000005       1    99  255  259  276  287  320  324  341  352  386  390  407  418  452  456  473  484
+R6                  U    000006       1   101  247  265  287  288  294  312  330  352  353  359  377  396  418  419  425  443  462
+                                               484  485  491
+R7                  U    000007       1   103  246  261  265  278  288  311  326  330  343  353  376  392  396  409  419  442  458
+                                               462  475  485
+R8                  U    000008       1   104  246  264  266  279  282  289  311  329  331  344  347  354  376  395  397  410  413
+                                               420  442  461  463  476  479  486
+R9                  U    000009       1   105  256  290  321  355  387  421  453  487
+SGRFLG              U    002C00       1   552  230
+SGRSUM              U    001C00       1   550  229
+SGRTABL             F    000348       4   225  177
+SGRTEST             I    000532       4   437  178
+SRFLG               U    002800       1   548  221
+SRSUM               U    001800       1   546  220
+SRTABL              F    000330       4   216  172
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    16
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+SRTEST              I    00049C       4   371  173
+START               H    000210       2   150  127
+STRTLABL            U    000000       1    86  121  124  126  129  137  199  538  540  542  544  546  548  550  552  554
+VALCT               U    000018       1   520  201  217
+VALCT64             U    000030       1   532  209  226
+WAITPSW             X    000248       8   185  182
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    17
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    18
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1576  000-627  000-627
+  Region             1576  000-627  000-627
+    CSECT  BIMADSUB  1576  000-627  000-627
+ASMA Ver. 0.2.0  bim-001-add-sub.asm: Test Basic Integer Math Add & Subtract                        02 Feb 2019 14:50:31  Page    19
+
+   STMT                            FILE NAME
+
+1     F:\Qsync\Source\Changes\SDL-hyperion\tests\bim-001-add-sub.asm
+
+
+** NO ERRORS FOUND **
+
+

@@ -88,7 +88,7 @@
   HUT_DLL_IMPORT char *resolve_symbol_string(const char *);
   HUT_DLL_IMPORT void set_symbol(const char *,const char *);
   HUT_DLL_IMPORT void del_symbol(const char *);
-  HUT_DLL_IMPORT void list_all_symbols(void);
+  HUT_DLL_IMPORT void list_all_symbols();
 
 #ifdef _MSVC_
   #ifndef HAVE_ID_T
@@ -101,9 +101,6 @@
     #define  PRIO_USER     2
   #endif
 #endif // _MSVC_
-
-/* Set the PROCESS "nice" value (NOT thread priority!) */
-HU2_DLL_IMPORT int set_herc_nice( int which, id_t who, int nice );
 
 #if !defined(HAVE_STRLCPY)
 /* $OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $ */
@@ -223,6 +220,11 @@ HUT_DLL_IMPORT char* fmt_memsize_KB ( const U64 memsizeKB, char* buf, const size
 HUT_DLL_IMPORT char* fmt_memsize_MB ( const U64 memsizeMB, char* buf, const size_t bufsz );
 
 /*-------------------------------------------------------------------*/
+/* Pretty format S64 value with thousand separators. Returns length. */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT size_t fmt_S64( char dst[32], S64 num );
+
+/*-------------------------------------------------------------------*/
 /* Standard Utility Initialization                                   */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int initialize_utility( int argc, char* argv[],
@@ -273,5 +275,10 @@ HUT_DLL_IMPORT char*   trim ( char* str, const char* dlm ); // (trim both)
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int nix_set_thread_name( pthread_t tid, const char* name );
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Hercules command line parsing function                            */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 
 #endif /* __HSCUTL_H__ */

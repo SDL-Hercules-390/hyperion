@@ -99,9 +99,9 @@ static void* test_thread( void* parg)
     sched_yield();
 
     /* Do nanosleep for the specified number of seconds */
-    logmsg("*** $test thread "TIDPAT": sleeping for %d seconds...\n", tid, secs );
+    LOGMSG("*** $test thread "TIDPAT": sleeping for %d seconds...\n", TID_CAST( tid ), secs );
     rc = nanosleep( &ts, NULL );
-    logmsg("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", tid, secs, rc );
+    LOGMSG("*** $test thread "TIDPAT": %d second sleep done; rc=%d\n", TID_CAST( tid ), secs, rc );
 
     return NULL;
 }
@@ -131,22 +131,35 @@ int test_cmd(int argc, char *argv[],char *cmdline)
 
     if (sysblk.scrtest)
     {
+        // "%s%s"
         WRMSG( HHC00001, "E", "", "WRONG! Perhaps you meant 'runtest' instead?");
         return -1;
     }
 
     if (argc > 1)
     {
-        if ( CMD(argv[1],crash,5) )
-            CRASH();
-        else if (CMD( argv[1], locks, 5 ))
+        if      (CMD( argv[1], CRASH,   5 )) CRASH();
+#if defined( HAVE_SIGNAL_HANDLING )
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+        else if (CMD( argv[1], SIGBUS,  6 )) raise( SIGBUS  );
+#endif
+        else if (CMD( argv[1], SIGFPE,  6 )) raise( SIGFPE  );
+        else if (CMD( argv[1], SIGILL,  6 )) raise( SIGILL  );
+        else if (CMD( argv[1], SIGSEGV, 7 )) raise( SIGSEGV );
+        else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
+        else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
+#endif
+        else if (CMD( argv[1], LOCKS,   5 ))
         {
             // test thread exit with lock still held
             static TID tid;
             VERIFY( create_thread( &tid, DETACHED,
                 test_locks_thread, 0, "test_locks_thread" ) == 0);
-            return 0;
         }
+        else
+            // "%s%s"
+            WRMSG( HHC00001, "E", argv[1], ": unsupported $test argument");
+        return 0;
     }
 
     /*-------------------------------------------*/
@@ -699,7 +712,7 @@ int rc = 0;
     }
     else
     {
-        display_version( stdout, 0, "Hercules" );
+        display_version      ( stdout, 0, NULL );
         display_build_options( stdout, 0 );
         display_extpkg_vers  ( stdout, 0 );
     }
@@ -3341,6 +3354,7 @@ DEPRECATED_PRIONICE_CMD( devprio_cmd  );
 DEPRECATED_PRIONICE_CMD( todprio_cmd  );
 DEPRECATED_PRIONICE_CMD( srvprio_cmd  );
 
+#if 0 /* INCOMPLETE */
 /*-------------------------------------------------------------------*/
 /* numvec command                                                    */
 /*-------------------------------------------------------------------*/
@@ -3385,6 +3399,7 @@ BYTE c;
 
     return 0;
 }
+#endif
 
 /*-------------------------------------------------------------------*/
 /* netdev command                                                    */
@@ -3766,45 +3781,80 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
-#if defined( PANEL_REFRESH_RATE )
+/*-------------------------------------------------------------------*/
+/* panopt command - display or set panel option(s)                   */
+/*-------------------------------------------------------------------*/
+int panopt_cmd( int argc, char* argv[], char* cmdline)
+{
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0(  argv   );
+
+    if (argc < 2)
+    {
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], sysblk.devnameonly ?
+            "NAMEONLY" : "FULLPATH" );
+        return 0;
+    }
+    else if (argc == 2)
+    {
+        if      (CMD( argv[1], NAMEONLY, 4 )) sysblk.devnameonly = 1;
+        else if (CMD( argv[1], FULLPATH, 4 )) sysblk.devnameonly = 0;
+        else // error
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[1], "" );
+            return -1;
+        }
+
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
+
+        return 0;
+    }
+
+    // "Invalid command usage. Type 'help %s' for assistance."
+    WRMSG( HHC02299, "E", argv[0] );
+    return -1;
+}
+
 /*-------------------------------------------------------------------*/
 /* panrate command - display or set rate at which console refreshes  */
 /*-------------------------------------------------------------------*/
-int panrate_cmd(int argc, char *argv[], char *cmdline)
+int panrate_cmd( int argc, char* argv[], char* cmdline )
 {
     char msgbuf[16];
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0(  argv   );
 
-    UPPER_ARGV_0( argv );
-
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
-        if ( CMD(argv[1],fast,4) )
-            sysblk.panrate = PANEL_REFRESH_RATE_FAST;
-        else if ( CMD(argv[1],slow,4) )
-            sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
+        if      (CMD( argv[1], FAST, 4 )) sysblk.panrate = PANEL_REFRESH_RATE_FAST;
+        else if (CMD( argv[1], SLOW, 4 )) sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
         else
         {
             int trate = 0;
             int rc;
 
-            rc = sscanf(argv[1],"%d", &trate);
+            rc = sscanf( argv[1], "%d", &trate );
 
             if (rc > 0 && trate >= (1000 / CLK_TCK) && trate < 5001)
                 sysblk.panrate = trate;
-            else
+            else // error
             {
                 char buf[20];
                 char buf2[64];
 
-                if ( rc == 0 )
+                if (rc == 0)
                 {
                     MSGBUF( buf, "%s", argv[1] );
                     MSGBUF( buf2, "; not numeric value" );
@@ -3812,37 +3862,41 @@ int panrate_cmd(int argc, char *argv[], char *cmdline)
                 else
                 {
                     MSGBUF( buf, "%d", trate );
-                    MSGBUF( buf2, "; not within range %d to 5000 inclusive", (1000/(int)CLK_TCK) );
+                    MSGBUF( buf2, "; not within range %d to 5000 inclusive",
+                        (1000 / (int) CLK_TCK ));
                 }
 
+                // "Invalid argument %s%s"
                 WRMSG( HHC02205, "E", buf, buf2 );
                 return -1;
             }
         }
-        if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], argv[1] );
+
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], argv[1] );
     }
     else
     {
         MSGBUF( msgbuf, "%d", sysblk.panrate );
-        WRMSG(HHC02203, "I", argv[0], msgbuf );
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], msgbuf );
     }
 
     return 0;
 }
-#endif /* defined( PANEL_REFRESH_RATE ) */
 
 /*-------------------------------------------------------------------*/
 /* pantitle xxxxxxxx command - set console title                     */
 /*-------------------------------------------------------------------*/
-int pantitle_cmd(int argc, char *argv[], char *cmdline)
+int pantitle_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+    UPPER_ARGV_0(  argv   );
 
-    UPPER_ARGV_0( argv );
-
-    if ( argc > 2 )
+    if (argc > 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
@@ -3850,19 +3904,21 @@ int pantitle_cmd(int argc, char *argv[], char *cmdline)
     /* Update pantitle if operand is specified */
     if (argc == 2)
     {
-        if (sysblk.pantitle)
-            free(sysblk.pantitle);
+        free( sysblk.pantitle );
 
-        sysblk.pantitle = (strlen(argv[1]) == 0 ) ? NULL : strdup(argv[1]);
+        sysblk.pantitle = (strlen( argv[1] ) == 0) ? NULL : strdup( argv[1] );
 
-        if ( MLVL(VERBOSE) )
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0],
-                   (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
+                sysblk.pantitle ? sysblk.pantitle : "(none)" );
 
         set_console_title( NULL );
     }
     else
-        WRMSG(HHC02203, "I", argv[0], (sysblk.pantitle == NULL) ? "(none)" : sysblk.pantitle);
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0],
+            sysblk.pantitle ? sysblk.pantitle : "(none)" );
 
     return 0;
 }
@@ -4413,44 +4469,64 @@ int stsi_manufacturer_cmd(int argc, char *argv[], char *cmdline)
 }
 
 #if defined( OPTION_SHARED_DEVICES )
-static int default_shrdport = 3390;
 /*-------------------------------------------------------------------*/
 /* shrdport - shared dasd port number                                */
 /*-------------------------------------------------------------------*/
-int shrdport_cmd(int argc, char *argv[], char *cmdline)
+int shrdport_cmd( int argc, char* argv[], char* cmdline )
 {
-U16  shrdport;
-BYTE c;
+    static int default_shrdport = SHARED_DEFAULT_PORT;
+    U16  shrdport;
+    BYTE c;
+    char buf[16] = {0};
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+
+    UPPER_ARGV_0( argv );
+
+    /* Check for correct number of arguments */
+    if (argc < 1 || argc > 2)
+    {
+        // "Invalid number of arguments for %s"
+        WRMSG( HHC01455, "E", argv[0] );
+        return -1;
+    }
+
+    /* Report current shared device port number */
+    if (argc < 2)
+    {
+        // "%-14s: %s"
+        MSGBUF( buf, "%hu", sysblk.shrdport );
+        WRMSG( HHC02203, "I", argv[0], buf );
+        return 0;
+    }
 
     /* Update shared device port number */
-    if (argc == 2)
+    if (CMD( argv[1], START, 5 ))
+        configure_shrdport( default_shrdport );
+    else
+    if (CMD( argv[1], STOP, 4 ))
+        configure_shrdport( 0 );
+    else
+    if (1
+        && strlen(  argv[1] ) >= 1
+        && sscanf( argv[1], "%hu%c", &shrdport, &c ) == 1
+        && (shrdport >= 1024 || shrdport == 0)
+    )
     {
-        if ( CMD( argv[1], start, 5))
-            configure_shrdport(default_shrdport);
-        else
-        if( CMD( argv[1], stop, 4))
-            configure_shrdport( 0);
-        else
-        if (strlen(argv[1]) >= 1
-          && sscanf(argv[1], "%hu%c", &shrdport, &c) == 1
-          && (shrdport >= 1024 || shrdport == 0))
-        {
-            if(!configure_shrdport(shrdport))
-                default_shrdport = shrdport;
-        }
-        else
-        {
-            WRMSG( HHC01451, "E", argv[1], argv[0] );
-            return 1;
-        }
+        if (!configure_shrdport( shrdport ))
+            default_shrdport = shrdport;
     }
     else
     {
-        WRMSG( HHC01455, "E", argv[0] );
+        // "Invalid value %s specified for %s"
+        WRMSG( HHC01451, "E", argv[1], argv[0] );
         return 1;
     }
+
+    if (MLVL( VERBOSE ))
+        // "%-14s set to %s"
+        MSGBUF( buf, "%hu", sysblk.shrdport );
+        WRMSG( HHC02204, "I", argv[0], buf );
 
     return 0;
 }
@@ -6305,7 +6381,7 @@ BYTE     unitstat, code = 0;
         {
             if ( dev->blockid == 0 )
             {
-                BYTE *sLABEL = malloc( MAX_BLKLEN );
+                BYTE *sLABEL = malloc( MAX_TAPE_BLKSIZE );
 
                 if (!sLABEL)
                 {

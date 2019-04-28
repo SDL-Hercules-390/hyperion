@@ -510,7 +510,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_RESUME_PROGRAM)*/
 
 
-#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) && !defined( FEATURE_370_EXTENSION )
 /*-------------------------------------------------------------------*/
 /* EB0F TRACG - Trace Long                                     [RSY] */
 /*-------------------------------------------------------------------*/
@@ -551,7 +551,7 @@ U32     op;                             /* Operand                   */
     PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(trace_long) */
-#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) && !defined( FEATURE_370_EXTENSION ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -1590,7 +1590,7 @@ QWORD   qwork;                          /* Quadword work area        */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
-#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
+#if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) && !defined( FEATURE_370_EXTENSION )
 /*-------------------------------------------------------------------*/
 /* B90E EREGG - Extract Stacked Registers Long                 [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1612,7 +1612,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     ARCH_DEP(unstack_registers) (1, lsea, r1, r2, regs);
 
 } /* end DEF_INST(extract_stacked_registers_long) */
-#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+#endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) && !defined( FEATURE_370_EXTENSION ) */
 
 
 #if defined(FEATURE_000_N3_INSTR_FACILITY) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -1643,7 +1643,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
     {
         FETCH_FW( regs->GR_L(r2), currpsw+4 );
 
-#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( FEATURE_370_EXTENSION )
         /* The Ninth Edition of ESA/390 POP (SA22-7201-08) requires
            the low 31 bits to be set to zeroes in ESA/390 mode */
         regs->GR_L(r2) &= 0x80000000;
@@ -4524,12 +4524,15 @@ DEF_INST(test_addressing_mode)
 /*-------------------------------------------------------------------*/
 DEF_INST( set_addressing_mode_24 )
 {
+#if !defined( FEATURE_370_EXTENSION )
 VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
+#endif
 
     E( inst, regs );
 
     UNREFERENCED( inst );
 
+#if !defined( FEATURE_370_EXTENSION )
     /* Set the bear register */
     SET_BEAR_REG( regs, regs->bear_ip );
 
@@ -4546,6 +4549,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 
     regs->psw.amode = 0;
     regs->psw.AMASK = AMASK24;
+#endif /* !defined( FEATURE_370_EXTENSION ) */
 
 } /* end DEF_INST(set_addressing_mode_24) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -4557,13 +4561,15 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 /*-------------------------------------------------------------------*/
 DEF_INST( set_addressing_mode_31 )
 {
+#if !defined( FEATURE_370_EXTENSION )
 VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
+#endif
 
     E( inst, regs );
 
     UNREFERENCED( inst );
 
-
+#if !defined( FEATURE_370_EXTENSION )
     /* Set the bear register */
     SET_BEAR_REG( regs, regs->bear_ip );
 
@@ -4579,6 +4585,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 #endif
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
+#endif /* !defined( FEATURE_370_EXTENSION ) */
 
 } /* end DEF_INST(set_addressing_mode_31) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -4604,7 +4611,12 @@ DEF_INST(set_addressing_mode_64)
 #endif
 
     regs->psw.amode = regs->psw.amode64 = 1;
+
+#if defined( FEATURE_370_EXTENSION )
+    regs->psw.AMASK = (U32) AMASK64;
+#else
     regs->psw.AMASK = AMASK64;
+#endif
 
 } /* end DEF_INST(set_addressing_mode_64) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */

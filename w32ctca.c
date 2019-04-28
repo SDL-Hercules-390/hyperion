@@ -255,6 +255,15 @@ BOOL tt32_loaddll()
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+void tt32_version_numbers( int* major, int* inter, int* minor, int* build )
+{
+    *major = *inter = *minor = *build = 0;
+    if (tt32_loaddll())
+        g_tt32_pfn_version_numbers( major, inter, minor, build );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
 int  tt32_open( char* pszGatewayDevice, int iFlags )
 {
     int rc, errnum;

@@ -1,4 +1,4 @@
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
                           ---------------------
@@ -13,7 +13,7 @@
  NOTE: ideally a separate GitHub "Issue" should be created for each of these!
 
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Determine optimal run_cpu/run_sie loop value taking into consideration
   typical/average real host milliseconds/microseconds to complete a real
@@ -35,13 +35,13 @@
   during startup to prevent our current defined fixed value from unfairly
   penalizing those users with slower/faster Hercules host systems.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Examine all instances of "#if 0" and "if 1" and determine which should
   stay and which should go. For those that should be kept, add comments
   documenting the rationale for keeping it.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   *BUG*:  FIX PORTABILITY ISSUES that have crept in over time.
 
@@ -69,7 +69,7 @@
 
   Refer to "hostopts.h" for an example of the technique I'm referring to.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   DUMP command (Windows only) to create on-demand mini-dump.
 
@@ -82,7 +82,7 @@
   Add thread naming support to *Nix: autoconf: check for availability
   of pthread_setname_np and pthread_getname_np functions.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Suspend/Resume:
 
@@ -94,16 +94,16 @@
   Add missing Suspend/Resume support to tape devices.
   Add missing Suspend/Resume support to CTC devices.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Add 'const' to as many functions' arguments as possible.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Per Mark Gaubatz, we need a new dasd util to fix CE/SA alt cyl issue
   for existing dasds created using the old dasdinit.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Card reader: @stack support, like Ivan's tape autoloader, to provide
   ability to specify different options (ascii/ebcdic) for each i/p file.
@@ -113,11 +113,11 @@
   Would make getting VMARC files into VM much easier without having to
   mess with a ebcdic USERID card.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Maxrates off: reset/disable automatic maxrates
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Design a more platform generic host cpu features runtime check that
   checks for the availability of certain host processor features
@@ -133,25 +133,25 @@
     BOOL WINAPI IsProcessorFeaturePresent( PF_COMPARE_EXCHANGE128 );
     _INTEGRAL_MAX_BITS (machdep.h ==> _InterlockedCompareExchange128 ==> cmpxchg16b)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Design a way for users to define command synonyms. (dynmod?)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Windows block device support (i.e. ability to define an entire drive
   (Windows drive letter / partition) as a Hercules dasd)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Full 2540 reader/punch support!   mode=1 (normal), mode=2 (binary/"card image")
                                     hopper selection, etc.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Ability to specify highlighting for console messages via regex pattern.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   ISSUE: there's the possibility for "socketpair" function to connect to some
   other socket other than the pair's listening socket due to some other socket
@@ -161,21 +161,21 @@
   in its 'bind' call and auto-retry again using next port# (in a loop). Refer
   to the "console_connection_handler" function for reference.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Device or facility per Gerhard Postpischil's 9/20/2007 suggestion
   that allows one to generate random "problems" (i/o errors, machine
   checks, etc) for better software error recovery testing.
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Add new "+rdbwd" 3590-device-only option to set flag in
   TapeCommands3590 table to allow/accept Read Backward CCW.
   (Requested by "herc_fun" = Charlie <os_390@hotmail.com>)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
   Generic native host SCSI support (mostly for tape,
   but having it opens other interesting possibilities)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

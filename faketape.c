@@ -410,7 +410,7 @@ char            sblklen[8];             /* work buffer               */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_faketape (DEVBLK *dev, BYTE *buf, U32 blklen,
+int write_faketape (DEVBLK *dev, const BYTE *buf, U32 blklen,
                         BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */

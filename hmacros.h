@@ -42,7 +42,7 @@
 /*-------------------------------------------------------------------*/
 /*             Round a value up to the next boundary                 */
 /*-------------------------------------------------------------------*/
-#define ROUND_UP(x,y)       ((((x)+((y)-1))/(y))*(y))
+#define ROUND_UP(x,y)       ((x)?((((x)+((y)-1))/(y))*(y)):(y))
 
 /*-------------------------------------------------------------------*/
 /*      Define min/max macros                                        */
@@ -348,6 +348,8 @@ typedef char _CASSERT_PASTE( assertion_failed_ ## file, line )[ 2 * !!(cond) - 1
   #define   HOPEN(_p,_o,...)    hopen     ((_p),(_o), ## __VA_ARGS__)
 #endif
 
+#define MAX_OFFSET_T            ((off_t)(ULLONG_MAX))
+
 /*-------------------------------------------------------------------*/
 /*      Macro for command parsing with variable length               */
 /*-------------------------------------------------------------------*/
@@ -469,19 +471,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*-------------------------------------------------------------------*/
 /*      CRASH                       (with hopefully a dump)          */
 /*-------------------------------------------------------------------*/
-
-#ifdef _MSVC_
-  #define CRASH() \
-    do { \
-      BYTE *p = NULL; \
-      *p=0; \
-    } while (0)
-#else
-  #define CRASH() \
-    do { \
-      abort(); \
-    } while (0)
-#endif
+#define CRASH()         do { BYTE* p=NULL; *p=0; } while (0)
 
 /*-------------------------------------------------------------------*/
 /*      Perform standard utility initialization                      */

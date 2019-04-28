@@ -108,7 +108,7 @@ static struct mt_tape_info densinfo[] =
 /*-------------------------------------------------------------------*/
 /* Maximum sized tape I/O buffer...                                  */
 /*-------------------------------------------------------------------*/
-static BYTE buf[ MAX_BLKLEN ];
+static BYTE buf[ MAX_TAPE_BLKSIZE ];
 
 /*-------------------------------------------------------------------*/
 /* Global variables used by main and the read/write functions        */

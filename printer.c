@@ -629,7 +629,7 @@ static int onconnect_callback (DEVBLK* dev)
     TID tid;
     int rc;
 
-    rc = create_thread( &tid, DETACHED, spthread, dev, NULL );
+    rc = create_thread( &tid, DETACHED, spthread, dev, "spthread" );
     if (rc)
     {
         // "Error in function create_thread(): %s"
@@ -1493,10 +1493,12 @@ int   fcbsize;                          /* FCB size for this devtype */
 static void printer_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "PRT", dev, devclass, buflen, buffer );
 
     snprintf (buffer, buflen, "%s%s%s%s%s IO[%"PRIu64"]",
-                 dev->filename,
+                 filename,
                 (dev->bs      ? " sockdev"   : ""),
                 (dev->crlf    ? " crlf"      : ""),
                 (dev->append  ? " append"    : ""),

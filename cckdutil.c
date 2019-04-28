@@ -28,13 +28,50 @@ static int  cdsk_spctab_sort(const void *a, const void *b);
 static int  cdsk_build_free_space(SPCTAB *spctab, int s);
 
 /*-------------------------------------------------------------------*/
-/* Static data areas                                                 */
+/* Helper macro                                                      */
 /*-------------------------------------------------------------------*/
-static char *spaces[] = { "none", "devhdr", "cdevhdr", "l1",  "l2",
-                          "trk",  "blkgrp", "free",    "eof" };
-static char *comps[]  = { "none", "zlib",   "bzip2" };
-
 #define  gui_fprintf        if (extgui) fprintf
+
+/*-------------------------------------------------------------------*/
+/* Return compression type string                                    */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* comp_to_str( BYTE comp )
+{
+    static const char* comp_types[] =
+    {
+        "none",
+        "zlib",
+        "bzip2"
+    };
+
+    return (comp < _countof( comp_types )) ?
+        comp_types[ comp ] : "?????";
+}
+
+/*-------------------------------------------------------------------*/
+/* Return space type string                                          */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* spc_typ_to_str( BYTE spc_typ )
+{
+    static const char* spc_types[] =
+    {
+        "none",             //  SPCTAB_NONE       0
+        "devhdr",           //  SPCTAB_DEVHDR     1
+        "cdevhdr",          //  SPCTAB_CDEVHDR    2
+        "l1",               //  SPCTAB_L1         3
+        "l2",               //  SPCTAB_L2         4
+        "trk",              //  SPCTAB_TRK        5
+        "blkgrp",           //  SPCTAB_BLKGRP     6
+        "free",             //  SPCTAB_FREE       7
+        "eof",              //  SPCTAB_EOF        8
+        "L2LOWER",          //  SPCTAB_L2LOWER    9
+        "L2UPPER",          //  SPCTAB_L2UPPER   10
+        "data",             //  SPCTAB_DATA      11
+    };
+
+    return (spc_typ < _countof( spc_types )) ?
+        spc_types[ spc_typ ] : "???????";
+}
 
 /*-------------------------------------------------------------------*/
 /* Toggle the endianess of a compressed file                         */
@@ -120,9 +157,14 @@ CCKD_FREEBLK      freeblk;              /* Free block                */
     /* l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0    || l1[i] == UINT_MAX
-         || l1[i] < lopos || l1[i] > hipos - CCKD_L2TAB_SIZE)
+        if (0
+            || l1[i] == CCKD_NOSIZE
+            || l1[i] == CCKD_MAXSIZE
+            || l1[i] < lopos
+            || l1[i] > hipos - CCKD_L2TAB_SIZE
+        )
             continue;
+
         off = (off_t)l1[i];
         if (lseek (fd, off, SEEK_SET) < 0)
             goto cswp_lseek_error;
@@ -492,7 +534,7 @@ comp_restart:
      *---------------------------------------------------------------*/
     n = 1 + 1 + 1 + cdevhdr.num_L1tab + 1;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
             n += 256;
     len = sizeof(SPCTAB);
     if ((spctab = calloc (n, len)) == NULL)
@@ -524,7 +566,7 @@ comp_restart:
     s++;
 
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
         {
             spctab[s].spc_typ = SPCTAB_L2;
             spctab[s].spc_val = i;
@@ -557,7 +599,7 @@ comp_restart:
             goto comp_read_error;
         for (j = 0; j < 256; j++)
         {
-            if (l2[l][j].L2_trkoff == 0 || l2[l][j].L2_trkoff == UINT_MAX)
+            if (l2[l][j].L2_trkoff == CCKD_NOSIZE || l2[l][j].L2_trkoff == CCKD_MAXSIZE)
                 continue;
             spctab[s].spc_typ = SPCTAB_TRK;
             spctab[s].spc_val = spctab[i].spc_val*256 + j;
@@ -570,7 +612,7 @@ comp_restart:
         if (memcmp (l2[l], &zero_l2, CCKD_L2TAB_SIZE) == 0
          || memcmp (l2[l], &ff_l2,   CCKD_L2TAB_SIZE) == 0)
         {
-            l1[l] = l2[l][0].L2_trkoff; /* 0 or UINT_MAX */
+            l1[l] = l2[l][0].L2_trkoff; /* CCKD_NOSIZE or CCKD_MAXSIZE */
             spctab[i].spc_typ = SPCTAB_NONE;
             free (l2[l]);
             l2[l] = NULL;
@@ -591,7 +633,8 @@ comp_restart:
     l2area = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
+        if (l1[i] == CCKD_NOSIZE || l1[i] == CCKD_MAXSIZE)
+            continue;
         if (l1[i] != l2area)
             relocate = 1;
         l2area += CCKD_L2TAB_SIZE;
@@ -659,7 +702,8 @@ comp_restart:
     off = CCKD_L1TAB_POS + l1size;
     for (i = 0; i < cdevhdr.num_L1tab; i++)
     {
-        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
+        if (l1[i] == CCKD_NOSIZE || l1[i] == CCKD_MAXSIZE)
+            continue;
         spctab[s].spc_typ = SPCTAB_L2;
         spctab[s].spc_val = i;
         spctab[s].spc_off = (U32)off;
@@ -811,7 +855,7 @@ comp_restart:
 
     /* write l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
         {
             off = (off_t)l1[i];
             if (lseek (fd, off, SEEK_SET) < 0)
@@ -1034,7 +1078,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         goto cdsk_fstat_error;
     gui_fprintf (stderr, "SIZE=%"PRIu64"\n", (U64) fst.st_size);
     hipos = (U32)fst.st_size;
-    cckd_maxsize = 0xffffffffull;
+    cckd_maxsize = CCKD_MAXSIZE;
     fdflags = get_file_accmode_flags(fd);
     ro = (fdflags & O_RDWR) == 0;
 
@@ -1329,7 +1373,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* find number of non-null l1 entries */
     for (i = n = 0; i < cdevhdr.num_L1tab; i++)
-        if (l1[i] != 0 && l1[i] != UINT_MAX)
+        if (l1[i] != CCKD_NOSIZE && l1[i] != CCKD_MAXSIZE)
             n++;
 
     if (level >= 4) n = cdevhdr.num_L1tab;
@@ -1373,7 +1417,8 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* l2 tables */
     for (i = 0; i < cdevhdr.num_L1tab && level < 4; i++)
     {
-        if (l1[i] == 0 || l1[i] == UINT_MAX) continue;
+        if (l1[i] == CCKD_NOSIZE || l1[i] == CCKD_MAXSIZE)
+            continue;
         spctab[s].spc_typ = SPCTAB_L2;
         spctab[s].spc_val = i;
         spctab[s].spc_off = l1[i];
@@ -1453,7 +1498,7 @@ BYTE            buf[4*65536];           /* buffer                    */
         /* add trks/blkgrps to the space table */
         for (j = 0; j < 256; j++)
         {
-            if (l2tab[j].L2_trkoff != 0 && l2tab[j].L2_trkoff != UINT_MAX)
+            if (l2tab[j].L2_trkoff != CCKD_NOSIZE && l2tab[j].L2_trkoff != CCKD_MAXSIZE)
             {
                 spctab[s].spc_typ = trktyp;
                 spctab[s].spc_val = spctab[i].spc_val * 256 + j;
@@ -1527,10 +1572,10 @@ BYTE            buf[4*65536];           /* buffer                    */
             recovery = 1;
 
             /* issue error message */
-            j = MSGBUF(space1, "%s", spaces[spctab[i].spc_typ]);
+            j = MSGBUF(space1, "%s", spc_typ_to_str( spctab[i].spc_typ ));
             if (spctab[i].spc_val >= 0)
                 sprintf(space1+j, "[%d]", spctab[i].spc_val);
-            j = MSGBUF(space2, "%s", spaces[spctab[i+1].spc_typ]);
+            j = MSGBUF(space2, "%s", spc_typ_to_str( spctab[i+1].spc_typ ));
             if (spctab[i+1].spc_val >= 0)
                 sprintf(space2+j, "[%d]", spctab[i+1].spc_val);
 
@@ -1589,11 +1634,11 @@ BYTE            buf[4*65536];           /* buffer                    */
             if(dev->batch)
                 // "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
                 FWRMSG( stdout, HHC00367, "W", LCSS_DEVNUM, dev->filename,
-                        spaces[trktyp], spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
+                        spc_typ_to_str( trktyp ), spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
             else
                 // "%1d:%04X CCKD file %s: %s[%d] l2 inconsistency: len %"PRId64", size %"PRId64
                 WRMSG( HHC00367, "W", LCSS_DEVNUM, dev->filename,
-                      spaces[trktyp], spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
+                      spc_typ_to_str( trktyp ), spctab[i].spc_val, (U64)spctab[i].spc_len, (U64)spctab[i].spc_siz);
 
             /* setup recovery */
             rcvtab[spctab[i].spc_val] = 1;
@@ -1758,11 +1803,11 @@ cdsk_space_check:
             {
                 if(dev->batch)
                     FWRMSG( stdout, HHC00369, "W", LCSS_DEVNUM, dev->filename,
-                            spaces[trktyp], spctab[i].spc_val, off,
+                            spc_typ_to_str( trktyp ), spctab[i].spc_val, off,
                             buf[0],buf[1],buf[2],buf[3],buf[4]);
                 else
                     WRMSG( HHC00369, "W", LCSS_DEVNUM, dev->filename,
-                          spaces[trktyp], spctab[i].spc_val, off,
+                          spc_typ_to_str( trktyp ), spctab[i].spc_val, off,
                           buf[0],buf[1],buf[2],buf[3],buf[4]);
 
                 /* recover this track */
@@ -1789,10 +1834,10 @@ cdsk_space_check:
                 comperrs = 1;
                 if(dev->batch)
                     FWRMSG( stdout, HHC00370, "W", LCSS_DEVNUM, dev->filename,
-                            spaces[trktyp], trk, comps[compmask[comp]]);
+                            spc_typ_to_str( trktyp ), trk, comp_to_str( compmask[ comp ]));
                 else
                     WRMSG( HHC00370, "W", LCSS_DEVNUM, dev->filename,
-                          spaces[trktyp], trk, comps[compmask[comp]]);
+                          spc_typ_to_str( trktyp ), trk, comp_to_str( compmask[ comp ]));
                 continue;
             }
 
@@ -1804,11 +1849,11 @@ cdsk_space_check:
                     if(dev->batch)
                         // "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
                         FWRMSG( stdout, HHC00371, "W", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], trk, off, (S64)len);
+                                spc_typ_to_str( trktyp ), trk, off, (S64)len);
                     else
                         // "%1d:%04X CCKD file %s: %s[%d] offset 0x%16.16"PRIX64" len %"PRId64" validation error"
                         WRMSG( HHC00371, "W", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], trk, off, (S64)len);
+                              spc_typ_to_str( trktyp ), trk, off, (S64)len);
 
                     /* recover this track */
                     rcvtab[trk] = recovery = 1;
@@ -2012,11 +2057,11 @@ cdsk_ckd_recover:
                     if(dev->batch)
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         FWRMSG( stdout, HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], trk, off + i, (S64)l);
+                                spc_typ_to_str( trktyp ), trk, off + i, (S64)l);
                     else
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         WRMSG( HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], trk, off + i, (S64)l);
+                              spc_typ_to_str( trktyp ), trk, off + i, (S64)l);
                     n--;
                     rcvtab[trk] = 2;
 
@@ -2242,11 +2287,11 @@ cdsk_fba_recover:
                     if(dev->batch)
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         FWRMSG( stdout, HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                                spaces[trktyp], blkgrp, off + i, (S64)l);
+                                spc_typ_to_str( trktyp ), blkgrp, off + i, (S64)l);
                     else
                         // "%1d:%04X CCKD file %s: %s[%d] recovered offset 0x%16.16"PRIX64" len %"PRId64
                         WRMSG( HHC00372, "I", LCSS_DEVNUM, dev->filename,
-                              spaces[trktyp], blkgrp, off + i, (S64)l);
+                              spc_typ_to_str( trktyp ), blkgrp, off + i, (S64)l);
                     n--;
                     rcvtab[blkgrp] = 2;
 
@@ -2284,11 +2329,11 @@ cdsk_fba_recover:
         if(dev->batch)
             // "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
             FWRMSG( stdout, HHC00373, "I", LCSS_DEVNUM, dev->filename,
-                    (S64)n, spaces[trktyp]);
+                    (S64)n, spc_typ_to_str( trktyp ));
         else
             // "%1d:%04X CCKD file %s: %"PRId64" %s images recovered"
             WRMSG( HHC00373, "I", LCSS_DEVNUM, dev->filename,
-                  (S64)n, spaces[trktyp]);
+                  (S64)n, spc_typ_to_str( trktyp ));
 
         /*-----------------------------------------------------------
          * Phase 2 -- rebuild affected l2 tables
@@ -2318,7 +2363,7 @@ cdsk_fba_recover:
             {
                 if ((l2[L1idx] = malloc (len)) == NULL)
                     goto cdsk_malloc_error;
-                l1[L1idx] = shadow ? UINT_MAX : 0;
+                l1[L1idx] = shadow ? CCKD_SHADOW_NO_OFFSET : CCKD_BASE_NO_OFFSET;
                 memcpy (l2[L1idx], &empty_l2, len);
             }
         }
@@ -2933,7 +2978,7 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
     }
 
     /* Validate length */
-    if (bufl <= CKD_NULLTRK_SIZE0)
+    if (bufl < MIN( MIN( CKD_NULLTRK_SIZE0, CKD_NULLTRK_SIZE1 ), CKD_NULLTRK_SIZE2 ))
         return 0; // (error: too small!)
 
     /* Check ha */
@@ -2972,10 +3017,10 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
         i < bufl - CKD_ENDTRK_SIZE;
 
         /* Increment buffer index by rn count + key + data */
-        i += len2,
+        i += len2,   /* (len2 is re-calculated each loop iteration) */
 
         /* Get past this record to the next possible user record */
-        bufp += len2
+        bufp += len2 /* (len2 is re-calculated each loop iteration) */
     )
     {
         /* Save rn count field */
@@ -2986,7 +3031,7 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
            Address record! They can be any value the user wants, as
            long as they're valid: the HH value MUST be < the number
            number of heads the device supports, and the R field can't
-           be 0 (there's only be one r0 and we already processed it).
+           be 0 (there can be only ONE r0 and we already processed it).
         */
         if (0
             || fetch_hw( rn.head ) >= heads
@@ -2998,16 +3043,16 @@ BYTE            buf2[64*1024];          /* Uncompressed buffer       */
         len2 = CKD_RECHDR_SIZE + rn.klen + fetch_hw( rn.dlen );
     }
 
-    /* Include length of end-of-track record too if requested */
+    /* Include length of END-OF-TRACK record too if requested */
     if (len < 0)
         bufl = i + CKD_ENDTRK_SIZE;
 
-    /* Validate track length and existence of EOT record */
+    /* Validate track length and existence of END-OF-TRACK record */
     if (0
         || i != (bufl - CKD_ENDTRK_SIZE)
         || memcmp( bufp, &CKD_ENDTRK, CKD_ENDTRK_SIZE ) != 0
     )
-        return 0; // (error: missing end-of-track!)
+        return 0; // (error: missing END-OF-TRACK!)
 
     return len > 0 ? len : bufl;  // (success: return track length)
 

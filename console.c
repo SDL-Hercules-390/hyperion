@@ -2076,6 +2076,8 @@ static int  loc3270_hresume( DEVBLK* dev, void* file )
 static void constty_query_device( DEVBLK* dev, char** devclass,
                                   int buflen, char* buffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "CON", dev, devclass, buflen, buffer );
 
     if (dev->connected)
@@ -2109,13 +2111,13 @@ static void constty_query_device( DEVBLK* dev, char** devclass,
         else
             acc[0] = 0;
 
-        if (dev->filename[0])
+        if (filename[0])
         {
             snprintf( buffer, buflen,
 
                 "GROUP=%s%s%s%s IO[%"PRIu64"]",
 
-                dev->filename,
+                filename,
                 !dev->prompt1052 ? " noprompt" : "",
                 acc[0] ? " " : "", acc,
                 dev->excps );
@@ -2159,6 +2161,8 @@ static void constty_query_device( DEVBLK* dev, char** devclass,
 static void loc3270_query_device( DEVBLK* dev, char** devclass,
                                   int buflen, char* buffer )
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "DSP", dev, devclass, buflen, buffer );
 
     if (dev->connected)
@@ -2187,11 +2191,11 @@ static void loc3270_query_device( DEVBLK* dev, char** devclass,
         else
             acc[0] = 0;
 
-        if (dev->filename[0])
+        if (filename[0])
         {
             snprintf( buffer, buflen,
                 "GROUP=%s%s%s IO[%"PRIu64"]",
-                dev->filename, acc[0] ? " " : "", acc, dev->excps );
+                filename, acc[0] ? " " : "", acc, dev->excps );
         }
         else
         {
@@ -2494,25 +2498,6 @@ static void constty_input( TELNET* tn, const BYTE* buffer, U32 size )
             tn->overflow = TRUE;
             dev->keybdrem = 0;
             return;
-        }
-
-        /* Check for Ctrl-C */
-        if (buffer[i] == 0x03)
-        {
-            tn->got_break = TRUE;
-            dev->keybdrem = 0;
-            return;
-        }
-
-        /* Check for ASCII backspace/delete */
-        if (0
-            || buffer[i] == 0x08    // BS
-            || buffer[i] == 0x7F    // DEL
-        )
-        {
-            if (dev->keybdrem > 0)
-                dev->keybdrem--;
-            continue;
         }
 
         /* Copy character to keyboard buffer */
@@ -3252,7 +3237,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     set_thread_priority( sysblk.srvprio );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), CON_CONN_THREAD_NAME );
+    LOG_THREAD_BEGIN( CON_CONN_THREAD_NAME  );
 
     /* Get information about this system */
     init_hostinfo( NULL );
@@ -3773,7 +3758,7 @@ TELNET                *tn;              /* Telnet Control Block      */
     close_socket( lsock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), CON_CONN_THREAD_NAME );
+    LOG_THREAD_END( CON_CONN_THREAD_NAME  );
 
     return NULL;
 
@@ -4281,11 +4266,8 @@ BYTE    stat;                           /* Unit status               */
         for (len = 0; len < num; len++)
         {
             c = guest_to_host( iobuf[len] );
-            /* Replace any non-printable characters with a blank
-               except keep carriage returns and newlines as-is. */
-            if (!isprint(c) && c != '\r' && c!= '\n')
-                c = ' ';
-            iobuf[len] = c;   /* only printable or CR/LF allowed */
+            /* Leave it up to guest OS to filter characters. */
+            iobuf[len] = c;
         } /* end for(len) */
 
         ASSERT(len == num);

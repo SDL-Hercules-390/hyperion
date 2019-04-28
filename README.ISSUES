@@ -1,13 +1,15 @@
 
-                      ===================
-                       UNRESOLVED ISSUES
-                      ===================
+                         ===================
+                          UNRESOLVED ISSUES
+                         ===================
 
-Note: For a current list of know issues please refer to the GitHub Issues
-web page at:
 
-https://github.com/issues?q=is%3Aopen+is%3Aissue+user%3ASDL-Hercules-390+
+  For a current list of known issues refer to the GitHub Issues web page:
 
+  https://github.com/issues?q=is%3Aopen+is%3Aissue+user%3ASDL-Hercules-390+
+
+
+-------------------------------------------------------------------------------
 
 
 *** XXX ***
@@ -83,3 +85,6 @@ Change to Enter key function (Ivan 2004/10/02)
     pressing the start button (which was quite handy for debugging). It now
     displays the last commands typed. Instead, 'start' must be typed every
     time to execute the next instruction.
+
+
+-------------------------------------------------------------------------------

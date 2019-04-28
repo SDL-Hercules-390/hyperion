@@ -158,19 +158,21 @@
   "tape devices as needed depending on the updated empty/non-empty list\n"      \
   "state.\n"
 
-#define bminus_cm_desc          "Delete breakpoint"
-#define bminus_cm_help          \
-                                \
-  "Format: \"b-\"  This command is the same as \"s-\"\n"
-
+#define bplus_cmd_desc          "(Synonym for 'b')"
+#define bminus_cmd_desc         "Delete breakpoint"
+#define bquest_cmd_desc         "Query breakpoint"
 #define b_cmd_desc              "Set breakpoint"
 #define b_cmd_help              \
                                 \
-  "Format: \"b addr\" or \"b addr-addr\" where 'addr' is the instruction\n"     \
-  "address or range of addresses where you wish to halt execution. This\n"      \
-  "command is synonymous with the \"s+\" command.\n"
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "     \"b addr-addr   [asid]\"\n"                                             \
+  "     \"b addr:addr   [asid]\"\n"                                             \
+  "     \"b addr.length [asid]\"\n"                                             \
+  "\n"                                                                          \
+  "Sets the instruction address or address range where you wish to halt\n"      \
+  "execution.  This command is synonymous with the \"s+\" command.\n"
 
-#define bplus_cmd_desc          "Set breakpoint"
 #define cachestats_cmd_desc     "Cache stats command"
 
 #define cckd_cmd_desc           "Compressed CKD command"
@@ -192,7 +194,7 @@
   "  debug=n       Enable CCW tracing debug messages       (0 or 1)\n"          \
   "  freepend=n    Set free pending cycles               (-1 ... 4)\n"          \
   "  fsync=n       Enable fsync                            (0 or 1)\n"          \
-  "  gcint=n       Set garbage collector interval (sec)  ( 1 .. 60)\n"          \
+  "  gcint=n       Set garbage collector interval (sec)  ( 0 .. 60)\n"          \
   "  gcparm=n      Set garbage collector parameter       (-8 ... 8)\n"          \
   "  gcstart=n     Start garbage collector                 (0 or 1)\n"          \
   "  linuxnull=n   Check for null linux tracks             (0 or 1)\n"          \
@@ -917,7 +919,7 @@
   "(3.6.0) what you defined as your default CTCI-WIN host network adapter.\n"
 
 #define numcpu_cmd_desc         "Set numcpu parameter"
-#define numvec_cmd_desc         "Set numvec parameter"
+//#define numvec_cmd_desc         "Set numvec parameter"
 #define osa_cmd_desc            "(Synonym for 'qeth')"
 #define ostailor_cmd_desc       "Tailor trace information for specific OS"
 #define ostailor_cmd_help       \
@@ -932,6 +934,15 @@
   "values with '+' to combine them with existing values or '-' to exclude\n"    \
   "them. SEE ALSO the 'pgmtrace' command which allows you to further fine\n"    \
   "tune the tracing of program interrupt exceptions.\n"
+
+#define panopt_cmd_desc         "Display or set panel options"
+#define panopt_cmd_help         \
+                                \
+  "Format: \"panopt [NAMEONLY|FULLPATH]\". Sets or displays panel options.\n"   \
+  "The only supported options at this time are 'NAMEONLY' or 'FULLPATH'.\n"     \
+  "NAMEONLY requests the panel to display only the emulated device's base\n"    \
+  "filename instead of the fullpath filename which is the default. Enter\n"    \
+  "the command with no arguments to display the current settings.\n"
 
 #define panrate_cmd_desc        "Display or set rate at which console refreshes"
 #define panrate_cmd_help        \
@@ -1209,34 +1220,46 @@
 #define s_cmd_desc              "Instruction stepping"
 #define s_cmd_help              \
                                 \
-  "Format: \"s addr-addr\" or \"s addr:addr\" or \"s addr.length\"\n"           \
-  "sets the instruction stepping and instruction breaking range,\n"             \
-  "(which is totally separate from the instruction tracing range).\n"           \
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "     \"s [ addr-addr   [ asid ]]\"\n"                                        \
+  "     \"s [ addr:addr   [ asid ]]\"\n"                                        \
+  "     \"s [ addr.length [ asid ]]\"\n"                                        \
+  "\n"                                                                          \
+  "Sets the instruction stepping and instruction breaking range, which\n"       \
+  "is totally separate from the instruction tracing range.\n"                   \
+  "\n"                                                                          \
   "With or without a range, the s command displays whether instruction\n"       \
-  "stepping is on or off and the range if any.\n"                               \
-  "The s command by itself does not activate instruction stepping.\n"           \
-  "Use the s+ command to activate instruction stepping.\n"                      \
-  "\"s 0\" eliminates the range (all addresses will be stepped).\n"
+  "stepping is on or off, and the range and asid, if any.  Specifying an\n"     \
+  "optional asid value causes stepping only for instructions executed by\n"     \
+  "that specific address space; instructions executed for any other asid\n"     \
+  "will not be stepped.\n"                                                      \
+  "\n"                                                                          \
+  "Note: the s command by itself does not activate instruction stepping.\n"     \
+  "The s+ command must be used to activate instruction stepping.  Use the\n"    \
+  "s 0 command to remove a range, causing all instructions to be stepped.\n"
 
-#define squest_cmd_desc         "Instruction stepping query"
+#define squest_cmd_desc         "Query instruction stepping"
 #define squest_cmd_help         \
                                 \
   "Format: \"s?\" displays whether instruction stepping is on or off\n"         \
   "and the range if any.\n"
 
 #define sdev_cmd_desc           "Turn CCW stepping on/off"
-#define splus_cmd_desc          "Instruction stepping on"
+#define splus_cmd_desc          "Activate instruction stepping"
 #define splus_cmd_help          \
                                 \
-  "Format: \"s+\" turns on instruction stepping. A range can be specified\n"    \
-  "as for the \"s\" command, otherwise the existing range is used. If\n"        \
-  "there is no range (or range was specified as 0) then the range\n"            \
-  "includes all addresses. When an instruction within the range is about\n"     \
-  "to be executed, the CPU is temporarily stopped and the next instruction\n"   \
-  "is displayed. You may then examine registers and/or storage, etc,\n"         \
-  "before pressing 'Enter' to execute the instruction and stop at the next\n"   \
-  "instruction. To turn off instruction stepping and continue execution,\n"     \
-  "enter the \"g\" command.\n"
+  "Format:  \"s+ [ addr-addr [ asid ]]\".  Activates instruction stepping.\n"   \
+  "\n"                                                                          \
+  "A range can be specified as for the \"s\" command.  If a range is not\n"     \
+  "specified then any previously defined range is used instead.  If there\n"    \
+  "is no previously defined range (or the range was specified as 0) then\n"     \
+  "the range includes all addresses.  When an instruction within the range\n"   \
+  "is about to be executed, the CPU is temporarily stopped and the next\n"      \
+  "instruction is displayed.  You may then examine registers and storage,\n"    \
+  "etc, before pressing the <enter> key to execute the instruction and stop\n"  \
+  "after the next one.  Use the \"g\" command to stop stepping and return\n"    \
+  "to normal instruction processing instead.\n"
 
 #define savecore_cmd_desc       "Save a core image to file"
 #define savecore_cmd_help       \
@@ -1421,8 +1444,33 @@
   "is specified, it's possible for Hercules guest operating systems to issue\n" \
   "commands directly to your host operating system.\n"
 
+#if defined( OPTION_SHARED_DEVICES )
+
 #define shrd_cmd_desc           "shrd command"
+#define shrd_cmd_help           \
+                                \
+  "Format: \"SHRD [TRACE[=nnnn]]\" where 'nnnn' is the desired number of\n"     \
+  "trace table entries. Specifying a non-zero value enables debug tracing\n"    \
+  "of the Shared Device Server.  Specifying a value of 0 disables tracing.\n"   \
+  "Entering the command with no arguments displays the current setting.\n"      \
+  "Use 'SHRD TRACE' by itself to print the current table.\n"                    \
+  "SEE ALSO: 'shrdport' command.\n"
+
 #define shrdport_cmd_desc       "Set shrdport value"
+#define shrdport_cmd_help       \
+                                \
+  "Format:  \"SHRDPORT   [0 | 3990 | nnnn | START | STOP]\"   where nnnn\n"     \
+  "is the port number that the Shared Device Server is to use to listen\n"      \
+  "for remote connections on.  The default port is 3990.  Setting shrdport\n"   \
+  "to 0 stops the server and resets port number back to the default.  Using\n"  \
+  "the 'STOP' command also stops the server, but preserves the currently\n"     \
+  "established port number so that entering the 'START' command will start\n"   \
+  "the server again using the same port number.  Entering the command\n"        \
+  "without any argument displays the current value.\n"                          \
+  "SEE ALSO: 'shrd' command.\n"
+
+#endif // defined( OPTION_SHARED_DEVICES )
+
 #define sizeof_cmd_desc         "Display size of structures"
 #define spm_cmd_desc            "SIE performance monitor"
 #define ssd_cmd_desc            "Signal shutdown"
@@ -1478,16 +1526,20 @@
   "identical in functionality to the \"sysclear\" command.\n"
 
 #define tminus_cmd_desc         "Turn off instruction tracing"
-#define t_cmd_desc              "Set instruction tracing address range"
+#define t_cmd_desc              "Set tracing range or Query tracing"
 #define t_cmd_help              \
                                 \
-  "Format: \"t addr-addr\" or \"t addr:addr\" or \"t addr.length\"\n"           \
+  "Format:\n"                                                                   \
   "\n"                                                                          \
-  "Sets the instruction tracing address range (which is totally separate\n"     \
-  "from the instruction stepping and breaking address range).\n"                \
+  "     \"t [addr-addr]\"\n"                                                    \
+  "     \"t [addr:addr]\"\n"                                                    \
+  "     \"t [addr.length]\"\n"                                                  \
+  "\n"                                                                          \
+  "Sets the instruction tracing address range, which is totally separate\n"     \
+  "from the instruction stepping and breaking address range.\n"                 \
   "\n"                                                                          \
   "With or without an address range, the 't' command displays whether\n"        \
-  "instruction tracing is on or off, and the address range (if any).\n"         \
+  "instruction tracing is on or off, and the address range, if any.\n"          \
   "\n"                                                                          \
   "The 't' command by itself does NOT activate instruction tracing.\n"          \
   "Use the 't+' command to activate instruction tracing.  Use 't 0'\n"          \
@@ -1505,10 +1557,11 @@
 #define tplus_cmd_desc          "Turn on instruction tracing"
 #define tplus_cmd_help          \
                                 \
-  "Format: \"t+\" turns on instruction tracing. An address range can be\n"      \
-  "specified as for the \"t\" command, else the existing address range\n"       \
-  "is used. If there is no address range (or it was specified as 0) then\n"     \
-  "all instructions will be traced.\n"
+  "Format:   \"t+ [addr-addr]\".    Activates instruction tracing.\n"           \
+  "\n"                                                                          \
+  "An address range can be specified as for the \"t\" command, else the\n"      \
+  "existing address range is used. If there is no address range (or was\n"      \
+  "specified as 0) then all instructions will be traced.\n"
 
 #define auto_trace_desc         "Automatic instruction tracing"
 #define auto_trace_help         \
@@ -1668,6 +1721,8 @@ COMMAND( "loadparm",                loadparm_cmd,           SYSCMD,             
 COMMAND( "log",                     log_cmd,                SYSCMD,             log_cmd_desc,           log_cmd_help        )
 COMMAND( "logopt",                  logopt_cmd,             SYSCMD,             logopt_cmd_desc,        logopt_cmd_help     )
 COMMAND( "mt",                      mt_cmd,                 SYSCMD,             mt_cmd_desc,            mt_cmd_help         )
+COMMAND( "panopt",                  panopt_cmd,             SYSCMD,             panopt_cmd_desc,        panopt_cmd_help     )
+COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       panrate_cmd_help    )
 COMMAND( "pantitle",                pantitle_cmd,           SYSCMD,             pantitle_cmd_desc,      pantitle_cmd_help   )
 CMDABBR( "qcpuid",          5,      qcpuid_cmd,             SYSCMD,             qcpuid_cmd_desc,        qcpuid_cmd_help     )
 COMMAND( "qpid",                    qpid_cmd,               SYSCMD,             qpid_cmd_desc,          NULL                )
@@ -1683,9 +1738,12 @@ COMMAND( "aia",                     aia_cmd,                SYSCMDNOPER,        
 COMMAND( "ar",                      ar_cmd,                 SYSCMDNOPER,        ar_cmd_desc,            NULL                )
 COMMAND( "autoinit",                autoinit_cmd,           SYSCMDNOPER,        autoinit_cmd_desc,      autoinit_cmd_help   )
 COMMAND( "automount",               automount_cmd,          SYSCMDNOPER,        automount_cmd_desc,     automount_cmd_help  )
-COMMAND( "b-",                      trace_cmd,              SYSCMDNOPER,        bminus_cm_desc,         bminus_cm_help      )
+
+COMMAND( "b-",                      trace_cmd,              SYSCMDNOPER,        bminus_cmd_desc,        NULL                )
 COMMAND( "b",                       trace_cmd,              SYSCMDNOPER,        b_cmd_desc,             b_cmd_help          )
+COMMAND( "b?",                      trace_cmd,              SYSCMDNOPER,        bquest_cmd_desc,        NULL                )
 COMMAND( "b+",                      trace_cmd,              SYSCMDNOPER,        bplus_cmd_desc,         NULL                )
+
 COMMAND( "cachestats",              EXTCMD(cachestats_cmd), SYSCMDNOPER,        cachestats_cmd_desc,    NULL                )
 COMMAND( "clocks",                  clocks_cmd,             SYSCMDNOPER,        clocks_cmd_desc,        NULL                )
 COMMAND( "codepage",                codepage_cmd,           SYSCMDNOPER,        codepage_cmd_desc,      codepage_cmd_help   )
@@ -1708,7 +1766,7 @@ COMMAND( "maxcpu",                  maxcpu_cmd,             SYSCMDNOPER,        
 CMDABBR( "mounted_tape_reinit",  9, mounted_tape_reinit_cmd,SYSCMDNOPER,        mtapeinit_cmd_desc,     mtapeinit_cmd_help  )
 COMMAND( "netdev",                  netdev_cmd,             SYSCMDNOPER,        netdev_cmd_desc,        netdev_cmd_help     )
 COMMAND( "numcpu",                  numcpu_cmd,             SYSCMDNOPER,        numcpu_cmd_desc,        NULL                )
-COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
+//COMMAND( "numvec",                  numvec_cmd,             SYSCMDNOPER,        numvec_cmd_desc,        NULL                )
 COMMAND( "osa",                     qeth_cmd,               SYSCMDNOPER,        osa_cmd_desc,           qeth_cmd_help       )
 COMMAND( "ostailor",                ostailor_cmd,           SYSCMDNOPER,        ostailor_cmd_desc,      ostailor_cmd_help   )
 COMMAND( "pgmtrace",                pgmtrace_cmd,           SYSCMDNOPER,        pgmtrace_cmd_desc,      pgmtrace_cmd_help   )
@@ -1721,21 +1779,24 @@ COMMAND( "qeth",                    qeth_cmd,               SYSCMDNOPER,        
 COMMAND( "quiet",                   quiet_cmd,              SYSCMDNOPER,        quiet_cmd_desc,         quiet_cmd_help      )
 COMMAND( "r",                       abs_or_r_cmd,           SYSCMDNOPER,        r_cmd_desc,             r_cmd_help          )
 COMMAND( "resume",                  resume_cmd,             SYSCMDNOPER,        resume_cmd_desc,        NULL                )
+
 COMMAND( "s-",                      trace_cmd,              SYSCMDNOPER,        sminus_cmd_desc,        NULL                )
 COMMAND( "s",                       trace_cmd,              SYSCMDNOPER,        s_cmd_desc,             s_cmd_help          )
 COMMAND( "s?",                      trace_cmd,              SYSCMDNOPER,        squest_cmd_desc,        squest_cmd_help     )
 COMMAND( "s+",                      trace_cmd,              SYSCMDNOPER,        splus_cmd_desc,         splus_cmd_help      )
+
 COMMAND( "savecore",                savecore_cmd,           SYSCMDNOPER,        savecore_cmd_desc,      savecore_cmd_help   )
 COMMAND( "script",                  script_cmd,             SYSCMDNOPER,        script_cmd_desc,        script_cmd_help     )
 COMMAND( "sh",                      sh_cmd,                 SYSCMDNOPER,        sh_cmd_desc,            sh_cmd_help         )
-COMMAND( "shrd",                    EXTCMD(shared_cmd),     SYSCMDNOPER,        shrd_cmd_desc,          NULL                )
 COMMAND( "suspend",                 suspend_cmd,            SYSCMDNOPER,        suspend_cmd_desc,       NULL                )
 COMMAND( "symptom",                 traceopt_cmd,           SYSCMDNOPER,        symptom_cmd_desc,       NULL                )
+
 COMMAND( "t-",                      trace_cmd,              SYSCMDNOPER,        tminus_cmd_desc,        NULL                )
 COMMAND( "t",                       trace_cmd,              SYSCMDNOPER,        t_cmd_desc,             t_cmd_help          )
 COMMAND( "t?",                      trace_cmd,              SYSCMDNOPER,        tquest_cmd_desc,        tquest_cmd_help     )
 COMMAND( "t+",                      trace_cmd,              SYSCMDNOPER,        tplus_cmd_desc,         tplus_cmd_help      )
-COMMAND( "t+-",                     auto_trace_cmd,         SYSCMDNOPER,        auto_trace_desc,         auto_trace_help    )
+
+COMMAND( "t+-",                     auto_trace_cmd,         SYSCMDNOPER,        auto_trace_desc,        auto_trace_help     )
 COMMAND( "timerint",                timerint_cmd,           SYSCMDNOPER,        timerint_cmd_desc,      timerint_cmd_help   )
 COMMAND( "tlb",                     tlb_cmd,                SYSCMDNOPER,        tlb_cmd_desc,           NULL                )
 COMMAND( "toddrag",                 toddrag_cmd,            SYSCMDNOPER,        toddrag_cmd_desc,       NULL                )
@@ -1888,14 +1949,12 @@ COMMAND( "auto_scsi_mount",         scsimount_cmd,          SYSCMDNOPER,        
 COMMAND( "scsimount",               scsimount_cmd,          SYSCMDNOPER,        scsimount_cmd_desc,     scsimount_cmd_help  )
 #endif
 #if defined( OPTION_SHARED_DEVICES )
-COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      NULL                )
+COMMAND( "shrdport",                shrdport_cmd,           SYSCFGNDIAG8,       shrdport_cmd_desc,      shrdport_cmd_help   )
+COMMAND( "shrd",                    EXTCMD(shrd_cmd),       SYSCMDNOPER,        shrd_cmd_desc,          shrd_cmd_help       )
 #endif
 COMMAND( "quit",                    quit_cmd,               SYSALLNDIAG8,       quit_cmd_desc,          quit_cmd_help       )
 #if defined( OPTION_W32_CTCI )
 COMMAND( "tt32",                    tt32_cmd,               SYSCMDNOPER,        tt32_cmd_desc,          tt32_cmd_help       )
-#endif
-#if defined( PANEL_REFRESH_RATE )
-COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       panrate_cmd_help    )
 #endif
 #if defined( SIE_DEBUG_PERFMON )
 COMMAND( "spm",                     spm_cmd,                SYSCMDNOPER,        spm_cmd_desc,           NULL                )

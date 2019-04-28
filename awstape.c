@@ -19,6 +19,10 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
+
+#define _AWSTAPE_C_
+#define _HDT3420_DLL_
+
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
 
@@ -33,17 +37,22 @@
 /* Close an AWSTAPE format file                                      */
 /* New Function added by ISW for consistency with other medias       */
 /*-------------------------------------------------------------------*/
-void close_awstape (DEVBLK *dev)
+DLL_EXPORT void close_awstape( DEVBLK* dev )
 {
-    if( dev->fd >= 0 )
+    if (dev->fd >= 0)
     {
-        WRMSG (HHC00201, "I", LCSS_DEVNUM, dev->filename, "aws");
-        close(dev->fd);
+        if (!dev->batch || !dev->quiet)
+            // "%1d:%04X Tape file %s, type %s: tape closed"
+            WRMSG( HHC00201, "I", LCSS_DEVNUM, dev->filename, "aws" );
+        close( dev->fd );
     }
+
     STRLCPY( dev->filename, TAPE_UNLOADED );
-    dev->fd=-1;
-    dev->blockid = 0;
-    dev->fenced = 0;
+
+    dev->fd      = -1;
+    dev->blockid =  0;
+    dev->fenced  =  0;
+
     return;
 }
 
@@ -51,7 +60,7 @@ void close_awstape (DEVBLK *dev)
 /* Rewinds an AWS Tape format file                                   */
 /* New Function added by ISW for consistency with other medias       */
 /*-------------------------------------------------------------------*/
-int rewind_awstape (DEVBLK *dev,BYTE *unitstat,BYTE code)
+DLL_EXPORT int rewind_awstape (DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
     off_t rcoff;
     rcoff=lseek(dev->fd,0,SEEK_SET);
@@ -72,7 +81,7 @@ int rewind_awstape (DEVBLK *dev,BYTE *unitstat,BYTE code)
 /* Determines if a tape has passed a virtual EOT marker              */
 /* New Function added by ISW for consistency with other medias       */
 /*-------------------------------------------------------------------*/
-int passedeot_awstape (DEVBLK *dev)
+DLL_EXPORT int passedeot_awstape (DEVBLK *dev)
 {
     if( dev->nxtblkpos == 0 )
     {
@@ -103,7 +112,7 @@ int passedeot_awstape (DEVBLK *dev)
 /* If successful, the file descriptor is stored in the device block  */
 /* and the return value is zero.  Otherwise the return value is -1.  */
 /*-------------------------------------------------------------------*/
-int open_awstape( DEVBLK* dev, BYTE* unitstat, BYTE code )
+DLL_EXPORT int open_awstape( DEVBLK* dev, BYTE* unitstat, BYTE code )
 {
     int   rc = -1;                      /* Return code               */
     char  pathname[MAX_PATH];           /* file path in host format  */
@@ -145,9 +154,10 @@ int open_awstape( DEVBLK* dev, BYTE* unitstat, BYTE code )
 
                 dev->fd = rc;
 
-                // "%1d:%04X Tape file %s, type %s: tape created"
-                WRMSG( HHC00235, "I", SSID_TO_LCSS( dev->ssid ),
-                       dev->devnum, dev->filename, "aws" );
+                if (!dev->batch || !dev->quiet)
+                    // "%1d:%04X Tape file %s, type %s: tape created"
+                    WRMSG( HHC00235, "I", SSID_TO_LCSS( dev->ssid ),
+                           dev->devnum, dev->filename, "aws" );
 
                 /* Write two tapemarks */
 
@@ -201,7 +211,7 @@ int open_awstape( DEVBLK* dev, BYTE* unitstat, BYTE code )
 /* If successful, return value is zero, and buffer contains header.  */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int readhdr_awstape (DEVBLK *dev, off_t blkpos,
+DLL_EXPORT int readhdr_awstape (DEVBLK *dev, off_t blkpos,
                      AWSTAPE_BLKHDR *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
@@ -268,7 +278,7 @@ off_t           rcoff;                  /* Return code from lseek()  */
 /* current file number in the device block is incremented.           */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int read_awstape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
+DLL_EXPORT int read_awstape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
@@ -294,11 +304,11 @@ U16             seglen;                 /* Data length of segment    */
         blkpos += sizeof(awshdr) + seglen;
 
         /* Check that block length will not exceed buffer size */
-        if (blklen + seglen > MAX_BLKLEN)
+        if (blklen + seglen > MAX_TAPE_BLKSIZE)
         {
             // "%1d:%04X Tape file %s, type %s: block length %d exceeds maximum at offset 0x%16.16"PRIX64
             WRMSG (HHC00202, "E", LCSS_DEVNUM, dev->filename, "aws",
-                    (int)MAX_BLKLEN, blkpos);
+                    (int)MAX_TAPE_BLKSIZE, blkpos);
 
             /* Set unit check with data check */
             build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -380,7 +390,7 @@ U16             seglen;                 /* Data length of segment    */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_awstape (DEVBLK *dev, BYTE *buf, U32 blklen,
+DLL_EXPORT int write_awstape (DEVBLK *dev, const BYTE *buf, U32 blklen,
                         BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
@@ -535,7 +545,7 @@ U16             prvblkl;                /* Length of previous chunk  */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_awsmark (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int write_awsmark (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* Return code from lseek()  */
@@ -633,7 +643,7 @@ U16             prvblkl;                /* Length of previous block  */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int sync_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int sync_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
     /* Unit check if tape is write-protected */
     if (dev->readonly)
@@ -665,7 +675,7 @@ int sync_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 /* and the current file number in the device block is incremented.   */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int fsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int fsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
@@ -722,7 +732,7 @@ U16             seglen;                 /* Data length of segment    */
 /* and the current file number in the device block is decremented.   */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int bsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int bsb_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
@@ -775,7 +785,7 @@ off_t           blkpos;                 /* Offset of block header    */
 /* in the device block is incremented by fsb_awstape.                */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int fsf_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int fsf_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
@@ -806,7 +816,7 @@ int             rc;                     /* Return code               */
 /* in the device block is decremented by bsb_awstape.                */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int bsf_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int bsf_awstape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 

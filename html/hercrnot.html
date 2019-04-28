@@ -15,7 +15,7 @@ Hercules: Release Notes
 <a name=4.2></a>
 <hr noshade>
 
-<h2>Release notes for the SDL version of Hercules 4.2 Hyperion</h2>
+<h2>Release notes for SDL Hyperion 4.2 <small> &nbsp; (under development) </small></h2>
 <p>
 <dl>
 
@@ -27,11 +27,57 @@ Hercules: Release Notes
     Compressed CKD (CCKD) dasd image files, called <b>CCKD64</b>, which can
     be much larger than 4GB in size.  More information about <b>CCKD64</b>
     can be found in the
-    "<a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.CCKD64">README.CCKD64</a>"
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.CCKD64">README.CCKD64</a>
     document in the source code distribution.  Detailed CCKD64 <i>file format</i>
     information can be found on the
     "<a href="cckddasd.html">Compressed Dasd Emulation</a>"
     web page.
+  </p>
+
+
+  <dt>SIGABEND Machine Check handler on Linux builds replaced with Crash handler
+  <dd>
+  <p>
+    The original designed "SIGABEND" handler on Linux builds that intercepted Hercules
+    abends (e.g. SIGSEGV, i.e. Hercules crashes, etc) and presented a Machine Check
+    Interruption to the guest in an attempt to allow Hercules and the guest to continue
+    running (in the hope that the guest would be able to either recover from the Machine
+    Check or be able to gracefully shutdown) has been removed since it served no valid
+    purpose other than to hide/mask otherwise very serious bugs in the Hercules emulator
+    making it nearly impossible to find or fix them.
+    <p>
+    Now, if Hercules crashes (due to a SIGSEGV, etc), the guest is no longer notified
+    of the event (a Machine Check Interruption does not occur) and Hercules makes no
+    attempt to recover or otherwise continue. Instead, it attempts to issue a message
+    to the Hercules user informing them of the crash and then requests that the host
+    perform default handling of the event (which is usually to create a "core" dump file
+    which can then be analyzed by gdb or by some other means to determine the cause of
+    the crash).
+    <p>
+    For more information regarding Linux core files, such as how to enable their creation
+    and how to analyze them when they occur, please refer to the following GitHub Issue:
+    <i>"<a href="https://github.com/SDL-Hercules-390/hyperion/issues/199">How to analyze
+    a Linux "core" file (i.e. crash dump)</a>"</i> (#199).
+  </p>
+
+
+  <dt>Integrated Regina REXX support no longer provided by default
+  <dd>
+  <p>
+    For those who want integrated Regina rexx support in Hercules, you will
+    now have to explicitly request such support on your <code>./configure</code>
+    command by specifying the <code>'--enable-regina-rexx'</code> option.  For
+    everyone else, integrated support for Regina rexx will <i>no longer</i> be
+    automatically provided by Hercules, even if it is installed in their system.
+    <p>
+    In other words, you can still have Regina rexx installed on your system
+    and use it as you normally would, but simply having it installed on your
+    system will now <i>no longer</i> cause Hercules to also provide integrated
+    support for it.
+    <p>
+    For more information refer to the
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.REXX">README.REXX</a>
+    document in the source code distribution.
   </p>
 
 
@@ -50,6 +96,71 @@ Hercules: Release Notes
     Hopefully it should execute well enough under most common situations however.
   </p>
 
+
+  <dt>VMFPLC2 VM/CMS tape utility enhanced
+  <dd>
+  <p>
+    The VMFPLC2 tape utility has been greatly enhanced and now supports the scan
+    and load functions, making it much easier to transfer files between the host
+    system and z/VM or VM/370 systems. Refer to the
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.VMFPLC2">README.VMFPLC2</a>
+    document for usage details.
+  </p>
+
+
+  <dt>System/370/390 Vector Facility has been disabled again
+  <dd>
+  <p>
+    It was a mistake to enable the System/370 and System/390 Vector Facility
+    set of instructions in release 4.1.  Hercules's implementation of the
+    facility only implements 26 of the required 180 instructions the facility
+    provides and thus is so incredibly incomplete as to be virtually unusable.
+    <p>
+    Given that virtually no one has ever complained about its unavailability
+    beforehand (and the interference it causes internally with the desired
+    proper functioning of the Hercules S/370 Extension pseudo-facility), it has
+    once again been disabled.
+    <p>
+    This is very likely to be a permanent setting given the extreme unlikelihood
+    of the facility ever being fully coded due to its unpopularity and the extreme
+    challenges posed by trying to code all of the missing instructions for a fully
+    compliant facility.
+  </p>
+
+
+  <dt>TCPIP (X'75') instruction integrated
+  <dd>
+  <p>
+    This instruction was developed by Jason Winter to allow the guest OS access
+    to the IP stack of the host OS. It is of particular importance to older
+    operating systems that do not support their own IP stack. It provides full
+    IPv4 networking capabilities to those systems.
+    <p>
+    Note that the TCPIP instruction doesn't fully comply with IBM's S/3x0, ESA/390
+    or z/Architecture specifications. For this reason it is not enabled by default.
+    File
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/README.TCPIP">README.TCPIP</a>
+    provides the information needed to enable the instruction.
+  </p>
+
+
+  <dt>Breakpoint/Stepping commands optional ASID parameter
+  <dd>
+  <p>
+    The <code>b</code> (breakpoint) and <code>s</code> (stepping) commands
+    now support an optional <b><code>asid</code></b> (<b>A</b>ddress <b>S</b>pace
+    <b>ID</b>entifier) parameter. If specified, the breakpoint or stepping
+    will only occur if the instruction being executed is <i>both</i> within
+    the specified address range <i><u>and</u></i> are being executed by the
+    specified address space. The breakpoint or stepping will <i>not</i>
+    occur for any other address spaces even if they are within the specified
+    address range.
+    <p>
+    For more information refer to the <code>help</code> command display
+    for the <code>b</code> and/or <code>s</code> commands.
+  </p>
+
+
 </dl>
 
 <!-- --------------------------------------------------------------------------------- -->
@@ -57,7 +168,7 @@ Hercules: Release Notes
 <hr>
 
 <a name=4.1></a>
-<h2>Release notes for the SDL version of Hercules 4.1 Hyperion</h2>
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases">SDL Hyperion 4.1</a></h2>
 <p>
 <dl>
 

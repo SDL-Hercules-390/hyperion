@@ -3,9 +3,21 @@
 
                               **  NOTE  **
 
-          This document is no longer maintained. Refer instead
-          to the Hercules Hyperion git repository's commit log
-          at: https://github.com/sdl-hercules-390/hyperion/commits
+          This document is no longer maintained.  Refer instead to
+          the following web pages for a list of current changes:
+
+
+          "What's New"
+          https://sdl-hercules-390.github.io/html/hercnew.html
+
+
+          "Release Notes"
+          https://sdl-hercules-390.github.io/html/hercrnot.html
+
+
+          Repository commit log:
+          https://github.com/sdl-hercules-390/hyperion/commits
+
 
 -------------------------------------------------------------------------------
 

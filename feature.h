@@ -644,11 +644,11 @@
 #undef NOCROSSPAGEL
 #undef   CROSSPAGEL
 
-#define NOCROSSPAGE(  addr, len )    likely( ((int)((addr) & PAGEFRAME_BYTEMASK)) <= (PAGEFRAME_BYTEMASK - (len)) )
-#define   CROSSPAGE(  addr, len )  unlikely( ((int)((addr) & PAGEFRAME_BYTEMASK)) >  (PAGEFRAME_BYTEMASK - (len)) )
+#define NOCROSSPAGE(  addr, len )    likely( ((int)((addr) & PAGEFRAME_BYTEMASK)) <= ((int)(PAGEFRAME_BYTEMASK - (len))) )
+#define   CROSSPAGE(  addr, len )  unlikely( ((int)((addr) & PAGEFRAME_BYTEMASK)) >  ((int)(PAGEFRAME_BYTEMASK - (len))) )
 
-#define NOCROSSPAGEL( addr, len )    likely( ((int)((addr) & PAGEFRAME_BYTEMASK)) <= (PAGEFRAME_PAGESIZE - (len)) )
-#define   CROSSPAGEL( addr, len )  unlikely( ((int)((addr) & PAGEFRAME_BYTEMASK)) >  (PAGEFRAME_PAGESIZE - (len)) )
+#define NOCROSSPAGEL( addr, len )    likely( ((int)((addr) & PAGEFRAME_BYTEMASK)) <= ((int)(PAGEFRAME_PAGESIZE - (len))) )
+#define   CROSSPAGEL( addr, len )  unlikely( ((int)((addr) & PAGEFRAME_BYTEMASK)) >  ((int)(PAGEFRAME_PAGESIZE - (len))) )
 
 /*-------------------------------------------------------------------*/
 /* EXPANDED STORAGE page-size related constants                      */

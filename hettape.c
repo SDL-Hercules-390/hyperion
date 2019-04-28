@@ -16,6 +16,10 @@
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
+
+#define _HETTAPE_C_
+#define _HDT3420_DLL_
+
 #include "hercules.h"  /* need Hercules control blocks               */
 #include "tapedev.h"   /* Main tape handler header file              */
 
@@ -28,7 +32,7 @@
 /* If successful, the het control blk is stored in the device block  */
 /* and the return value is zero.  Otherwise the return value is -1.  */
 /*-------------------------------------------------------------------*/
-int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
+DLL_EXPORT int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 {
     int   rc;                           /* Return code               */
     char  pathname[MAX_PATH];           /* file path in host format  */
@@ -109,9 +113,9 @@ int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 
     if (sysblk.auto_tape_create && dev->hetb->created)
     {
-        // "%1d:%04X Tape file %s, type %s: tape created"
-        WRMSG( HHC00235, "I", LCSS_DEVNUM,
-            dev->filename, "het" );
+        if (!dev->batch || !dev->quiet)
+            // "%1d:%04X Tape file %s, type %s: tape created"
+            WRMSG( HHC00235, "I", LCSS_DEVNUM, dev->filename, "het" );
     }
 
     return 0;
@@ -123,24 +127,22 @@ int open_het( DEVBLK* dev, BYTE* unitstat, BYTE code )
 /*                                                                   */
 /* The HET file is close and all device block fields reinitialized.  */
 /*-------------------------------------------------------------------*/
-void close_het (DEVBLK *dev)
+DLL_EXPORT void close_het( DEVBLK* dev )
 {
-    /* BHE 03/04/2010: This was the statement?? */
-    /* if(dev->hetb->fd >= 0) */
-    /* Caught it after a warning message */
-    if(dev->fd >= 0)
+    if (dev->fd >= 0)
     {
-        WRMSG (HHC00201, "I", LCSS_DEVNUM, dev->filename, "het");
+        if (!dev->batch || !dev->quiet)
+            // "%1d:%04X Tape file %s, type %s: tape closed"
+            WRMSG( HHC00201, "I", LCSS_DEVNUM, dev->filename, "het" );
     }
-    /* Close the HET file */
-    het_close (&dev->hetb);
 
-    /* Reinitialize the DEV fields */
-    dev->fd = -1;
-    dev->fh = NULL;
+    het_close( &dev->hetb );
     STRLCPY( dev->filename, TAPE_UNLOADED );
-    dev->blockid = 0;
-    dev->fenced = 0;
+
+    dev->fh      = NULL;
+    dev->fd      = -1;
+    dev->blockid =  0;
+    dev->fenced  =  0;
 
     return;
 
@@ -151,7 +153,7 @@ void close_het (DEVBLK *dev)
 /*                                                                   */
 /* The HET file is close and all device block fields reinitialized.  */
 /*-------------------------------------------------------------------*/
-int rewind_het(DEVBLK *dev,BYTE *unitstat,BYTE code)
+DLL_EXPORT int rewind_het(DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
 int rc;
     rc = het_rewind (dev->hetb);
@@ -181,7 +183,7 @@ int rc;
 /* current file number in the device block is incremented.           */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int read_het (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
+DLL_EXPORT int read_het (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
@@ -226,58 +228,64 @@ int             rc;                     /* Return code               */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_het (DEVBLK *dev, BYTE *buf, U32 blklen,
-                      BYTE *unitstat,BYTE code)
+DLL_EXPORT int write_het( DEVBLK* dev, const BYTE* buf, U32 blklen,
+                          BYTE* unitstat, BYTE code )
 {
 int             rc;                     /* Return code               */
 off_t           cursize;                /* Current size for size chk */
 
-    if ( dev->hetb->writeprotect )
+    if (dev->hetb->writeprotect)
     {
-        build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+        build_senseX( TAPE_BSENSE_WRITEPROTECT, dev, unitstat, code );
             return -1;
     }
 
     /* Check if we have already violated the size limit */
-    if(dev->tdparms.maxsize>0)
+    if (dev->tdparms.maxsize > 0)
     {
-        cursize=het_tell(dev->hetb);
-        if(cursize>=dev->tdparms.maxsize)
+        if ((cursize = het_tell( dev->hetb )) >= dev->tdparms.maxsize)
         {
-            build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
+            build_senseX( TAPE_BSENSE_ENDOFTAPE, dev, unitstat, code );
             return -1;
         }
     }
+
     /* Write the data block */
-    rc = het_write (dev->hetb, buf, blklen);
-    if (rc < 0)
+    if ((rc = het_write( dev->hetb, buf, blklen )) < 0)
     {
         /* Handle write error condition */
         char msgbuf[128];
-        MSGBUF( msgbuf, "Het error '%s': '%s'", het_error(rc), strerror(errno));
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, dev->filename, "het", "het_write()", (off_t)dev->hetb->cblk, msgbuf);
+        MSGBUF( msgbuf, "Het error '%s': '%s'", het_error( rc ), strerror( errno ));
+        WRMSG( HHC00204, "E", LCSS_DEVNUM, dev->filename, "het", "het_write()", (off_t) dev->hetb->cblk, msgbuf );
 
         /* Set unit check with equipment check */
-        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        build_senseX( TAPE_BSENSE_WRITEFAIL, dev, unitstat, code );
         return -1;
     }
+
     /* Check if we have violated the maxsize limit */
     /* Also check if we are passed EOT marker */
-    if(dev->tdparms.maxsize>0)
+    if (dev->tdparms.maxsize > 0)
     {
-        cursize=het_tell(dev->hetb);
-        if(cursize>dev->tdparms.maxsize)
+        if ((cursize = het_tell( dev->hetb )) > dev->tdparms.maxsize)
         {
-            WRMSG (HHC00208, "I", LCSS_DEVNUM, dev->filename, "het");
-            if(dev->tdparms.strictsize)
+            if (!dev->batch || !dev->quiet)
+                // "%1d:%04X Tape file %s, type %s: maximum tape capacity exceeded"
+                WRMSG( HHC00208, "I", LCSS_DEVNUM, dev->filename, "het" );
+
+            if (dev->tdparms.strictsize)
             {
-                WRMSG (HHC00209, "I", LCSS_DEVNUM, dev->filename, "het");
-                het_bsb(dev->hetb);
-                cursize=het_tell(dev->hetb);
-                VERIFY(!ftruncate(dev->hetb->fd, cursize));
-                dev->hetb->truncated=TRUE; /* SHOULD BE IN HETLIB */
+                if (!dev->batch || !dev->quiet)
+                    // "%1d:%04X Tape file %s, type %s: maximum tape capacity enforced"
+                    WRMSG( HHC00209, "I", LCSS_DEVNUM, dev->filename, "het" );
+
+                het_bsb( dev->hetb );
+                cursize = het_tell( dev->hetb );
+                VERIFY( 0 == ftruncate( dev->hetb->fd, cursize ));
+                dev->hetb->truncated = TRUE; /* SHOULD BE IN HETLIB */
             }
-            build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
+
+            build_senseX( TAPE_BSENSE_ENDOFTAPE, dev, unitstat, code );
             return -1;
         }
     }
@@ -295,7 +303,7 @@ off_t           cursize;                /* Current size for size chk */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int write_hetmark( DEVBLK *dev, BYTE *unitstat, BYTE code )
+DLL_EXPORT int write_hetmark( DEVBLK *dev, BYTE *unitstat, BYTE code )
 {
 int             rc;                     /* Return code               */
 
@@ -332,7 +340,7 @@ int             rc;                     /* Return code               */
 /* If successful, return value is zero.                              */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int sync_het(DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int sync_het(DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
@@ -364,7 +372,7 @@ int             rc;                     /* Return code               */
 /* and the current file number in the device block is incremented.   */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int fsb_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int fsb_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
@@ -412,7 +420,7 @@ int             rc;                     /* Return code               */
 /* and the current file number in the device block is decremented.   */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int bsb_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int bsb_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
@@ -459,7 +467,7 @@ int             rc;                     /* Return code               */
 /* in the device block is incremented.                               */
 /* If error, return value is -1 and unitstat is set to CE+DE+UC      */
 /*-------------------------------------------------------------------*/
-int fsf_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int fsf_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 
@@ -494,7 +502,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Check HET file is passed the allowed EOT margin                   */
 /*-------------------------------------------------------------------*/
-int passedeot_het (DEVBLK *dev)
+DLL_EXPORT int passedeot_het (DEVBLK *dev)
 {
 off_t cursize;
     if(dev->fd>0)
@@ -524,7 +532,7 @@ off_t cursize;
 /* In either case the current block number in the HET control block  */
 /* is always updated.                                                */
 /*-------------------------------------------------------------------*/
-int bsf_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
+DLL_EXPORT int bsf_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
 

@@ -66,59 +66,6 @@ static int set_restart(const char * s);
 /* End of forward declarations.                                      */
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to parse an argument string. The string that is passed */
-/* is modified in-place by inserting null characters at the end of   */
-/* each argument found. The returned array of argument pointers      */
-/* then points to each argument found in the original string. Any    */
-/* argument (except the first one) that begins with '#' character    */
-/* is considered a line comment and causes early termination of      */
-/* parsing and is not included in the argument count. If the first   */
-/* argument begins with a '#' character, it is treated as a command  */
-/* and parsing continues as normal, thus allowing comments to be     */
-/* processed as commands. Any argument beginning with a double quote */
-/* or single apostrophe causes all characters up to the next quote   */
-/* or apostrophe to be included as part of that argument. The quotes */
-/* and/or apostrophes themselves are not considered to be a part of  */
-/* the argument itself and are replaced with nulls.                  */
-/* p            Points to string to be parsed.                       */
-/* maxargc      Maximum allowable number of arguments. (Prevents     */
-/*              overflowing the pargv array)                         */
-/* pargv        Pointer to buffer for argument pointer array.        */
-/* pargc        Pointer to number of arguments integer result.       */
-/* Returns number of arguments found. (same value as at *pargc)      */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
-{
-    *pargc = 0;
-    *pargv = NULL;
-
-    while (*p && *pargc < maxargc)
-    {
-        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
-
-        if (*p == '#' && *pargc) break; // stop when line comment reached
-
-        *pargv = p; ++*pargc; // count new arg
-
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
-
-        if (*p == '\"' || *p == '\'')
-        {
-            char delim = *p;
-            if (p == *pargv) *pargv = p+1;
-            do {} while (*++p && *p != delim);
-            if (!*p) break; // find end of quoted string
-        }
-
-        *p++ = 0; // mark end of arg
-        pargv++; // next arg ptr
-    }
-
-    return *pargc;
-}
-
-
-/*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
 /* addargc      Contains number of arguments                         */
 /* addargv      An array of pointers to each argument                */
@@ -231,7 +178,7 @@ char   *buf1;                           /* Pointer to resolved buffer*/
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int process_config (const char *cfg_name)
 {
-char buf[1024];                         /* Config statement buffer   */
+char buf[ MAX_CFG_LINELEN ];            /* Config statement buffer   */
 int  addargc;                           /* Number of additional args */
 char *addargv[MAX_ARGS];                /* Additional argument array */
 
@@ -639,7 +586,7 @@ static void ListScriptsIds()
         if (!pCtl->scr_tid) continue; /* (inactive) */
         // "Script id:%d, tid:"TIDPAT", level:%d, name:%s"
         WRMSG( HHC02315, "I", pCtl->scr_id,
-            pCtl->scr_tid, pCtl->scr_recursion,
+            TID_CAST( pCtl->scr_tid ), pCtl->scr_recursion,
             pCtl->scr_name ? pCtl->scr_name : "" );
     }
 
@@ -775,7 +722,7 @@ static int script_abort( SCRCTL* pCtl )
 /*-------------------------------------------------------------------*/
 /* Process a single script file                 (internal, external) */
 /*-------------------------------------------------------------------*/
-int process_script_file( char *script_name, const int isrcfile )
+int process_script_file( const char* script_name, bool isrcfile )
 {
 SCRCTL* pCtl;                           /* Script processing control */
 char   *scrname;                        /* Resolved script name      */
@@ -793,14 +740,13 @@ int     rc;                             /* (work)                    */
     {
         /* If not found it's probably the Hercules ".RC" file */
         ASSERT( isrcfile );
+
         /* Create a temporary working control entry */
         if (!(pCtl = NewSCRCTL( tid, script_name )))
             return -1; /* (error message already issued) */
 
-        /* Start  over again using our temporary control entry.  The */
-        /* screwy second argument is to silence the unused parameter */
-        /* warning when ASSERT does no assert (the mind boggles)     */
-        rc = process_script_file( script_name, 0 & isrcfile );
+        /* Start over again using our temporary control entry. */
+        rc = process_script_file( script_name, isrcfile );
         FreeSCRCTL( pCtl );
         return rc;
     }
@@ -947,19 +893,17 @@ static void *script_thread( void *arg )
     char*    argv[MAX_ARGS];            /* Command arguments array   */
     int      argc;                      /* Number of cmd arguments   */
     int      i;                         /* (work)                    */
-    TID      tid   = thread_id();
     SCRCTL*  pCtl  = NULL;
 
     UNREFERENCED(arg);
 
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' started"
-    WRMSG( HHC00100, "I", (u_long) tid,
-        get_thread_priority(), SCRIPT_THREAD_NAME );
+    LOG_THREAD_BEGIN( SCRIPT_THREAD_NAME );
 #endif
 
     /* Retrieve our control entry */
-    pCtl = FindSCRCTL( tid );
+    pCtl = FindSCRCTL( thread_id() );
     ASSERT( pCtl && pCtl->scr_cmdline ); /* (sanity check) */
 
     /* Parse the command line into its individual arguments...
@@ -971,7 +915,7 @@ static void *script_thread( void *arg )
     for (i=1; !script_abort( pCtl ) && i < argc; i++)
     {
         UpdSCRCTL( pCtl, argv[i] );
-        process_script_file( argv[i], 0 );
+        process_script_file( argv[i], false );
     }
 
     /* Remove entry from list and exit */
@@ -979,8 +923,7 @@ static void *script_thread( void *arg )
 
 #ifdef LOGSCRTHREADBEGEND
     // "Thread id "TIDPAT", prio %2d, name '%s' ended"
-    WRMSG( HHC00101, "I", (u_long) tid,
-        get_thread_priority(), SCRIPT_THREAD_NAME );
+    LOG_THREAD_BEGIN( SCRIPT_THREAD_NAME );
 #endif
 
     return NULL;
@@ -1015,7 +958,7 @@ int script_cmd( int argc, char* argv[], char* cmdline )
         for (i=1; !script_abort( pCtl ) && i < argc; i++)
         {
             UpdSCRCTL( pCtl, argv[i] );
-            rc = process_script_file( argv[i], 0 );
+            rc = process_script_file( argv[i], false );
             if (0 <= rc2 && 0 < rc) rc2 = MAX( rc, rc2 );
             else if (0 > rc) rc2 = MIN( rc, rc2 );
         }

@@ -114,6 +114,9 @@
   DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
   #endif
 
+  // "converts between pointers to integer types with different sign"
+  DISABLE_GCC_WARNING( "-Wpointer-sign" )
+
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */
   /*-----------------------------------------------------------------*/

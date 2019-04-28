@@ -27,7 +27,6 @@
 
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
 
-#define PANEL_REFRESH_RATE              /* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
 
@@ -328,5 +327,6 @@
 #undef  FEATURE_VIRTUAL_ARCHITECTURE_LEVEL
 #undef  FEATURE_VM_BLOCKIO
 #undef  FEATURE_WAITSTATE_ASSIST
+#undef  FEATURE_TCPIP_EXTENSION
 
 /* end of FEATALL.H */

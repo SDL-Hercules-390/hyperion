@@ -607,8 +607,6 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 
         TID tid = pCTCBLK->tid;
         pCTCBLK->fCloseInProgress = 1;  // (ask read thread to exit)
-        signal_thread( tid, SIGUSR2 );   // (for non-Win32 platforms)
-//FIXME signal_thread not working for non-MSVC platforms
 #if defined(_MSVC_)
         join_thread( tid, NULL );       // (wait for thread to end)
 #endif
@@ -628,6 +626,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
                   int     iBufLen, char*  pBuffer )
 {
+    char filename[ PATH_MAX + 1 ];      /* full path or just name    */
+
     CTCBLK*  pCTCBLK;
     char*    pGuestIP;
     char*    pDriveIP;

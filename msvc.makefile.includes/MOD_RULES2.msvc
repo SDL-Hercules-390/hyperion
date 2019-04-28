@@ -9,6 +9,8 @@
 # ---------------------------------------------------------------------
 # DLL export libraries are dependent on themselves existing
 
+$(O)hdt3420.lib:    $(X)hdt3420.dll
+
 $(O)hdasd.lib:      $(X)hdasd.dll
 
 $(O)htape.lib:      $(X)htape.dll
@@ -53,6 +55,11 @@ $(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)w32ctca.obj \
 
 $(X)hdteq.dll:    $(O)hdteq.obj \
                   $(O)hengine.lib $(O)hutil.lib              $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
+$(X)hdt2880.dll:  $(O)hchan.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
@@ -179,6 +186,8 @@ $(X)dasdcopy64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)h
 
 $(X)convto64.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
+$(X)cckdmap.exe:   $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
 $(X)ckd2cckd.exe: $(X)dasdcopy.exe
     copy /b /v /y $(X)dasdcopy.exe $(X)ckd2cckd.exe > NUL
 
@@ -239,7 +248,7 @@ $(X)tapemap.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)tapesplt.exe: $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
 
-$(X)vmfplc2.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)herctape.res
+$(X)vmfplc2.exe:  $(O)$(@B).obj $(O)htape.lib $(O)hsys.lib $(O)hutil.lib $(O)hdt3420.lib $(O)herctape.res
 
 # NOTE: to be safe, since this member contains build rules, we need to
 # make sure there's always a blank line following the last build rule

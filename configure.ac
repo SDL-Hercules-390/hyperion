@@ -120,6 +120,11 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir=""
         ;;
 
+    aarch64*)
+        hc_cv_cpu_arch=aarch64
+        hc_cv_pkg_lib_subdir="/aarch64"
+        ;;
+
     arm*)
         hc_cv_cpu_arch=arm
         hc_cv_pkg_lib_subdir="/arm"
@@ -489,6 +494,7 @@ AH_TEMPLATE( [NO_ASM_BYTESWAP],         [Define to disable assembler routines fo
 AH_TEMPLATE( [NO_IEEE_SUPPORT],         [Define to disable IEEE floating point support] )
 AH_TEMPLATE( [NO_SETUID],               [Define to disable setuid operation] )
 AH_TEMPLATE( [NO_SIGABEND_HANDLER],     [Define to disable sigabend_handler (please describe this better)] )
+AH_TEMPLATE( [HAVE_SIGNAL_HANDLING],    [Define to if signal handling is available] )
 AH_TEMPLATE( [NON_UNIQUE_GETTIMEOFDAY], [Define if 'gettimeofday' returns non-unique values] )
 AH_TEMPLATE( [NEED_GETOPT_WRAPPER],     [Define to indicate a wrapper for getopt is needed] )
 AH_TEMPLATE( [NEED_GETOPT_OPTRESET],    [Define to indicate optreset exists] )
@@ -782,8 +788,6 @@ AC_CACHE_SAVE()
 #  "HAVE_DECL_XXXX" is #defined to '0' instead of leaving "HAVE_DECL_XXXX" #undefined.
 #  (e.g. #defined to 1 if you have the declaration and #defined to 0 if you don't)
 
-AC_CHECK_DECLS( SIGUSR1,              [hc_cv_have_sigusr1=yes],             [hc_cv_have_sigusr1=no],             [#include <signal.h>] )
-AC_CHECK_DECLS( SIGUSR2,              [hc_cv_have_sigusr2=yes],             [hc_cv_have_sigusr2=no],             [#include <signal.h>] )
 AC_CHECK_DECLS( SIGPIPE,              [hc_cv_have_sigpipe=yes],             [hc_cv_have_sigpipe=no],             [#include <signal.h>] )
 AC_CHECK_DECLS( SIGBUS,               [hc_cv_have_sigbus=yes],              [hc_cv_have_sigbus=no],              [#include <signal.h>] )
 AC_CHECK_DECLS( IFNAMSIZ,             [hc_cv_have_ifnamsiz=yes],            [hc_cv_have_ifnamsiz=no],
@@ -1250,7 +1254,7 @@ else
 
     case "$target_cpu-$GCC" in
 
-        arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
+        aarch64*-yes|arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
 
             hc_cv_byte_structs_always_aligned_and_rounded=no
             ;;
@@ -2119,12 +2123,7 @@ AC_ARG_ENABLE( regina-rexx,
         esac
     ],
     [
-     if test "$hc_cv_have_rexxsaa_h"        = "yes"  ||
-        test "$hc_cv_have_regina_rexxsaa_h" = "yes"; then
-         hc_cv_ena_regina_rexx=yes
-     else
-         hc_cv_ena_regina_rexx=no
-     fi
+        hc_cv_ena_regina_rexx=no
     ]
 )
 
@@ -2475,15 +2474,17 @@ fi
 
 #------------------------------------------------------------------------------
 #  signal.h is only required if strsignal function isn't available since if
-#  the strsignal function isn't available, we use our builtin which needs it.
-#  The presumption that if the strsignal function is found, then the signal.h
-#  header will also be found seems to be a fairly safe assumption to make IMO.
+#  the strsignal function isn't available, we use our own strsignal function
+#  which needs it.  The presumption that if the strsignal function is found,
+#  signal.h will also be found seems a fairly safe assumption to make IMO.
 
 if test "$hc_cv_have_strsignal" != "yes"  &&
    test "$hc_cv_have_signal_h"  != "yes"; then
 
    AC_MSG_RESULT( [ERROR: Required header 'signal.h' not found] )
    hc_error=yes
+else
+   hc_cv_have_signal_handling=yes
 fi
 
 #------------------------------------------------------------------------------
@@ -2718,6 +2719,11 @@ if test "$hc_cv_auto_optimize" = "yes"; then
             fi
             ;;
 
+        aarch64-yes)
+
+            hc_cv_is_intel_x86_arch=no
+            ;;
+
         arm-yes)
 
             hc_cv_is_intel_x86_arch=no
@@ -2848,14 +2854,9 @@ test "$hc_cv_have_gcc_diag_pushpop"        = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_P
 test "$hc_cv_have_gcc_unused_func_warning" = "yes" &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
 test "$hc_cv_have_gcc_set_unused_warning"  = "yes" &&  AC_DEFINE(HAVE_GCC_SET_UNUSED_WARNING)
 
-if test $hc_cv_have_sa_sigaction != yes ||
-   test $hc_cv_have_sigusr1      != yes ||
-   test $hc_cv_have_sigusr2      != yes ||
-   test $hc_cv_have_sigpipe      != yes ||
-   test $hc_cv_have_sigbus       != yes; then
-
-    AC_DEFINE(NO_SIGABEND_HANDLER)
-
+if test $hc_cv_have_sa_sigaction    = yes &&
+   test $hc_cv_have_signal_handling = yes; then
+    AC_DEFINE(HAVE_SIGNAL_HANDLING)
 fi
 
 if test "$hc_cv_attr_printf_supported" = "yes"; then
@@ -3105,7 +3106,17 @@ if test -z "${hc_cv_extpkg_dir}"; then
         fi
       fi
     fi
-  done <<< "${LIBRARY_PATH}:"     # (trailing ':' to ensure last dir processed)
+
+    # Note the trailing ':' in the below LIBRARY_PATH statement
+    # to ensure that the last directory in the list is always
+    # processed.  Also note that the statements being passed to
+    # the while loop (i.e. those between the "<<END" clause and
+    # the "END" statement) should not have any # line comments
+    # either, since they too would be passed to the while loop.
+
+  done <<END
+${LIBRARY_PATH}:
+END
 fi
 
 ###############################################################################

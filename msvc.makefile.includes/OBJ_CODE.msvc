@@ -61,7 +61,6 @@ hutil_OBJ = \
     $(O)hostinfo.obj \
     $(O)hscutl.obj   \
     $(O)hexdumpe.obj \
-    $(O)hscutl2.obj  \
     $(O)logger.obj   \
     $(O)logmsg.obj   \
     $(O)memrchr.obj  \
@@ -140,10 +139,12 @@ hengine_OBJ = \
     $(O)sie.obj      \
     $(O)sr.obj       \
     $(O)stack.obj    \
+    $(O)tcpip.obj    \
     $(O)timer.obj    \
     $(O)trace.obj    \
     $(O)transact.obj \
     $(O)vector.obj   \
     $(O)vm.obj       \
     $(O)vmd250.obj   \
+    $(O)x75.obj      \
     $(O)xstore.obj

@@ -696,7 +696,7 @@ static void NP_screen_redraw (REGS *regs)
     draw_text ("| ");
     set_color (COLOR_WHITE, COLOR_BLUE);
 
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
 
     /* Center "Peripherals" on the right-hand-side */
     i = 40 + snprintf(buf, sizeof(buf),
@@ -709,7 +709,7 @@ static void NP_screen_redraw (REGS *regs)
     draw_text (buf);
     fill_text (' ', (short)cons_cols);
 
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
 
     /* Line 2 - peripheral headings */
     set_pos (2, 41);
@@ -1738,14 +1738,8 @@ size_t  loopcount;                      /* Number of iterations done */
     {
 #if defined( _MSVC_ )
         /* Wait for keyboard input */
-        for (i=
-#if defined(PANEL_REFRESH_RATE)
-               sysblk.panrate
-#else
-               500
-#endif
-                             /WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS; i && !kbhit(); i--)
-            Sleep(WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS);
+        for (i = sysblk.panrate / WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS; i && !kbhit(); i--)
+            Sleep(                WAIT_FOR_KEYBOARD_INPUT_SLEEP_MILLISECS );
 
         ADJ_SCREEN_SIZE();
 
@@ -1771,20 +1765,8 @@ size_t  loopcount;                      /* Number of iterations done */
 
         /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
-        tv.tv_sec =
-#if defined(PANEL_REFRESH_RATE)
-                    sysblk.panrate
-#else
-                    500
-#endif
-                                   / 1000;
-        tv.tv_usec = (
-#if defined(PANEL_REFRESH_RATE)
-                      sysblk.panrate
-#else
-                      500
-#endif
-                                     * 1000) % 1000000;
+        tv.tv_sec  =  sysblk.panrate / 1000;
+        tv.tv_usec = (sysblk.panrate * 1000) % 1000000;
         rc = select (maxfd + 1, &readset, NULL, NULL, &tv);
         if (rc < 0 )
         {
@@ -2996,9 +2978,9 @@ FinishShutdown:
 
                     if (0
                         || ( sysblk.hicpu && (cnt_stopped == 0 && cnt_disabled == 0))
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
                         || (!sysblk.hicpu && (sysblk.shrdport))
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
                     )
                         state = "GREEN";
                     set_console_title(state);
@@ -3097,9 +3079,9 @@ FinishShutdown:
                     && (len + i + (numcpu ? 13 : 11)) < cons_cols
                     && (0
                         ||   numcpu
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
                         || (!numcpu && sysblk.shrdport)
-#endif // defined(OPTION_SHARED_DEVICES)
+#endif
                        )
                 )
                 {
@@ -3178,7 +3160,7 @@ FinishShutdown:
 
     sysblk.panel_init = 0;
 
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), PANEL_THREAD_NAME );
+    LOG_THREAD_END( PANEL_THREAD_NAME  );
 
     ASSERT( sysblk.shutdown );  // (why else would we be here?!)
 

@@ -393,44 +393,38 @@ DLL_EXPORT void set_symbol(const char *sym, const char *value)
     return;
 }
 
-DLL_EXPORT const char *get_symbol(const char *sym)
+DLL_EXPORT const char* get_symbol( const char* sym )
 {
-char *val;
-static char     buf[MAX_PATH];
+    SYMBOL_TOKEN* tok;
+    char buf[ MAX_ENVVAR_LEN ];
 
-SYMBOL_TOKEN   *tok;
-
-    if ( CMD(sym,DATE,4) )
+    if (CMD( sym, DATE, 4 ))
     {
+        // Rebuild new value each time date/time symbol is retrieved
         time_t  raw_tt;
-
-        time( &raw_tt );        // YYYYMMDD
-        strftime(buf, sizeof(buf)-1, "%Y%m%d", localtime(&raw_tt) );
-        return(buf);
+        time( &raw_tt );                // YYYYMMDD
+        strftime( buf, sizeof( buf ) - 1, "%Y%m%d", localtime( &raw_tt ));
+        set_symbol( sym = "DATE", buf );
     }
-    else if ( CMD(sym,TIME,4) )
+    else if (CMD( sym, TIME, 4 ))
     {
+        // Rebuild new value each time date/time symbol is retrieved
         time_t  raw_tt;
-
         time( &raw_tt );                // HHMMSS
-        strftime(buf, sizeof(buf)-1, "%H%M%S", localtime(&raw_tt) );
-        return(buf);
-    }
-    else
-    {
-        tok=get_symbol_token(sym,0);
-    }
-    if (tok != NULL)
-    {
-        return(tok->val);
-    }
-    else
-    {
-        val=getenv(sym);
-        MSGBUF(buf, "%s", val == NULL? "" : val );
-        return(buf);
+        strftime( buf, sizeof( buf ) - 1, "%H%M%S", localtime( &raw_tt ));
+        set_symbol( sym = "TIME", buf );
     }
 
+    if (!(tok = get_symbol_token( sym, 0 )))
+    {
+        // Add this environment variable to our DEFSYM pool
+        const char* val = getenv( sym );
+        MSGBUF( buf, "%s", val ? val : "" );
+        set_symbol( sym, buf );
+        // (now try again; should succeed this time)
+        tok = get_symbol_token( sym, 0 );
+    }
+    return tok->val;
 }
 
 DLL_EXPORT char *resolve_symbol_string(const char *text)
@@ -597,17 +591,13 @@ DLL_EXPORT char *resolve_symbol_string(const char *text)
 }
 
 /* (called by defsym panel command) */
-DLL_EXPORT void list_all_symbols(void)
+DLL_EXPORT void list_all_symbols()
 {
     SYMBOL_TOKEN* tok; int i;
-
-    for ( i=0; i < symbol_count; i++ )
-    {
-        tok = symbols[i];
-        if (tok)
-            WRMSG(HHC02199, "I", tok->var, tok->val ? tok->val : "");
-    }
-    return;
+    for (i=0; i < symbol_count; i++)
+        if ((tok = symbols[i]) != NULL)
+            // "Symbol %-12s %s"
+            WRMSG( HHC02199, "I", tok->var, tok->val ? tok->val : "" );
 }
 
 /* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
@@ -1279,6 +1269,41 @@ DLL_EXPORT char* fmt_memsize_KB( const U64 memsizeKB, char* buf, const size_t bu
 DLL_EXPORT char* fmt_memsize_MB( const U64 memsizeMB, char* buf, const size_t bufsz ) { return _fmt_memsize( memsizeMB, 2, buf, bufsz ); }
 
 /*-------------------------------------------------------------------*/
+/* Pretty format S64 value with thousand separators. Returns length. */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT size_t fmt_S64( char dst[32], S64 num )
+{
+    char  src[32];
+    char* p_src     = src;
+    char* p_dst     = dst;
+
+    const char separator = ',';     // (FIXME)
+    int num_len, commas;
+
+    num_len = snprintf( src, sizeof( src ), "%"PRId64, num );
+
+    if (*p_src == '-')
+    {
+        *p_dst++ = *p_src++;
+        num_len--;
+    }
+
+    for (commas = 2 - num_len % 3;
+         *p_src;
+         commas = (commas + 1) % 3)
+    {
+        *p_dst++ = *p_src++;
+        if (commas == 1) {
+            *p_dst++ = separator;
+        }
+    }
+
+    *--p_dst = 0;
+
+    return (size_t) (p_dst - dst);
+}
+
+/*-------------------------------------------------------------------*/
 /*                Standard Utility Initialization                    */
 /*-------------------------------------------------------------------*/
 /* Performs standard utility initialization as follows: determines   */
@@ -1372,13 +1397,14 @@ int initialize_utility( int argc, char* argv[],
         *pgm = strdup( nameonly );
 
     /* Format the program identification message */
-    MSGBUF( namedesc, MSG_C( HHC02499, "I", nameonly, desc ) );
+    MSGBUF( namedesc, "%s - %s", nameonly, desc );
 
     /* Now it's safe to discard exename */
     free( exename );
 
     /* Display version, copyright, and build date */
-    display_version( stdout, 0, namedesc+10 );
+    init_sysblk_version_str_arrays( namedesc );
+    display_version( stdout, 0, NULL );
 
     return argc;
 }
@@ -1614,6 +1640,8 @@ DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
 {
     int rc = 0;
     char threadname[16];
+
+    if (!name) return 0;            /* (ignore premature calls) */
     STRLCPY( threadname, name );
 
     /* Some platforms (e.g. Mac) can only set name of current thread */
@@ -1631,3 +1659,55 @@ DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
 }
 
 #endif // !defined( _MSVC_ )
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to parse an argument string. The string that is passed */
+/* is modified in-place by inserting null characters at the end of   */
+/* each argument found. The returned array of argument pointers      */
+/* then points to each argument found in the original string. Any    */
+/* argument (except the first one) that begins with '#' character    */
+/* is considered a line comment and causes early termination of      */
+/* parsing and is not included in the argument count. If the first   */
+/* argument begins with a '#' character, it is treated as a command  */
+/* and parsing continues as normal, thus allowing comments to be     */
+/* processed as commands. Any argument beginning with a double quote */
+/* or single apostrophe causes all characters up to the next quote   */
+/* or apostrophe to be included as part of that argument. The quotes */
+/* and/or apostrophes themselves are not considered to be a part of  */
+/* the argument itself and are replaced with nulls.                  */
+/* p            Points to string to be parsed.                       */
+/* maxargc      Maximum allowable number of arguments. (Prevents     */
+/*              overflowing the pargv array)                         */
+/* pargv        Pointer to buffer for argument pointer array.        */
+/* pargc        Pointer to number of arguments integer result.       */
+/* Returns number of arguments found. (same value as at *pargc)      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
+{
+    *pargc = 0;
+    *pargv = NULL;
+
+    while (*p && *pargc < maxargc)
+    {
+        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
+
+        if (*p == '#' && *pargc) break; // stop when line comment reached
+
+        *pargv = p; ++*pargc; // count new arg
+
+        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
+
+        if (*p == '\"' || *p == '\'')
+        {
+            char delim = *p;
+            if (p == *pargv) *pargv = p+1;
+            do {} while (*++p && *p != delim);
+            if (!*p) break; // find end of quoted string
+        }
+
+        *p++ = 0; // mark end of arg
+        pargv++; // next arg ptr
+    }
+
+    return *pargc;
+}

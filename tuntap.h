@@ -142,6 +142,21 @@ extern int      TUNTAP_DelRoute         ( char*   pszNetDevName,
                                           int     iFlags );
 #endif
 
+#if defined( OPTION_W32_CTCI )   // CTCI-WIN v3.7.0 or greater
+  #if defined( TT32QIFDSTADDRS ) // CTCI-WIN v3.7.0 or greater
+    extern int TT32_AddIPAddr ( int fd, BYTE* ipv4addr  );
+    extern int TT32_DelIPAddr ( int fd, BYTE* ipv4addr  );
+    extern int TT32_QryIPAddrs( int fd, BYTE* ipv4addrs ); // >= 256 byte buffer
+  #else
+    static inline int TT32_AddIPAddr ( int fd, BYTE* ipv4addr )
+    { UNREFERENCED( fd ); UNREFERENCED( ipv4addr ); return -1; }
+    static inline int TT32_DelIPAddr ( int fd, BYTE* ipv4addr  )
+    { UNREFERENCED( fd ); UNREFERENCED( ipv4addr ); return -1; }
+    static inline int TT32_QryIPAddrs( int fd, BYTE* ipv4addrs )
+    { UNREFERENCED( fd ); UNREFERENCED( ipv4addrs ); return -1; }
+  #endif
+#endif
+
 // (functions used by *BOTH* Win32 *and* NON-Win32 platforms)
 
 extern void build_herc_iface_mac ( BYTE* out_mac, const BYTE* in_ip );

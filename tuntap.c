@@ -938,6 +938,36 @@ int           TUNTAP_DelRoute( char*  pszNetDevName,
 #endif // OPTION_TUNTAP_DELADD_ROUTES
 
 
+
+#if defined( OPTION_W32_CTCI )    // CTCI-WIN v3.7.0 or greater
+#if defined( TT32QIFDSTADDRS )    // CTCI-WIN v3.7.0 or greater
+/*--------------------------------------------------------------------*/
+/*  TT32_AddIPAddr -- add IPv4 address to the virtual interface       */
+/*--------------------------------------------------------------------*/
+int TT32_AddIPAddr( int fd, BYTE* ipv4addr )
+{
+    return TUNTAP_IOCtl( fd, TT32AIFDSTADDR, (char*)ipv4addr );
+}
+/*--------------------------------------------------------------------*/
+/*  TT32_DelIPAddr -- delete IPv4 address from the virtual interface  */
+/*--------------------------------------------------------------------*/
+int TT32_DelIPAddr( int fd, BYTE* ipv4addr )
+{
+    return TUNTAP_IOCtl( fd, TT32DIFDSTADDR, (char*)ipv4addr );
+}
+/*--------------------------------------------------------------------*/
+/*  TT32_QryIPAddrs -- query virtual interface IPv4 addresses         */
+/*--------------------------------------------------------------------*/
+int TT32_QryIPAddrs( int fd, BYTE* ipv4addrs )
+{
+    // PROGRAMMING NOTE: buffer should be 256 bytes minimum
+    return TUNTAP_IOCtl( fd, TT32QIFDSTADDRS, (char*)ipv4addrs );
+}
+#endif // defined( TT32QIFDSTADDRS )  // CTCI-WIN v3.7.0 or greater
+#endif // defined( OPTION_W32_CTCI )  // CTCI-WIN v3.7.0 or greater
+
+
+
 #if !defined( OPTION_W32_CTCI )
 // ====================================================================
 // HercIFC Helper Functions

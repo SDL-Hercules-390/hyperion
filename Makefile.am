@@ -172,12 +172,13 @@ LIB_LD_FLAGS =      \
 
 HERCLIBS =
 
-HERCLIBS2 =   \
-  libhercs.la \
-  libhercu.la \
-  libherct.la \
-  libhercd.la \
-  libherc.la
+HERCLIBS2 =     \
+  libhercs.la   \
+  libhercu.la   \
+  libherct.la   \
+  libhercd.la   \
+  libherc.la    \
+  libhdt3420_not_mod.la
 
 HERCMODS =      \
   dyncrypt.la   \
@@ -216,6 +217,7 @@ bin_PROGRAMS = \
   cckddiag64   \
   cckdswap64   \
   convto64     \
+  cckdmap      \
   dasdcat      \
   dasdconv     \
   dasdcopy     \
@@ -323,9 +325,7 @@ hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
 #--------------------------------------------
 
 libhercs_la_SOURCES = hsys.c
-
 libhercs_la_LDFLAGS = $(LIB_LD_FLAGS)
-
 libhercs_la_LIBADD  = $(ldadd)
 
 #--------------------------------------------
@@ -380,7 +380,6 @@ libhercu_la_SOURCES = \
   hexdumpe.c          \
   hostinfo.c          \
   hscutl.c            \
-  hscutl2.c           \
   hsocket.c           \
   hthreads.c          \
   logger.c            \
@@ -391,13 +390,29 @@ libhercu_la_SOURCES = \
   version.c           \
   $(FTHREADS)         \
   $(LTDL)
-
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
-
-libhercu_la_LIBADD = \
-  $(extpkg_ldadd)    \
-  $(ldadd)           \
+libhercu_la_LIBADD =  \
+  $(extpkg_ldadd)     \
+  $(ldadd)            \
   libhercs.la
+
+libhdt3420_not_mod_la_SOURCES  =  \
+  tapedev.c                       \
+  tapeccws.c                      \
+  awstape.c                       \
+  faketape.c                      \
+  hettape.c                       \
+  omatape.c                       \
+  scsitape.c                      \
+  scsiutil.c
+libhdt3420_not_mod_la_LDFLAGS  =  $(LIB_LD_FLAGS)
+libhdt3420_not_mod_la_LIBADD   =  \
+  $(ldadd)                        \
+  libherct.la                     \
+  libhercs.la                     \
+  libhercu.la                     \
+  libherc.la                      \
+  libherct.la
 
 #--------------------------------------------
 # Core Hercules (shared) library
@@ -472,12 +487,14 @@ libherc_la_SOURCES = \
   sr.c               \
   stack.c            \
   strsignal.c        \
+  tcpip.c            \
   timer.c            \
   trace.c            \
   transact.c         \
   vector.c           \
   vm.c               \
   vmd250.c           \
+  x75.c              \
   xstore.c           \
   $(DYNSRC)
 
@@ -653,7 +670,11 @@ cckdswap64_SOURCES = cckdswap64.c
 cckdswap64_LDADD   = $(tools_ADDLIBS)
 cckdswap64_LDFLAGS = $(tools_LD_FLAGS)
 
-cconto64_SOURCES   = convto64.c
+cckdmap_SOURCES    = cckdmap.c
+cckdmap_LDADD      = $(tools_ADDLIBS)
+cckdmap_LDFLAGS    = $(tools_LD_FLAGS)
+
+convto64_SOURCES   = convto64.c
 convto64_LDADD     = $(tools_ADDLIBS)
 convto64_LDFLAGS   = $(tools_LD_FLAGS)
 
@@ -678,7 +699,7 @@ dmap2hrc_LDADD     = $(tools_ADDLIBS)
 dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
 
 vmfplc2_SOURCES    = vmfplc2.c
-vmfplc2_LDADD      = $(tools_ADDLIBS)
+vmfplc2_LDADD      = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
@@ -797,6 +818,8 @@ EXTRA_DIST =                  \
   README.SOFTFLOAT            \
   README.SUN                  \
   README.TAPE                 \
+  README.TCPIP                \
+  README.VMFPLC2              \
   README.TELNET               \
   README.WIN64                \
   RELEASE.NOTES               \
@@ -928,6 +951,7 @@ noinst_HEADERS =          \
   stfl.h                  \
   tapedev.h               \
   targetver.h             \
+  tcpip.h                 \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \
@@ -939,6 +963,7 @@ noinst_HEADERS =          \
   w32mtio.h               \
   w32stape.h              \
   w32util.h               \
+  x75.h                   \
   zfcp.h
 
 ###############################################################################
@@ -962,7 +987,7 @@ noinst_HEADERS =          \
 ###############################################################################
 
 
-cckd:                 \
+cckd:                   \
 	cckdcdsk$(EXEEXT)   \
 	cckdcomp$(EXEEXT)   \
 	cckddiag$(EXEEXT)   \
@@ -971,6 +996,7 @@ cckd:                 \
 	cckdcomp64$(EXEEXT) \
 	cckddiag64$(EXEEXT) \
 	cckdswap64$(EXEEXT) \
+	cckdmap$(EXEEXT)    \
 	convto64$(EXEEXT)   \
 	cckd2ckd$(EXEEXT)   \
 	dasdcopy$(EXEEXT)   \

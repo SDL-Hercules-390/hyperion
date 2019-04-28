@@ -1299,7 +1299,7 @@ int   rc;
     /* Display thread started message on control panel */
 
     MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
+    LOG_THREAD_BEGIN( thread_name  );
     SET_THREAD_NAME( thread_name );
 
     /* Execute the program in specified mode */
@@ -1324,7 +1324,7 @@ int   rc;
     signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
-    WRMSG(HHC00101, "I", thread_id(),  get_thread_priority(), thread_name);
+    LOG_THREAD_END( thread_name );
 
     RELEASE_INTLOCK(NULL);
 
@@ -1866,16 +1866,17 @@ int     aswitch;
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(process_trace)(REGS *regs)
 {
-int     shouldtrace = 0;                /* 1=Trace instruction       */
-int     shouldstep = 0;                 /* 1=Wait for start command  */
+    bool shouldtrace = false;           /* true == Trace instruction */
+    bool shouldstep  = false;           /* true == Wait for 'start'  */
 
     /* Test for trace */
-    if (CPU_TRACING(regs, 0))
-        shouldtrace = 1;
+    if (CPU_TRACING( regs, 0 ))
+        shouldtrace = true;
 
     /* Test for step */
-    if (CPU_STEPPING(regs, 0))
-        shouldstep = 1;
+    if (CPU_STEPPING( regs, 0 ))
+        shouldstep = !sysblk.stepasid
+            || regs->CR_LHL(4) == sysblk.stepasid;
 
     /* Display the instruction */
     if (shouldtrace || shouldstep)

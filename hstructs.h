@@ -468,7 +468,7 @@ enum OPERATION_MODE
 /*-------------------------------------------------------------------*/
 struct SYSBLK {
 #define HDL_NAME_SYSBLK   "SYSBLK"
-#define HDL_VERS_SYSBLK   "SDL 4.00"    /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "SDL 4.2"     /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         BLOCK_HEADER;                   /* Name of block - SYSBLK    */
         char   *hercules_pgmname;       /* Starting program name     */
@@ -476,6 +476,10 @@ struct SYSBLK {
         char   *hercules_cmdline;       /* Hercules Command line     */
         char   *netdev;                 /* Network device name       */
 #define DEF_NETDEV init_sysblk_netdev() /* Retrieve sysblk.netdev    */
+
+  const char  **vers_info;              /* Version information       */
+  const char  **bld_opts;               /* Build options             */
+  const char  **extpkg_vers;            /* External Package versions */
 
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
@@ -501,7 +505,6 @@ struct SYSBLK {
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     loggertid;              /* logger_thread Thread-id   */
-        TID     wdtid;                  /* Thread-id for watchdog    */
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
         U16     lparnum;                /* LPAR identification number*/
@@ -529,6 +532,8 @@ struct SYSBLK {
         U32     cpacap;                 /* Dynamic CP alternate cap. */
         U8      cpccr;                  /* Dynamic CP change reason  */
         U8      cpcai;                  /* Dynamic CP capacity adj.  */
+        U8      hhc_111_112;            /* HHC00111/HHC00112 issued  */
+        U8      unused1;                /* (pad/align/unused/avail)  */
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
@@ -602,8 +607,8 @@ struct SYSBLK {
         int     cnslrpipe;              /* fd for receiving signal   */
         LOCK    sockpipe_lock;          /* signaled flag access lock */
         int     sockpipe_flag;          /* 1 == already signaled     */
-        int     sockwpipe;              /* Sockdev signaling pipe Wr */
-        int     sockrpipe;              /* Sockdev signaling pipe Rd */
+        int     sockwpipe;              /* fd for sending signal     */
+        int     sockrpipe;              /* fd for receiving signal   */
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
@@ -751,13 +756,15 @@ struct SYSBLK {
                 logoptnotime:1,         /* 1 = don't timestamp log   */
                 nolrasoe:1,             /* 1 = No trace LRA Special  */
                                         /*     Operation Exceptions  */
-                noch9oflow:1;           /* Suppress CH9 O'Flow trace */
+                noch9oflow:1,           /* Suppress CH9 O'Flow trace */
+                devnameonly:1;          /* Display only dev filename */
         U32     ints_state;             /* Common Interrupts Status  */
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
-        U64     traceaddr[2];           /* Tracing address range     */
+        U16     stepasid;               /* Stepping ASID             */
         U64     stepaddr[2];            /* Stepping address range    */
+        U64     traceaddr[2];           /* Tracing address range     */
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
@@ -790,14 +797,18 @@ struct SYSBLK {
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
         COND    sync_cond;              /* COND for syncing CPU      */
         COND    sync_bc_cond;           /* COND for other CPUs       */
-#if defined(OPTION_SHARED_DEVICES)
+#if defined( OPTION_SHARED_DEVICES )
+        LOCK    shrdlock;               /* shrdport LOCK             */
+        COND    shrdcond;               /* shrdport COND             */
         TID     shrdtid;                /* Shared device listener    */
         U16     shrdport;               /* Shared device server port */
         U32     shrdcount;              /* IO count                  */
+        LOCK    shrdtracelock;          /* Trace table LOCK          */
         SHRD_TRACE  *shrdtrace;         /* Internal trace table      */
         SHRD_TRACE  *shrdtracep;        /* Current pointer           */
         SHRD_TRACE  *shrdtracex;        /* End of trace table        */
         int          shrdtracen;        /* Number of entries         */
+        bool         shrddtax;          /* true=dump table at exit   */
 #endif
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
@@ -1175,6 +1186,7 @@ struct DEVBLK {                         /* Device configuration block*/
 #endif // defined( OPTION_SHARED_DEVICES )
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
+                                        /* 1=Connected to remote dev */
                 readpending:2,          /* 1=Console read pending    */
                 connecting:1,           /* 1=Connecting to remote    */
                 localhost:1,            /* 1=Remote is local         */

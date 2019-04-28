@@ -154,37 +154,6 @@
 #define DIAGCTL_MAINT_QUERY     0x12    /* Media Maintenance Query   */
 
 /*-------------------------------------------------------------------*/
-/* Definitions for sense data format codes and message codes         */
-/*-------------------------------------------------------------------*/
-#define FORMAT_0                0       /* Program or System Checks  */
-#define FORMAT_1                1       /* Device Equipment Checks   */
-#define FORMAT_2                2       /* 3990 Equipment Checks     */
-#define FORMAT_3                3       /* 3990 Control Checks       */
-#define FORMAT_4                4       /* Data Checks               */
-#define FORMAT_5                5       /* Data Check + Displacement */
-#define FORMAT_6                6       /* Usage Stats/Overrun Errors*/
-#define FORMAT_7                7       /* Device Control Checks     */
-#define FORMAT_8                8       /* Device Equipment Checks   */
-#define FORMAT_9                9       /* Device Rd/Wrt/Seek Checks */
-#define FORMAT_F                15      /* Cache Storage Checks      */
-#define MESSAGE_0               0       /* Message 0                 */
-#define MESSAGE_1               1       /* Message 1                 */
-#define MESSAGE_2               2       /* Message 2                 */
-#define MESSAGE_3               3       /* Message 3                 */
-#define MESSAGE_4               4       /* Message 4                 */
-#define MESSAGE_5               5       /* Message 5                 */
-#define MESSAGE_6               6       /* Message 6                 */
-#define MESSAGE_7               7       /* Message 7                 */
-#define MESSAGE_8               8       /* Message 8                 */
-#define MESSAGE_9               9       /* Message 9                 */
-#define MESSAGE_A               10      /* Message A                 */
-#define MESSAGE_B               11      /* Message B                 */
-#define MESSAGE_C               12      /* Message C                 */
-#define MESSAGE_D               13      /* Message D                 */
-#define MESSAGE_E               14      /* Message E                 */
-#define MESSAGE_F               15      /* Message F                 */
-
-/*-------------------------------------------------------------------*/
 /* Definitions for Read Configuration Data command                   */
 /*-------------------------------------------------------------------*/
 #define CONFIG_DATA_SIZE        256     /* Number of bytes returned
@@ -593,12 +562,6 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
     /* Restore the last character of the file name */
     *sfxptr = sfxchar;
 
-    /* Log the device geometry */
-    if (!dev->quiet)
-        // "%1d:%04X CKD file %s: cyls %d heads %d tracks %d trklen %d"
-        WRMSG( HHC00414, "I", LCSS_DEVNUM, filename,
-               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
-
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
@@ -608,6 +571,12 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
                filename, dev->devtype );
         return -1;
     }
+
+    /* Log the device geometry */
+    if (!dev->quiet)
+        // "%1d:%04X CKD file %s: model %s cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00414, "I", LCSS_DEVNUM, filename, dev->ckdtab->name,
+               dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Locate the CKD control unit dasd table entry */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
@@ -659,7 +628,8 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
 void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
-    CCKD_EXT    *cckd;
+    char       filename[ PATH_MAX + 1 ];/* full path or just name    */
+    CCKD_EXT*  cckd;                    /* CCKD Extension Block      */
 
     BEGIN_DEVICE_CLASS_QUERY( "DASD", dev, devclass, buflen, buffer );
 
@@ -671,7 +641,7 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
         {
             snprintf( buffer, buflen, "%s%s [%d cyls] [%d segs] IO[%"PRIu64"]",
                       dev->cckd64 ? "*64* " : "",
-                      dev->filename,
+                      filename,
                       dev->ckdcyls,
                       dev->ckdnumfd,
                       dev->excps );
@@ -680,7 +650,7 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
         {
             snprintf( buffer, buflen, "%s%s [%d cyls] IO[%"PRIu64"]",
                       dev->cckd64 ? "*64* " : "",
-                      dev->filename,
+                      filename,
                       dev->ckdcyls,
                       dev->excps );
         }
@@ -689,7 +659,7 @@ void ckd_dasd_query_device (DEVBLK *dev, char **devclass,
     {
         snprintf( buffer, buflen, "%s%s [%d cyls] [%d sfs] IO[%"PRIu64"]",
                   dev->cckd64 ? "*64* " : "",
-                  dev->filename,
+                  filename,
                   dev->ckdcyls,
                   cckd->sfn,
                   dev->excps );
@@ -707,7 +677,7 @@ int             trk;                    /* Cached track              */
 DEVBLK         *dev = data;             /* -> device block           */
 
     UNREFERENCED(answer);
-    UNREFERENCED( trk ); // (silence "set but not used" warning) 
+    UNREFERENCED( trk ); // (silence "set but not used" warning)
     CKD_CACHE_GETKEY(i, devnum, trk);
     if (dev->devnum == devnum)
         cache_release (ix, i, CACHE_FREEBUF);
@@ -4639,7 +4609,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             dev->ckdloper = iobuf[44];
             /* Bytes 2-3 contain the extent block size */
             xblksz = (iobuf[14] << 8) | iobuf[15];
-        
+
             /* If extent block size is zero then use the maximum R0
                record length (as returned in device characteristics
                bytes 44 and 45) plus 8 */
@@ -4809,7 +4779,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             memcpy(cchhr, iobuf + 8, 5);
         else
             memcpy(cchhr, iobuf + 52, 5);
-        
+
         /* Byte 13 contains the sector number */
         sector = iobuf[13];
 

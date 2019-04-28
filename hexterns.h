@@ -47,7 +47,6 @@ BLDC_DLL_IMPORT const char* init_sysblk_netdev();
 
 /* Functions in module script.c */
 SCRI_DLL_IMPORT int process_config (const char *fname);
-SCRI_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 
 /* Functions in module config.c */
 void release_config ( void* );
@@ -70,6 +69,8 @@ int  configure_xstorage(U64);
 U64  adjust_mainsize( int archnum, U64 mainsize );
 
 int  configure_shrdport(U16 shrdport);
+SHR_DLL_IMPORT void shutdown_shared_server       ( void* unused );
+SHR_DLL_IMPORT void shutdown_shared_server_locked( void* unused );
 #define MAX_ARGS  1024                  /* Max argv[] array size     */
 int parse_and_attach_devices(const char *devnums,const char *devtype,int ac,char **av);
 CONF_DLL_IMPORT int parse_single_devnum(const char *spec, U16 *lcss, U16 *devnum);
@@ -181,7 +182,6 @@ HSYS_DLL_IMPORT  DBGT32TR*      debug_tt32_tracing;
 
 HSYS_DLL_IMPORT  HDLDBGCD*      debug_cd_cmd;
 HSYS_DLL_IMPORT  HDLDBGCPU*     debug_cpu_state;
-HSYS_DLL_IMPORT  HDLDBGCPU*     debug_watchdog_signal;
 HSYS_DLL_IMPORT  HDLDBGPGMI*    debug_program_interrupt;
 HSYS_DLL_IMPORT  HDLDBGDIAG*    debug_diagnose;
 
@@ -320,6 +320,9 @@ int     cfba64_read_block (DEVBLK *, int, BYTE *);
 int     cfba64_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 
 /* Functions in module cckdutil.c/cckdutil64.c */
+CCDU_DLL_IMPORT const char* comp_to_str( BYTE comp );
+CCDU_DLL_IMPORT const char* spc_typ_to_str( BYTE spc_typ );
+
 CCDU_DLL_IMPORT   int   cckd_swapend (DEVBLK *);
 CCDU_DLL_IMPORT   void  cckd_swapend_chdr ( CCKD_DEVHDR* );
 CCDU_DLL_IMPORT   void  cckd_swapend_l1   ( CCKD_L1ENT*, int num_L1tab );

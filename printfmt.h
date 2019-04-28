@@ -100,9 +100,11 @@
 #if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
  #define PTR_FMTx          "%16.16"PRIx64       // complete format spec
  #define PTR_FMTX          "%16.16"PRIX64       // complete format spec
+ #define PTR_CAST( p )     ((U64)(p))           // cast to printable
 #else
  #define PTR_FMTx           "%8.8" PRIx32       // complete format spec
  #define PTR_FMTX           "%8.8" PRIX32       // complete format spec
+ #define PTR_CAST( p )     ((U32)(p))           // cast to printable
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -112,12 +114,26 @@
 #if defined( _MSVC_ )
   #define TIDPAT             "%8.8"PRIx32       // complete format spec
   #define SCN_TIDPAT            "%"PRIx32       // complete format spec
+  #define TID_CAST( _tid )   ((U32)(_tid))      // cast to printable
 #elif defined( SIZEOF_PTHREAD_T ) && SIZEOF_PTHREAD_T >= 8
   #define TIDPAT           "%16.16"PRIx64       // complete format spec
   #define SCN_TIDPAT            "%"PRIx64       // complete format spec
+  #define TID_CAST( _tid )   ((U64)(_tid))      // cast to printable
 #else
   #define TIDPAT             "%8.8"PRIx32       // complete format spec
   #define SCN_TIDPAT            "%"PRIx32       // complete format spec
+  #define TID_CAST( _tid )   ((U32)(_tid))      // cast to printable
 #endif
+
+#define LOG_TID_BEGIN( _tid, _name ) \
+    WRMSG( HHC00100, "I", \
+        TID_CAST( _tid ), get_thread_priority_id( _tid ), _name );
+
+#define LOG_TID_END( _tid, _name ) \
+    WRMSG( HHC00101, "I", \
+        TID_CAST( _tid ), get_thread_priority_id( _tid ), _name );
+
+#define LOG_THREAD_BEGIN( _name )   LOG_TID_BEGIN( thread_id(), _name )
+#define LOG_THREAD_END(   _name )   LOG_TID_END  ( thread_id(), _name )
 
 #endif // _PRINTFMT_H_

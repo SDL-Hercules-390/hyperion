@@ -12,24 +12,25 @@ Hercules's Rexx support provides support for the following two Rexx packages:
 
 
 Support for either package is not mutually exclusive of support for the other.
-Support for both packages is provided as long as the package's .h header file
-is found during build time.
 
-If the headers rexx.h and oorexxapi.h are found, then support for OORexx will
-be provided.  If the header rexxsaa.h is found, then support for Regina Rexx
-will be provided.  If all three headers are found, then support for both OORexx
-and Regina will be provided and you can then specify at runtime which one you
-want Hercules to use.
+Support for Open Object Rexx (ooRexx) is automatically provided as long as the
+package's rexx.h and oorexxapi.h header files are found during build time.  If
+the rexx.h and oorexxapi.h headers are found, then integrated OORexx support
+will be provided.  If you wish to have ooRexx installed on your system but do
+not want Hercules to provide integrated support for it, you must explicitly
+request that such support be disabled via the '--disable-object-rexx' option.
 
-On Linux, support for both packages are enabled by default but whether support
-is provided depends of course on whether the previously mentioned headers are
-found.  If either package is installed the headers should be found and support
-should be provided.
+Support for integrated Regina Rexx however, is NOT automatically provided and
+must instead be explicitly requested via the '--enable-regina-rexx' configure
+option at build time.  Even if the package's rexx.h and rexxsaa.h headers are
+found, support for integrated Regina Rexx will still NOT be provided.  Support
+is provided ONLY if the headers are found AND the '--enable-regina-rexx' option
+is specified.
 
-Support for either package can be disabled (Linux only) by simply specifying
-either the "--disable-object-rexx" and/or "--disable-regina-rexx" configure
-options at build time.  On Windows, the only way to purposely disable support
-is to rename the header file(s) to prevent Hercules from finding them.
+Support for either package can be enabled or disabled (Linux only) by simply
+specifying the appropriate "--disable-object-rexx" and/or "--enable-regina-rexx"
+configure option at build time.  On Windows, the only way to purposely disable
+support is to rename the header file(s) to prevent Hercules from finding them.
 
 
 -------------------------------------------------------------------------------

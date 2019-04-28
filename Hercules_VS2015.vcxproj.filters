@@ -249,6 +249,9 @@
     <ClCompile Include="cckdswap64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClCompile Include="cckdmap.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
     <ClCompile Include="convto64.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
@@ -636,9 +639,6 @@
     <ClCompile Include="hscutl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hscutl2.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hsocket.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -738,6 +738,9 @@
     <ClCompile Include="strsignal.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tcpip.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="timer.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -760,6 +763,9 @@
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="w32util.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="x75.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xstore.c">
@@ -999,6 +1005,12 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.TAPE">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="README.TCPIP">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="README.VMFPLC2">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="README.WIN64">
@@ -1625,6 +1637,9 @@
     <None Include="tests\bfp-023-threads.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\bim-001-add-sub.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1794,6 +1809,9 @@
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\bfp-023-threads.sptst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\bim-001-add-sub.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\cipher.tst">
@@ -1997,6 +2015,9 @@
     <None Include="tests\bfp-023-threads.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\bim-001-add-sub.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2076,6 +2097,9 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-023-threads.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bim-001-add-sub.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\pfpo.list">
@@ -2310,6 +2334,21 @@
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\CLCL-et-al.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CLCL.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCL.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCL.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCL.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCL.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="Hercules_VS2017.sln">
@@ -2686,6 +2725,9 @@
     <ClInclude Include="targetver.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tcpip.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="version.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
@@ -2699,6 +2741,9 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="w32util.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="x75.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="decNumber\include\decContext.h">

@@ -9,6 +9,20 @@
 #define _CCKD_H_
 
 /*-------------------------------------------------------------------*/
+/*  IMPORTANT PROGRAMMING NOTE: for whatever reason, base dasd       */
+/*  image files use a L2_trkoff value of zero in their L1tab entry   */
+/*  for non-existent tracks, whereas shadow files use a value of -1. */
+/*  To ensure we remain 100% compatible with all non-CCKD64 versions */
+/*  of Hercules, we MUST enforce this same inconsistent use design.  */
+/*-------------------------------------------------------------------*/
+
+#define CCKD_NOSIZE                 ((U32)0)
+#define CCKD_MAXSIZE                ((U32)MAX_OFFSET_T)
+
+#define CCKD_BASE_NO_OFFSET         CCKD_NOSIZE
+#define CCKD_SHADOW_NO_OFFSET       CCKD_MAXSIZE
+
+/*-------------------------------------------------------------------*/
 /*                    struct typedefs                                */
 /*-------------------------------------------------------------------*/
 typedef struct CKD_DEVHDR       CKD_DEVHDR;     // Device header
@@ -76,14 +90,14 @@ struct CKD_RECHDR {                     /* Record header             */
 #define CKD_RECHDR_SIZE         ((ssize_t)sizeof(CKD_RECHDR))
 
 /* Null track formats */
-#define CKD_NULLTRK_FMT0        0       /* ha r0 r1 eot              */
+#define CKD_NULLTRK_FMT0        0       /* ha r0 eof eot             */
 #define CKD_NULLTRK_FMT1        1       /* ha r0 eot                 */
 #define CKD_NULLTRK_FMT2        2       /* linux (3390 only)         */
 #define CKD_NULLTRK_FMTMAX      CKD_NULLTRK_FMT2
 
-#define CKD_NULLTRK_SIZE0       (5 + 8 + 8 + 8 + 8)
-#define CKD_NULLTRK_SIZE1       (5 + 8 + 8 + 8)
-#define CKD_NULLTRK_SIZE2       (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
+#define CKD_NULLTRK_SIZE0       (CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN + CKD_EOF_SIZE + CKD_ENDTRK_SIZE)
+#define CKD_NULLTRK_SIZE1       (CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN                + CKD_ENDTRK_SIZE)
+#define CKD_NULLTRK_SIZE2       (CKD_TRKHDR_SIZE + CKD_R0_SIZE + CKD_R0_DLEN + (12 * (CKD_RECHDR_SIZE + CKD_NULL_FMT2_DLEN)) + CKD_ENDTRK_SIZE)
 
 /*-------------------------------------------------------------------*/
 /*     Structure definitions for Compressed CCKD/CFBA devices        */
@@ -178,7 +192,7 @@ struct CCKD_RA {                        /* Readahead queue entry     */
 typedef  U32          CCKD_L1ENT;       /* Level 1 table entry       */
 typedef  CCKD_L1ENT   CCKD_L1TAB[];     /* Level 1 table             */
 typedef  CCKD_L2ENT   CCKD_L2TAB[256];  /* Level 2 table             */
-typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
+typedef  char         CCKD_ITRACE[256]; /* Trace table entry         */
 
 #define CCKD_DEVHDR_SIZE       ((ssize_t)sizeof(CCKD_DEVHDR))
 #define CCKD_L1ENT_SIZE        ((ssize_t)sizeof(CCKD_L1ENT))
@@ -195,38 +209,50 @@ typedef  char         CCKD_TRACE[128];  /* Trace table entry         */
 #define CCKD_SIZE_ANY          0x02     /* Space can be any size     */
 #define CCKD_L2SPACE           0x04     /* Space for a l2 table      */
 
-/* adjustable values */
+/* Adjustable values */
 
+#define CCKD_IFB_ENTS_INCR     1024     /* ifb entries per (re)alloc */
 #define CCKD_FREE_MIN_SIZE     96       /* Minimum free space size   */
-#define CCKD_FREE_MIN_INCR     32       /* Added for each 1024 spaces*/
+#define CCKD_FREE_MIN_INCR     32       /* Added for each ifb incr   */
+
 #define CCKD_COMPRESS_MIN      512      /* Track images smaller than
                                            this won't be compressed  */
 #define CCKD_MAX_SF            8        /* Maximum number of shadow
                                            files: 0 to 9 [0 disables
                                            shadow file support]      */
-#define CCKD_MAX_READAHEADS    16       /* Max readahead trks        */
-#define CCKD_MAX_RA_SIZE       16       /* Readahead queue size      */
-#define CCKD_MAX_RA            9        /* Max readahead threads     */
-#define CCKD_MAX_WRITER        9        /* Max writer threads        */
-#define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
-#define CCKD_DEF_TRACE         3        /* Def nbr trace entries     */
-#define CCKD_MAX_TRACE         200000   /* Max nbr trace entries     */
-#define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
 #define CCKD_MIN_READAHEADS    0        /* Min readahead trks        */
-#define CCKD_MIN_RA            0        /* Min readahead threads     */
-#define CCKD_MIN_WRITER        1        /* Min writer threads        */
-#define CCKD_MIN_GCOL          0        /* Min garbage collectors    */
+#define CCKD_DEF_READAHEADS    2        /* Def readahead trks        */
+#define CCKD_MAX_READAHEADS    16       /* Max readahead trks        */
 
 #define CCKD_DEF_RA_SIZE       4        /* Readahead queue size      */
-#define CCKD_DEF_RA            2        /* Default number readaheads */
-#define CCKD_DEF_WRITER        2        /* Default number writers    */
-#define CCKD_DEF_GCOL          1        /* Default number garbage
-                                              collectors             */
-#define CCKD_DEF_GCOLWAIT     10        /* Default wait (seconds)    */
-#define CCKD_DEF_GCOLPARM      0        /* Default adjustment parm   */
-#define CCKD_DEF_READAHEADS    2        /* Default nbr to read ahead */
-#define CCKD_DEF_FREEPEND     -1        /* Default freepend cycles   */
+#define CCKD_MAX_RA_SIZE       16       /* Readahead queue size      */
+
+#define CCKD_MIN_RA            0        /* Min readahead threads     */
+#define CCKD_DEF_RA            2        /* Def readahead threads     */
+#define CCKD_MAX_RA            9        /* Max readahead threads     */
+
+#define CCKD_MIN_WRITER        1        /* Min writer threads        */
+#define CCKD_DEF_WRITER        2        /* Def writer threads        */
+#define CCKD_MAX_WRITER        9        /* Max writer threads        */
+
+#define CCKD_MIN_GCOL          0        /* Min garbage collectors    */
+#define CCKD_DEF_GCOL          1        /* Def garbage collectors    */
+#define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
+
+#define CCKD_MIN_GCINT         0        /* Min collection interval   */
+#define CCKD_DEF_GCINT         10       /* Def collection interval   */
+#define CCKD_MAX_GCINT         60       /* Max collection interval   */
+
+#define CCKD_MIN_GCPARM       -8        /* Min gcol adjustment parm  */
+#define CCKD_DEF_GCPARM        0        /* Def gcol adjustment parm  */
+#define CCKD_MAX_GCPARM       +8        /* max gcol adjustment parm  */
+
+#define CCKD_DEF_NUM_TRACE     64       /* Def nbr of trace entries  */
+#define CCKD_MAX_NUM_TRACE     262144   /* Max nbr of trace entries  */
+
+#define CCKD_DEF_FREEPEND     -1        /* Def free pending cycles   */
+#define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
 /*-------------------------------------------------------------------*/
 /*                   Global CCKD dasd block                          */
@@ -237,6 +263,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         unsigned int     batch:1,       /* 1=called in batch mode    */
                          debug:1,       /* 1=CCW trace debug msgs    */
+                         dtax:1,        /* 1=Dump Table At Exit      */
                          sfmerge:1,     /* 1=sf-* merge              */
                          sfforce:1;     /* 1=sf-* force              */
         int              sflevel;       /* sfk xxxx level            */
@@ -251,7 +278,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              gcs;           /* Number garbage collector threads started */
         int              gca;           /* Number garbage collector threads active */
         int              gcmax;         /* Max garbage collectors    */
-        int              gcwait;        /* Wait time in seconds      */
+        int              gcint;         /* Wait time in seconds      */
         int              gcparm;        /* Adjustment parm           */
 
         LOCK             wrlock;        /* I/O lock                  */
@@ -306,13 +333,21 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         U64              stats_gcolmoves;      /* Spaces moved       */
         U64              stats_gcolbytes;      /* Bytes moved        */
 
-        CCKD_TRACE      *itrace;        /* Internal trace table      */
-        CCKD_TRACE      *itracep;       /* Current pointer           */
-        CCKD_TRACE      *itracex;       /* End of trace table        */
-        int              itracen;       /* Number of entries         */
+        LOCK             trclock;       /* Internal trace table lock */
+        CCKD_ITRACE     *itrace;        /* Internal trace table      */
+        CCKD_ITRACE     *itracep;       /* Current pointer           */
+        CCKD_ITRACE     *itracex;       /* End of trace table        */
+        int              itracen;       /* Table size in #of entries */
+        int              itracec;       /* How many entries are used */
 
         int              bytemsgs;      /* Limit for `byte 0' msgs   */
 };
+
+#define OBTAIN_TRACE_LOCK()     obtain_lock(  &cckdblk.trclock )
+#define RELEASE_TRACE_LOCK()    release_lock( &cckdblk.trclock )
+
+#define CCKD_TRACE( fmt, ... ) \
+    cckd_trace( __FUNCTION__, __LINE__, dev, fmt, ## __VA_ARGS__ )
 
 /*-------------------------------------------------------------------*/
 /*                   CCKD Extension Block                            */
@@ -353,13 +388,13 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
 
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
-        unsigned int     freemin;       /* Minimum free space size   */
-        CCKD_IFREEBLK   *ifb;           /* Internal free space chain */
 
-        int              free_count;    /* Number free space entries */
+        CCKD_IFREEBLK   *ifb;           /* Internal free space chain */
+        int              free_count;    /* Number of entries in chain*/
         int              free_idx1st;   /* Index of 1st entry        */
         int              free_idxlast;  /* Index of last entry       */
         int              free_idxavail; /* Index of available entry  */
+        unsigned int     free_minsize;  /* Minimum free space size   */
 
         int              lastsync;      /* Time of last sync         */
 
@@ -386,6 +421,10 @@ struct CCKD_EXT {                       /* Ext for compressed ckd    */
         CCKD_DEVHDR      cdevhdr[CCKD_MAX_SF+1]; /* cckd device hdr  */
 };
 
+#define CCKD_MIN_FREESIZE( free_count )     (CCKD_FREE_MIN_SIZE +   \
+      free_count < CCKD_IFB_ENTS_INCR ? 0 :                         \
+     (free_count / CCKD_IFB_ENTS_INCR) * CCKD_FREE_MIN_INCR)
+
 #define CCKD_OPEN_NONE         0
 #define CCKD_OPEN_RO           1
 #define CCKD_OPEN_RD           2
@@ -398,20 +437,56 @@ struct SPCTAB
 {
     BYTE        spc_typ;                /* Type of space             */
     int         spc_val;                /* Value for space           */
+    int         spc_val2;               /* Another value for space   */
     U32         spc_off;                /* Space offset              */
     U32         spc_len;                /* Space length              */
     U32         spc_siz;                /* Space size                */
 };
 
-#define SPCTAB_NONE     0               /* Ignore this space entry   */
-#define SPCTAB_DEVHDR   1               /* Space is device header    */
-#define SPCTAB_CDEVHDR  2               /* Space is compressed hdr   */
-#define SPCTAB_L1       3               /* Space is level 1 table    */
-#define SPCTAB_L2       4               /* Space is level 2 table    */
-#define SPCTAB_TRK      5               /* Space is track image      */
-#define SPCTAB_BLKGRP   6               /* Space is blkgrp image     */
-#define SPCTAB_FREE     7               /* Space is free block       */
-#define SPCTAB_EOF      8               /* Space is end-of-file      */
+#define SPCTAB_NONE            0        /* Ignore this space entry   */
+#define SPCTAB_DEVHDR          1        /* Space is device header    */
+#define SPCTAB_CDEVHDR         2        /* Space is compressed hdr   */
+#define SPCTAB_L1              3        /* Space is level 1 table    */
+#define SPCTAB_L2              4        /* Space is level 2 table    */
+#define SPCTAB_TRK             5        /* Space is track image      */
+#define SPCTAB_BLKGRP          6        /* Space is blkgrp image     */
+#define SPCTAB_FREE            7        /* Space is free block       */
+#define SPCTAB_EOF             8        /* Space is end-of-file      */
+#define SPCTAB_L2LOWER         9        /* Space is L2 lower bound   */
+#define SPCTAB_L2UPPER        10        /* Space is L2 upper bound   */
+#define SPCTAB_DATA           11        /* Space is track/block data */
+
+/*-------------------------------------------------------------------*/
+/* Definitions for sense data format codes and message codes         */
+/*-------------------------------------------------------------------*/
+#define FORMAT_0                0       /* Program or System Checks  */
+#define FORMAT_1                1       /* Device Equipment Checks   */
+#define FORMAT_2                2       /* 3990 Equipment Checks     */
+#define FORMAT_3                3       /* 3990 Control Checks       */
+#define FORMAT_4                4       /* Data Checks               */
+#define FORMAT_5                5       /* Data Check + Displacement */
+#define FORMAT_6                6       /* Usage Stats/Overrun Errors*/
+#define FORMAT_7                7       /* Device Control Checks     */
+#define FORMAT_8                8       /* Device Equipment Checks   */
+#define FORMAT_9                9       /* Device Rd/Wrt/Seek Checks */
+#define FORMAT_F                15      /* Cache Storage Checks      */
+
+#define MESSAGE_0               0       /* Message 0                 */
+#define MESSAGE_1               1       /* Message 1                 */
+#define MESSAGE_2               2       /* Message 2                 */
+#define MESSAGE_3               3       /* Message 3                 */
+#define MESSAGE_4               4       /* Message 4                 */
+#define MESSAGE_5               5       /* Message 5                 */
+#define MESSAGE_6               6       /* Message 6                 */
+#define MESSAGE_7               7       /* Message 7                 */
+#define MESSAGE_8               8       /* Message 8                 */
+#define MESSAGE_9               9       /* Message 9                 */
+#define MESSAGE_A               10      /* Message A                 */
+#define MESSAGE_B               11      /* Message B                 */
+#define MESSAGE_C               12      /* Message C                 */
+#define MESSAGE_D               13      /* Message D                 */
+#define MESSAGE_E               14      /* Message E                 */
+#define MESSAGE_F               15      /* Message F                 */
 
 /*-------------------------------------------------------------------*/
 /*                 CCKD64 structs and definitions                    */

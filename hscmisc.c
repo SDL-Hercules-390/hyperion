@@ -2549,7 +2549,11 @@ char    regs_msg_buf[4*512] = {0};
             ((inst[1] >= 0x20 && inst[1] <= 0x2F)
             || (inst[1] >= 0x40 && inst[1] <= 0x6F)
             || (inst[1] >= 0xA0 && inst[1] <= 0xAF)))
-        || opcode == 0xB9)
+        || (opcode == 0xB9 &&
+            (0
+            || (inst[1] == 0x05)    /*LURAG*/
+            || (inst[1] == 0x25)    /*STURG*/
+            || (inst[1] >= 0x31)))) /*FIXME : Needs more specifics ! */
     {
         b1 = inst[3] >> 4;
         addr1 = regs->GR(b1) & ADDRESS_MAXWRAP(regs);
@@ -2557,10 +2561,7 @@ char    regs_msg_buf[4*512] = {0};
         if (inst[1] >= 0x29 && inst[1] <= 0x2C)
             addr2 = regs->GR(b2) & ADDRESS_MAXWRAP_E(regs);
         else
-        if (inst[1] >= 0x29 && inst[1] <= 0x2C)
             addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
-        else
-        addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
     }
 
     /* Calculate the operand address for RIL_A instructions */

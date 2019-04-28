@@ -11,7 +11,6 @@
 /* It also contains function prototypes for the DASD table utilities.*/
 /*-------------------------------------------------------------------*/
 
-
 #ifndef _DASDTAB_H
 #define _DASDTAB_H
 
@@ -39,7 +38,7 @@
 /* Definition of a CKD DASD device entry                             */
 /*-------------------------------------------------------------------*/
 typedef struct _CKDDEV {                /* CKD Device table entry    */
-        char   *name;                   /* Device name               */
+  const char   *name;                   /* Device name               */
         U16     devt;                   /* Device type               */
         BYTE    model;                  /* Device model              */
         BYTE    devclass;               /* Device class              */

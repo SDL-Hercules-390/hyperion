@@ -176,11 +176,12 @@ int     i;                              /* Array subscript           */
 static void cardpch_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
 
     BEGIN_DEVICE_CLASS_QUERY( "PCH", dev, devclass, buflen, buffer );
 
     snprintf (buffer, buflen, "%s%s%s%s%s IO[%"PRIu64"]",
-                dev->filename,
+                filename,
                 (dev->ascii                ? " ascii"     : " ebcdic"),
                 ((dev->ascii && dev->crlf) ? " crlf"      : ""),
                 (dev->append               ? " append"    : ""),

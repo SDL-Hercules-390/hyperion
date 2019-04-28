@@ -12,19 +12,25 @@
 #include "hercules.h"
 #include "opcode.h"
 
-#if !defined(_SCEDASD_C)
+/*-------------------------------------------------------------------*/
+/*                non-ARCH_DEP helper functions                      */
+/*              compiled only once, the first time                   */
+/*-------------------------------------------------------------------*/
+
+#ifndef _SCEDASD_C
 #define _SCEDASD_C
 
-static TID     scedio_tid;             /* Thread id of the i/o driver
-                                                                     */
-static char *sce_basedir = NULL;
+static TID    scedio_tid;             /* Thread id of the i/o driver */
+static char*  sce_basedir = NULL;     /* base directory for SCE load */
 
+/*-------------------------------------------------------------------*/
 
 char *get_sce_dir()
 {
     return sce_basedir;
 }
 
+/*-------------------------------------------------------------------*/
 
 void set_sce_dir(char *path)
 {
@@ -53,6 +59,7 @@ char tempdir[MAX_PATH];
         }
 }
 
+/*-------------------------------------------------------------------*/
 
 static char *set_sce_basedir(char *path)
 {
@@ -87,6 +94,7 @@ char tempdir[MAX_PATH];
     }
 }
 
+/*-------------------------------------------------------------------*/
 
 static char *check_sce_filepath(const char *path, char *fullpath)
 {
@@ -123,11 +131,27 @@ char tempreal[MAX_PATH];
     return fullpath;
 }
 
+/*-------------------------------------------------------------------*/
+
 #define    CHUNKSIZE   (64 * 1024 * 1024)
 CASSERT(   CHUNKSIZE < (INT_MAX - PAGEFRAME_PAGESIZE), scedasd_c );
 CASSERT( !(CHUNKSIZE &            PAGEFRAME_BYTEMASK), scedasd_c );
 
-#endif /* !defined(_SCEDASD_C) */
+#endif /* #ifndef _SCEDASD_C */
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
 /* Function to Load (read) specified file into absolute main storage */
@@ -347,7 +371,7 @@ int     rc = 0;                         /* Return codes (work)       */
 } /* end function load_hmc */
 
 
-#if defined(FEATURE_SCEDIO)
+#if defined( FEATURE_SCEDIO )
 
 /*-------------------------------------------------------------------*/
 /* Function to write to a file on the service processor disk         */
@@ -545,6 +569,7 @@ eof:
     return totread;
 }
 
+/*-------------------------------------------------------------------*/
 
 static int ARCH_DEP(scedio_ior)(SCCB_SCEDIOR_BK *scedior_bk)
 {
@@ -574,6 +599,7 @@ char filename[MAX_PATH];
     return (size >= 0) ? TRUE : FALSE;
 }
 
+/*-------------------------------------------------------------------*/
 
 static int ARCH_DEP(scedio_iov)(SCCB_SCEDIOV_BK *scediov_bk)
 {
@@ -781,27 +807,6 @@ static int scedio_pending;
     }
     else
     {
-#if !defined(NO_SIGABEND_HANDLER)
-        switch(scedio_bk->flag1) {
-            case SCCB_SCEDIO_FLG1_IOV:
-                scediov_bk = (SCCB_SCEDIOV_BK*)(scedio_bk + 1);
-                switch(scediov_bk->type) {
-                    case SCCB_SCEDIOV_TYPE_INIT:
-                        /* Kill the scedio thread if it is active */
-                        if( scedio_tid )
-                        {
-                            OBTAIN_INTLOCK(NULL);
-                            signal_thread(scedio_tid, SIGKILL);
-                            scedio_tid = 0;
-                            scedio_pending = 0;
-                            RELEASE_INTLOCK(NULL);
-                        }
-                        break;
-                }
-                break;
-        }
-#endif
-
         /* Take a copy of the scedio_bk in the SCCB */
         static_scedio_bk.scedio_bk = *scedio_bk;
         switch(scedio_bk->flag1) {
@@ -885,21 +890,41 @@ U16 evd_len;
 
 }
 
-#endif /*defined(FEATURE_SCEDIO)*/
+#endif /* defined( FEATURE_SCEDIO ) */
 
 
-#if !defined(_GEN_ARCH)
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "scedasd.c"
-#endif
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "scedasd.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "scedasd.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "scedasd.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
 
 
 /*-------------------------------------------------------------------*/

@@ -17,26 +17,35 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "inline.h"
 #include "service.h"
 
-#if defined(_FEATURE_HARDWARE_LOADER)
+#if defined( _FEATURE_HARDWARE_LOADER )
 
-#if !defined(_SCEHWL_C)
+/*-------------------------------------------------------------------*/
+/*                non-ARCH_DEP helper functions                      */
+/*              compiled only once, the first time                   */
+/*-------------------------------------------------------------------*/
 
+#ifndef _SCEHWL_C
 #define _SCEHWL_C
+
 #define BOOT_PARM_ADDR             0x01FFD000
 #define SDIAS_STORE_STATUS_MAXSIZE 0x02000000
 #define HWL_MAXFILETYPE            8    /* Number of supported files */
 
-
-/* Store Status data retrieval request */
-typedef struct _SCSI_BOOT_BK {
+/*-------------------------------------------------------------------*/
+/*                     SCSI Boot Request                             */
+/*-------------------------------------------------------------------*/
+typedef struct _SCSI_BOOT_BK
+{
 /*000*/ FWORD   xml_off;                /* Offset to XML data        */
 /*004*/ FWORD   resv004;
 /*008*/ FWORD   scp_off;                /* Offset to SCP data        */
 /*00C*/ FWORD   resv00c;
 /*010*/ FWORD   resv010[78];
 /*148*/ BYTE    ldind;                  /* Load/Dump indicator       */
+
 #define SCSI_BOOT_LDIND_LOAD     0x10
 #define SCSI_BOOT_LDIND_DUMP     0x20
+
 /*149*/ BYTE    resv149[3];
 /*14C*/ HWORD   resv14c;
 /*14E*/ HWORD   devno;                  /* Device Number             */
@@ -48,27 +57,40 @@ typedef struct _SCSI_BOOT_BK {
 /*174*/ DBLWRD  brlba;                  /* br_lba                    */
 /*17C*/ FWORD   scp_len;                /* Length of SCP Data        */
 /*180*/ FWORD   resv180[65];
-    } SCSI_BOOT_BK;
+}
+SCSI_BOOT_BK;
 
-
-/* Store Status data retrieval request */
-typedef struct _SCCB_SDIAS_BK {
+/*-------------------------------------------------------------------*/
+/*                Store Data In Absolute Storage                     */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_SDIAS_BK
+{
 /*006*/ BYTE    event_qual;
+
 #define SCCB_SDIAS_ENVENTQUAL_EQ_INFO 0x01
 #define SCCB_SDIAS_ENVENTQUAL_EQ_READ 0x00
+
 /*007*/ BYTE    data_id;
+
 #define SCCB_SDIAS_DATAID_FCPDUMP     0x00
+
 /*008*/ DBLWRD  reserved2;
 /*010*/ FWORD   event_id;
+
 #define SCCB_SDIAS_ENVENTID_4712      4712
+
 /*014*/ HWORD   reserved3;
 /*016*/ BYTE    asa_size;
+
 #define SCCB_SDIAS_ASASIZE_32         0x00
 #define SCCB_SDIAS_ASASIZE_64         0x01
+
 /*017*/ BYTE    event_status;
+
 #define SCCB_SDIAS_STATUS_ALL_STORED  0x00
 #define SCCB_SDIAS_STATUS_PART_STORED 0x03
 #define SCCB_SDIAS_STATUS_NO_DATA     0x10
+
 /*018*/ FWORD   reserved4;
 /*01C*/ FWORD   blk_cnt;
 /*020*/ DBLWRD  asa;
@@ -78,18 +100,26 @@ typedef struct _SCCB_SDIAS_BK {
 /*034*/ FWORD   lbn;
 /*038*/ HWORD   reserved7;
 /*03A*/ HWORD   dbs;
+
 #define SCCB_SDIAS_DBS_1              0x01
-    } SCCB_SDIAS_BK;
+}
+SCCB_SDIAS_BK;
 
-
-/* Hardware load request */
-typedef struct _SCCB_HWL_BK {
+/*-------------------------------------------------------------------*/
+/*                   Hardware load request                           */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_HWL_BK
+{
 /*006*/ BYTE    type;
+
 #define SCCB_HWL_TYPE_LOAD      0x00    /* Load request              */
 #define SCCB_HWL_TYPE_RESET     0x01    /* Reset request             */
 #define SCCB_HWL_TYPE_INFO      0x02    /* Load info request         */
+
 /*007*/ BYTE    file;
+
 #define SCCB_HWL_FILE_SCSIBOOT  0x02    /* SCSI Boot Loader          */
+
 /*008*/ FWORD   resv1[2];
 /*010*/ FWORD   hwl;                    /* Pointer to HWL BK         */
 /*014*/ HWORD   resv2;
@@ -98,39 +128,58 @@ typedef struct _SCCB_HWL_BK {
 /*018*/ DBLWRD  sto;                    /* Segment Table Origin      */
 /*020*/ FWORD   resv4[3];
 /*02C*/ FWORD   size;                   /* Length in 4K pages        */
-    } SCCB_HWL_BK;
+}
+SCCB_HWL_BK;
 
+/*-------------------------------------------------------------------*/
 
-struct name2file {
-    char *name;
-    unsigned int file;
-    };
+struct name2file
+{
+    const char*   name;
+    unsigned int  file;
+};
 
-
-struct name2file n2flist[] = {
+struct name2file  n2flist[]  =
+{
     { "scsiboot", SCCB_HWL_FILE_SCSIBOOT },
+
 #if 0
     { "netboot",  7 }, // Hercules implementation of PXE style netboot for OSA
 #endif
-    { NULL, 0 } };
 
+    { NULL, 0 }     // (end of list)
+};
 
-static U64 scsi_lddev_wwpn[2];
-static U64 scsi_lddev_lun[2];
-static U32 scsi_lddev_prog[2];
-static U64 scsi_lddev_brlba[2];
-static BYTE *scsi_lddev_scpdata[2];
+/*-------------------------------------------------------------------*/
 
-static TID   hwl_tid;                   /* Thread id of the hardware
-                                           loader                    */
-static char  *hwl_fn[HWL_MAXFILETYPE];  /* Files by type             */
+static U64    scsi_lddev_wwpn    [2];   // [0] = LOAD, [1] = DUMP
+static U64    scsi_lddev_lun     [2];   // [0] = LOAD, [1] = DUMP
+static U32    scsi_lddev_prog    [2];   // [0] = LOAD, [1] = DUMP
+static U64    scsi_lddev_brlba   [2];   // [0] = LOAD, [1] = DUMP
+static BYTE*  scsi_lddev_scpdata [2];   // [0] = LOAD, [1] = DUMP
 
-#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+static TID    hwl_tid;                  /* Thread id of HW loader    */
+static char*  hwl_fn [HWL_MAXFILETYPE]; /* Files by type             */
 
-#endif /*!defined(_SCEHWL_C)*/
+#endif /* #ifndef _SCEHWL_C */
 
+#endif /* defined( _FEATURE_HARDWARE_LOADER ) */
 
-#if defined(FEATURE_HARDWARE_LOADER)
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+#if defined( FEATURE_HARDWARE_LOADER )
 /*-------------------------------------------------------------------*/
 /* Funtion to load file to main storage                              */
 /*-------------------------------------------------------------------*/
@@ -144,12 +193,13 @@ int fd;
     fd = open (hwl_fn[hwl_bk->file], O_RDONLY|O_BINARY);
     if (fd < 0)
     {
-        LOGMSG( "HHCHL002I %s open error: %s\n",
-            hwl_fn[hwl_bk->file], strerror( errno ));
+        // "%s open error: %s"
+        WRMSG( HHC00650, "E", hwl_fn[ hwl_bk->file ], strerror( errno ));
         return;
     }
-//  else
-//      LOGMSG( "HHCHL004I Loading %s\n", hwl_fn[ hwl_bk->file ]);
+    else
+        // "Loading %s"
+        WRMSG( HHC00651, "I", hwl_fn[ hwl_bk->file ]);
 
     FETCH_FW(size,hwl_bk->size);
 
@@ -256,8 +306,8 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
                     STORE_FW(hwl_bk->size,size);
                 }
                 else
-                    LOGMSG( "HHCHL001I Hardware loader %s: %s\n",
-                        hwl_fn[ hwl_bk->file ], strerror( errno ));
+                    // "Hardware loader %s: %s"
+                    WRMSG( HHC00652, "E", hwl_fn[ hwl_bk->file ], strerror( errno ));
             }
             break;
 
@@ -275,9 +325,9 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
         }
 
     }
-//  else
-//      LOGMSG( "HHCHL005I Hardware loader file type %d not not supported\n",
-//             hwl_bk->file );
+    else
+        // "Hardware loader file type %d not not supported"
+        WRMSG( HHC00653, "E", hwl_bk->file );
 
     hwl_tid = 0;
 
@@ -343,26 +393,9 @@ static int hwl_pending;
 
         return 0;
 
-
-#if !defined(NO_SIGABEND_HANDLER)
-    case SCCB_HWL_TYPE_RESET:
-
-        /* Kill the hwl thread if it is active */
-        if( hwl_tid )
-        {
-            OBTAIN_INTLOCK(NULL);
-            signal_thread(hwl_tid, SIGKILL);
-            hwl_tid = 0;
-            hwl_pending = 0;
-            RELEASE_INTLOCK(NULL);
-        }
-        return 0;
-#endif
-
-
     default:
-        LOGMSG( "HHCHL003I Unknown hardware loader request type %2.2X\n",
-            hwl_bk->type );
+        // "Unknown hardware loader request type %2.2X"
+        WRMSG( HHC00654, "E", hwl_bk->type );
         return -1;
     }
 }
@@ -501,10 +534,11 @@ U16 evd_len;
     sccb->resp = SCCB_RESP_BACKOUT;
 #endif
 }
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
+#endif /* defined( FEATURE_HARDWARE_LOADER ) */
 
 
-#if defined(_FEATURE_HARDWARE_LOADER)
+#if defined( _FEATURE_HARDWARE_LOADER )
+
 static BYTE *sdias_hsa;
 static U32   sdias_size;
 
@@ -539,12 +573,13 @@ void ARCH_DEP(sdias_store_status)(REGS *regs)
     if(sdias_hsa)
         memcpy(sdias_hsa,sysblk.mainstor,sdias_size);
     else
-        LOGMSG( "HHCSB010 Store Status save to HSA failed\n" );
+        // "Store Status save to HSA failed"
+        WRMSG( HHC00655, "E" );
 }
-#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+#endif /* defined( _FEATURE_HARDWARE_LOADER ) */
 
 
-#if defined(_FEATURE_SCSI_IPL)
+#if defined( _FEATURE_SCSI_IPL )
 /*-------------------------------------------------------------------*/
 /* Function to store boot parameters in main storage                 */
 /*-------------------------------------------------------------------*/
@@ -636,8 +671,8 @@ int bootfile;
 
     if( ARCH_DEP(load_main) (hwl_fn[bootfile], 0, 0) < 0)
     {
-        LOGMSG( "HHCSB010 Cannot load bootstrap loader %s: %s\n",
-            hwl_fn[ bootfile ], strerror( errno ));
+        // "Cannot load bootstrap loader %s: %s"
+        WRMSG( HHC00656, "E", hwl_fn[ bootfile ], strerror( errno ));
         return -1;
     }
     sysblk.main_clear = sysblk.xpnd_clear = 0;
@@ -648,26 +683,46 @@ int bootfile;
     return ARCH_DEP(common_load_finish)(regs);
 }
 
-
-#endif /*defined(_FEATURE_SCSI_IPL)*/
-
-
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "scescsi.c"
-#endif
-
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "scescsi.c"
-#endif
+#endif /* defined( _FEATURE_SCSI_IPL ) */
 
 
-#if defined(_FEATURE_HARDWARE_LOADER)
-static char *file2name(unsigned int file)
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "scescsi.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "scescsi.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+
+#if defined( _FEATURE_HARDWARE_LOADER )
+static const char *file2name(unsigned int file)
 {
 struct name2file *ntf;
 static char name[8];
@@ -708,7 +763,8 @@ int n;
         {
             if(!ntf->name)
             {
-                LOGMSG( "HHCSB001 Invalid file %s\n", argv[1] );
+                // "Invalid file %s"
+                WRMSG( HHC00657, "E", argv[1] );
                 return -1;
             }
         }
@@ -728,31 +784,35 @@ int n;
         }
         else
         {
-            LOGMSG( "%-8s %s\n", file2name( file ), hwl_fn[ file ]);
+            // "%-8s %s"
+            WRMSG( HHC00660, "I", file2name( file ), hwl_fn[ file ]);
             return 0;
         }
     }
     else
         for(file = 0; file < HWL_MAXFILETYPE; file++)
             if(hwl_fn[file])
-                LOGMSG( "%-8s %s\n", file2name( file ), hwl_fn[ file ]);
+                // "%-8s %s"
+                WRMSG( HHC00660, "I", file2name( file ), hwl_fn[ file ]);
 
     return 0;
 }
-#endif /*defined(_FEATURE_HARDWARE_LOADER)*/
+#endif /* defined( _FEATURE_HARDWARE_LOADER ) */
 
-#if defined(_FEATURE_SCSI_IPL)
+
+#if defined( _FEATURE_SCSI_IPL )
 /*-------------------------------------------------------------------*/
-/* loaddv / dumpdev commands to specify boot parameters              */
+/* loaddev / dumpdev commands to specify boot parameters             */
 /*-------------------------------------------------------------------*/
-int lddev_cmd(int argc, char *argv[], char *cmdline)
+int lddev_cmd( int argc, char* argv[], char* cmdline )
 {
-int  i;
-char c;
-int  ldind;  /* Load / Dump indicator */
+    int  i;
+    char c;
+    int  ldind;     /* LOAD/DUMP indicator: [0] = LOAD, [1] = DUMP */
 
     UNREFERENCED(cmdline);
 
+    // [0] = LOAD, [1] = DUMP
     ldind = ((islower(*argv[0]) ? toupper(*argv[0]) : *argv[0] ) == 'L')
           ? 0 : 1;
 
@@ -764,25 +824,29 @@ int  ldind;  /* Load / Dump indicator */
             if(!strcasecmp("portname",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx64"%c", &scsi_lddev_wwpn[ldind], &c) != 1)
-                    LOGMSG( "HHCSB002 Invalid PORTNAME\n" );
+                    // "Invalid %s"
+                    WRMSG( HHC00670, "E", "PORTNAME" );
                 continue;
             }
             else if(!strcasecmp("lun",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx64"%c", &scsi_lddev_lun[ldind], &c) != 1)
-                    LOGMSG( "HHCSB003 Invalid LUN\n" );
+                    // "Invalid %s"
+                    WRMSG( HHC00670, "E", "LUN" );
                 continue;
             }
             else if(!strcasecmp("bootprog",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx32"%c", &scsi_lddev_prog[ldind], &c) != 1)
-                    LOGMSG( "HHCSB004 Invalid BOOTPROG\n" );
+                    // "Invalid %s"
+                    WRMSG( HHC00670, "E", "BOOTPROG" );
                 continue;
             }
             else if(!strcasecmp("br_lba",argv[i]) && (i+1) < argc)
             {
                 if(sscanf(argv[++i], "%"SCNx64"%c", &scsi_lddev_brlba[ldind], &c) != 1)
-                    LOGMSG( "HHCSB005 Invalid BR_LBA\n" );
+                    // "Invalid %s"
+                    WRMSG( HHC00670, "E", "BR_LBA" );
                 continue;
             }
             else if(!strcasecmp("scpdata",argv[i]) && (i+1) < argc)
@@ -797,23 +861,24 @@ int  ldind;  /* Load / Dump indicator */
             }
             else
             {
-                LOGMSG( "HHCSB006 Invalid option %s\n", argv[i] );
+                // "Invalid option %s"
+                WRMSG( HHC00671, "E", argv[i] );
                 return -1;
             }
         }
     }
     else
     {
-        if(scsi_lddev_wwpn[ldind])
-            LOGMSG( "portname %16.16"PRIx64"\n", scsi_lddev_wwpn[ ldind ]);
-        if(scsi_lddev_lun[ldind])
-            LOGMSG( "lun      %16.16"PRIx64"\n", scsi_lddev_lun[ ldind ]);
-        if(scsi_lddev_prog[ldind])
-            LOGMSG( "bootprog %8.8x\n", scsi_lddev_prog[ ldind ]);
-        if(scsi_lddev_brlba[ldind])
-            LOGMSG( "br_lba   %16.16"PRIx64"\n", scsi_lddev_brlba[ ldind ]);
-        if(scsi_lddev_scpdata[ldind])
-            LOGMSG( "scpdata  %s\n", scsi_lddev_scpdata[ ldind ]);
+        // "portname %16.16"PRIx64
+        // "lun      %16.16"PRIx64
+        // "bootprog %8.8x"
+        // "br_lba   %16.16"PRIx64
+        // "scpdata  %s"
+        if (scsi_lddev_wwpn   [ ldind ]) WRMSG( HHC00680, "I", scsi_lddev_wwpn   [ ldind ] );
+        if (scsi_lddev_lun    [ ldind ]) WRMSG( HHC00681, "I", scsi_lddev_lun    [ ldind ] );
+        if (scsi_lddev_prog   [ ldind ]) WRMSG( HHC00682, "I", scsi_lddev_prog   [ ldind ] );
+        if (scsi_lddev_brlba  [ ldind ]) WRMSG( HHC00683, "I", scsi_lddev_brlba  [ ldind ] );
+        if (scsi_lddev_scpdata[ ldind ]) WRMSG( HHC00684, "I", scsi_lddev_scpdata[ ldind ] );
     }
     return 0;
 }
@@ -885,6 +950,6 @@ int load_boot (DEVBLK *dev, int cpu, int clear, int ldind)
     return -1;
 }
 
-#endif /*defined(_FEATURE_SCSI_IPL)*/
+#endif /* defined( _FEATURE_SCSI_IPL ) */
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */

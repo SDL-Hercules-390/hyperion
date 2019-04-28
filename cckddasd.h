@@ -38,38 +38,6 @@ extern CCKD_L2ENT    empty_l2   [ CKD_NULLTRK_FMTMAX + 1 ][256];
 extern CCKD64_L2ENT  empty64_l2 [ CKD_NULLTRK_FMTMAX + 1 ][256];
 
 /*-------------------------------------------------------------------*/
-/* Definitions for sense data format codes and message codes         */
-/*-------------------------------------------------------------------*/
-#define FORMAT_0                0       /* Program or System Checks  */
-#define FORMAT_1                1       /* Device Equipment Checks   */
-#define FORMAT_2                2       /* 3990 Equipment Checks     */
-#define FORMAT_3                3       /* 3990 Control Checks       */
-#define FORMAT_4                4       /* Data Checks               */
-#define FORMAT_5                5       /* Data Check + Displacement */
-#define FORMAT_6                6       /* Usage Stats/Overrun Errors*/
-#define FORMAT_7                7       /* Device Control Checks     */
-#define FORMAT_8                8       /* Device Equipment Checks   */
-#define FORMAT_9                9       /* Device Rd/Wrt/Seek Checks */
-#define FORMAT_F                15      /* Cache Storage Checks      */
-
-#define MESSAGE_0               0       /* Message 0                 */
-#define MESSAGE_1               1       /* Message 1                 */
-#define MESSAGE_2               2       /* Message 2                 */
-#define MESSAGE_3               3       /* Message 3                 */
-#define MESSAGE_4               4       /* Message 4                 */
-#define MESSAGE_5               5       /* Message 5                 */
-#define MESSAGE_6               6       /* Message 6                 */
-#define MESSAGE_7               7       /* Message 7                 */
-#define MESSAGE_8               8       /* Message 8                 */
-#define MESSAGE_9               9       /* Message 9                 */
-#define MESSAGE_A               10      /* Message A                 */
-#define MESSAGE_B               11      /* Message B                 */
-#define MESSAGE_C               12      /* Message C                 */
-#define MESSAGE_D               13      /* Message D                 */
-#define MESSAGE_E               14      /* Message E                 */
-#define MESSAGE_F               15      /* Message F                 */
-
-/*-------------------------------------------------------------------*/
 /* Internal functions                                                */
 /*-------------------------------------------------------------------*/
 int     cckd_dasd_init(int argc, BYTE *argv[]);
@@ -99,10 +67,7 @@ int     cckd64_ftruncate(DEVBLK *dev, int sfx, U64 off);
 /*-------------------------------------------------------------------*/
 void   *cckd_malloc(DEVBLK *dev, char *id, size_t size);
 void   *cckd_calloc(DEVBLK *dev, char *id, size_t n, size_t size);
-/*-------------------------------------------------------------------*/
-void   *cckd64_malloc(DEVBLK *dev, char *id, U64 size);
-void   *cckd64_calloc(DEVBLK *dev, char *id, U64 n, U64 size);
-/*-------------------------------------------------------------------*/
+void   *cckd_realloc( DEVBLK *dev, char *id, void* p, size_t size );
 void   *cckd_free(DEVBLK *dev, char *id,void *p);
 int     cckd_read_track(DEVBLK *dev, int trk, BYTE *unitstat);
 int     cckd_update_track(DEVBLK *dev, int trk, int off,
@@ -249,8 +214,10 @@ CCKD_DLL_IMPORT   int     cckd_command(char *op, int cmd);
                   void    cckd_command_help();
                   void    cckd_command_opts();
                   void    cckd_command_stats();
-                  void    cckd_trace(DEVBLK *dev, char *msg, ...);
+                  void    cckd_trace( const char* func, int line,
+                                      DEVBLK* dev, char* fmt, ...);
 CCKD_DLL_IMPORT   void    cckd_print_itrace();
+CCKD_DLL_IMPORT   bool    cckd_dtax(); // Dump Table At Exit
 /*-------------------------------------------------------------------*/
 //KD64_DLL_IMPORT int     cckd64_command(char *op, int cmd);
 //                void    cckd64_command_help();

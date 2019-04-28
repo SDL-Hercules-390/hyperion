@@ -15,43 +15,15 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "hercules.h"
 #include "opcode.h"
 #include "devtype.h"
+#include "ccwarn.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-#define FBA_BLKGRP_SIZE (120*512)
+#if defined( OPTION_SHARED_DEVICES )
 
-/*-------------------------------------------------------------------*/
-/* Definitions for sense data format codes and message codes         */
-/*-------------------------------------------------------------------*/
-#define FORMAT_0                0       /* Program or System Checks  */
-#define FORMAT_1                1       /* Device Equipment Checks   */
-#define FORMAT_2                2       /* 3990 Equipment Checks     */
-#define FORMAT_3                3       /* 3990 Control Checks       */
-#define FORMAT_4                4       /* Data Checks               */
-#define FORMAT_5                5       /* Data Check + Displacement */
-#define FORMAT_6                6       /* Usage Stats/Overrun Errors*/
-#define FORMAT_7                7       /* Device Control Checks     */
-#define FORMAT_8                8       /* Device Equipment Checks   */
-#define FORMAT_9                9       /* Device Rd/Wrt/Seek Checks */
-#define FORMAT_F                15      /* Cache Storage Checks      */
-#define MESSAGE_0               0       /* Message 0                 */
-#define MESSAGE_1               1       /* Message 1                 */
-#define MESSAGE_2               2       /* Message 2                 */
-#define MESSAGE_3               3       /* Message 3                 */
-#define MESSAGE_4               4       /* Message 4                 */
-#define MESSAGE_5               5       /* Message 5                 */
-#define MESSAGE_6               6       /* Message 6                 */
-#define MESSAGE_7               7       /* Message 7                 */
-#define MESSAGE_8               8       /* Message 8                 */
-#define MESSAGE_9               9       /* Message 9                 */
-#define MESSAGE_A               10      /* Message A                 */
-#define MESSAGE_B               11      /* Message B                 */
-#define MESSAGE_C               12      /* Message C                 */
-#define MESSAGE_D               13      /* Message D                 */
-#define MESSAGE_E               14      /* Message E                 */
-#define MESSAGE_F               15      /* Message F                 */
-
-#if defined(OPTION_SHARED_DEVICES)
+/*-------------------------------------------------------------------
+ *                    Global variables
+ *-------------------------------------------------------------------*/
 
 DEVHND  shared_ckd_device_hndinfo;
 DEVHND  shared_fba_device_hndinfo;
@@ -88,7 +60,7 @@ int      i, j;                          /* Indexes                   */
             else
                 store_fw (dev->shrd[i]->purge[dev->shrd[i]->purgen++],
                           block);
-           shrdtrc(dev,"notify %d added for id=%d, n=%d\n",
+           SHRDTRACE("notify %d added for id=%d, n=%d",
                    block, dev->shrd[i]->id, dev->shrd[i]->purgen);
         }
 
@@ -119,16 +91,16 @@ FWORD    cyls;                          /* Remote number cylinders   */
 char    *p, buf[1024];                  /* Work buffer               */
 char    *strtok_str = NULL;             /* last position             */
 
-    retry = dev->connecting;
-
     /* Process the arguments */
-    if (!retry)
+    if (!(retry = dev->connecting))
     {
+        dev->connected = 0;             /* SHRD_CONNECT not done yet */
+
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
         STRLCPY( buf, argv[0] );
 
-        /* First argument is `ipname:port:devnum' */
+        /* First argument is 'ipname:port:devnum' */
         ipname = buf;
         if (strchr(ipname,'/') || strchr(ipname,'\\'))
             return -1;
@@ -210,7 +182,8 @@ char    *strtok_str = NULL;             /* last position             */
                 continue;
             }
 #endif
-            WRMSG (HHC00700, "S", argv[i], i + 1);
+            // "Shared: parameter %s in argument %d is invalid"
+            WRMSG( HHC00700, "S", argv[i], i + 1 );
             return -1;
         }
     }
@@ -235,7 +208,8 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            WRMSG (HHC00701, "W", LCSS_DEVNUM, dev->filename);
+            // "%1d:%04X Shared: connect pending to file %s"
+            WRMSG( HHC00701, "W", LCSS_DEVNUM, dev->filename );
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -252,7 +226,8 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00702, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving cylinders"
+        WRMSG( HHC00702, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->ckdcyls = fetch_fw (cyls);
@@ -264,7 +239,8 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        WRMSG (HHC00703, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving device characteristics"
+        WRMSG( HHC00703, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->numdevchar = rc;
@@ -281,7 +257,8 @@ init_retry:
         dev->devtype = fetch_hw (dev->devchar + 3);
     else if (dev->devtype != fetch_hw (dev->devchar + 3))
     {
-        WRMSG (HHC00704, "S", LCSS_DEVNUM, dev->rmtnum, fetch_hw (dev->devchar + 3));
+        // "%1d:%04X Shared: remote device %04X is a %04X"
+        WRMSG( HHC00704, "S", LCSS_DEVNUM, dev->rmtnum, fetch_hw( dev->devchar + 3 ));
         return -1;
     }
 
@@ -292,7 +269,8 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        WRMSG (HHC00705, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving device id"
+        WRMSG( HHC00705, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->numdevid = rc;
@@ -308,7 +286,8 @@ init_retry:
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        WRMSG (HHC00706, "S", LCSS_DEVNUM, dev->devtype);
+        // "%1d:%04X Shared: device type %4.4X not found in dasd table"
+        WRMSG( HHC00706, "S", LCSS_DEVNUM, dev->devtype );
         return -1;
     }
 
@@ -319,7 +298,8 @@ init_retry:
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        WRMSG (HHC00707, "S", LCSS_DEVNUM, cu ? cu : dev->ckdtab->cu);
+        // "%1d:%04X Shared: control unit %s not found in dasd table"
+        WRMSG( HHC00707, "S", LCSS_DEVNUM, cu ? cu : dev->ckdtab->cu );
         return -1;
     }
 
@@ -339,8 +319,9 @@ init_retry:
 
     /* Log the device geometry */
     if (!dev->batch)
-    WRMSG (HHC00708, "I", LCSS_DEVNUM, dev->filename, dev->ckdcyls,
-            dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
+        // "%1d:%04X Shared: file %s: model %s cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00708, "I", LCSS_DEVNUM, dev->filename, dev->ckdtab->name,
+            dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     dev->connecting = 0;
 
@@ -387,13 +368,12 @@ FWORD    blksiz;                        /* FBA block size            */
 char    *p, buf[1024];                  /* Work buffer               */
 #if defined( HAVE_ZLIB )
 char    *strtok_str = NULL;             /* last token                */
-#endif /*HAVE_ZLIB*/
-
-    retry = dev->connecting;
+#endif
 
     /* Process the arguments */
-    if (!retry)
+    if (!(retry = dev->connecting))
     {
+        dev->connected = 0;             /* SHRD_CONNECT not done yet */
 
         kw = op = NULL;
 
@@ -401,7 +381,7 @@ char    *strtok_str = NULL;             /* last token                */
             return -1;
         STRLCPY( buf, argv[0] );
 
-        /* First argument is `ipname:port:devnum' */
+        /* First argument is 'ipname:port:devnum' */
         ipname = buf;
         p = strchr (buf, ':');
         if (p)
@@ -453,7 +433,8 @@ char    *strtok_str = NULL;             /* last token                */
                 continue;
             }
 #endif
-            WRMSG (HHC00700, "S", argv[i], i + 1);
+            // "Shared: parameter %s in argument %d is invalid"
+            WRMSG( HHC00700, "S", argv[i], i + 1 );
             rc = -1;
         }
         if (rc)
@@ -480,7 +461,8 @@ init_retry:
         rc = clientConnect (dev, retry);
         if (rc < 0)
         {
-            WRMSG (HHC00701, "W", LCSS_DEVNUM, dev->filename);
+            // "%1d:%04X Shared: connect pending to file %s"
+            WRMSG( HHC00701, "W", LCSS_DEVNUM, dev->filename );
             if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
@@ -494,7 +476,8 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00709, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving fba origin"
+        WRMSG( HHC00709, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->fbaorigin = fetch_fw (origin);
@@ -505,7 +488,8 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00710, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving fba number blocks"
+        WRMSG( HHC00710, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->fbanumblk = fetch_fw (numblks);
@@ -516,7 +500,8 @@ init_retry:
         goto init_retry;
     else if (rc != 4)
     {
-        WRMSG (HHC00711, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving fba block size"
+        WRMSG( HHC00711, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->fbablksiz = fetch_fw (blksiz);
@@ -529,7 +514,8 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devid))
     {
-        WRMSG (HHC00705, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving device id"
+        WRMSG( HHC00705, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->numdevid = rc;
@@ -537,7 +523,8 @@ init_retry:
     /* Check the device type */
     if (dev->devtype != fetch_hw (dev->devid + 4))
     {
-        WRMSG (HHC00704, "S", LCSS_DEVNUM, dev->rmtnum, fetch_hw (dev->devid + 4));
+        // "%1d:%04X Shared: remote device %04X is a %04X"
+        WRMSG( HHC00704, "S", LCSS_DEVNUM, dev->rmtnum, fetch_hw( dev->devid + 4 ));
         return -1;
     }
 
@@ -548,7 +535,8 @@ init_retry:
         goto init_retry;
     else if (rc == 0 || rc > (int)sizeof(dev->devchar))
     {
-        WRMSG (HHC00703, "S", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving device characteristics"
+        WRMSG( HHC00703, "S", LCSS_DEVNUM );
         return -1;
     }
     dev->numdevchar = rc;
@@ -564,7 +552,8 @@ init_retry:
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        WRMSG (HHC00706, "S", LCSS_DEVNUM, dev->devtype);
+        // "%1d:%04X Shared: device type %4.4X not found in dasd table"
+        WRMSG( HHC00706, "S", LCSS_DEVNUM, dev->devtype );
         return -1;
     }
 
@@ -572,7 +561,9 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    WRMSG (HHC00712, "I", LCSS_DEVNUM, dev->filename, dev->fbaorigin, dev->fbanumblk);
+    // "%1d:%04X Shared: file %s: model %s origin %"PRId64" blks %d"
+    WRMSG( HHC00712, "I", LCSS_DEVNUM, dev->filename, dev->fbatab->name,
+        dev->fbaorigin, dev->fbanumblk );
 
     dev->connecting = 0;
 
@@ -609,14 +600,15 @@ int      trk;                           /* Cache track number        */
 int      code;                          /* Response code             */
 BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
 
-    shrdtrc(dev,"start cur %d cache %d\n",dev->bufcur,dev->cache);
+    SHRDTRACE("start cur %d cache %d",dev->bufcur,dev->cache);
 
     /* Send the START request */
     rc = clientRequest (dev, buf, sizeof(buf),
                         SHRD_START, 0, &code, NULL);
     if (rc < 0)
     {
-        WRMSG(HHC00713, "E", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error during channel program start"
+        WRMSG( HHC00713, "E", LCSS_DEVNUM );
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -653,7 +645,7 @@ static void shared_end (DEVBLK *dev)
 {
 int      rc;                            /* Return code               */
 
-    shrdtrc(dev,"end cur %d cache %d\n",dev->bufcur,dev->cache);
+    SHRDTRACE("end cur %d cache %d",dev->bufcur,dev->cache);
 
     /* Write the previous active entry if it was updated */
     if (dev->bufupd)
@@ -672,7 +664,8 @@ int      rc;                            /* Return code               */
     rc = clientRequest (dev, NULL, 0, SHRD_END, 0, NULL, NULL);
     if (rc < 0)
     {
-        WRMSG(HHC00714, "E", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error during channel program end"
+        WRMSG( HHC00714, "E", LCSS_DEVNUM );
         clientPurge (dev, 0, NULL);
         dev->cache = dev->bufcur = -1;
         dev->buf = NULL;
@@ -707,7 +700,7 @@ BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
         return 0;
     }
 
-    shrdtrc(dev,"ckd_read trk %d\n",trk);
+    SHRDTRACE( "ckd read trk %d", trk );
 
     /* Write the previous active entry if it was updated */
     if (dev->bufupd)
@@ -743,21 +736,21 @@ cache_retry:
         dev->bufoffhi = dev->ckdtrksz;
         dev->buflen = shared_ckd_trklen (dev, dev->buf);
         dev->bufsize = cache_getlen (CACHE_DEVBUF, cache);
-        shrdtrc(dev,"ckd_read trk %d cache hit %d\n",trk,dev->cache);
+        SHRDTRACE( "ckd read trk %d cache hit %d", trk, dev->cache );
         return 0;
     }
 
     /* Special processing if no available cache entry */
     if (lru < 0)
     {
-        shrdtrc(dev,"ckd_read trk %d cache wait\n",trk);
+        SHRDTRACE( "ckd read trk %d cache wait", trk );
         dev->cachewaits++;
         cache_wait (CACHE_DEVBUF);
         goto cache_retry;
     }
 
     /* Process cache miss */
-    shrdtrc(dev,"ckd_read trk %d cache miss %d\n",trk,dev->cache);
+    SHRDTRACE( "ckd read trk %d cache miss %d", trk, dev->cache );
     dev->cachemisses++;
     cache_setflag (CACHE_DEVBUF, lru, 0, SHRD_CACHE_ACTIVE|DEVBUF_TYPE_SCKD);
     cache_setkey (CACHE_DEVBUF, lru, SHRD_CACHE_SETKEY(dev->devnum, trk));
@@ -776,7 +769,8 @@ read_retry:
     {
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRMSG(HHC00715, "E", LCSS_DEVNUM, trk);
+        // "%1d:%04X Shared: remote error reading track %d"
+        WRMSG( HHC00715, "E", LCSS_DEVNUM, trk );
         return -1;
     }
 
@@ -788,7 +782,8 @@ read_retry:
         if (rc < 0 && retries--) goto read_retry;
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        WRMSG(HHC00715, "E", LCSS_DEVNUM, trk);
+        // "%1d:%04X Shared: remote error reading track %d"
+        WRMSG( HHC00715, "E", LCSS_DEVNUM, trk );
         return -1;
     }
 
@@ -831,7 +826,7 @@ int      rc;                            /* Return code               */
         return -1;
     }
 
-    shrdtrc(dev,"ckd_write trk %d off %d len %d\n",trk,off,len);
+    SHRDTRACE( "ckd write trk %d off %d len %d", trk, off, len );
 
     /* If the track is not current then read it */
     if (trk != dev->bufcur)
@@ -909,7 +904,8 @@ FWORD    usage;                         /* Usage buffer              */
     rc = clientRequest (dev, usage, 4, SHRD_USED, 0, NULL, NULL);
     if (rc != 4)
     {
-        WRMSG (HHC00717, "E", LCSS_DEVNUM);
+        // "%1d:%04X Shared: error retrieving usage information"
+        WRMSG( HHC00717, "E", LCSS_DEVNUM );
         return -1;
     }
     return fetch_fw (usage);
@@ -966,7 +962,7 @@ BYTE        errmsg[SHARED_MAX_MSGLEN+1];/* Error message             */
         return 0;
     }
 
-    shrdtrc(dev,"write rcd %d off %d len %d\n",block,dev->bufupdlo,len);
+    SHRDTRACE("write rcd %d off %d len %d",block,dev->bufupdlo,len);
 
 write_retry:
 
@@ -979,7 +975,8 @@ write_retry:
     rc = clientSend (dev, hdr, dev->buf + dev->bufupdlo, len);
     if (rc < 0)
     {
-        WRMSG(HHC00718, "E", LCSS_DEVNUM, dev->bufcur);
+        // "%1d:%04X Shared: error writing track %d"
+        WRMSG( HHC00718, "E", LCSS_DEVNUM, dev->bufcur );
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -991,7 +988,8 @@ write_retry:
     if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR))
     {
         if (rc < 0 && retries--) goto write_retry;
-        WRMSG(HHC00719, "E", LCSS_DEVNUM, dev->bufcur, code, status);
+        // "%1d:%04X Shared: remote error writing track %d %2.2X-%2.2X"
+        WRMSG( HHC00719, "E", LCSS_DEVNUM, dev->bufcur, code, status );
         dev->bufupdlo = dev->bufupdhi = 0;
         clientPurge (dev, 0, NULL);
         return -1;
@@ -1025,7 +1023,7 @@ DEVBLK         *dev = data;             /* -> device block           */
     {
         if (dev->rmtpurgen == 0) {
             cache_release (ix, i, 0);
-            shrdtrc(dev,"purge %d\n",trk);
+            SHRDTRACE("purge %d",trk);
         }
         else
         {
@@ -1033,7 +1031,7 @@ DEVBLK         *dev = data;             /* -> device block           */
             {
                 if (trk == (int)fetch_fw (dev->rmtpurge[p]))
                 {
-                    shrdtrc(dev,"purge %d\n",trk);
+                    SHRDTRACE("purge %d",trk);
                     cache_release (ix, i, 0);
                     break;
                 }
@@ -1046,105 +1044,127 @@ DEVBLK         *dev = data;             /* -> device block           */
 /*-------------------------------------------------------------------
  * Connect to the server (client side)
  *-------------------------------------------------------------------*/
-static int clientConnect (DEVBLK *dev, int retry)
+static int clientConnect( DEVBLK* dev, int retry )
 {
 int                rc;                  /* Return code               */
-struct sockaddr   *server;              /* -> server descriptor      */
-int                flag;                /* Flags (version | release) */
+struct sockaddr*   server;              /* -> Server descriptor      */
 int                len;                 /* Length server descriptor  */
 struct sockaddr_in iserver;             /* inet server descriptor    */
 #if defined( HAVE_SYS_UN_H )
-struct sockaddr_un userver;             /* unix server descriptor    */
+struct sockaddr_un userver;             /* Unix server descriptor    */
 #endif
 int                retries = 10;        /* Number of retries         */
 HWORD              id;                  /* Returned identifier       */
 HWORD              comp;                /* Returned compression parm */
 
-    do {
+    SHRDTRACE( "Beg clientConnect sequence for dev %4.4x retry=%d", dev->devnum, retry );
 
+    do
+    {
         /* Close previous connection */
-        if (dev->fd >= 0) close_socket (dev->fd);
+        if (dev->fd >= 0)
+            close_socket( dev->fd );
 
-        /* Get a socket */
+        /* Get a new socket */
         if (dev->localhost)
         {
 #if defined( HAVE_SYS_UN_H )
-            dev->fd = dev->ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
-#else // !defined( HAVE_SYS_UN_H )
-            dev->fd = dev->ckdfd[0] = -1;
-#endif // defined( HAVE_SYS_UN_H )
+            dev->fd = socket( AF_UNIX, SOCK_STREAM, 0 );
+#else
+            dev->fd = -1;
+#endif
+            dev->ckdfd[0] = dev->fd;
+
             if (dev->fd < 0)
             {
-                WRMSG (HHC00720, "E", LCSS_DEVNUM, "socket()", strerror(HSO_errno));
+                // "%1d:%04X Shared: error in function %s: %s"
+                WRMSG( HHC00720, "E", LCSS_DEVNUM, "socket()", strerror( HSO_errno ));
                 return -1;
             }
 #if defined( HAVE_SYS_UN_H )
             userver.sun_family = AF_UNIX;
-            sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport);
-            server = (struct sockaddr *)&userver;
-            len = sizeof(userver);
-#endif // !defined( HAVE_SYS_UN_H )
+            sprintf( userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport );
+            server = (struct sockaddr*) &userver;
+            len = sizeof( userver );
+#endif
         }
         else
         {
-            dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
+            dev->fd = socket( AF_INET, SOCK_STREAM, 0 );
+            dev->ckdfd[0] = dev->fd;
+
             if (dev->fd < 0)
             {
-                WRMSG (HHC00720, "E", LCSS_DEVNUM, "socket()", strerror(HSO_errno));
+                // "%1d:%04X Shared: error in function %s: %s"
+                WRMSG( HHC00720, "E", LCSS_DEVNUM, "socket()", strerror( HSO_errno ));
                 return -1;
             }
-            iserver.sin_family      = AF_INET;
-            iserver.sin_port        = htons(dev->rmtport);
-            memcpy(&iserver.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
-            server = (struct sockaddr *)&iserver;
-            len = sizeof(iserver);
+
+            iserver.sin_family = AF_INET;
+            iserver.sin_port   = htons( dev->rmtport );
+            memcpy( &iserver.sin_addr.s_addr, &dev->rmtaddr, sizeof( struct in_addr ));
+            server = (struct sockaddr*) &iserver;
+            len = sizeof( iserver );
         }
 
         /* Connect to the server */
-        store_hw (id, dev->rmtid);
-        rc = connect (dev->fd, server, len);
-        shrdtrc(dev,"connect rc=%d errno=%d\n",rc, HSO_errno);
+        store_hw( id, dev->rmtid );
+        rc = connect( dev->fd, server, len );
+
+        if (rc < 0)
+            SHRDTRACE( "connect rc=%d errno=%d %s", rc, HSO_errno, strerror( HSO_errno ));
+        else
+            SHRDTRACE( "connect rc=%d", rc );
+
         if (rc >= 0)
         {
-            if (!dev->batch)
-              WRMSG(HHC00721, "I", LCSS_DEVNUM, dev->filename);
-
-            /* Request device connection */
-            flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
-            rc = clientRequest (dev, id, 2, SHRD_CONNECT, flag, NULL, &flag);
-            if (rc >= 0)
+            /* Request device connection (if we haven't done so yet) */
+            if (!dev->connected)
             {
-                dev->rmtid = fetch_hw (id);
-                dev->rmtrel = flag & 0x0f;
-            }
-
-            /*
-             * Negotiate compression - top 4 bits have the compression
-             * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
-             * 00110000 -> both) and the bottom 4 bits indicates the
-             * libz parm we want to use when sending data back & forth.
-             * If the server returns `0' back, then we won't use libz to
-             * compress data to the server.  What the `compression
-             * algorithms we support' means is that if the data source is
-             * cckd or cfba then the server doesn't have to uncompress
-             * the data for us if we support the compression algorithm.
-             */
-
-            if (rc >= 0 && (dev->rmtcomp || dev->rmtcomps))
-            {
-                rc = clientRequest (dev, comp, 2, SHRD_COMPRESS,
-                           (dev->rmtcomps << 4) | dev->rmtcomp, NULL, NULL);
+                int flag = (SHARED_VERSION << 4) | SHARED_RELEASE;
+                rc = clientRequest( dev, id, 2, SHRD_CONNECT, flag, NULL, &flag );
                 if (rc >= 0)
-                    dev->rmtcomp = fetch_hw (comp);
-            }
+                {
+                    dev->connected = 1;             // (SHRD_CONNECT success)
+                    dev->rmtid  = fetch_hw( id );   // (must only do ONCE!!!)
+                    dev->rmtrel = flag & 0x0f;
 
+                    if (!dev->batch)
+                        if (MLVL( VERBOSE ))
+                            // "%1d:%04X Shared: connected to file %s"
+                            WRMSG( HHC00721, "I", LCSS_DEVNUM, dev->filename );
+                    /*
+                     * Negotiate compression - top 4 bits have the compression
+                     * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
+                     * 00110000 -> both) and the bottom 4 bits indicates the
+                     * libz parm we want to use when sending data back & forth.
+                     * If the server returns '0' back, then we won't use libz to
+                     * compress data to the server.  What the 'compression
+                     * algorithms we support' means is that if the data source is
+                     * cckd or cfba then the server doesn't have to uncompress
+                     * the data for us if we support the compression algorithm.
+                     */
+
+                    if (dev->rmtcomp || dev->rmtcomps)
+                    {
+                        rc = clientRequest( dev, comp, 2, SHRD_COMPRESS,
+                                   (dev->rmtcomps << 4) | dev->rmtcomp, NULL, NULL );
+                        if (rc >= 0)
+                            dev->rmtcomp = fetch_hw( comp );
+                    }
+                }
+            }
         }
         else if (!retry)
-            WRMSG(HHC00722, "E", LCSS_DEVNUM, dev->filename, strerror(HSO_errno));
+            // "%1d:%04X Shared: error in connect to file %s: %s"
+            WRMSG( HHC00722, "E", LCSS_DEVNUM, dev->filename, strerror( HSO_errno ));
 
-        if (rc < 0 && retry) usleep (20000);
+        if (rc < 0 && retry)
+            usleep( 20000 );    // (20ms between connect retries?!)
+    }
+    while (rc < 0 && retry && retries--);
 
-    } while (retry && retries-- && rc < 0);
+    SHRDTRACE( "end clientConnect sequence for dev %4.4x retry=%d", dev->devnum, retry );
 
     return rc;
 
@@ -1157,7 +1177,7 @@ HWORD              comp;                /* Returned compression parm */
  * If an uncorrectable connection error occurs -1 is returned.
  * Otherwise *code and *status is set from the response header
  *
- * Since `buf' may be NULL or not very long, response data is
+ * Since 'buf' may be NULL or not very long, response data is
  * received in a temporary buffer.  This enables us to receive
  * an error message from the remote system.
  *-------------------------------------------------------------------*/
@@ -1174,12 +1194,11 @@ int      rlen;                          /* Request return length     */
 BYTE     hdr[SHRD_HDR_SIZE];            /* Header                    */
 BYTE     temp[256];                     /* Temporary buffer          */
 
-retry :
+retry:
 
     /* Send the request */
     SHRD_SET_HDR(hdr, cmd, flags, dev->rmtnum, dev->rmtid, 0);
-    shrdtrc(dev,"client_request %2.2x %2.2x %2.2x %d\n",
-            cmd,flags,dev->rmtnum,dev->rmtid);
+    SHRDHDRTRACE( "client request", hdr );
     rc = clientSend (dev, hdr, NULL, 0);
     if (rc < 0) return rc;
 
@@ -1189,7 +1208,11 @@ retry :
     /* Retry recv errors */
     if (rc < 0)
     {
-        if (cmd != SHRD_CONNECT && retries--)
+        if (1
+            && cmd != SHRD_CONNECT
+            && cmd != SHRD_DISCONNECT
+            && retries--
+        )
         {
             SLEEP (1);
             clientConnect (dev, 1);
@@ -1200,8 +1223,8 @@ retry :
 
     /* Set code and status */
     SHRD_GET_HDR(hdr, rcode, rstatus, rdevnum, rid, rlen);
-    shrdtrc(dev,"client_response %2.2x %2.2x %2.2x %d %d\n",
-            rcode,rstatus,rdevnum,rid,rlen);
+    SHRDHDRTRACE( "client response", hdr );
+
     if (code)   *code   = rcode;
     if (status) *status = rstatus;
 
@@ -1215,56 +1238,68 @@ retry :
 /*-------------------------------------------------------------------
  * Send a request to the host
  *
- * `buf' may be NULL
- * `buflen' is the length in `buf' (should be 0 if `buf' is NULL)
- * `hdr' may contain additional data; this is detected by the
- *       difference between `buflen' and the length in the header
+ * 'buf' may be NULL
+ * 'buflen' is the length in 'buf' (should be 0 if 'buf' is NULL)
+ * 'hdr' may contain additional data; this is detected by the
+ *       difference between 'buflen' and the length in the header
  *
- * If `buf' is adjacent to `hdr' then `buf' should be NULL
+ * If 'buf' is adjacent to 'hdr' then 'buf' should be NULL
  *
  *-------------------------------------------------------------------*/
-static int clientSend (DEVBLK *dev, BYTE *hdr, BYTE *buf, int buflen)
+static int clientSend( DEVBLK* dev, BYTE* hdr, BYTE* buf, int buflen )
 {
 int      rc;                            /* Return code               */
 BYTE     cmd;                           /* Header command            */
 BYTE     flag;                          /* Header flags              */
-U16      devnum;                        /* Header device nu          */
+U16      devnum;                        /* Header device number      */
 int      len;                           /* Header length             */
 int      id;                            /* Header identifier         */
 int      hdrlen;                        /* Header length + other data*/
 int      off;                           /* Offset to buffer data     */
-BYTE    *sendbuf;                       /* Send buffer               */
+BYTE*    sendbuf;                       /* Send buffer               */
 int      sendlen;                       /* Send length               */
 BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
+const char* trcmsg;                     /* Header trace message      */
+
+    /* Save original hdr values */
+    SHRD_GET_HDR( hdr, cmd, flag, devnum, id, len );
+
+    /* Connect to remote device on server if needed */
+    if (dev->fd < 0)
+    {
+        if (SHRD_DISCONNECT == cmd)
+            return -1; // (already disconnected!)
+
+        if ((rc = clientConnect( dev, 1 )) < 0)
+            return -1;
+
+        /* Update values due to clientConnect */
+        id = dev->rmtid;
+        SHRD_SET_HDR( hdr, cmd, flag, devnum, id, len );
+    }
 
     /* Make buf, buflen consistent if no additional data to be sent  */
     if (buf == NULL) buflen = 0;
     else if (buflen == 0) buf = NULL;
 
     /* Calculate length of header, may contain additional data */
-    SHRD_GET_HDR(hdr, cmd, flag, devnum, id, len);
-    shrdtrc(dev,"client_send %2.2x %2.2x %2.2x %d %d\n",
-             cmd,flag,devnum,id,len);
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
     off = len - buflen;
 
-    if (dev->fd < 0)
-    {
-        rc = clientConnect (dev, 1);
-        if (rc < 0) return -1;
-    }
-
 #if defined( HAVE_ZLIB )
     /* Compress the buf */
-    if (dev->rmtcomp != 0
-     && flag == 0 && off <= SHRD_COMP_MAX_OFF
-     && buflen >= SHARED_COMPRESS_MINLEN)
+    if (1
+        && dev->rmtcomp != 0
+        && flag == 0
+        && off <= SHRD_COMP_MAX_OFF
+        && buflen >= SHARED_COMPRESS_MINLEN
+    )
     {
         unsigned long newlen;
         newlen = 65536 - hdrlen;
-        memcpy (cbuf, hdr, hdrlen);
-        rc = compress2 (cbuf + hdrlen, &newlen,
-                        buf, buflen, dev->rmtcomp);
+        memcpy( cbuf, hdr, hdrlen );
+        rc = compress2( cbuf + hdrlen, &newlen,
+                        buf, buflen, dev->rmtcomp );
         if (rc == Z_OK && (int)newlen < buflen)
         {
             cmd |= SHRD_COMP;
@@ -1285,32 +1320,54 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     }
     else
     {
-        memcpy (cbuf, hdr, hdrlen);
-        memcpy (cbuf + hdrlen, buf, buflen);
+        memcpy( cbuf, hdr, hdrlen );
+        memcpy( cbuf + hdrlen, buf, buflen );
         sendbuf = cbuf;
         sendlen = hdrlen + buflen;
     }
 
-    SHRD_SET_HDR(sendbuf, cmd, flag, devnum, id, (U16)(sendlen - SHRD_HDR_SIZE));
-
-    if (cmd & SHRD_COMP)
-        shrdtrc(dev,"client_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
-                cmd, flag, devnum, id, (int)(sendlen - SHRD_HDR_SIZE));
+    len = (sendlen - SHRD_HDR_SIZE);
+    trcmsg = "client send";
 
 retry:
 
+    /* Update hdr with final values */
+    SHRD_SET_HDR( sendbuf, cmd, flag, devnum, id, len );
+
+    /* Trace what we'll be sending */
+    if (cmd & SHRD_COMP)
+        SHRDHDRTRACE2( trcmsg, sendbuf, "(compressed)" );
+    else
+        SHRDHDRTRACE(  trcmsg, sendbuf );
+
     /* Send the header and data */
-    rc = send (dev->fd, sendbuf, sendlen, 0);
-    if (rc < 0)
+    if ((rc = send( dev->fd, sendbuf, sendlen, 0 )) < 0)
     {
-        rc = clientConnect (dev, 0);
-        if (rc >= 0) goto retry;
+        /* Trace the socket error */
+        SHRDTRACE( "send rc=%d errno=%d %s", rc, HSO_errno, strerror( HSO_errno ));
+
+        /* If the request we're trying to send to the server
+           is a disconnect request, it doesn't make much sense
+           to go to the time and effort to re-connect to the
+           server only to tell it we're about to DISCONNECT!
+        */
+        if (SHRD_DISCONNECT != cmd)
+        {
+            if ((rc = clientConnect( dev, 0 )) >= 0)
+            {
+                /* Pickup new rmtid due to clientConnect */
+                id = dev->rmtid;
+                trcmsg = "client send retry";
+                goto retry;
+            }
+        }
     }
 
     /* Process return code */
-    if (rc < 0)
+    if (rc < 0 && SHRD_DISCONNECT != cmd)
     {
-        WRMSG(HHC00723, "E", LCSS_DEVNUM, cmd, flag, strerror(HSO_errno));
+        // "%1d:%04X Shared: error in send for %2.2X-%2.2X: %s"
+        WRMSG( HHC00723, "E", LCSS_DEVNUM, cmd, flag, strerror( HSO_errno ));
         return -1;
     }
 
@@ -1336,7 +1393,8 @@ int      len;                           /* Response length           */
     /* Return error if not connected */
     if (dev->fd < 0)
     {
-        WRMSG(HHC00724, "E", LCSS_DEVNUM, dev->filename);
+        // "%1d:%04X Shared: not connected to file %s"
+        WRMSG( HHC00724, "E", LCSS_DEVNUM, dev->filename );
         return -1;
     }
 
@@ -1345,18 +1403,19 @@ int      len;                           /* Response length           */
     if (rc < 0)
     {
         if (rc != -ENOTCONN)
-            WRMSG(HHC00725, "E", LCSS_DEVNUM, strerror(-rc));
+            // "%1d:%04X Shared: error in receive: %s"
+            WRMSG( HHC00725, "E", LCSS_DEVNUM, strerror( -rc ));
         return rc;
     }
-    SHRD_GET_HDR(hdr, code, status, devnum, id, len);
 
-    shrdtrc(dev,"client_recv %2.2x %2.2x %2.2x %d %d\n",
-             code,status,devnum,id,len);
+    SHRD_GET_HDR(hdr, code, status, devnum, id, len);
+    SHRDHDRTRACE( "client recv", hdr );
 
     /* Handle remote logical error */
     if (code & SHRD_ERROR)
     {
-        WRMSG(HHC00726, "E", LCSS_DEVNUM, code, status, buf);
+        // "%1d:%04X Shared: remote error %2.2X-%2.2X: %s"
+        WRMSG( HHC00726, "E", LCSS_DEVNUM, code, status, buf );
         len = 0;
     }
 
@@ -1389,7 +1448,7 @@ int                     id;             /* Header identifier         */
 int                     len;            /* Header length             */
 int                     comp = 0;       /* Compression type          */
 int                     off = 0;        /* Offset to compressed data */
-DEVBLK                 *dev = NULL;     /* For `shrdtrc'             */
+DEVBLK                 *dev = NULL;     /* For 'SHRDTRACE'             */
 BYTE                    cbuf[65536];    /* Compressed buffer         */
 
 
@@ -1402,10 +1461,9 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         else if (rc == 0)
             return -HSO_ENOTCONN;
     }
-    SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
 
-    shrdtrc(dev,"recvData    %2.2x %2.2x %2.2x %d %d\n",
-             cmd, flag, devnum, id, len);
+    SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
+    SHRDHDRTRACE( "recvData", hdr );
 
     /* Return if no data */
     if (len == 0) return 0;
@@ -1462,12 +1520,12 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         else
         {
             // "Shared: decompress error %d offset %d length %d"
-            WRMSG(HHC00727, "E", rc, off, len - off);
+            WRMSG( HHC00727, "E", rc, off, len - off );
             recvlen = -1;
         }
 #else
         // "Shared: data compressed using method %s is unsupported"
-        WRMSG(HHC00728, "E", "libz");
+        WRMSG( HHC00728, "E", "libz" );
         recvlen = -1;
 #endif
     }
@@ -1486,11 +1544,12 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         else
         {
             // "Shared: decompress error %d offset %d length %d"
-            WRMSG(HHC00727, "E", rc, off, len - off);
+            WRMSG( HHC00727, "E", rc, off, len - off );
             recvlen = -1;
         }
 #else
-        WRMSG(HHC00728, "E", "bzip2");
+        // "Shared: data compressed using method %s is unsupported"
+        WRMSG( HHC00728, "E", "bzip2" );
         recvlen = -1;
 #endif
     }
@@ -1499,13 +1558,57 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     {
         SHRD_SET_HDR (hdr, cmd, flag, devnum, id, recvlen);
         if (comp)
-            shrdtrc(dev,"recvData    %2.2x %2.2x %2.2x %d %d (uncompressed)\n",
-                     cmd, flag, devnum, id, recvlen);
+            SHRDHDRTRACE2( "recvData", hdr, "(uncompressed)" );
     }
 
     return recvlen;
 
 } /* recvData */
+
+/*-------------------------------------------------------------------
+ * Convert shared command code to string for tracing purposes
+ *-------------------------------------------------------------------*/
+static const char* shrdcmd2str( const BYTE cmd )
+{
+    switch (cmd)
+    {
+        // Requests
+        case SHRD_CONNECT:          return "CONNECT ";
+        case SHRD_DISCONNECT:       return "DISCONNE";
+        case SHRD_START:            return "START   ";
+        case SHRD_END:              return "END     ";
+        case SHRD_RESUME:           return "RESUME  ";
+        case SHRD_SUSPEND:          return "SUSPEND ";
+        case SHRD_RESERVE:          return "RESERVE ";
+        case SHRD_RELEASE:          return "RELEASE ";
+        case SHRD_READ:             return "READ    ";
+        case SHRD_WRITE:            return "WRITE   ";
+        case SHRD_SENSE:            return "SENSE   ";
+        case SHRD_QUERY:            return "QUERY   ";
+        case SHRD_COMPRESS:         return "COMPRESS";
+
+        // Response codes
+        case SHRD_OK:               return "OK      ";
+        case SHRD_ERROR:            return "ERROR   ";
+        case SHRD_IOERR:            return "IOERR   ";
+        case SHRD_BUSY:             return "BUSY    ";
+        case SHRD_COMP:             return "COMP    ";
+        case SHRD_PURGE:            return "PURGE   ";
+
+        // Error responses
+        case SHRD_ERROR_INVALID:    return "INVALID ";
+        case SHRD_ERROR_BADVERS:    return "BADVERS ";
+        case SHRD_ERROR_NOTINIT:    return "NOTINIT ";
+        case SHRD_ERROR_NOTCONN:    return "NOTCONN ";
+        case SHRD_ERROR_NOTAVAIL:   return "NOTAVAIL";
+        case SHRD_ERROR_NOMEM:      return "NOMEM   ";
+        case SHRD_ERROR_NOTACTIVE:  return "NOTACTIV";
+        case SHRD_ERROR_NODEVICE:   return "NODEVICE";
+        case SHRD_ERROR_CONNECTED:  return "ECONNECT";
+
+        default:                    return "????????";
+    }
+}
 
 /*-------------------------------------------------------------------
  * Process a request (server side)
@@ -1522,15 +1625,17 @@ int      len;                           /* Header length             */
 int      code;                          /* Response code             */
 int      rcd;                           /* Record to read/write      */
 int      off;                           /* Offset into record        */
+char     trcmsg[32];
 
     /* Extract header information */
     SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
+    MSGBUF( trcmsg, "server request [%d]", ix );
+    SHRDHDRTRACE( trcmsg, hdr );
 
-    shrdtrc(dev,"server_request [%d] %2.2x %2.2x %2.2x %d %d\n",
-             ix, cmd, flag, devnum, id, len);
+    /* Save time of last request (for connection timeout purposes) */
+    dev->shrd[ix]->time = time( NULL );
 
-    dev->shrd[ix]->time = time (NULL);
-
+    /* Process the request */
     switch (cmd) {
 
     case SHRD_CONNECT:
@@ -1588,9 +1693,9 @@ int      off;                           /* Offset into record        */
         /* Check if the device is busy */
         if (dev->shioactive != id && dev->shioactive != DEV_SYS_NONE)
         {
-            shrdtrc(dev,"server_request busy id=%d shioactive=%d reserved=%d\n",
-                    id,dev->shioactive,dev->reserved);
-            /* If the `nowait' bit is on then respond `busy' */
+            SHRDTRACE( "server request busy id=%d shioactive=%d reserved=%d",
+                    id, dev->shioactive, dev->reserved );
+            /* If the 'nowait' bit is on then respond 'busy' */
             if (flag & SHRD_NOWAIT)
             {
                 release_lock (&dev->lock);
@@ -1609,7 +1714,7 @@ int      off;                           /* Offset into record        */
                 dev->shiowaiters--;
             }
 
-            /* Return with the `waiting' bit on if busy by a remote system */
+            /* Return with the 'waiting' bit on if busy by a remote system */
             if (dev->shioactive != DEV_SYS_NONE && dev->shioactive != DEV_SYS_LOCAL)
             {
                 release_lock (&dev->lock);
@@ -1623,7 +1728,7 @@ int      off;                           /* Offset into record        */
         dev->shioactive = id;
         dev->busy = 1;
         sysblk.shrdcount++;
-        shrdtrc(dev,"server_request active id=%d\n", id);
+        SHRDTRACE( "server request active id=%d", id );
 
         release_lock(&dev->lock);
 
@@ -1685,7 +1790,7 @@ int      off;                           /* Offset into record        */
                 dev->busy = 0;
             }
 
-            /* Reset any `waiting' bits */
+            /* Reset any 'waiting' bits */
             for (i = 0; i < SHARED_MAX_SYS; i++)
                 if (dev->shrd[i])
                     dev->shrd[i]->waiting = 0;
@@ -1694,7 +1799,7 @@ int      off;                           /* Offset into record        */
             if (dev->shiowaiters)
                 signal_condition (&dev->shiocond);
         }
-        shrdtrc(dev,"server_request inactive id=%d\n", id);
+        SHRDTRACE( "server request inactive id=%d", id );
 
         release_lock (&dev->lock);
 
@@ -1716,7 +1821,7 @@ int      off;                           /* Offset into record        */
         dev->reserved = 1;
         release_lock (&dev->lock);
 
-        shrdtrc(dev,"server_request reserved id=%d\n", id);
+        SHRDTRACE( "server request reserved id=%d", id );
 
         /* Call the I/O reserve exit */
         if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
@@ -1743,7 +1848,7 @@ int      off;                           /* Offset into record        */
         dev->reserved = 0;
         release_lock (&dev->lock);
 
-        shrdtrc(dev,"server_request released id=%d\n", id);
+        SHRDTRACE( "server request released id=%d", id );
 
         /* Send response back */
         SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 0);
@@ -1767,8 +1872,8 @@ int      off;                           /* Offset into record        */
         /* Call the I/O read exit */
         rcd = (int)fetch_fw (buf);
         rc = (dev->hnd->read) (dev, rcd, &flag);
-        shrdtrc(dev,"server_request read rcd %d flag %2.2x rc=%d\n",
-                rcd, flag, rc);
+        SHRDTRACE( "server request read rcd %d flag %2.2x rc=%d",
+                rcd, flag, rc );
 
         if (rc < 0)
             code = SHRD_IOERR;
@@ -1800,8 +1905,8 @@ int      off;                           /* Offset into record        */
         rcd = fetch_fw (buf + 2);
 
         rc = (dev->hnd->write) (dev, rcd, off, buf + 6, len - 6, &flag);
-        shrdtrc(dev,"server_request write rcd %d off %d len %d flag %2.2x rc=%d\n",
-                rcd, off, len - 6, flag, rc);
+        SHRDTRACE( "server request write rcd %d off %d len %d flag %2.2x rc=%d",
+                rcd, off, len - 6, flag, rc );
 
         if (rc < 0)
             code = SHRD_IOERR;
@@ -1860,7 +1965,7 @@ int      off;                           /* Offset into record        */
             break;
 
         case SHRD_FBAORIGIN:
-            store_fw (buf, dev->fbaorigin);
+            store_dw( buf, dev->fbaorigin );
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, 4);
             serverSend (dev, ix, hdr, buf, 4);
             break;
@@ -1904,25 +2009,33 @@ int      off;                           /* Offset into record        */
 } /* serverRequest */
 
 /*-------------------------------------------------------------------
- * Locate the SHRD block for a socket (server side)
+ * Locate the SHRD block for a socket (server side). Returns index.
  *-------------------------------------------------------------------*/
-static int serverLocate (DEVBLK *dev, int id, int *avail)
+static int serverLocate( DEVBLK* dev, int id, int* avail )
 {
-int      i;                             /* Loop index                */
+    int i;
 
-    if (avail) *avail = -1;
-    for (i = 0; i < SHARED_MAX_SYS; i++)
+    if (avail)
+        *avail = -1;
+
+    for (i=0; i < SHARED_MAX_SYS; i++)
     {
+        // Active slot?
         if (dev->shrd[i])
         {
+            // Is this the one they want?
             if (dev->shrd[i]->id == id)
                 return i;
         }
-        else if (avail && *avail < 0)
-            *avail = i;
+        else // (available slot)
+        {
+            if (avail && *avail < 0)
+                *avail = i;
+        }
     }
+
     return -1;
-} /* serverLocate */
+}
 
 /*-------------------------------------------------------------------
  * Return a new Identifier (server side)
@@ -1955,21 +2068,21 @@ int      id;                            /* Identifier                */
 static int serverError (DEVBLK *dev, int ix, int code, int status,
                         char *msg)
 {
-int rc;                                 /* Return code               */
-size_t len;                             /* Message length            */
-BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
+    int rc;                             /* Return code               */
+    size_t len;                         /* Message length            */
+    BYTE hdr[SHRD_HDR_SIZE];            /* Header                    */
 
     /* Get message length */
     len = strlen(msg) + 1;
     if (len > SHARED_MAX_MSGLEN)
         len = SHARED_MAX_MSGLEN;
 
-    SHRD_SET_HDR (hdr, code, status, dev ? dev->devnum : 0,
-                  ix < 0 ? 0 : dev->shrd[ix]->id, (U16)len);
+    SHRD_SET_HDR( hdr, code, status, dev ? dev->devnum : 0,
+                  ix < 0 ? 0 : dev->shrd[ix]->id, (U16) len );
 
-    shrdtrc(dev,"server_error %2.2x %2.2x: %s\n", code, status, msg);
+    SHRDTRACE( "SERVER ERROR! %2.2x %2.2x: %s", code, status, msg );
 
-    rc = serverSend (dev, ix, hdr, (BYTE *)msg, (int)len);
+    rc = serverSend( dev, ix, hdr, (BYTE*) msg, (int) len );
     return rc;
 
 } /* serverError */
@@ -2009,10 +2122,10 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         buflen = 0;
     }
 
-    /* Send only the header buffer if `buf' is empty */
+    /* Send only the header buffer if 'buf' is empty */
     if (buflen == 0)  sendbuf = hdr;
 
-    /* Get socket number; if `ix' < 0 we don't have a device yet */
+    /* Get socket number; if 'ix' < 0 we don't have a device yet */
     if (ix >= 0)
         sock = dev->shrd[ix]->fd;
     else
@@ -2021,8 +2134,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         dev = NULL;
     }
 
-    shrdtrc(dev,"server_send %2.2x %2.2x %2.2x %d %d\n",
-            code, status, devnum, id, len);
+    SHRDHDRTRACE( "server send", hdr );
 
 #if defined( HAVE_ZLIB )
     /* Compress the buf */
@@ -2045,9 +2157,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
             buflen = 0;
             code = SHRD_COMP;
             status = (SHRD_LIBZ << 4) | off;
-            SHRD_SET_HDR (cbuf, code, status, devnum, id, newlen + off);
-            shrdtrc(dev,"server_send %2.2x %2.2x %2.2x %d %d (compressed)\n",
-                   code,status,devnum,id,(int)newlen+off);
+            SHRD_SET_HDR (cbuf, code, status, devnum, id, (U16)(newlen + off));
+            SHRDHDRTRACE2( "server send", cbuf, "(compressed)" );
         }
     }
 #endif
@@ -2066,7 +2177,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     /* Process return code */
     if (rc < 0)
     {
-        WRMSG(HHC00729, "E", LCSS_DEVNUM, id, strerror(HSO_errno));
+        // "%1d:%04X Shared: error in send id %d: %s"
+        WRMSG( HHC00729, "E", LCSS_DEVNUM, id, strerror( HSO_errno ));
         dev->shrd[ix]->disconnect = 1;
     }
 
@@ -2077,22 +2189,24 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 /*-------------------------------------------------------------------
  * Determine if a client can be disconnected (server side)
  *-------------------------------------------------------------------*/
-static int serverDisconnectable (DEVBLK *dev, int ix) {
-
-    if (dev->shrd[ix]->waiting || dev->shrd[ix]->pending
-     || dev->shioactive == dev->shrd[ix]->id)
-        return 0;
-    else
-        return 1;
-} /* serverDisconnectable */
+static bool serverDisconnectable( DEVBLK* dev, int ix )
+{
+    return
+    (1
+        && !dev->shrd[ix]->waiting
+        && !dev->shrd[ix]->pending
+        && dev->shioactive != dev->shrd[ix]->id
+    );
+}
 
 /*-------------------------------------------------------------------
  * Disconnect a client (server side)
  * dev->lock *must* be held
  *-------------------------------------------------------------------*/
-static void serverDisconnect (DEVBLK *dev, int ix) {
-int id;                                 /* Client identifier         */
-int i;                                  /* Loop index                */
+static void serverDisconnect (DEVBLK *dev, int ix)
+{
+    int id;                             /* Client identifier         */
+    int i;                              /* Loop index                */
 
     id = dev->shrd[ix]->id;
 
@@ -2104,7 +2218,8 @@ int i;                                  /* Loop index                */
        This is *not* a good situation */
     if (dev->shioactive == id)
     {
-        WRMSG(HHC00730, "W", LCSS_DEVNUM, id, dev->reserved ? "reserved" : "");
+        // "%1d:%04X Shared: busy client being removed id %d %s"
+        WRMSG( HHC00730, "W", LCSS_DEVNUM, id, dev->reserved ? "reserved" : "" );
 
         /* Call the I/O release exit if reserved by this client */
         if (dev->reserved && dev->hnd->release)
@@ -2114,7 +2229,7 @@ int i;                                  /* Loop index                */
         if (dev->hnd->end)
             (dev->hnd->end) (dev);
 
-        /* Reset any `waiting' bits */
+        /* Reset any 'waiting' bits */
         for (i = 0; i < SHARED_MAX_SYS; i++)
             if (dev->shrd[i])
                 dev->shrd[i]->waiting = 0;
@@ -2135,7 +2250,9 @@ int i;                                  /* Loop index                */
             signal_condition (&dev->shiocond);
     }
 
-    WRMSG(HHC00731, "I", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, id);
+    if (MLVL( VERBOSE ))
+        // "%1d:%04X Shared: %s disconnected id %d"
+        WRMSG( HHC00731, "I", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, id );
 
     /* Release the SHRD block */
     close_socket (dev->shrd[ix]->fd);
@@ -2175,7 +2292,7 @@ DEVBLK      *dev;                       /* -> Device block           */
 } /* findDevice */
 
 /*-------------------------------------------------------------------
- * Connect a new client
+ * Connect a new client     This is essentially the device thread
  *-------------------------------------------------------------------*/
 static void *serverConnect (void *psock)
 {
@@ -2195,313 +2312,399 @@ struct timeval  wait;                   /* Wait time for select      */
 BYTE            hdr[SHRD_HDR_SIZE + 65536];  /* Header + buffer      */
 BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 char           *ipaddr = NULL;          /* IP addr of connected peer */
-char            threadname[40];
+char            threadname[16] = {0};
+
+    // We are (or will be) the "dev->shrdtid" thread...
 
     csock = *(int*)psock;
-    free (psock);
-    ipaddr = clientip(csock);
+    free( psock );
+    ipaddr = clientip( csock );
 
-    shrdtrc(dev,"server_connect %s sock %d\n",ipaddr,csock);
+    SHRDTRACE( "server connect %s sock %d", ipaddr, csock );
 
-    rc = recvData(csock, hdr, buf, 65536, 1);
+    rc = recvData( csock, hdr, buf, 65536, 1 );
     if (rc < 0)
     {
-        WRMSG(HHC00732, "E", ipaddr);
-        close_socket (csock);
+        // "Shared: connect to IP %s failed"
+        WRMSG( HHC00732, "E", ipaddr );
+        close_socket( csock );
         return NULL;
     }
-    SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
+
+    SHRD_GET_HDR( hdr, cmd, flag, devnum, id, len );
 
     /* Error if not a connect request */
     if (id == 0 && cmd != SHRD_CONNECT)
     {
-        serverError (NULL, -csock, SHRD_ERROR_NOTCONN, cmd,
-                     "not a connect request");
-        close_socket (csock);
+        serverError( NULL, -csock, SHRD_ERROR_NOTCONN, cmd,
+                     "not a connect request" );
+        close_socket( csock );
         return NULL;
     }
 
     /* Locate the device */
-    dev = findDevice (devnum);
-
-    /* Error if device not found */
-    if (dev == NULL)
+    if (!(dev = findDevice( devnum )))
     {
-        serverError (NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
-                     "device not found");
-        close_socket (csock);
+        serverError( NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
+                     "device not found" );
+        close_socket( csock );
         return NULL;
     }
 
     /* Obtain the device lock */
-    obtain_lock (&dev->lock);
+    obtain_lock( &dev->lock );
 
     /* Find an available slot for the connection */
-    rc = serverLocate (dev, id, &ix);
-
-    /* Error if already connected */
-    if (rc >= 0)
+    if ((rc = serverLocate( dev, id, &ix )) >= 0)
     {
-        release_lock (&dev->lock);
-        serverError (NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
-                     "already connected");
-        close_socket (csock);
+        release_lock( &dev->lock );
+        serverError( NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
+                     "already connected" );
+        close_socket( csock );
         return NULL;
     }
 
     /* Error if no available slot */
     if (ix < 0)
     {
-        release_lock (&dev->lock);
-        serverError (NULL, -csock, SHRD_ERROR_NOTAVAIL, cmd,
-                     "too many connections");
-        close_socket (csock);
+        release_lock( &dev->lock );
+        serverError( NULL, -csock, SHRD_ERROR_NOTAVAIL, cmd,
+                     "too many connections" );
+        close_socket( csock );
         return NULL;
     }
 
     /* Obtain SHRD block */
-    dev->shrd[ix] = calloc (sizeof(SHRD), 1);
-
-    /* Error if not obtained */
-    if (dev->shrd[ix] == NULL)
+    if (!(dev->shrd[ix] = calloc( sizeof( SHRD ), 1 )))
     {
-        release_lock (&dev->lock);
-        serverError (NULL, -csock, SHRD_ERROR_NOMEM, cmd,
-                     "calloc() failure");
-        close_socket (csock);
+        release_lock( &dev->lock );
+        serverError( NULL, -csock, SHRD_ERROR_NOMEM, cmd,
+                     "calloc() failure" );
+        close_socket( csock );
         return NULL;
     }
 
     /* Initialize the SHRD block */
     dev->shrd[ix]->pending = 1;
     dev->shrd[ix]->havehdr = 1;
-    if (id == 0) id = serverId (dev);
-    dev->shrd[ix]->id = id;
-    dev->shrd[ix]->fd = csock;
-    dev->shrd[ix]->ipaddr = strdup(ipaddr);
-    dev->shrd[ix]->time = time (NULL);
-    dev->shrd[ix]->purgen = -1;
+    if (id == 0) id = serverId( dev );
+    dev->shrd[ix]->id      = id;
+    dev->shrd[ix]->fd      = csock;
+    dev->shrd[ix]->ipaddr  = strdup(ipaddr);
+    dev->shrd[ix]->time    = time (NULL);
+    dev->shrd[ix]->purgen  = -1;
     dev->shrdconn++;
-    SHRD_SET_HDR (dev->shrd[ix]->hdr, cmd, flag, devnum, id, len);
+    SHRD_SET_HDR( dev->shrd[ix]->hdr, cmd, flag, devnum, id, len );
 
-    WRMSG (HHC00733, "I", LCSS_DEVNUM, ipaddr, id);
+    if (MLVL( VERBOSE ))
+        // "%1d:%04X Shared: %s connected id %d"
+        WRMSG( HHC00733, "I", LCSS_DEVNUM, ipaddr, id );
 
     /* Return if device thread already active */
     if (dev->shrdtid)
     {
-        if (dev->shrdwait)
-        {
-            signal_thread (dev->shrdtid, SIGUSR2);
-        }
-        release_lock (&dev->lock);
+        release_lock( &dev->lock );
         return NULL;
     }
+
+    /* This thread will be the shared device thread (dev->shrdtid) */
+
     dev->shrdtid = thread_id();
 
-    /* This thread will be the shared device thread */
-    MSGBUF(threadname, "Shared device(%1d:%04X)", LCSS_DEVNUM);
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), threadname);
+    MSGBUF( threadname, "shrd dev %1d:%04X", LCSS_DEVNUM );
+    if (MLVL( VERBOSE ))
+        LOG_THREAD_BEGIN( threadname  );
 
+    /* Keep looping while there are still clients connected to our device */
     while (dev->shrdconn)
     {
-        FD_ZERO (&selset);
+        FD_ZERO( &selset );
         maxfd = -1;
 
         /* Get the current time */
-        now = time (NULL);
+        now = time( NULL );
 
+        /* For each remote system connected to our device... */
         for (ix = 0; ix < SHARED_MAX_SYS; ix++)
         {
+            /* Is there a client at this slot? */
             if (dev->shrd[ix])
             {
-                /* Exit loop if pending and not waiting */
+                /* Stop as soon as we find a pending request */
                 if (dev->shrd[ix]->pending && !dev->shrd[ix]->waiting)
-                    break;
+                    break; // (go process pending request)
 
                 /* Disconnect if not a valid socket */
-                if ( !socket_is_socket( dev->shrd[ix]->fd ) )
+                if (!socket_is_socket( dev->shrd[ix]->fd ))
                     dev->shrd[ix]->disconnect = 1;
 
                 /* See if the connection can be timed out */
-                else if (now - dev->shrd[ix]->time > SHARED_TIMEOUT
-                 && serverDisconnectable (dev, ix))
+                else if (1
+                    && (now - dev->shrd[ix]->time) > SHARED_TIMEOUT
+                    && serverDisconnectable( dev, ix )
+                )
                     dev->shrd[ix]->disconnect = 1;
 
                 /* Disconnect if the disconnect bit is set */
                 if (dev->shrd[ix]->disconnect)
-                    serverDisconnect (dev, ix);
+                    serverDisconnect( dev, ix );
 
                 /* Otherwise set the fd if not waiting */
                 else if (!dev->shrd[ix]->waiting)
                 {
-                    FD_SET (dev->shrd[ix]->fd, &selset);
+                    FD_SET( dev->shrd[ix]->fd, &selset );
+
                     if (dev->shrd[ix]->fd >= maxfd)
                         maxfd = dev->shrd[ix]->fd + 1;
-                    shrdtrc(dev,"select   set %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
+
+                    SHRDTRACE( "select set %d id=%d",
+                        dev->shrd[ix]->fd, dev->shrd[ix]->id );
                 }
             }
-
         }
 
-        /* Wait for a request if no pending requests */
+        /* Wait for request if all pending requests were processed */
         if (ix >= SHARED_MAX_SYS)
         {
-            /* Exit thread if nothing to select */
-            if (maxfd < 0) continue;
+            /* If our select set is empty, there are not any clients
+               connected to our device (and dev->shrdconn SHOULD now
+               be zero) and thus we have nothing to do. If we don't
+               have any clients connected to our device then we are
+               serving no purpose so we should just exit our thread.
+            */
+            if (maxfd < 0)      // (if nothing to select)
+                continue;       // (then exit our thread)
 
-            /* Wait for a file descriptor to become busy */
-            wait.tv_sec = 10; /*SHARED_SELECT_WAIT;*/
+            /* Wait for a client to send us a request */
+            wait.tv_sec = SHARED_SELECT_WAIT;
             wait.tv_usec = 0;
-            release_lock (&dev->lock);
 
-            dev->shrdwait = 1;
-            rc = select ( maxfd, &selset, NULL, NULL, &wait );
-            dev->shrdwait = 0;
+            release_lock( &dev->lock );
+            {
+                dev->shrdwait = 1;
+                {
+                    rc = select( maxfd, &selset, NULL, NULL, &wait );
+                }
+                dev->shrdwait = 0;
+            }
+            obtain_lock( &dev->lock );
 
-            obtain_lock (&dev->lock);
+            SHRDTRACE("select rc %d", rc );
 
-            shrdtrc(dev,"select rc %d\n",rc);
+            /* Timeout; no one has any requests for us at this time */
+            if (rc == 0)
+                continue;
 
-            if (rc == 0) continue;
-
+            /* Did the select fail? */
             if (rc < 0 )
             {
-                if (HSO_errno == HSO_EINTR || HSO_errno == HSO_EBADF) continue;
-                WRMSG(HHC00735, "E", "select()", strerror(HSO_errno));
-                break;
+                /* Try again if temporary error */
+                if (HSO_errno == HSO_EINTR || HSO_errno == HSO_EBADF)
+                    continue;
+
+                // "Shared: error in function %s: %s"
+                WRMSG( HHC00735, "E", "select()", strerror( HSO_errno ));
+                break; // (exit our thread)
             }
 
-            /* Find any pending requests */
+            /* One or more sockets in our select set is ready, meaning
+               one or more remote clients connected to our device has
+               a request it needs us to process. Loop through our list
+               of connected clients and set the 'pending' request bit
+               for each one whose socket that select said is FD_ISSET.
+            */
             for (ix = 0; ix < SHARED_MAX_SYS; ix++)
             {
-                if (dev->shrd[ix]
-                 && FD_ISSET(dev->shrd[ix]->fd, &selset))
+                if (1
+                    /* Is there a client at this slot? */
+                    && dev->shrd[ix]
+                    /* Did select() say its socket is set? */
+                    && FD_ISSET( dev->shrd[ix]->fd, &selset )
+                )
                 {
+                    /* Indicate this client has a pending request */
                     dev->shrd[ix]->pending = 1;
-                    shrdtrc(dev,"select isset %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
+                    SHRDTRACE("select isset %d id=%d",
+                        dev->shrd[ix]->fd, dev->shrd[ix]->id );
                 }
             }
-            continue;
+            continue; // (re-iterate to process all pending requests)
         }
 
         /* Found a pending request */
-        release_lock (&dev->lock);
+        release_lock( &dev->lock );
 
-        shrdtrc(dev,"select ready %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
+        SHRDTRACE("select ready %d id=%d",
+            dev->shrd[ix]->fd, dev->shrd[ix]->id );
 
         if (dev->shrd[ix]->havehdr)
         {
             /* Copy the saved start/resume packet */
-            memcpy (hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE);
-            dev->shrd[ix]->havehdr = dev->shrd[ix]->waiting = 0;
+            memcpy( hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE );
+            dev->shrd[ix]->havehdr = 0;
+            dev->shrd[ix]->waiting = 0;
         }
         else
         {
             /* Read the request packet */
-            rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
-            if (rc < 0)
+            if ((rc = recvData( dev->shrd[ix]->fd, hdr, buf, 65536, 1 )) < 0)
             {
-                WRMSG(HHC00734, "E", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id);
+                // "%1d:%04X Shared: error in receive from %s id %d"
+                WRMSG( HHC00734, "E", LCSS_DEVNUM, dev->shrd[ix]->ipaddr, dev->shrd[ix]->id );
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
-                obtain_lock (&dev->lock);
+                obtain_lock( &dev->lock );
                 continue;
             }
         }
 
         /* Process the request */
-        serverRequest (dev, ix, hdr, buf);
+        serverRequest( dev, ix, hdr, buf );
 
-        obtain_lock (&dev->lock);
+        obtain_lock( &dev->lock );
 
-        /* If the `waiting' bit is on then the start/resume request
+        /* If the 'waiting' bit is on then the start/resume request
            failed because the device is busy on some other remote
            system.  We only need to save the header because the data
            is ignored for start/resume.
         */
         if (dev->shrd[ix]->waiting)
         {
-            memcpy (dev->shrd[ix]->hdr, hdr, SHRD_HDR_SIZE);
+            memcpy( dev->shrd[ix]->hdr, hdr, SHRD_HDR_SIZE );
             dev->shrd[ix]->havehdr = 1;
         }
         else
             dev->shrd[ix]->pending = 0;
-    }
+
+    } /* while (dev->shrdconn) */
 
     dev->shrdtid = 0;
-    release_lock (&dev->lock);
+    release_lock( &dev->lock );
 
-    WRMSG(HHC00101, "I", thread_id(), get_thread_priority(), threadname);
+    if (MLVL( VERBOSE ))
+        LOG_THREAD_END( threadname  );
 
     return NULL;
 
 } /* serverConnect */
 
 /*-------------------------------------------------------------------
- * General trace routine for shared devices
+ * Trace routine for tracing SHRD_HDR
  *-------------------------------------------------------------------*/
-static void shrdtrc (DEVBLK *dev, char *msg, ...)
+static void shrdhdrtrc( DEVBLK* dev, const char* msg, const BYTE* hdr,
+                                     const char* msg2 )
 {
-int             dt;
-struct timeval  tv;
-SHRD_TRACE      s;
-va_list         vl;
-
-    dt = (dev != NULL && (dev->ccwtrace||dev->ccwstep));
-    if (dt == 0 && sysblk.shrdtrace == 0) return;
-
-    va_start(vl,msg);
-    gettimeofday(&tv, NULL);
-    sprintf ((char *)s,
-            "%6.6ld" "." "%6.6ld %4.4X:",
-            (long)tv.tv_sec, (long)tv.tv_usec, dev ? dev->devnum : 0);
-    vsnprintf ((char *)s + strlen(s), sizeof(s) - strlen(s),
-            msg, vl);
-    if (dt)
-    {
-        WRMSG(HHC00743, "I", s+14);
-    }
-    if (sysblk.shrdtrace)
-    {
-        SHRD_TRACE *p = sysblk.shrdtracep++;
-        if (p >= sysblk.shrdtracex)
-        {
-            p = sysblk.shrdtrace;
-            sysblk.shrdtracep = p + 1;
-        }
-        if (p) memcpy(p, s, sizeof(*p));
-    }
-
-} /* shrdtrc */
-
+    BYTE cmd, code; U16 devnum; int id, len; char buf[4];
+    SHRD_GET_HDR( hdr, cmd, code, devnum, id, len );
+    MSGBUF( buf, "%2.2x", cmd );
+    SHRDTRACE( "%-18s : %s(%2.2x) %2.2x dev %4.4x id %d len %d%s%s",
+        msg, shrdcmd2str( cmd ), cmd, code, devnum, id, len,
+        msg2 ? " " : "", msg2 ? msg2 : "" );
+}
 
 /*-------------------------------------------------------------------
- * Shared device server
+ * General trace routine for shared devices
  *-------------------------------------------------------------------*/
-LOCK shrdlock;
-COND shrdcond;
-
-static void shared_device_manager_shutdown(void * unused)
+static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
 {
-    UNREFERENCED(unused);
+    bool            tracing_or_stepping;
+    struct timeval  tv;
+    SHRD_TRACE      tracemsg;
+    va_list         vl;
+    char            buf[32];
 
-    if(sysblk.shrdport)
+    /* If the device is being traced or stepped, we also print a
+       trace message (WITHOUT a timestamp) directly to the panel.
+       Otherwise we build a trace message WITH a timestamp prefix
+       and enter it into out trace table if one exists. If neither
+       is true (not tracing or stepping AND no trace table) then
+       there's nothing for us to do so we return immediately.
+    */
+    tracing_or_stepping = (dev && (dev->ccwtrace || dev->ccwstep));
+
+    OBTAIN_SHRDTRACE_LOCK();
+
+    if (!tracing_or_stepping && !sysblk.shrdtrace)
+    {
+        RELEASE_SHRDTRACE_LOCK();
+        return;  // (nothing for us to do!)
+    }
+
+    ASSERT( tracing_or_stepping || sysblk.shrdtrace );
+
+    /* Build the timestamp portion of the trace message */
+    gettimeofday( &tv, NULL );
+    FormatTIMEVAL( &tv, buf, sizeof( buf ));
+    STRLCPY( tracemsg, buf + 11 ); // (skip "YYYY-MM-DD ")
+
+    /* Append the devnum to the trace message */
+    MSGBUF( buf, "  %4.4X  ", dev ? dev->devnum : 0 );
+    STRLCAT( tracemsg, buf );
+
+    /* Now format the rest of the trace message following that part */
+    va_start( vl, fmt );
+    vsnprintf( (char*) tracemsg + strlen( tracemsg ),
+        sizeof( tracemsg ) - strlen( tracemsg ), fmt, vl );
+
+    /* Log the trace message directly to the panel (WITHOUT the
+       timestamp prefix) if the device is being traced/stepped. */
+    if (tracing_or_stepping)
+        // "Shared:  %s"
+        WRMSG( HHC00743, "I", tracemsg + 16 ); // (skip "HH:MM:SS.uuuuuu ")
+
+    /* Copy the trace message into the trace table (if it exists) */
+    if (sysblk.shrdtrace)
+    {
+        /* Grab pointer to next available table entry and then
+           bump the pointer to the next entry for next time.
+        */
+        SHRD_TRACE* currmsg = sysblk.shrdtracep++;
+
+        if (sysblk.shrdtracep >= sysblk.shrdtracex)
+            sysblk.shrdtracep  = sysblk.shrdtrace;
+
+        /* Copy message (WITH timestamp) into trace table */
+        strlcpy( (char*) currmsg, (const char*) tracemsg, sizeof( SHRD_TRACE ));
+    }
+
+    RELEASE_SHRDTRACE_LOCK();
+}
+
+/*-------------------------------------------------------------------
+ *              shutdown_shared_server
+ *-------------------------------------------------------------------*/
+DLL_EXPORT void shutdown_shared_server( void* unused )
+{
+    OBTAIN_SHRDLOCK();
+    {
+        shutdown_shared_server_locked( unused );
+    }
+    RELEASE_SHRDLOCK();
+}
+
+/*-------------------------------------------------------------------
+ *              shutdown_shared_server_locked
+ *-------------------------------------------------------------------*/
+DLL_EXPORT void shutdown_shared_server_locked( void* unused )
+{
+    UNREFERENCED( unused );
+
+    if (sysblk.shrdport || sysblk.shrdtid)
     {
         sysblk.shrdport = 0;
 
         if (sysblk.shrdtid)
-        {
-            signal_thread (sysblk.shrdtid, SIGUSR2);
-
-            obtain_lock(&shrdlock);
-            timed_wait_condition_relative_usecs(&shrdcond,&shrdlock,2*1000*1000,NULL);
-            release_lock(&shrdlock);
-        }
+            wait_condition( &sysblk.shrdcond, &sysblk.shrdlock );
     }
+    ASSERT( !sysblk.shrdport && !sysblk.shrdtid );
 }
 
-DLL_EXPORT void *shared_server (void *arg)
+/*-------------------------------------------------------------------
+ * Shared device server thread: accept connect from remote client
+ *-------------------------------------------------------------------*/
+DLL_EXPORT void* shared_server( void* arg )
 {
+bool                    shutdown=false; /* shutdown flag             */
 int                     rc = -32767;    /* Return code               */
 int                     hi;             /* Hi fd for select          */
 int                     lsock;          /* inet socket for listening */
@@ -2516,30 +2719,31 @@ struct sockaddr_un      userver;        /* Unix address structure    */
 int                     optval;         /* Argument for setsockopt   */
 fd_set                  selset;         /* Read bit map for select   */
 TID                     tid;            /* Negotiation thread id     */
-char                    threadname[40];
+char                    threadname[16] = {0};
+struct timeval          timeout = {0};
 
-    UNREFERENCED(arg);
+    // We are the "sysblk.shrdtid" thread...
 
-    MSGBUF(threadname, "Shared device server %d.%d", SHARED_VERSION, SHARED_RELEASE);
+    UNREFERENCED( arg );
 
     /* Display thread started message on control panel */
-    WRMSG (HHC00100, "I", thread_id(), get_thread_priority(), threadname);
+    MSGBUF( threadname, "shrd srvr %d.%d", SHARED_VERSION, SHARED_RELEASE );
+    LOG_THREAD_BEGIN( threadname  );
 
     /* Obtain a internet socket */
-    lsock = socket (AF_INET, SOCK_STREAM, 0);
-
-    if (lsock < 0)
+    if ((lsock = socket( AF_INET, SOCK_STREAM, 0 )) < 0)
     {
-        WRMSG(HHC00735, "E", "socket()", strerror(HSO_errno));
+        // "Shared: error in function %s: %s"
+        WRMSG( HHC00735, "E", "socket()", strerror( HSO_errno ));
         return NULL;
     }
 
     /* Obtain a unix socket */
 #if defined( HAVE_SYS_UN_H )
-    usock = socket (AF_UNIX, SOCK_STREAM, 0);
-    if (usock < 0)
+    if ((usock = socket( AF_UNIX, SOCK_STREAM, 0 )) < 0)
     {
-        WRMSG(HHC00735, "W", "socket()", strerror(HSO_errno));
+        // "Shared: error in function %s: %s"
+        WRMSG( HHC00735, "W", "socket()", strerror( HSO_errno ));
     }
 #else
     usock = -1;
@@ -2547,29 +2751,32 @@ char                    threadname[40];
 
     /* Allow previous instance of socket to be reused */
     optval = 1;
-    setsockopt (lsock, SOL_SOCKET, SO_REUSEADDR,
-                (GETSET_SOCKOPT_T*)&optval, sizeof(optval));
+    setsockopt( lsock, SOL_SOCKET, SO_REUSEADDR,
+                (GETSET_SOCKOPT_T*) &optval, sizeof( optval ));
 
     /* Prepare the sockaddr structure for the bind */
     memset( &server, 0, sizeof(server) );
-    server.sin_family = AF_INET;
+    server.sin_family      = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = sysblk.shrdport;
-    server.sin_port = htons(server.sin_port);
+    server.sin_port        = htons( sysblk.shrdport );
 
     /* Attempt to bind the internet socket to the port */
     while (sysblk.shrdport)
     {
-        rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
-        if (rc == 0 || HSO_errno != HSO_EADDRINUSE) break;
-        WRMSG (HHC00736, "W", sysblk.shrdport);
-        SLEEP(10);
+        rc = bind( lsock, (struct sockaddr*) &server, sizeof( server ));
+        if (rc == 0 || HSO_errno != HSO_EADDRINUSE)
+            break;
+        // "Shared: waiting for port %u to become free"
+        WRMSG( HHC00736, "W", sysblk.shrdport );
+        SLEEP( 10 );
     } /* end while */
 
     if (rc != 0 || !sysblk.shrdport)
     {
-        WRMSG(HHC00735, "E", "bind()", strerror(HSO_errno));
-        close_socket(lsock); close_socket(usock);
+        // "Shared: error in function %s: %s"
+        WRMSG( HHC00735, "E", "bind()", strerror( HSO_errno ));
+        close_socket( lsock );
+        close_socket( usock );
         return NULL;
     }
 
@@ -2578,231 +2785,366 @@ char                    threadname[40];
     if (usock >= 0)
     {
         userver.sun_family = AF_UNIX;
-        sprintf(userver.sun_path, "/tmp/hercules_shared.%d", sysblk.shrdport);
-        unlink(userver.sun_path);
-        fchmod (usock, 0700);
+        sprintf( userver.sun_path, "/tmp/hercules_shared.%d", sysblk.shrdport );
+        unlink( userver.sun_path );
+        fchmod( usock, 0700 );
 
-        rc = bind (usock, (struct sockaddr *)&userver, sizeof(userver));
+        rc = bind( usock, (struct sockaddr*) &userver, sizeof( userver ));
 
         if (rc < 0)
         {
-            WRMSG(HHC00735, "W", "bind()", strerror(errno));
-            close(usock);
+            // "Shared: error in function %s: %s"
+            WRMSG( HHC00735, "W", "bind()", strerror( errno ));
+            close( usock );
             usock = -1;
         }
     }
 #endif // defined( HAVE_SYS_UN_H )
 
     /* Put the sockets into listening state */
-    rc = listen (lsock, SHARED_MAX_SYS);
+    rc = listen( lsock, SHARED_MAX_SYS );
 
     if (rc < 0)
     {
-        WRMSG(HHC00735, "E", "listen()", strerror(HSO_errno));
-        close_socket(lsock); close_socket(usock);
+        // "Shared: error in function %s: %s"
+        WRMSG( HHC00735, "E", "listen()", strerror( HSO_errno ));
+        close_socket( lsock );
+        close_socket( usock );
         return NULL;
     }
 
     if (usock >= 0)
     {
-        rc = listen (usock, SHARED_MAX_SYS);
+        rc = listen( usock, SHARED_MAX_SYS );
 
         if (rc < 0)
         {
-            WRMSG(HHC00735, "W", "listen()", strerror(HSO_errno));
-            close_socket(usock);
+            // "Shared: error in function %s: %s"
+            WRMSG( HHC00735, "W", "listen()", strerror( HSO_errno ));
+            close_socket( usock );
             usock = -1;
         }
     }
 
     csock = -1;
+
     if (lsock < usock)
         hi = usock + 1;
     else
         hi = lsock + 1;
 
-    WRMSG(HHC00737, "I", sysblk.shrdport);
+    // "Shared: waiting for shared device requests on port %u"
+    WRMSG( HHC00737, "I", sysblk.shrdport );
 
-    initialize_lock (&shrdlock);
-    initialize_condition(&shrdcond);
-
-    hdl_addshut("shared_device_manager_shutdown",shared_device_manager_shutdown, NULL);
+    /* Define shared server thread shutdown routine */
+    hdl_addshut( "shutdown_shared_server", shutdown_shared_server, NULL );
 
     /* Handle connection requests and attention interrupts */
-    while (sysblk.shrdport)
+    while (1)
     {
+        /* Continue running (looping) as long as shrdport is defined */
+        OBTAIN_SHRDLOCK();
+        {
+            shutdown = (sysblk.shrdport ? false : true);
+        }
+        RELEASE_SHRDLOCK();
+
+        if (shutdown)
+            break;
+
         /* Initialize the select parameters */
-        FD_ZERO (&selset);
-        FD_SET (lsock, &selset);
+        FD_ZERO( &selset );
+        FD_SET( lsock, &selset );
+
         if (usock >= 0)
-            FD_SET (usock, &selset);
+            FD_SET( usock, &selset );
 
         /* Wait for a file descriptor to become ready */
-        rc = select ( hi, &selset, NULL, NULL, NULL );
+        timeout.tv_sec  = 0;
+        timeout.tv_usec = 500000;  // 0.5 seconds
+        rc = select( hi, &selset, NULL, NULL, &timeout );
 
-        if (rc == 0) continue;
+        if (rc == 0)
+            continue;
 
         if (rc < 0 )
         {
-            if (HSO_errno == HSO_EINTR) continue;
-            WRMSG(HHC00735, "E", "select()", strerror(HSO_errno));
+            if (HSO_errno == HSO_EINTR)
+                continue;
+
+            // "Shared: error in function %s: %s"
+            WRMSG( HHC00735, "E", "select()", strerror( HSO_errno ));
             break;
         }
 
         /* If a client connection request has arrived then accept it */
-        if (FD_ISSET(lsock, &selset))
+        if (FD_ISSET( lsock, &selset ))
             rsock = lsock;
-        else if (usock >= 0 && FD_ISSET(usock, &selset))
+        else if (usock >= 0 && FD_ISSET( usock, &selset ))
             rsock = usock;
         else
             rsock = -1;
 
+        /* Accept the connection and create conversation socket */
         if (rsock > 0)
         {
-            /* Accept a connection and create conversation socket */
-            csock = accept (rsock, NULL, NULL);
-            if (csock < 0)
+            if ((csock = accept( rsock, NULL, NULL )) < 0)
             {
-                WRMSG(HHC00735, "E", "accept()", strerror(HSO_errno));
+                // "Shared: error in function %s: %s"
+                WRMSG( HHC00735, "E", "accept()", strerror( HSO_errno ));
                 continue;
             }
 
-            psock = malloc (sizeof (csock));
-            if (psock == NULL)
+            if (!(psock = malloc( sizeof( csock ))))
             {
                 char buf[40];
-                MSGBUF(buf, "malloc(%d)", (int)sizeof(csock));
-                WRMSG(HHC00735, "E", buf, strerror(HSO_errno));
-                close_socket (csock);
+                MSGBUF( buf, "malloc(%d)", (int) sizeof( csock ));
+                // "Shared: error in function %s: %s"
+                WRMSG( HHC00735, "E", buf, strerror( HSO_errno ));
+                close_socket( csock );
                 continue;
             }
             *psock = csock;
 
             /* Create a thread to complete the client connection */
-            rc = create_thread (&tid, DETACHED,
-                                serverConnect, psock, "serverConnect");
-            if(rc)
+            rc = create_thread( &tid, DETACHED,
+                                serverConnect, psock, "serverConnect" );
+            if (rc)
             {
-                WRMSG(HHC00102, "E", strerror(rc));
-                close_socket (csock);
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror( rc ));
+                close_socket( csock );
             }
 
         } /* end if(rsock) */
 
+    } /* end while (1) */
 
-    } /* end while */
+    /* Remove shut entry so we can do a new 'hdl_addshut' next time */
+    if (!sysblk.shutdown)
+        hdl_delshut( shutdown_shared_server, NULL );
 
     /* Close the listening sockets */
-    close_socket (lsock);
+    close_socket( lsock );
+
 #if defined( HAVE_SYS_UN_H )
     if (usock >= 0)
     {
-        close_socket (usock);
-        unlink(userver.sun_path);
+        close_socket( usock );
+        unlink( userver.sun_path );
     }
 #endif
 
-    signal_condition(&shrdcond);
+    /* Notify "shutdown_shared_server" that we've exited */
+    OBTAIN_SHRDLOCK();
+    {
+        sysblk.shrdtid = 0;
+        signal_condition( &sysblk.shrdcond );
+    }
+    RELEASE_SHRDLOCK();
 
-    if ( !sysblk.shutdown )
-        hdl_delshut(shared_device_manager_shutdown, NULL);
-
-    sysblk.shrdtid = 0;
-
-    WRMSG (HHC00101, "I", thread_id(), get_thread_priority(), threadname);
+    LOG_THREAD_END( threadname  );
 
     return NULL;
 
 } /* end function shared_server */
 
 /*-------------------------------------------------------------------
- * Shared device command processor
+ * Define number of Shared Device Server trace table entries
  *-------------------------------------------------------------------*/
-DLL_EXPORT int shared_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
 {
     char buf[256];
     char *kw, *op, c;
     char *strtok_str = NULL;
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
+
+    UPPER_ARGV_0( argv );
 
     /* Get keyword and operand */
-    if (argc != 2 || strlen(argv[1]) > 255)
+    if (0
+        ||  argc < 1
+        ||  argc > 2
+        || (argc > 1 && strlen( argv[1] ) >= _countof( buf ))
+    )
     {
-        WRMSG (HHC00738, "E");
-        return 0;
-    }
-    STRLCPY( buf, argv[1] );
-    kw = strtok_r (buf, "=", &strtok_str );
-    op = strtok_r (NULL, " \t", &strtok_str );
-
-    if (kw == NULL)
-    {
-        WRMSG (HHC00739, "E");
-        return 0;
+        // "Shared: invalid or missing argument"
+        WRMSG( HHC00738, "E" );
+        return -1;
     }
 
-    if (strcasecmp(kw, "trace") == 0)
+    if (argc < 2)
     {
-        int n;
-        SHRD_TRACE *s, *p, *x, *i;
-        s = sysblk.shrdtrace;
-        p = sysblk.shrdtracep;
-        x = sysblk.shrdtracex;
-        n = sysblk.shrdtracen;
-
-        /* Get a new trace table if an operand was specified */
-        if (op)
+        OBTAIN_SHRDTRACE_LOCK();
         {
-            if (sscanf (op, "%d%c", &n, &c) != 1)
-            {
-                WRMSG (HHC00740, "E", op);
-                return 0;
-            }
-            if (s != NULL)
-            {
-                sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
-                SLEEP (1);
-                free (s);
-            }
-            sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
-            sysblk.shrdtracen = 0;
-            if (n > 0)
-            {
-                s = calloc( (size_t)n, sizeof(SHRD_TRACE) );
-                if (s == NULL)
-                {
-                    char buf[40];
-                    MSGBUF(buf, "calloc(%d, %d)", (int)n, (int)sizeof(SHRD_TRACE) );
-                    WRMSG (HHC00735, "E", buf, strerror(errno));
-                    return 0;
-                }
-                sysblk.shrdtracen = n;
-                sysblk.shrdtrace = sysblk.shrdtracep = s;
-                sysblk.shrdtracex = s + n;
-            }
+            MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
+        }
+        RELEASE_SHRDTRACE_LOCK();
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], buf );
+        return 0;
+    }
+
+    // Format: "SHRD [TRACE[=nnnn]]" where nnnn is #of table entries.
+    // Enter the command with no argument to display the current value.
+    // Use "shrd trace" by itself to print the current table.
+
+    STRLCPY( buf, argv[1] );
+
+    kw = strtok_r( buf, "=",    &strtok_str );
+    op = strtok_r( NULL, " \t", &strtok_str );
+
+    if (!kw)
+    {
+        // "Shared: invalid or missing keyword"
+        WRMSG( HHC00739, "E" );
+        return -1;
+    }
+
+    if (strcasecmp( kw, "TRACE" ) == 0)
+    {
+        SHRD_TRACE*  shrdtrace;
+        SHRD_TRACE*  shrdtracep;
+        SHRD_TRACE*  shrdtracex;
+        int          shrdtracen;
+
+        OBTAIN_SHRDTRACE_LOCK();
+
+        shrdtrace  = sysblk.shrdtrace;       // (ptr to beginning of table)
+        shrdtracep = sysblk.shrdtracep;      // (ptr to current/next entry)
+        shrdtracex = sysblk.shrdtracex;      // (ptr past the end of table)
+
+        /* Print trace table if no TRACE operand was specified */
+        if (!op)
+        {
+            shared_print_trace_table_locked();
+            RELEASE_SHRDTRACE_LOCK();
             return 0;
         }
-        /* Print the trace table */
-        sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
-        i = p;
-        SLEEP(1);
-        do {
-            if (i[0] != '\0') WRMSG(HHC00743, "I", (char *)i);
-            if (++i >= x) i = s;
-        } while (i != p);
-        memset(s, 0, n * sizeof(SHRD_TRACE) );
-        sysblk.shrdtrace = s;
-        sysblk.shrdtracep = s;
-        sysblk.shrdtracex = x;
-        sysblk.shrdtracen = n;
-    }
-    else
-    {
-        WRMSG (HHC00741, "E", kw);
+
+        /* Operand specified: get size of requested table */
+        if (sscanf( op, "%d%c", &shrdtracen, &c ) != 1)
+        {
+            // "Shared: invalid or missing value %s"
+            WRMSG( HHC00740, "E", op );
+            RELEASE_SHRDTRACE_LOCK();
+            return -1;
+        }
+
+        /* Free existing table */
+        free( sysblk.shrdtrace );
+        sysblk.shrdtrace  = NULL;
+        sysblk.shrdtracex = NULL;
+        sysblk.shrdtracep = NULL;
+        sysblk.shrdtracen = 0;
+
+        /* Allocate new table */
+        if (shrdtracen > 0)
+        {
+            if (!(shrdtrace = calloc( (size_t) shrdtracen, sizeof( SHRD_TRACE ))))
+            {
+                char buf[40];
+                MSGBUF( buf, "calloc(%d, %d)", (int) shrdtracen, (int) sizeof( SHRD_TRACE ));
+                // "Shared: error in function %s: %s"
+                WRMSG( HHC00735, "E", buf, strerror( errno ));
+                RELEASE_SHRDTRACE_LOCK();
+                return -1;
+            }
+
+            sysblk.shrdtracen = shrdtracen;
+            sysblk.shrdtracex = shrdtrace + shrdtracen;
+            sysblk.shrdtrace  = shrdtrace;
+            sysblk.shrdtracep = shrdtrace;
+        }
+
+        if (MLVL( VERBOSE ))
+        {
+            // "%-14s set to %s"
+            MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
+            WRMSG( HHC02204, "I", argv[0], buf );
+        }
+
+        RELEASE_SHRDTRACE_LOCK();
         return 0;
     }
-    return 0;
+
+    if (strcasecmp( kw, "DTAX" ) == 0)  // Dump Table At Exit
+    {
+        int dtax;
+        if (!op)
+        {
+            // "Shared: invalid or missing value %s"
+            WRMSG( HHC00740, "E", kw );
+            RELEASE_SHRDTRACE_LOCK();
+            return -1;
+        }
+        if (sscanf( op, "%d%c", &dtax, &c ) != 1)
+        {
+            // "Shared: invalid or missing value %s"
+            WRMSG( HHC00740, "E", op );
+            RELEASE_SHRDTRACE_LOCK();
+            return -1;
+        }
+        sysblk.shrddtax = dtax ? true : false;
+        RELEASE_SHRDTRACE_LOCK();
+        return 0;
+    }
+
+    // "Shared: invalid or missing keyword %s"
+    WRMSG( HHC00741, "E", kw );
+    return -1;
+}
+
+/*-------------------------------------------------------------------
+ * Print Shared Device Server trace table entries
+ *-------------------------------------------------------------------*/
+DLL_EXPORT void shared_print_trace_table()
+{
+    OBTAIN_SHRDTRACE_LOCK();
+    {
+        shared_print_trace_table_locked();
+    }
+    RELEASE_SHRDTRACE_LOCK();
+}
+
+/*-------------------------------------------------------------------
+ * Print Shared Device Server trace table entries
+ *-------------------------------------------------------------------*/
+static void shared_print_trace_table_locked()
+{
+    /* Does a trace table exist? */
+    if (sysblk.shrdtrace)
+    {
+        SHRD_TRACE* current = sysblk.shrdtracep;
+        bool printed = false;
+
+        do
+        {
+            if (current[0][0])
+            {
+                // "Shared:  %s"
+                WRMSG( HHC00743, "I", (char*) current );
+                printed = true;
+            }
+
+            if (++current >= sysblk.shrdtracex)
+                current = sysblk.shrdtrace;
+        }
+        while (current != sysblk.shrdtracep);
+
+        if (!printed)
+        {
+            // "Shared:  %s"
+            WRMSG( HHC00743, "I", "(none)" );
+        }
+
+        /* Now that it's been printed, reset it to empty */
+        memset( sysblk.shrdtrace, 0, sysblk.shrdtracen * sizeof( SHRD_TRACE ));
+    }
+    else
+        // "Shared:  %s"
+        WRMSG( HHC00743, "I", "(NULL)" );
 }
 
 DEVHND shared_ckd_device_hndinfo = {
@@ -2863,38 +3205,40 @@ DEVHND shared_fba_device_hndinfo = {
 
 #else // !defined( OPTION_SHARED_DEVICES )
 
-int shared_update_notify (DEVBLK *dev, int block)
+int shared_update_notify( DEVBLK* dev, int block )
 {
- UNREFERENCED(dev);
- UNREFERENCED(block);
+ UNREFERENCED( dev   );
+ UNREFERENCED( block );
  return 0;
 }
-int shared_ckd_init (DEVBLK *dev, int argc, char *argv[] )
+int shared_ckd_init( DEVBLK* dev, int argc, char* argv[] )
 {
- UNREFERENCED(dev);
- UNREFERENCED(argc);
- UNREFERENCED(argv);
+ UNREFERENCED( dev  );
+ UNREFERENCED( argc );
+ UNREFERENCED( argv );
  return -1;
 }
-int shared_fba_init (DEVBLK *dev, int argc, char *argv[] )
+int shared_fba_init( DEVBLK* dev, int argc, char* argv[] )
 {
- UNREFERENCED(dev);
- UNREFERENCED(argc);
- UNREFERENCED(argv);
+ UNREFERENCED( dev  );
+ UNREFERENCED( argc );
+ UNREFERENCED( argv );
  return -1;
 }
-void *shared_server (void *arg)
+void* shared_server( void* arg )
 {
- UNREFERENCED(arg);
- WRMSG (HHC00742, "E");
+ UNREFERENCED( arg );
+ // "Shared: OPTION_SHARED_DEVICES not defined"
+ WRMSG( HHC00742, "E" );
  return NULL;
 }
-int shared_cmd(int argc, char *argv[], char *cmdline)
+int shrd_cmd( int argc, char* argv[], char* cmdline )
 {
- UNREFERENCED(argc);
- UNREFERENCED(argv);
- UNREFERENCED(cmdline);
- WRMSG (HHC00742, "E");
- return 0;
+ UNREFERENCED( argc    );
+ UNREFERENCED( argv    );
+ UNREFERENCED( cmdline );
+ // "Shared: OPTION_SHARED_DEVICES not defined"
+ WRMSG( HHC00742, "E" );
+ return -1;
 }
-#endif /* defined(OPTION_SHARED_DEVICES) */
+#endif /* defined( OPTION_SHARED_DEVICES ) */

@@ -66,7 +66,6 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#MAINSIZE">MAINSIZE</a>   1G
     <a href="#XPNDSIZE">XPNDSIZE</a>   0
     <a href="#NUMCPU">NUMCPU</a>     4
-    <a href="#NUMVEC">NUMVEC</a>     0
     <a href="#MAXCPU">MAXCPU</a>     8
     <a href="#ENGINES">ENGINES</a>    CP,CP,AP,IP
 
@@ -85,10 +84,12 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CCKD">CCKD</a>       NOSFD=1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
-    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+    <a href="#PANOPT">PANOPT</a>     NAMEONLY
     <a href="#PANRATE">PANRATE</a>    FAST
+    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+
     <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP
-    <a href="#CODEPAGE">CODEPAGE</a>   default
+    <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
     <a href="#LEGACYSENSEID">LEGACYSENSEID</a>   OFF
@@ -377,7 +378,8 @@ a real System/390.  The configuration file is an ASCII text file.
     Specifies the codepage conversion mapping table used for ASCII/EBCDIC translation.
     <p>
 
-    <code>default</code> specifies traditional Hercules codepage mapping.
+    <code>default</code> specifies traditional Hercules codepage mapping,
+    which is non-transparent.
 
     <p>
 
@@ -473,10 +475,10 @@ a real System/390.  The configuration file is an ASCII text file.
             <td><center>YES</center></td>
         </tr>
 
-        <tr><td align="center"><code>819/1047</code></td>
-            <td>819 ISO-8859-1</td>
-            <td>1047 Open Systems Latin 1</td>
-            <td><center>YES</center></td>
+        <tr><td align="center"><b><code>819/1047</code></b></td>
+            <td><b>819 ISO-8859-1</b></td>
+            <td><b>1047 Open Systems Latin 1</b></td>
+            <td><b><center>YES</center></b></td>
         </tr>
 
         <tr><td align="center"><code>850/273</code></td>
@@ -542,6 +544,40 @@ a real System/390.  The configuration file is an ASCII text file.
     panel command (which is supported as a configuration file statement
     as well). Enter the panel command <code>help cp_updt</code> for more
     information.
+
+    <p>
+
+    The recommended code page is "<b>819/1047</b>", as it is both transparent
+    and properly translates <i><u>all</u></i> ASCII characters to their EBCDIC
+    equivalents, including all extended ASCII characters such as
+
+    '[' (left square bracket),
+    '\' (backslash),
+    ']' (right square bracket),
+    '^' (caret / circumflex),
+    '_' (underscore),
+    '`' (grave / accent),
+    '{' (left curly bracket),
+    '|' (vertical bar),
+    '}' (right curly bracket),
+    '~' (tilde),
+    '&cent;' (cent),
+    '&pound;' (pound),
+    '&curren;' (Currency sign),
+    '&yen;' (yen, yuan),
+    '&brvbar;' (broken bar),
+    '&sect;' (section sign),
+    '&copy;' (copyright),
+    '&ordf;' (feminine ordinal indicator),
+    '&reg;' (registered trademark),
+    '&deg;' (degree),
+    '&plusmn;' (plus-minus),
+    '&micro;' (mu/micro),
+    '&para;' (pilcrow/paragraph),
+    '&ordm;' (masculine ordinal indicator),
+    '&iquest;' (inverted question mark),
+    '&times;' (multiplication sign),
+    '&divide;' (obelus/divide sign).
 
     <p>
 
@@ -1155,6 +1191,19 @@ a real System/390.  The configuration file is an ASCII text file.
     for information regarding modifying Windows's "Adapter Binding Order" and/or defining
     a preferred CTCI-WIN default host network adapter.
     <p>
+    <center>
+    <table width=95%>
+      <tr><td>
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+      </td></tr>
+    </table>
+    </center>
+    <p>
 
 <a name="NUMCPU"></a>
 <dt><code>NUMCPU &nbsp; <em>nn</em></code>
@@ -1175,13 +1224,6 @@ a real System/390.  The configuration file is an ASCII text file.
     actually able to support multiple CPUs (and if you do not actually need
     multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
     compile time might even produce a slight performance advantage too).
-    <p>
-
-<a name="NUMVEC"></a>
-<dt><code>NUMVEC &nbsp; <em>nn</em></code>
-<dd><p>
-    Specifies the number of emulated vector facilities. Default is one per
-    CPU. Only available by default in ESA/390 mode.
     <p>
 
 <a name="OSTAILOR"></a>
@@ -1206,6 +1248,15 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     Use the <code>ostailor</code> or <code>pgmtrace</code> panel
     commands to display or alter the current settings.
+    <p>
+
+<a name="PANOPT"></a>
+<dt><code>PANOPT &nbsp; <u>FULLPATH</u> &#124; NAMEONLY </code>
+<dd><p>
+    Defines panel options. The only supported options at this time are
+    <code>NAMEONLY</code> or <code>FULLPATH</code>. The <code>NAMEONLY</code>
+    option requests the panel to display only the emulated device's base
+    filename instead of the fullpath filename, which is the default.
     <p>
 
 <a name="PANRATE"></a>
@@ -1773,13 +1824,9 @@ a real System/390.  The configuration file is an ASCII text file.
     <TR>
         <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="11%">1</TD>
         <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">(watchdog)</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="15%">(unused)</TD>
         <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="67%">
-            The "watch dog" thread is the internal Hercules thread that monitors
-            all CPU threads for a  malfunctioning CPU (i.e. one that, due to a bug,
-            has stopped executing instructions). The watch dog thread is always
-            set to a relative priority one less than the priority assigned to
-            the CPU threads.
+            ---
         </TD>
     </TR>
     <TR> <!-- ============================================================================ -->
@@ -3013,7 +3060,8 @@ a real System/390.  The configuration file is an ASCII text file.
             via the use of special CCW opcodes (0x4B Set Diagnose and 0xE4
             Sense Id) without any intervention on the part of the Hercules
             operator. An example of such a program for DOS/VSE called
-            <code>TMOUNT</code> is provided in the <code>util</code>
+            <code><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/util/TMOUNT.txt">TMOUNT</a></code>
+            is provided in the <code>util</code>
             subdirectory of the distributed source code.
             <p>
             This is a sticky option. When specified, automount support for
@@ -3064,8 +3112,9 @@ a real System/390.  The configuration file is an ASCII text file.
             A message is also issued whenever a successful mount or unmount
             is performed.
             <p>
-            A sample guest automount program called <code>TMOUNT</code> for
-            the DOS/VSE operating system is provided in the
+            A sample guest automount program called 
+            <code><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/util/TMOUNT.txt">TMOUNT</a></code>
+            for the DOS/VSE operating system is provided in the
             <code>util</code> subdirectory of the distributed source code.
 
         </dl> <!-- end Additional AWS/HET/FAKE parameters -->
@@ -3278,17 +3327,26 @@ a real System/390.  The configuration file is an ASCII text file.
 
         Emulates an OSA Express card running in QDIO mode.
         Both layer-2 and layer-3 are currently supported.
+        The mode of operation is selected by the emulated workload
+        and cannot be configured from Hercules.
+
+        </p>
 
         <p>
-
-        For technical reasons, the <code>iface</code>,&nbsp;<code>ipaddr</code>
-        and <code>netmask</code> parameters are <i><u>required parameters</u></i>
-        for both Windows and *nix. All other parameters however, are optional.
-
-        <p>
-
         The device/emulation type may optionally be specified as <code>OSA</code>
         or <code>OSD</code> instead of <code>QETH</code>.
+        </p>
+
+        <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. The easiest way to do this on Linux is
+        to enable setuid of hercifc using the <tt>--enable-setuid-hercifc</tt>
+        configure option. If that's not an option, or you're not running under
+        Linux, using Administrative (root) privileges when running Hercules will
+        work as well.
+        </i>
 
         <br><br>
 
@@ -3303,18 +3361,30 @@ a real System/390.  The configuration file is an ASCII text file.
         implemented.
         </i>
 
-        <br><br>
+        </p>
 
         <dl> <!-- begin QETH parms -->
 
-        <dt><i><u>Required</u></i> parameters for both Windows and *nix:
+        <dt>Arguments:
         <dd><p>
 
-            <dl> <!-- begin REQUIRED for both Windows and *nix -->
+            <dl>
+
+                <dt><code>ifname &nbsp;<em>interface</em></code>
+                <dd><p>
+                    <b><i>Only available on *nix</i></b><br>
+                    Specifies the interface name for the device to be created
+                    (e.g. <code>tun</code>, <code>tun0</code>, etc).
+                    <p>
+
+            </dl>
+
+            <dl> <!-- begin Optional for both *nix and Windows -->
 
                 <dt><code>ipaddr &nbsp;<em>address</em></code>
                 <dt><code>ipaddr &nbsp;<em>address/prefix</em></code>
                 <dd><p>
+                    <b><i>Required on Windows</i></b><br>
                     Specifies the IPv4 address to be assigned to your virtual
                     OSA Express card. This IP Address should match the IP
                     address in your guest's TCPIP PROFILE, although this is
@@ -3344,31 +3414,6 @@ a real System/390.  The configuration file is an ASCII text file.
                     the subnet mask is not already defined via the optional
                     prefix size parameter of the <code>ipaddr</code> option.
                     <p>
-
-            </dl> <!-- end REQUIRED for both Windows and *nix -->
-
-        <br>
-
-        <dt>Optional for *nix only:
-        <dd><p>
-
-            <dl> <!-- begin Optional for *nix -->
-
-                <dt><code>ifname &nbsp;<em>interface</em></code>
-                <dd><p>
-                    Specifies the interface name of a host interface
-                    that is already configured (e.g. <code>tun</code>,
-                    <code>tun0</code>, etc). &nbsp;(*nix only)
-                    <p>
-
-            </dl> <!-- end Optional for *nix -->
-
-        <br>
-
-        <dt>Optional for both Windows and *nix:
-        <dd><p>
-
-            <dl> <!-- begin Optional for both *nix and Windows -->
 
                 <dt><code>iface &nbsp;<em>device</em></code>
                 <dd><p>
@@ -3461,6 +3506,15 @@ a real System/390.  The configuration file is an ASCII text file.
         the Hercules machine as either an IBM 8232 LCS device, the LCS3172
         driver of a P/390, a 3172 running ICP (Interconnect Communications
         Program), or as a simple IBM 2216 router.
+
+        <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
 
         <p>
 
@@ -3698,6 +3752,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
         <a href="herctcp.html">Hercules TCP/IP</a> page for unix details,
         in particular the use of preconfigured interfaces.
         <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
+        <p>
         The Windows implementation is different from the unix one. See
         SoftDevLab's <a href="http://www.softdevlabs.com/ctci-win">CTCI-WIN</a>
         page for further details and information.
@@ -3840,6 +3903,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
         Adapter.  CTCE devices are emulated via TCP/IP connections between
         two or more Hercules instances.
         <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
+        <p>
         A Hercules CTCE device requires two even-odd pairs of devices, one for
         reading and the other for writing.  Each individual device of the even-odd
         device pair requires and even-odd pair of port numbers.  Only the even
@@ -3920,6 +3992,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
         From the point of view of the guest image running in the Hercules
         machine it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to
         another image.
+        <p>
+
+        <i>
+        <b>Note:</b> Hercules's networking support requires <u>privileged access</u>
+        to your host's networking devices. If Hercules is not started with
+        <u>Administrative (root) privileges</u> then initialization of your
+        networking devices will fail and your guest's networking will not work.
+        </i>
+
         <p>
         For *nix systems, such as Linux, BSD, and OSX, you may use
         preconfigured interfaces or you may request Hercules to configure

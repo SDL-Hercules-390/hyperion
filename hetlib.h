@@ -166,12 +166,12 @@ typedef struct _hetb
 /*
 || Public functions
 */
-HET_DLL_IMPORT int het_open( HETB **hetb, char *filename, int flags );
+HET_DLL_IMPORT int het_open( HETB **hetb, const char *filename, int flags );
 HET_DLL_IMPORT int het_close( HETB **hetb );
 HET_DLL_IMPORT int het_read_header( HETB *hetb );
 HET_DLL_IMPORT int het_read( HETB *hetb, void *sbuf );
 HET_DLL_IMPORT int het_write_header( HETB *hetb, int len, int flags1, int flags2 );
-HET_DLL_IMPORT int het_write( HETB *hetb, void *sbuf, int slen );
+HET_DLL_IMPORT int het_write( HETB *hetb, const void *sbuf, int slen );
 HET_DLL_IMPORT int het_tapemark( HETB *hetb );
 HET_DLL_IMPORT int het_sync( HETB *hetb );
 HET_DLL_IMPORT int het_cntl( HETB *hetb, int func, unsigned long val );

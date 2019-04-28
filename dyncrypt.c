@@ -2731,8 +2731,10 @@ static void ARCH_DEP(kmctr_aes)(int r1, int r2, int r3, REGS *regs)
   wrap = kmctr_wrap[fc];
   keylen = kmctr_keylengths[fc];
   parameter_blocklen = kmctr_pblens[fc];
+#ifdef OPTION_KMCTR_DEBUG
   logmsg("Feature code %d wrap %d keylen %d pblen %d\n",
    tfc, wrap, keylen, parameter_blocklen);
+#endif /* #ifdef OPTION_KMCTR_DEBUG */
 
   /* Fetch the parameter block */
   ARCH_DEP(vfetchc)(parameter_block, parameter_blocklen - 1, GR_A(1, regs) & ADDRESS_MAXWRAP(regs), 1, regs);
@@ -5026,29 +5028,50 @@ HDL_INSTRUCTION_SECTION;
     // (allows for a much shorter HDL_INST statement)
 
 #define HDL_INST            HDL_DEF_INST
-#define ARCH_390_900        HDL_INSTARCH_390 | HDL_INSTARCH_900
-#define ARCH_____900                           HDL_INSTARCH_900
+#define ARCH_____390_900                       HDL_INSTARCH_390 | HDL_INSTARCH_900
+#define ARCH_________900                                          HDL_INSTARCH_900
+#define ARCH_370_390_900    HDL_INSTARCH_370 | HDL_INSTARCH_390 | HDL_INSTARCH_900
+#define ARCH_370_____900    HDL_INSTARCH_370                    | HDL_INSTARCH_900
 #define OPCODE( _opcode )   0x ## _opcode
 
   /* Install our instructions for the architectures we support */
 
 #if defined( _FEATURE_017_MSA_FACILITY )
-  HDL_INST( ARCH_390_900, OPCODE( B93E ), dyn_compute_intermediate_message_digest );
-  HDL_INST( ARCH_390_900, OPCODE( B93F ), dyn_compute_last_message_digest         );
-  HDL_INST( ARCH_390_900, OPCODE( B92E ), dyn_cipher_message                      );
-  HDL_INST( ARCH_390_900, OPCODE( B91E ), dyn_compute_message_authentication_code );
-  HDL_INST( ARCH_390_900, OPCODE( B92F ), dyn_cipher_message_with_chaining        );
+  #if !defined( _FEATURE_370_EXTENSION )
+  HDL_INST( ARCH_____390_900, OPCODE( B93E ), dyn_compute_intermediate_message_digest );
+  HDL_INST( ARCH_____390_900, OPCODE( B93F ), dyn_compute_last_message_digest         );
+  HDL_INST( ARCH_____390_900, OPCODE( B92E ), dyn_cipher_message                      );
+  HDL_INST( ARCH_____390_900, OPCODE( B91E ), dyn_compute_message_authentication_code );
+  HDL_INST( ARCH_____390_900, OPCODE( B92F ), dyn_cipher_message_with_chaining        );
+  #else
+  HDL_INST( ARCH_370_390_900, OPCODE( B93E ), dyn_compute_intermediate_message_digest );
+  HDL_INST( ARCH_370_390_900, OPCODE( B93F ), dyn_compute_last_message_digest         );
+  HDL_INST( ARCH_370_390_900, OPCODE( B92E ), dyn_cipher_message                      );
+  HDL_INST( ARCH_370_390_900, OPCODE( B91E ), dyn_compute_message_authentication_code );
+  HDL_INST( ARCH_370_390_900, OPCODE( B92F ), dyn_cipher_message_with_chaining        );
+  #endif
 #endif
 
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
-  HDL_INST( ARCH_____900, OPCODE( B928 ), dyn_perform_cryptographic_key_management_operation );
+  #if !defined( _FEATURE_370_EXTENSION )
+  HDL_INST( ARCH_________900, OPCODE( B928 ), dyn_perform_cryptographic_key_management_operation );
+  #else
+  HDL_INST( ARCH_370_____900, OPCODE( B928 ), dyn_perform_cryptographic_key_management_operation );
+  #endif
 #endif
 
 #if defined( _FEATURE_077_MSA_EXTENSION_FACILITY_4 )
-  HDL_INST( ARCH_____900, OPCODE( B92D ), dyn_cipher_message_with_counter         );
-  HDL_INST( ARCH_____900, OPCODE( B92A ), dyn_cipher_message_with_cipher_feedback );
-  HDL_INST( ARCH_____900, OPCODE( B92B ), dyn_cipher_message_with_output_feedback );
-  HDL_INST( ARCH_____900, OPCODE( B92C ), dyn_perform_cryptographic_computation   );
+  #if !defined( _FEATURE_370_EXTENSION )
+  HDL_INST( ARCH_________900, OPCODE( B92D ), dyn_cipher_message_with_counter         );
+  HDL_INST( ARCH_________900, OPCODE( B92A ), dyn_cipher_message_with_cipher_feedback );
+  HDL_INST( ARCH_________900, OPCODE( B92B ), dyn_cipher_message_with_output_feedback );
+  HDL_INST( ARCH_________900, OPCODE( B92C ), dyn_perform_cryptographic_computation   );
+  #else
+  HDL_INST( ARCH_370_____900, OPCODE( B92D ), dyn_cipher_message_with_counter         );
+  HDL_INST( ARCH_370_____900, OPCODE( B92A ), dyn_cipher_message_with_cipher_feedback );
+  HDL_INST( ARCH_370_____900, OPCODE( B92B ), dyn_cipher_message_with_output_feedback );
+  HDL_INST( ARCH_370_____900, OPCODE( B92C ), dyn_perform_cryptographic_computation   );
+  #endif
 #endif
 }
 END_INSTRUCTION_SECTION;
@@ -5057,15 +5080,10 @@ HDL_REGISTER_SECTION;
 {
   /* Display copyright, version and level of support information */
 
-  char pkgvers[ 80 ];
-
   UNREFERENCED( regsym );   // (HDL_REGISTER_SECTION parameter)
 
   // "%s module loaded%s"
   WRMSG( HHC00150, "I", "Crypto", " (C) Copyright 2003-2016 by Bernard van der Helm");
-  MSGBUF( pkgvers, "Built with crypto external package version %s", crypto_version() );
-  // "%s"
-  WRMSG( HHC01417, "I", pkgvers );
 
   // "Activated facility: %s"
   WRMSG( HHC00151, "I", "Message Security Assist");

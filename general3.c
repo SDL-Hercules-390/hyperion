@@ -1947,13 +1947,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
         resu ^= rota;
         break;
     default:    /* Should not EVER occur! */
-        // "MACHINE CHECK: Instruction Processing Damage: %2.2x R[x]SBG"
-        WRMSG( HHC90550, "E", opcode );
-#if !defined( NO_SIGABEND_HANDLER )
-        signal_thread( sysblk.cputid[ regs->cpuad ], SIGUSR1 );
-#else
         CRASH();
-#endif
     }
 
     /* And/Or/Xor set condition code according to result bits */

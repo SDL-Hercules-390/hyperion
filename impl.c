@@ -79,7 +79,7 @@ static char*  modnames[ MAX_MODS ] = {0};       /* ptrs to modnames  */
 static int    modcount = 0;                     /* count of modnames */
 
 /* forward define process_script_file (ISW20030220-3) */
-extern int process_script_file(char *,int);
+extern int process_script_file( const char*, bool );
 /* extern int quit_cmd(int argc, char *argv[],char *cmdline);        */
 
 /* Forward declarations:                                             */
@@ -120,18 +120,23 @@ static void delayed_exit (int exit_code)
 }
 
 /*-------------------------------------------------------------------*/
-/* Signal handler for SIGINT signal                                  */
+/*                   SIGINT signal handler                           */
 /*-------------------------------------------------------------------*/
-static void sigint_handler (int signo)
+/*                                                                   */
+/*  The SIGINT signal is sent to a process by its controlling        */
+/*  terminal when a user wishes to interrupt the process. This       */
+/*  is typically initiated by pressing Ctrl+C, but on some           */
+/*  systems the "delete" character or "break" key can be used.       */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static void sigint_handler( int signo )
 {
-//  logmsg ("impl.c: sigint handler entered for thread %lu\n",/*debug*/
-//          thread_id());                                     /*debug*/
+    UNREFERENCED( signo );
 
-    UNREFERENCED(signo);
+    signal( SIGINT, sigint_handler );
 
-    signal(SIGINT, sigint_handler);
     /* Ignore signal unless presented on console thread */
-    if ( !equal_threads( thread_id(), sysblk.cnsltid ) )
+    if (!equal_threads( thread_id(), sysblk.cnsltid ))
         return;
 
     /* Exit if previous SIGINT request was not actioned */
@@ -148,29 +153,33 @@ static void sigint_handler (int signo)
     /* Activate instruction stepping */
     sysblk.inststep = 1;
     SET_IC_TRACE;
-    return;
-} /* end function sigint_handler */
+}
 
 /*-------------------------------------------------------------------*/
-/* Signal handler for SIGTERM signal                                 */
+/*                    SIGTERM signal handler                         */
 /*-------------------------------------------------------------------*/
-static void sigterm_handler (int signo)
+/*                                                                   */
+/*  The SIGTERM signal is sent to a process to request its           */
+/*  termination. Unlike the SIGKILL signal, it can be caught         */
+/*  and interpreted or ignored by the process. This allows the       */
+/*  process to perform nice termination releasing resources          */
+/*  and saving state if appropriate. SIGINT is nearly identical      */
+/*  to SIGTERM.                                                      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static void sigterm_handler( int signo )
 {
-//  logmsg ("impl.c: sigterm handler entered for thread %lu\n",/*debug*/
-//          thread_id());                                      /*debug*/
+    UNREFERENCED( signo );
 
-    UNREFERENCED(signo);
+    signal( SIGTERM, sigterm_handler );
 
-    signal(SIGTERM, sigterm_handler);
     /* Ignore signal unless presented on main program (impl) thread */
-    if ( !equal_threads( thread_id(), sysblk.impltid ) )
+    if (!equal_threads( thread_id(), sysblk.impltid ))
         return;
 
     /* Initiate system shutdown */
     do_shutdown();
-
-    return;
-} /* end function sigterm_handler */
+}
 
 #if defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
@@ -392,113 +401,6 @@ static void* WinMsgThread( void* arg )
 }
 #endif /* defined( _MSVC_ ) */
 
-#if !defined( NO_SIGABEND_HANDLER )
-/*-------------------------------------------------------------------*/
-/* Linux watchdog thread -- detects malfunctioning CPU engines       */
-/*-------------------------------------------------------------------*/
-static void* watchdog_thread( void* arg )
-{
-    REGS* regs;
-    S64   savecount[ MAX_CPU_ENGINES ];
-    int   cpu;
-
-    UNREFERENCED( arg );
-
-    /* Set watchdog priority LOWER than the cpu thread priority
-       such that it will not invalidly detect an inoperable cpu
-    */
-    set_thread_priority( MAX( sysblk.minprio, sysblk.cpuprio - 1 ));
-
-    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
-        savecount[ cpu ] = -1;
-
-    while (!sysblk.shutdown)
-    {
-        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
-        {
-            /* We're only interested in CPUs
-               that are ONLINE and STARTED
-            */
-            if (0
-                || !IS_CPU_ONLINE( cpu )
-                || (regs = sysblk.regs[ cpu ])->cpustate != CPUSTATE_STARTED
-            )
-            {
-                /* CPU not ONLINE or not STARTED */
-                savecount[ cpu ] = -1;
-                continue;
-            }
-
-            /* CPU is ONLINE and STARTED. Now check to see if it's
-               maybe in a WAITSTATE. If so, we're not interested.
-            */
-            if (0
-                || WAITSTATE( &regs->psw )
-#if defined( _FEATURE_WAITSTATE_ASSIST )
-                || (1
-                    && regs->sie_active
-                    && WAITSTATE( &regs->guestregs->psw )
-                   )
-#endif
-            )
-            {
-                /* CPU is in a WAITSTATE */
-                savecount[ cpu ] = -1;
-                continue;
-            }
-
-            /* We have found a running CPU that should be executing
-               instructions. Compare its current instruction count
-               with our previously saved value. If they're different
-               then it has obviously executed SOME instructions and
-               all is well. Save its current instruction counter and
-               move on the next CPU. This one appears to be healthy.
-            */
-            if (INSTCOUNT( regs ) != (U64) savecount[ cpu ])
-            {
-                /* Save updated instruction count for next time */
-                savecount[ cpu ] = INSTCOUNT( regs );
-                continue;
-            }
-
-            /*
-               Uh oh! We have found a malfunctioning CPU! It has not
-               executed any instructions at all within the last check
-               interval! Let the defined HDL watchdog hook deal with
-               this situation (if such a hook has been defined).
-            */
-            if (HDC1( debug_watchdog_signal, regs ))
-                continue;
-
-            /* Either there was no HDL watchdog hook defined for this
-               situation or else it returned false indicating it was
-               not abe to deal with the situation itself, so we have
-               to deal with it as best we can: send a signal to the
-               malfunctioning CPU's thread to cause a Machine Check.
-               The guest will then (if it's able to!) deal with the
-               its Machine Check however it needs to (e.g. by taking
-               the malfunctioning CPU offline, etc).
-            */
-            signal_thread( sysblk.cputid[ cpu ], SIGUSR1 );
-
-            /* Now reset our saved instruction count value to prevent
-               us from throwing another Machine Checks the next time
-               we wakeup. This means the guest has one check interval
-               to take the CPU offline. (It obviously cannot FIX the
-               problem since it's not ITS problem to fix! It's OURS!
-               Hercules obviously has a SERIOUS BUG somewhere!)
-            */
-            savecount[ cpu ] = -1;
-        }
-
-        SLEEP( WATCHDOG_SECS );     // (sleep for another interval)
-
-    } // while (!sysblk.shutdown)
-
-    return NULL;
-}
-#endif /* !defined( NO_SIGABEND_HANDLER ) */
-
 /*-------------------------------------------------------------------*/
 /* Herclin (plain line mode Hercules) message callback function      */
 /*-------------------------------------------------------------------*/
@@ -529,29 +431,50 @@ DLL_EXPORT  COMMANDHANDLER  getCommandHandler()
 
 /*-------------------------------------------------------------------*/
 /* Process .RC file thread.                                          */
-/*                                                                   */
-/* Called synchronously when in daemon mode.                         */
+/* Called synchronously when in daemon mode. Else asynchronously.    */
 /*-------------------------------------------------------------------*/
-static void* process_rc_file (void* dummy)
+static void* process_rc_file( void* dummy )
 {
-    char  pathname[MAX_PATH];
+    char  pathname[ MAX_PATH ];
 
-    UNREFERENCED(dummy);
+    UNREFERENCED( dummy );
 
-    /* We have a .rc file to run */
-    hostpath(pathname, cfgorrc[want_rc].filename, sizeof(pathname));
+    /* Obtain the name of the hercules.rc file or default */
+    if (0
+        /* Neither '-r' nor "HERCULES_RC" environment variable given */
+        || !cfgorrc[want_rc].filename
+        || !cfgorrc[want_rc].filename[0]
+    )
+    {
+        /* Check for "hercules.rc" file in current directory */
+        struct stat st;
+        if (stat( "hercules.rc", &st ) == 0)
+            cfgorrc[want_rc].filename = "hercules.rc";
+    }
 
-    /* Wait for panel thread to engage */
-// ZZ FIXME:THIS NEEDS TO GO
-    if (!sysblk.daemon_mode)
-        while (!sysblk.panel_init)
-            usleep( 10 * 1000 );
+    /* If we have a hercules.rc file, process it */
+    if (1
+        && cfgorrc[want_rc].filename
+        && cfgorrc[want_rc].filename[0]
+        && strcasecmp( cfgorrc[want_rc].filename, "None" ) != 0
+    )
+    {
+        hostpath( pathname, cfgorrc[want_rc].filename, sizeof( pathname ));
 
-    /* Run the script processor for this file */
-    process_script_file(pathname, 1);
-        // (else error message already issued)
+#if 1 // ZZ FIXME: THIS NEEDS TO GO
 
-    return NULL;    /* End the .rc thread */
+        /* Wait for panel thread to engage */
+        if (!sysblk.daemon_mode)
+            while (!sysblk.panel_init)
+                usleep( 10 * 1000 );
+
+#endif // ZZ FIXME: THIS NEEDS TO GO
+
+        /* Run the script processor for this file */
+        process_script_file( pathname, true );
+    }
+
+    return NULL;
 }
 
 /*-------------------------------------------------------------------*/
@@ -585,8 +508,9 @@ int     rc;
 
     sysblk.msglvl = DEFAULT_MLVL;
 
-    /* Initialize program name */
+    /* Initialize program name and version strings arrays */
     init_progname( argc, argv );
+    init_sysblk_version_str_arrays( NULL );
 
     /* Initialize SETMODE and set user authority */
     SETMODE( INIT );
@@ -696,6 +620,8 @@ int     rc;
     sysblk.cpuid = createCpuId( sysblk.cpumodel, sysblk.cpuversion,
                                 sysblk.cpuserial, 0 );
 
+    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
+
     /* set default Program Interrupt Trace to NONE */
     sysblk.pgminttr = OS_DEFAULT;
 
@@ -704,10 +630,6 @@ int     rc;
 #if defined( _FEATURE_ECPSVM )
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
-#endif
-
-#if defined( PANEL_REFRESH_RATE )
-    sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 #endif
 
 #if defined( OPTION_SHARED_DEVICES )
@@ -747,6 +669,12 @@ int     rc;
 
     initialize_condition( &sysblk.scrcond );
     initialize_condition( &sysblk.ioqcond );
+
+#if defined( OPTION_SHARED_DEVICES )
+    initialize_lock( &sysblk.shrdlock );
+    initialize_condition( &sysblk.shrdcond );
+    initialize_lock( &sysblk.shrdtracelock );
+#endif
 
     sysblk.mainowner = LOCK_OWNER_NONE;
     sysblk.intowner  = LOCK_OWNER_NONE;
@@ -842,12 +770,11 @@ int     rc;
        is the logger that processes all WRMSG() calls.
     */
     /* Log our own thread started message (better late than never) */
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), IMPL_THREAD_NAME );
+    LOG_THREAD_BEGIN( IMPL_THREAD_NAME  );
 
     /* Set the priority of the logger thread and log its started msg */
     set_thread_priority_id( sysblk.loggertid, sysblk.srvprio );
-    WRMSG( HHC00100, "I", sysblk.loggertid,
-        get_thread_priority_id( sysblk.loggertid ), LOGGER_THREAD_NAME );
+    LOG_TID_BEGIN( sysblk.loggertid, LOGGER_THREAD_NAME );
 
     /* Process command-line arguments. Exit if any serious errors. */
     if ((rc = process_args( argc, argv )) != 0)
@@ -872,7 +799,7 @@ int     rc;
        cepted and handled by the logger facility thereby allowing the
        panel thread or external gui to "see" it and thus display it.
     */
-    display_version       ( stdout, 0, "Hercules" );
+    display_version       ( stdout, 0, NULL );
     display_build_options ( stdout, 0 );
     display_extpkg_vers   ( stdout, 0 );
 
@@ -1052,6 +979,19 @@ int     rc;
         }
     }
 
+    /* The SIGINT signal is sent to a process by its controlling
+       terminal when a user wishes to interrupt the process. This
+       is typically initiated by pressing Ctrl+C, but on some
+       systems, the "delete" character or "break" key can be used.
+
+       The SIGTERM signal is sent to a process to request its
+       termination. Unlike the SIGKILL signal, it can be caught
+       and interpreted or ignored by the process. This allows
+       the process to perform nice termination releasing resources
+       and saving state if appropriate. SIGINT is nearly identical
+       to SIGTERM.
+    */
+
     /* Register the SIGINT handler */
     if (signal( SIGINT, sigint_handler ) == SIG_ERR)
     {
@@ -1077,6 +1017,11 @@ int     rc;
         TID dummy;
         BOOL bSuccess = FALSE;
 
+        /* The Windows the console_ctrl_handler function
+           accomplishes the same thing as what a SIGINT or
+           SIGTERM signal handler does on Unix systems: it
+           handles Ctrl+C and Close events.
+        */
         if (!SetConsoleCtrlHandler( console_ctrl_handler, TRUE ))
         {
             // "Cannot register %s handler: %s"
@@ -1113,12 +1058,13 @@ int     rc;
     }
 #endif
 
-#if defined(HAVE_DECL_SIGPIPE) && HAVE_DECL_SIGPIPE
+#if defined( HAVE_DECL_SIGPIPE ) && HAVE_DECL_SIGPIPE
     /* Ignore the SIGPIPE signal, otherwise Hercules may terminate with
        Broken Pipe error if the printer driver writes to a closed pipe */
-    if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
+    if (signal( SIGPIPE, SIG_IGN ) == SIG_ERR)
     {
-        WRMSG(HHC01411, "E", strerror(errno));
+        // "Cannot suppress SIGPIPE signal: %s"
+        WRMSG( HHC01411, "E", strerror( errno ));
     }
 #endif
 
@@ -1136,33 +1082,6 @@ int     rc;
         sysblk.sockrpipe=fds[0];
     }
 
-#if !defined(NO_SIGABEND_HANDLER)
-    {
-    struct sigaction sa;
-        sa.sa_sigaction = (void*)&sigabend_handler;
-#ifdef SA_NODEFER
-        sa.sa_flags = SA_NODEFER;
-#else
-        sa.sa_flags = 0;
-#endif
-
-        /* Explictily initialize sa_mask to its default.        @PJJ */
-        sigemptyset(&sa.sa_mask);
-
-        if( sigaction(SIGILL, &sa, NULL)
-         || sigaction(SIGFPE, &sa, NULL)
-         || sigaction(SIGSEGV, &sa, NULL)
-         || sigaction(SIGBUS, &sa, NULL)
-         || sigaction(SIGUSR1, &sa, NULL)
-         || sigaction(SIGUSR2, &sa, NULL) )
-        {
-            WRMSG(HHC01410, "S", "SIGILL/FPE/SEGV/BUS/USR", strerror(errno));
-            delayed_exit(-1);
-            return 1;
-        }
-    }
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
-
 #ifdef HAVE_REXX
     /* Initialize Rexx */
     InitializeRexx();
@@ -1170,18 +1089,6 @@ int     rc;
 
     /* System initialisation time */
     sysblk.todstart = hw_clock() << 8;
-
-#if !defined(NO_SIGABEND_HANDLER)
-    /* Start the watchdog */
-    rc = create_thread (&sysblk.wdtid, DETACHED,
-                        watchdog_thread, NULL, "watchdog_thread");
-    if (rc)
-    {
-        WRMSG(HHC00102, "E", strerror(rc));
-        delayed_exit(-1);
-        return 1;
-    }
-#endif /*!defined(NO_SIGABEND_HANDLER)*/
 
     hdl_addshut( "release_config", release_config, NULL );
 
@@ -1194,17 +1101,14 @@ int     rc;
 
     /* Process the .rc file synchronously when in daemon mode. */
     /* Otherwise Start up the RC file processing thread.       */
-    if (cfgorrc[want_rc].filename)
+    if (sysblk.daemon_mode)
+        process_rc_file( NULL );
+    else
     {
-        if (sysblk.daemon_mode)
-            process_rc_file( NULL );
-        else
-        {
-            rc = create_thread( &rctid, DETACHED,
-                process_rc_file, NULL, "process_rc_file" );
-            if (rc)
-                WRMSG( HHC00102, "E", strerror( rc ));
-        }
+        rc = create_thread( &rctid, DETACHED,
+            process_rc_file, NULL, "process_rc_file" );
+        if (rc)
+            WRMSG( HHC00102, "E", strerror( rc ));
     }
 
     if (log_callback)
@@ -1231,7 +1135,7 @@ int     rc;
         else
         {
             /* daemon mode without any daemon_task */
-            process_script_file("-", 1);
+            process_script_file( "-", true );
 
             /* We come here only if the user did ctl-d on a tty,
                or we reached EOF on stdin.  No quit command has
@@ -1359,7 +1263,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "version" ) == 0
                     )
                     {
-                        display_version( stdout, 0, "Hercules" );
+                        display_version( stdout, 0, NULL );
                     }
                     else if (0
                         || strcasecmp( optarg, "build"   ) == 0
@@ -1373,7 +1277,7 @@ static int process_args( int argc, char* argv[] )
                         || strcasecmp( optarg, "full" ) == 0
                     )
                     {
-                        display_version( stdout, 0, "Hercules" );
+                        display_version      ( stdout, 0, NULL );
                         display_build_options( stdout, 0 );
                         display_extpkg_vers  ( stdout, 0 );
                     }
@@ -1549,29 +1453,33 @@ error:
 
         for (i=0; cfgorrccount > i; i++)
         {
-            if (!cfgorrc[i].filename)       /* No value specified */
+            /* If no value explicitly specified, try env. default */
+            if (!cfgorrc[i].filename)
                 cfgorrc[i].filename = get_symbol( cfgorrc[i].envname );
 
-            if (!cfgorrc[i].filename)       /* No environment var */
+            /* If no env. default, try hard coded default */
+            if (0
+                || !cfgorrc[i].filename
+                || !cfgorrc[i].filename[0]
+            )
             {
-                if (!(rv = stat( cfgorrc[i].defaultfile, &st )))
+                /* Use default from current directory if it exists */
+                if ((rv = stat( cfgorrc[i].defaultfile, &st )) == 0)
                     cfgorrc[i].filename = cfgorrc[i].defaultfile;
                 continue;
             }
 
-            if (0
-                || !cfgorrc[i].filename[0]     /* Null name */
-                || !strcasecmp( cfgorrc[i].filename, "None" )
-            )
+            /* Explicit request for no file use at all? */
+            if (strcasecmp( cfgorrc[i].filename, "None" ) == 0)
             {
                cfgorrc[i].filename = NULL;  /* Suppress file */
                continue;
             }
 
-            /* File specified explicitly or by environment */
-            if (-1 == (rv = stat(cfgorrc[i].filename, &st)))
+            /* File specified explicitly or by env; check existence */
+            if ((rv = stat( cfgorrc[i].filename, &st )) != 0)
             {
-                // "%s file %s not found:  %s"
+                // "%s file %s not found: %s"
                 WRMSG( HHC02342, "S", cfgorrc[i].whatfile,
                     cfgorrc[i].filename, strerror( errno ));
                 arg_error++;

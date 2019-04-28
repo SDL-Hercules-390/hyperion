@@ -11,6 +11,20 @@
 #include "cckd.h"           // (need CCKD_MAX_SF, etc)
 
 /*-------------------------------------------------------------------*/
+/*  IMPORTANT PROGRAMMING NOTE: for whatever reason, base dasd       */
+/*  image files use a L2_trkoff value of zero in their L1tab entry   */
+/*  for non-existent tracks, whereas shadow files use a value of -1. */
+/*  To ensure we remain 100% compatible with all non-CCKD64 versions */
+/*  of Hercules, we MUST enforce this same inconsistent use design.  */
+/*-------------------------------------------------------------------*/
+
+#define CCKD64_NOSIZE               ((U64)0)
+#define CCKD64_MAXSIZE              ((U64)MAX_OFFSET_T)
+
+#define CCKD64_BASE_NO_OFFSET       CCKD64_NOSIZE
+#define CCKD64_SHADOW_NO_OFFSET     CCKD64_MAXSIZE
+
+/*-------------------------------------------------------------------*/
 /*                    struct typedefs                                */
 /*-------------------------------------------------------------------*/
 typedef struct CCKD64_DEVHDR    CCKD64_DEVHDR;  // Compress device header
@@ -24,9 +38,12 @@ typedef struct SPCTAB64         SPCTAB64;       // Space table
 /*                   Record layouts and sizes                        */
 /*-------------------------------------------------------------------*/
 #define CKD_R0       CKD_RECHDR         /* Record-0 count field      */
-#define CKD_EOFREC   CKD_RECHDR         /* End-of-FILE count field   */
+#define CKD_EOFREC   CKD_RECHDR         /* An END-OF-FILE record is     \
+                                           a count field with klen      \
+                                           of zero and dlen of zero,    \
+                                           i.e. a zero length record */
 static
-const   CKD_RECHDR   CKD_ENDTRK  =      /* End-of-TRACK marker is a     \
+const   CKD_RECHDR   CKD_ENDTRK  =      /* END-OF-TRACK marker is a     \
                                            count field (i.e. record     \
                                            header) consisting of...  */ \
     {{0xff,0xff},{0xff,0xff},0xff,0xff,{0xff,0xff}}; /* ...all 0xffs */
@@ -107,7 +124,7 @@ typedef  U64          CCKD64_L1ENT;     /* Level 1 table entry       */
 typedef  CCKD64_L1ENT CCKD64_L1TAB[];   /* Level 1 table             */
 typedef  CCKD64_L2ENT CCKD64_L2TAB[256];/* Level 2 table             */
 
-#define CCKD_TRACE_SIZE        ((S64)sizeof(CCKD_TRACE))
+#define CCKD_TRACE_SIZE        ((S64)sizeof(CCKD_ITRACE))
 #define CCKD64_DEVHDR_SIZE     ((S64)sizeof(CCKD64_DEVHDR))
 #define CCKD64_L1ENT_SIZE      ((S64)sizeof(CCKD64_L1ENT))
 #define CCKD64_L2ENT_SIZE      ((S64)sizeof(CCKD64_L2ENT))
@@ -161,13 +178,13 @@ struct CCKD64_EXT {                     /* Ext for compressed ckd    */
 
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
-        unsigned int     freemin;       /* Minimum free space size   */
-        CCKD64_IFREEBLK *ifb;           /* Internal free space chain */
 
-        int              free_count;    /* Number free space entries */
+        CCKD64_IFREEBLK *ifb;           /* Internal free space chain */
+        int              free_count;    /* Number of entries in chain*/
         int              free_idx1st;   /* Index of 1st entry        */
         int              free_idxlast;  /* Index of last entry       */
         int              free_idxavail; /* Index of available entry  */
+        unsigned int     free_minsize;  /* Minimum free space size   */
 
         int              lastsync;      /* Time of last sync         */
 
@@ -201,6 +218,7 @@ struct SPCTAB64
 {
     BYTE        spc_typ;                /* Type of space             */
     int         spc_val;                /* Value for space           */
+    int         spc_val2;               /* Another value for space   */
     U64         spc_off;                /* Space offset              */
     U64         spc_len;                /* Space length              */
     U64         spc_siz;                /* Space size                */

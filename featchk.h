@@ -547,6 +547,10 @@
  #define    _FEATURE_WAITSTATE_ASSIST
 #endif
 
+#if defined( FEATURE_TCPIP_EXTENSION )
+ #define    _FEATURE_TCPIP_EXTENSION
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                     PROGRAMMING NOTE                              */
 /*-------------------------------------------------------------------*/

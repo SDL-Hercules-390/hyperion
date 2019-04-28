@@ -28,15 +28,8 @@ Jan Jaeger designed and implemented many of the advanced features of
 Hercules, including dynamic reconfiguration, integrated console,
 interpretive execution and z/Architecture support.
 
-Until shortly after the Turbo-Hercules debacle, a dedicated crew of
-programmers was constantly at work implementing new features and fixing
-bugs. It is questionable whether the same is true today. Thus the reason
-for the existence of this SoftDevLabs version of Hercules 4.x Hyperion:
-to try and keep the Hercules project alive and active. (Sadly, there's not
-a lot of activity these days with the original version of Hercules. The
-SoftDevLabs version of Hercules 4.a Hyperion however (i.e. _this_ version),
-seems to be the only 'active' version of the Hercules emulator in existence.)
-
+The SoftDevLabs version of Hercules 4.x Hyperion is currently the only
+'active' version of the Hercules emulator in existence (so it seems).
 
 ### To find out more about this particular version of Hercules 4.x Hyperion,
 follow this link: [Hercules 4.x (Hyperion)](http://sdl-hercules-390.github.io/html/)

@@ -137,7 +137,18 @@
   #endif
 #endif
 
-#define PATH_SEP            "/"
+#define PATHSEPC '/'          // (character)
+#define PATHSEPS "/"          // (string)
+#define PATH_SEP "/"          // (same thing)
+
+#define SPACE    ' '          //  <---<<<  Look close!  There's a space there!
+
+#define MAX_ENVVAR_LEN        32768     // (just a reasonable limit)
+#define MAX_CFG_LINELEN       32768     // (to support long defsyms)
+
+#if    MAX_CFG_LINELEN         <  MAX_ENVVAR_LEN
+#error MAX_CFG_LINELEN must be >= MAX_ENVVAR_LEN
+#endif
 
 #if defined( _MSVC_ )
 
@@ -149,6 +160,10 @@
 
 #ifndef     S_IWGRP
   #define   S_IWGRP           0
+#endif
+
+#ifndef     SIGUSR1
+  #define   SIGUSR1           30
 #endif
 
 #ifndef     SIGUSR2
@@ -335,14 +350,6 @@
 #endif // (KEEPALIVE)
 
 /*-------------------------------------------------------------------*/
-/*          Miscellaneous Hercules-related constants                 */
-/*-------------------------------------------------------------------*/
-#define PATHSEPC '/'         /* Everyone else */
-#define PATHSEPS "/"
-
-#define SPACE   ' '    /* <---<<< Look close! There's a space there! */
-
-/*-------------------------------------------------------------------*/
 /*       Definitions for program product OS restriction flag.        */
 /*-------------------------------------------------------------------*/
 /* This flag is ORed with the SCLP READ CPU INFO response code. A    */
@@ -452,12 +459,6 @@
 #define MAX_RUNTEST_FACTOR  (((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) \
                             / 1000000.0 /* (usecs) */                 \
                             / MAX_RUNTEST_DUR)
-
-/*-------------------------------------------------------------------*/
-/*                  Watchdog thread interval                         */
-/*-------------------------------------------------------------------*/
-
-#define WATCHDOG_SECS           20      /* Seconds between checks    */
 
 /*-------------------------------------------------------------------*/
 /*                   Panel thread heartbeat                          */

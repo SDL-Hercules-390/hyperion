@@ -187,19 +187,19 @@ typedef struct _OSA_GRP {
     char *ttchpid;              /* chpid                             */
 
     BYTE  confipaddr4[4];       /* IPv4 address of the interface in  */
-                                /* host byte order. This variable    */
+                                /* network byte order. This variable */
                                 /* contains the binary equivalent of */
                                 /* the ttipaddr string.              */
-    BYTE  confpfxmask4[4];      /* IPv4 prefix mask (zeroes then ff) */
+    BYTE  confpfxmask4[4];      /* IPv4 prefix mask in network order */
     BYTE  confipaddr6[16];      /* IPv6 address of the interface in  */
-                                /* host byte order. This variable    */
+                                /* network byte order. This variable */
                                 /* contains the binary equivalent of */
                                 /* the ttipaddr6 string.             */
     BYTE  confpfxmask6[16];     /* IPv6 prefix mask (zeroes then ff) */
 
- OSA_IPV4 ipaddr4[OSA_MAXIPV4]; /* Locally recognised IPv4 address   */
+ OSA_IPV4 ipaddr4[OSA_MAXIPV4]; /* Locally recognised IPv4 addresses */
  OSA_IPV6 ipaddr6[OSA_MAXIPV6]; /* Locally recognised IPv6 addresses */
-  OSA_MAC mac[OSA_MAXMAC];      /* Locally recognised MAC addresses  */
+ OSA_MAC  mac    [OSA_MAXMAC];  /* Locally recognised MAC  addresses */
 
     int   promisc;              /* Adapter is in promiscuous mode    */
 
@@ -264,12 +264,12 @@ typedef struct _OSA_GRP {
     BYTE  gtulpfilt[4];         /* Guest token ulp filter            */
     BYTE  gtulpconn[4];         /* Guest token ulp connection        */
 
-#if defined(ENABLE_IPV6)
+#if defined( ENABLE_IPV6 )
     BYTE  iaDriveMACAddr[IFHWADDRLEN];   /* MAC address (Driver)     */
     char  szDriveMACAddr[24];            /* MAC address (Driver)     */
     struct in6_addr iaDriveLLAddr6;      /* IPv6 Link Local address (Driver) */
     char            szDriveLLAddr6[48];  /* IPv6 Link Local address (Driver) */
-#endif /* defined(ENABLE_IPV6) */
+#endif
 
 } OSA_GRP;
 
@@ -377,9 +377,8 @@ typedef struct OSA_HDR3 OSA_HDR3;
 /*-------------------------------------------------------------------*/
 /* Default pathname of the TUNTAP adapter                            */
 /*-------------------------------------------------------------------*/
-#define TUNTAP_NAME "/dev/net/tun"
-
-#endif /*!defined( OPTION_W32_CTCI )*/
+#define TUNTAP_NAME     "/dev/net/tun"
+#endif
 
 
 #endif /*_QETH_H*/

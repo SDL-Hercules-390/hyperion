@@ -393,17 +393,19 @@ int     attn = 0;
 static void cardrdr_query_device (DEVBLK *dev, char **devclass,
                 int buflen, char *buffer)
 {
+    char  filename[ PATH_MAX + 1 ];     /* full path or just name    */
+
     BEGIN_DEVICE_CLASS_QUERY( "RDR", dev, devclass, buflen, buffer );
 
     snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s IO[%"PRIu64"]",
-        ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),
-        (dev->bs ?                    " sockdev"   : ""),
-        (dev->multifile ?             " multifile" : ""),
-        (dev->ascii ?                 " ascii"     : ""),
-        (dev->ebcdic ?                " ebcdic"    : ""),
-        (dev->autopad ?               " autopad"   : ""),
+        ((filename[0] == '\0')      ? "*"          : (char*)filename),
+        (dev->bs                    ? " sockdev"   : ""),
+        (dev->multifile             ? " multifile" : ""),
+        (dev->ascii                 ? " ascii"     : ""),
+        (dev->ebcdic                ? " ebcdic"    : ""),
+        (dev->autopad               ? " autopad"   : ""),
         ((dev->ascii && dev->trunc) ? " trunc"     : ""),
-        (dev->rdreof ?                " eof"       : " intrq"),
+        (dev->rdreof                ? " eof"       : " intrq"),
         dev->excps );
 
 } /* end function cardrdr_query_device */

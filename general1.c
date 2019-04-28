@@ -553,7 +553,7 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(branch_and_save) */
 
 
-#if defined(FEATURE_BIMODAL_ADDRESSING)
+#if defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )
 /*-------------------------------------------------------------------*/
 /* 0C   BASSM - Branch and Save and Set Mode                    [RR] */
 /*-------------------------------------------------------------------*/
@@ -561,8 +561,10 @@ DEF_INST(branch_and_save_and_set_mode)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
+#if !defined( FEATURE_370_EXTENSION )
 int     xmode;                          /* 64 or 31 mode of target   */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#endif
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 BYTE    *ipsav;                         /* save for ip               */
 #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
@@ -615,17 +617,19 @@ BYTE    *ipsav;                         /* save for ip               */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
+#if !defined( FEATURE_370_EXTENSION )
         SET_ADDRESSING_MODE(regs, newia);
+#endif
         SUCCESSFUL_BRANCH(regs, newia, 2);
     }
     else
         INST_UPDATE_PSW(regs, 2, 0);
 
 } /* end DEF_INST(branch_and_save_and_set_mode) */
-#endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
+#endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
 
 
-#if defined(FEATURE_BIMODAL_ADDRESSING)
+#if defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )
 /*-------------------------------------------------------------------*/
 /* 0B   BSM   - Branch and Set Mode                             [RR] */
 /*-------------------------------------------------------------------*/
@@ -672,14 +676,16 @@ VADR    newia;                          /* New instruction address   */
     /* Set mode and branch to address specified by R2 operand */
     if ( r2 != 0 )
     {
+#if !defined( FEATURE_370_EXTENSION )
         SET_ADDRESSING_MODE(regs, newia);
+#endif
         SUCCESSFUL_BRANCH(regs, newia, 2);
     }
     else
         INST_UPDATE_PSW(regs, 2, 0);
 
 } /* end DEF_INST(branch_and_set_mode) */
-#endif /*defined(FEATURE_BIMODAL_ADDRESSING)*/
+#endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
 
 
 /*-------------------------------------------------------------------*/
@@ -1572,12 +1578,12 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
     cpu_length = min(4, len);
 
     /* Should the second operand cross a page boundary with the minimum
-       length or if the specified length is within the minimum, process 
-       the remaining length byte by byte so as to observe possible 
+       length or if the specified length is within the minimum, process
+       the remaining length byte by byte so as to observe possible
        access exceptions */
     if (0
-        || len <= 4 
-        || CROSSPAGEL( addr2, (int)cpu_length )
+        || len <= 4
+        || CROSSPAGEL( addr2, cpu_length )
        )
     {
         /* Fetch fullword from second operand */
@@ -1615,13 +1621,13 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
             dreg++;
         }
 
-    } 
+    }
     else
     {
-        /* Here if a page boundary would not be crossed with the 
+        /* Here if a page boundary would not be crossed with the
            minimum length and if the specified length is more than the
-           minimum.  Extend the CPU determined length out to the end 
-           of the page, but not longer than the specified length in 
+           minimum.  Extend the CPU determined length out to the end
+           of the page, but not longer than the specified length in
            register r2+1  */
         cpu_length = PAGEFRAME_PAGESIZE - ( addr2 & PAGEFRAME_BYTEMASK );
         cpu_length = min( cpu_length, len );
@@ -1651,7 +1657,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
             }
         } /* end for(j) */
 
-        /* Adjust the operand address and remaining length for the 
+        /* Adjust the operand address and remaining length for the
            number of bytes processed */
         addr2 += cpu_length;
         addr2 &= ADDRESS_MAXWRAP( regs );
@@ -1994,24 +2000,7 @@ U64     old, new;                       /* old, new values           */
 }
 
 
-#if defined(FEATURE_032_CSS_FACILITY)
-
-#if defined(FEATURE_033_CSS_FACILITY_2)
-#ifndef MAX_CSST_FC
-#define MAX_CSST_FC 2
-#endif /*#ifndef MAX_CSST_FC*/
-#ifndef MAX_CSST_SC
-#define MAX_CSST_SC 4
-#endif /*#ifndef MAX_CSST_SC*/
-#else
-#ifndef MAX_CSST_FC
-#define MAX_CSST_FC 1
-#endif /*#ifndef MAX_CSST_FC*/
-#ifndef MAX_CSST_SC
-#define MAX_CSST_SC 3
-#endif /*#ifndef MAX_CSST_SC*/
-#endif
-
+#if defined( FEATURE_032_CSS_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C8x2 CSST  - Compare and Swap and Store                     [SSF] */
 /*-------------------------------------------------------------------*/
@@ -2046,11 +2035,22 @@ BYTE    sc;                             /* Store characteristic      */
     /* Extract store characteristic from register 0 bits 48-55 */
     sc = regs->GR_LHLCH(0);
 
-    /* Program check if function code is not 0 or 1 */
+#undef  MAX_CSST_FC
+#undef  MAX_CSST_SC
+
+#if defined( FEATURE_033_CSS_FACILITY_2 )
+#define MAX_CSST_FC     2
+#define MAX_CSST_SC     4
+#else
+#define MAX_CSST_FC     1
+#define MAX_CSST_SC     3
+#endif
+
+    /* Program check if function code is greater than 1 or 2 */
     if (fc > MAX_CSST_FC)
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Program check if store characteristic is not 0, 1, 2, or 3 */
+    /* Program check if store characteristic is greater than 3 or 4 */
     if (sc > MAX_CSST_SC)
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -2231,7 +2231,7 @@ BYTE    sc;                             /* Store characteristic      */
     PERFORM_SERIALIZATION (regs);
 
 } /* end DEF_INST(compare_and_swap_and_store) */
-#endif /*defined(FEATURE_032_CSS_FACILITY)*/
+#endif /* defined( FEATURE_032_CSS_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2501,7 +2501,7 @@ int ARCH_DEP( mem_pad_cmp )
         rc = memcmp( m1, m2, neqlen = len1 );
         if (rc == 0)
         {
-            neqidx = neqlen;
+            neqidx += neqlen;
             m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
             rc = memcmp( m1, neq2 = m2, neqlen = len - len1 );
@@ -2634,7 +2634,7 @@ int ARCH_DEP( mem_cmp )
             rc = memcmp( m1, m2, neqlen = len2 );
             if (rc == 0)
             {
-                neqidx = neqlen;
+                neqidx += neqlen;
                 m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
                                     b2, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( neq1 = m1 + len2, m2, neqlen = len - len2 );
@@ -2651,7 +2651,7 @@ int ARCH_DEP( mem_cmp )
             rc = memcmp( m1, m2, neqlen = len1 );
             if (rc == 0)
             {
-                neqidx = neqlen;
+                neqidx += neqlen;
                 m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                     b1, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( m1, neq2 = m2 + len1, neqlen = len - len1 );
@@ -2667,7 +2667,7 @@ int ARCH_DEP( mem_cmp )
                 rc = memcmp( m1, m2, neqlen = len1 );
                 if (rc == 0)
                 {
-                    neqidx = neqlen;
+                    neqidx += neqlen;
                     m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                         b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     m2 = neq2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
@@ -2682,13 +2682,13 @@ int ARCH_DEP( mem_cmp )
                 rc = memcmp( m1, m2, neqlen = len1 );
                 if (rc == 0)
                 {
-                    neqidx = neqlen;
+                    neqidx += neqlen;
                     m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                         b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, neq2 = m2 + len1, neqlen = len2 - len1 );
                     if (rc == 0)
                     {
-                        neqidx = neqlen;
+                        neqidx += neqlen;
                         m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
                                             b2, regs, ACCTYPE_READ, regs->psw.pkey );
                         rc = memcmp( neq1 = m1 + len2 - len1, m2, neqlen = len - len2 );
@@ -2702,13 +2702,13 @@ int ARCH_DEP( mem_cmp )
                 rc = memcmp( m1, m2, neqlen = len2 );
                 if (rc == 0)
                 {
-                    neqidx = neqlen;
+                    neqidx += neqlen;
                     m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
                                         b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( neq1 = m1 + len2, m2, neqlen = len1 - len2 );
                     if (rc == 0)
                     {
-                        neqidx = neqlen;
+                        neqidx += neqlen;
                         m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
                                             b1, regs, ACCTYPE_READ, regs->psw.pkey );
                         rc = memcmp( m1, neq2 = m2 + len1 - len2, neqlen = len - len1 );
@@ -5645,10 +5645,10 @@ BYTE    termchar;                       /* Terminating character     */
        any number above zero. Set the CPU determined length to
        the nearest end of page of either operand.
     */
-    
+
     dist1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-    
+
     cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
 
     main1 = MADDR( addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );

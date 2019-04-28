@@ -19,6 +19,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "hercules.h"
 #include "opcode.h"
 #include "chsc.h"
+#include "cckddasd.h"
 
 /*-------------------------------------------------------------------*/
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
@@ -605,9 +606,7 @@ static void DelDevnumFastLookup(U16 lcss,U16 devnum)
 static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 {
     unsigned int schw;
-#if 0
-    LOGMSG( "DEBUG : DSFL Removing %d\n", subchan );
-#endif
+    TRACE( "DEBUG: DSFL Removing %d\n", subchan );
     if(sysblk.subchan_fl==NULL)
     {
         return;
@@ -876,6 +875,16 @@ int     cpu;
             deconfigure_cpu(cpu);
     RELEASE_INTLOCK(NULL);
 
+    /* Dump trace tables at exit */
+#if defined( OPTION_SHARED_DEVICES )
+    if (sysblk.shrddtax)
+        shared_print_trace_table();
+#endif
+    if (cckd_dtax())
+        cckd_print_itrace();
+    if (ptt_dtax())
+        ptt_pthread_print();
+
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->allocated)
@@ -901,14 +910,14 @@ int     cpu;
     WRMSG( HHC01427, "I", "Expanded", !configure_xstorage(~0ULL) ? "" : "not ");
 
     WRMSG(HHC01422, "I");
-
 } /* end function release_config */
 
-#ifdef OPTION_SHARED_DEVICES
+#if defined( OPTION_SHARED_DEVICES )
+
 /*-------------------------------------------------------------------*/
-/*                    shrdport_connecting_thread                     */
+/*            shrd_devinit                                           */
 /*-------------------------------------------------------------------*/
-static void* shrdport_connecting_thread(void* arg)
+static void* shrd_devinit( void* arg )
 {
     DEVBLK* dev = (DEVBLK*) arg;
     dev->hnd->init( dev, 0, NULL );
@@ -918,57 +927,66 @@ static void* shrdport_connecting_thread(void* arg)
 /*-------------------------------------------------------------------*/
 /*                       configure_shrdport                          */
 /*-------------------------------------------------------------------*/
-int configure_shrdport(U16 shrdport)
+int configure_shrdport( U16 shrdport )
 {
-int rc;
+    int      rc;
+    DEVBLK*  dev;
+    TID      tid;
 
-    if(sysblk.shrdport && shrdport)
+    obtain_lock( &sysblk.shrdlock );
+
+    if (shrdport && sysblk.shrdport)
     {
-        WRMSG(HHC00744, "E");
+        release_lock( &sysblk.shrdlock );
+        // "Shared: Server already active"
+        WRMSG( HHC00744, "E" );
         return -1;
     }
 
-    /* Start the shared server */
-    if ((sysblk.shrdport = shrdport))
-    {
-        rc = create_thread (&sysblk.shrdtid, DETACHED,
-                            shared_server, NULL, "shared_server");
-        if (rc)
-        {
-            WRMSG(HHC00102, "E", strerror(rc));
-            sysblk.shrdport = 0;
-            return(1);
-        }
+    /* Set requested shared port number */
+    sysblk.shrdport = shrdport;
 
-    }
-    else
+    /* Terminate the shared_server thread if requested */
+    if (!sysblk.shrdport)
     {
-        /* Terminate the shared device listener thread */
-        if (sysblk.shrdtid)
-            signal_thread (sysblk.shrdtid, SIGUSR2);
+        shutdown_shared_server_locked( NULL );
+        release_lock( &sysblk.shrdlock );
         return 0;
     }
 
-    /* Retry pending connections */
+    /* Start the shared server thread */
+    rc = create_thread( &sysblk.shrdtid, DETACHED,
+                        shared_server, NULL, "shared_server" );
+    if (rc)
     {
-        DEVBLK *dev;
-        TID     tid;
-
-        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if (dev->connecting)
-            {
-                rc = create_thread (&tid, DETACHED,
-                           shrdport_connecting_thread, dev, "device connecting thread");
-                if (rc)
-                {
-                    WRMSG(HHC00102, "E", strerror(rc));
-                    return(1);
-                }
-            }
+        sysblk.shrdport = 0;
+        release_lock( &sysblk.shrdlock );
+        // "Error in function create_thread(): %s"
+        WRMSG( HHC00102, "E", strerror( rc ));
+        return -1;
     }
+
+    release_lock( &sysblk.shrdlock );
+
+    /* Retry any pending connections */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    {
+        if (dev->connecting)
+        {
+            rc = create_thread( &tid, DETACHED,
+                       shrd_devinit, dev, "shrd_devinit" );
+            if (rc)
+            {
+                // "Error in function create_thread(): %s"
+                WRMSG( HHC00102, "E", strerror( rc ));
+                return -1;
+            }
+        }
+    }
+
     return 0;
 }
-#endif
+#endif /* defined( OPTION_SHARED_DEVICES ) */
 
 /*-------------------------------------------------------------------*/
 /* Check if we're a CPU thread or not.       (boolean function)      */
@@ -1044,13 +1062,16 @@ int configure_cpu( int target_cpu )
         /* Initialise the CPU's thread clockid so that clock_gettime() can use it */
         /* provided the _POSIX_THREAD_CPUTIME is supported.                       */
         pthread_getcpuclockid( sysblk.cputid[ target_cpu ], &sysblk.cpuclockid[ target_cpu ]);
-        WRMSG( HHC00111, "I", _POSIX_THREAD_CPUTIME );
+        if (!sysblk.hhc_111_112)
+            WRMSG( HHC00111, "I", _POSIX_THREAD_CPUTIME );
 #else
         /* When not supported, we zero the cpuclockid, which will trigger a       */
         /* different approach to obtain the thread CPU time in clock.c            */
         sysblk.cpuclockid[ target_cpu ] = 0;
-        WRMSG( HHC00112, "W" );
+        if (!sysblk.hhc_111_112)
+            WRMSG( HHC00112, "W" );
 #endif
+        sysblk.hhc_111_112 = true;
 
         /* Find out if we are a cpu thread */
         arecpu = are_cpu_thread( &ourcpu );

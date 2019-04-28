@@ -26,10 +26,27 @@
 
   In order to take advantage of the new CCKD64 file format, existing emulated
   dasd image files in the old CCKD compressed format must first be converted
-  to the new CCKD64 format by either: a) using the new 'convto64' utility
-  (recommended), b) creating brand new dasd image files using the the new
-  'dasdinit64' utility, or c) copying existing old format CCKD images to the
-  new CCKD64 format using the new 'dasdcopy64' utility.
+  to the new CCKD64 format by either: a) using the new 'convto64' utility to
+  individually convert each old format base image and associated shadow files
+  to the new format (recommended), b) creating brand new cckd64 base image
+  file using the new 'dasdinit64' utility, or c) copying existing old format
+  CCKD images to the new CCKD64 format using the new 'dasdcopy64' utility.
+
+
+  Using the 'convto64' utility to convert existing CCKD files to the CCKD64
+  format is recommended over using dasdcopy64 as it is not only significantly
+  faster than dasdcopy64 but is also able to convert individual CCKD shadow
+  files as well (which dasdcopy64 cannot currently do).  That is to say, if
+  you already have a CCKD format base dasd image file with one or more shadow
+  files associated with it, dasdcopy64 can only copy the base image plus all
+  of its shadow files to a single new CCKD64 base image file (i.e. the shadow
+  files are automatically "merged" during the copy operation, resulting in a
+  single CCKD64 BASE dasd image output file).  The 'convto64' utility however,
+  directly converts base images -OR- shadow files individually, resulting in
+  a new CCKD64 format base image or CCKD64 format shadow file.  It does NOT
+  "merge" them together and, as previously mentioned, is significantly faster
+  than dasdcopy64 too.  It is the recommended way to convert existing CCKD
+  dasd images to the new CCKD64 format.
 
 
   In addition to the new 'dasdinit64' and 'dasdcopy64' utilities, there are

@@ -117,7 +117,7 @@ static  CMDTAB   cmdtab[]  = {              /* (COMMAND table)       */
 /*-------------------------------------------------------------------*/
 
   CALL_EXTCMD ( cachestats_cmd )            /* (lives in cache.c)    */
-  CALL_EXTCMD ( shared_cmd     )            /* (lives in shared.c)   */
+  CALL_EXTCMD ( shrd_cmd       )            /* (lives in shared.c)   */
   CALL_EXTCMD ( ptt_cmd        )            /* (lives in pttrace.c)  */
   CALL_EXTCMD ( locks_cmd      )            /* (lives in hthreads.c) */
 

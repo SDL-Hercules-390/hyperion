@@ -625,7 +625,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( set_storage_key )
 #endif
 
-#if !defined( FEATURE_BIMODAL_ADDRESSING )
+#if !(defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION ))
  UNDEF_INST( branch_and_set_mode )
  UNDEF_INST( branch_and_save_and_set_mode )
 #endif
@@ -1182,6 +1182,18 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( v_store_vector_parameters )
  UNDEF_INST( v_store_vmr )
  UNDEF_INST( v_test_vmr )
+#else
+  #if !defined( _GEN_ARCH )
+    #if defined( _370 )
+      #define _VEC_FAC_DEFINED_FOR_370
+    #else
+      #define _VEC_FAC_DEFINED_FOR_390
+    #endif
+  #else
+    #if ( _GEN_ARCH == 390 )
+      #define _VEC_FAC_DEFINED_FOR_390
+    #endif
+  #endif
 #endif /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 #if !defined( FEATURE_SERVICE_PROCESSOR )
@@ -1221,6 +1233,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #if !defined( FEATURE_SVS )
  UNDEF_INST( set_vector_summary )
+#endif
+
+#if !defined( FEATURE_TCPIP_EXTENSION )
+ UNDEF_INST( tcpip )
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -1328,7 +1344,9 @@ static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS];
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS];
+#endif
 static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS];
 
@@ -1433,7 +1451,7 @@ DISASM_ROUTE(edxx,[5])
 
 /*----------------------------------------------------------------------------*/
 
-#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 
  #define opcode_a4xx        v_opcode_a4xx
  DISASM_ROUTE(  a4xx,[1])
@@ -1447,13 +1465,13 @@ DISASM_ROUTE(edxx,[5])
  DISASM_ROUTE(  e4xx,[1])
  #undef  opcode_e4xx
 
-#else /* !defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+#else /* !defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
  #define disasm_a4xx    disasm_none
  #define disasm_a6xx    disasm_none
  #define disasm_e4xx    disasm_none
 
-#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
+#endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 /*----------------------------------------------------------------------------*/
 
@@ -1941,8 +1959,8 @@ static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*08*/   GENx370x___x___ (set_storage_key,RR,"SSK"),
  /*09*/   GENx370x___x___ (insert_storage_key,RR,"ISK"),
  /*0A*/   GENx370x390x900 (supervisor_call,RR_SVC,"SVC"),
- /*0B*/   GENx___x390x900 (branch_and_set_mode,RR,"BSM"),
- /*0C*/   GENx___x390x900 (branch_and_save_and_set_mode,RR,"BASSM"),
+ /*0B*/   GENx37Xx390x900 (branch_and_set_mode,RR,"BSM"),
+ /*0C*/   GENx37Xx390x900 (branch_and_save_and_set_mode,RR,"BASSM"),
  /*0D*/   GENx370x390x900 (branch_and_save_register,RR,"BASR"),
  /*0E*/   GENx370x390x900 (move_long,RR,"MVCL"),
  /*0F*/   GENx370x390x900 (compare_logical_character_long,RR,"CLCL"),
@@ -2047,7 +2065,7 @@ static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*72*/   GENx___x___x___ ,
  /*73*/   GENx___x___x___ ,
  /*74*/   GENx___x___x___ ,
- /*75*/   GENx___x___x___ ,
+ /*75*/   GENx370x390x900 (tcpip,RX,"TCPIP"),
  /*76*/   GENx___x___x___ ,
  /*77*/   GENx___x___x___ ,
  /*78*/   GENx370x390x900 (load_float_short,RX,"LE"),
@@ -2192,7 +2210,7 @@ static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*0100*/ GENx___x___x___ ,
  /*0101*/ GENx___x390x900 (program_return,E,"PR"),
- /*0102*/ GENx___x390x900 (update_tree,E,"UPT"),
+ /*0102*/ GENx37Xx390x900 (update_tree,E,"UPT"),
  /*0103*/ GENx___x___x___ ,
  /*0104*/ GENx___x___x900 (perform_timing_facility_function,E,"PTFF"),
  /*0105*/ GENx___x___x___ , /*(clear_message,?,"CMSG"),*/
@@ -2201,9 +2219,9 @@ static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
  /*0108*/ GENx___x___x___ , /*(test_message_path_state,?,"TMPS"),*/
  /*0109*/ GENx___x___x___ , /*(clear_message_path_state,?,"CMPS"),*/
  /*010A*/ GENx___x___x900 (perform_floating_point_operation,E,"PFPO"),
- /*010B*/ GENx___x390x900 (test_addressing_mode,E,"TAM"),
- /*010C*/ GENx___x390x900 (set_addressing_mode_24,E,"SAM24"),
- /*010D*/ GENx___x390x900 (set_addressing_mode_31,E,"SAM31"),
+ /*010B*/ GENx37Xx390x900 (test_addressing_mode,E,"TAM"),
+ /*010C*/ GENx37Xx390x900 (set_addressing_mode_24,E,"SAM24"),
+ /*010D*/ GENx37Xx390x900 (set_addressing_mode_31,E,"SAM31"),
  /*010E*/ GENx___x___x900 (set_addressing_mode_64,E,"SAM64"),
  /*010F*/ GENx___x___x___ ,
  /*0110*/ GENx___x___x___ ,
@@ -2452,20 +2470,20 @@ static INSTR_FUNC opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A5x0*/ GENx___x___x900 (insert_immediate_high_high,RI,"IIHH"),
  /*A5x1*/ GENx___x___x900 (insert_immediate_high_low,RI,"IIHL"),
- /*A5x2*/ GENx___x___x900 (insert_immediate_low_high,RI,"IILH"),
- /*A5x3*/ GENx___x___x900 (insert_immediate_low_low,RI,"IILL"),
+ /*A5x2*/ GENx37Xx___x900 (insert_immediate_low_high,RI,"IILH"),
+ /*A5x3*/ GENx37Xx___x900 (insert_immediate_low_low,RI,"IILL"),
  /*A5x4*/ GENx___x___x900 (and_immediate_high_high,RI,"NIHH"),
  /*A5x5*/ GENx___x___x900 (and_immediate_high_low,RI,"NIHL"),
- /*A5x6*/ GENx___x___x900 (and_immediate_low_high,RI,"NILH"),
- /*A5x7*/ GENx___x___x900 (and_immediate_low_low,RI,"NILL"),
+ /*A5x6*/ GENx37Xx___x900 (and_immediate_low_high,RI,"NILH"),
+ /*A5x7*/ GENx37Xx___x900 (and_immediate_low_low,RI,"NILL"),
  /*A5x8*/ GENx___x___x900 (or_immediate_high_high,RI,"OIHH"),
  /*A5x9*/ GENx___x___x900 (or_immediate_high_low,RI,"OIHL"),
- /*A5xA*/ GENx___x___x900 (or_immediate_low_high,RI,"OILH"),
- /*A5xB*/ GENx___x___x900 (or_immediate_low_low,RI,"OILL"),
+ /*A5xA*/ GENx37Xx___x900 (or_immediate_low_high,RI,"OILH"),
+ /*A5xB*/ GENx37Xx___x900 (or_immediate_low_low,RI,"OILL"),
  /*A5xC*/ GENx___x___x900 (load_logical_immediate_high_high,RI,"LLIHH"),
  /*A5xD*/ GENx___x___x900 (load_logical_immediate_high_low,RI,"LLIHL"),
- /*A5xE*/ GENx___x___x900 (load_logical_immediate_low_high,RI,"LLILH"),
- /*A5xF*/ GENx___x___x900 (load_logical_immediate_low_low,RI,"LLILL")
+ /*A5xE*/ GENx37Xx___x900 (load_logical_immediate_low_high,RI,"LLILH"),
+ /*A5xF*/ GENx37Xx___x900 (load_logical_immediate_low_low,RI,"LLILL")
 };
 
 static INSTR_FUNC opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
@@ -2516,7 +2534,7 @@ static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B217*/ GENx___x___x___ ,                                   /*%STETR/STSYN */
  /*B218*/ GENx370x390x900 (program_call,S,"PC"),
  /*B219*/ GENx370x390x900 (set_address_space_control,S,"SAC"),
- /*B21A*/ GENx___x390x900 (compare_and_form_codeword,S,"CFC"),
+ /*B21A*/ GENx37Xx390x900 (compare_and_form_codeword,S,"CFC"),
  /*B21B*/ GENx___x___x___ ,
  /*B21C*/ GENx___x___x___ ,
  /*B21D*/ GENx___x___x___ ,
@@ -3277,15 +3295,15 @@ static INSTR_FUNC opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
  /*C0x4*/ GENx37Xx390x900 (branch_relative_on_condition_long,RIL_A,"BRCL"),
  /*C0x5*/ GENx37Xx390x900 (branch_relative_and_save_long,RIL_A,"BRASL"),
  /*C0x6*/ GENx___x___x900 (exclusive_or_immediate_high_fullword,RIL,"XIHF"),       /*@Z9*/
- /*C0x7*/ GENx___x___x900 (exclusive_or_immediate_low_fullword,RIL,"XILF"),        /*@Z9*/
+ /*C0x7*/ GENx37Xx___x900 (exclusive_or_immediate_low_fullword,RIL,"XILF"),        /*@Z9*/
  /*C0x8*/ GENx___x___x900 (insert_immediate_high_fullword,RIL,"IIHF"),             /*@Z9*/
- /*C0x9*/ GENx___x___x900 (insert_immediate_low_fullword,RIL,"IILF"),              /*@Z9*/
+ /*C0x9*/ GENx37Xx___x900 (insert_immediate_low_fullword,RIL,"IILF"),              /*@Z9*/
  /*C0xA*/ GENx___x___x900 (and_immediate_high_fullword,RIL,"NIHF"),                /*@Z9*/
- /*C0xB*/ GENx___x___x900 (and_immediate_low_fullword,RIL,"NILF"),                 /*@Z9*/
+ /*C0xB*/ GENx37Xx___x900 (and_immediate_low_fullword,RIL,"NILF"),                 /*@Z9*/
  /*C0xC*/ GENx___x___x900 (or_immediate_high_fullword,RIL,"OIHF"),                 /*@Z9*/
- /*C0xD*/ GENx___x___x900 (or_immediate_low_fullword,RIL,"OILF"),                  /*@Z9*/
+ /*C0xD*/ GENx37Xx___x900 (or_immediate_low_fullword,RIL,"OILF"),                  /*@Z9*/
  /*C0xE*/ GENx___x___x900 (load_logical_immediate_high_fullword,RIL,"LLIHF"),      /*@Z9*/
- /*C0xF*/ GENx___x___x900 (load_logical_immediate_low_fullword,RIL,"LLILF")        /*@Z9*/
+ /*C0xF*/ GENx37Xx___x900 (load_logical_immediate_low_fullword,RIL,"LLILF")        /*@Z9*/
 };
 
 static INSTR_FUNC opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
@@ -3352,7 +3370,7 @@ static INSTR_FUNC opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C8x0*/ GENx___x___x900 (move_with_optional_specifications,SSF,"MVCOS"),
  /*C8x1*/ GENx___x___x900 (extract_cpu_time,SSF,"ECTG"),
- /*C8x2*/ GENx___x___x900 (compare_and_swap_and_store,SSF,"CSST"),
+ /*C8x2*/ GENx37Xx___x900 (compare_and_swap_and_store,SSF,"CSST"),
  /*C8x3*/ GENx___x___x___ ,
  /*C8x4*/ GENx37Xx390x900 (load_pair_disjoint,SSF_RSS,"LPD"),                      /*810*/
  /*C8x5*/ GENx___x___x900 (load_pair_disjoint_long,SSF_RSS,"LPDG"),                /*810*/
@@ -3396,7 +3414,7 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E303*/ GENx___x___x900 (load_real_address_long,RXY,"LRAG"),
  /*E304*/ GENx___x___x900 (load_long,RXY,"LG"),
  /*E305*/ GENx___x___x___ ,
- /*E306*/ GENx___x___x900 (convert_to_binary_y,RXY,"CVBY"),
+ /*E306*/ GENx37Xx___x900 (convert_to_binary_y,RXY,"CVBY"),
  /*E307*/ GENx___x___x___ ,
  /*E308*/ GENx___x___x900 (add_long,RXY,"AG"),
  /*E309*/ GENx___x___x900 (subtract_long,RXY,"SG"),
@@ -3428,7 +3446,7 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E323*/ GENx___x___x___ ,
  /*E324*/ GENx___x___x900 (store_long,RXY,"STG"),
  /*E325*/ GENx___x___x___ ,
- /*E326*/ GENx___x___x900 (convert_to_decimal_y,RXY,"CVDY"),
+ /*E326*/ GENx37Xx___x900 (convert_to_decimal_y,RXY,"CVDY"),
  /*E327*/ GENx___x___x___ ,
  /*E328*/ GENx___x___x___ ,
  /*E329*/ GENx___x___x___ ,
@@ -3452,8 +3470,8 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E33B*/ GENx___x___x___ ,
  /*E33C*/ GENx___x___x___ ,
  /*E33D*/ GENx___x___x___ ,
- /*E33E*/ GENx___x390x900 (store_reversed,RXY,"STRV"),
- /*E33F*/ GENx___x390x900 (store_reversed_half,RXY,"STRVH"),
+ /*E33E*/ GENx37Xx390x900 (store_reversed,RXY,"STRV"),
+ /*E33F*/ GENx37Xx390x900 (store_reversed_half,RXY,"STRVH"),
  /*E340*/ GENx___x___x___ ,
  /*E341*/ GENx___x___x___ ,
  /*E342*/ GENx___x___x___ ,
@@ -3470,22 +3488,22 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E34D*/ GENx___x___x___ ,
  /*E34E*/ GENx___x___x___ ,
  /*E34F*/ GENx___x___x___ ,
- /*E350*/ GENx___x___x900 (store_y,RXY,"STY"),
- /*E351*/ GENx___x___x900 (multiply_single_y,RXY,"MSY"),
+ /*E350*/ GENx37Xx___x900 (store_y,RXY,"STY"),
+ /*E351*/ GENx37Xx___x900 (multiply_single_y,RXY,"MSY"),
  /*E352*/ GENx___x___x___ ,
  /*E353*/ GENx___x___x___ ,
- /*E354*/ GENx___x___x900 (and_y,RXY,"NY"),
- /*E355*/ GENx___x___x900 (compare_logical_y,RXY,"CLY"),
- /*E356*/ GENx___x___x900 (or_y,RXY,"OY"),
- /*E357*/ GENx___x___x900 (exclusive_or_y,RXY,"XY"),
- /*E358*/ GENx___x___x900 (load_y,RXY,"LY"),
- /*E359*/ GENx___x___x900 (compare_y,RXY,"CY"),
- /*E35A*/ GENx___x___x900 (add_y,RXY,"AY"),
- /*E35B*/ GENx___x___x900 (subtract_y,RXY,"SY"),
- /*E35C*/ GENx___x___x900 (multiply_y,RXY,"MFY"),                                  /*208*/
+ /*E354*/ GENx37Xx___x900 (and_y,RXY,"NY"),
+ /*E355*/ GENx37Xx___x900 (compare_logical_y,RXY,"CLY"),
+ /*E356*/ GENx37Xx___x900 (or_y,RXY,"OY"),
+ /*E357*/ GENx37Xx___x900 (exclusive_or_y,RXY,"XY"),
+ /*E358*/ GENx37Xx___x900 (load_y,RXY,"LY"),
+ /*E359*/ GENx37Xx___x900 (compare_y,RXY,"CY"),
+ /*E35A*/ GENx37Xx___x900 (add_y,RXY,"AY"),
+ /*E35B*/ GENx37Xx___x900 (subtract_y,RXY,"SY"),
+ /*E35C*/ GENx37Xx___x900 (multiply_y,RXY,"MFY"),                                  /*208*/
  /*E35D*/ GENx___x___x___ ,
- /*E35E*/ GENx___x___x900 (add_logical_y,RXY,"ALY"),
- /*E35F*/ GENx___x___x900 (subtract_logical_y,RXY,"SLY"),
+ /*E35E*/ GENx37Xx___x900 (add_logical_y,RXY,"ALY"),
+ /*E35F*/ GENx37Xx___x900 (subtract_logical_y,RXY,"SLY"),
  /*E360*/ GENx___x___x___ ,
  /*E361*/ GENx___x___x___ ,
  /*E362*/ GENx___x___x___ ,
@@ -3508,13 +3526,13 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E373*/ GENx___x___x900 (insert_character_y,RXY,"ICY"),
  /*E374*/ GENx___x___x___ ,
  /*E375*/ GENx___x___x900 (load_address_extended_y,RXY,"LAEY"),                    /*208*/
- /*E376*/ GENx___x___x900 (load_byte,RXY,"LB"),
+ /*E376*/ GENx37Xx___x900 (load_byte,RXY,"LB"),
  /*E377*/ GENx___x___x900 (load_byte_long,RXY,"LGB"),
- /*E378*/ GENx___x___x900 (load_halfword_y,RXY,"LHY"),
- /*E379*/ GENx___x___x900 (compare_halfword_y,RXY,"CHY"),
- /*E37A*/ GENx___x___x900 (add_halfword_y,RXY,"AHY"),
- /*E37B*/ GENx___x___x900 (subtract_halfword_y,RXY,"SHY"),
- /*E37C*/ GENx___x___x900 (multiply_halfword_y,RXY,"MHY"),                         /*208*/
+ /*E378*/ GENx37Xx___x900 (load_halfword_y,RXY,"LHY"),
+ /*E379*/ GENx37Xx___x900 (compare_halfword_y,RXY,"CHY"),
+ /*E37A*/ GENx37Xx___x900 (add_halfword_y,RXY,"AHY"),
+ /*E37B*/ GENx37Xx___x900 (subtract_halfword_y,RXY,"SHY"),
+ /*E37C*/ GENx37Xx___x900 (multiply_halfword_y,RXY,"MHY"),                         /*208*/
  /*E37D*/ GENx___x___x___ ,
  /*E37E*/ GENx___x___x___ ,
  /*E37F*/ GENx___x___x___ ,
@@ -5218,6 +5236,7 @@ static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
  /*A4FF*/ GENx___x___x___
 };
 
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A500*/ GENx___x___x___ , /* VAER */
@@ -5477,6 +5496,7 @@ static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
  /*A5FE*/ GENx___x___x___ ,
  /*A5FF*/ GENx___x___x___
 };
+#endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
 {
@@ -6480,6 +6500,11 @@ DLL_EXPORT void* the_real_replace_opcode( int arch, INSTR_FUNC inst, int opcode1
       if(arch == ARCH_900_IDX)
         return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
 
+      #if (!defined( _VEC_FAC_DEFINED_FOR_370 )) && defined( _FEATURE_370_EXTENSION )
+      if(arch == ARCH_370_IDX)
+        return(replace_opcode_xx_x(arch, inst, opcode1, opcode2));
+      #endif
+
       return(replace_opcode_xxxx(arch, inst, opcode1, opcode2));
     }
 
@@ -6539,7 +6564,14 @@ void init_opcode_tables()
       if(arch != ARCH_900_IDX)
       {
         replace_opcode_xxxx(arch, v_opcode_a4xx[i][arch], 0xa4, i);
-        replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+        #if defined( _VEC_FAC_DEFINED_FOR_370 )
+        if(arch == ARCH_370_IDX)
+          replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+        #endif
+        #if defined( _VEC_FAC_DEFINED_FOR_390 )
+        if(arch == ARCH_390_IDX)
+          replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+        #endif
         replace_opcode_xxxx(arch, v_opcode_a6xx[i][arch], 0xa6, i);
       }
 
@@ -6562,6 +6594,10 @@ void init_opcode_tables()
     {
       if(arch == ARCH_900_IDX)
         replace_opcode_xx_x(arch, opcode_a5_x[i][arch], 0xa5, i);
+      #if (!defined( _VEC_FAC_DEFINED_FOR_370 )) && defined( _FEATURE_370_EXTENSION )
+      if(arch == ARCH_370_IDX)
+        replace_opcode_xx_x(arch, opcode_a5_x[i][arch], 0xa5, i);
+      #endif
       replace_opcode_xx_x(arch, opcode_a7_x[i][arch], 0xa7, i);
       replace_opcode_xx_x(arch, opcode_c0_x[i][arch], 0xc0, i);
       replace_opcode_xx_x(arch, opcode_c2_x[i][arch], 0xc2, i);

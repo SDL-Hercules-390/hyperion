@@ -55,6 +55,7 @@ PTT_TRACE *pttrace       = NULL;        /* Pointer to current entry  */
 int        pttnolock     = 0;           /* 1=no table locking        */
 int        pttnotod      = 0;           /* 1=don't call gettimeofday */
 int        pttnowrap     = 0;           /* 1=don't wrap              */
+bool       pttdtax       = false;       /* true=dump table at exit   */
 int        pttto         = 0;           /* timeout in seconds        */
 COND       ptttocond;                   /* timeout thread condition  */
 HLOCK      ptttolock;                   /* timeout thread lock       */
@@ -210,7 +211,7 @@ static void* ptt_timeout( void* arg )
     SET_THREAD_NAME( thread_name );
 
     // "Thread id "TIDPAT", prio %2d, name %s started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), thread_name );
+    LOG_THREAD_BEGIN( thread_name  );
 
     hthread_mutex_lock( &ptttolock );
 
@@ -234,9 +235,17 @@ static void* ptt_timeout( void* arg )
     hthread_mutex_unlock( &ptttolock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), thread_name );
+    LOG_THREAD_END( thread_name  );
 
     return NULL;
+}
+
+/*-------------------------------------------------------------------*/
+/* ptt_dtax return Dump Table At Exit setting                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool ptt_dtax()
+{
+    return pttdtax; // Dump Table At Exit
 }
 
 /*-------------------------------------------------------------------*/
@@ -279,6 +288,11 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
             else if (strcasecmp("?", argv[0]) == 0)
             {
                 showparms = 1;
+            }
+            else if (strcasecmp("dtax", argv[0]) == 0)
+            {
+                pttdtax = true; // Dump Table At Exit
+                continue;
             }
             else if (strcasecmp("lock", argv[0]) == 0)
             {
@@ -522,13 +536,14 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                     else
                         MSGBUF(retcode, "%d", pttrace[i].rc);
                 }
+                // "%-18s %s "TIDPAT" %-18s "PTR_FMTx" "PTR_FMTx" %s"
                 WRMSG( HHC90021, "I"
                     , pttrace[i].loc                    // File name (string; 18 chars)
                     , &tod[11]                          // Time of day (HH:MM:SS.usecs)
-                    , pttrace[i].tid                    // Thread id
+                    , TID_CAST( pttrace[i].tid )        // Thread id
                     , pttrace[i].msg                    // Trace message (string; 18 chars)
-                    , (uintptr_t)pttrace[i].data1       // Data value 1
-                    , (uintptr_t)pttrace[i].data2       // Data value 2
+                    , PTR_CAST( pttrace[i].data1 )      // Data value 1
+                    , PTR_CAST( pttrace[i].data2 )      // Data value 2
                     , retcode                           // Return code (or empty string)
                 );
                 count++;

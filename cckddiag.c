@@ -663,10 +663,17 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
     if (cmd_devhdr)
     {
+        BYTE* p = (BYTE*) &devhdr;
+
         // "%s - %d (decimal) bytes:"
         printf("\n");
         WRMSG( HHC02614, "I", "DEVHDR", (int) CKD_DEVHDR_SIZE );
-        data_dump( &devhdr, CKD_DEVHDR_SIZE );
+
+        // Note: first 8 bytes of DEVHDR is in ASCII, but
+        // the data_dump function dumps 16 bytes per line.
+        data_dump_ascii ( p,                       16 );
+        data_dump_offset( p + 16, CKD_DEVHDR_SIZE, 16 );
+
         printf("\n");
     }
 
@@ -859,12 +866,12 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
         // "L1 index %d = L2TAB offset %"PRId64" (0x%16.16"PRIX64")"
         WRMSG( HHC02610, "I", L1ndx, L2taboff, L2taboff );
 
-        // Programming Note: for whatever reason, base dasd image files
+        // PROGRAMMING NOTE: for whatever reason, base dasd image files
         // use a L2_trkoff value of zero in their L1tab entry for non-
         // existent tracks, whereas shadow files use a value of -1, so
         // we need to check for both.
 
-        if (!L2taboff || ((U64)L2taboff == ULONG_MAX))
+        if (!L2taboff || L2taboff == CCKD_MAXSIZE)
         {
             // "L2tab for %s %d not found"
             FWRMSG( stderr, HHC02618, "S", ckddasd ? "track" : "block", trk );
@@ -872,24 +879,22 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
             ErrExit( EXIT_DATA_NOTFOUND );
         }
 
-        L2tab = makbuf(cdevhdr.num_L2tab * CCKD_L2ENT_SIZE, "L2TAB");
-
-        readpos(fd, L2tab, L2taboff,
-                cdevhdr.num_L2tab * CCKD_L2ENT_SIZE);
+        L2tab = makbuf(               cdevhdr.num_L2tab * CCKD_L2ENT_SIZE, "L2TAB" );
+        readpos( fd, L2tab, L2taboff, cdevhdr.num_L2tab * CCKD_L2ENT_SIZE );
 
         if (cmd_l2tab)
         {
             // "%s - %d (decimal) bytes:"
             printf("\n");
             WRMSG( HHC02614, "I", "L2TAB",
-                (int) (cdevhdr.num_L2tab * CCKD_L2ENT_SIZE) );
+                (int)         (cdevhdr.num_L2tab * CCKD_L2ENT_SIZE) );
             data_dump( L2tab, (cdevhdr.num_L2tab * CCKD_L2ENT_SIZE));
         }
 
         // "L2 index %d = L2TAB entry: %d bytes:"
         printf("\n");
         WRMSG( HHC02611, "I", L2ndx, (int) CCKD_L2ENT_SIZE);
-        data_dump( &L2tab[ L2ndx ], CCKD_L2ENT_SIZE);
+        data_dump( &L2tab[ L2ndx ],        CCKD_L2ENT_SIZE);
         printf("\n");
 
         trkhdroff = L2tab[ L2ndx ].L2_trkoff;

@@ -216,16 +216,6 @@ int  fthread_equal
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
-
-FT_DLL_IMPORT
-int  fthread_kill   // FIXME: TODO:
-(
-    int  dummy1,
-    int  dummy2
-);
-
-////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "mutex"...
 
 FT_DLL_IMPORT

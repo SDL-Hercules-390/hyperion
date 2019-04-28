@@ -17,46 +17,150 @@
 #if defined(HDL_USE_LIBTOOL)
 #include "ltdl.h"
 #endif
+#include "cckd.h"
+#include "cckddasd.h"
 
 #if !defined( _MSVC_ )
+
+struct termios stdin_attrs    = {0};    // (saved stdin  term settings)
+struct termios stdout_attrs   = {0};    // (saved stdout term settings)
+struct termios stderr_attrs   = {0};    // (saved stderr term settings)
+
+static void save_term_attrs()
+{
+    tcgetattr( STDIN_FILENO,  &stdin_attrs  );
+    tcgetattr( STDOUT_FILENO, &stdout_attrs );
+    tcgetattr( STDERR_FILENO, &stderr_attrs );
+}
+
+static void restore_term_attrs()
+{
+    tcsetattr( STDIN_FILENO,  TCSANOW, &stdin_attrs  );
+    tcsetattr( STDOUT_FILENO, TCSANOW, &stdout_attrs );
+    tcsetattr( STDERR_FILENO, TCSANOW, &stderr_attrs );
+}
+
+#if defined( HAVE_SIGNAL_HANDLING )
+
+int crash_signo = -1;                   // Saved signal number of crash
+
+struct sigaction  sa_CRASH    = {0};    // (for catching exceptions)
+struct sigaction  sa_SIGFPE   = {0};    // (original SIGFPE  action)
+struct sigaction  sa_SIGILL   = {0};    // (original SIGILL  action)
+struct sigaction  sa_SIGSEGV  = {0};    // (original SIGSEGV action)
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+struct sigaction  sa_SIGBUS   = {0};    // (original SIGBUS  action)
+#endif
+
+static void crash_signal_handler( int signo );
+
+static void install_crash_handler()
+{
+    /* Install our crash signal handler */
+    sa_CRASH.sa_handler = &crash_signal_handler;
+    sigaction( SIGFPE,  &sa_CRASH, &sa_SIGFPE  );
+    sigaction( SIGILL,  &sa_CRASH, &sa_SIGILL  );
+    sigaction( SIGSEGV, &sa_CRASH, &sa_SIGSEGV );
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+    sigaction( SIGBUS,  &sa_CRASH, &sa_SIGBUS  );
+#endif
+}
+
+static void uninstall_crash_handler()
+{
+    /* Restore original signal handlers */
+    sigaction( SIGFPE,  &sa_SIGFPE,  0 );
+    sigaction( SIGILL,  &sa_SIGILL,  0 );
+    sigaction( SIGSEGV, &sa_SIGSEGV, 0 );
+#if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
+    sigaction( SIGBUS,  &sa_SIGBUS,  0 );
+#endif
+}
+
+static void log_crashed_msg( FILE* stream )
+{
+    fprintf
+    (
+        stream,
+
+        "\n"
+        "\n"
+        "\n"
+        "    +++ OOPS! +++\n"
+        "\n"
+        "Hercules has crashed! (%s)\n"
+        "\n"
+        "Creating crash dump... This may take a while...\n"
+        "\n"
+
+        , strsignal( crash_signo )
+    );
+    fflush( stream );
+}
+
+static void crash_signal_handler( int signo )
+{
+    crash_signo = signo;
+    uninstall_crash_handler();
+    restore_term_attrs();
+    log_crashed_msg( stderr );
+    log_crashed_msg( stdout );
+}
+#endif /* defined( HAVE_SIGNAL_HANDLING ) */
+
 /*-------------------------------------------------------------------*/
-/* For Unix-like platforms, the main() function:                     */
-/* - sets the privilege level                                        */
-/* - initializes the LIBTOOL environment                             */
-/* - passes control to the impl() function in impl.c                 */
+/*                                                                   */
+/*  For Unix-like platforms, the main() function:                    */
+/*                                                                   */
+/*   - Installs a crash handler if signal handling is available      */
+/*   - Sets the privilege level                                      */
+/*   - Initializes the LIBTOOL environment                           */
+/*   - Passes control to the impl() function in impl.c               */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 int main( int ac, char* av[] )
 {
+    int rc = 0;
+    save_term_attrs();
     DROP_PRIVILEGES( CAP_SYS_NICE );
     SET_THREAD_NAME( BOOTSTRAP_NAME );
-
 #if defined( HDL_USE_LIBTOOL )
     LTDL_SET_PRELOADED_SYMBOLS();
 #endif
-    exit( impl( ac, av ));
+#if defined( HAVE_SIGNAL_HANDLING )
+    install_crash_handler();
+#endif
+    rc = impl( ac, av );
+    restore_term_attrs();
+    return rc;
 }
 
 #else // defined( _MSVC_ )
 /*-------------------------------------------------------------------*/
-/* For Windows platforms, the main() function:                       */
-/* - disables the standard CRT invalid parameter handler             */
-/* - requests a minimum resolution for periodic timers               */
-/* - sets up an exception trap                                       */
-/* - passes control to the impl() function in impl.c                 */
 /*                                                                   */
-/* The purpose of the exception trap is to call a function which     */
-/* will write a minidump file in the event of a Hercules crash.      */
+/*  For Windows platforms, the main() function:                      */
+/*                                                                   */
+/*   - Disables the standard CRT invalid parameter handler           */
+/*   - Requests a minimum resolution for periodic timers             */
+/*   - Sets up an exception trap                                     */
+/*   - Passes control to the impl() function in impl.c               */
+/*                                                                   */
+/*  The purpose of the exception trap is to call a function which    */
+/*  will create a minidump in the event of a Hercules crash (which   */
+/*  can then be analyzed offline to determine where Herc crashed).   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*          ******************************************               */
+/*                                                                   */
+/*          **--------------------------------------**               */
 /*          **       IMPORTANT!  PLEASE NOTE!       **               */
-/*          ******************************************               */
+/*          **--------------------------------------**               */
 /*                                                                   */
-/*  Without a compatible version of DBGHELP.dll to use, the below    */
-/*  exception handling logic accomplishes absolutely *NOTHING*.      */
 /*                                                                   */
-/*  The below exception handling requires DBGHELP.DLL version 6.1    */
+/*  Without a compatible version of DbgHelp.dll to use, the below    */
+/*  exception handling logic accomplishes absolutely *NOTHING*!      */
+/*                                                                   */
+/*  The below exception handling requires DbgHelp.dll version 6.1    */
 /*  or greater. Windows XP is known to ship a version of DbgHelp     */
 /*  that is too old (version 5.1). Hercules *SHOULD* be shipping     */
 /*  DbgHelp.DLL as part of its distribution. The latest version      */
@@ -68,8 +172,11 @@ int main( int ac, char* av[] )
 /*  http://go.microsoft.com/FWLink/?LinkId=84137                     */
 /*  http://www.microsoft.com/whdc/devtools/debugging/default.mspx    */
 /*                                                                   */
-/*  The DbgHelp.dll that ships in Windows is *NOT* redistributable.  */
-/*  The "Debugging Tools for Windows" DbgHelp *IS* redistributable.  */
+/*                                                                   */
+/*                        ** NOTE **                                 */
+/*                                                                   */
+/*  The DbgHelp.dll that ships in Windows is *NOT* redistributable!  */
+/*  The "Debugging Tools for Windows" DbgHelp *IS* redistributable!  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
@@ -103,6 +210,8 @@ static WCHAR  g_wszFileName  [ 4 * _MAX_FNAME ]  = {0};
 
 static TCHAR    g_szSaveTitle[ 512 ] = {0};
 static LPCTSTR  g_pszTempTitle = _T("{98C1C303-2A9E-11d4-9FF5-0060677l8D04}");
+
+static int g_itracen = 0;   // (saved cckdblk.itracen value)
 
 ///////////////////////////////////////////////////////////////////////////////
 // (forward references)
@@ -165,11 +274,17 @@ int main( int ac, char* av[] )
 
     if (!IsDebuggerPresent())
     {
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO )) // (normal panel mode?)
+        // Normal panel mode?
+
+        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
         {
+            // Then disable the [x] Close button for safety
+
             EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
                             SC_CLOSE, MF_BYCOMMAND | MF_GRAYED );
         }
+
+        // Load the debugging helper library...
 
         if (1
             && (g_hDbgHelpDll = LoadLibrary(_T("DbgHelp.dll")))
@@ -180,6 +295,8 @@ int main( int ac, char* av[] )
             GetModuleFileNameW( NULL, g_wszHercPath, _countof( g_wszHercPath ) );
             _wsplitpath( g_wszHercPath, g_wszHercDrive, g_wszHercDir, NULL, NULL );
         }
+
+        // Enable exception handling...
 
         SetUnhandledExceptionFilter( HerculesUnhandledExceptionFilter );
         SetErrorMode( SEM_NOGPFAULTERRORBOX );
@@ -193,8 +310,12 @@ int main( int ac, char* av[] )
 
     if (!IsDebuggerPresent())
     {
-        if (!sysblk.daemon_mode && isatty( STDERR_FILENO )) // (normal panel mode?)
+        // Normal panel mode?
+
+        if (!sysblk.daemon_mode && isatty( STDERR_FILENO ))
         {
+            // Re-enable the [x] Close button
+
             EnableMenuItem( GetSystemMenu( FindConsoleHandle(), FALSE ),
                         SC_CLOSE, MF_BYCOMMAND | MF_ENABLED );
         }
@@ -218,7 +339,14 @@ static LONG WINAPI HerculesUnhandledExceptionFilter( EXCEPTION_POINTERS* pExcept
     bDidThis = TRUE;
     SetErrorMode( 0 );                          // (reset back to default handling)
 
-    if (sysblk.daemon_mode)                     // (is an external GUI in control?)
+    // Stop CCKD tracing right away to preserve existing trace entries
+
+    g_itracen = cckdblk.itracen;                // (save existing value)
+    cckdblk.itracen = 0;                        // (set table size to 0)
+
+    // Is an external GUI in control?
+
+    if (sysblk.daemon_mode)
     {
         fflush( stdout );
         fflush( stderr );
@@ -351,6 +479,7 @@ static inline int MsgBox( HWND hWnd, LPCTSTR pszText, LPCTSTR pszCaption,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Create a minidump
 
 static void ProcessException( EXCEPTION_POINTERS* pExceptionPtrs )
 {
@@ -461,14 +590,18 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
         mci.CallbackRoutine     = (MINIDUMP_CALLBACK_ROUTINE) MyMiniDumpCallback;
         mci.CallbackParam       = 0;
 
+        // Ref: "EFFECTIVE MINIDUMPS"
+        //      http://www.debuginfo.com/articles/effminidumps.html
+        //      http://www.debuginfo.com/articles/effminidumps2.html
+
         mdt = (MINIDUMP_TYPE)
         (0
-            | MiniDumpWithPrivateReadWriteMemory
-            | MiniDumpWithDataSegs
-            | MiniDumpWithHandleData
-//          | MiniDumpWithFullMemoryInfo
-//          | MiniDumpWithThreadInfo
-            | MiniDumpWithUnloadedModules
+            | MiniDumpWithPrivateReadWriteMemory        // Needed to also dump heap
+            | MiniDumpWithIndirectlyReferencedMemory    // Dump portions of the heap
+                                                        // only if referenced in stack
+            | MiniDumpWithDataSegs                      // Include global variables
+            | MiniDumpWithHandleData                    // Dump all file handles too
+            | MiniDumpWithUnloadedModules               // Tell us about unloaded DLLs
         );
 
         bSuccess = g_pfnMiniDumpWriteDumpFunc( GetCurrentProcess(), GetCurrentProcessId(),
@@ -496,60 +629,94 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 ///////////////////////////////////////////////////////////////////////////////
 // Build User Stream Arrays...
 
-#define MAX_MINIDUMP_USER_STREAMS  (64)
+#define MAX_MINIDUMP_USER_STREAMS  (1024)   // (just an arbitrary value)
+#define NUM_LOGFILE_MESSAGES        (128)   // (just an arbitrary value)
+#define NUM_CCKD_TRACE_STRINGS       (64)   // (enough to debug cckd?)
 
-static  char                  g_host_info_str [ 1024 ];
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
+
+#define BUILD_SYSBLK_USER_STREAM( sysblk_xxx )                                 \
+                                                                               \
+    for (pstr = sysblk_xxx;                                                    \
+        *pstr && StreamNum < MAX_MINIDUMP_USER_STREAMS; ++pstr, ++StreamNum)   \
+    {                                                                          \
+        UserStreamArray[ StreamNum ].Type       = CommentStreamA;              \
+        UserStreamArray[ StreamNum ].Buffer     = (PVOID)         *pstr;       \
+        UserStreamArray[ StreamNum ].BufferSize = (ULONG) strlen( *pstr ) + 1; \
+    }
 
 static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
 {
-    const char** ppszBldInfoStr;
-    int nNumBldInfoStrs;
-    ULONG UserStreamCount;
+    const char** pstr;
+    ULONG StreamNum = 0;
 
     _ASSERTE( pMDUSI );
 
-    get_hostinfo_str( NULL, g_host_info_str, sizeof(g_host_info_str) );
-    nNumBldInfoStrs = get_buildinfo_strings( &ppszBldInfoStr );
-
-    UserStreamCount = min( (3+nNumBldInfoStrs), MAX_MINIDUMP_USER_STREAMS );
-
-    pMDUSI->UserStreamCount = UserStreamCount;
     pMDUSI->UserStreamArray = UserStreamArray;
 
-    UserStreamCount = 0;
+    // Save version information
 
-    if ( UserStreamCount < pMDUSI->UserStreamCount )
+    BUILD_SYSBLK_USER_STREAM( sysblk.vers_info   );
+    BUILD_SYSBLK_USER_STREAM( sysblk.bld_opts    );
+    BUILD_SYSBLK_USER_STREAM( sysblk.extpkg_vers );
+
+    // Save last few log messages
+
+    if (StreamNum < MAX_MINIDUMP_USER_STREAMS)
     {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        VERSION;
-        UserStreamArray[UserStreamCount].BufferSize = sizeof(VERSION);
-        UserStreamCount++;
+        char* logbuf_ptr;
+        int   logbuf_idx;
+        int   logbuf_bytes;
+
+        logbuf_idx = log_line( NUM_LOGFILE_MESSAGES );
+
+        if ((logbuf_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
+        {
+            UserStreamArray[ StreamNum ].Type       = CommentStreamA;
+            UserStreamArray[ StreamNum ].Buffer     = (PVOID) logbuf_ptr;
+            UserStreamArray[ StreamNum ].BufferSize = (ULONG) logbuf_bytes;
+            StreamNum++;
+        }
     }
 
-    if ( UserStreamCount < pMDUSI->UserStreamCount )
+    // Save last few entries of CCKD internal trace table
+
+    if (1
+        && StreamNum < MAX_MINIDUMP_USER_STREAMS
+        && g_itracen && cckdblk.itrace    // (do we have a table?)
+    )
     {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        HERCULES_COPYRIGHT;
-        UserStreamArray[UserStreamCount].BufferSize = sizeof(HERCULES_COPYRIGHT);
-        UserStreamCount++;
+        // itrace       ptr to beginning of table (first entry)
+        // itracep      ptr to "current" entry" (ptr to the entry that
+        //              should be used next, i.e. the "oldest" entry)
+        // itracex      ptr to end of table (i.e. points to the entry
+        //              just PAST the very last entry in the table)
+        // itracen      the number of entries there are in the table
+        // itracec      how many of those entries are actively in use
+
+        int i, k = min( NUM_CCKD_TRACE_STRINGS, cckdblk.itracec );
+        CCKD_ITRACE* p = cckdblk.itracep;
+
+        // Backup 'k' entries...   (note pointer arithmetic)
+
+        for (i=0; i < k; ++i)
+            if (--p < cckdblk.itrace)
+                p = cckdblk.itracex - 1;
+
+        // Dump 'k' entries starting from there...
+
+        for (i=0; i < k && StreamNum < MAX_MINIDUMP_USER_STREAMS; ++i, ++p, ++StreamNum)
+        {
+            if (p >= cckdblk.itracex)
+                p = cckdblk.itrace;
+
+            UserStreamArray[ StreamNum ].Type       = CommentStreamA;
+            UserStreamArray[ StreamNum ].Buffer     = (PVOID)                      p;
+            UserStreamArray[ StreamNum ].BufferSize = (ULONG) (strlen((const char*)p)+1);
+        }
     }
 
-    if ( UserStreamCount < pMDUSI->UserStreamCount )
-    {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     =        g_host_info_str;
-        UserStreamArray[UserStreamCount].BufferSize = (ULONG)strlen(g_host_info_str)+1;
-        UserStreamCount++;
-    }
-
-    for (; nNumBldInfoStrs && UserStreamCount < pMDUSI->UserStreamCount;
-        nNumBldInfoStrs--, UserStreamCount++, ppszBldInfoStr++ )
-    {
-        UserStreamArray[UserStreamCount].Type       = CommentStreamA;
-        UserStreamArray[UserStreamCount].Buffer     = (PVOID)*ppszBldInfoStr;
-        UserStreamArray[UserStreamCount].BufferSize = (ULONG)strlen(*ppszBldInfoStr)+1;
-    }
+    pMDUSI->UserStreamCount = StreamNum;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -562,7 +729,7 @@ static BOOL CALLBACK MyMiniDumpCallback
     PMINIDUMP_CALLBACK_OUTPUT        pOutput
 )
 {
-    BOOL bRet = FALSE;
+    BOOL bRet = FALSE;      // (default unless we decide otherwise)
 
     if ( !pInput || !pOutput )
         return FALSE;
@@ -613,33 +780,39 @@ static BOOL CALLBACK MyMiniDumpCallback
         }
         break;
 
-/* NOTE About MemoryCallback :
- * This is defined for DbgHelp > 6.1..
- * Since "false" is returned, it has been commented out.
- *
- * Additionally, false is now returned by default. This
- * ensures that the callback function will operate correctly
- * even with future versions of the DbhHelp DLL.
- * -- Ivan
- */
-//        case MemoryCallback:
-//        {
-//            // We do not include any information here -> return FALSE
-//            bRet = FALSE;
-//        }
-//        break;
+        //-------------------------------------------------------------
+        //
+        //                  PROGRAMMING NOTE
+        //
+        // MemoryCallback is defined only for DbgHelp > 6.1.  Since we
+        // were returning FALSE for this callback anyway (which is our
+        // default), it was commented out altogether.
+        //
+        // This ensures our callback function will operate correctly
+        // even with future versions of DbgHelp DLL.
+        //
+        // -- Ivan
+        //
+        //-------------------------------------------------------------
 
-// Following default block added by ISW 2005/05/06
-          default:
-            {
-                // Do not return any information for unrecognized
-                // callback types.
-                bRet=FALSE;
-            }
-            break;
+//      case MemoryCallback:
+//      {
+//          // We do not include any information here -> return FALSE
+//          bRet = FALSE;
+//      }
+//      break;
 
-//      case CancelCallback:
-//          break;
+
+        // Following default block added by ISW 2005/05/06
+
+        default:
+        {
+            // Do not return any information for
+            // any unrecognized callback types.
+
+            bRet = FALSE;
+        }
+        break;
     }
 
     return bRet;

@@ -338,7 +338,7 @@ int     msgcount = 22;
 
 
         // We need to convert certain characters that might
-        // possibly be erroneously interpretted as HTML code
+        // possibly be erroneously interpreted as HTML code
 
 #define  AMP_LT    "&lt;"       // (HTML code for '<')
 #define  AMP_GT    "&gt;"       // (HTML code for '>')
@@ -1167,17 +1167,13 @@ int i,j;
 /*-------------------------------------------------------------------*/
 /*                 cgibin_debug_version_info                         */
 /*-------------------------------------------------------------------*/
-void cgibin_debug_version_info(WEBBLK *webblk)
+void cgibin_debug_version_info( WEBBLK* webblk )
 {
-    html_header(webblk);
-
-    hprintf(webblk->sock,"<h1>Hercules Version Information</h1>\n"
-                          "<pre>\n");
+    html_header( webblk );
+    hprintf( webblk->sock, "<h1>Hercules Version Information</h1>\n<pre>\n" );
     display_version( NULL, webblk->sock, "Hercules HTTP Server" );
-    hprintf(webblk->sock,"</pre>\n");
-
-    html_footer(webblk);
-
+    hprintf( webblk->sock, "</pre>\n" );
+    html_footer( webblk );
 }
 
 /*-------------------------------------------------------------------*/

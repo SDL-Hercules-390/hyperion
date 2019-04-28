@@ -1210,21 +1210,6 @@ int  fthread_attr_getstacksize
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
-
-DLL_EXPORT
-int  fthread_kill       // FIXME: TODO:
-(
-    int  dummy1,
-    int  dummy2
-)
-{
-    UNREFERENCED ( dummy1 );
-    UNREFERENCED ( dummy2 );
-    return RC(ENOTSUP);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
 // Return thread-id...
 
 DLL_EXPORT
@@ -1800,11 +1785,18 @@ DLL_EXPORT int fthread_getschedparam( fthread_t dwThreadID, int* pnPolicy, struc
         return RC(EINVAL);
 
     *pnPolicy = FTHREAD_POLICY;
-    VERIFY((pFTHREAD = FindFTHREAD( dwThreadID )));
-    pSCHPARM->sched_priority = (pFTHREAD->nPriority < 0)
-                             ? W2FPriority( nWindowsPriority )
-                             : pFTHREAD->nPriority;
-    UnlockThreadsList();
+
+    if (0
+        || !(pFTHREAD = FindFTHREAD( dwThreadID ))
+        ||   pFTHREAD->nPriority < 0
+    )
+        pSCHPARM->sched_priority = W2FPriority( nWindowsPriority );
+    else
+        pSCHPARM->sched_priority = pFTHREAD->nPriority;
+
+    if (pFTHREAD)
+        UnlockThreadsList();
+
     return RC(0);
 }
 

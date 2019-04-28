@@ -581,7 +581,7 @@ static void* hao_thread(void* dummy)
     UNREFERENCED(dummy);
 
     // "Thread id "TIDPAT", prio %d, name '%s' started"
-    WRMSG( HHC00100, "I", thread_id(), get_thread_priority(), HAO_THREAD_NAME );
+    LOG_THREAD_BEGIN( HAO_THREAD_NAME  );
 
     /* PROGRAMMING NOTE: because we are dependent on the logger thread (to
      * feed us log messages) we must NOT proceed until the logger facility
@@ -645,7 +645,7 @@ static void* hao_thread(void* dummy)
     }
 
     // "Thread id "TIDPAT", prio %d, name '%s' ended"
-    WRMSG( HHC00101, "I", thread_id(), get_thread_priority(), HAO_THREAD_NAME );
+    LOG_THREAD_END( HAO_THREAD_NAME  );
     return NULL;
 }
 

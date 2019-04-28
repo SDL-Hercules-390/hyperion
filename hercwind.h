@@ -103,7 +103,10 @@ struct dirent
 #define OPTION_FTHREADS
 #define HAVE_STRSIGNAL
 #define NO_SETUID
-#define NO_SIGABEND_HANDLER
+
+#define HAVE_SIGNAL_HANDLING    // have raise() and signal()
+#undef  HAVE_DECL_SIGBUS        // but not SIGBUS
+#undef  HAVE_DECL_SIGPIPE       // but not SIGPIPE
 
 #undef  NO_ATTR_REGPARM         // ( ATTR_REGPARM(x) == __fastcall )
 #define HAVE_ATTR_REGPARM       // ( ATTR_REGPARM(x) == __fastcall )
