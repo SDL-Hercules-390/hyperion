@@ -667,7 +667,7 @@ static void ARCH_DEP(store_decimal) (VADR addr, int len, int arn, REGS *regs,
 int     i, j;                           /* Array subscripts          */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
-    /* if operand crosses page, make sure both pages are accessable */
+    /* if operand crosses page, make sure both pages are accessible */
     if((addr & PAGEFRAME_PAGEMASK) !=
         ((addr + len) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (addr, arn, len, ACCTYPE_WRITE_SKP, regs);
@@ -916,7 +916,7 @@ BYTE    rbyte;                          /* Result byte               */
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
-    /* If addr1 crosses page, make sure both pages are accessable */
+    /* If addr1 crosses page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (effective_addr1, b1, l, ACCTYPE_WRITE_SKP, regs);

@@ -281,12 +281,12 @@ BYTE    dbyte;                          /* Destination operand byte  */
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    /* If operand 1 crosses a page, make sure both pages are accessable */
+    /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE_SKP, regs);
 
-    /* If operand 2 crosses a page, make sure both pages are accessable */
+    /* If operand 2 crosses a page, make sure both pages are accessible */
     if((effective_addr2 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr2 + l2) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
@@ -331,7 +331,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 }
 
 
-#if defined(FEATURE_PERFORM_LOCKED_OPERATION)
+#if defined( FEATURE_PERFORM_LOCKED_OPERATION )
 /*-------------------------------------------------------------------*/
 /* EE   PLO   - Perform Locked Operation                        [SS] */
 /*-------------------------------------------------------------------*/
@@ -363,7 +363,7 @@ VADR    effective_addr2,
         case PLO_CSDSTG:
         case PLO_CSTST:
         case PLO_CSTSTG:
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         case PLO_CLGR:
         case PLO_CLX:
         case PLO_CSGR:
@@ -376,7 +376,7 @@ VADR    effective_addr2,
         case PLO_CSDSTX:
         case PLO_CSTSTGR:
         case PLO_CSTSTX:
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
             /* Indicate function supported */
             regs->psw.cc = 0;
@@ -447,7 +447,7 @@ VADR    effective_addr2,
                 regs->psw.cc = ARCH_DEP(plo_cststg) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
                 break;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             case PLO_CLGR:
                 regs->psw.cc = ARCH_DEP(plo_clgr) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
@@ -496,7 +496,7 @@ VADR    effective_addr2,
                 regs->psw.cc = ARCH_DEP(plo_cststx) (r1, r3,
                         effective_addr2, b2, effective_addr4, b4, regs);
                 break;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
             default:
@@ -515,10 +515,10 @@ VADR    effective_addr2,
 
     }
 }
-#endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/
+#endif /* defined( FEATURE_PERFORM_LOCKED_OPERATION ) */
 
 
-#if defined(FEATURE_STRING_INSTRUCTION)
+#if defined( FEATURE_STRING_INSTRUCTION )
 /*-------------------------------------------------------------------*/
 /* B25E SRST  - Search String                                  [RRE] */
 /*-------------------------------------------------------------------*/
@@ -637,10 +637,10 @@ BYTE    termchar;                       /* Terminating character     */
     regs->psw.cc = 3;
 
 } /* end DEF_INST(search_string) */
-#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
+#endif /* defined( FEATURE_STRING_INSTRUCTION ) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* B24E SAR   - Set Access Register                            [RRE] */
 /*-------------------------------------------------------------------*/
@@ -654,7 +654,7 @@ int     r1, r2;                         /* Values of R fields        */
     regs->AR(r1) = regs->GR_L(r2);
     SET_AEA_AR(regs, r1);
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -938,7 +938,7 @@ U32     n;                              /* Integer work areas        */
 }
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* 9B   STAM  - Store Access Multiple                           [RS] */
 /*-------------------------------------------------------------------*/
@@ -978,7 +978,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
         store_fw( p2++, regs->AR( (r1 + i) & 0xF ));
 
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1017,7 +1017,7 @@ BYTE    rbyte[4];                       /* Byte work area            */
 
         if (i)
             ARCH_DEP(vstorec) (rbyte, i-1, effective_addr2, b2, regs);
-#if defined(MODEL_DEPENDENT_STCM)
+#if defined( MODEL_DEPENDENT_STCM )
         /* If the mask is all zero, we nevertheless access one byte
            from the storage operand, because POP states that an
            access exception may be recognized on the first byte */
@@ -1089,7 +1089,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 }
 
 
-#if defined(FEATURE_EXTENDED_TOD_CLOCK)
+#if defined( FEATURE_EXTENDED_TOD_CLOCK )
 /*-------------------------------------------------------------------*/
 /* B278 STCKE - Store Clock Extended                             [S] */
 /*-------------------------------------------------------------------*/
@@ -1101,10 +1101,10 @@ ETOD    ETOD;                           /* Extended clock work area  */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, STCK))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
     /* Perform serialization before fetching clock */
     PERFORM_SERIALIZATION (regs);
@@ -1138,7 +1138,7 @@ ETOD    ETOD;                           /* Extended clock work area  */
     /* Set condition code zero */
     regs->psw.cc = 0;
 }
-#endif /*defined(FEATURE_EXTENDED_TOD_CLOCK)*/
+#endif /* defined( FEATURE_EXTENDED_TOD_CLOCK ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1419,14 +1419,14 @@ RADR    px;                             /* prefix                    */
 int     rc;                             /* Return code               */
 
     RR_SVC(inst, regs, i);
-#if defined(FEATURE_ECPSVM)
+#if defined( FEATURE_ECPSVM )
     if(ecpsvm_dosvc(regs,i)==0)
     {
         return;
     }
 #endif
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     if(SIE_MODE(regs) &&
       ( (regs->siebk->svc_ctl[0] & SIE_SVC0_ALL)
         || ( (regs->siebk->svc_ctl[0] & SIE_SVC0_1N) &&
@@ -1436,7 +1436,7 @@ int     rc;                             /* Return code               */
         || ( (regs->siebk->svc_ctl[0] & SIE_SVC0_3N) &&
               regs->siebk->svc_ctl[3] == i) ))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
     px = regs->PX;
     SIE_TRANSLATE(&px, ACCTYPE_WRITE, regs);
@@ -1450,10 +1450,10 @@ int     rc;                             /* Return code               */
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + px);
 
-#if defined(FEATURE_BCMODE)
+#if defined( FEATURE_BCMODE )
     /* For ECMODE, store SVC interrupt code at PSA+X'88' */
     if ( ECMODE(&regs->psw) )
-#endif /*defined(FEATURE_BCMODE)*/
+#endif
     {
         psa->svcint[0] = 0;
         psa->svcint[1] = REAL_ILC(regs);
@@ -1531,7 +1531,7 @@ BYTE    old;                            /* Old value                 */
 
     if (regs->psw.cc == 1)
     {
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
         if(SIE_STATB(regs, IC0, TS1))
         {
             if( !OPEN_IC_PER(regs) )
@@ -1540,7 +1540,7 @@ BYTE    old;                            /* Old value                 */
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
         }
         else
-#endif /*defined(_FEATURE_SIE)*/
+#endif
             if (sysblk.cpus > 1)
                 sched_yield();
     }
@@ -1600,7 +1600,7 @@ TMgen(01)
 #endif /* OPTION_OPTINST */
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7x0 TMH   - Test under Mask High                            [RI] */
 /*-------------------------------------------------------------------*/
@@ -1627,10 +1627,10 @@ U16     h2;                             /* 16-bit operand values     */
             ((h1 & h2) == 0) ? 1 :      /* leftmost bit zero */
             2;                          /* leftmost bit one  */
 }
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7x1 TML   - Test under Mask Low                             [RI] */
 /*-------------------------------------------------------------------*/
@@ -1658,7 +1658,7 @@ U16     h2;                             /* 16-bit operand values     */
             2;                          /* leftmost bit one  */
 
 }
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1863,7 +1863,7 @@ BYTE    trtab[256];                     /* Translate table           */
     /* Process first operand from left to right */
     for (i = 0; len1 > 0; i++)
     {
-        /* If 4096 bytes have been compared, exit with condition code 3 */
+        /* If 4096 bytes have been compared, exit with CC 3 */
         if (i >= 4096)
         {
             cc = 3;
@@ -1919,12 +1919,12 @@ BYTE    lbyte;                          /* Left result byte of pair  */
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    /* If operand 1 crosses a page, make sure both pages are accessable */
+    /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE_SKP, regs);
 
-    /* If operand 2 crosses a page, make sure both pages are accessable */
+    /* If operand 2 crosses a page, make sure both pages are accessible */
     if((effective_addr2 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr2 + l2) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
@@ -1981,7 +1981,7 @@ GREG    index;                          /* tree index                */
 GREG    nodecode;                       /* current node's codeword   */
 GREG    nodedata;                       /* current node's other data */
 VADR    nodeaddr;                       /* work addr of current node */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 #endif
 
@@ -2049,7 +2049,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 
         nodeaddr = regs->GR(4) + index;
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if ( a64 )
         {
             nodecode = ARCH_DEP(vfetch8) ( (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
@@ -2096,7 +2096,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
         */
 
         /* Store obsolete GR0 and GR1 values into this node's entry */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if ( a64 )
         {
             ARCH_DEP(vstore8) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
@@ -2118,7 +2118,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
     SET_GR_A(5,regs,index);
 }
 
-#if defined(FEATURE_022_EXT_TRANSL_FACILITY_3)
+#if defined( FEATURE_022_EXT_TRANSL_FACILITY_3 )
 /*-------------------------------------------------------------------*/
 /* B9B0 CU14  - Convert UTF-8 to UTF-32                        [RRF] */
 /*-------------------------------------------------------------------*/
@@ -2133,9 +2133,9 @@ DEF_INST(convert_utf8_to_utf32)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
   int wfc;                         /* Well-Formedness-Checking (W)   */
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
   int xlated;                      /* characters translated          */
 
 // NOTE: it's faster to decode with RRE format
@@ -2150,12 +2150,12 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2189,7 +2189,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xc0 && utf8[0] <= 0xdf)
     {
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2199,7 +2199,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
       /* Check end of source */
       if(srcelen < 2)
@@ -2211,7 +2211,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next byte */
       utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2221,7 +2221,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
@@ -2242,7 +2242,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 2 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
       /* WellformednessChecking */
       if(wfc)
       {
@@ -2271,7 +2271,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /* defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY ) */
 
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
@@ -2282,7 +2282,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
     {
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2292,7 +2292,7 @@ DEF_INST(convert_utf8_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
       /* Check end of source */
       if(srcelen < 4)
@@ -2304,7 +2304,7 @@ DEF_INST(convert_utf8_to_utf32)
       /* Get the next 3 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
       /* WellFormdnessChecking */
       if(wfc)
       {
@@ -2333,7 +2333,7 @@ DEF_INST(convert_utf8_to_utf32)
           }
         }
       }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /* defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY ) */
 
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
@@ -2377,9 +2377,9 @@ DEF_INST(convert_utf16_to_utf32)
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
   int wfc;                         /* Well-Formedness-Checking (W)   */
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
   int xlated;                      /* characters translated          */
 
 // NOTE: it's faster to decode with RRE format
@@ -2394,12 +2394,12 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
   if(inst[2] & 0x10)
     wfc = 1;
   else
     wfc = 0;
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
@@ -2443,7 +2443,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* Fetch another 2 bytes */
       ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
       /* WellFormednessChecking */
       if(wfc)
       {
@@ -2453,8 +2453,7 @@ DEF_INST(convert_utf16_to_utf32)
           return;
         }
       }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
-
+#endif
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
       /* 000uvwxy = 0000abcde + 1 */
@@ -2801,7 +2800,7 @@ DEF_INST(translate_and_test_reverse)
     if(sbyte != 0)
     {
       /* Store address of argument byte in register 1 */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
       if(regs->psw.amode64)
         regs->GR_G(1) = effective_addr1;
       else
@@ -2837,7 +2836,7 @@ DEF_INST(translate_and_test_reverse)
   /* Update the condition code */
   regs->psw.cc = cc;
 }
-#endif /*defined(FEATURE_022_EXT_TRANSL_FACILITY_3)*/
+#endif /* defined( FEATURE_022_EXT_TRANSL_FACILITY_3 ) */
 
 #ifdef FEATURE_026_PARSING_ENHANCE_FACILITY
 /*-------------------------------------------------------------------*/
@@ -3029,17 +3028,17 @@ DEF_INST(translate_and_test_reverse_extended)
 }
 #endif /* FEATURE_026_PARSING_ENHANCE_FACILITY */
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "general2.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "general2.c"
+  #endif
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "general2.c"
-#endif
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "general2.c"
+  #endif
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */

@@ -10,15 +10,15 @@
 /*    *ALL* existing FEATUREs *must* be #undef-ed further below.     */
 /*-------------------------------------------------------------------*/
 
-#if !defined(OPTION_370_MODE) && !defined(NO_370_MODE)
+#if !defined( OPTION_370_MODE ) && !defined( NO_370_MODE )
 #define OPTION_370_MODE                 /* Generate S/370 support    */
 #endif
 
-#if !defined(OPTION_390_MODE) && !defined(NO_390_MODE)
+#if !defined( OPTION_390_MODE ) && !defined( NO_390_MODE )
 #define OPTION_390_MODE                 /* Generate ESA/390 support  */
 #endif
 
-#if !defined(OPTION_900_MODE) && !defined(NO_900_MODE)
+#if !defined( OPTION_900_MODE ) && !defined( NO_900_MODE )
 #define OPTION_900_MODE                 /* Generate z/Arch support   */
 #endif
 
@@ -30,9 +30,9 @@
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
 
-#define MIN_TOD_UPDATE_USECS        1   /* Min TOD updt freq (usecs) */
-#define DEF_TOD_UPDATE_USECS       50   /* Def TOD updt freq (usecs) */
-#define MAX_TOD_UPDATE_USECS  1000000   /* Max TOD updt freq (usecs) */
+#define MIN_TOD_UPDATE_USECS          1 /* Min TOD updt freq (usecs) */
+#define DEF_TOD_UPDATE_USECS         50 /* Def TOD updt freq (usecs) */
+#define MAX_TOD_UPDATE_USECS    1000000 /* Max TOD updt freq (usecs) */
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 
@@ -52,7 +52,7 @@
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 //efine SIE_DEBUG_PERFMON               /* SIE performance monitor   */
 
-#if !defined(OPTION_OPTINST) && !defined(NO_OPTINST)
+#if !defined( OPTION_OPTINST ) && !defined( NO_OPTINST )
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #endif
 
@@ -110,14 +110,14 @@
 #include "hostopts.h"     // (HOST-specific options/feature settings)
 
 // (allow for compiler command-line overrides...)
-#if defined(OPTION_370_MODE) && defined(NO_370_MODE)
-  #undef    OPTION_370_MODE
+#if defined( OPTION_370_MODE ) && defined( NO_370_MODE )
+  #undef     OPTION_370_MODE
 #endif
-#if defined(OPTION_390_MODE) && defined(NO_390_MODE)
-  #undef    OPTION_390_MODE
+#if defined( OPTION_390_MODE ) && defined( NO_390_MODE )
+  #undef     OPTION_390_MODE
 #endif
-#if defined(OPTION_900_MODE) && defined(NO_900_MODE)
-  #undef    OPTION_900_MODE
+#if defined( OPTION_900_MODE ) && defined( NO_900_MODE )
+  #undef     OPTION_900_MODE
 #endif
 
 /*********************************************************************/
@@ -148,7 +148,7 @@
 #undef  FEATURE_014_NONQ_KEY_SET_FACILITY                       /*810*/
 #undef  FEATURE_016_EXT_TRANSL_FACILITY_2
 #undef  FEATURE_017_MSA_FACILITY
-#undef  DYNINST_017_MSA_FACILITY                         /* dyncrypt */
+#undef  DYNINST_017_MSA_FACILITY                           /*dyncrypt*/
 #undef  FEATURE_018_LONG_DISPL_INST_FACILITY
 #undef  FEATURE_019_LONG_DISPL_HPERF_FACILITY
 #undef  FEATURE_020_HFP_MULT_ADD_SUB_FACILITY
@@ -205,9 +205,9 @@
 #undef  FEATURE_074_STORE_HYPER_INFO_FACILITY
 #undef  FEATURE_075_ACC_EX_FS_INDIC_FACILITY                    /*810*/
 #undef  FEATURE_076_MSA_EXTENSION_FACILITY_3
-#undef  DYNINST_076_MSA_EXTENSION_FACILITY_3             /* dyncrypt */
+#undef  DYNINST_076_MSA_EXTENSION_FACILITY_3               /*dyncrypt*/
 #undef  FEATURE_077_MSA_EXTENSION_FACILITY_4
-#undef  DYNINST_077_MSA_EXTENSION_FACILITY_4             /* dyncrypt */
+#undef  DYNINST_077_MSA_EXTENSION_FACILITY_4               /*dyncrypt*/
 #undef  FEATURE_078_ENHANCED_DAT_FACILITY_2
 #undef  FEATURE_080_DFP_PACK_CONV_FACILITY
 #undef  FEATURE_129_ZVECTOR_FACILITY
@@ -287,7 +287,7 @@
 #undef  FEATURE_MSSF_CALL
 #undef  FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
 #undef  FEATURE_MVS_ASSIST
-#undef  FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS  // 'N' instructions
+#undef  FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS     // 'N' instructions
 #undef  FEATURE_PAGE_PROTECTION
 #undef  FEATURE_PER
 #undef  FEATURE_PER1

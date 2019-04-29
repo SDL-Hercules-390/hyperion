@@ -47,7 +47,7 @@
 //efine FEATURE_014_NONQ_KEY_SET_FACILITY                       /*810*/
 #define FEATURE_016_EXT_TRANSL_FACILITY_2
 #define FEATURE_017_MSA_FACILITY
-#define DYNINST_017_MSA_FACILITY                         /* dyncrypt */
+#define DYNINST_017_MSA_FACILITY                           /*dyncrypt*/
 #define FEATURE_018_LONG_DISPL_INST_FACILITY
 #define FEATURE_019_LONG_DISPL_HPERF_FACILITY
 #define FEATURE_020_HFP_MULT_ADD_SUB_FACILITY
@@ -106,9 +106,9 @@
 //efine FEATURE_074_STORE_HYPER_INFO_FACILITY
 #define FEATURE_075_ACC_EX_FS_INDIC_FACILITY                    /*810*/
 #define FEATURE_076_MSA_EXTENSION_FACILITY_3
-#define DYNINST_076_MSA_EXTENSION_FACILITY_3             /* dyncrypt */
+#define DYNINST_076_MSA_EXTENSION_FACILITY_3               /*dyncrypt*/
 #define FEATURE_077_MSA_EXTENSION_FACILITY_4
-#define DYNINST_077_MSA_EXTENSION_FACILITY_4             /* dyncrypt */
+#define DYNINST_077_MSA_EXTENSION_FACILITY_4               /*dyncrypt*/
 //efine FEATURE_078_ENHANCED_DAT_FACILITY_2
 //efine FEATURE_080_DFP_PACK_CONV_FACILITY
 //efine FEATURE_129_ZVECTOR_FACILITY
@@ -215,6 +215,6 @@
 #define FEATURE_VM_BLOCKIO
 #define FEATURE_WAITSTATE_ASSIST
 
-#endif /*defined(OPTION_900_MODE)*/
+#endif /* defined( OPTION_900_MODE ) */
 
 /* end of FEAT900.H */

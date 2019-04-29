@@ -123,7 +123,7 @@ S32     n;                              /* 32-bit operand values     */
 }
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7xA AHI   - Add Halfword Immediate                          [RI] */
 /*-------------------------------------------------------------------*/
@@ -146,7 +146,7 @@ U16     i2;                             /* 16-bit immediate op       */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -418,7 +418,7 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-#if defined(FEATURE_TRACING)
+#if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
@@ -427,13 +427,13 @@ VADR    newia;                          /* New instruction address   */
                         (regs->psw.amode, regs->GR_L(r2), regs);
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
-#endif /*defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_TRACING ) */
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
     /* Save the link information in the R1 operand */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 2);
     else
@@ -466,7 +466,7 @@ VADR    effective_addr2;                /* Effective address         */
     RX_B(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 operand */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 4);
     else
@@ -492,7 +492,7 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-#if defined(FEATURE_TRACING)
+#if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
@@ -501,13 +501,13 @@ VADR    newia;                          /* New instruction address   */
                          (regs->psw.amode, regs->GR_L(r2), regs);
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
-#endif /*defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_TRACING ) */
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
     /* Save the link information in the R1 operand */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 2);
     else
@@ -538,7 +538,7 @@ VADR    effective_addr2;                /* Effective address         */
     RX_B(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 register */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 4);
     else
@@ -566,15 +566,15 @@ int     xmode;                          /* 64 or 31 mode of target   */
 #endif
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 BYTE    *ipsav;                         /* save for ip               */
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     RR_B(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
-#if defined(FEATURE_TRACING)
-     #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_TRACING )
+     #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
@@ -587,28 +587,28 @@ BYTE    *ipsav;                         /* save for ip               */
         regs->ip = ipsav;
     }
     else
-     #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+     #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-     #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+     #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (newia & 0x01)
             xmode = 1;
         else
-     #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+     #endif
         xmode = newia & 0x80000000 ? 1 : 0;
         regs->CR(12) = ARCH_DEP(trace_br) (xmode, newia & ~0x01, regs);
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
-#endif /*defined(FEATURE_TRACING)*/
+#endif /* defined( FEATURE_TRACING ) */
 
     /* Save the link information in the R1 operand */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 3); // low bit on
     else
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
     if ( regs->psw.amode )
         regs->GR_L(r1) = 0x80000000 | PSW_IA31(regs, 2);
     else
@@ -643,8 +643,8 @@ VADR    newia;                          /* New instruction address   */
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
-#if defined(FEATURE_TRACING)
-     #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_TRACING )
+     #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
@@ -652,13 +652,13 @@ VADR    newia;                          /* New instruction address   */
         regs->psw.ilc = 2;
         regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
     }
-     #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-#endif /*defined(FEATURE_TRACING)*/
+     #endif
+#endif
 
     /* Insert addressing mode into bit 0 of R1 operand */
     if ( r1 != 0 )
     {
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Z/Pops seems to be in error about this */
 //      regs->GR_LHLCL(r1) &= 0xFE;
         if ( regs->psw.amode64 )
@@ -710,14 +710,14 @@ DEF_INST(branch_on_condition_register)
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
         }
-#if defined(FEATURE_045_FAST_BCR_SERIAL_FACILITY)            /*810*/
+#if defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY )             /*810*/
         /* Perform serialization without checkpoint synchronization
            the mask is B'1110' and R2 is register 0 */
         else if (inst[1] == 0xE0)
         {
             PERFORM_SERIALIZATION (regs);
         }
-#endif /*defined(FEATURE_045_FAST_BCR_SERIAL_FACILITY)*/
+#endif /* defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY ) */
     }
 
 } /* end DEF_INST(branch_on_condition_register) */
@@ -1311,7 +1311,7 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7x4 BRC   - Branch Relative on Condition                    [RI] */
 /*-------------------------------------------------------------------*/
@@ -1329,7 +1329,7 @@ U16   i2;                               /* 16-bit operand values     */
         INST_UPDATE_PSW(regs, 4, 0);
 
 } /* end DEF_INST(branch_relative_on_condition) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 /*-------------------------------------------------------------------*/
 /* 06   BCTR  - Branch on Count Register                        [RR] */
@@ -1434,7 +1434,7 @@ S32     i, j;                           /* Integer work areas        */
 } /* end DEF_INST(branch_on_index_low_or_equal) */
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7x5 BRAS  - Branch Relative And Save                        [RI] */
 /*-------------------------------------------------------------------*/
@@ -1447,7 +1447,7 @@ U16     i2;                             /* 16-bit operand values     */
     RI_B(inst, regs, r1, opcd, i2);
 
     /* Save the link information in the R1 operand */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ( regs->psw.amode64 )
         regs->GR_G(r1) = PSW_IA64(regs, 4);
     else
@@ -1460,10 +1460,10 @@ U16     i2;                             /* 16-bit operand values     */
     SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
 
 } /* end DEF_INST(branch_relative_and_save) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7x6 BRCT  - Branch Relative on Count                        [RI] */
 /*-------------------------------------------------------------------*/
@@ -1482,10 +1482,10 @@ U16     i2;                             /* 16-bit operand values     */
         INST_UPDATE_PSW(regs, 4, 0);
 
 } /* end DEF_INST(branch_relative_on_count) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* 84   BRXH  - Branch Relative on Index High                  [RSI] */
 /*-------------------------------------------------------------------*/
@@ -1513,10 +1513,10 @@ S32     i,j;                            /* Integer workareas         */
         INST_UPDATE_PSW(regs, 4, 0);
 
 } /* end DEF_INST(branch_relative_on_index_high) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* 85   BRXLE - Branch Relative on Index Low or Equal          [RSI] */
 /*-------------------------------------------------------------------*/
@@ -1544,10 +1544,10 @@ S32     i,j;                            /* Integer workareas         */
         INST_UPDATE_PSW(regs, 4, 0);
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
-#if defined(FEATURE_CHECKSUM_INSTRUCTION)
+#if defined( FEATURE_CHECKSUM_INSTRUCTION )
 /*-------------------------------------------------------------------*/
 /* B241 CKSM  - Checksum                                       [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1676,7 +1676,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
     if (len > 0) cc = 3;
     regs->psw.cc = cc;
 }
-#endif /*defined(FEATURE_CHECKSUM_INSTRUCTION)*/
+#endif /* defined( FEATURE_CHECKSUM_INSTRUCTION ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1736,7 +1736,7 @@ BYTE    op1[CFC_MAX_OPSIZE];            /* (work field)              */
 BYTE    op3[CFC_MAX_OPSIZE];            /* (work field)              */
 BYTE    tmp[CFC_MAX_OPSIZE];            /* (work field)              */
 BYTE    descending;                     /* (sort-order control bit)  */
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 BYTE    a64 = regs->psw.amode64;        /* ("64-bit mode" flag)      */
 #endif
 BYTE    op_size      = CFC_OPSIZE;      /* (work constant; uses a64) */
@@ -1915,7 +1915,7 @@ U32     old;                            /* old value                 */
     {
         PTT_CSF("*CS",regs->GR_L(r1),regs->GR_L(r3),(U32)(addr2 & 0xffffffff));
         regs->GR_L(r1) = CSWAP32(old);
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
         if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
@@ -1924,7 +1924,7 @@ U32     old;                            /* old value                 */
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
         }
         else
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
             if (sysblk.cpus > 1)
                 sched_yield();
     }
@@ -1980,7 +1980,7 @@ U64     old, new;                       /* old, new values           */
         PTT_CSF("*CDS",regs->GR_L(r1),regs->GR_L(r3),(U32)(addr2 & 0xffffffff));
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
         if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
@@ -1989,7 +1989,7 @@ U64     old, new;                       /* old, new values           */
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
         }
         else
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
             if (sysblk.cpus > 1)
                 sched_yield();
     }
@@ -2013,11 +2013,11 @@ VADR    addr1, addr2;                   /* Effective addresses       */
 VADR    addrp;                          /* Parameter list address    */
 BYTE   *main1;                          /* Mainstor address of op1   */
 int     ln2;                            /* Second operand length - 1 */
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
 U64     old16l=0, old16h=0,
         new16l=0, new16h=0,             /* swap values for cmpxchg16 */
         stv16h=0,stv16l=0;              /* 16-byte store value pair  */
-#endif /*#if defined(FEATURE_033_CSS_FACILITY_2)*/
+#endif
 U64     old8=0, new8=0;                 /* Swap values for cmpxchg8  */
 U32     old4=0, new4=0;                 /* Swap values for cmpxchg4  */
 U64     stv8=0;                         /* 8-byte store value        */
@@ -2066,14 +2066,14 @@ BYTE    sc;                             /* Store characteristic      */
         case 1:
             DW_CHECK(addr1, regs);
             break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
         case 2:
             QW_CHECK(addr1, regs);
             break;
 #endif
     }
 
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
     if((r3 & 1) && (fc == 2))
     {
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -2092,7 +2092,7 @@ BYTE    sc;                             /* Store characteristic      */
         case 3:
             DW_CHECK(addr2, regs);
             break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
         case 4:
             QW_CHECK(addr2, regs);
             break;
@@ -2128,7 +2128,7 @@ BYTE    sc;                             /* Store characteristic      */
             new8 = ARCH_DEP(vfetch8) (addrp, rp, regs);
             new8 = CSWAP64(new8);
             break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
         case 2:
             old16h = CSWAP64(regs->GR_G(r3));
             old16l = CSWAP64(regs->GR_G(r3+1));
@@ -2158,7 +2158,7 @@ BYTE    sc;                             /* Store characteristic      */
         case 3:
             stv8 = ARCH_DEP(vfetch8) (addrp, rp, regs);
             break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
         case 4:
             stv16h = ARCH_DEP(vfetch8) (addrp, rp, regs);
             stv16l = ARCH_DEP(vfetch8) (addrp+8, rp, regs);
@@ -2174,7 +2174,7 @@ BYTE    sc;                             /* Store characteristic      */
         case 1:
             regs->psw.cc = cmpxchg8 (&old8, new8, main1);
             break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
         case 2:
             regs->psw.cc = cmpxchg16 (&old16h, &old16l, new16h, new16l, main1);
             break;
@@ -2197,7 +2197,7 @@ BYTE    sc;                             /* Store characteristic      */
             case 3:
                 ARCH_DEP(vstore8) (stv8, addr2, b2, regs);
                 break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
             case 4:
                 ARCH_DEP(vstore8) (stv16h, addr2, b2, regs);
                 ARCH_DEP(vstore8) (stv16l, addr2+8, b2, regs);
@@ -2215,7 +2215,7 @@ BYTE    sc;                             /* Store characteristic      */
             case 1:
                 regs->GR_G(r3) = CSWAP64(old8);
                 break;
-#if defined(FEATURE_033_CSS_FACILITY_2)
+#if defined( FEATURE_033_CSS_FACILITY_2 )
             case 2:
                 regs->GR_G(r3) = CSWAP64(old16h);
                 regs->GR_G(r3+1) = CSWAP64(old16l);
@@ -2256,7 +2256,7 @@ S32     n;                              /* 32-bit operand values     */
 }
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7xE CHI   - Compare Halfword Immediate                      [RI] */
 /*-------------------------------------------------------------------*/
@@ -2274,7 +2274,7 @@ U16     i2;                             /* 16-bit operand            */
             (S32)regs->GR_L(r1) > (S16)i2 ? 2 : 0;
 
 }
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -3370,13 +3370,13 @@ BYTE    pad;                            /* Padding byte              */
 BYTE    sublen;                         /* Substring length          */
 BYTE    equlen = 0;                     /* Equal byte counter        */
 VADR    eqaddr1, eqaddr2;               /* Address of equal substring*/
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 S64     len1, len2;                     /* Operand lengths           */
 S64     remlen1, remlen2;               /* Lengths remaining         */
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else
 S32     len1, len2;                     /* Operand lengths           */
 S32     remlen1, remlen2;               /* Lengths remaining         */
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     RRE(inst, regs, r1, r2);
 
@@ -3398,14 +3398,14 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
 
     /* Load signed operand lengths from R1+1 and R2+1 */
     len1 =
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
            regs->psw.amode64 ? (S64)(regs->GR_G(r1+1)) :
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
                                (S32)(regs->GR_L(r1+1));
     len2 =
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
            regs->psw.amode64 ? (S64)(regs->GR_G(r2+1)) :
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
                                (S32)(regs->GR_L(r2+1));
 
     /* Initialize equal string addresses and lengths */
@@ -3571,9 +3571,9 @@ U16     unicode1;                       /* Unicode character         */
 U16     unicode2;                       /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
 int     wfc;                            /* Well-Formedness-Checking  */
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
 // NOTE: it's faster to decode with RRE format
 // and then to handle the 'wfc' flag separately...
@@ -3583,13 +3583,13 @@ int     wfc;                            /* Well-Formedness-Checking  */
 
     ODD2_CHECK(r1, r2, regs);
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
     /* Set WellFormednessChecking */
     if(inst[2] & 0x10)
       wfc = 1;
     else
       wfc = 0;
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -3655,7 +3655,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
             naddr2 &= ADDRESS_MAXWRAP(regs);
             nlen2 -= 2;
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -3665,7 +3665,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
                 return;
               }
             }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /* defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY ) */
 
             /* Convert Unicode surrogate pair to four UTF-8 bytes */
             uvwxy = ((unicode1 & 0x03C0) >> 6) + 1;
@@ -3727,9 +3727,9 @@ U16     unicode1;                       /* Unicode character         */
 U16     unicode2 = 0;                   /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
 int     wfc;                            /* WellFormednessChecking    */
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
 // NOTE: it's faster to decode with RRE format
 // and then to handle the 'wfc' flag separately...
@@ -3739,13 +3739,13 @@ int     wfc;                            /* WellFormednessChecking    */
 
     ODD2_CHECK(r1, r2, regs);
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
     /* Set WellFormednessChecking */
     if(inst[2] & 0x10)
       wfc = 1;
     else
       wfc = 0;
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -3781,7 +3781,7 @@ int     wfc;                            /* WellFormednessChecking    */
         }
         else if ((utf[0] & 0xE0) == 0xC0)
         {
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -3791,8 +3791,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 return;
               }
             }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
-
+#endif
             /* Exit if fewer than 2 bytes remain in source operand */
             n = 1;
             if (len2 <= n) break;
@@ -3800,7 +3799,7 @@ int     wfc;                            /* WellFormednessChecking    */
             /* Fetch two UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormednessChecking */
             if(wfc)
             {
@@ -3810,8 +3809,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 return;
               }
             }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
-
+#endif
             /* Convert C0xx-DFxx to Unicode */
             unicode1 = ((U16)(utf[0] & 0x1F) << 6)
                         | ((U16)(utf[1] & 0x3F));
@@ -3826,7 +3824,7 @@ int     wfc;                            /* WellFormednessChecking    */
             /* Fetch three UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -3855,7 +3853,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 }
               }
             }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /* defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY ) */
 
             /* Convert E0xxxx-EFxxxx to Unicode */
             unicode1 = ((U16)(utf[0]) << 12)
@@ -3872,7 +3870,7 @@ int     wfc;                            /* WellFormednessChecking    */
             /* Fetch four UTF-8 bytes from source operand */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
-#if defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)
+#if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
             /* WellFormdnessChecking */
             if(wfc)
             {
@@ -3901,7 +3899,7 @@ int     wfc;                            /* WellFormednessChecking    */
                 }
               }
             }
-#endif /*defined(FEATURE_030_ETF3_ENHANCEMENT_FACILITY)*/
+#endif /* defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY ) */
 
             /* Convert F0xxxxxx-F7xxxxxx to Unicode surrogate pair */
             uvwxy = ((((U16)(utf[0] & 0x07) << 2)
@@ -4041,7 +4039,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
 } /* end DEF_INST(convert_to_decimal) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* B24D CPYA  - Copy Access                                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4055,7 +4053,7 @@ int     r1, r2;                         /* Values of R fields        */
     regs->AR(r1) = regs->AR(r2);
     SET_AEA_AR(regs, r1);
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -4360,12 +4358,12 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     ODD_CHECK(regs->ET, regs);
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Ensure that the instruction field is zero, such that
        zeros are stored in the interception parm field, if
        the interrupt is intercepted */
     memset(regs->exinst, 0, 8);
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
     /* Fetch target instruction from operand address */
     ip = INSTRUCTION_FETCH(regs, 1);
@@ -4374,9 +4372,9 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44
-#if defined(FEATURE_035_EXECUTE_EXTN_FACILITY)
+#if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
          || (regs->exinst[0] == 0xc6 && !(regs->exinst[1] & 0x0f))
-#endif /*defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/
+#endif
                                                                    )
         regs->program_interrupt (regs, PGM_EXECUTE_EXCEPTION);
 
@@ -4496,10 +4494,10 @@ DEF_INST( execute_relative_long )
     if (!OPEN_IC_PER( regs ))
         regs->execflag = 0;
 }
-#endif /* defined(FEATURE_EXECUTE_EXTENSION_FACILITY) */
+#endif /* defined( FEATURE_EXECUTE_EXTENSION_FACILITY ) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* B24F EAR   - Extract Access Register                        [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4512,7 +4510,7 @@ int     r1, r2;                         /* Values of R fields        */
     /* Copy R2 access register to R1 general register */
     regs->GR_L(r1) = regs->AR(r2);
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -4777,7 +4775,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 #endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* 51   LAE   - Load Address Extended                           [RX] */
 /*-------------------------------------------------------------------*/
@@ -4803,7 +4801,7 @@ VADR    effective_addr2;                /* Effective address         */
         regs->AR(r1) = (b2 == 0) ? 0 : regs->AR(b2);
     SET_AEA_AR(regs, r1);
 }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -4850,7 +4848,7 @@ int     r1, r2;                         /* Values of R fields        */
 }
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7x8 LHI   - Load Halfword Immediate                         [RI] */
 /*-------------------------------------------------------------------*/
@@ -4866,7 +4864,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->GR_L(r1) = (S16)i2;
 
 }
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -5019,7 +5017,7 @@ CREG    n;                              /* Work                      */
     if ((n & 0x00008000) == 0)
         return;
 
-#if defined(FEATURE_036_ENH_MONITOR_FACILITY)
+#if defined( FEATURE_036_ENH_MONITOR_FACILITY )
     /* Perform Monitor Event Counting Operation if enabled */
     if (FACILITY_ENABLED( 036_ENH_MONITOR, regs )
       && (( (regs->CR_H(8) & CR8_MCMASK) << i2) & 0x00008000))
@@ -5116,7 +5114,7 @@ CREG    n;                              /* Work                      */
         return;
 
     }
-#endif /*defined(FEATURE_036_ENH_MONITOR_FACILITY)*/
+#endif /* defined( FEATURE_036_ENH_MONITOR_FACILITY ) */
 
     regs->monclass = i2;
     regs->MONCODE = effective_addr1;
@@ -5374,7 +5372,7 @@ int     orglen1;                        /* Original dest length      */
 }
 
 
-#if defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)
+#if defined( FEATURE_COMPARE_AND_MOVE_EXTENDED )
 /*-------------------------------------------------------------------*/
 /* A8   MVCLE - Move Long Extended                              [RS] */
 /*-------------------------------------------------------------------*/
@@ -5469,7 +5467,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
     regs->psw.cc = cc;
 
 }
-#endif /*defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)*/
+#endif /* defined( FEATURE_COMPARE_AND_MOVE_EXTENDED ) */
 
 
 #define MOVE_NUMERIC_BUMP( dst, src )                   \
@@ -5614,7 +5612,7 @@ int     i;                              /* Loop counter              */
 }
 
 
-#if defined(FEATURE_STRING_INSTRUCTION)
+#if defined( FEATURE_STRING_INSTRUCTION )
 /*-------------------------------------------------------------------*/
 /* B255 MVST  - Move String                                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5692,7 +5690,7 @@ BYTE    termchar;                       /* Terminating character     */
     SET_GR_A( r2, regs,addr2 );
 
 } /* end DEF_INST(move_string) */
-#endif /*defined(FEATURE_STRING_INSTRUCTION)*/
+#endif /* defined( FEATURE_STRING_INSTRUCTION ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -5711,12 +5709,12 @@ BYTE    dbyte;                          /* Destination operand byte  */
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    /* If operand 1 crosses a page, make sure both pages are accessable */
+    /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
         ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE_SKP, regs);
 
-    /* If operand 2 crosses a page, make sure both pages are accessable */
+    /* If operand 2 crosses a page, make sure both pages are accessible */
     if((effective_addr2 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr2 + l2) & PAGEFRAME_PAGEMASK))
     ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
@@ -5966,7 +5964,7 @@ S32     n;                              /* 32-bit operand values     */
 }
 
 
-#if defined(FEATURE_IMMEDIATE_AND_RELATIVE)
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
 /* A7xC MHI   - Multiply Halfword Immediate                     [RI] */
 /*-------------------------------------------------------------------*/
@@ -6018,19 +6016,19 @@ U32     n;                              /* 32-bit operand values     */
     regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S32)n;
 
 } /* end DEF_INST(multiply_single) */
-#endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
+#endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "general1.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "general1.c"
+  #endif
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "general1.c"
-#endif
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "general1.c"
+  #endif
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif /* !defined( _GEN_ARCH ) */
