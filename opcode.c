@@ -1265,7 +1265,7 @@ DEF_INST( execute_opcode_e3________xx )
   regs->ARCH_DEP( runtime_opcode_e3________xx )[inst[5]](inst, regs);
 }
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
 DEF_INST( E3_0 )
 {
   regs->ARCH_DEP( runtime_opcode_e3_0______xx )[inst[5]](inst, regs);
@@ -1378,9 +1378,14 @@ static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
+
+#if !defined( OPTION_NO_E3_OPTINST )
+
 static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
+
+#endif
 
 #endif /* OPTION_OPTINST */
 
@@ -1395,7 +1400,7 @@ static INSTR_FUNC runtime_opcode_eb________xx[NUM_GEN_ARCHS][256];
 static INSTR_FUNC runtime_opcode_ec________xx[NUM_GEN_ARCHS][256];
 static INSTR_FUNC runtime_opcode_ed________xx[NUM_GEN_ARCHS][256];
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
 static INSTR_FUNC runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
 #endif
 
@@ -6347,6 +6352,8 @@ static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
  /*BF_F*/ GENx370x390x900 (BF_F,RS,"ICM")
 };
 
+#if !defined( OPTION_NO_E3_OPTINST )
+
 static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E3*/   GENx370x390x900 (E3_0,e3xx,"")
@@ -6365,6 +6372,8 @@ static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E324*/ GENx___x___x900 (E3_0______24,RXY,"STG")
 };
+
+#endif /* !defined( OPTION_NO_E3_OPTINST ) */
 
 #endif /* OPTION_OPTINST */
 
@@ -6463,15 +6472,13 @@ static INSTR_FUNC replace_opcode_xx________xx( int arch, INSTR_FUNC inst, int op
     {
         case 0xe3:
         {
-#if defined( OPTION_OPTINST )
-            oldinst = runtime_opcode_e3_0______xx[arch][opcode2];
-                      runtime_opcode_e3_0______xx[arch][opcode2] = inst;
-            break;
-#else
+
+#if defined( OPTION_OPTINST) && !defined( OPTION_NO_E3_OPTINST )
+  #error E3 instruction optimization is not supported! (yet?)
+#endif
             oldinst = runtime_opcode_e3________xx[arch][opcode2];
                       runtime_opcode_e3________xx[arch][opcode2] = inst;
             break;
-#endif
         }
         case 0xeb:
         {
@@ -6637,7 +6644,7 @@ void init_opcode_tables()
 
     // "Optimized" Instructions
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST )
 
     for(i = 0; i < 256; i++)
     {
@@ -6657,7 +6664,9 @@ void init_opcode_tables()
       replace_opcode_xxxx(arch, opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
       replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
       replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
+#if !defined( OPTION_NO_E3_OPTINST )
       replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
+#endif
     }
 
     bit = 0x80;
@@ -6667,6 +6676,8 @@ void init_opcode_tables()
       replace_opcode_xxxx(arch, opcode_91xx[i][arch], 0x91, bit); /* Single bit TM */
       bit >>= 1;
     }
+
+#if !defined( OPTION_NO_E3_OPTINST )
 
     for(i = 0; i < 256; i++)
     {
@@ -6688,7 +6699,10 @@ void init_opcode_tables()
           break;
       }
     }
-#endif /* OPTION_OPTINST */
+
+#endif /* !defined( OPTION_NO_E3_OPTINST ) */
+
+#endif /* defined( OPTION_OPTINST ) */
   }
 }
 
@@ -6721,7 +6735,7 @@ void init_opcode_pointers( REGS* regs )
   regs->z900_runtime_opcode_ec________xx = runtime_opcode_ec________xx[ARCH_900_IDX];
   regs->z900_runtime_opcode_ed________xx = runtime_opcode_ed________xx[ARCH_900_IDX];
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
   regs->s370_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_370_IDX];
   regs->s390_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_390_IDX];
   regs->z900_runtime_opcode_e3_0______xx = runtime_opcode_e3_0______xx[ARCH_900_IDX];

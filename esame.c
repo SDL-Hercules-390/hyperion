@@ -4639,7 +4639,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(store_long) */
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
 /*-------------------------------------------------------------------*/
 /* E324 STG   - Store Long                                     [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4656,7 +4656,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(store_long) */
 
-#endif /* #ifdef OPTION_OPTINST */
+#endif /* defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
@@ -4704,7 +4704,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(load_long) */
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
 /*-------------------------------------------------------------------*/
 /* E304 LG    - Load Long                                      [RXY] */
 /*-------------------------------------------------------------------*/
@@ -4721,7 +4721,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(load_long) */
 
-#endif /* #ifdef OPTION_OPTINST */
+#endif /* defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 

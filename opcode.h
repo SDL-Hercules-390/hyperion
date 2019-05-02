@@ -4951,11 +4951,15 @@ SLRdefgenr2(D);
 SLRdefgenr2(E);
 SLRdefgenr2(F);
 
+#if !defined( OPTION_NO_E3_OPTINST )
+
 // Load/Store 64-bit
 
 DEF_INST( E3_0 );
 DEF_INST( E3_0______04 );
 DEF_INST( E3_0______24 );
+
+#endif
 
 #endif /* OPTION_OPTINST */
 

@@ -56,6 +56,8 @@
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #endif
 
+#define OPTION_NO_E3_OPTINST            /* Temporary?                */
+
 #if defined( HAVE_FULL_KEEPALIVE )
   #if !defined( HAVE_PARTIAL_KEEPALIVE ) || !defined( HAVE_BASIC_KEEPALIVE )
     #error Cannot have full TCP keepalive without partial and basic as well

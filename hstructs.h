@@ -388,7 +388,8 @@ struct REGS {                           /* Processor registers       */
                             *z900_runtime_opcode_eb________xx,
                             *z900_runtime_opcode_ec________xx,
                             *z900_runtime_opcode_ed________xx;
-#ifdef OPTION_OPTINST
+
+#if !defined( OPTION_NO_E3_OPTINST )
         const INSTR_FUNC    *s370_runtime_opcode_e3_0______xx,
                             *s390_runtime_opcode_e3_0______xx,
                             *z900_runtime_opcode_e3_0______xx;
