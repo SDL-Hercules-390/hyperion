@@ -404,11 +404,11 @@ FT( Z390, Z390, NONE, 052_INTERLOCKED_ACCESS_2 )
 /*-------------------------------------------------------------------*/
 
 #if defined(  FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
-FT( NONE, NONE, NONE, 053_LOAD_STORE_ON_COND_2 )
+FT( Z900, Z900, NONE, 053_LOAD_STORE_ON_COND_2 )
 #endif
 
 #if defined(  FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
-FT( NONE, NONE, NONE, 053_LOAD_ZERO_RIGHTMOST )
+FT( Z900, Z900, NONE, 053_LOAD_ZERO_RIGHTMOST )
 #endif
 
 /*-------------------------------------------------------------------*/

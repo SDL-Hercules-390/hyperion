@@ -574,6 +574,21 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( perform_processor_assist );
 #endif
 
+#if !defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
+ UNDEF_INST( load_halfword_high_immediate_on_condition );
+ UNDEF_INST( load_halfword_immediate_on_condition );
+ UNDEF_INST( load_halfword_immediate_on_condition_grande );
+ UNDEF_INST( load_high_on_condition );
+ UNDEF_INST( load_high_on_condition_register );
+ UNDEF_INST( store_high_on_condition );
+#endif
+
+#if !defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
+ UNDEF_INST( load_and_zero_rightmost_byte_grande );
+ UNDEF_INST( load_logical_and_zero_rightmost_byte );
+ UNDEF_INST( load_and_zero_rightmost_byte );
+#endif
+
 #if !defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
  UNDEF_INST( reset_reference_bits_multiple )                      /*810*/
 #endif
@@ -1702,6 +1717,13 @@ int r1,r3,i2;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2)
+
+DISASM_TYPE(RIE_G);
+int r1,i2, m3;
+    r1 = inst[1] >> 4;
+    m3 = inst[1] & 0x0F;
+    i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
+    DISASM_PRINT("%d,%d,%d",r1,i2,m3)
 
 DISASM_TYPE(RIE_RRI);
 int r1,r3,i2;
@@ -3252,7 +3274,7 @@ static INSTR_FUNC opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9DD*/ GENx___x___x900 (compare_high_low_register,RRE,"CHLR"),                  /*810*/
  /*B9DE*/ GENx___x___x___ ,
  /*B9DF*/ GENx___x___x900 (compare_logical_high_low_register,RRE,"CLHLR"),         /*810*/
- /*B9E0*/ GENx___x___x___ ,
+ /*B9E0*/ GENx___x___x900 (load_high_on_condition_register,RRF_M3,"LOCFHR"),
  /*B9E1*/ GENx___x___x900 (population_count,RRE,"POPCNT"),                         /*810*/
  /*B9E2*/ GENx___x___x900 (load_on_condition_long_register,RRF_M3,"LOCGR"),        /*810*/
  /*B9E3*/ GENx___x___x___ ,
@@ -3450,7 +3472,7 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E327*/ GENx___x___x___ ,
  /*E328*/ GENx___x___x___ ,
  /*E329*/ GENx___x___x___ ,
- /*E32A*/ GENx___x___x___ ,
+ /*E32A*/ GENx___x___x900 (load_and_zero_rightmost_byte_grande,RXY,"LZRG"),
  /*E32B*/ GENx___x___x___ ,
  /*E32C*/ GENx___x___x___ ,
  /*E32D*/ GENx___x___x___ ,
@@ -3466,8 +3488,8 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E337*/ GENx___x___x___ ,
  /*E338*/ GENx___x___x___ ,
  /*E339*/ GENx___x___x___ ,
- /*E33A*/ GENx___x___x___ ,
- /*E33B*/ GENx___x___x___ ,
+ /*E33A*/ GENx___x___x900 (load_logical_and_zero_rightmost_byte,RXY,"LLZRGF"),
+ /*E33B*/ GENx___x___x900 (load_and_zero_rightmost_byte,RXY,"LZRF"),
  /*E33C*/ GENx___x___x___ ,
  /*E33D*/ GENx___x___x___ ,
  /*E33E*/ GENx37Xx390x900 (store_reversed,RXY,"STRV"),
@@ -4422,8 +4444,8 @@ static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
  /*EBDD*/ GENx37Xx390x900 (shift_left_single_distinct,RSY,"SLAK"),                 /*810*/
  /*EBDE*/ GENx37Xx390x900 (shift_right_single_logical_distinct,RSY,"SRLK"),        /*810*/
  /*EBDF*/ GENx37Xx390x900 (shift_left_single_logical_distinct,RSY,"SLLK"),         /*810*/
- /*EBE0*/ GENx___x___x___ ,
- /*EBE1*/ GENx___x___x___ ,
+ /*EBE0*/ GENx___x___x900 (load_high_on_condition,RSY_M3,"LOCFH"),
+ /*EBE1*/ GENx___x___x900 (store_high_on_condition,RSY_M3,"STOCFH"),
  /*EBE2*/ GENx___x___x900 (load_on_condition_long,RSY_M3,"LOCG"),                  /*810*/
  /*EBE3*/ GENx___x___x900 (store_on_condition_long,RSY_M3,"STOCG"),                /*810*/
  /*EBE4*/ GENx___x___x900 (load_and_and_long,RSY,"LANG"),                          /*810*/
@@ -4524,11 +4546,11 @@ static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
  /*EC3F*/ GENx___x___x___ ,
  /*EC40*/ GENx___x___x___ ,
  /*EC41*/ GENx___x___x___ ,
- /*EC42*/ GENx___x___x___ ,
+ /*EC42*/ GENx___x___x900 (load_halfword_immediate_on_condition,RIE_G,"LOCHI"),
  /*EC43*/ GENx___x___x___ ,
  /*EC44*/ GENx___x___x900 (branch_relative_on_index_high_long,RIE,"BRXHG"),
  /*EC45*/ GENx___x___x900 (branch_relative_on_index_low_or_equal_long,RIE,"BRXLG"),
- /*EC46*/ GENx___x___x___ ,
+ /*EC46*/ GENx___x___x900 (load_halfword_immediate_on_condition_grande,RIE_G,"LOCGHI"),
  /*EC47*/ GENx___x___x___ ,
  /*EC48*/ GENx___x___x___ ,
  /*EC49*/ GENx___x___x___ ,
@@ -4536,7 +4558,7 @@ static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
  /*EC4B*/ GENx___x___x___ ,
  /*EC4C*/ GENx___x___x___ ,
  /*EC4D*/ GENx___x___x___ ,
- /*EC4E*/ GENx___x___x___ ,
+ /*EC4E*/ GENx___x___x900 (load_halfword_high_immediate_on_condition,RIE_G,"LOCHHI"),
  /*EC4F*/ GENx___x___x___ ,
  /*EC50*/ GENx___x___x___ ,
  /*EC51*/ GENx___x___x900 (rotate_then_insert_selected_bits_low_long_reg,RIE_RRIII,"RISBLG"),  /*810*/
@@ -6441,9 +6463,15 @@ static INSTR_FUNC replace_opcode_xx________xx( int arch, INSTR_FUNC inst, int op
     {
         case 0xe3:
         {
+#if defined( OPTION_OPTINST )
+            oldinst = runtime_opcode_e3_0______xx[arch][opcode2];
+                      runtime_opcode_e3_0______xx[arch][opcode2] = inst;
+            break;
+#else
             oldinst = runtime_opcode_e3________xx[arch][opcode2];
                       runtime_opcode_e3________xx[arch][opcode2] = inst;
             break;
+#endif
         }
         case 0xeb:
         {

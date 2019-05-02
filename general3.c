@@ -3879,6 +3879,210 @@ BYTE    i1, i2;                         /* Immediate fields          */
 #endif /* defined( FEATURE_049_EXECUTION_HINT_FACILITY ) */     /*912*/
 
 
+#if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
+/*-------------------------------------------------------------------*/
+/* B9E0 LOCFHR - Load High On Condition Register               [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_high_on_condition_register)
+{
+int     r1, r2, m3;                     /* Register numbers, mask    */
+
+    /* Decode instruction */
+    RRF_M( inst, regs, r1, r2, m3 );
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 0-31 from R2 register bits 0-31 */
+        regs->GR_H( r1 ) = regs->GR_H( r2 );
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* EC4E LOCHHI - Load Halfword High Immediate On Condition     [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_halfword_high_immediate_on_condition)
+{
+int     r1, m3;                         /* Register number, mask     */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    /* Decode instruction */
+    RIE( inst, regs, r1, m3, i2 );
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 0-31 w/sign extended immediate data */
+        regs->GR_H( r1 ) = (S32)((S16)i2);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* EC42 LOCHI - Load Halfword Immediate On Condition           [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_halfword_immediate_on_condition)
+{
+int     r1, m3;                         /* Register number, mask     */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    /* Decode instruction */
+    RIE( inst, regs, r1, m3, i2 );
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 32-63 w/sign extended immediate data */
+        regs->GR_L( r1 ) = (S32)((S16)i2);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* EC46 LOCGHI - Load Halfword Immediate On Condition Grande   [RIE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_halfword_immediate_on_condition_grande)
+{
+int     r1, m3;                         /* Register number, mask     */
+U16     i2;                             /* 16-bit immediate operand  */
+
+    /* Decode instruction */
+    RIE( inst, regs, r1, m3, i2 );
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 0-63 w/sign extended immediate data */
+        regs->GR_G( r1 ) = (S64)((S16)i2);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* EBE0 LOCFH - Load High On Condition                         [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_high_on_condition)
+{
+int     r1, m3;                         /* Register number, mask     */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Decode instruction */
+    RSY( inst, regs, r1, m3, b2, effective_addr2 );
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 register bits 0-31 from second operand */
+        regs->GR_H( r1 ) = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* EBE1 STOCFH - Store High On Condition                       [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST( store_high_on_condition) 
+{
+int     r1, m3;                         /* Register number, mask     */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    /* Decode instruction */
+    RSY( inst, regs, r1, m3, b2, effective_addr2 );
+
+    /* Test M3 mask bit corresponding to condition code */
+    if (m3 & (0x08 >> regs->psw.cc))
+    {
+        /* Store R1 register bits 0-31 at second operand address */
+        ARCH_DEP( vstore4 )( regs->GR_H( r1 ), effective_addr2, b2, regs );
+    }
+}
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 ) */
+
+
+#if defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+/*-------------------------------------------------------------------*/
+/* E32A LZRG  - Load and Zero Rightmost Byte Grande            [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_and_zero_rightmost_byte_grande )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     u64;                            /* Second operand value      */
+
+    /* Decode instruction */
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Load 64-bit second operand from storage */
+    u64 = ARCH_DEP( vfetch8 )( effective_addr2, b2, regs );
+
+    /* Zero rightmost byte */
+    u64 &= 0xFFFFFFFFFFFFFF00ULL;
+
+    /* Place 64-bit result into bits 0-63 of first operand */
+    regs->GR_G( r1 ) = u64;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* E33A LLZRGF - Load Logical and Zero Rightmost Byte          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_logical_and_zero_rightmost_byte )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     u32;                            /* Second operand value      */
+
+    /* Decode instruction */
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Load 64-bit second operand from storage */
+    u32 = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
+
+    /* Zero rightmost byte */
+    u32 &= 0xFFFFFF00UL;
+
+    /* Place 32-bit result into bits 32-63 of */
+    /* first operand and set bits 0-31 to zeros */
+    regs->GR_L( r1 ) = u32;
+    regs->GR_H( r1 ) = 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* E33B LZRF  - Load and Zero Rightmost Byte                   [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_and_zero_rightmost_byte )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     u32;                            /* Second operand value      */
+
+    /* Decode instruction */
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Load 32-bit second operand from storage */
+    u32 = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
+
+    /* Zero rightmost byte */
+    u32 &= 0xFFFFFF00UL;
+
+    /* Place 32-bit result into bits 32-63 of first operand */
+    regs->GR_L( r1 ) = u32;
+}
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY ) */
+
+
 #if !defined( _GEN_ARCH )
 
   #if defined(              _ARCH_NUM_1 )

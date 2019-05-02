@@ -3311,6 +3311,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\FAC53.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\pfpo.core"
 						>
 					</File>
@@ -4234,6 +4238,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\FAC53.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\hetbsf.tst"
 							>
 						</File>
@@ -4570,6 +4578,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\FAC53.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\mhi.asm"
 							>
 						</File>
@@ -4750,6 +4762,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\CLCL.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\FAC53.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\FAC53.pdf"
 								>
 							</File>
 							<File

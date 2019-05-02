@@ -153,6 +153,11 @@ EXTRA_DIST =                    \
      cr.tst                     \
      comments.txt               \
      cpu0off.core               \
+     FAC53.asm                  \
+     FAC53.core                 \
+     FAC53.list                 \
+     FAC53.pdf                  \
+     FAC53.tst                  \
      cpsdr.txt                  \
      csst.txt                   \
      cvttst.rexx                \

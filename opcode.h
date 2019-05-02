@@ -3834,6 +3834,21 @@ DEF_INST( rotate_then_insert_selected_bits_long_reg_n );        /*912*/
 DEF_INST( perform_processor_assist );
 #endif
 
+#if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
+DEF_INST( load_halfword_high_immediate_on_condition );
+DEF_INST( load_halfword_immediate_on_condition );
+DEF_INST( load_halfword_immediate_on_condition_grande );
+DEF_INST( load_high_on_condition );
+DEF_INST( load_high_on_condition_register );
+DEF_INST( store_high_on_condition );
+#endif
+
+#if defined( FEATURE_053_LOAD_ZERO_RIGHTMOST_FACILITY )
+DEF_INST( load_and_zero_rightmost_byte_grande );
+DEF_INST( load_logical_and_zero_rightmost_byte );
+DEF_INST( load_and_zero_rightmost_byte );
+#endif
+
 #if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
 DEF_INST( reset_reference_bits_multiple );                      /*810*/
 #endif

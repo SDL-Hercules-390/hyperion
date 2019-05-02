@@ -1,0 +1,325 @@
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2
+                              00000000  0000048F     3 FAC53TST START 0
+                                                     4
+                              00000000  00000001     5 START    EQU   *
+                                                     6
+                                                     7
+                                                     8
+                                                     9
+                              00000000  00000001    10 R0       EQU   0
+                              00000001  00000001    11 R1       EQU   1
+                              00000002  00000001    12 R2       EQU   2
+                              00000003  00000001    13 R3       EQU   3
+                              00000004  00000001    14 R4       EQU   4
+                              00000005  00000001    15 R5       EQU   5
+                              00000006  00000001    16 R6       EQU   6
+                              00000007  00000001    17 R7       EQU   7
+                              00000008  00000001    18 R8       EQU   8
+                              00000009  00000001    19 R9       EQU   9
+                              0000000A  00000001    20 R10      EQU   10
+                              0000000B  00000001    21 R11      EQU   11
+                              0000000C  00000001    22 R12      EQU   12
+                              0000000D  00000001    23 R13      EQU   13
+                              0000000E  00000001    24 R14      EQU   14
+                              0000000F  00000001    25 R15      EQU   15
+                                                    26
+                                                    27
+                                                    28
+                                                    29
+00000000                      00000000              30          USING START,R0
+                                                    31
+                                                    32
+                                                    33
+00000000                      00000000  000001A0    34          ORG   START+X'1A0'                     z/Arch Restart PSW
+000001A0  00000001 80000000                         35          DC    XL12'000000018000000000000000'
+000001AC  00000200                                  36          DC    A(BEGIN)
+                                                    37
+                                                    38
+                                                    39
+000001B0                      000001B0  000001D0    40          ORG   START+X'1D0'                     z/Arch Program New PSW
+000001D0  00000001 80000000                         41          DC    XL12'000000018000000000000000'
+000001DC  00000372                                  42          DC    A(PROGCHK)
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    44 ***********************************************************************
+                                                    45 *                         TEST PROGRAM
+                                                    46 ***********************************************************************
+                                                    47
+000001E0                      000001E0  00000200    48          ORG      START+X'200'    START OF TEST PROGRAM
+                                                    49
+00000200  EB02 0430 0004                00000430    50 BEGIN    LMG      R0,R2,TESTVALS Load test registers
+                                                    51
+00000206  B904 0030                                 52          LGR      R3,R0
+0000020A  B904 0040                                 53          LGR      R4,R0
+0000020E  B904 0050                                 54          LGR      R5,R0
+00000212  B904 0060                                 55          LGR      R6,R0
+00000216  B904 0070                                 56          LGR      R7,R0
+0000021A  B904 0080                                 57          LGR      R8,R0
+0000021E  B904 0090                                 58          LGR      R9,R0
+00000222  B904 00A0                                 59          LGR      R10,R0
+00000226  B904 00B0                                 60          LGR      R11,R0
+0000022A  B904 00C0                                 61          LGR      R12,R0
+0000022E  B904 00D0                                 62          LGR      R13,R0
+00000232  B904 00E0                                 63          LGR      R14,R0
+00000236  B904 00F0                                 64          LGR      R15,R0
+                                                    65
+                                                    66
+                                                    67
+                                                    68 *----------------------------------------------------------------------
+                                                    69 *        LOAD AND ZERO RIGHTMOST BYTE (64)
+                                                    70 *----------------------------------------------------------------------
+                                                    71
+0000023A  E330 0438 002A                00000438    72          LZRG     R3,ONES         E3r00aaa002A
+00000240  E330 0448 0021                00000448    73          CLG      R3,LZRB64       Correct value loaded?
+00000246  A784 0004                     0000024E    74          JE       *+8             Yes, continue on to next test
+0000024A  A7F5 0092                     0000036E    75          JAS      R15,FAILURE     No, abort
+                                                    76
+                                                    77 *----------------------------------------------------------------------
+                                                    78 *        LOAD AND ZERO RIGHTMOST BYTE (32)
+                                                    79 *----------------------------------------------------------------------
+                                                    80
+0000024E  E340 0438 003B                00000438    81          LZRF     R4,ONES         E3r00aaa003B
+00000254  E340 0458 0021                00000458    82          CLG      R4,LZRB32       Correct value loaded?
+0000025A  A784 0004                     00000262    83          JE       *+8             Yes, continue on to next test
+0000025E  A7F5 0088                     0000036E    84          JAS      R15,FAILURE     No, abort
+                                                    85
+                                                    86 *----------------------------------------------------------------------
+                                                    87 *        LOAD LOGICAL AND ZERO RIGHTMOST BYTE (64 <- 32)
+                                                    88 *----------------------------------------------------------------------
+                                                    89
+00000262  E350 0438 003A                00000438    90          LLZRGF   R5,ONES         E3r00aaa003A
+00000268  E350 0450 0021                00000450    91          CLG      R5,LZRB64L      Correct value loaded?
+0000026E  A784 0004                     00000276    92          JE       *+8             Yes, continue on to next test
+00000272  A7F5 007E                     0000036E    93          JAS      R15,FAILURE     No, abort
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    95 *----------------------------------------------------------------------
+                                                    96 *        Initialize condition code...
+                                                    97 *----------------------------------------------------------------------
+                                                    98
+00000276  B902 0000                                 99          LTGR     R0,R0           Set condition code 0  (i.e. '8')
+                                                   100
+                                                   101 *----------------------------------------------------------------------
+                                                   102 *        LOAD HALFWORD HIGH IMMEDIATE ON CONDITION (32 <- 16)
+                                                   103 *----------------------------------------------------------------------
+                                                   104
+0000027A  EC67 FFFF 004E                           105          LOCHHI   R6,-1,7         ECrmiiii004E
+00000280  E360 0430 0021                00000430   106          CLG      R6,ZEROS        Correct value loaded?
+00000286  A784 0004                     0000028E   107          JE       *+8             Yes, continue on to next test
+0000028A  A7F5 0072                     0000036E   108          JAS      R15,FAILURE     No, abort
+                                                   109
+0000028E  EC68 FFFF 004E                           110          LOCHHI   R6,-1,8         ECrmiiii004E
+00000294  E360 0460 0021                00000460   111          CLG      R6,LOC32H       Correct value loaded?
+0000029A  A784 0004                     000002A2   112          JE       *+8             Yes, continue on to next test
+0000029E  A7F5 0068                     0000036E   113          JAS      R15,FAILURE     No, abort
+                                                   114
+                                                   115 *----------------------------------------------------------------------
+                                                   116 *        LOAD HALFWORD IMMEDIATE ON CONDITION (32 <- 16)
+                                                   117 *----------------------------------------------------------------------
+                                                   118
+000002A2  EC77 FFFF 0042                           119          LOCHI    R7,-1,7         ECrmiiii0042
+000002A8  E370 0430 0021                00000430   120          CLG      R7,ZEROS        Correct value loaded?
+000002AE  A784 0004                     000002B6   121          JE       *+8             Yes, continue on to next test
+000002B2  A7F5 005E                     0000036E   122          JAS      R15,FAILURE     No, abort
+                                                   123
+000002B6  EC78 FFFF 0042                           124          LOCHI    R7,-1,8         ECrmiiii0042
+000002BC  E370 0468 0021                00000468   125          CLG      R7,LOC32        Correct value loaded?
+000002C2  A784 0004                     000002CA   126          JE       *+8             Yes, continue on to next test
+000002C6  A7F5 0054                     0000036E   127          JAS      R15,FAILURE     No, abort
+                                                   128
+                                                   129 *----------------------------------------------------------------------
+                                                   130 *        LOAD HALFWORD IMMEDIATE ON CONDITION (64 <- 16)
+                                                   131 *----------------------------------------------------------------------
+                                                   132
+000002CA  EC87 FFFF 0046                           133          LOCGHI   R8,-1,7         ECrmiiii0046
+000002D0  E380 0430 0021                00000430   134          CLG      R8,ZEROS        Correct value loaded?
+000002D6  A784 0004                     000002DE   135          JE       *+8             Yes, continue on to next test
+000002DA  A7F5 004A                     0000036E   136          JAS      R15,FAILURE     No, abort
+                                                   137
+000002DE  EC88 FFFF 0046                           138          LOCGHI   R8,-1,8         ECrmiiii0046
+000002E4  E380 0470 0021                00000470   139          CLG      R8,LOC64        Correct value loaded?
+000002EA  A784 0004                     000002F2   140          JE       *+8             Yes, continue on to next test
+000002EE  A7F5 0040                     0000036E   141          JAS      R15,FAILURE     No, abort
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   143 *----------------------------------------------------------------------
+                                                   144 *        LOAD HIGH ON CONDITION (32)
+                                                   145 *----------------------------------------------------------------------
+                                                   146
+000002F2  B9E0 7091                                147          LOCFHR   R9,R1,7         B9E0m0xy
+000002F6  E390 0430 0021                00000430   148          CLG      R9,ZEROS        Correct value loaded?
+000002FC  A784 0004                     00000304   149          JE       *+8             Yes, continue on to next test
+00000300  A7F5 0037                     0000036E   150          JAS      R15,FAILURE     No, abort
+                                                   151
+00000304  B9E0 8091                                152          LOCFHR   R9,R1,8         B9E0m0xy
+00000308  E390 0478 0021                00000478   153          CLG      R9,LOC3211S     Correct value loaded?
+0000030E  A784 0004                     00000316   154          JE       *+8             Yes, continue on to next test
+00000312  A7F5 002E                     0000036E   155          JAS      R15,FAILURE     No, abort
+                                                   156
+                                                   157 *----------------------------------------------------------------------
+                                                   158 *        LOAD HIGH ON CONDITION (32)
+                                                   159 *----------------------------------------------------------------------
+                                                   160
+00000316  EBA7 0438 00E0                00000438   161          LOCFH    R10,ONES,7      EBrm0aaa00E0
+0000031C  E3A0 0430 0021                00000430   162          CLG      R10,ZEROS       Correct value loaded?
+00000322  A784 0004                     0000032A   163          JE       *+8             Yes, continue on to next test
+00000326  A7F5 0024                     0000036E   164          JAS      R15,FAILURE     No, abort
+                                                   165
+0000032A  EBA8 0438 00E0                00000438   166          LOCFH    R10,ONES,8      EBrm0aaa00E0
+00000330  E3A0 0478 0021                00000478   167          CLG      R10,LOC3211S    Correct value loaded?
+00000336  A784 0004                     0000033E   168          JE       *+8             Yes, continue on to next test
+0000033A  A7F5 001A                     0000036E   169          JAS      R15,FAILURE     No, abort
+                                                   170
+                                                   171 *----------------------------------------------------------------------
+                                                   172 *        STORE HIGH ON CONDITION
+                                                   173 *----------------------------------------------------------------------
+                                                   174
+0000033E  EB17 0480 00E1                00000480   175          STOCFH   R1,STOCFH,7     EBrm0aaa00E1
+00000344  E320 0480 0021                00000480   176          CLG      R2,STOCFH       Correct value stored?
+0000034A  A784 0004                     00000352   177          JE       *+8             Yes, continue on to next test
+0000034E  A7F5 0010                     0000036E   178          JAS      R15,FAILURE     No, abort
+                                                   179
+                                                   180
+00000352  EB18 0480 00E1                00000480   181          STOCFH   R1,STOCFH,8     EBrm0aaa00E1
+00000358  D507 0480 0488      00000480  00000488   182          CLC      STOCFH,STOCFH1F Correct value stored?
+0000035E  A784 0004                     00000366   183          JE       *+8             Yes, continue on to next test
+00000362  A7F5 0006                     0000036E   184          JAS      R15,FAILURE     No, abort
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   186 *----------------------------------------------------------------------
+                                                   187 *                 SUCCESSFUL END OF TEST
+                                                   188 *----------------------------------------------------------------------
+                                                   189
+00000366  A7F4 0002                     0000036A   190          J        SUCCESS         SUCCESSFUL END OF TEST
+                                                   191
+                                                   192
+                                                   193
+                                                   194
+                                                   195 ***********************************************************************
+                                                   196 *                      WORKING STORAGE
+                                                   197 ***********************************************************************
+                                                   198
+0000036A  B2B2 0400                     00000400   199 SUCCESS  LPSWE    GOODPSW         Load test completed successfully PSW
+0000036E  B2B2 0410                     00000410   200 FAILURE  LPSWE    BADPSW          Load the test FAILED somewhere!! PSW
+00000372  B2B2 0420                     00000420   201 PROGCHK  LPSWE    DEADBEEF        Load "A PROGRAM-CHECK OCCURRED!" PSW
+                                                   202
+                                                   203
+00000376                      00000376  00000400   204          ORG   START+X'400'
+                                                   205
+                                                   206
+00000400  00020001 80000000                        207 GOODPSW  DC    XL8'0002000180000000'
+00000408  00000000 00000000                        208          DC    XL4'00000000',A(X'00000000')
+                                                   209
+                                                   210
+00000410  00020001 80000000                        211 BADPSW   DC    XL8'0002000180000000'
+00000418  00000000 00000BAD                        212          DC    XL4'00000000',A(X'00000BAD')
+                                                   213
+                                                   214
+00000420  00020001 80000000                        215 DEADBEEF DC    XL8'0002000180000000'
+00000428  00000000 DEADBEEF                        216          DC    XL4'00000000',A(X'DEADBEEF')
+                                                   217
+                                                   218
+                                                   219
+                                                   220
+                              00000430  00000001   221 TESTVALS EQU   *
+00000430  00000000 00000000                        222 ZEROS    DC    XL8'0000000000000000'
+00000438  11111111 11111111                        223 ONES     DC    XL8'1111111111111111'
+00000440  FFFFFFFF FFFFFFFF                        224 HEXFFS   DC    XL8'FFFFFFFFFFFFFFFF'
+                                                   225
+                                                   226
+00000448  11111111 11111100                        227 LZRB64   DC    XL8'1111111111111100'
+00000450  00000000 11111100                        228 LZRB64L  DC    XL8'0000000011111100'
+00000458  00000000 11111100                        229 LZRB32   DC    XL8'0000000011111100'
+00000460  FFFFFFFF 00000000                        230 LOC32H   DC    XL8'FFFFFFFF00000000'
+00000468  00000000 FFFFFFFF                        231 LOC32    DC    XL8'00000000FFFFFFFF'
+00000470  FFFFFFFF FFFFFFFF                        232 LOC64    DC    XL8'FFFFFFFFFFFFFFFF'
+00000478  11111111 00000000                        233 LOC3211S DC    XL8'1111111100000000'
+00000480  FFFFFFFF FFFFFFFF                        234 STOCFH   DC    XL8'FFFFFFFFFFFFFFFF'
+00000488  11111111 FFFFFFFF                        235 STOCFH1F DC    XL8'11111111FFFFFFFF'
+                                                   236
+                                                   237
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   238
+                                                   239          END
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     7
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BADPSW              X    000410       8   211  200
+BEGIN               I    000200       6    50   36
+DEADBEEF            X    000420       8   215  201
+FAC53TST            J    000000    1168     3
+FAILURE             I    00036E       4   200   75   84   93  108  113  122  127  136  141  150  155  164  169  178  184
+GOODPSW             X    000400       8   207  199
+HEXFFS              X    000440       8   224
+IMAGE               1    000000    1168     0
+LOC32               X    000468       8   231  125
+LOC3211S            X    000478       8   233  153  167
+LOC32H              X    000460       8   230  111
+LOC64               X    000470       8   232  139
+LZRB32              X    000458       8   229   82
+LZRB64              X    000448       8   227   73
+LZRB64L             X    000450       8   228   91
+ONES                X    000438       8   223   72   81   90  161  166
+PROGCHK             I    000372       4   201   42
+R0                  U    000000       1    10   30   50   52   53   54   55   56   57   58   59   60   61   62   63   64   99
+R1                  U    000001       1    11  147  152  175  181
+R10                 U    00000A       1    20   59  161  162  166  167
+R11                 U    00000B       1    21   60
+R12                 U    00000C       1    22   61
+R13                 U    00000D       1    23   62
+R14                 U    00000E       1    24   63
+R15                 U    00000F       1    25   64   75   84   93  108  113  122  127  136  141  150  155  164  169  178  184
+R2                  U    000002       1    12   50  176
+R3                  U    000003       1    13   52   72   73
+R4                  U    000004       1    14   53   81   82
+R5                  U    000005       1    15   54   90   91
+R6                  U    000006       1    16   55  105  106  110  111
+R7                  U    000007       1    17   56  119  120  124  125
+R8                  U    000008       1    18   57  133  134  138  139
+R9                  U    000009       1    19   58  147  148  152  153
+START               U    000000       1     5   34   40   48  204   30
+STOCFH              X    000480       8   234  175  176  181  182
+STOCFH1F            X    000488       8   235  182
+SUCCESS             I    00036A       4   199  190
+TESTVALS            U    000430       1   221   50
+ZEROS               X    000430       8   222  106  120  134  148  162
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     8
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page     9
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     1168  000-48F  000-48F
+  Region             1168  000-48F  000-48F
+    CSECT  FAC53TST  1168  000-48F  000-48F
+ASMA Ver. 0.2.0                                   Test Facility 53 Instructions                     01 May 2019 18:16:08  Page    10
+
+   STMT                                        FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\FAC53\FAC53.asm
+
+
+** NO ERRORS FOUND **
+
+
