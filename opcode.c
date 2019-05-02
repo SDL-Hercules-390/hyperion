@@ -6424,52 +6424,52 @@ static INSTR_FUNC replace_opcode_xx_x(int arch, INSTR_FUNC inst, int opcode1, in
 
 /*-------------------------------------------------------------------*/
 
-static INSTR_FUNC replace_opcode_xx________xx(int arch, INSTR_FUNC inst, int opcode1, int opcode2)
+static INSTR_FUNC replace_opcode_xx________xx( int arch, INSTR_FUNC inst, int opcode1, int opcode2 )
 {
-  INSTR_FUNC oldinst;
+  INSTR_FUNC  oldinst   = NULL;
 
-  if(arch < 0 || arch >= NUM_GEN_ARCHS)
-    return(NULL);
+    if (0
+        || !inst
+        || arch < 0
+        || arch >= NUM_GEN_ARCHS
+        || opcode2 < 0
+        || opcode2 > 0xff
+    )
+        return NULL;
 
-  if(opcode2 < 0 || opcode2 > 0xff)
-    return(NULL);
-
-  if(!inst)
-    return(NULL);
-
-  switch(opcode1)
-  {
-    case 0xe3:
+    switch (opcode1)
     {
-      oldinst = runtime_opcode_e3________xx[arch][opcode2];
-      runtime_opcode_e3________xx[arch][opcode2] = inst;
-      break;
+        case 0xe3:
+        {
+            oldinst = runtime_opcode_e3________xx[arch][opcode2];
+                      runtime_opcode_e3________xx[arch][opcode2] = inst;
+            break;
+        }
+        case 0xeb:
+        {
+            oldinst = runtime_opcode_eb________xx[arch][opcode2];
+                      runtime_opcode_eb________xx[arch][opcode2] = inst;
+            break;
+        }
+        case 0xec:
+        {
+            oldinst = runtime_opcode_ec________xx[arch][opcode2];
+                      runtime_opcode_ec________xx[arch][opcode2] = inst;
+            break;
+        }
+        case 0xed:
+        {
+            oldinst = runtime_opcode_ed________xx[arch][opcode2];
+                      runtime_opcode_ed________xx[arch][opcode2] = inst;
+            break;
+        }
+        default:
+        {
+            oldinst = NULL;
+            break;
+        }
     }
-    case 0xeb:
-    {
-      oldinst = runtime_opcode_eb________xx[arch][opcode2];
-      runtime_opcode_eb________xx[arch][opcode2] = inst;
-      break;
-    }
-    case 0xec:
-    {
-      oldinst = runtime_opcode_ec________xx[arch][opcode2];
-      runtime_opcode_ec________xx[arch][opcode2] = inst;
-      break;
-    }
-    case 0xed:
-    {
-      oldinst = runtime_opcode_ed________xx[arch][opcode2];
-      runtime_opcode_ed________xx[arch][opcode2] = inst;
-      break;
-    }
-    default:
-    {
-      oldinst = NULL;
-      break;
-    }
-  }
-  return(oldinst);
+    return oldinst;
 }
 
 /*-------------------------------------------------------------------*/
