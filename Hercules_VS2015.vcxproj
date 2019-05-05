@@ -461,6 +461,7 @@
     <ClCompile Include="zfcp.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".travis.yml" />
     <None Include="crypto\lib\crypto32.pdb" />
     <None Include="crypto\lib\crypto32d.pdb" />
     <None Include="crypto\lib\crypto64.pdb" />
@@ -858,6 +859,7 @@
     <None Include="tests\cmd-rv.tst" />
     <None Include="tests\cr.tst" />
     <None Include="tests\cpu0off.core" />
+    <None Include="tests\dotest" />
     <None Include="tests\FAC53.asm" />
     <None Include="tests\FAC53.core" />
     <None Include="tests\FAC53.list" />
@@ -972,6 +974,7 @@
     <None Include="tests\tape.tst" />
     <None Include="tests\tapebsf.subtst" />
     <None Include="tests\tests.conf" />
+    <None Include="tests\text2tst.rexx" />
     <None Include="tests\timeout.tst" />
     <None Include="tests\wild.assemble" />
     <None Include="tests\wild.listing" />
@@ -1370,6 +1373,7 @@
     <Image Include="html\images\telnetputtyconndata.png" />
     <Image Include="html\images\telnetputtysession.png" />
     <Image Include="html\images\telnetputtyterminal.png" />
+    <Image Include="html\images\telnetwin.png" />
     <Image Include="html\images\telnetwin10.png" />
     <Image Include="html\images\telnetwinntconnect.png" />
     <Image Include="html\images\telnetwinnttermpref.png" />

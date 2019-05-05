@@ -1949,6 +1949,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\.travis.yml"
+				>
+			</File>
+			<File
 				RelativePath=".\hercdasd.ico"
 				>
 			</File>
@@ -2562,7 +2566,7 @@
 							>
 						</File>
 						<File
-							RelativePath=".\html\images\telnetwin10.png"
+							RelativePath=".\html\images\telnetwin.png"
 							>
 						</File>
 						<File
@@ -3148,6 +3152,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\dotest"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\hetbsf-bzip2.het"
 					>
 				</File>
@@ -3185,6 +3193,10 @@
 				</File>
 				<File
 					RelativePath=".\tests\tests.conf"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\text2tst.rexx"
 					>
 				</File>
 				<Filter
@@ -3315,7 +3327,23 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\mhi.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\pfpo.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\privop.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\problem.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\semipriv.core"
 						>
 					</File>
 					<File
