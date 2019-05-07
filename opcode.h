@@ -2286,7 +2286,7 @@ do { \
 #else
  #define RIS(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
          RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 6)
- #define RISO(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
+ #define RIS0(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
          RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 0)
  #define RIS_B(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4) \
          RIS_DECODER_TEST(_inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 0, 0)
