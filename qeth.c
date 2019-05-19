@@ -1711,8 +1711,23 @@ U16 offph;
 
                     if (proto == IPA_PROTO_IPV4)
                     {
+                      /* Save guest IPv4 address and netmask.        */
+                      /* Note: ipa_sip->data.ip4.mask often contains */
+                      /* 0xFFFFFF00, irrespective of the subnet mask */
+                      /* the guest is actually using.                */
+                      MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
+                                                  ipa_sip->data.ip4.addr[1],
+                                                  ipa_sip->data.ip4.addr[2],
+                                                  ipa_sip->data.ip4.addr[3]);
+                      MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
+                                                  ipa_sip->data.ip4.mask[1],
+                                                  ipa_sip->data.ip4.mask[2],
+                                                  ipa_sip->data.ip4.mask[3]);
                       FETCH_FW(flags,ipa_sip->data.ip4.flags);
-                      if (flags == IPA_SIP_DEFAULT)
+                      /* Note: whether an address is flagged as default */
+                      /* or vipa appear to depend on what the guest is, */
+                      /* and how the inferface is defined in the guest. */
+                      if (flags == IPA_SIP_DEFAULT || flags == IPA_SIP_VIPA)
                       {
                         /* Register the IPv4 address */
                         rc = register_ipv4(grp, dev, (BYTE*)ipa_sip->data.ip4.addr);
@@ -1724,25 +1739,13 @@ U16 offph;
                             retcode = IPA_RC_SUCCESS;
                         }
 
-                        /* We only set the interface IPv4 address if the IPv4   */
-                        /* address supplied by the guest is different to the    */
-                        /* interface IPv4 address that is currently being used. */
+                        /* We only set the interface IPv4 address if the address */
+                        /* provided by the guest is different from the address   */
+                        /* specified on the configuration statement.             */
+                        /* Note: grp->confipaddr4 contains nulls if no address   */
+                        /* was specified on the configuration statement.         */
                         if (memcmp( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 ) != 0)
                         {
-
-                          /* Save guest IPv4 address and netmask. */
-                          MSGBUF(ipaddr,"%d.%d.%d.%d",ipa_sip->data.ip4.addr[0],
-                                                      ipa_sip->data.ip4.addr[1],
-                                                      ipa_sip->data.ip4.addr[2],
-                                                      ipa_sip->data.ip4.addr[3]);
-                          /* Note: ipa_sip->data.ip4.mask often contains */
-                          /* 0xFFFFFF00, irrespective of the subnet mask */
-                          /* the guest is actually using, particularly   */
-                          /* when the guest is Linux.                    */
-                          MSGBUF(ipmask,"%d.%d.%d.%d",ipa_sip->data.ip4.mask[0],
-                                                      ipa_sip->data.ip4.mask[1],
-                                                      ipa_sip->data.ip4.mask[2],
-                                                      ipa_sip->data.ip4.mask[3]);
 
 #if defined( OPTION_W32_CTCI )
                           if (tt32_multiple_ip_support())
