@@ -1763,17 +1763,6 @@ U16 offph;
                               rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
 
 #if defined( OPTION_W32_CTCI )
-                              if (rc == 0)
-                              {
-                                  free( grp->ttipaddr );
-                                  grp->ttipaddr = strdup( ipaddr );
-                                  memcpy( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 );
-
-                                  free( grp->ttnetmask );
-                                  grp->ttnetmask = strdup( ipmask );
-                                  memcpy( grp->confpfxmask4, ipa_sip->data.ip4.mask, 4 );
-                              }
-
                               if (was_enabled)
                                   VERIFY( qeth_enable_interface( dev, grp ) == 0);
                           }
