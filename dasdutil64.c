@@ -891,7 +891,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Display completion message */
     // "%1d:%04X CKD64 file %s: %u %s successfully written"
-    FWRMSG( stderr, HHC00471, "I", 0, 0, fname,
+    FWRMSG( stdout, HHC00471, "I", 0, 0, fname,
             cyl - start, "cylinders" );
     return 0;
 
@@ -966,7 +966,7 @@ U32             trksize;                /* DASD image track length   */
     if (maxcyls > 65536)
     {
         maxcyls = 65536;
-        FWRMSG( stderr, HHC00467, "I", "cylinders", maxcyls );
+        FWRMSG( stderr, HHC00467, "W", "cylinders", maxcyls );
     }
 
     /* Check for valid number of cylinders */
@@ -987,7 +987,7 @@ U32             trksize;                /* DASD image track length   */
 #endif
             char   *pszopt;
 
-            FWRMSG( stderr, HHC00466, "I", maxcyls, "cylinders", CKD_MAXFILES );
+            FWRMSG( stderr, HHC00466, "W", maxcyls, "cylinders", CKD_MAXFILES );
 
             if ( strlen(pszcomp) > 0 )
                 pszopt = "related options";
@@ -1016,7 +1016,7 @@ U32             trksize;                /* DASD image track length   */
 
     /* Display progress message */
     // "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u cyls, %u trks/cyl, %u bytes/track"
-    FWRMSG( stderr, HHC00472, "I", 0, 0, fname,
+    FWRMSG( stdout, HHC00472, "I", 0, 0, fname,
             devtype, rawflag ? "" : volser, volcyls, heads, trksize );
 
     /* Copy the unsuffixed DASD image file name */
@@ -1131,7 +1131,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (sectors < minsect || (!lfs && sectors > maxsect))
     {
         if (!lfs)
-            FWRMSG( stderr, HHC00521, "I", maxsect, "sectors" );
+            FWRMSG( stderr, HHC00521, "W", maxsect, "sectors" );
 
         FWRMSG( stderr, HHC00461, "E", 0, 0, fname,
                 "sector", sectors, minsect, maxsect );
@@ -1151,7 +1151,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Display progress message */
     // "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
-    FWRMSG( stderr, HHC00473, "I", 0, 0, fname,
+    FWRMSG( stdout, HHC00473, "I", 0, 0, fname,
             devtype, rawflag ? "" : volser, sectors, sectsz );
 
     /* if `dasdcopy' > 1 then we can replace the existing file */
@@ -1171,7 +1171,10 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* If the `dasdcopy' bit is on then simply allocate the space */
     if (dasdcopy)
     {
-        U64 sz = sectors * sectsz;
+        U64 sz = (U64)((S64)sectors * sectsz);
+        sz = ROUND_UP( sz, CFBA_BLKGRP_SIZE );
+        // "This might take a while... Please wait..."
+        FWRMSG( stdout, HHC00475, "I" );
         rc = ftruncate (fd, sz);
         if (rc < 0)
         {
@@ -1229,7 +1232,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Display completion message */
     // "%1d:%04X CKD64 file %s: %u %s successfully written"
-    FWRMSG( stderr, HHC00471, "I", 0, 0, fname, sectors, "sectors" );
+    FWRMSG( stdout, HHC00471, "I", 0, 0, fname, sectors, "sectors" );
 
     return 0;
 } /* end function create_fba64 */
@@ -1313,7 +1316,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
 
     /* Display progress message */
     // "%1d:%04X CKD64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
-    FWRMSG( stderr, HHC00474, "I", 0, 0, fname,
+    FWRMSG( stdout, HHC00474, "I", 0, 0, fname,
         devtype, rawflag ? "" : volser, sectors, sectsz );
 
     /* Create the device header */
@@ -1514,7 +1517,7 @@ int create_compressed_fba64( char* fname, U16 devtype, U32 sectsz,
 
     /* Display completion message */
     // "%1d:%04X CKD64 file %s: %u %s successfully written"
-    FWRMSG( stderr, HHC00471, "I", 0, 0, fname,
+    FWRMSG( stdout, HHC00471, "I", 0, 0, fname,
         sectors, "sectors" );
     return 0;
 } /* end function create_compressed_fba64 */

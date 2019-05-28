@@ -19,10 +19,10 @@
 /*      The program may also be invoked by one of the following      */
 /*      aliases which override the default output file format:       */
 /*                                                                   */
-/*              ckd2cckd [-options] ifile ofile                      */
-/*              cckd2ckd [-options] ifile [sf=sfile] ofile           */
-/*              fba2cfba [-options] ifile ofile                      */
-/*              cfba2fba [-options] ifile [sf=sfile] ofile           */
+/*              ckd2cckd64 [-options] ifile            ofile         */
+/*              cckd642ckd [-options] ifile [sf=sfile] ofile         */
+/*              fba2cfba64 [-options] ifile            ofile         */
+/*              cfba642fba [-options] ifile [sf=sfile] ofile         */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -321,7 +321,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
     else // fba
     {
-        fba_bytes_remaining = idev->fbanumblk * idev->fbablksiz;
+        fba_bytes_remaining = (U64)((S64)idev->fbanumblk * idev->fbablksiz);
         if (blks < 0) blks = idev->fbanumblk;
         else if (blks == 0) blks = (idev->hnd->used)(idev);
         fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, 0);
@@ -433,13 +433,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
         /* Write the track or block just read... */
 
-        /* IMPORTANT PROGRAMMING NOTE: please note that the output
-           file's track is written directly from the INPUT's device
-           buffer. This means when we are done, we must close the
-           output file first, which flushes the output of the last
-           track that was written, which as explained, requires that
-           the INPUT file's device buffer to still be valid.
-        */
         if (ckddasd)
         {
             rc = (odev->hnd->write)(odev, i, 0, idev->buf,
@@ -466,7 +459,15 @@ char            pathname[MAX_PATH];     /* file path in host format  */
             // "Write error on file %s: %s %d stat=%2.2X"
             FWRMSG( stderr, HHC02434, "E",
                      ofile, ckddasd ? "track" : "block", i, unitstat );
-            close_image_file(icif); close_image_file(ocif);
+            /* IMPORTANT PROGRAMMING NOTE: please note that the output
+               file's track is written directly from the INPUT's device
+               buffer. This means when we are done, we must close the
+               output file first, which flushes the output of the last
+               track that was written, which as explained, requires that
+               the INPUT file's device buffer to still be valid.
+            */
+            close_image_file( ocif );   /* Close output file FIRST! */
+            close_image_file( icif );   /* Close input file SECOND! */
             return -1;
         }
 
@@ -494,7 +495,6 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     // "DASD operation completed"
     WRMSG( HHC02423, "I" );
-
     return 0;
 }
 
