@@ -277,6 +277,7 @@ int             argc=0;                 /*  device open              */
 
     /* Initialize the devblk */
     dev = &cif->devblk;
+    dev->fd = -1;
     dev->cckd64 = 1;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;

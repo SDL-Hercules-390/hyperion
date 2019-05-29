@@ -867,6 +867,7 @@ int             argc=0;                 /*  device open              */
     dev = &cif->devblk;
     dev->cckd64 = 0;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
+    dev->fd = -1;
     dev->batch = 1;
     dev->dasdcopy  = (option & IMAGE_OPEN_DASDCOPY) ? 1 : 0;
     dev->quiet     = (option & IMAGE_OPEN_QUIET)    ? 1 : 0;
