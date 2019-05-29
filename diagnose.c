@@ -95,8 +95,7 @@ static void *stop_cpus_and_ipl(int *ipltype)
 /*-------------------------------------------------------------------*/
 /* Diagnose instruction                                              */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(diagnose_call) (VADR effective_addr2, int b2,
-                              int r1, int r2, REGS *regs)
+void ARCH_DEP( diagnose_call )( REGS* regs, int r1, int r3, int b2, VADR effective_addr2 )
 {
 #ifdef FEATURE_HERCULES_DIAGCALLS
 U32   n;                                /* 32-bit operand value      */
@@ -114,7 +113,7 @@ U32   code;
     /* Diagnose 002: Update Interrupt Interlock Control Bit in PMCW  */
     /*---------------------------------------------------------------*/
 
-        ARCH_DEP(diagnose_002) (regs, r1, r2);
+        ARCH_DEP(diagnose_002) (regs, r1, r3);
 
         break;
 #endif
@@ -133,9 +132,9 @@ U32   code;
 
         /* The poweroff diagnose is only valid on the 9221 */
         if (sysblk.cpumodel != 0x9221
-          /* and r1/r2 must contain C'POWEROFF' in EBCDIC */
+          /* and r1/r3 must contain C'POWEROFF' in EBCDIC */
           || regs->GR_L(r1) != 0xD7D6E6C5
-          || regs->GR_L(r2) != 0xD9D6C6C6)
+          || regs->GR_L(r3) != 0xD9D6C6C6)
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
         regs->cpustate = CPUSTATE_STOPPING;
@@ -162,7 +161,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 080: MSSF Call                                       */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(mssf_call) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(mssf_call) (r1, r3, regs);
         break;
 #endif /*FEATURE_MSSF_CALL*/
 
@@ -182,7 +181,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 204: LPAR RMF Interface                              */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(diag204_call) (r1, r2, regs);
+        ARCH_DEP(diag204_call) (r1, r3, regs);
         regs->psw.cc = 0;
         break;
 
@@ -190,7 +189,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 224: CPU Names                                       */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(diag224_call) (r1, r2, regs);
+        ARCH_DEP(diag224_call) (r1, r3, regs);
         regs->psw.cc = 0;
         break;
 #endif /*defined(FEATURE_HYPERVISOR)*/
@@ -210,7 +209,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 288: Control Virtual Machine Time Bomb               */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(vm_timebomb) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(vm_timebomb) (r1, r3, regs);
         break;
 #endif
 
@@ -219,7 +218,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 000: Store Extended Identification Code              */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(extid_call) (r1, r2, regs);
+        ARCH_DEP(extid_call) (r1, r3, regs);
         break;
 
     case 0x008:
@@ -233,21 +232,21 @@ U32   code;
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         /* Process CP command and set condition code */
-        regs->psw.cc = ARCH_DEP(cpcmd_call) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(cpcmd_call) (r1, r3, regs);
         break;
 
     case 0x00C:
     /*---------------------------------------------------------------*/
     /* Diagnose 00C: Pseudo Timer                                    */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(pseudo_timer) (code, r1, r2, regs);
+        ARCH_DEP(pseudo_timer) (code, r1, r3, regs);
         break;
 
     case 0x024:
     /*---------------------------------------------------------------*/
     /* Diagnose 024: Device Type and Features                        */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(diag_devtype) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(diag_devtype) (r1, r3, regs);
         break;
 
     case 0x05C:
@@ -271,7 +270,7 @@ U32   code;
     /* Diagnose 064: Named Saved Segment Manipulation                */
     /*---------------------------------------------------------------*/
         /* Return code 44 cond code 2 means segment does not exist */
-        regs->GR_L(r2) = 44;
+        regs->GR_L(r3) = 44;
         regs->psw.cc = 2;
         break;
 
@@ -279,7 +278,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 0A4: Synchronous I/O (Standard CMS Blocksize)        */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(syncblk_io) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(syncblk_io) (r1, r3, regs);
 //      logmsg ("Diagnose X\'0A4\': CC=%d, R15=%8.8X\n",      /*debug*/
 //              regs->psw.cc, regs->GR_L(15));                 /*debug*/
         break;
@@ -288,7 +287,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 0A8: Synchronous General I/O                         */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(syncgen_io) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(syncgen_io) (r1, r3, regs);
 //      logmsg ("Diagnose X\'0A8\': CC=%d, R15=%8.8X\n",      /*debug*/
 //              regs->psw.cc, regs->GR_L(15));                 /*debug*/
         break;
@@ -297,7 +296,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 0B0: Access Re-IPL Data                              */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(access_reipl_data) (r1, r2, regs);
+        ARCH_DEP(access_reipl_data) (r1, r3, regs);
         break;
 
     case 0x0DC:
@@ -305,7 +304,7 @@ U32   code;
     /* Diagnose 0DC: Control Application Monitor Record Collection   */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        regs->GR_L(r2) = 0;
+        regs->GR_L(r3) = 0;
         regs->psw.cc = 0;
         break;
 
@@ -313,14 +312,14 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 210: Retrieve Device Information                     */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(device_info) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(device_info) (r1, r3, regs);
         break;
 
     case 0x214:
     /*---------------------------------------------------------------*/
     /* Diagnose 214: Pending Page Release                            */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(diag_ppagerel) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(diag_ppagerel) (r1, r3, regs);
         break;
 
 
@@ -328,19 +327,19 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 220: TOD Epoch                                       */
     /*---------------------------------------------------------------*/
-        ODD_CHECK(r2, regs);
+        ODD_CHECK(r3, regs);
 
         switch(regs->GR_L(r1))
         {
             case 0:
                 /* Obtain TOD features */
-                regs->GR_L(r2)  =0xc0000000;
-                regs->GR_L(r2+1)=0x00000000;
+                regs->GR_L(r3)  =0xc0000000;
+                regs->GR_L(r3+1)=0x00000000;
                 break;
             case 1:
                 /* Obtain TOD offset to real TOD in R2, R2+1 */
-                regs->GR_L(r2)  = (regs->tod_epoch >> 24) & 0xFFFFFFFF;
-                regs->GR_L(r2+1)= (regs->tod_epoch << 8) & 0xFFFFFFFF;
+                regs->GR_L(r3)  = (regs->tod_epoch >> 24) & 0xFFFFFFFF;
+                regs->GR_L(r3+1)= (regs->tod_epoch << 8) & 0xFFFFFFFF;
                 break;
             default:
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -353,7 +352,7 @@ U32   code;
     /* Diagnose 23C: Address Space Services                          */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        regs->GR_L(r2) = 0;
+        regs->GR_L(r3) = 0;
         break;
 
 
@@ -362,7 +361,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 250: Standardized Block I/O                          */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = ARCH_DEP(vm_blockio) (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(vm_blockio) (r1, r3, regs);
         break;
 #endif /*defined(FEATURE_VM_BLOCKIO)*/
 
@@ -371,7 +370,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 260: Access Certain Virtual Machine Information      */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(vm_info) (r1, r2, regs);
+        ARCH_DEP(vm_info) (r1, r3, regs);
         break;
 
     case 0x264:
@@ -379,7 +378,7 @@ U32   code;
     /* Diagnose 264: CP Communication                                */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        PTT_ERR("*DIAG264",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*DIAG264",regs->GR_L(r1),regs->GR_L(r3),regs->psw.IA_L);
         regs->psw.cc = 0;
         break;
 
@@ -387,7 +386,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 270: Pseudo Timer Extended                           */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(pseudo_timer) (code, r1, r2, regs);
+        ARCH_DEP(pseudo_timer) (code, r1, r3, regs);
         break;
 
     case 0x274:
@@ -395,7 +394,7 @@ U32   code;
     /* Diagnose 274: Set Timezone Interrupt Flag                     */
     /*---------------------------------------------------------------*/
         /* This function is implemented as a no-operation */
-        PTT_ERR("*DIAG274",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*DIAG274",regs->GR_L(r1),regs->GR_L(r3),regs->psw.IA_L);
         regs->psw.cc = 0;
         break;
 #endif /*FEATURE_EMULATE_VM*/
@@ -406,7 +405,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose 308: IPL functions                                   */
     /*---------------------------------------------------------------*/
-        switch(r2)
+        switch(r3)
         {
             TID   tid;                              /* Thread identifier         */
             char *ipltype;                          /* "ipl" or "iplc"           */
@@ -434,7 +433,7 @@ U32   code;
             break;
         default:
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
-        } /* end switch(r2) */
+        } /* end switch(r3) */
         break;
 #endif /*FEATURE_PROGRAM_DIRECTED_REIPL*/
 
@@ -470,10 +469,104 @@ U32   code;
 
     case 0xF08:
     /*---------------------------------------------------------------*/
-    /* Diagnose F08: Hercules get instruction counter                */
+    /* Diagnose F08: Return Hercules instruction counter (32)        */
     /*---------------------------------------------------------------*/
-        regs->GR_L(r1) = (U32)INSTCOUNT(regs);
+        regs->GR_L( r1 ) = (U32) INSTCOUNT( regs );
         break;
+
+    case 0xF09:
+    /*---------------------------------------------------------------*/
+    /* Diagnose F09: Return Hercules instruction counter (64)        */
+    /*---------------------------------------------------------------*/
+    {
+        // Operand register r1 bits 32-47 specify the option code and
+        // bits 48-63 specify the CPU Address for option code 1. For
+        // option code 0, operand register r1 bits 48-63 are ignored.
+        // Bits 0-31 of operand register r1 are also always ignored.
+        // Any option code other than 0 or 1 causes a Specification
+        // Exception Program Interrupt to occur.
+        //
+        // Option 0 = instruction count for entire system (all CPUs
+        // together). Option 1 = instruction count for specific CPU
+        // identified in bits 48-63 of r1.
+        //
+        // The register and bits that the 64-bit instruction count
+        // is returned in depends on: 1) whether z/Architecture mode
+        // is active or not, and 2) whether or not the specified r3
+        // register number is even or odd.
+        //
+        // If r3 is an even numbered register, then the high-order
+        // bits 0-31 of the 64-bit instruction count is returned
+        // in bits 32-63 of the even numbered register, the low-order
+        // bits 32-63 the 64-bit instruction count is returned in
+        // bits 32-63 of the r3+1 odd numbered register, and bits
+        // 0-31 of each register remains unmodified.
+        //
+        // If r3 specifies an odd numbered register however, then
+        // the entire 64-bit instruction count is returned in bits
+        // 0-63 of the specified r3 register in z/Architecture mode,
+        // whereas a Specification Exception Program Check Interrupt
+        // occurs in both ESA/390 and System/370 architecture modes
+        // as 64-bit registers don't exist in either architecture.
+        //
+        // Precluding a Specification Exception Program Interrupt,
+        // Condition Code 0 is returned for option 0, whereas for
+        // option 1, Condition Code 0 is only returned if the CPU
+        // specified in bits 48-63 of the operand-1 r1 register is
+        // currently valid and online. Otherwise if the specified
+        // CPU is offline or does not exist in the configuration,
+        // Condition Code 3 is returned and the r3 or r3 and r3+1
+        // return value register(s) is/are not modified.
+
+        U64   instcount;                    // Instruction count
+        U16   opt = regs->GR_LHH( r1 );     // Option code
+
+        if (regs->arch_mode != ARCH_900_IDX)// Not 64-bit architecture?
+            ODD_CHECK( r3, regs );          // 64-bit regs don't exist!
+
+        if (opt > 1)                        // Unsupported option?
+        {
+            regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+        }
+        else if (opt == 1)                  // Count for specific CPU?
+        {
+            int cpu = regs->GR_LHL( r1 );   // Get desired CPU from r1
+
+            if (cpu < 0 || cpu >= sysblk.maxcpu || !IS_CPU_ONLINE( cpu ))
+            {
+                regs->psw.cc = 3;           // CPU is invalid/offline
+                break;                      // We are done
+            }
+
+            /* Retrieve the requested CPU's instruction count */
+            instcount = sysblk.regs[ cpu ]->prevcount  // (U64)
+                      + sysblk.regs[ cpu ]->instcount; // (U32)
+            regs->psw.cc = 0;
+        }
+        else if (opt == 0)                  // Global system counter?
+        {
+            instcount = sysblk.instcount;   // Get total for ALL CPUs
+            regs->psw.cc = 0;
+        }
+
+        /* Return the instruction count in the requested register(s) */
+        if (r3 & 1)
+            regs->GR_G( r3 ) = instcount;   // Contiguous 64-bit count
+        else
+        {
+            /* Place the high-order 32 bits of the 64-bit count into
+               bits 32-63 of the even numbered register and place the
+               low-order 32 bits of the 64-bit count into bits 32-63
+               of the r3+1 odd numbered register. For S/370 and S/390
+               mode this corresponds to bits 0-31 of the register pair
+               since registers are only 32 bits wide in 370 and 390.
+            */
+            regs->GR_L( r3    ) = (U32)((instcount >> 32) & 0xFFFFFFFF);
+            regs->GR_L( r3 + 1) = (U32)((instcount      ) & 0xFFFFFFFF);
+        }
+
+        break;
+    }
 
     case 0xF0C:
     /*---------------------------------------------------------------*/
@@ -486,7 +579,7 @@ U32   code;
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
         /* Load 4K block address from R2 register */
-        n = regs->GR_L(r2) & ADDRESS_MAXWRAP(regs);
+        n = regs->GR_L(r3) & ADDRESS_MAXWRAP(regs);
 
         /* Convert real address to absolute address */
         n = APPLY_PREFIXING (n, regs->PX);
@@ -523,7 +616,7 @@ U32   code;
     /*---------------------------------------------------------------*/
     /* Diagnose F18: Hercules Access Host Resource                   */
     /*---------------------------------------------------------------*/
-        ARCH_DEP(diagf18_call) (r1, r2, regs);
+        ARCH_DEP(diagf18_call) (r1, r3, regs);
         break;
 #endif /* defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY) */
 
@@ -535,7 +628,7 @@ U32   code;
     /* Diagnose xxx: Invalid function code                           */
     /*---------------------------------------------------------------*/
 
-        if( HDC4(debug_diagnose, code, r1, r2, regs) )
+        if( HDC4(debug_diagnose, code, r1, r3, regs) )
             return;
 
         /* Power Off diagnose on 4361, 9371, 9373, 9375, 9377, 9221: */
@@ -546,7 +639,7 @@ U32   code;
         /*          DS 0H                                            */
         /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'   */
 
-        if (0 == r1 && 2 == r2
+        if (0 == r1 && 2 == r3
              && sysblk.cpuversion != 0xFF
              && (sysblk.cpumodel == 0x4361
               || (sysblk.cpumodel & 0xFFF9) == 0x9371   /* (937X) */

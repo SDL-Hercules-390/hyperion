@@ -3110,7 +3110,7 @@ void binary_to_packed (S64 bin, BYTE *result);
 
 
 /* Functions in module diagnose.c */
-void ARCH_DEP( diagnose_call ) (VADR effective_addr2, int b2, int r1, int r3, REGS *regs);
+void ARCH_DEP( diagnose_call )( REGS* regs, int r1, int r3, int b2, VADR effective_addr2 );
 
 
 /* Functions in module diagmssf.c */

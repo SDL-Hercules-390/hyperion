@@ -767,46 +767,61 @@ U32     old;                            /* old value                 */
 /*-------------------------------------------------------------------*/
 /* 83   DIAG  - Diagnose                                        [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(diagnose)
+DEF_INST( diagnose )
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS( inst, regs, r1, r3, b2, effective_addr2 );
 
+    PTT_INF( "DIAG", regs->GR_G( r1 ), regs->GR_G( r3 ),
+        (U32)(effective_addr2 & 0xffffff) );
+
+    /* Let VM370 Assist take first crack at diagnose instructions */
 #if defined( FEATURE_ECPSVM )
-    if(ecpsvm_dodiag(regs,r1,r3,b2,effective_addr2)==0)
-    {
+    if (ecpsvm_dodiag( regs, r1, r3, b2, effective_addr2 ) == 0)
         return;
-    }
 #endif
-
+    /*  Diagnose F08/F09 (Get Hercules Instruction Counter) is NOT
+        a privileged instruction and can be executed by ANY problem
+        state program as long as the HERC_PROBSTATE_DIAGF08 facility
+        is enabled.  All OTHER diagnose instructions (including the
+        Diagnose F08 (Get Hercules Instruction Counter) instruction
+        when the HERC_PROBSTATE_DIAGF08 facility is NOT enabled)
+        ARE privileged and require supervisor state.
+    */
 #if defined( FEATURE_HERCULES_DIAGCALLS )
-    if (
+    if (1
 #if defined( _FEATURE_SIE )
-        !SIE_MODE(regs) &&
-#endif /* defined( _FEATURE_SIE ) */
-                      !(effective_addr2 == 0xF08 && FACILITY_ENABLED( HERC_PROBSTATE_DIAGF08,regs )) )
-#endif /* defined( FEATURE_HERCULES_DIAGCALLS ) */
+        && !SIE_MODE( regs )
+#endif
+        && !(((effective_addr2 == 0xF08) ||
+              (effective_addr2 == 0xF09)) &&
+              FACILITY_ENABLED( HERC_PROBSTATE_DIAGF08, regs ))
+    )
+#endif
+    {
+        /* Program Check Interrupt if not supervisor state */
+        PRIV_CHECK( regs );
+    }
 
-    PRIV_CHECK(regs);
+    /* Allow SIE to intercept this instruction */
+    SIE_INTERCEPT( regs );
 
-    SIE_INTERCEPT(regs);
-
-    PTT_INF("DIAG",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffff));
-
-    /* Process diagnose instruction */
+    /* Otherwise process this diagnose instruction */
     regs->diagnose = TRUE;
-    ARCH_DEP(diagnose_call) (effective_addr2, b2, r1, r3, regs);
+    {
+        ARCH_DEP( diagnose_call )( regs, r1, r3, b2, effective_addr2 );
+    }
     regs->diagnose = FALSE;
 
     /* Perform serialization and checkpoint-synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
 #if defined( FEATURE_HERCULES_DIAGCALLS )
-    RETURN_INTCHECK(regs);
+    RETURN_INTCHECK( regs );
 #endif
 
 } /* end DEF_INST(diagnose) */
