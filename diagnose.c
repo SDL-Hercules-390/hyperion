@@ -479,50 +479,50 @@ U32   code;
     /* Diagnose F09: Return Hercules instruction counter (64)        */
     /*---------------------------------------------------------------*/
     {
-        // Operand register r1 bits 32-47 specify the option code and
+        // Operand register r3 bits 32-47 specify the option code and
         // bits 48-63 specify the CPU Address for option code 1. For
-        // option code 0, operand register r1 bits 48-63 are ignored.
-        // Bits 0-31 of operand register r1 are also always ignored.
+        // option code 0, operand register r3 bits 48-63 are ignored.
+        // Bits 0-31 of operand register r3 are also always ignored.
         // Any option code other than 0 or 1 causes a Specification
         // Exception Program Interrupt to occur.
         //
         // Option 0 = instruction count for entire system (all CPUs
         // together). Option 1 = instruction count for specific CPU
-        // identified in bits 48-63 of r1.
+        // identified in bits 48-63 of r3.
         //
         // The register and bits that the 64-bit instruction count
         // is returned in depends on: 1) whether z/Architecture mode
-        // is active or not, and 2) whether or not the specified r3
-        // register number is even or odd.
+        // is active or not, and 2) whether the specified operand-1
+        // r1 register number is even or odd.
         //
-        // If r3 is an even numbered register, then the high-order
-        // bits 0-31 of the 64-bit instruction count is returned
-        // in bits 32-63 of the even numbered register, the low-order
-        // bits 32-63 the 64-bit instruction count is returned in
-        // bits 32-63 of the r3+1 odd numbered register, and bits
-        // 0-31 of each register remains unmodified.
+        // If operand-1 register r1 is an even numbered register,
+        // then the high-order bits 0-31 of the 64-bit instruction
+        // count is returned in bits 32-63 of the even numbered
+        // register, the low-order bits 32-63 the 64-bit instruction
+        // count is returned in bits 32-63 of the r1+1 odd numbered
+        // register and bits 0-31 of each register remain unmodified.
         //
-        // If r3 specifies an odd numbered register however, then
-        // the entire 64-bit instruction count is returned in bits
-        // 0-63 of the specified r3 register in z/Architecture mode,
-        // whereas a Specification Exception Program Check Interrupt
-        // occurs in both ESA/390 and System/370 architecture modes
-        // as 64-bit registers don't exist in either architecture.
+        // If operand-1 register r1 specifies an odd numbered register
+        // however, then the 64-bit instruction count is returned in
+        // bits 0-63 of register r1 in z/Architecture mode, whereas a
+        // Specification Exception Program Check Interrupt occurs in
+        // both ESA/390 and System/370 architecture modes as 64-bit
+        // registers don't exist in either of those architectures.
         //
         // Precluding a Specification Exception Program Interrupt,
         // Condition Code 0 is returned for option 0, whereas for
         // option 1, Condition Code 0 is only returned if the CPU
-        // specified in bits 48-63 of the operand-1 r1 register is
+        // specified in bits 48-63 of the operand-3 register r3 is
         // currently valid and online. Otherwise if the specified
         // CPU is offline or does not exist in the configuration,
-        // Condition Code 3 is returned and the r3 or r3 and r3+1
+        // Condition Code 3 is returned and the r1 or r1 and r1+1
         // return value register(s) is/are not modified.
 
         U64   instcount;                    // Instruction count
-        U16   opt = regs->GR_LHH( r1 );     // Option code
+        U16   opt = regs->GR_LHH( r3 );     // Option code
 
         if (regs->arch_mode != ARCH_900_IDX)// Not 64-bit architecture?
-            ODD_CHECK( r3, regs );          // 64-bit regs don't exist!
+            ODD_CHECK( r1, regs );          // 64-bit regs don't exist!
 
         if (opt > 1)                        // Unsupported option?
         {
@@ -530,7 +530,7 @@ U32   code;
         }
         else if (opt == 1)                  // Count for specific CPU?
         {
-            int cpu = regs->GR_LHL( r1 );   // Get desired CPU from r1
+            int cpu = regs->GR_LHL( r3 );   // Get desired CPU from r3
 
             if (cpu < 0 || cpu >= sysblk.maxcpu || !IS_CPU_ONLINE( cpu ))
             {
@@ -550,19 +550,19 @@ U32   code;
         }
 
         /* Return the instruction count in the requested register(s) */
-        if (r3 & 1)
-            regs->GR_G( r3 ) = instcount;   // Contiguous 64-bit count
+        if (r1 & 1)
+            regs->GR_G( r1 ) = instcount;   // Contiguous 64-bit count
         else
         {
             /* Place the high-order 32 bits of the 64-bit count into
                bits 32-63 of the even numbered register and place the
                low-order 32 bits of the 64-bit count into bits 32-63
-               of the r3+1 odd numbered register. For S/370 and S/390
+               of the r1+1 odd numbered register. For S/370 and S/390
                mode this corresponds to bits 0-31 of the register pair
                since registers are only 32 bits wide in 370 and 390.
             */
-            regs->GR_L( r3    ) = (U32)((instcount >> 32) & 0xFFFFFFFF);
-            regs->GR_L( r3 + 1) = (U32)((instcount      ) & 0xFFFFFFFF);
+            regs->GR_L( r1    ) = (U32)((instcount >> 32) & 0xFFFFFFFF);
+            regs->GR_L( r1 + 1) = (U32)((instcount      ) & 0xFFFFFFFF);
         }
 
         break;
