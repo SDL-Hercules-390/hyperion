@@ -1727,7 +1727,11 @@ U16 offph;
                       /* Note: whether an address is flagged as default */
                       /* or vipa appear to depend on what the guest is, */
                       /* and how the inferface is defined in the guest. */
-                      if (flags == IPA_SIP_DEFAULT || flags == IPA_SIP_VIPA)
+                      if (0
+                          || flags == IPA_SIP_DEFAULT
+                          || flags == IPA_SIP_VIPA
+                          || flags == IPA_SIP_TAKEOVER
+                      )
                       {
                         /* Register the IPv4 address */
                         rc = register_ipv4(grp, dev, (BYTE*)ipa_sip->data.ip4.addr);
@@ -1746,7 +1750,6 @@ U16 offph;
                         /* was specified on the configuration statement.         */
                         if (memcmp( grp->confipaddr4, ipa_sip->data.ip4.addr, 4 ) != 0)
                         {
-
 #if defined( OPTION_W32_CTCI )
                           if (tt32_multiple_ip_support())
                               rc = 0; // 'register_ipv4' did it for us
@@ -1761,7 +1764,6 @@ U16 offph;
                                   VERIFY( qeth_disable_interface( dev, grp ) == 0);
 #endif
                               rc = TUNTAP_SetDestAddr( grp->ttifname, ipaddr );
-
 #if defined( OPTION_W32_CTCI )
                               if (was_enabled)
                                   VERIFY( qeth_enable_interface( dev, grp ) == 0);
@@ -1777,6 +1779,10 @@ U16 offph;
                         }
 
                         ipadatasize = (4 + 4 + 4);
+                      }
+                      else
+                      {
+                        retcode = IPA_RC_UNSUPPORTED_SUBCMD;
                       }
                     }
 #if defined( ENABLE_IPV6 )
