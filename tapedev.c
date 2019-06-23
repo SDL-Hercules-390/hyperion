@@ -2020,18 +2020,17 @@ void ReqAutoMount( DEVBLK *dev )
     /* Open the file/drive if needed (kick off auto-mount if needed) */
     if (dev->fd < 0)
     {
-        BYTE unitstat = 0, code = 0;
-        BYTE *sensebkup;
+        BYTE   unitstat = 0, code = 0;
+        BYTE   sensebkup[ _countof( dev->sense )];  // (same size)
 
         /* Save any pending sense */
-        sensebkup=malloc(dev->numsense);
-        memcpy(sensebkup,dev->sense,dev->numsense);
+        memcpy( sensebkup, dev->sense, sizeof( sensebkup ));
 
+        /* Open the file/drive */
         dev->tmh->open( dev, &unitstat, code );
 
         /* Restore pending sense */
-        memcpy(dev->sense,sensebkup,dev->numsense);
-        free(sensebkup);
+        memcpy( dev->sense, sensebkup, sizeof( dev->sense ));
 
 #if defined(OPTION_SCSI_TAPE)
         if (TAPEDEVT_SCSITAPE == dev->tapedevt)
@@ -2055,11 +2054,11 @@ void ReqAutoMount( DEVBLK *dev )
     }
 
     /* Disabled when [non-SCSI] ACL in use */
-    if ( dev->als )
+    if (dev->als)
         return;
 
     /* Do we actually have any work to do? */
-    if ( !( dev->tapedispflags & TAPEDISPFLG_REQAUTOMNT ) )
+    if (!(dev->tapedispflags & TAPEDISPFLG_REQAUTOMNT))
         return;     // (nothing to do!)
 
     /* Reset work flag */
@@ -2067,7 +2066,7 @@ void ReqAutoMount( DEVBLK *dev )
 
     /* If the drive doesn't have a display,
        then it can't have an auto-loader either */
-    if ( !dev->tdparms.displayfeat )
+    if (!dev->tdparms.displayfeat)
         return;
 
     /* Determine if mount or unmount request
@@ -2083,17 +2082,20 @@ void ReqAutoMount( DEVBLK *dev )
         // A tape IS already loaded...
 
         // 1st byte of message1 non-blank, *AND*,
-        // unmount request or,
-        // unmountmount request and not message2-only flag?
+        // unmount request,
+        // or unmount+mount request and not message2-only flag?
 
-        if (' ' != *(tapemsg = dev->tapemsg1) &&
-            (0
+        tapemsg = dev->tapemsg1;
+
+        if (1
+            && ' ' != tapemsg[0]
+            && (0
                 || TAPEDISPTYP_UNMOUNT == dev->tapedisptype
                 || (1
                     && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
                     && !(dev->tapedispflags & TAPEDISPFLG_MESSAGE2)
                    )
-            )
+               )
         )
             unmountreq = TRUE;
     }
@@ -2102,28 +2104,29 @@ void ReqAutoMount( DEVBLK *dev )
         // NO TAPE is loaded yet...
 
         // mount request and 1st byte of msg1 non-blank, *OR*,
-        // unmountmount request and 1st byte of msg2 non-blank?
+        // unmount+mount request and 1st byte of msg2 non-blank?
 
-        if (
-        (1
-            && TAPEDISPTYP_MOUNT == dev->tapedisptype
-            && ' ' != *(tapemsg = dev->tapemsg1)
+        if ((1
+                && TAPEDISPTYP_MOUNT == dev->tapedisptype
+                && ' ' != *(tapemsg = dev->tapemsg1)
+            )
+            ||
+            (1
+                && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+                && ' ' != *(tapemsg = dev->tapemsg2)
+            )
         )
-        ||
-        (1
-            && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
-            && ' ' != *(tapemsg = dev->tapemsg2)
-        ))
             mountreq = TRUE;
     }
 
     /* Extract volser from message */
-    strncpy( volser, tapemsg+1, 6 ); volser[6]=0;
+    strncpy( volser, tapemsg+1, 6 );
+    volser[6] = 0;
 
     /* Set some boolean flags */
     autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )    ?  TRUE  :  FALSE;
     stdlbled = ( 'S' == tapemsg[7] )                              ?  TRUE  :  FALSE;
-//    ascii    = ( 'A' == tapemsg[7] )                              ?  TRUE  :  FALSE;
+//  ascii    = ( 'A' == tapemsg[7] )                              ?  TRUE  :  FALSE;
     scratch  = ( 'S' == tapemsg[0] )                              ?  TRUE  :  FALSE;
 
     lbltype = stdlbled ? "SL" : "UL";
@@ -2148,24 +2151,26 @@ void ReqAutoMount( DEVBLK *dev )
 #endif
 #endif /* defined(OPTION_SCSI_TAPE) */
 
-    if ( autoload )
+    if (autoload)
     {
         // ZZ TODO: Here is where we'd issue i/o (ASPI?) to the actual
         // hardware autoloader facility (i.e. the SCSI medium changer)
         // to unload and/or load the tape(s) if this were a SCSI auto-
         // loading tape drive.
 
-        if ( unmountreq )
+        if (unmountreq)
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto unloaded"
-            WRMSG(HHC00226, "I", LCSS_DEVNUM, dev->filename,
-                            TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
+            WRMSG( HHC00226, "I", LCSS_DEVNUM, dev->filename,
+                TTYPSTR( dev->tapedevt ),
+                lbltype, scratch ? "<scratch>" : volser );
         }
-        if ( mountreq )
+        if (mountreq)
         {
             // "%1d:%04X Tape file '%s', type '%s': '%s' tape volume '%s' being auto loaded"
-            WRMSG(HHC00227, "I", LCSS_DEVNUM, dev->filename,
-                            TTYPSTR(dev->tapedevt), lbltype, scratch ? "<scratch>" : volser);
+            WRMSG( HHC00227, "I", LCSS_DEVNUM, dev->filename,
+                TTYPSTR( dev->tapedevt ),
+                lbltype, scratch ? "<scratch>" : volser );
         }
     }
 

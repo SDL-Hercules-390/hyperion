@@ -3805,27 +3805,32 @@ do {                                                                   \
 /*        (Non-SNA).                                                 */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int
-ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
+ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 {
-    obtain_lock (&dev->lock);
+    obtain_lock( &dev->lock );
 
-    if (dev->hnd->attention) (dev->hnd->attention) (dev);
+    if (dev->hnd->attention)
+        dev->hnd->attention( dev );
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* If subchannel not valid and enabled, do not present interrupt */
-    if ((dev->pmcw.flag5 & PMCW5_V) == 0
-     || (dev->pmcw.flag5 & PMCW5_E) == 0)
+    if (0
+        || (dev->pmcw.flag5 & PMCW5_V) == 0
+        || (dev->pmcw.flag5 & PMCW5_E) == 0
+    )
     {
-        release_lock (&dev->lock);
+        release_lock( &dev->lock );
         return 3;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
 
     /* If device is already busy or interrupt pending */
-    if (dev->busy       ||
-        IOPENDING(dev)  ||
-        (dev->scsw.flag3 & SCSW3_SC_PEND))
+    if (0
+        || dev->busy
+        || IOPENDING( dev )
+        || (dev->scsw.flag3 & SCSW3_SC_PEND)
+    )
     {
         int rc;                         /* Return code               */
 
@@ -3834,22 +3839,24 @@ ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
         /*  p. 4-1, Attention                                        */
         if(dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
-            dev->scsw.flag3 |= SCSW3_SC_ALERT |
-                               SCSW3_SC_PEND;
-            dev->scsw.unitstat |= unitstat |= CSW_ATTN;
-            dev->scsw.flag2 |= SCSW2_AC_RESUM;
-            schedule_ioq(NULL, dev);
+            unitstat |= CSW_ATTN;
+
+            dev->scsw.unitstat |= unitstat;
+            dev->scsw.flag2    |= SCSW2_AC_RESUM;
+            dev->scsw.flag3    |= SCSW3_SC_ALERT | SCSW3_SC_PEND;
+
+            schedule_ioq( NULL, dev );
+
             if (CCW_TRACE_OR_STEP( dev ))
-                WRMSG (HHC01304, "I", SSID_TO_LCSS(dev->ssid),
-                                      dev->devnum);
+                // "%1d:%04X CHAN: attention signaled"
+                WRMSG( HHC01304, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum);
             rc = 0;
         }
         else
             rc = 1;
 
-        release_lock (&dev->lock);
-
-        return (rc);
+        release_lock( &dev->lock );
+        return rc;
     }
 
     if (CCW_TRACE_OR_STEP( dev ))

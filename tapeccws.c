@@ -3377,7 +3377,7 @@ BYTE            fcb;                    /* Format Control Byte       */
 BYTE            tapeloaded;             /* (boolean true/false)      */
 BYTE*           msg;                    /* (work buf ptr)            */
 
-    if ( !count )
+    if (!count)
         return;
 
     /* Pick up format control byte */
