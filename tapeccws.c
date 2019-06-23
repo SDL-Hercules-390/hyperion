@@ -3369,8 +3369,9 @@ static TAMDIR* findtamdir( int rej, int minlen, const char* pszDir )
 /*-------------------------------------------------------------------*/
 /* Load Display channel command processing...                        */
 /*-------------------------------------------------------------------*/
-void load_display (DEVBLK *dev, BYTE *buf, U16 count)
+int  load_display (DEVBLK *dev, BYTE *buf, U16 count)
 {
+int             rc = 0;                 /* Return code               */
 U16             i;                      /* Array subscript           */
 char            msg1[9], msg2[9];       /* Message areas (ASCIIZ)    */
 BYTE            fcb;                    /* Format Control Byte       */
@@ -3378,7 +3379,7 @@ BYTE            tapeloaded;             /* (boolean true/false)      */
 BYTE*           msg;                    /* (work buf ptr)            */
 
     if (!count)
-        return;
+        return rc;
 
     /* Pick up format control byte */
     fcb = *buf;
@@ -3484,7 +3485,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
         ||       physically communicate with a drive."
         */
 
-        return;
+        return rc;
 
     case FCB_FS_RESET_DISPLAY: // 0x80
 
@@ -3580,7 +3581,8 @@ BYTE*           msg;                    /* (work buf ptr)            */
                           ( (fcb & FCB_AL) ? TAPEDISPFLG_AUTOLOADER : 0 ));
 
     UpdateDisplay( dev );
-    ReqAutoMount( dev );
+    rc = ReqAutoMount( dev );
+    return rc;
 
 } /* end function load_display */
 

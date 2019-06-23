@@ -546,7 +546,7 @@ extern int   gettapetype_bydata     (DEVBLK *dev);
 extern int   mountnewtape           (DEVBLK *dev, int argc, char **argv);
 extern void  GetDisplayMsg          (DEVBLK *dev, char *msgbfr, size_t  lenbfr);
 extern int   IsAtLoadPoint          (DEVBLK *dev);
-extern void  ReqAutoMount           (DEVBLK *dev);
+extern int   ReqAutoMount           (DEVBLK *dev);
 extern void  UpdateDisplay          (DEVBLK *dev);
 extern int   return_false1          (DEVBLK *dev);
 extern int   write_READONLY5        (DEVBLK *dev, const BYTE *bfr, U32 blklen, BYTE *unitstat, BYTE code);
@@ -575,7 +575,7 @@ extern int   TapeCommandIsValid     (BYTE code, U16 devtype, BYTE *rustat);
 extern void  tapedev_execute_ccw    (DEVBLK *dev, BYTE code, BYTE flags,
                                      BYTE chained, U32 count, BYTE prevcode, int ccwseq,
                                      BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual);
-extern void  load_display           (DEVBLK *dev, BYTE *buf, U16 count);
+extern int   load_display           (DEVBLK *dev, BYTE *buf, U16 count);
 
 extern void  build_senseX           (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);
 extern void  build_sense_3410       (int ERCode, DEVBLK *dev, BYTE *unitstat, BYTE ccwcode);

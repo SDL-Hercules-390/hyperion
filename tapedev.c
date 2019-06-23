@@ -1745,8 +1745,8 @@ int  mountnewtape ( DEVBLK *dev, int argc, char **argv )
         }
     }
     UpdateDisplay(dev);
-    ReqAutoMount(dev);
-    return 0;
+    rc = ReqAutoMount(dev);
+    return rc;
 
 } /* end function mountnewtape */
 
@@ -1946,8 +1946,9 @@ void UpdateDisplay( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Issue Automatic Mount Requests as defined by the display          */
 /*-------------------------------------------------------------------*/
-void ReqAutoMount( DEVBLK *dev )
+int  ReqAutoMount( DEVBLK *dev )
 {
+    int    rc = 0;
     char   volser[7];
     BYTE   tapeloaded, autoload, mountreq, unmountreq, stdlbled, scratch;
     char*  lbltype;
@@ -2027,10 +2028,12 @@ void ReqAutoMount( DEVBLK *dev )
         memcpy( sensebkup, dev->sense, sizeof( sensebkup ));
 
         /* Open the file/drive */
-        dev->tmh->open( dev, &unitstat, code );
+        rc = dev->tmh->open( dev, &unitstat, code );
 
         /* Restore pending sense */
-        memcpy( dev->sense, sensebkup, sizeof( dev->sense ));
+        // FIXME: (but only if the open succeeded?? Is this right??)
+        if (rc >= 0)
+            memcpy( dev->sense, sensebkup, sizeof( dev->sense ));
 
 #if defined(OPTION_SCSI_TAPE)
         if (TAPEDEVT_SCSITAPE == dev->tapedevt)
@@ -2051,15 +2054,19 @@ void ReqAutoMount( DEVBLK *dev )
             VERIFY( dev->tmh->generic( &gen_parms ) == 0 );
         }
 #endif /* defined(OPTION_SCSI_TAPE) */
+
+        /* Return with error if open failed */
+        if (rc < 0)
+            return rc;
     }
 
     /* Disabled when [non-SCSI] ACL in use */
     if (dev->als)
-        return;
+        return rc;
 
     /* Do we actually have any work to do? */
     if (!(dev->tapedispflags & TAPEDISPFLG_REQAUTOMNT))
-        return;     // (nothing to do!)
+        return rc;     // (nothing to do!)
 
     /* Reset work flag */
     dev->tapedispflags &= ~TAPEDISPFLG_REQAUTOMNT;
@@ -2067,7 +2074,7 @@ void ReqAutoMount( DEVBLK *dev )
     /* If the drive doesn't have a display,
        then it can't have an auto-loader either */
     if (!dev->tdparms.displayfeat)
-        return;
+        return rc;
 
     /* Determine if mount or unmount request
        and get pointer to correct message */
@@ -2174,7 +2181,7 @@ void ReqAutoMount( DEVBLK *dev )
         }
     }
 
-
+    return rc;
 } /* end function ReqAutoMount */
 
 
