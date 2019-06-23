@@ -862,10 +862,18 @@ TAPERDC*        rdc = (TAPERDC*) dev->devchar;
     dev->bufsize = MAX_TAPE_BLKSIZE;
 
     /* Make attention pending if necessary */
-    if (dev->reinit)
+    if (!dev->reinit || rc < 0)
     {
+        TRACE( "+++ NOT calling device_attention( 0x%04.4X, CSW_DE )\n", dev->devnum );
+    }
+    else // (dev->reinit && rc >= 0)
+    {
+        TRACE( "+++ CALLING device_attention( 0x%04.4X, CSW_DE )\n", dev->devnum );
+
         release_lock( &dev->lock );
-        device_attention( dev, CSW_DE );
+        {
+            rc = device_attention( dev, CSW_DE );
+        }
         obtain_lock( &dev->lock );
     }
 
