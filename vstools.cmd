@@ -62,9 +62,9 @@
   echo              vstarget        The requested target architecture:
   echo                              "x86" if '32', "amd64" if '64'.
   echo.
-  echo              vs2017..vs2005  The Visual Studio version numbers
+  echo              vs2019..vs2005  The Visual Studio version numbers
   echo                              for each supported version of it
-  echo                              (vs2017=150, vs2008=90, etc)
+  echo                              (vs2019=160, vs2017=150, etc)
   echo.
   echo     EXIT STATUS
   echo.
@@ -98,9 +98,10 @@
   set "vs2013=120"
   set "vs2015=140"
   set "vs2017=150"
+  set "vs2019=160"
 
-  set "VSNAMES=vs2017 vs2015 vs2013 vs2012 vs2010 vs2008 vs2005"
-
+  set "VSNAMES=vs2019 vs2017 vs2015 vs2013 vs2012 vs2010 vs2008 vs2005"
+  
   set "vsname="
   set "vsver="
   set "vshost="
