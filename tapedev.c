@@ -2038,6 +2038,10 @@ int  ReqAutoMount( DEVBLK *dev )
         /* Open the file/drive */
         rc = dev->tmh->open( dev, &unitstat, code );
 
+        /* Ignore open error if no tape being mounted */
+        if (strcmp( dev->filename, TAPE_UNLOADED ) == 0)
+            rc = 0;
+
         /* Restore pending sense */
         // FIXME: (but only if the open succeeded?? Is this right??)
         if (rc >= 0)
