@@ -1,9 +1,9 @@
-#HERCULES FOR WIN64 README FILE
+# HERCULES FOR WIN64 README FILE
 
 There is only one 64-bit architecture supported by 64-bit Windows: the
 x64 architecture also known as x86_64 (for AMD64 processors).
 
-##HOW TO COMPILE HERCULES FOR AMD64: command line method
+## HOW TO COMPILE HERCULES FOR AMD64: command line method
 
 1. Install Visual Studio 2008 (VS9) Standard or Professional Edition
    A 90-day evaluation edition can be downloaded from
@@ -14,7 +14,7 @@ x64 architecture also known as x86_64 (for AMD64 processors).
    - "Visual Studio 2008 x64 Cross Tools Command Prompt"
 
    Then, at the Cross Tools command prompt, enter this command:
-   SET CPU=AMD64
+   `SET CPU=AMD64`
 
 3. If compiling on a 64-bit Windows system, go to the start menu and choose
    "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools"
@@ -28,12 +28,12 @@ x64 architecture also known as x86_64 (for AMD64 processors).
    You can override these default directory locations by simply setting
    the following environment variables:
 
-     SET ZLIB_DIR=c:\packages\zlib
-     SET BZIP2_DIR=c:\packages\bzip2
-     SET PCRE_DIR=c:\packages\pcre
+     `SET ZLIB_DIR=c:\packages\zlib`
+     `SET BZIP2_DIR=c:\packages\bzip2`
+     `SET PCRE_DIR=c:\packages\pcre`
 
-5. nmake clean -f makefile-dllmod.msvc
-   nmake -f makefile-dllmod.msvc
+5. `nmake clean -f makefile-dllmod.msvc`
+   `nmake -f makefile-dllmod.msvc`
 
 6. The binaries will be installed into subfolder "msvc.AMD64.bin"
    If you compiled on a 32-bit Windows system, copy this folder
