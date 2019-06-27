@@ -28,12 +28,14 @@ x64 architecture also known as x86_64 (for AMD64 processors).
    You can override these default directory locations by simply setting
    the following environment variables:
 
-     `SET ZLIB_DIR=c:\packages\zlib`
-     `SET BZIP2_DIR=c:\packages\bzip2`
-     `SET PCRE_DIR=c:\packages\pcre`
+```javascript
+SET ZLIB_DIR=c:\packages\zlib
+SET BZIP2_DIR=c:\packages\bzip2
+SET PCRE_DIR=c:\packages\pcre
+```
 
-5. `nmake clean -f makefile-dllmod.msvc`
-   `nmake -f makefile-dllmod.msvc`
+5. nmake clean -f makefile-dllmod.msvc
+   nmake -f makefile-dllmod.msvc
 
 6. The binaries will be installed into subfolder "msvc.AMD64.bin"
    If you compiled on a 32-bit Windows system, copy this folder
@@ -46,7 +48,7 @@ x64 architecture also known as x86_64 (for AMD64 processors).
    http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
 
 
-##              How to build Hercules for the x64 (AMD64): The Fish "Visual Studio 2008" method
+## How to build Hercules for the x64 (AMD64): The Fish "Visual Studio 2008" method
 
               (which accomplishes virtually the same thing
               as the above command-line build instructions)
@@ -76,11 +78,8 @@ x64 architecture also known as x86_64 (for AMD64 processors).
         and/or PCRE_DIR sections of the README.MSVC document for details.
 
 
--------------------------------------------------------------------------------
 
-
-                 Building Hercules from the command-line
-                via the "makefile.bat" Windows batch file.
+##  Building Hercules from the command-line via the "makefile.bat" Windows batch file.
 
 
 The Hercules "makefile.bat" makes it trivially easy to build Hercules from
@@ -100,7 +99,7 @@ and/or PCRE_DIR sections of the README.MSVC document for details.
 
 
 
-                            makefile.bat
+## makefile.bat
 
 
  Initializes the Windows software development build envionment and invokes
@@ -109,14 +108,14 @@ and/or PCRE_DIR sections of the README.MSVC document for details.
 
  Format:
 
-
+'''javascript
    makefile.bat  {build-type}  {makefile-name}  {num-cpu-engines}  \
                  [-asm]                                            \
                  [-title "custom build title"]                     \
                  [-hqa {directory}]                                \
                  [-a|clean]                                        \
                  [{nmake-option}]
-
+'''
 
  Where:
 
@@ -156,6 +155,3 @@ and/or PCRE_DIR sections of the README.MSVC document for details.
                        option to ensure that a complete rebuild is done.
 
    [{nmake-option}]    Extra nmake option(s).   (e.g. -k, -g, etc...)
-
-
--------------------------------------------------------------------------------
