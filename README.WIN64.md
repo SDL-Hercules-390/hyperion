@@ -1,13 +1,9 @@
--------------------------------------------------------------------------------
-
-
-                     *HERCULES FOR WIN64 README FILE*
-
+#HERCULES FOR WIN64 README FILE
 
 There is only one 64-bit architecture supported by 64-bit Windows: the
 x64 architecture also known as x86_64 (for AMD64 processors).
 
-HOW TO COMPILE HERCULES FOR AMD64
+##HOW TO COMPILE HERCULES FOR AMD64: command line method
 
 1. Install Visual Studio 2008 (VS9) Standard or Professional Edition
    A 90-day evaluation edition can be downloaded from
@@ -50,13 +46,7 @@ HOW TO COMPILE HERCULES FOR AMD64
    http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
 
 
--------------------------------------------------------------------------------
-
-
-              How to build Hercules for the x64 (AMD64):
-
-                 The Fish "Visual Studio 2008" method
-
+##              How to build Hercules for the x64 (AMD64): The Fish "Visual Studio 2008" method
 
               (which accomplishes virtually the same thing
               as the above command-line build instructions)
