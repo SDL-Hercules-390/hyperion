@@ -999,6 +999,9 @@ struct TELNET {
         char    clientid[32];           /* Client Id string          */
         int     csock;                  /* Client socket             */
 
+        unsigned int  sendbuf_size;     /* One shot send buffer size */
+        char         *sendbuf;          /* One shot send buffer      */
+
         telnet_t  *ctl;                 /* Ptr to libtelnet control  */
         DEVBLK    *dev;                 /* Device Block ptr or NULL  */
         U16        devnum;              /* Requested device number,  */

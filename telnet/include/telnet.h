@@ -562,6 +562,15 @@ extern void telnet_iac
 );
 
 /*-------------------------------------------------------------------*/
+/* Send a single byte (typically 3270 R or RM), followed by IAC+EOR  */
+/*-------------------------------------------------------------------*/
+void telnet_3270_cmd
+(
+    telnet_t*      telnet,      // Telnet state tracker object
+    BYTE           cmd          // Byte to send
+);
+
+/*-------------------------------------------------------------------*/
 /*                  Send negotiation command                         */
 /*-------------------------------------------------------------------*/
 /*
@@ -584,6 +593,17 @@ extern void telnet_send
     telnet_t*     telnet,       // Telnet state tracker object.
     const BYTE*   buffer,       // Buffer of bytes to send.
     unsigned int  size          // Number of bytes to send.
+);
+
+/*-------------------------------------------------------------------*/
+/* Buffer non-command data, append IAC+EOR and send in one shot      */
+/*-------------------------------------------------------------------*/
+extern void telnet_send_one_shot
+(
+    telnet_t*     telnet,       // Telnet state tracker object.
+    const BYTE*   buffer,       // Buffer of bytes to send.
+    unsigned int  size,         // Number of bytes to send.
+    char*         sendbuf
 );
 
 /*-------------------------------------------------------------------*/
