@@ -1,7 +1,7 @@
 # Hercules CCKD64 Support README
 
 * [About CCKD64](#About-CCKD64)
-  * [Conversion to CCKD64](#CONVTO64)
+  * [Conversion to CCKD64](#Conversion-to-CCKD64)
     * [Procedure](#PROCEDURE)
   
 ## About CCKD64
@@ -12,9 +12,20 @@ The current default implementation of CCKD only supports a maximum file size of 
 
 With the introduction of CCKD64 support however, the new CCKD64 file format uses 64-bit file offsets, thus allowing CCKD64 format compressed dasd image files (and their associated shadow files) to grow to the theoretical maximum of 18EB in size.  (The actual maximum size that any operating system file can actually be however, is limited by the operating system itself as well as the format of the file system that the file resides on.  On Windows with NTFS volumes for example, the actual maximum supported file size is 16TB.)
 
-## CONVTO64
+## Conversion to CCKD64
 
-In order to take advantage of the new CCKD64 file format, existing emulated dasd image files in the old CCKD compressed format must first be converted to the new CCKD64 format by either: a) using the new 'convto64' utility to individually convert each old format base image and associated shadow files to the new format (recommended), b) creating brand new cckd64 base image file using the new 'dasdinit64' utility, or c) copying existing old format CCKD images to the new CCKD64 format using the new 'dasdcopy64' utility. It is critical the dasd images being converted not have any errors before they are converted.  It is highly recommended that "cckdcdsk -3" be run on each image before converting.  Running cckdcomp is also recommended.
+In order to take advantage of the new CCKD64 file format, existing emulated dasd image files in the old CCKD compressed format must first be converted to the new CCKD64 format by either:
+- using the new 'convto64' utility to individually convert each old format base image and associated shadow files to the new format (recommended)
+
+or
+
+- creating brand new cckd64 base image file using the new 'dasdinit64' utility
+
+or
+
+- copying existing old format CCKD images to the new CCKD64 format using the new 'dasdcopy64' utility.
+
+It is critical the dasd images being converted not have any errors before they are converted.  It is highly recommended that "cckdcdsk -3" be run on each image before converting.  Running cckdcomp is also recommended.
 
 
   Using the 'convto64' utility to convert existing CCKD files to the CCKD64
