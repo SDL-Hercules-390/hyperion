@@ -1,6 +1,6 @@
 # Hercules CCKD64 Support README
 
-* [About CCKD64](#About CCKD64)
+* [About CCKD64](#About-CCKD64)
   * [Conversion to CCKD64](#CONVTO64)
     * [Procedure](#PROCEDURE)
   
