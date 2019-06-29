@@ -1,8 +1,18 @@
-# Preliminary 2703 BSC Support
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](..\README.MD)
 
+# Preliminary 2703 BSC Support
+## Contents
+1. [Notes](Notes)
+2. [Hercules device statement](Hercules-device-statement)
+3. [The communication protocol](The-communication-protocol)
+4. [Dial data format](Dial-data-format)
+5. [Bugs, Caveats](Bugs,-Caveats)
+
+## Notes
 Only allows Point to Point connection.
 
-## Hercules device statement:
+## Hercules device statement
 
 ```
 CCUU 2703 lport=port lhost=host rhost=host rport=port dial=IN|OUT|INOUT|NO
@@ -89,12 +99,10 @@ Note : the ETO parameter is ignored if DIAL=NO is not specified. For a dialed li
 
 
 ## The communication protocol
-
 The communication protocol is basic. Every character written by the guest program with a WRITE CCW is transfered to the remote end, untranslated and untouched (except for Transparent BSC rules which deem that DLE characters are doubled when the program has previously written a DLE/STX sequence).
 
 
 ## Dial data format
-
 Dial data is originally as follows :
 ```
 x x x x 0 0 0 0 : Dial # 0
