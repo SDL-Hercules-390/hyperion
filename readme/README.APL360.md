@@ -1,4 +1,11 @@
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](..\README.MD)
+
 # APL\360 mods by Max H. Parke
+## Contents
+1. [About](About)
+
+# About
 Max H. Parke (ikj1234i@yahoo.com) has modified the commadpt driver to work for APL\360.  This is Max's README regarding his APL\360 mods:
 
 1. Here is the APL conf that I used
