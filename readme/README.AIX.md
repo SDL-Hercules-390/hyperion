@@ -1,9 +1,9 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
+<p align="center">
+  <a href="../readme.md">Return to master README.MD</a>
+</p>
 
-#### Click [here](..\readme.md) to return to main readme.md, with index of all readme files.
-# *PRELIMINARY
-
-# Building Hercules-390 for AIX 5.3
+# Building Hercules-390 for AIX 5.3      *PRELIMINARY
 ## Contents
 1. [About](About)
 2. [Process](Process)
