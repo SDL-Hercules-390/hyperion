@@ -1,3 +1,5 @@
+![test image](/readme/images/image_header_herculeshyperionSDL.png)  
+
 [![Build Status](https://travis-ci.org/SDL-Hercules-390/hyperion.svg?branch=master)](https://travis-ci.org/SDL-Hercules-390/hyperion)
 
 # The Hercules System/370, ESA/390, and z/Architecture Emulator
@@ -33,3 +35,20 @@ The SoftDevLabs version of Hercules 4.x Hyperion is currently the only
 
 ### To find out more about this particular version of Hercules 4.x Hyperion,
 follow this link: [Hercules 4.x (Hyperion)](http://sdl-hercules-390.github.io/html/)
+
+### Additional README files
+
+#### Building Hercules
+[Building Hercules under AIX](readme/README.AIX.md)  
+[Building Hercules under BSD/OSX](readme/README.BSD.md)  
+[Hercules "External Packages"](readme/README.EXTPKG.md)  
+
+#### Mods and features
+[APL/360 mods](readme/README.APL360.md)  
+[Hercules CCKD64 Support](readme/README.CCKD64.md)  
+[Hercules CMPSC "Compression Call" instruction support](/readme/README.CMPSC.md)  
+[Preliminary 2703 BSC Support](readme/README.COMMADPT.md)  
+[Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
+[ECPS:VM & Extended VM Assists](readme/README.ECPSVM.md)  
+
+
