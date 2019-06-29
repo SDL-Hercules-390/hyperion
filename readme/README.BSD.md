@@ -1,7 +1,11 @@
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](..\README.MD)
 # Notes for FreeBSD and to some extent also OS/X
+## Contents
+1. [Notes](Notes)
+# Notes
 
-Hercules has been build on FreeBSD and on its derivative, OS/X.  While untested, there should be more than a sporting chance that it builds
-on NetBSD and OpenBSD too.
+Hercules has been built on FreeBSD and on its derivative, OS/X.  While untested, there should be more than a sporting chance that it builds on NetBSD and OpenBSD too.
 
 You need to install the ports of the gnu m4, make, and sed commands in addition to the packages mentioned in the INSTALL file as Hercules
 will not build with the original BSD version of these utilities.
