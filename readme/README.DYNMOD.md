@@ -12,7 +12,7 @@
   makefile:       "{modname}.msvc"    defines module name and source file(s)
   resource file:  "{modname}.rc"      the module's version resource file
 
-## Required makefile format:
+## Required makefile format
     # Module name:
 
     DYNMOD = {modname}
@@ -28,7 +28,7 @@
   Your makefile is !INCLUDEd as part of Hercules's main makefile and
   thus your dynamic module gets built along with the rest of Hercules.
 
-## Building (making):
+## Building (making)
     `dynmake.bat {projdir} {modname} {build_type} {num_cpus} [-a|clean]`
   e.g.:
    `"X:\Hercules\dynmake.bat"  "$(SolutionDir)"  {modname}  RETAIL  32  -a`
