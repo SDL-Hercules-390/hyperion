@@ -3,9 +3,9 @@
 
 # Building Hercules-390 for AIX 5.3      *PRELIMINARY
 ## Contents
-1. [About](About)
-2. [Process](Process)
-3. [ToDo](ToDo)
+1. [About](#About)
+2. [Process](#Process)
+3. [ToDo](#ToDo)
 
 ## About
 This document gives instructions and information on how to build Hercules-390 for AIX v5.3.
