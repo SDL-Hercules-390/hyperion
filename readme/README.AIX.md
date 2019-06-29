@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](..\README.MD)
+[Return to master README.MD](/README.md)
 
 # Building Hercules-390 for AIX 5.3      *PRELIMINARY
 ## Contents
