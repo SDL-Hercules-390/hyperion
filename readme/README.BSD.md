@@ -2,7 +2,7 @@
 [Return to master README.MD](..\README.MD)
 # Notes for FreeBSD and to some extent also OS/X
 ## Contents
-1. [Notes](Notes)
+1. [Notes](#Notes)
 # Notes
 
 Hercules has been built on FreeBSD and on its derivative, OS/X.  While untested, there should be more than a sporting chance that it builds on NetBSD and OpenBSD too.
