@@ -1,11 +1,14 @@
-# Hercules CCKD64 Support README
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](..\README.MD)
 
-* [About CCKD64](#About-CCKD64)
-  * [Conversion to CCKD64](#Conversion-to-CCKD64)
-    * [Procedure](#PROCEDURE)
+# Hercules CCKD64 Support
+## Contents
+1. [About CCKD64](About CCKD64)
+2. [Conversion to CCKD64](Conversion to CCKD64)
+3. [Procedure](Procedure)
+4. [Additional Information])(Additional Information)
   
 ## About CCKD64
-
 Version 4.2 of SDL Hercules Hyperion introduces support for very large Compressed CKD (CCKD) dasd image files, called CCKD64, which can be much larger than 4GB in size.
 
 The current default implementation of CCKD only supports a maximum file size of 4GB.  With the current CCKD implementation, when a compressed CCKD dasd image file (or any of its associated shadow files) reaches a file size of 4GB, unrecoverable I/O errors occur.  This is caused by the use of only 32-bit file offset values being used in the original design.
@@ -13,7 +16,6 @@ The current default implementation of CCKD only supports a maximum file size of 
 With the introduction of CCKD64 support however, the new CCKD64 file format uses 64-bit file offsets, thus allowing CCKD64 format compressed dasd image files (and their associated shadow files) to grow to the theoretical maximum of 18EB in size.  (The actual maximum size that any operating system file can actually be however, is limited by the operating system itself as well as the format of the file system that the file resides on.  On Windows with NTFS volumes for example, the actual maximum supported file size is 16TB.)
 
 ## Conversion to CCKD64
-
 In order to take advantage of the new CCKD64 file format, existing emulated dasd image files in the old CCKD compressed format must first be converted to the new CCKD64 format by either:
 - using the new 'convto64' utility to individually convert each old format base image and associated shadow files to the new format (recommended)
 
@@ -59,8 +61,7 @@ It is critical the dasd images being converted not have any errors before they a
   they just don't have separate executable names ending in '64' as they have
   all been updated to support either of the two formats automatically.
 
-### PROCEDURE
-
+## Procedure
 1. Run `cckdcdsk -3` on all existing 32-bit CCKD dasds to correct any existing errors.
 
 2. Run `cckdcomp` on all existing 32-bit CCKD dasds to remove all free space.
@@ -69,4 +70,5 @@ It is critical the dasd images being converted not have any errors before they a
 
 4. Optional: run `cckdcdsk64 -3` on all of the newly converted 64-bit CCKD64 dasd images to verify the conversion was successful and that no errors exist on any of the images.
 
+## Additional Information
 Additional information regarding the new CCKD64 file format can be found on the "Compressed Dasd Emulation" web page (cckddasd.html).
