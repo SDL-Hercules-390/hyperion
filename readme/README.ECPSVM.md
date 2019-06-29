@@ -13,9 +13,9 @@
 5. [Determining if the assist is used by VM](#Determining-if-the-assist-is-used-by-VM)
 6. [Technical information](#Technical-information)
 7. [Troubleshooting](#Troubleshooting)
-8. [Implemented Assists](#Implemented Assists)
+8. [Implemented Assists](#Implemented-Assists)
 9. [Special Situations](#Special-Situations)
-10. [Example 'ecpsvm stats' report](#Example-'ecpsvm-stats'-report)
+10. [Example 'ecpsvm stats' report](#Example-ecpsvm-stats-report)
 
 ## Change Log
 08/06/18 : Updated supported functions to include DIAG and STCTL instruction assists
@@ -195,7 +195,7 @@ You can determine if ECPS:VM is operating with the trap after IPL by issuing the
 `ECPS:VM Operating with CP FREE/FRET trap in effect`
 
 
-## Example 'ecpsvm stats' report
+## Example ecpsvm stats report
 
 ```
 15:04:36 HHC01603I ecpsvm stat
