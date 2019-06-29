@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](..\README.MD)
+[Return to master README.MD](/README.MD)
 
 # Hercules "External Packages"
 ## Contents
