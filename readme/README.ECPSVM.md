@@ -6,45 +6,33 @@
 # Extended VM Assists - Partial Privop Simulation And Virtual Interval Timer
 
 ## Contents
-1. [About](#About)
-2. [Process](#Process)
-3. [ToDo](#ToDo)
+1. [Change Log](#Change-Log)
+2. [Supported Systems](#Supported-Systems)
+3. [How to enable/disable VM Assists](#How-to-enable/disable-VM-Assists)
+4. [New panel command](#New-panel-command)
+5. [Determining if the assist is used by VM](#Determining-if-the-assist-is-used-by-VM)
+6. [Technical information](#Technical-information)
+7. [Troubleshooting](#Troubleshooting)
+8. [Implemented Assists](#Implemented Assists)
+9. [Special Situations](#Special-Situations)
+10. [Example 'ecpsvm stats' report](#Example-'ecpsvm-stats'-report)
 
--------------------------------------------------------------------------------
-
-          ECPS:VM : Extended Control Program Support : VM/370
-
-                            - AND -
-
- Extended VM Assists - Partial Privop Simulation And Virtual Interval Timer
-
--------------------------------------------------------------------------------
-
-                            CHANGE LOG
-
-08/06/18 : Updated supported functions to include DIAG and STCTL instruction
-           assists; added support for CP assist LCSPG.
-04/12/17 : Updated supported functions to include LRA instruction
-           assist; fixed DISP0 assist issue where VMPSWAIT was not
-           being set.
-02/18/17 : Updated supported functions to include CCW translation
-           assists DFCCW,DNCCW,CCWGN, and CCW untranslation assists
-           UXCCW, FCCWS.
-02/10/17 : Updated supported functions to include SIO/SIOF assist,
-           CP LINK/RETURN (SVC 8/12) assist.
-02/05/17 : Changed description for configuration and commands
-           for ECPSVM YES TRAP/NOTRAP; updated relevant text;
-           updated supported features list; sample output.
+## Change Log
+08/06/18 : Updated supported functions to include DIAG and STCTL instruction assists
+         ; added support for CP assist LCSPG.
+04/12/17 : Updated supported functions to include LRA instruction assist
+         ; fixed DISP0 assist issue where VMPSWAIT was not being set.
+02/18/17 : Updated supported functions to include CCW translation assists DFCCW,DNCCW,CCWGN, and CCW untranslation assists UXCCW, FCCWS.
+02/10/17 : Updated supported functions to include SIO/SIOF assist, CP LINK/RETURN (SVC 8/12) assist.
+02/05/17 : Changed description for configuration and commands for ECPSVM YES TRAP/NOTRAP
+         ; updated relevant text
+         ; updated supported features list
+         ; sample output.
 07/07/03 : Changed description for configuration and commands
            ECPS:VM changed to ECPSVM (configuration)
            evm changed to ecpsvm     (command)
 
-
--------------------------------------------------------------------------------
-
-                        Supported Systems
-
-
+## Supported Systems
 Affected operating systems:
 
   VM/370 Release 6  (PTFs required - PLC 029 works fine)
@@ -60,28 +48,18 @@ A VM/SP Guest (or VM/370 Guest with 4K Storage key updates) running under
 [z/]VM[/[XA|ESA]] will NOT have access to either the CP assists or VM Assists.
 The ECPS:VM Feature is disabled when running under SIE.
 
--------------------------------------------------------------------------------
-
-                      How to enable/disable VM Assists
-
-
-In the HERCULES.CNF file within the configuration section, insert one of
-the following statements:
-
-
+## How to enable/disable VM Assists
+In the HERCULES.CNF file within the configuration section, insert one of the following statements:
   ECPSVM LEVEL n          Where n is the requested level (see CAUTION below!)
   ECPSVM NO               Assist not enabled (default)
   ECPSVM YES [ TRAP   ]   Assist enabled with CP FREE/FRET trap support
              [ NOTRAP ]   Assist enabled without FREE/FRET trap support
 
-
 If "YES" is specified, the most appropriate level is returned (Level 20).
 If TRAP or NOTRAP is not specified with ECPSVM YES, TRAP is the default.
-Refer to the Special Situations section further below for more information
-about TRAP/NOTRAP.
+Refer to the Special Situations section further below for more information about TRAP/NOTRAP.
 
-NOTE: The ECPSVM LEVEL 'n' level number doesn't affect the operations of the
-assist but rather only defines what level number is reported to the program.
+NOTE: The ECPSVM LEVEL 'n' level number doesn't affect the operations of the assist but rather only defines what level number is reported to the program.
 
                             +-----------------+
                             |    CAUTION!!    |
@@ -90,12 +68,8 @@ assist but rather only defines what level number is reported to the program.
 Use of the LEVEL 'n' form is NOT recommended, and is only provided for
 engineering use!
 
-
--------------------------------------------------------------------------------
-
-                       New panel command:  'ecpsvm'
-
-
+## New panel command
+'ecpsvm'
 
     ecpsvm help                 Summary of these commands
 
@@ -116,165 +90,88 @@ engineering use!
 
     ecpsvm nodebug [feature]    Turn off debugging messages
 
+NOTE: ecpsvm disable does NOT entirely disable all CP ASSISTS. If it did (i.e. generate a program interrupt whenever a E6xx instruction is invoked) VM would abend immediately. Rather, omit the ECPSVM statement altogether from the configuration file.
 
-
-NOTE: ecpsvm disable does NOT entirely disable all CP ASSISTS. If it did
-(i.e. generate a program interrupt whenever a E6xx instruction is invoked)
-VM would abend immediately. Rather, omit the ECPSVM statement altogether
-from the configuration file.
-
-To determine the feature names, type "ecpsvm enable ALL".  All of the enabled
-features will then be listed.
+To determine the feature names, type "ecpsvm enable ALL".  All of the enabled features will then be listed.
 
 The ecpsvm command is NOT case sensitive.
 
--------------------------------------------------------------------------------
-
-                    Determining if the assist is used by VM
-
-
+## Determining if the assist is used by VM
 Use the 2 following CLASS A commands:
-
   CP QUERY CPASSIST
   CP QUERY SASSIST
 
 Both queries should return 'ON'.
 
 Also use the following CLASS G Command:
-
   CP QUERY SET
 
 2nd line should indicate:
-
   ASSIST ON SVC TMR
 
--------------------------------------------------------------------------------
+## Technical information
+The CP Assists provides the VM System Control Program (SCP) with various microcoded instructions to shorten the supervisor pathlength. All microcoded instructions are privileged instructions and have an opcode of E6xx. They are native representation of what the SCP would do in a similar case. For all cases where the assist is not able to correctly assist the SCP, the E6xx instructions resolve to a no-op, thus leaving the responsibility of the task to the original CP code.
 
-                          Technical information
+The VM Assists alter the behavior of certain privileged instructions when executed in problem state (controlled by the Problem State bit in the PSW). The VM Assist will either completely simulate the instruction (when feasible), branch directly to the CP support module for that instruction (thereby bypassing program interruption processing and instruction decoding), or generate a privileged operation exception program interruption for all other cases so that CP can provide the simulation.
 
+The VM Virtual Interval Timer assist allows updating of a Virtual Machine virtual interval timer directly by the microcode.
 
-The CP Assists provides the VM System Control Program (SCP) with various
-microcoded instructions to shorten the supervisor pathlength. All microcoded
-instructions are privileged instructions and have an opcode of E6xx. They
-are native representation of what the SCP would do in a similar case. For all
-cases where the assist is not able to correctly assist the SCP, the E6xx
-instructions resolve to a no-op, thus leaving the responsibility of the task
-to the original CP code.
+Both CP And VM Assists are controlled by real Control Register 6 which controls the availability and behavior of the assists.
 
-The VM Assists alter the behavior of certain privileged instructions when
-executed in problem state (controlled by the Problem State bit in the PSW).
-The VM Assist will either completely simulate the instruction (when feasible),
-branch directly to the CP support module for that instruction (thereby
-bypassing program interruption processing and instruction decoding), or
-generate a privileged operation exception program interruption for all other
-cases so that CP can provide the simulation.
-
-The VM Virtual Interval Timer assist allows updating of a Virtual Machine
-virtual interval timer directly by the microcode.
-
-Both CP And VM Assists are controlled by real Control Register 6 which
-controls the availability and behavior of the assists.
-
--------------------------------------------------------------------------------
-
-                              Troubleshooting
-
-
-In the event that a certain CP or VM Assist disrupts normal operations, it
-is possible to selectively disable each discrete component. The best method
-is to disable ALL VM and CP Assists (except STEVL and SSM if done prior to
-IPL) and then to enable each feature until the problem occurs. If it is
-unknown whether the problem lies in the VM or CP Assist, it is also possible
-to enable/disable the entire group of assists.
+## Troubleshooting
+In the event that a certain CP or VM Assist disrupts normal operations, it is possible to selectively disable each discrete component. The best method is to disable ALL VM and CP Assists (except STEVL and SSM if done prior to IPL) and then to enable each feature until the problem occurs. If it is unknown whether the problem lies in the VM or CP Assist, it is also possible to enable/disable the entire group of assists.
 
 Refer to the ECPSVM ENABLE|DISABLE command documented further above.
 
-ECPSVM STATS allows you to see how often each assist is invoked. The hit count
-and hit ratio makes it possible to determine how effective the assists are.
+ECPSVM STATS allows you to see how often each assist is invoked. The hit count and hit ratio makes it possible to determine how effective the assists are.
 
-A low hit ratio may be normal in some situations. For example, the LPSW hit
-ratio will be very low when running VM under VM, because most PSW switches
-cannot be resolved by the assist.
+A low hit ratio may be normal in some situations. For example, the LPSW hit ratio will be very low when running VM under VM, because most PSW switches cannot be resolved by the assist.
 
-A low invocation count simply shows that the related assist is not often
-issued. For example, there are very few LCTLs when running CMS.
+A low invocation count simply shows that the related assist is not often issued. For example, there are very few LCTLs when running CMS.
 
 Some assists are just invoked once at IPL (STEVL). This is normal behavior.
 
--------------------------------------------------------------------------------
+## Implemented Assists
+### CP ASSISTS:
+- [x]    DFCCW, DNCCW, CCWGN     CCW translation
+- [x]    DISP0, DISP1, DISP2     CP Dispatching
+- [x]    FREEX, FRETX            CP Free Storage management
+- [ ]    FREE/FRET       Original CP Free Storage Management (up to level 19)
+- [x]    LCKPG, ULKPG            Real page frame locking/unlocking
+- [x]    LCSPG                   Locate changed shared page
+- [x]    LINK, RETRN             CP SVC 8/12 LINK and RETURN function
+- [ ]    PMASS           Preferred Machine Assist (insufficient information)
+- [x]    SCNRU, SCNVU            Real/Virtual Device control block scan
+- [x]    STEVL                   Store ECPS:VM support level
+- [x]    TRBRG, TRLCK            Virtual frame addressing/locking
+- [x]    VIST,  VIPT             Invalidate shadow segment/page tables
+- [x]    UXCCW, FCCWS            CCW untranslation
 
-                          Implemented Assists
+### VM ASSISTS:
+- [x]    DIAG Simulation
+- [ ]    IUCV
+- [ ]    ISK/SSK/ISKE/SSKE/IVSK    Extended Key Operations assist
+- [x]    LCTL Simulation
+- [x]    LPSW Simulation
+- [x]    LRA Simulation
+- [x]    SIO/SIOF Simulation
+- [x]    SSM Simulation
+- [x]    SVC Simulation
+- [x]    STNSM Simulation
+- [x]    STOSM Simulation
+- [ ]    V=R Shadow Table Bypass assists [note]
+- [x]    Virtual Interval Timer
 
+Note: The V=R Shadow Table Bypass assist is a feature which requires the guest program to be aware of the feature (Page 0 Relocation).
 
-  CP ASSISTS:
-    FREEX, FRETX            CP Free Storage management
-    DISP0, DISP1, DISP2     CP Dispatching
-    LCKPG, ULKPG            Real page frame locking/unlocking
-    TRBRG, TRLCK            Virtual frame addressing/locking
-    SCNRU, SCNVU            Real/Virtual Device control block scan
-    VIST,  VIPT             Invalidate shadow segment/page tables
-    STEVL                   Store ECPS:VM support level
-    LINK, RETRN             CP SVC 8/12 LINK and RETURN function
-    DFCCW, DNCCW, CCWGN     CCW translation
-    UXCCW, FCCWS            CCW untranslation
-    LCSPG                   Locate changed shared page
+## Special Situations
+1.  ECPS:VM will NOT work in an AP or MP system. An AP or MP generated system locks various system control blocks being manipulated by the assisted functions (VMBLOK, RDEVBLOK, VDEVBLOK, etc..). However, the current ECPS:VM implementation doesn't lock any of those structures.
 
-  VM ASSISTS:
-    Virtual Interval Timer
-    LPSW Simulation
-    SIO/SIOF Simulation
-    SSM Simulation
-    SVC Simulation
-    LCTL Simulation
-    STNSM Simulation
-    STOSM Simulation
-    LRA Simulation
-    DIAG Simulation
+Therefore, CP will fairly quickly abend because it will find some of the control blocks to not have been locked when they should, resulting in various LOKxxx abends.  Consequently, ECPS:VM *must* be disabled when a AP or MP system is used.
 
--------------------------------------------------------------------------------
+2.  Many users that run VM/370 are also using a diagnostic tool called the FREE/FRET trap.  This tool is used to help diagnose problems with CP's management of free storage.  The various builds of VM in use by emulator users typically have the trap already in effect.  However, ECPS:VM normally cannot perform several of the CP Assists when the trap is in effect and the affected assists are turned off.  Unfortunately, the assists that are turned off are otherwise highly used and losing the assist capability for these functions is a significant performance impact.
 
-                        Non-Implemented assists
-
-
-  CP ASSISTS:
-    FREE/FRET       Original CP Free Storage Management (up to level 19)
-    PMASS           Preferred Machine Assist (insufficient information)
-
-  VM ASSISTS:
-    IUCV
-    ISK/SSK/ISKE/SSKE/IVSK    Extended Key Operations assist
-    V=R Shadow Table Bypass assists
-
-            Note: The V=R Shadow Table Bypass assist
-            is a feature which requires the guest program
-            to be aware of the feature (Page 0 Relocation).
-
--------------------------------------------------------------------------------
-
-                          Special Situations
-
-
-1.  ECPS:VM will NOT work in an AP or MP system. An AP or MP generated
-    system locks various system control blocks being manipulated by the
-    assisted functions (VMBLOK, RDEVBLOK, VDEVBLOK, etc..). However, the
-    current ECPS:VM implementation doesn't lock any of those structures.
-
-    Therefore, CP will fairly quickly abend because it will find some of
-    the control blocks to not have been locked when they should, resulting
-    in various LOKxxx abends.  Consequently, ECPS:VM *must* be disabled
-    when a AP or MP system is used.
-
-
-2.  Many users that run VM/370 are also using a diagnostic tool called the
-    FREE/FRET trap.  This tool is used to help diagnose problems with CP's
-    management of free storage.  The various builds of VM in use by emulator
-    users typically have the trap already in effect.  However, ECPS:VM
-    normally cannot perform several of the CP Assists when the trap is in
-    effect and the affected assists are turned off.  Unfortunately, the
-    assists that are turned off are otherwise highly used and losing the
-    assist capability for these functions is a significant performance impact.
-
-    This updated version of the ECPS:VM support provides the capability to
+This updated version of the ECPS:VM support provides the capability to
     operate with or without the FREE/FRET trap in effect.  The assist can
     automatically determine at IPL time whether it needs to operate with the
     trap or without the trap.  If the trap is enabled, all of the supported
@@ -311,9 +208,9 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
 -------------------------------------------------------------------------------
 
 
-                    Example 'ecpsvm stats' report
+## Example 'ecpsvm stats' report
 
-
+```
 15:04:36 HHC01603I ecpsvm stat
 15:04:36 HHC01719I ECPS:VM Command processor invoked
 14:04:36 HHC01724I ECPS:VM Operating with CP FREE/FRET trap in effect
@@ -365,6 +262,4 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
 15:04:36 HHC01702I +-----------+------------+------------+-------+
 15:04:36 HHC01704I 4 entries not shown and never invoked
 15:04:36 HHC01722I ECPS:VM Command processor complete
-
-
--------------------------------------------------------------------------------
+```
