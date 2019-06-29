@@ -1,4 +1,10 @@
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](..\README.MD)
+
 # Hercules CMPSC "Compression Call" instruction support
+## Contents
+1. [Notes](Notes)
+## Notes
 
 The z/Architecture Compression Call instruction (CMPSC opcode B263) had at one time two different implementations within Hercules 4.0 Hyperion.
 
