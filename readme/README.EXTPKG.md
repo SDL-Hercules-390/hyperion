@@ -1,7 +1,7 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
 [Return to master README.MD](..\README.MD)
 
-# HERCULES "External Packages"
+# Hercules "External Packages"
 ## Contents
 1. [Overview](#Overview)
 2. [LINUX (non-Windows)](#LINUX-(non-Windows))
