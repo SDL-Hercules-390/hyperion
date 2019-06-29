@@ -2,12 +2,16 @@
 [Return to master README.MD](..\README.MD)
 
 # Hercules Dynamic Modules (on Windows)
+
 ## Contents
 1. [Requires Files](#Requires-Files)
 2. [Required makefile format](#Required-makefile-format)
 3. [Building (making)](#Building-(making))
 4. [Pre-Build event and Post-Build event callbacks](#Pre-Build-event-and-Post-Build-event-callbacks)
-5. [Resource Compiler](#Resource Compiler)
+5. [Resource Compiler](#Resource-Compiler)
+6. [The Build Process](#The-Build-Process)
+7. [More Information](#More-Information)
+
 ## Required files
   makefile:       "{modname}.msvc"    defines module name and source file(s)
   resource file:  "{modname}.rc"      the module's version resource file
