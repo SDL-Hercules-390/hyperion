@@ -3695,8 +3695,14 @@ int prev_rlen3270;
                 /* Release the device lock */
                 release_lock( &dev->lock );
 
-                /* Raise attention interrupt for the device */
-                raise_device_attention( dev, unitstat );
+                /* Raise attention interrupt for device, but only
+                   if we actually received any 3270 data.  Telnet
+                   keepalive messages for example, arrive as pure
+                   telnet control messages which, once processed,
+                   result in no actual 3270 client data remaining.
+                */
+                if (dev->rlen3270)
+                    raise_device_attention( dev, unitstat );
 
             } /* end scan DEVBLK chain */
 
