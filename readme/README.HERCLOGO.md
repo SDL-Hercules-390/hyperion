@@ -1,11 +1,11 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
 [Return to master README.MD](/README.md)
 
-# Customizable hercules 3270 Logo
+# Customizable Hercules 3270 Logo
 ## Contents
 1. [Customizable hercules 3270 Logo](#Customizable-hercules-3270-Logo)
-2. [Process](#Process)
-3. [ToDo](#ToDo)
+2. [How to specify the logo file](#How-to-specify-the-logo-file)
+3. [How to create the logo file](#How-to-create-the-logo-file)
 
 ## Customizable hercules 3270 Logo
 The initial welcome screen presented when a TN 3270 terminal connects to a hercules 3270 device can now be customized.
@@ -23,6 +23,7 @@ The logo file name can also be specified:
 * by using the 'HERCLOGO' environment variable.
 * at run time using the 'HERCLOGO' panel command.
 
+## How to create the logo file
 Each line in the file represent either an order or a plain text line. The orders are as follows:  
 `@SBA X,Y`   Position the current buffer position to Row X col Y (X and Y start at 0)  
 `@SF [H][P]` Set the Highlight and/or Protected attribute  
