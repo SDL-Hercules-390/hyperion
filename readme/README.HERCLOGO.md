@@ -53,5 +53,5 @@ Additionally, it is also possible to specify environment variable names.
 The file `herclogo.txt` is provided in the distribution as a sample template.
 It reflects the contents of the built-in logo.
 
-Ivan Warren 3/1/2006
+Ivan Warren 3/1/2006  
 Paul Gorlinsky 7/13/2011
