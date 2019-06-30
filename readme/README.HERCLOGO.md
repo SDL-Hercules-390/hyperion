@@ -15,13 +15,13 @@ Hercules also contains a built-in logo should no suitable file be found.
 The built-in logo is contained in `cnsllogo.h` and is included in `console.c`.
 
 ## How to specify the logo file
-Upon startup, Hercules will first look for a file named "herclogo.txt" in the current directory.
+Upon startup, Hercules will first look for a file named `herclogo.txt` in the current directory.
 The logo file name can also be specified:
-* as a startup option by using the '-b' flag.
-* by using the 'HERCLOGO' configuration statement.
+* as a startup option by using the `-b` flag.
+* by using the `HERCLOGO` configuration statement.
 (NOTE : The statement was previously LOGOFILE, but LOGOFILE has been deprecated).
-* by using the 'HERCLOGO' environment variable.
-* at run time using the 'HERCLOGO' panel command.
+* by using the `HERCLOGO` environment variable.
+* at run time using the `HERCLOGO` panel command.
 
 ## How to create the logo file
 Each line in the file represent either an order or a plain text line. The orders are as follows:  
