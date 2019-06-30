@@ -1,35 +1,39 @@
-/*
-                     Hercules Dynamic Loader
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
 
-    The dynamic loader is intended to supply a loading and linking
-    mechanism, whereby routines, commands, instructions and functions
-    can be dynamically added to hercules, without the need to rebuild
-    or even restart hercules.
+# Hercules Dynamic Loader
+## Contents
+1. [About](#About)
+2. [Commands](#Commands)
+3. [Module load and unload](#Module-load-and-unload)
+4. [Resolving Symbols](#Resolving-Symbols)
+5. [Some additional notes](#Some-additional-notes)
+6. [Important Hercules internals build information relating to HDL](#Important-Hercules-internals-build-information-relating-to-HDL)
+2. [Commands](#Commands)
 
-    The loader can be controlled by the following hercules commands:
+## About
 
+The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to hercules, without the need to rebuild or even restart hercules.
+
+## Commands
+The loader can be controlled by the following hercules commands:
         ldmod <module list>    - Load modules named in module list
         rmmod <module list>    - Unload modules named in list
         lsmod                  - List all modules and entry points
         lsdep                  - List all dependencies
 
-        The ldmod statement may also appear in the hercules
-        configuration file.
+        The ldmod statement may also appear in the hercules configuration file.
 
         configuration statement:
         modpath <pathname>     - Specifies where modules are loaded from
 
+## Module load and unload
+The loader has 2 basic functions: module load and module unload.
 
-    The loader has 2 basic functions module load and module unload.
-
-    Module load:
-
+###  Module load
     int hdl_load(char *name, int flags);
 
-        Where name is the module name, this name may include the
-        path.  If no path is given then the module is loaded from
-        the default library search order.  Note that this is
-        different from the standard search order.
+        Where name is the module name, this name may include the path.  If no path is given then the module is loaded from the default library search order.  Note that this is different from the standard search order.
 
         flags may be one of the following:
 
@@ -41,8 +45,7 @@
 
         This function returns a zero value when the load is successful.
 
-
-    Module unload:
+### Module unload
 
     int hdl_dele(char *name);
 
@@ -51,7 +54,7 @@
         This function returns a zero value when the unload is successful.
 
 
-    Resolving Symbols:
+## Resolving Symbols
 
     void * HDL_FINDSYM(char *symbolname);
 
@@ -69,35 +72,22 @@
         as listed below.
 
 
-    There are some special considerations for systems that do not support
-    the concept of back-linking.  Back-linking is the operating system
-    support of dynamically resolving unresolved external references in
-    a dynamic module, with the main module, or other loaded modules.
-    Cygwin does not support back-linking and Cygwin specials are listed
-    in this example with #if defined(WIN32).
+There are some special considerations for systems that do not support the concept of back-linking.  Back-linking is the operating system support of dynamically resolving unresolved external references in a dynamic module, with the main module, or other loaded modules. Cygwin does not support back-linking and Cygwin specials are listed in this example with #if defined(WIN32).
 
 
-    Some additional notes:
+## Some additional notes
 
-    Unload will remove all references to a specific module, but currently
-    it will not actually remove the loaded module from memory.  This is
-    because there is no safe way (yet) to synchronize unloading of code
-    and, besides, it may still be in use.  This should however pose no
-    practical limitations.
+Unload will remove all references to a specific module, but currently it will not actually remove the loaded module from memory.  This is because there is no safe way (yet) to synchronize unloading of code and, besides, it may still be in use.  This should however pose no practical limitations.
 
-    When a module lists a new dependency, that dependency will be regis-
-    tered.  Unloading the module does not remove the dependency, this is
-    to be consistent with the previous note about unloading.
+When a module lists a new dependency, that dependency will be registered.  Unloading the module does not remove the dependency, this is to be consistent with the previous note about unloading.
 
 */
-
+```
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
 
-
 /*   Local definitions   */
-
 
 static void *gui_cpu_state(REGS *regs)
 {
@@ -128,42 +118,35 @@ void * (*prev_panel_command)(char *);
 
     return NULL;
 }
-
+```
 
 /*
-    The dependency section is - for all intents and purposes - called
-    before the module is loaded.  Its function is to check that there
-    are no incompatibilities between this module and the version of
-    hercules that we are running.  Dependencies are identified by
-    name, this name is given on the HDL_DEPENDENCY statement.
+The dependency section is - for all intents and purposes - called before the module is loaded.  Its function is to check that there are no incompatibilities between this module and the version of hercules that we are running.  Dependencies are identified by name, this name is given on the HDL_DEPENDENCY statement.
 
-    Each dependency then has a version code, and a size code, where
-    the version code is a character string, and the size code an
-    integer value.  If the version or size codes do not match with
-    those in the hercules main module, the module cannot be loaded.
-    The version is usually a character string that identifies the
-    version of the component, and the size is to be the size of
-    the component in the case of structures or unions.
+Each dependency then has a version code, and a size code, where the version code is a character string, and the size code an integer value.  If the version or size codes do not match with those in the hercules main module, the module cannot be loaded.
+The version is usually a character string that identifies the version of the component, and the size is to be the size of the component in the case of structures or unions.
 
-    Version and size should be coded as following:
+Version and size should be coded as following:
 
-      #define HDL_VERS_SOMETHING  "1.0"
-      #define HDL_SIZE_SOMETHING  sizeof(SOMETHING)
+```
+#define HDL_VERS_SOMETHING  "1.0"
+#define HDL_SIZE_SOMETHING  sizeof(SOMETHING)
+```
 
-    where SOMETHING can be a structure or other component.
+where SOMETHING can be a structure or other component.
 
-    the associated dependency statement:
+The associated dependency statement:
+```
+HDL_DEPENDENCY(SOMETHING);
+````
 
-      HDL_DEPENDENCY(SOMETHING);
+When a dependency is given that has not yet been registered, it will be registered, such that it can be checked in subsequent module loads.
 
-    When a dependency is given that has not yet been registered,
-    it will be registered, such that it can be checked in subsequent
-    module loads.
-
-    The dependency section is mandatory.
+The dependency section is mandatory.
 
 */
 
+```
 HDL_DEPENDENCY_SECTION;
 {
      /* Define version dependencies that this module requires */
@@ -173,7 +156,7 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY ( DEVBLK   );
 }
 END_DEPENDENCY_SECTION;
-
+```
 
 /*
     The registration exports labels and their associated entry points
@@ -189,7 +172,7 @@ END_DEPENDENCY_SECTION;
 
 */
 
-
+```
 HDL_REGISTER_SECTION;
 {
     /* These are the entry points we export to Hercules
@@ -204,7 +187,7 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER ( panel_command, ProcessCommand );
 }
 END_REGISTER_SECTION;
-
+```
 
 /*
     The resolver section imports the entry points of symbols that
@@ -232,7 +215,7 @@ END_REGISTER_SECTION;
 
 */
 
-
+```
 HDL_RESOLVER_SECTION;
 {
     /* These are Hercules's entry points that we need access to
@@ -246,7 +229,7 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE_PTRVAR ( my_sysblk_ptr, sysblk );
 }
 END_RESOLVER_SECTION;
-
+```
 
 /*
     The device section is to register device drivers with hercules.
@@ -271,13 +254,14 @@ END_RESOLVER_SECTION;
 
     The device section is optional
 */
-
+```
 HDL_DEVICE_SECTION;
 {
     HDL_DEVICE(1052,constty_device_hndinfo);
     HDL_DEVICE(3215,constty_device_hndinfo);
 }
 END_DEVICE_SECTION;
+```
 
 /*  The instruction section registers inserts optional instructions,
     or modifies existing instructions.
@@ -324,7 +308,7 @@ END_FINAL_SECTION;
 
 Below is Fish's sample code...
 
-
+```
 /*   Define version dependencies that this module requires...
 **
 ** The following are the various Hercules structures whose layout your
@@ -573,37 +557,24 @@ HDL_INSTRUCTION_SECTION;
 } END_INSTRUCTION_SECTION;
 
 #endif /*!defined(_GEN_ARCH)*/
+```
 
 
-=======================================================================
-=======================================================================
-=======================================================================
+
+### IMPORTANT HERCULES INTERNALS BUILD INFORMATION RELATING TO HDL
+(our 'DLL_EXPORT' and 'DLL_IMPORT' design)
+
+Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), *MUST* have its functon declaration defined in the "hexterns.h" header and *ONLY* in the "hexterns.h" header!
+
+That is to say, you must NOT declare the function in a separate header file! (That might be the way you normally do things for a normal project, but that is NOT the way you do it with Hercules)
 
 
-  IMPORTANT HERCULES INTERNALS BUILD INFORMATION RELATING TO HDL
+#### STEP 1
 
-           (our 'DLL_EXPORT' and 'DLL_IMPORT' design)
+You need to ensure your .c SOURCE member always begins with the following very specific header file #include sequence:
 
-
-Here's the poop. Any function that needs to be exported/imported
-to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc),
-*MUST* have its functon declaration defined in the "hexterns.h"
-header and *ONLY* in the "hexterns.h" header!
-
-That is to say, you must NOT declare the function in a separate
-header file! (That might be the way you normally do things for a
-normal project, but that is NOT the way you do it with Hercules)
-
-
-                       --------------
-                       +   STEP 1   +
-                       --------------
-
-You need to ensure your .c SOURCE member always begins with the
-following very specific header file #include sequence:
-
-
-    /*  XXXXXX.C    (C) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
+ ```
+ /*  XXXXXX.C    (C) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
     /*              Module description goes here...                      */
     /*                                                                   */
     /*   Released under "The Q Public License Version 1"                 */
@@ -637,20 +608,14 @@ following very specific header file #include sequence:
     {
       ... function body ...
     }
+```
+
+where 'XXXXX' is the name of your source member, 'ZZZZZ' is the name of the MODULE (.dll or .so) your code will be a part of, and 'DLL_EXPORT' is added to the beginning of each function that needs to be exported.
+
+Refer to the "OBJ_CODE.msvc" and/or "makefile.am" members to see how all of hercules code is divided into separate loadable modules (DLLs) so you know which module (DLL) your function should be a part of.
 
 
-where 'XXXXX' is the name of your source member, 'ZZZZZ' is the name
-of the MODULE (.dll or .so) your code will be a part of, and 'DLL_EXPORT'
-is added to the beginning of each function that needs to be exported.
-
-Refer to the "OBJ_CODE.msvc" and/or "makefile.am" members to see how
-all of hercules code is divided into separate loadable modules (DLLs)
-so you know which module (DLL) your function should be a part of.
-
-
-                       --------------
-                       +   STEP 2   +
-                       --------------
+#### STEP 2
 
 Add a new entry at the BEGINNING of "hexterns.h" as follows:
 
@@ -670,9 +635,7 @@ where 'MMMM' is a unique 2-4 character prefix of your own choosing
 that identifies your source member export (e.g. HUTL_DLL_IMPORT).
 
 
-                       --------------
-                       +   STEP 3   +
-                       --------------
+#### STEP 3
 
 Add your exported function declarations to END of "hexterns.h":
 
@@ -684,12 +647,10 @@ Add your exported function declarations to END of "hexterns.h":
     ...etc...
 
 
-                       --------------
-                       +   STEP 4   +
-                       --------------
 
-Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your
-new source member. Be sure to update BOTH files, e.g.:
+#### STEP 4
+
+Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your new source member. Be sure to update BOTH files, e.g.:
 
 
     ---(makefile.am)---
@@ -734,11 +695,4 @@ new source member. Be sure to update BOTH files, e.g.:
 
 That's it. That's all you should have to do.
 
-Again, you MAY use a separate #include header file for your new source
-member with NON-EXPORTED functions declared within it but any function
-you need to export to another module must NOT be declared there. The
-function must instead be declared in "hexterns.h" as described above.
-
-=======================================================================
-=======================================================================
-=======================================================================
+Again, you MAY use a separate #include header file for your new source member with NON-EXPORTED functions declared within it but any function you need to export to another module must NOT be declared there. The function must instead be declared in "hexterns.h" as described above.
