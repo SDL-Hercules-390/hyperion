@@ -5,7 +5,7 @@
 ## Contents
 1. [Introduction](#Introduction)
 2. [How to use HQA](#How-to-use-HQA)
-3. [Creating new build scenarios](#Creating new build scenarios)
+3. [Creating new build scenarios](#Creating-new-build-scenarios)
 4. [Samples](#Samples)
 ## Introduction
 
