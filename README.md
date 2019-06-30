@@ -50,5 +50,6 @@ follow this link: [Hercules 4.x (Hyperion)](http://sdl-hercules-390.github.io/ht
 [Preliminary 2703 BSC Support](readme/README.COMMADPT.md)  
 [Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
 [ECPS:VM & Extended VM Assists](readme/README.ECPSVM.md)  
+[Hercules Automatic Operator](readme/README.HAO.md)
 
 
