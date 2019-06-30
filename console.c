@@ -3235,7 +3235,7 @@ size_t                  logoheight;     /* Logo file number of lines */
 /*-------------------------------------------------------------------*/
 static void* console_connection_handler( void* arg )
 {
-static const struct timespec tv_100ms = {0, 100000000}; /* Slow poll */
+static const struct timespec tv_10us = {0, 000010000};  /* FAST poll */
 int                    rc = 0;          /* Return code               */
 int                    lsock;           /* Socket for listening      */
 int                    csock;           /* Socket for conversation   */
@@ -3427,10 +3427,7 @@ int prev_rlen3270;
 
         } /* end build pselect() read set */
 
-        /* Wait for a file descriptor to become ready; use a slow poll
-         * to ensure that no hang occurs.  This is consistent with the
-         * operations of real "hardware" controllers providing telnet
-         * services.
+        /* Wait for a file descriptor to become ready.
          *
          * We use the POSIX pselect() function (and NOT the select()
          * function used in previous versions of Hercules) to address
@@ -3450,7 +3447,7 @@ int prev_rlen3270;
          * interrupt mask instead which should be functionally equivalent
          * to select() anyway.
          */
-        rc = pselect( maxfd+1, &readset, NULL, NULL, &tv_100ms, NULL );
+        rc = pselect( maxfd+1, &readset, NULL, NULL, &tv_10us, NULL );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
