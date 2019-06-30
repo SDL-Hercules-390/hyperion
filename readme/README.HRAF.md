@@ -37,14 +37,15 @@ By default, the Host Resource Access Facility is disabled.  Use the `archlvl` co
 
 ## DIAGNOSE X'F18' Subcodes
 
-The following subcodes are supported or planned.  The DIAGNOSE version in which the subcode has been made available is identified.  An '*' indicates a future planned subcode.
-
+The following subcodes are supported or planned.  The DIAGNOSE version in which the subcode has been made available is identified.  An '*' indicates a future planned subcode.  
+```
     Subcode    Version  Description
   X'00000000'     1     Query DIAGNOSE X'F18' available functionality
   X'00000001'     *     Perform a compatibility mode host socket function
   X'00000002'     1     Perform a compatibility mode host file system operation
   X'00000003'     *     Perform a native mode host socket function
   X'00000004'     *     Perform a native mode host file system operation
+```
 
 ### Subcode X'00000000' - Query DIAGNOSE X'F18'
 
