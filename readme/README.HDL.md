@@ -15,16 +15,19 @@
 The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to hercules, without the need to rebuild or even restart hercules.
 
 ## Commands
-The loader can be controlled by the following hercules commands:
-        ldmod <module list>    - Load modules named in module list
-        rmmod <module list>    - Unload modules named in list
-        lsmod                  - List all modules and entry points
-        lsdep                  - List all dependencies
+The loader can be controlled by the following hercules commands:  
+```
+ldmod <module list>    - Load modules named in module list
+rmmod <module list>    - Unload modules named in list
+lsmod                  - List all modules and entry points
+lsdep                  - List all dependencies
+```
 
-        The ldmod statement may also appear in the hercules configuration file.
-
-        configuration statement:
-        modpath <pathname>     - Specifies where modules are loaded from
+The ldmod statement may also appear in the hercules configuration file.  
+```
+configuration statement:
+modpath <pathname>     - Specifies where modules are loaded from
+```
 
 ## Module load and unload
 The loader has 2 basic functions: module load and module unload.
@@ -51,22 +54,20 @@ This function returns a zero value when the unload is successful.
 `void * HDL_FINDSYM(char *symbolname);`  
 This function will return the entry point of symbolname or zero when the symbol cannot be resolved.
 
-`void * HDL_FINDNXT(current_entry point);`
+`void * HDL_FINDNXT(current_entry point);`  
 This function will return the previous entry point.
 That is, the entry point which was current before the entry point as identified by current_entry point was registered.
 
 This function is intended to allow a module to call the original routine.  An example of this is given in the panel_command entry as listed below.
 
-There are some special considerations for systems that do not support the concept of back-linking.  Back-linking is the operating system support of dynamically resolving unresolved external references in a dynamic module, with the main module, or other loaded modules. Cygwin does not support back-linking and Cygwin specials are listed in this example with #if defined(WIN32).
+There are some special considerations for systems that do not support the concept of back-linking.  Back-linking is the operating system support of dynamically resolving unresolved external references in a dynamic module, with the main module, or other loaded modules. Cygwin does not support back-linking and Cygwin specials are listed in this example with `#if defined(WIN32)`.
 
 
 ## Some additional notes
-
 Unload will remove all references to a specific module, but currently it will not actually remove the loaded module from memory.  This is because there is no safe way (yet) to synchronize unloading of code and, besides, it may still be in use.  This should however pose no practical limitations.
 
 When a module lists a new dependency, that dependency will be registered.  Unloading the module does not remove the dependency, this is to be consistent with the previous note about unloading.
 
-*/
 ```
 #include "hercules.h"
 #include "devtype.h"
