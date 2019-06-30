@@ -1,7 +1,6 @@
 ![test image](/readme/images/image_header_herculeshyperionSDL.png)  
 [![Build Status](https://travis-ci.org/SDL-Hercules-390/hyperion.svg?branch=master)](https://travis-ci.org/SDL-Hercules-390/hyperion)
 
-# The Hercules System/370, ESA/390, and z/Architecture Emulator
 ## The [SoftDevLabs](http://www.softdevlabs.com) version of Hercules 4.x (Hyperion)
 
 ## Contents
@@ -33,14 +32,18 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
 [Hercules "External Packages"](readme/README.EXTPKG.md)  
+[HQA Build Scenarios](readme/README.HQA.md)
 
-### Mods and features
+### Mods
 [APL/360 mods](readme/README.APL360.md)  
-[Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules CMPSC "Compression Call" instruction support](/readme/README.CMPSC.md)  
 [Preliminary 2703 BSC Support](readme/README.COMMADPT.md)  
 [Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
 [ECPS:VM & Extended VM Assists](readme/README.ECPSVM.md)  
+
+### Features
+[Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules Automatic Operator](readme/README.HAO.md)
-
-
+[Hercules Dynamic Loader](readme/README.HDL.md)
+[Customizable Hercules 3270 Logo](readme/README.HERCLOGO.md)
+[Host Resource Access Facility](readme/README.HRAF.md)
