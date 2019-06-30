@@ -12,7 +12,6 @@
 2. [Commands](#Commands)
 
 ## About
-
 The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to hercules, without the need to rebuild or even restart hercules.
 
 ## Commands
@@ -31,46 +30,32 @@ The loader can be controlled by the following hercules commands:
 The loader has 2 basic functions: module load and module unload.
 
 ###  Module load
-    int hdl_load(char *name, int flags);
+`int hdl_load(char *name, int flags);`  
+Where name is the module name, this name may include the path.  If no path is given then the module is loaded from the default library search order.  Note that this is different from the standard search order.
 
-        Where name is the module name, this name may include the path.  If no path is given then the module is loaded from the default library search order.  Note that this is different from the standard search order.
-
-        flags may be one of the following:
+Flags may be one of the following:
 
          HDL_LOAD_DEFAULT or 0  -  Default load
          HDL_LOAD_MAIN          -  Reserved for hercules use
          HDL_LOAD_NOUNLOAD      -  Module cannot be unloaded
          HDL_LOAD_FORCE         -  Override dependency check
          HDL_LOAD_NOMSG         -  Do not issue any error messages
-
-        This function returns a zero value when the load is successful.
+This function returns a zero value when the load is successful.
 
 ### Module unload
-
-    int hdl_dele(char *name);
-
-        Where name is the name of the module that is to be unloaded.
-
-        This function returns a zero value when the unload is successful.
-
+`int hdl_dele(char *name);`  
+Where name is the name of the module that is to be unloaded.
+This function returns a zero value when the unload is successful.
 
 ## Resolving Symbols
+`void * HDL_FINDSYM(char *symbolname);`  
+This function will return the entry point of symbolname or zero when the symbol cannot be resolved.
 
-    void * HDL_FINDSYM(char *symbolname);
+`void * HDL_FINDNXT(current_entry point);`
+This function will return the previous entry point.
+That is, the entry point which was current before the entry point as identified by current_entry point was registered.
 
-        This function will return the entry point of symbolname or
-        zero when the symbol cannot be resolved.
-
-    void * HDL_FINDNXT(current_entry point);
-
-        This function will return the previous entry point.
-        That is, the entry point which was current before the entry point
-        as identified by current_entry point was registered.
-
-        This function is intended to allow a module to call the original
-        routine.  An example of this is given in the panel_command entry
-        as listed below.
-
+This function is intended to allow a module to call the original routine.  An example of this is given in the panel_command entry as listed below.
 
 There are some special considerations for systems that do not support the concept of back-linking.  Back-linking is the operating system support of dynamically resolving unresolved external references in a dynamic module, with the main module, or other loaded modules. Cygwin does not support back-linking and Cygwin specials are listed in this example with #if defined(WIN32).
 
@@ -559,8 +544,6 @@ HDL_INSTRUCTION_SECTION;
 #endif /*!defined(_GEN_ARCH)*/
 ```
 
-
-
 ### IMPORTANT HERCULES INTERNALS BUILD INFORMATION RELATING TO HDL
 (our 'DLL_EXPORT' and 'DLL_IMPORT' design)
 
@@ -574,7 +557,7 @@ That is to say, you must NOT declare the function in a separate header file! (Th
 You need to ensure your .c SOURCE member always begins with the following very specific header file #include sequence:
 
  ```
- /*  XXXXXX.C    (C) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
+    /*  XXXXXX.C    (C) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
     /*              Module description goes here...                      */
     /*                                                                   */
     /*   Released under "The Q Public License Version 1"                 */
@@ -619,40 +602,37 @@ Refer to the "OBJ_CODE.msvc" and/or "makefile.am" members to see how all of herc
 
 Add a new entry at the BEGINNING of "hexterns.h" as follows:
 
+```
+#ifndef _XXXXXXX_C_
+#ifndef _ZZZZZZZ_DLL_
+#define MMMM_DLL_IMPORT  DLL_IMPORT
+#else
+#define MMMM_DLL_IMPORT  extern
+#endif
+#else
+#define MMMM_DLL_IMPORT  DLL_EXPORT
+#endif
+```
 
-    #ifndef _XXXXXXX_C_
-    #ifndef _ZZZZZZZ_DLL_
-    #define MMMM_DLL_IMPORT  DLL_IMPORT
-    #else
-    #define MMMM_DLL_IMPORT  extern
-    #endif
-    #else
-    #define MMMM_DLL_IMPORT  DLL_EXPORT
-    #endif
-
-
-where 'MMMM' is a unique 2-4 character prefix of your own choosing
-that identifies your source member export (e.g. HUTL_DLL_IMPORT).
+where 'MMMM' is a unique 2-4 character prefix of your own choosing that identifies your source member export (e.g. HUTL_DLL_IMPORT).
 
 
 #### STEP 3
-
 Add your exported function declarations to END of "hexterns.h":
 
-
+```
     /* Functions in module xxxxxxx.c */
     MMMM_DLL_IMPORT int myfunction1 (DEVBLK*, int myarg, int otherarg);
     MMMM_DLL_IMPORT int myfunction2 (DEVBLK*, int myarg, int otherarg);
     MMMM_DLL_IMPORT int myfunction3 (DEVBLK*, int myarg, int otherarg);
     ...etc...
-
+```
 
 
 #### STEP 4
-
 Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your new source member. Be sure to update BOTH files, e.g.:
 
-
+```
     ---(makefile.am)---
 
 
@@ -691,7 +671,7 @@ Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your new source m
             $(O)hsocket.obj  \
             $(O)w32util.obj  \
             $(O)xxxxxxxx.obj
-
+```
 
 That's it. That's all you should have to do.
 
