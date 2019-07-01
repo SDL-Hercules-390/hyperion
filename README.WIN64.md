@@ -66,14 +66,14 @@ Note: As explained in the previous sections, in order to build support for ZLIB 
 
  Format:
 
-'''javascript
+```javascript
    makefile.bat  {build-type}  {makefile-name}  {num-cpu-engines}  \
                  [-asm]                                            \
                  [-title "custom build title"]                     \
                  [-hqa {directory}]                                \
                  [-a|clean]                                        \
                  [{nmake-option}]
-'''
+```
 
  Where:
 
