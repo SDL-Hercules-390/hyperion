@@ -1,21 +1,16 @@
 # HERCULES FOR WIN64 README FILE
-
 There is only one 64-bit architecture supported by 64-bit Windows: the x64 architecture also known as x86_64 (for AMD64 processors).
 
 ## HOW TO COMPILE HERCULES FOR AMD64: command line method
-
 1. Install Visual Studio 2008 (VS9) Standard or Professional Edition
-   A 90-day evaluation edition can be downloaded from
-   http://msdn.microsoft.com/en-us/evalcenter/bb633753.aspx
+A 90-day evaluation edition can be downloaded from http://msdn.microsoft.com/en-us/evalcenter/bb633753.aspx
 
-2. If compiling on a 32-bit Windows system, go to the start menu and choose
-   "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools"
-   - "Visual Studio 2008 x64 Cross Tools Command Prompt"
+2. 32-bit Windows
+If compiling on a 32-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Cross Tools Command Prompt"
+Then, at the Cross Tools command prompt, enter this command: `SET CPU=AMD64`
 
-   Then, at the Cross Tools command prompt, enter this command:
-   `SET CPU=AMD64`
-
-3. If compiling on a 64-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Win64 Command Prompt"
+3. 64-bit Windows
+If compiling on a 64-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Win64 Command Prompt"
 
 4. If you require gzip or bzip2 for disk or tape compression, or if you require PCRE for the Hercules Automatic Operator facility, you should install the AMD64 versions of these programs in winbuild\zlib\x64 winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory.
 
@@ -33,9 +28,7 @@ nmake -f makefile-dllmod.msvc
 6. The binaries will be installed into subfolder "msvc.AMD64.bin"
 If you compiled on a 32-bit Windows system, copy this folder to your target 64-bit Windows machine.
 
-7. If you copy the binaries to a machine which does not have Visual
-Studio 2008 (VS9) installed, then you must also install the Microsoft Visual C++ 2008 Redistributable Package (x64) on the target machine. This package can be downloaded from http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
-
+7. If you copy the binaries to a machine which does not have Visual Studio 2008 (VS9) installed, then you must also install the Microsoft Visual C++ 2008 Redistributable Package (x64) on the target machine. This package can be downloaded from http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
 
 ## How to build Hercules for the x64 (AMD64): The Fish "Visual Studio 2008" method
 (which accomplishes virtually the same thing as the above command-line build instructions)
@@ -55,16 +48,10 @@ What follows further below is the usage information that is displayed when you e
 
 Note: As explained in the previous sections, in order to build support for ZLIB and/or BZIP2 compressed dasd files and/or Regular Expression support, you need to also ensure your 64-bit versions of the ZLIB, BZIP2, and/or PCRE development packages should be in an appropriate 'x64' subdirectory beneath their normal package home directory. See the ZLIB_DIR, BZIP2_DIR, and/or PCRE_DIR sections of the README.MSVC document for details.
 
-
-
 ## makefile.bat
+Initializes the Windows software development build envionment and invokes nmake to build the desired 32 or 64-bit version of the Hercules emulator.
 
-
- Initializes the Windows software development build envionment and invokes
- nmake to build the desired 32 or 64-bit version of the Hercules emulator.
-
-
- Format:
+Format:
 
 ```javascript
    makefile.bat  {build-type}  {makefile-name}  {num-cpu-engines}  \
@@ -77,7 +64,8 @@ Note: As explained in the previous sections, in order to build support for ZLIB 
 
  Where:
 
-   {build-type}        The desired build configuration. Valid values are
+```
+{build-type}        The desired build configuration. Valid values are
                        DEBUG / RETAIL for building a 32-bit Hercules, or
                        DEBUG-X64 / RETAIL-X64 to build a 64-bit version
                        of Hercules targeting (favoring) AMD64 processors.
@@ -113,3 +101,4 @@ Note: As explained in the previous sections, in order to build support for ZLIB 
                        option to ensure that a complete rebuild is done.
 
    [{nmake-option}]    Extra nmake option(s).   (e.g. -k, -g, etc...)
+```
