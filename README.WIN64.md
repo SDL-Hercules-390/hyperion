@@ -1,7 +1,6 @@
 # HERCULES FOR WIN64 README FILE
 
-There is only one 64-bit architecture supported by 64-bit Windows: the
-x64 architecture also known as x86_64 (for AMD64 processors).
+There is only one 64-bit architecture supported by 64-bit Windows: the x64 architecture also known as x86_64 (for AMD64 processors).
 
 ## HOW TO COMPILE HERCULES FOR AMD64: command line method
 
@@ -16,17 +15,11 @@ x64 architecture also known as x86_64 (for AMD64 processors).
    Then, at the Cross Tools command prompt, enter this command:
    `SET CPU=AMD64`
 
-3. If compiling on a 64-bit Windows system, go to the start menu and choose
-   "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools"
-   - "Visual Studio 2008 x64 Win64 Command Prompt"
+3. If compiling on a 64-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Win64 Command Prompt"
 
-4. If you require gzip or bzip2 for disk or tape compression, or if you
-   require PCRE for the Hercules Automatic Operator facility, you should
-   install the AMD64 versions of these programs in winbuild\zlib\x64
-   winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory.
+4. If you require gzip or bzip2 for disk or tape compression, or if you require PCRE for the Hercules Automatic Operator facility, you should install the AMD64 versions of these programs in winbuild\zlib\x64 winbuild\bzip2\x64 and winbuild\pcre\x64 under the Hercules directory.
 
-   You can override these default directory locations by simply setting
-   the following environment variables:
+You can override these default directory locations by simply setting the following environment variables:
 
 ```javascript
 SET ZLIB_DIR=c:\packages\zlib
@@ -35,67 +28,32 @@ SET PCRE_DIR=c:\packages\pcre
 ```
 
 5. nmake clean -f makefile-dllmod.msvc
-   nmake -f makefile-dllmod.msvc
+nmake -f makefile-dllmod.msvc
 
 6. The binaries will be installed into subfolder "msvc.AMD64.bin"
-   If you compiled on a 32-bit Windows system, copy this folder
-   to your target 64-bit Windows machine.
+If you compiled on a 32-bit Windows system, copy this folder to your target 64-bit Windows machine.
 
 7. If you copy the binaries to a machine which does not have Visual
-   Studio 2008 (VS9) installed, then you must also install the
-   Microsoft Visual C++ 2008 Redistributable Package (x64)
-   on the target machine. This package can be downloaded from
-   http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
+Studio 2008 (VS9) installed, then you must also install the Microsoft Visual C++ 2008 Redistributable Package (x64) on the target machine. This package can be downloaded from http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
 
 
 ## How to build Hercules for the x64 (AMD64): The Fish "Visual Studio 2008" method
+(which accomplishes virtually the same thing as the above command-line build instructions)
 
-              (which accomplishes virtually the same thing
-              as the above command-line build instructions)
+1. Install Visual Studio 2008.  
+Be sure to select compiler support for "x64" when installing Visual Studio since the Hercules provided Visual Studio Solution expects it.
+2. Open the "Hercules_VS2008.sln" Solution file.
+3. Select your desired Solution Configuration (Debug or Release) and Solution Platform (Win32 or x64) from the appropriate dropdowns.
+4. Click the "Build Solution" or "Rebuild Solution" toolbar button.
 
-
-
-  1. Install Visual Studio 2008.
-
-     Be sure to select compiler support for "x64" when installing Visual
-     Studio since the Hercules provided Visual Studio Solution expects it.
-
-
-  2. Open the "Hercules_VS2008.sln" Solution file.
-
-
-  3. Select your desired Solution Configuration (Debug or Release) and
-     Solution Platform (Win32 or x64) from the appropriate dropdowns.
-
-
-  4. Click the "Build Solution" or "Rebuild Solution" toolbar button.
-
-
-
-  Note: Your 64-bit versions of the ZLIB, BZIP2, and/or PCRE development
-        packages should be in an appropriate 'x64' subdirectory beneath
-        their normal package home directory. See the ZLIB_DIR, BZIP2_DIR,
-        and/or PCRE_DIR sections of the README.MSVC document for details.
-
-
+Note: Your 64-bit versions of the ZLIB, BZIP2, and/or PCRE development packages should be in an appropriate 'x64' subdirectory beneath their normal package home directory. See the ZLIB_DIR, BZIP2_DIR, and/or PCRE_DIR sections of the README.MSVC document for details.
 
 ##  Building Hercules from the command-line via the "makefile.bat" Windows batch file.
+The Hercules "makefile.bat" makes it trivially easy to build Hercules from the command-line on Windows.  In fact, the Visual Studio "project" files included with Hercules are setup to simply invoke the Hercules "makefile.bat" with default build parameters.  (see previous section immediately above)
 
+What follows further below is the usage information that is displayed when you enter the "makefile.bat" command with no arguments.
 
-The Hercules "makefile.bat" makes it trivially easy to build Hercules from
-the command-line on Windows.  In fact, the Visual Studio "project" files
-included with Hercules are setup to simply invoke the Hercules "makefile.bat"
-with default build parameters.  (see previous section immediately above)
-
-What follows further below is the usage information that is displayed when
-you enter the "makefile.bat" command with no arguments.
-
-Note: As explained in the previous sections, in order to build support for
-ZLIB and/or BZIP2 compressed dasd files and/or Regular Expression support,
-you need to also ensure your 64-bit versions of the ZLIB, BZIP2, and/or
-PCRE development packages should be in an appropriate 'x64' subdirectory
-beneath their normal package home directory. See the ZLIB_DIR, BZIP2_DIR,
-and/or PCRE_DIR sections of the README.MSVC document for details.
+Note: As explained in the previous sections, in order to build support for ZLIB and/or BZIP2 compressed dasd files and/or Regular Expression support, you need to also ensure your 64-bit versions of the ZLIB, BZIP2, and/or PCRE development packages should be in an appropriate 'x64' subdirectory beneath their normal package home directory. See the ZLIB_DIR, BZIP2_DIR, and/or PCRE_DIR sections of the README.MSVC document for details.
 
 
 
