@@ -1,4 +1,16 @@
-## Unresolved Issues
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
+
+# Unresolved Issues
+## Contents
+1. [About](#About)
+2. [Tape Device Handler](#Tape-Device-Handler)
+3. [I/O Subsystem](#I/O-Subsystem)
+3. [Device Handlers](#Device-Handlers)
+3. [Hardware Panel](#Hardware Panel)
+
+
+## About
 For a current list of known issues refer to the [GitHub Issues web page](https://github.com/issues?q=is%3Aopen+is%3Aissue+user%3ASDL-Hercules-390+).
 
 ## XXX - Marks the functional subsystem affected
@@ -22,6 +34,6 @@ The I/O subsystem reset function does not actually send a reset signal (as descr
 ### Some units still returning CE+DE+UC on not-ready conditions (Ivan 2004/10/02)
 I/O architecture requires non-ready units to return UC only. This is done at the device handler lever and has not been implemented in all device handlers
 
-## Hardware panel
+## Hardware Panel
 ### Change to Enter key function (Ivan 2004/10/02)
 Pressing enter while in single step mode used to be the equivalent of pressing the start button (which was quite handy for debugging). It now displays the last commands typed. Instead, 'start' must be typed every time to execute the next instruction.
