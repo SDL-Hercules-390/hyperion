@@ -1,4 +1,4 @@
-![test image](images/image_header_herculeshyperionSDL.png)
+![test image](/readme/images/image_header_herculeshyperionSDL.png)
 [Return to master README.MD](/README.md)
 
 # LOW-LEVEL TEST CASES
