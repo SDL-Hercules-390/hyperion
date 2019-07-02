@@ -43,7 +43,13 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 
 ### Features
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
-[Hercules Automatic Operator](readme/README.HAO.md)
-[Hercules Dynamic Loader](readme/README.HDL.md)
-[Customizable Hercules 3270 Logo](readme/README.HERCLOGO.md)
-[Host Resource Access Facility](readme/README.HRAF.md)
+[Hercules Automatic Operator](readme/README.HAO.md)  
+[Hercules Dynamic Loader](readme/README.HDL.md)  
+[Customizable Hercules 3270 Logo](readme/README.HERCLOGO.md)  
+[Host Resource Access Facility](readme/README.HRAF.md)  
+
+### Hercules Architecture
+[Hercules Input/Output Architecture](readme/README.IOARCH.md)  
+
+### Issues
+[Unresolved Issues](readme/README.ISSUES.md)  
