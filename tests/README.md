@@ -1,54 +1,38 @@
-========================================================================
-                       LOW-LEVEL TEST CASES
-========================================================================
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
 
-This directory contains test cases that are run by Hercules console
-commands.  High-level test cases are run under an operating system, for
-example OS/j.
+# LOW-LEVEL TEST CASES
+## Contents
+1. [About](#About)
+2. ["runtest" shell script](#"runtest"-shell-script)
+3. [.tst file runtest command](#.tst-file-runtest-command)
+4. [.tst file directives](#.tst-file-directives)
+5. [Predefined variables](#Predefined-variables)
+6. [Creating test files that can run on z/CMS as well as under Hercules](#Creating-test-files-that-can-run-on-z/CMS-as-well-as-under-Hercules)
 
-Test cases are run after Hyperion has been built, but before it is
-installed.  "make check" runs the entire regression test reference.
 
-With current Hyperion as of 2016-06-06, there are no longer any special
-considerations for testing crypto.
 
-A test case is run stand-alone under hercules from a script specified
-with the -r flag.  The script first sets up a program in core storage
-either by the r console command or by loading a core image by loadcore.
-It then issues the runtest command to start Hercules by a restart
-interrupt, the restart new PSW having been set up in the previous step.
-The script regains control when all CPUs have entered the stopped state.
-The remainder of the script inspects storage, registers, etc., to
-display data that are later inspected.  The session log is then
-processed to check the results against known good values.
+## About
+
+This directory contains test cases that are run by Hercules console commands.  High-level test cases are run under an operating system, for example OS/j.
+
+Test cases are run after Hyperion has been built, but before it is installed.  "make check" runs the entire regression test reference.
+
+With current Hyperion as of 2016-06-06, there are no longer any special considerations for testing crypto.
+
+A test case is run stand-alone under hercules from a script specified with the -r flag.  The script first sets up a program in core storage either by the r console command or by loading a core image by loadcore. It then issues the runtest command to start Hercules by a restart interrupt, the restart new PSW having been set up in the previous step. The script regains control when all CPUs have entered the stopped state. The remainder of the script inspects storage, registers, etc., to display data that are later inspected.  The session log is then processed to check the results against known good values.
 
 You can create test cases in several ways:
 
-*     Entirely by hand using only a text editor.  Many test cases have
-      been built this way, but this usage has been superseded by use of
-      an assembler that can generate core images directly.
+* Entirely by hand using only a text editor.  Many test cases have been built this way, but this usage has been superseded by use of an assembler that can generate core images directly.
 
-*     By using SATK's ASMA, which is an assembler that implements a
-      subset of HLASM's functionality, but has the ability to generate a
-      core image directly.  Thus no post processing is required.
-      Typically, you will write by hand a .tst file to load the .core
-      file and do whatever is required.
+* By using SATK's ASMA, which is an assembler that implements a subset of HLASM's functionality, but has the ability to generate a core image directly.  Thus no post processing is required. Typically, you will write by hand a .tst file to load the .core file and do whatever is required.
 
-*     By a real /360 assembler, such as IFOX or HLASM.  The object deck
-      is converted to r console commands or a core file.  This offers
-      the full assembly language with a powerful macro capability, but
-      at the expense of some post processing.
+* By a real /360 assembler, such as IFOX or HLASM.  The object deck is converted to r console commands or a core file.  This offers the full assembly language with a powerful macro capability, but at the expense of some post processing.
 
-Validating the test case (specifying the desired results; the oracle in
-testing parlance) is the most difficult step if you do not have access
-to z/CMS.  There may be ambiguities in the PoO or, perhaps more likely,
-you may misinterpret the manual.  As IBM do not publish the suite the
-developers use to validate a new CPU model, you will need to find a
-friend who has access to "real iron".  This real iron could be z/PDT.
+Validating the test case (specifying the desired results; the oracle in testing parlance) is the most difficult step if you do not have access to z/CMS.  There may be ambiguities in the PoO or, perhaps more likely, you may misinterpret the manual.  As IBM do not publish the suite the developers use to validate a new CPU model, you will need to find a friend who has access to "real iron".  This real iron could be z/PDT.
 
-There are two routes to obtaining an object module and validation script
-for z/CMS:  From an ASSEMBLE file using an assembler or from a .tst file
-by the cvttst.rexx utility (very much still in the development phase).
+There are two routes to obtaining an object module and validation script for z/CMS:  From an ASSEMBLE file using an assembler or from a .tst file by the cvttst.rexx utility (very much still in the development phase).
 
 By convention, the following file type extensions are used.
 
@@ -158,8 +142,7 @@ be created by many means; one of them is ASMA as described above.
 
 
 
-"runtest" shell script
-----------------------
+## "runtest" shell script
 
 The "runtest" UNIX shell script ("runtest.cmd" batch file on Windows)
 is used to run one or more (usually all) automated .tst scripts to
@@ -201,61 +184,46 @@ The tail end of an early sample output is:
 
 The Linux runtest shell script accepts these flags:
 
--d <word>
-Specify the path to the test directory.  The default is ${dirname $0},
-perhaps ../hyperion/tests
+-d <word>  
+Specify the path to the test directory.  The default is ${dirname $0}, perhaps ../hyperion/tests
 
--e <word>
-Specify the default extension for the input test files.  tst is the
-default.  The -e flag is active for all -f flags until the next -e flag,
-if any.
+-e <word>  
+Specify the default extension for the input test files.  tst is the default.  The -e flag is active for all -f flags until the next -e flag, if any.
 
--f <word>
-Specify the input file name perhaps including an extension.  The default
-is "-f *.tst" to get the current behaviour.  Multiple -f flags are
-supported.  The default extension is appended if the word does not
-contain a period.
+-f <word>  
+Specify the input file name perhaps including an extension.  The default is `-f *.tst` to get the current behaviour.  Multiple -f flags are supported.  The default extension is appended if the word does not contain a period.
 
--h <word>
+-h <word>  
 Specify the object directory that contains the hercules executable.  The
 default is parent of -d if there is no hercules executable in the
 current directory (that is, in-source build).
 
--l <word>
-Specify the name of a module to load dynamically into hercules.  This is
-passed to Hercules.
+-l <word>  
+Specify the name of a module to load dynamically into hercules.  This is passed to Hercules.
 
--p <word>
-Specify the library path for loadable modules, i.e., device managers.
-This is passed to Hercules.
+-p <word>  
+Specify the library path for loadable modules, i.e., device managers. This is passed to Hercules.
 
--q
+-q  
 Pass "quiet" to redtest to suppress details about test cases.
 
--r <number>
-Repeat the composite test script n times.  There is no need to specify
--x as hercules terminates without an explicit quit when in daemon mode.
+-r <number>  
+Repeat the composite test script n times.  There is no need to specify -x as hercules terminates without an explicit quit when in daemon mode.
 
--t <number>
+-t <number>  
 Passed to hercules (timeout factor)
 
--v <word>
-Set variable for redtest.rexx (in fact, arguments to redtest.rexx).  Use
--v ptrsize=4 when running a 32 bit executable on an 8 bit system if no
-valid config.h can be found. You can also set private variables this way
-(but such variables will be unset when running "make check").  Variable
-names are case insensitive but their values are not. -v quiet will make
-redtest more terse.
+-v <word>  
+Set variable for redtest.rexx (in fact, arguments to redtest.rexx).  Use `-v ptrsize=4` when running a 32 bit executable on an 8 bit system if no valid config.h can be found. You can also set private variables this way (but such variables will be unset when running "make check").  Variable names are case insensitive but their values are not. `-v quiet` will make redtest more terse.
 
--w <word>
+-w <word>  
 Specify the work file name.  The default is allTests.
 
--x
+-x  
 Do not append the quit command to the composite test script.
 
 
-.tst file runtest command
--------------------------
+## .tst file runtest command
 
 The test a .tst script defines is normally begun via a special runtest
 script command which supports optional arguments indicating how the
@@ -263,9 +231,10 @@ test should be started as well as the maximum amount of time it should
 run. Unlike the 'pause' command, 'runtest' waits only until all CPUs
 are in the stopped state.
 
-      runtest   [restart|start|<oldpsw>]   [timeout]   [# comment...]
-
-      <oldpsw> ::= external | svc | program | machine | io
+```
+runtest   [restart|start|<oldpsw>]   [timeout]   [# comment...]
+<oldpsw> ::= external | svc | program | machine | io
+```
 
 The first argument is optional.  If specified, it must be either
 "restart", "start", or an interrupt type.  It specifies how the test
@@ -297,9 +266,7 @@ well as several of the below .tst file directives to verify the test
 case ran correctly.
 
 
-.tst file directives
---------------------
-
+## .tst file directives
 .tst files are executed as Hercules .rc files, so they contain Hercules
 console commands.
 
@@ -307,6 +274,7 @@ A number of "loud" comments (without a blank immediately following it)
 are interpretted by redtest.rexx as directives.  All testing directives
 are case sensitive.  Using "*testcase" for example accomplishes nothing.
 
+```
 *           Hercules "loud" comment.  There must be a blank after the
             asterisk for it to be ignored.  If it is not followed by a
             blank it will interpretted as a test directive.
@@ -322,7 +290,7 @@ are case sensitive.  Using "*testcase" for example accomplishes nothing.
 
 *Want       The expected r command output.  A string identifying the
             comparison may be enclosed in double quotes before the
-            compare data (e.g. '*Want "CRC-32" DF00E74C')
+            compare data (e.g. `*Want "CRC-32" DF00E74C`)
 
 *Gpr        A previous gpr console command should have been issued to
             display the general registers.  The specified register is
@@ -391,14 +359,14 @@ are case sensitive.  Using "*testcase" for example accomplishes nothing.
             tests just console commands without running any code.
 
 *Timeout    A timeout is expected.  Do not use.
+```
 
 logicimm.tst shows examples of all directives, except *Key, *Prefix,
 and *Program; see sske.tst for an example of *Key and *Program.  See
 pr.tst for *Prefix.  See mainsize.tst for conditional processing.
 
 
-Predefined variables
---------------------
+## Predefined variables
 
 Predefined variables are specified as arguments to redtest.rexx as well
 as being extracted from the HHC01417I features messages.  The runtest
@@ -486,6 +454,7 @@ The current list of pre-defined runtime variables are as follows:
 
 Examples of if/else variable usage:
 
+```
   mainsize 2147483648b
   *If $ptrsize = 4
       *Error 1 HHC01430S Error in function configure_storage(2G): Cannot allocate memory
@@ -514,15 +483,12 @@ Examples of if/else variable usage:
           ...(do test here)...
       *Fi
   *Fi
+```
 
-
-Creating test files that can run on z/CMS as well as under Hercules
+## Creating test files that can run on z/CMS as well as under Hercules
 -------------------------------------------------------------------
 
-Running a test case on z/CMS is accomplished by DOTEST EXEC.  It merges
-the object deck for the test case with a pipeline program that
-interprets the runtest directives, which are extracted from the objeck
-deck.
+Running a test case on z/CMS is accomplished by DOTEST EXEC.  It merges the object deck for the test case with a pipeline program that interprets the runtest directives, which are extracted from the object deck.
 
 A test case to run on z/CMS can be generated in two ways:
 
@@ -577,10 +543,12 @@ hand-built tst script:
 Here is an example of how to code a dual-path return in an assembler
 program:
 
- ltr 14,14     Have a return address?
+```
+ltr 14,14     Have a return address?
  bnzr 14       return if so
  LPSWE WAITPSW     Load wait PSW
 WAITPSW dc x'0002000180000000',ad(0) OK wait state PSW
+```
 
 Some programs contain a series of tests where the CPU is stopped after
 each test.  This should be emulated by a branch back using GPR14, having
@@ -588,6 +556,7 @@ stored the resume address in the SVC old PSW.  This applies only to
 tests that are assembled from assembler source; cvttst.rexx knows how to
 deal with loading a disabled PSW.
 
+```
 swap equ * entry by bas 9,swap
  ltr 14,14  Running on CMS?
  jz bare
@@ -599,6 +568,7 @@ swap equ * entry by bas 9,swap
 bare equ *
  svc 255  We are in problem state
  br 9
+```
 
 The test cases are TEXT decks on CMS.  When the .tst script is built from
 assembler source, the object deck is a by product; it should be uploaded
