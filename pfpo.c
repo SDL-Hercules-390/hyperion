@@ -4,48 +4,31 @@
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
- 
+
 /*              (c) Copyright Bernard van der Helm, 2009-2011        */
 /*              Noordwijkerhout, The Netherlands                     */
- 
+
 /*-------------------------------------------------------------------*/
 /* This module implements the Perform Floating Point Operation       */
 /* instruction described in the manual SA22-7832-05.                 */
 /*-------------------------------------------------------------------*/
- 
+
 #include "hstdinc.h"
- 
-#if !defined(_HENGINE_DLL_)
+
 #define _HENGINE_DLL_
-#endif
-#if !defined(_PFPO_C_)
 #define _PFPO_C_
-#endif
- 
+
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
- 
+
 #include "decimal128.h"
 #include "decimal64.h"
 #include "decimal32.h"
 #include "decPacked.h"
- 
- 
-#if defined(FEATURE_044_PFPO_FACILITY)
- 
-#define CLASS_ZERO      1
-#define CLASS_SUBNORMAL 2
-#define CLASS_INFINITY  3
-#define CLASS_QNAN      4
-#define CLASS_SNAN      5
-#define CLASS_NORMAL    6
- 
-#define INFINITYSTR     "Infinity"
-#define QNANSTR         "NaN"
-#define SNANSTR         "sNaN"
- 
- 
+
+#if defined( FEATURE_044_PFPO_FACILITY )
+
 const uint16_t DPD2BIN[1024]={    0,    1,    2,    3,    4,    5,    6,    7,
     8,    9,   80,   81,  800,  801,  880,  881,   10,   11,   12,   13,   14,
    15,   16,   17,   18,   19,   90,   91,  810,  811,  890,  891,   20,   21,
@@ -126,18 +109,18 @@ const uint16_t DPD2BIN[1024]={    0,    1,    2,    3,    4,    5,    6,    7,
   764,  765,  766,  767,  768,  769,  786,  787,  966,  967,  988,  989,  770,
   771,  772,  773,  774,  775,  776,  777,  778,  779,  796,  797,  976,  977,
   998,  999};
- 
+
 const uint16_t BIN2DPD[1000]={
      0,    1,    2,    3,    4,    5,    6,    7,    8,    9,
-  16,   17,   18,   19,   20,   21,   22,   23,   24,   25,
-  32,   33,   34,   35,   36,   37,   38,   39,   40,   41,
-  48,   49,   50,   51,   52,   53,   54,   55,   56,   57,
-  64,   65,   66,   67,   68,   69,   70,   71,   72,   73,
-  80,   81,   82,   83,   84,   85,   86,   87,   88,   89,
+    16,   17,   18,   19,   20,   21,   22,   23,   24,   25,
+    32,   33,   34,   35,   36,   37,   38,   39,   40,   41,
+    48,   49,   50,   51,   52,   53,   54,   55,   56,   57,
+    64,   65,   66,   67,   68,   69,   70,   71,   72,   73,
+    80,   81,   82,   83,   84,   85,   86,   87,   88,   89,
     96,   97,   98,   99,  100,  101,  102,  103,  104,  105,
    112,  113,  114,  115,  116,  117,  118,  119,  120,  121,
     10,   11,   42,   43,   74,   75,  106,  107,   78,   79,
-  26,   27,   58,   59,   90,   91,  122,  123,   94,   95,
+    26,   27,   58,   59,   90,   91,  122,  123,   94,   95,
    128,  129,  130,  131,  132,  133,  134,  135,  136,  137,
    144,  145,  146,  147,  148,  149,  150,  151,  152,  153,
    160,  161,  162,  163,  164,  165,  166,  167,  168,  169,
@@ -205,19 +188,19 @@ const uint16_t BIN2DPD[1000]={
    960,  961,  962,  963,  964,  965,  966,  967,  968,  969,
    976,  977,  978,  979,  980,  981,  982,  983,  984,  985,
    992,  993,  994,  995,  996,  997,  998,  999, 1000, 1001,
-   1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017,
+  1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017,
    906,  907,  938,  939,  970,  971, 1002, 1003,  974,  975,
    922,  923,  954,  955,  986,  987, 1018, 1019,  990,  991,
-   12,   13,  268,  269,  524,  525,  780,  781,   46,   47,
-   28,   29,  284,  285,  540,  541,  796,  797,   62,   63,
-   44,   45,  300,  301,  556,  557,  812,  813,  302,  303,
-   60,   61,  316,  317,  572,  573,  828,  829,  318,  319,
-   76,   77,  332,  333,  588,  589,  844,  845,  558,  559,
-   92,   93,  348,  349,  604,  605,  860,  861,  574,  575,
+    12,   13,  268,  269,  524,  525,  780,  781,   46,   47,
+    28,   29,  284,  285,  540,  541,  796,  797,   62,   63,
+    44,   45,  300,  301,  556,  557,  812,  813,  302,  303,
+    60,   61,  316,  317,  572,  573,  828,  829,  318,  319,
+    76,   77,  332,  333,  588,  589,  844,  845,  558,  559,
+    92,   93,  348,  349,  604,  605,  860,  861,  574,  575,
    108,  109,  364,  365,  620,  621,  876,  877,  814,  815,
    124,  125,  380,  381,  636,  637,  892,  893,  830,  831,
-   14,   15,  270,  271,  526,  527,  782,  783,  110,  111,
-   30,   31,  286,  287,  542,  543,  798,  799,  126,  127,
+    14,   15,  270,  271,  526,  527,  782,  783,  110,  111,
+    30,   31,  286,  287,  542,  543,  798,  799,  126,  127,
    140,  141,  396,  397,  652,  653,  908,  909,  174,  175,
    156,  157,  412,  413,  668,  669,  924,  925,  190,  191,
    172,  173,  428,  429,  684,  685,  940,  941,  430,  431,
@@ -228,21 +211,21 @@ const uint16_t BIN2DPD[1000]={
    252,  253,  508,  509,  764,  765, 1020, 1021,  958,  959,
    142,  143,  398,  399,  654,  655,  910,  911,  238,  239,
    158,  159,  414,  415,  670,  671,  926,  927,  254,  255};
- 
-const int hflmaxdigit[5] = {0,6,14,0,28};
-const int dflmaxdigit[5] = {0,7,16,0,34};
-const int bflmaxdigit[5] = {0,23,52,0,112};
-const int dflsigbits[5] = {0,20,18,0,14};
-const int dflrbebits[5] = {0,6,8,0,12};
-const int dflexpmax[5] = {0,101,398,0,6176};
-const int dflrbefac[5] = {0,64,256,0,4096};
-const int bflexpbits[5] = {0,9,12,0,16};
-const int bflexpbias[5] = {0,127,1023,0,16383};
-const int bflexpmax[5] = { 0,255,2047,0,32767 };
-#define ARRAYMAX 7
-#define ARRAYPAD 3
-#define ARRAYTABSIZE ARRAYMAX*sizeof(long long)
- 
+
+const int  hflmaxdigit [5] = { 0,   6,   14, 0,    28 };
+const int  dflmaxdigit [5] = { 0,   7,   16, 0,    34 };
+const int  bflmaxdigit [5] = { 0,  23,   52, 0,   112 };
+const int  dflsigbits  [5] = { 0,  20,   18, 0,    14 };
+const int  dflrbebits  [5] = { 0,   6,    8, 0,    12 };
+const int  dflexpmax   [5] = { 0, 101,  398, 0,  6176 };
+const int  dflrbefac   [5] = { 0,  64,  256, 0,  4096 };
+const int  bflexpbits  [5] = { 0,   9,   12, 0,    16 };
+const int  bflexpbias  [5] = { 0, 127, 1023, 0, 16383 };
+const int  bflexpmax   [5] = { 0, 255, 2047, 0, 32767 };
+
+#define ARRAYMAX    7
+#define ARRAYPAD    3
+
 /***************************************************************/
 /*   arraydiv:  Divide an array of integer values by a single  */
 /*              integer value.  This is essentially using long */
@@ -274,7 +257,7 @@ void arraydiv(unsigned int *ltab,int divisor,int ntab,unsigned int *rem)
   *rem = (unsigned int)temp1;
   return;
 }
- 
+
 /***************************************************************/
 /*   arrayadd:  Add an array of integer values to another array*/
 /*              of integer values.  The integers are stored as */
@@ -306,7 +289,7 @@ void arrayadd(unsigned int *tab1,unsigned int *tab2,int ntab1, int ntab2)
   tab1[0] += (unsigned int)carry;
   return;
 }
- 
+
 /***************************************************************/
 /*   arrayaddint:  Add an integer value to an array of integer */
 /*                 values.  The array is stored as long longs  */
@@ -337,7 +320,7 @@ void arrayaddint(unsigned int *tab1,int incr,int ntab)
   tab1[0] += (unsigned int)carry;
   return;
 }
- 
+
 /***************************************************************/
 /*   arraymlt:  Multiply an array of integer values by a single*/
 /*              integer value.  This is done using long        */
@@ -362,7 +345,7 @@ void arraymlt(unsigned int *ltab,int mult,int ntab)
   ltab[0] += (unsigned int)carry;
   return;
 }
- 
+
 /***************************************************************/
 /*   arrayshiftright:  Shift an array of integers a specified  */
 /*              number of bits.                                */
@@ -405,7 +388,7 @@ void arrayshiftright(unsigned int *ltab,int ntab,int shift, unsigned int *remtab
   }
   return;
 }
- 
+
 /***************************************************************/
 /*   arrayshiftleft:   Shift an array of integers a specified  */
 /*              number of bits.                                */
@@ -441,7 +424,7 @@ void arrayshiftleft(unsigned int *ltab,int ntab,int shift)
   }
   return;
 }
- 
+
 /***************************************************************/
 /*   dflexp:  Extract the exponent value for a decfloat number.*/
 /***************************************************************/
@@ -469,7 +452,7 @@ int dflexp(int expword,int *lmdrtn,int dflwords)
   *lmdrtn = lmd;
   return exp;
 }
- 
+
 int getlzerobits(unsigned int *ltab, int ntab)
 {
   int bitctr = 0;
@@ -598,7 +581,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
           cc = 2;
         else
           cc = -7;
-          
+
       }
       else
       {
@@ -753,18 +736,18 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
         bfltab[3] = 0;
         break;
       }
-      
+
       *FPC |= 0x00200000;
       cc = 2;
-    } 
+    }
   }
   else
     if (bexp < 0)
-    { 
+    {
       switch (bflnum)
       {
       case 1:
-        shiftmax = 22;      
+        shiftmax = 22;
         break;
       case 2:
         shiftmax = 51;
@@ -822,11 +805,11 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
         memset(bfltab, 0x00, sizeof(int) * bflnum);
         *FPC |= 0x00180000;
         cc = 2;
-      }   
+      }
     }
   return cc;
 }
- 
+
 /***************************************************************/
 /*   dfl2hfl:  Convert a decfloat value to hexfloat            */
 /***************************************************************/
@@ -839,7 +822,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   unsigned int wrk[ARRAYMAX];
   unsigned int remtab[ARRAYMAX];
   unsigned char decwork[6210];
-  unsigned int rem; 
+  unsigned int rem;
   unsigned char binzero[ARRAYMAX * sizeof(int)];
   long long wk;
   int decnum;
@@ -869,22 +852,23 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int expword;
   //  the following table is used to reverse the bits in a byte.  This is needed
   //  for nan processing
-  unsigned int bittab1[256] = { 0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
-                  0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
-                  0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
-                  0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
-                  0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
-                  0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
-                  0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
-                  0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
-                  0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
-                  0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
-                  0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
-                  0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
-                  0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
-                  0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
-                  0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
-                  0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff };
+  unsigned int bittab1[256] = {
+    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff };
   int power10tab[8] = { 1,10,100,1000,10000,100000,1000000, 10000000 };
   int power10;
   int pidx;
@@ -1041,7 +1025,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   memset(hfl,0x00,sizeof(hfl));
   memset(decwork,0x00,sizeof(decwork));
   decctr = 0;
-  fac10 = 0; 
+  fac10 = 0;
   hexp = 0;
   bexp = 0;
   dexp = exp;
@@ -1280,7 +1264,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
         }
       }
       else
-        mid = 0; 
+        mid = 0;
       roundarray(hfl, ARRAYMAX, roundrule, rem, 16, neg, 0, mid);
       remtab[rx] = 0;
       hexp += shiftamt / 4;
@@ -1339,7 +1323,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     wk = hexp << 24;
     if (hexp <= 127 && hexp >= 0)
       hfl[0] += wk;
-    
+
   }
   for (i = 0;i < hflwords;i++)
     hfltab[i] = (unsigned int)hfl[i];
@@ -1380,7 +1364,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     hfltab[0] |= 0x80000000;
   return cc;
 }
- 
+
 /***************************************************************/
 /*   hfldhfl:  Convert a hexfloat value to decfloat            */
 /***************************************************************/
@@ -1418,22 +1402,23 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
   int nan = 0;
   //  the following table is used to reverse the bits in a nibble.  This is needed
   //  for nan processing
-  unsigned int bittab1[256] = { 0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
-                  0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
-                  0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
-                  0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
-                  0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
-                  0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
-                  0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
-                  0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
-                  0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
-                  0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
-                  0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
-                  0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
-                  0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
-                  0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
-                  0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
-                  0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff };
+  unsigned int bittab1[256] = {
+    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff };
   int power10tab[8] = { 1,10,100,1000,10000,100000,1000000, 10000000};
   int hexdigittab[6] = { 0, 2, 3, 4, 5, 7 };
   int power10;
@@ -1847,7 +1832,7 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
   }
   return cc;
 }
- 
+
 /***************************************************************/
 /*   convert hex float to binary (IEEE) float.                 */
 /***************************************************************/
@@ -2052,7 +2037,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
   unsigned int temptab1[6];
   unsigned int remtab[4];
   int hexp;
-  int bexpbias; 
+  int bexpbias;
   int hexp2;
   int bexp = 0;
   int bexpround;
@@ -2238,13 +2223,13 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
     tabout[0] |= 0x80000000;
   return cc;
 }
- 
+
 /*-------------------------------------------------------------------*/
 /* 010A PFPO  - Perform Floating Point Operation                 [E] */
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_floating_point_operation)
 {
-  S64 gr0;  
+  S64 gr0;
   unsigned int ftab[4];
   unsigned int tabout[4];
   int numout = 0;
@@ -2256,14 +2241,14 @@ DEF_INST(perform_floating_point_operation)
   unsigned char ccbits;
   int i0,i2,i4,i6;
   char creg0[8];
- 
+
   i0 = FPR2I(0);
   i2 = FPR2I(2);
   i4 = FPR2I(4);
   i6 = FPR2I(6);
- 
+
     E(inst, regs);
- 
+
    gr0 = (S64)regs->GR_G(0);
    FPC = regs->fpc;
    FPC &= 0xffff00ff;
@@ -2371,7 +2356,7 @@ DEF_INST(perform_floating_point_operation)
    if (creg0[3] & 0x80)
    {
      regs->psw.cc = 0;
-     return; 
+     return;
    }
    switch (opcode)
    {
@@ -2638,22 +2623,22 @@ DEF_INST(perform_floating_point_operation)
      regs->fpc = FPC;
      ARCH_DEP(program_interrupt)(regs, PGM_DATA_EXCEPTION);
    }
- 
+
 } /* end DEF_INST(perform_floating_point_operation) */
- 
-#endif /*defined(FEATURE_PFPO)*/
- 
-#if !defined(_GEN_ARCH)
- 
-#if defined(_ARCH_NUM_1)
-#define  _GEN_ARCH _ARCH_NUM_1
-#include "pfpo.c"
-#endif
- 
-#if defined(_ARCH_NUM_2)
-#undef   _GEN_ARCH
-#define  _GEN_ARCH _ARCH_NUM_2
-#include "pfpo.c"
-#endif
- 
-#endif /*!defined(_GEN_ARCH)*/
+
+#endif /* defined( FEATURE_044_PFPO_FACILITY ) */
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "pfpo.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "pfpo.c"
+  #endif
+
+#endif /* !defined( _GEN_ARCH ) */
