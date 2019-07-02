@@ -3231,11 +3231,44 @@ size_t                  logoheight;     /* Logo file number of lines */
 } /* end function connect_client */
 
 /*-------------------------------------------------------------------*/
+/*        Automatic pselect timeout adjustment for IND$FILE          */
+/*-------------------------------------------------------------------*/
+
+struct timespec     slowpoll    = { 0, 100000000 };         /* 100ms */
+struct timespec     fastpoll    = { 0,   1000000 };         /*   1ms */
+struct timespec*    timeout     = &slowpoll;       /* default = slow */
+
+struct timeval  previo = {0,0};              /* TOD of last read I/O */
+struct timeval  currio, diffio;              /* Work variables       */
+
+static void calcto()    // (calculate timeout)
+{
+    struct timespec* prev_timeout = timeout;
+    gettimeofday( &currio, NULL );
+    timeval_subtract( &previo, &currio, &diffio );
+    timeout = (diffio.tv_sec  > 0 || diffio.tv_usec > 100000) ?
+        &slowpoll : &fastpoll;
+    if (timeout != prev_timeout)
+        WRMSG( HHC02917, "I", &slowpoll == prev_timeout ?
+            "slow to FAST" : "FAST to slow" );
+}
+
+static void consio()    // (console read)
+{
+    calcto();
+    memcpy( &previo, &currio, sizeof( struct timeval ));
+}
+
+static void consto()    // (select timeout)
+{
+    calcto();
+}
+
+/*-------------------------------------------------------------------*/
 /*        CONSOLE CONNECTION AND ATTENTION HANDLER THREAD            */
 /*-------------------------------------------------------------------*/
 static void* console_connection_handler( void* arg )
 {
-static const struct timespec tv_10us = {0, 000010000};  /* FAST poll */
 int                    rc = 0;          /* Return code               */
 int                    lsock;           /* Socket for listening      */
 int                    csock;           /* Socket for conversation   */
@@ -3447,7 +3480,7 @@ int prev_rlen3270;
          * interrupt mask instead which should be functionally equivalent
          * to select() anyway.
          */
-        rc = pselect( maxfd+1, &readset, NULL, NULL, &tv_10us, NULL );
+        rc = pselect( maxfd+1, &readset, NULL, NULL, timeout, NULL );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
@@ -3455,6 +3488,13 @@ int prev_rlen3270;
         /* Check for thread exit condition */
         if (console_cnslcnt <= 0)
             break;
+
+        /* Check for select timeout */
+        if (rc == 0)
+        {
+            consto();
+            continue;
+        }
 
         /* Log pselect error */
         if (rc < 0 )
@@ -3660,6 +3700,8 @@ int prev_rlen3270;
                     release_lock( &dev->lock );
                     continue;
                 }
+
+                consio();
 
                 /* Receive console input data from the client */
                 if ((dev->devtype == 0x3270) ||

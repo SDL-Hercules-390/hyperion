@@ -2176,7 +2176,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02914 "%s COMM: %s negotiations complete; ttype = '%s'"
 #define HHC02915 "%s COMM: Connection received"
 #define HHC02916 "%s COMM: No acceptable terminal types"
-//efine HHC02917 - HHC02949 (available)
+#define HHC02917 "COMM: Switching from %s polling"
+//efine HHC02918 - HHC02949 (available)
 
 // convto64
 #define HHC02950 "Usage: %s [-r] [-c] [-q] [-v] infile outfile"             "\n" \
