@@ -1,31 +1,32 @@
-HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
 
-1. DOWNLOAD AND INSTALL THE GNU COMPILER AND TOOLS
+# How to build Hercules from SVN under Solaris
+## Contents
+1. [1. Download and Install](#1. Download-and-Install)
+2. [2. Download the Hercules source from SVN](#2. Download-the-Hercules-source-from-SVN)
+3. [ToDo](#ToDo)
 
-  (a) You can obtain all the required tools from
-      http://www.sunfreeware.com
+## 1. Download and Install
+DOWNLOAD AND INSTALL THE GNU COMPILER AND TOOLS
 
-      To download the tools you will need wget which is
-      installed in /usr/sfw/bin on Solaris 9 and 10.
+(a) You can obtain all the required tools from http://www.sunfreeware.com
 
-      First add this directory to your path using the command:
-      PATH=${PATH}:/usr/sfw/bin
+To download the tools you will need wget which is installed in /usr/sfw/bin on Solaris 9 and 10.
+First add this directory to your path using the command:
+    PATH=${PATH}:/usr/sfw/bin
 
-  (b) Follow instructions on http://www.blastwave.org/pkg-get.php
-      to install the pkg-get package.
-      Choose /opt/csw as the package base directory.
+(b) Follow instructions on http://www.blastwave.org/pkg-get.php to install the pkg-get package.  
+Choose /opt/csw as the package base directory.
 
-      Choose a local mirror site from the list at
-      http://www.blastwave.org/mirrors.html
-      and update /opt/csw/etc/pkg-get.conf to point to the /stable
-      directory at the mirror site, for example:
+Choose a local mirror site from the list at http://www.blastwave.org/mirrors.html and update /opt/csw/etc/pkg-get.conf to point to the /stable directory at the mirror site, for example:
       url=http://blastwave.informatik.uni-erlangen.de/csw/stable
 
-      Add /opt/csw/bin to your path using the command:
+Add /opt/csw/bin to your path using the command:
       PATH=/opt/csw/bin:${PATH}
 
-  (c) Then install the GNU compiler and tools using these commands:
-
+(c) Then install the GNU compiler and tools using these commands:
+```
       pkg-get install textutils
       pkg-get install automake
       pkg-get install autoconf
@@ -34,14 +35,16 @@ HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
       pkg-get install gmake
       pkg-get install ggrep
       pkg-get install gcc3
+```
 
-  (d) Check that all the required tools are installed:
-
+(d) Check that all the required tools are installed:
+```
       pkg-get compare subversion autoconf automake flex gawk gcc3
       pkg-get compare ggettext ggrep libiconv gm4 gmake perl gsed
-
+```
       which should produce output something like this:
 
+```
        software                    localrev                   remoterev
      subversion        1.4.5,REV=2007.11.18                        SAME
        autoconf         2.61,REV=2007.07.13                        SAME
@@ -56,10 +59,11 @@ HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
           gmake                        3.81                        SAME
            perl        5.8.8,REV=2007.10.05                        SAME
            gsed                       4.1.4                        SAME
+```
 
-  (e) Finally, add symbolic links to allow certain GNU tools to be
-      invoked using standard Unix names:
+(e) Finally, add symbolic links to allow certain GNU tools to be invoked using standard Unix names:
 
+```
       cd /opt/csw/bin
       ln -s /opt/csw/gcc3/bin/gcc gcc
       ln -s /opt/csw/bin/ggettext gettext
@@ -67,8 +71,9 @@ HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
       ln -s /opt/csw/bin/gm4 m4
       ln -s /opt/csw/bin/gmake make
       ln -s /opt/csw/bin/gsed sed
+```
 
-2. DOWNLOAD THE HERCULES SOURCE FROM SVN
+## 2. Download the Hercules source from SVN
 
       Add the following line to your .profile file:
       PATH=/opt/csw/bin:${PATH}
@@ -88,7 +93,7 @@ HOW TO BUILD HERCULES FROM SVN UNDER SOLARIS
       4. Download the patch and unzip it into /var/spool/patch
       5. patchadd /var/spool/patch/114129-02
 
-3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
+## 3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
 
       From your home directory issue these commands:
 
