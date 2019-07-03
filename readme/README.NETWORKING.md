@@ -73,7 +73,7 @@ where:
 ### CTCI     - Channel to Channel link to Linux TCP/IP stack
 This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the operating system running in the Hercules machine it appears to be a CTC link to a machine running TCP/IP for MVS or VM.
 
-CTCI uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[1].
+CTCI uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[[1]](#[1]).
 
 The configuration statement for CTCI is as follows:
 
@@ -432,7 +432,8 @@ The TUN interface could then be used with a PTP specified as:-
 ```
 
 ## Notes
-[1] The TunTap32.dll and FishPack.dll are part of Fish's [CTCI-WIN](http://www.softdevlabs.com/ctci-win) package which includes the required [WinPCap](http://www.winpcap.org) packet driver as well.  See Fish's web page for details.
+#### [1]
+The TunTap32.dll and FishPack.dll are part of Fish's [CTCI-WIN](http://www.softdevlabs.com/ctci-win) package which includes the required [WinPCap](http://www.winpcap.org) packet driver as well.  See Fish's web page for details.
 
 ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using only the current RELEASE version of WinPCap and NOT any type of 'alpha' OR 'beta' version! Alpha and Beta versions of WinPCap are NOT SUPPORTED! Only official *release* version are supported!
 
