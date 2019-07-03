@@ -10,7 +10,7 @@ Once we got Herc to build successfully using MSVC, I/we stopped all effort on tr
 
 ## Original readme now follows:
 
-'''
+```
 ******************************************************************
 ******************************************************************
 
