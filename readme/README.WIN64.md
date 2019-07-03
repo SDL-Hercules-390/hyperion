@@ -15,7 +15,7 @@ There is only one 64-bit architecture supported by 64-bit Windows: the x64 archi
 A 90-day evaluation edition can be downloaded from http://msdn.microsoft.com/en-us/evalcenter/bb633753.aspx
 
 2. 32-bit Windows
-If compiling on a 32-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Cross Tools Command Prompt"
+If compiling on a 32-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Cross Tools Command Prompt"  
 Then, at the Cross Tools command prompt, enter this command: `SET CPU=AMD64`
 
 3. 64-bit Windows
