@@ -1,11 +1,10 @@
-******************************************************************
-******************************************************************
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
 
+# NOTE!  This file is OBSOLETE and should probably be deleted!
+### Not converted to markdown on that basis.
 
-                NOTE!  This file is OBSOLETE
-                and should probably be deleted!
-
-
+```
 
             Once we got Herc to build successfully
             using MSVC, I/we stopped all effort on
@@ -793,3 +792,4 @@ Hooray, we got it.
 ***********************************************************************
 ***********************************************************************
 ***********************************************************************
+```
