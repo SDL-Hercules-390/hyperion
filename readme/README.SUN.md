@@ -89,13 +89,13 @@ If you get this message, you will need to install a patch from Sun:
       5. patchadd /var/spool/patch/114129-02  
 
 ## 3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
-From your home directory issue these commands:
-
+From your home directory issue these commands:  
+```
       cd hercules
       util/bldlvlck
-
+```  
 which should produce output something like this:
-
+```
        OK      SVN (informational), found x.yy.zz
        OK      autoconf requires 2.5, found 2.61
        OK      automake requires 1.9, found 1.9.6
@@ -111,6 +111,7 @@ which should produce output something like this:
        OK      make requires 3.79, found 3.81
        OK      perl requires 5.6, found 5.8.8
        OK      sed requires 3.02, found 4.1.4
+```
 
 ## 4. Build Hercules
 In the hercules directory issue these commands:
