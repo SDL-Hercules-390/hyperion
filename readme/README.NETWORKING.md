@@ -73,7 +73,7 @@ where:
 ### CTCI     - Channel to Channel link to Linux TCP/IP stack
 This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the operating system running in the Hercules machine it appears to be a CTC link to a machine running TCP/IP for MVS or VM.
 
-CTCI uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[[1]](1).
+CTCI uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[[1]](#1).
 
 The configuration statement for CTCI is as follows:
 
