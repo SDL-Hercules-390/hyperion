@@ -72,13 +72,10 @@ which should produce output something like this:
 ```
 
 ## 2. Download the Hercules source from SVN
-Add the following line to your .profile file:
-      PATH=/opt/csw/bin:${PATH}
-
-      From your home directory issue this command:
-
-      svn checkout svn://svn.hercules-390.org/hercules/trunk hercules
-Note: svn will fail if you do not have libuuid installed on your system
+Add the following line to your .profile file: `PATH=/opt/csw/bin:${PATH}`
+From your home directory issue this command:  
+      `svn checkout svn://svn.hercules-390.org/hercules/trunk hercules`  
+Note: svn will fail if you do not have libuuid installed on your system  
 `ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory`  
 
 If you get this message, you will need to install a patch from Sun:  
