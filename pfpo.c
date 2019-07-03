@@ -243,7 +243,6 @@ void arraydiv(unsigned int *ltab,int divisor,int ntab,unsigned int *rem)
   unsigned long long divisort;
   unsigned long long dividend;
   int i;
-  int lzero = 0;
   work1 = (unsigned long long)ltab[0];
   divisort = (unsigned long long)divisor;
   for (i = 0;i < ntab;i++)
@@ -333,7 +332,6 @@ void arraymlt(unsigned int *ltab,int mult,int ntab)
   unsigned long long carry = 0;
   unsigned long long op1;
   unsigned long long op2 = (unsigned long long)mult;
-  int lzero = 0;
   for (i = ntab - 1;i >= 0;i--)
   {
     op1 = (unsigned long long)ltab[i];
@@ -848,7 +846,6 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int dexp;
   int bexp;
   int delta;
-  int skip = 1;
   int expword;
   //  the following table is used to reverse the bits in a byte.  This is needed
   //  for nan processing
@@ -877,7 +874,6 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   unsigned int temp1;
   unsigned int temp2;
   int nan = 0;
-  int shiftnzero = 0;
   int tbits;
   int expbits;
   int lzero = 0;
@@ -2007,6 +2003,7 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
   case 4:
     rem = temptab1[4] >> 31;
     temptab1[4] &= 0x7fffffff;
+    mid = 0;
     if (temptab1[4] == 0)
       mid = 1;
     if (mid == 0 || rem != 0)
@@ -2234,7 +2231,7 @@ DEF_INST(perform_floating_point_operation)
   unsigned int tabout[4];
   int numout = 0;
   int opcode;
-  int cc;
+  int cc = 0;
   int FPC;
   int dxc;
   int rrbits;
@@ -2521,59 +2518,59 @@ DEF_INST(perform_floating_point_operation)
      numout = 1;
      break;
    case 85:
-     dfl2hflbfl(ftab, tabout, 2, 2, ccbits, 1, &FPC);
+     cc = dfl2hflbfl(ftab, tabout, 2, 2, ccbits, 1, &FPC);
      numout = 2;
      break;
    case 86:
-     dfl2hflbfl(ftab, tabout, 2, 4, ccbits, 1, &FPC);
+     cc = dfl2hflbfl(ftab, tabout, 2, 4, ccbits, 1, &FPC);
      numout = 4;
      break;
    case 94:
-     dfl2hflbfl(ftab, tabout, 4, 1, ccbits, 1, &FPC);
+     cc = dfl2hflbfl(ftab, tabout, 4, 1, ccbits, 1, &FPC);
      numout = 1;
      break;
    case 95:
-     dfl2hflbfl(ftab, tabout, 4, 2, ccbits, 1, &FPC);
+     cc = dfl2hflbfl(ftab, tabout, 4, 2, ccbits, 1, &FPC);
      numout = 2;
      break;
    case 96:
-     dfl2hflbfl(ftab, tabout, 4, 4, ccbits, 1, &FPC);
+     cc = dfl2hflbfl(ftab, tabout, 4, 4, ccbits, 1, &FPC);
      numout = 4;
      break;
    case 47:
-     hflbfl2dfl(ftab, tabout, 1, 1, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 1, 1, ccbits, 1, &FPC);
      numout = 1;
      break;
    case 48:
-     hflbfl2dfl(ftab, tabout, 1, 2, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 1, 2, ccbits, 1, &FPC);
      numout = 2;
      break;
    case 49:
-     hflbfl2dfl(ftab, tabout, 1, 4, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 1, 4, ccbits, 1, &FPC);
      numout = 4;
      break;
    case 57:
-     hflbfl2dfl(ftab, tabout, 2, 1, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 2, 1, ccbits, 1, &FPC);
      numout = 1;
      break;
    case 58:
-     hflbfl2dfl(ftab, tabout, 2, 2, ccbits, 1,&FPC);
+     cc = hflbfl2dfl(ftab, tabout, 2, 2, ccbits, 1,&FPC);
      numout = 2;
      break;
    case 59:
-     hflbfl2dfl(ftab, tabout, 2, 4, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 2, 4, ccbits, 1, &FPC);
      numout = 4;
      break;
    case 67:
-     hflbfl2dfl(ftab, tabout, 4, 1, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 4, 1, ccbits, 1, &FPC);
      numout = 1;
      break;
    case 68:
-     hflbfl2dfl(ftab, tabout, 4, 2, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 4, 2, ccbits, 1, &FPC);
      numout = 2;
      break;
    case 69:
-     hflbfl2dfl(ftab, tabout, 4, 4, ccbits, 1, &FPC);
+     cc = hflbfl2dfl(ftab, tabout, 4, 4, ccbits, 1, &FPC);
      numout = 4;
      break;
    default:
