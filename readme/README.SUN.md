@@ -12,19 +12,17 @@ DOWNLOAD AND INSTALL THE GNU COMPILER AND TOOLS
 
 (a) You can obtain all the required tools from http://www.sunfreeware.com
 
-To download the tools you will need wget which is installed in /usr/sfw/bin on Solaris 9 and 10.
-First add this directory to your path using the command:
-    PATH=${PATH}:/usr/sfw/bin
+To download the tools you will need wget which is installed in `/usr/sfw/bin` on Solaris 9 and 10.
+First add this directory to your path using the command `PATH=${PATH}:/usr/sfw/bin`.
 
 (b) Follow instructions on http://www.blastwave.org/pkg-get.php to install the pkg-get package.  
 Choose /opt/csw as the package base directory.
 
-Choose a local mirror site from the list at http://www.blastwave.org/mirrors.html and update /opt/csw/etc/pkg-get.conf to point to the /stable directory at the mirror site, for example:
-      url=http://blastwave.informatik.uni-erlangen.de/csw/stable
-
-Add /opt/csw/bin to your path using the command:
-      PATH=/opt/csw/bin:${PATH}
-
+Choose a local mirror site from the list at http://www.blastwave.org/mirrors.html and update /opt/csw/etc/pkg-get.conf to point to the /stable directory at the mirror site, for example:  
+`url=http://blastwave.informatik.uni-erlangen.de/csw/stable`
+  
+Add `/opt/csw/bin` to your path using the command: `PATH=/opt/csw/bin:${PATH}`
+  
 (c) Then install the GNU compiler and tools using these commands:
 ```
       pkg-get install textutils
@@ -117,7 +115,7 @@ which should produce output something like this:
 ## 4. Build Hercules
 In the hercules directory issue these commands:
 ```
-      sh ./autogen.sh
-      ./configure
-      make
+sh ./autogen.sh
+./configure
+make
 ```
