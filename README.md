@@ -32,8 +32,8 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
 [Hercules "External Packages"](readme/README.EXTPKG.md)  
-[HQA Build Scenarios](readme/README.HQA.md)
-[How to build Hercules from SVN under Solaris](readme/README.SUN.md)
+[HQA Build Scenarios](readme/README.HQA.md)  
+[How to build Hercules from SVN under Solaris](readme/README.SUN.md)  
 
 ### Mods
 [APL/360 mods](readme/README.APL360.md)  
