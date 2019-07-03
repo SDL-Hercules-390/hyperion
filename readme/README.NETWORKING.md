@@ -9,8 +9,7 @@
 
 ## About
 
-    *** Please read herctcp.html as Roger explains how ***
-    *** to set up TCP/IP networking with Hercules.     ***
+    *** Please read herctcp.html as Roger explains how to set up TCP/IP networking with Hercules.     ***
 
 All of the communications emulation implemented within Hercules use a CTCA (Channel to Channel Adapter) type device. Depending on the "flavor", the CTCA device will provide either a point-to-point or a virtual network adapter interface to the driving system's TCP/IP stack or in the case of CTCT, a "true" CTCA connection to another instance of Hercules via a TCP/IP connection.
 
@@ -18,8 +17,7 @@ All current emulations, with the exception of VMNET, CTCT and CTCE use the Unive
 
 ## Details
 
-    *** Important information about changes to the ***
-    *** Hercules configuration files - PLEASE READ ***
+    *** Important information about changes to the Hercules configuration files - PLEASE READ ***
 
 The format of the Hercules configuration file statements for all of the networking emulations have changed from the previous releases of Hercules. The older format will still be accepted to maintain compatibility, however it is the recommendation of the maintainer that the new format be used. Also note that there is no distinction between the CTCI and CTCI-W32 modes any more, in fact CTCI-W32 does not exist in this release (other than to maintain compatibility with previous configuration files).
 
@@ -73,7 +71,6 @@ where:
 ```
 
 ### CTCI     - Channel to Channel link to Linux TCP/IP stack
-
 This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the operating system running in the Hercules machine it appears to be a CTC link to a machine running TCP/IP for MVS or VM.
 
 CTCI uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[1].
@@ -250,39 +247,23 @@ Additionally, two other statements can be included in the address translation fi
 
 Use the HWADD to specify a hardware (MAC) address for a virtual adapter. The first parameter after HWADD specifies with relative adapter for which the address is applied.
 
-The ROUTE statement is included for convenience. This allows the
-hercifc program to create a network route for this specified
-virtual adapter. Please note that it is not necessary to include
-point-to-point routes for each IP address in the table. This is
-done automatically by the emulation module.
+The ROUTE statement is included for convenience. This allows the hercifc program to create a network route for this specified virtual adapter. Please note that it is not necessary to include point-to-point routes for each IP address in the table. This is done automatically by the emulation module.
 
 Up to 4 virtual (relative) adapters 00-03 are currently supported.
 
 ### SLIP/VMNET  - Channel to Channel link to TCP/IP via SLIP/VMNET
 
-If the emulation mode is not specified on the configuration
-statement, it is assumed to be a point-to-point link to the
-driving system's TCP/IP stack using Willem Konynenberg's VMNET
-package.  This provides the same function as the CTCI mode of
-operation, except that it uses a virtual SLIP interface instead
-of the TUN/TAP driver.
+If the emulation mode is not specified on the configuration statement, it is assumed to be a point-to-point link to the driving system's TCP/IP stack using Willem Konynenberg's VMNET package.  This provides the same function as the CTCI mode of operation, except that it uses a virtual SLIP interface instead of the TUN/TAP driver.
 
 Refer to http://www.kiyoinc.com/herc3088.html for more details.
 
 ### CTCE - Enhanced Channel to Channel Emulation via TCP connection
 
-The CTCE device type will emulate a real 3088 Channel to Channnel
-Adapter also for non-IP traffic, enhancing the CTCT capabilities.
-CTCE connections are also based on TCP/IP between two (or more)
-Hercules instances, and requires an even-odd pair of port numbers
-per device side. Only the even port numbers are to be configured;
-the odd numbers are just derived by adding 1 to the (configured)
-even port numbers.  The socket connection pairs cross-connect,
-the arrows showing the send->receive direction :
+The CTCE device type will emulate a real 3088 Channel to Channnel Adapter also for non-IP traffic, enhancing the CTCT capabilities. CTCE connections are also based on TCP/IP between two (or more) Hercules instances, and requires an even-odd pair of port numbers per device side. Only the even port numbers are to be configured; the odd numbers are just derived by adding 1 to the (configured) even port numbers.  The socket connection pairs cross-connect, the arrows showing the send->receive direction :
 
 ```
-x-lport-even -> y-rport-odd
-  x-lport-odd  <- y-rport-even
+    x-lport-even -> y-rport-odd
+    x-lport-odd  <- y-rport-even
 ```
 
 The configuration statement for CTCE is as follows :
@@ -291,8 +272,8 @@ The configuration statement for CTCE is as follows :
 ````
 where:
 ```
-     <devnum>   is the address of the CTCT device.
-     <lport>    is the even TCP/IP port on the local system.
+     <devnum>   is the address of the CTCT device.  
+     <lport>    is the even TCP/IP port on the local system.  
      <raddress> is the IP address on the remote.
      <rport>    is the even TCP/IP port on the remote system.
      <mtu>      optional mtu buffersize, defaults to 32778
@@ -313,17 +294,11 @@ A sample CTCE device configuration is shown below:
 
 CTCE connected Hercules instances can be hosted on either Unix or Windows platforms, both sides do not need to be the same.
 
-
 ### PTP      - MPCPTP/PCPTP6 Channel to Channel link
 
-This is a point-to-point link to the driving system's TCP/IP
-stack. From the point of view of the z/OS V1R5 or later image
-running in the Hercules machine it appears to be an MPCPTP and/or
-MPCPTP6 ESCON CTC link to another z/OS image.
+This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the z/OS V1R5 or later image running in the Hercules machine it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to another z/OS image.
 
-PTP uses the Universal TUN/TAP driver on *nix and Politecnico
-di Torino's WinPCap packet driver as well as Fish's TunTap32
-and FishPack DLLs on Windows[1].
+TP uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[1].
 
 The configuration statement for PTP is as follows:
 ```
@@ -453,28 +428,16 @@ The following commands are an example of how to create a pre-configured TUN inte
 ```
 The TUN interface could then be used with a PTP specified as:-
 ```
-E20-E21 PTP tun99
+    E20-E21 PTP tun99
 ```
 
-=================================================================
-[1] The TunTap32.dll and FishPack.dll are part of Fish's CTCI-WIN
-http://www.softdevlabs.com/ctci-win
-package which includes the required WinPCap packet driver as well.
-http://www.winpcap.org
-See Fish's web page for details.
+## Notes
+[1] The TunTap32.dll and FishPack.dll are part of Fish's [CTCI-WIN](http://www.softdevlabs.com/ctci-win) package which includes the required [WinPCap](http://www.winpcap.org) packet driver as well.  See Fish's web page for details.
 
-ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using
-only the current RELEASE version of WinPCap and NOT any type of
-'alpha' OR 'beta' version! Alpha and Beta versions of WinPCap are
-NOT SUPPORTED! Only official *release* version are supported!
+ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using only the current RELEASE version of WinPCap and NOT any type of 'alpha' OR 'beta' version! Alpha and Beta versions of WinPCap are NOT SUPPORTED! Only official *release* version are supported!
 
-When you visit the WinPCap download web page, you need need to
-scroll down the page a bit to reach the OFFICIAL RELEASE VERSION
-of WinPcap. They usually put their Beta versions at the top of the
-page, and BETA versions ARE NOT SUPPORTED. *Please* scroll down
-the page and use and official RELEASE version. Thanks.
+When you visit the WinPCap download web page, you need need to scroll down the page a bit to reach the OFFICIAL RELEASE VERSION of WinPcap. They usually put their Beta versions at the top of the page, and BETA versions ARE NOT SUPPORTED. *Please* scroll down the page and use and official RELEASE version. Thanks.
 
-You may, if you want, use a beta version of WinPCap, but if you do,
-then you're on your own if you have any problems with it.
+You may, if you want, use a beta version of WinPCap, but if you do, then you're on your own if you have any problems with it.
 
   -- Fish, May 2004.
