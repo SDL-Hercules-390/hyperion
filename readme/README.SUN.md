@@ -3,9 +3,9 @@
 
 # How to build Hercules from SVN under Solaris
 ## Contents
-1. [1. Download and Install](#1. Download-and-Install)
-2. [2. Download the Hercules source from SVN](#2. Download-the-Hercules-source-from-SVN)
-3. [ToDo](#ToDo)
+1. [1. Download and Install](#1.-Download-and-Install)
+2. [2. Download the Hercules source from SVN](#2.-Download-the-Hercules-source-from-SVN)
+3. [4. Build Hercules](#4.=Build-Hercules)
 
 ## 1. Download and Install
 DOWNLOAD AND INSTALL THE GNU COMPILER AND TOOLS
@@ -42,7 +42,7 @@ Add /opt/csw/bin to your path using the command:
       pkg-get compare subversion autoconf automake flex gawk gcc3
       pkg-get compare ggettext ggrep libiconv gm4 gmake perl gsed
 ```
-      which should produce output something like this:
+which should produce output something like this:
 
 ```
        software                    localrev                   remoterev
@@ -74,33 +74,29 @@ Add /opt/csw/bin to your path using the command:
 ```
 
 ## 2. Download the Hercules source from SVN
-
-      Add the following line to your .profile file:
+Add the following line to your .profile file:
       PATH=/opt/csw/bin:${PATH}
 
       From your home directory issue this command:
 
       svn checkout svn://svn.hercules-390.org/hercules/trunk hercules
+Note: svn will fail if you do not have libuuid installed on your system
+`ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory`  
 
-      Note: svn will fail if you do not have libuuid installed on your system
-      ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory
-
-      If you get this message, you will need to install a patch from Sun:
-      1. Go to sunsolve.sun.com and select "Patch Finder"
-      2. Scroll down to "Download Product Specific Patches" and select your
-         version of Solaris (for example, Solaris 2.9 SPARC)
-      3. Look for a patch which contains libuuid (for example, 114129-02)
-      4. Download the patch and unzip it into /var/spool/patch
-      5. patchadd /var/spool/patch/114129-02
+If you get this message, you will need to install a patch from Sun:  
+      1. Go to sunsolve.sun.com and select "Patch Finder"  
+      2. Scroll down to "Download Product Specific Patches" and select your version of Solaris (for example, Solaris 2.9 SPARC)  
+      3. Look for a patch which contains libuuid (for example, 114129-02)  
+      4. Download the patch and unzip it into /var/spool/patch  
+      5. patchadd /var/spool/patch/114129-02  
 
 ## 3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
-
-      From your home directory issue these commands:
+From your home directory issue these commands:
 
       cd hercules
       util/bldlvlck
 
-      which should produce output something like this:
+which should produce output something like this:
 
        OK      SVN (informational), found x.yy.zz
        OK      autoconf requires 2.5, found 2.61
@@ -118,10 +114,10 @@ Add /opt/csw/bin to your path using the command:
        OK      perl requires 5.6, found 5.8.8
        OK      sed requires 3.02, found 4.1.4
 
-4. BUILD HERCULES
-
-      In the hercules directory issue these commands:
-
+## 4. Build Hercules
+In the hercules directory issue these commands:
+```
       sh ./autogen.sh
       ./configure
       make
+```
