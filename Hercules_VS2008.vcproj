@@ -2870,6 +2870,22 @@
 							>
 						</File>
 					</Filter>
+					<Filter
+						Name="VS2019"
+						>
+						<File
+							RelativePath=".\Hercules_VS2019.sln"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2019.vcxproj"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2019.vcxproj.filters"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="other"
