@@ -1,17 +1,14 @@
-******************************************************************
-******************************************************************
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
 
+# NOTE!  This file is OUT OF DATE and should probably be deleted!
+### Not converted to markdown on that basis.
 
-                NOTE!  THIS FILE IS OUT OF DATE
-                AND SHOULD PROBABLY BE DELETED.
+FOR MORE CURRENT UP-TO-DATE INFORMATION, PLEASE REFER TO THE [README.WIN64.md](/readme/README.WIN64.md) DOCUMENT
 
-            FOR MORE CURRENT UP-TO-DATE INFORMATION,
-           PLEASE REFER TO THE "README.WIN64" DOCUMENT
+## Original readme now follows:
 
-
-******************************************************************
-******************************************************************
-
+```
 ----------------------------------------------------------------
   HOW TO BUILD HERCULES FOR WINDOWS WITH MICROSOFT VISUAL C
 ----------------------------------------------------------------
@@ -346,3 +343,4 @@ Sep 22 2006
 -- Fish
 
 -----------------------------------------------------------------------
+```
