@@ -3,15 +3,15 @@
 
 # How to build Hercules from SVN under Solaris
 ## Contents
-1. [1. Download and Install](#1.-Download-and-Install)
-2. [2. Download the Hercules source from SVN](#2.-Download-the-Hercules-source-from-SVN)
-3. [4. Build Hercules](#4.=Build-Hercules)
+1. [Download and Install](#Download-and-Install)
+2. [Download Source](#Download-Source)
+3. [Tool Versions](#Tool-Versions)
+4. [Build Hercules](#Build-Hercules)
 
-## 1. Download and Install
-DOWNLOAD AND INSTALL THE GNU COMPILER AND TOOLS
+## Download and Install
+Download and install the GNU Compiler and tools.
 
 (a) You can obtain all the required tools from http://www.sunfreeware.com
-
 To download the tools you will need wget which is installed in `/usr/sfw/bin` on Solaris 9 and 10.
 First add this directory to your path using the command `PATH=${PATH}:/usr/sfw/bin`.
 
@@ -71,12 +71,13 @@ which should produce output something like this:
       ln -s /opt/csw/bin/gsed sed
 ```
 
-## 2. Download the Hercules source from SVN
-Add the following line to your .profile file: `PATH=/opt/csw/bin:${PATH}`
-From your home directory issue this command:  
-      `svn checkout svn://svn.hercules-390.org/hercules/trunk hercules`  
+## Download Source
+Download the Hercules source from SVN.  
+
+Add the following line to your .profile file: `PATH=/opt/csw/bin:${PATH}`  
+From your home directory issue this command: `svn checkout svn://svn.hercules-390.org/hercules/trunk hercules`  
 Note: svn will fail if you do not have libuuid installed on your system  
-`ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory`  
+    `ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory`  
 
 If you get this message, you will need to install a patch from Sun:  
       1. Go to sunsolve.sun.com and select "Patch Finder"  
@@ -85,8 +86,8 @@ If you get this message, you will need to install a patch from Sun:
       4. Download the patch and unzip it into /var/spool/patch  
       5. patchadd /var/spool/patch/114129-02  
 
-## 3. CHECK THAT THE REQUIRED LEVELS OF TOOLS ARE INSTALLED
-From your home directory issue these commands:  
+## Tool Versions
+Check that the required levels of tools are installed. From your home directory issue these commands:  
 ```
       cd hercules
       util/bldlvlck
@@ -110,7 +111,7 @@ which should produce output something like this:
        OK      sed requires 3.02, found 4.1.4
 ```
 
-## 4. Build Hercules
+## Build Hercules
 In the hercules directory issue these commands:
 ```
 sh ./autogen.sh
