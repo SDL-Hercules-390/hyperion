@@ -185,23 +185,21 @@ To query the name of the currently mounted file, the 0xE4 CCW is used. Note howe
 As a result of this restriction, if the automount 0x4B Set Diagnose CCW is chained, the filename must be at least two bytes or longer. To mount a one byte filename, the 0x4B Set Diagnose CCW must *NOT* be chained:
 
 
-      --------------- The following works okay ---------------
+The following works okay:
 ```
       ONECHAR DC  C'Z'                    (one byte filename)
 
       CCW   X'4B',ONECHAR,X'20',L'ONECHAR        (automount)
 ```
 
-
-      --------------- The following works okay ---------------
+The following works okay:
 ```
       MYFILE  DC  C'MYTAPE.AWS'             (normal filename)
 
       CCW   X'4B',MYFILE,X'20',L'MYFILE          (automount)
 ```
 
-
-      --------------- The following works okay ---------------
+The following works okay:
 ```
       MYFILE  DC  C'MYTAPE.AWS'             (normal filename)
       VOL1LBL DC  CL80' '
@@ -212,8 +210,7 @@ As a result of this restriction, if the automount 0x4B Set Diagnose CCW is chain
       CCW   X'07',*,X'20',1                      (rewind)
 ```
 
-
-      --------------- The following will FAIL! ---------------
+The following will FAIL:
 ```
       ONECHAR DC  C'Z'                    (one byte filename)
       VOL1LBL DC  CL80' '
