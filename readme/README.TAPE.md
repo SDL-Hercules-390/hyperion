@@ -155,19 +155,15 @@ This behaviour may be changed at a later time.
 ### Device End Suppression for Tape motion CCWs on a non-ready tape drive
 ### Control Unit End is presented on Rewind Unload status
 ### Sense Pending status support
-        When certain conditions arise during an I/O operation, A sense is
-        built and Unit Check is presented to the program.
-        The program is then responsible for retrieving the sense information.
-        However, if the sense is not the result of a previously occuring
-        Unit Check, a new sense is built to reflect the current device status.
-        Also, this management is a necessary step in order to eventually
-        implement multipath operations (Contengency Allegiance status).
+When certain conditions arise during an I/O operation, A sense is built and Unit Check is presented to the program.
+The program is then responsible for retrieving the sense information.
+However, if the sense is not the result of a previously occuring Unit Check, a new sense is built to reflect the current device status.
+Also, this management is a necessary step in order to eventually implement multipath operations (Contengency Allegiance status).
 
 ### readonly=0|1 :
-        force an emulated tape device read only.
-        (1/2 Inch tape ring or 38k Cartridge Protect tab)
-        (support for this feature is incomplete)
-
+Force an emulated tape device read only.
+(1/2 Inch tape ring or 38k Cartridge Protect tab)
+(support for this feature is incomplete)
 
 ## AUTOMOUNT support
 Starting with Hercules version 3.06 a new AUTOMOUNT option is available that allows guest operating systems to directly mount, unmount and query tape device filenames for themselves, without any intervention on the part of the Hercules operator.
