@@ -115,7 +115,7 @@ In subroutine mode Hercules parses the string normally and passes each argument 
 The argument passing style is determined by the 'rexx' command's current "Mode" setting, but can be temporarily overridden for the current execution by simply specifying the 'mode' parameter on the command itself, immediately before the scriptname (e.g. 'exec cmd ...' for command style argument passing, or 'exec sub ...' for subroutine style argument passing):
 
 Contents of script 'example.rexx':  
-```
+```REXX
         parse arg str
         say "parse arg str: " str
         say "arg(1): "arg(1)
@@ -125,7 +125,7 @@ Contents of script 'example.rexx':
 ```
 
 Running the script from a command line (outside of Hercules) results in:  
-```
+```REXX
         C:\> example.rexx one,   Two   "Buckle    MY shoe"
         parse arg str:  one,   Two   "Buckle    MY shoe"
         arg(1): one,   Two   "Buckle    MY shoe"
@@ -134,7 +134,7 @@ Running the script from a command line (outside of Hercules) results in:
 ```
 
 Running the script from within Hercules via the 'exec' command using the default 'Command' mode setting results in:  
-```
+```REXX
         HHC01603I exec example.rexx  one,   Two   "Buckle    MY shoe"
         parse arg str:  one,   Two   "Buckle    MY shoe"
         arg(1): one,   Two   "Buckle    MY shoe"
@@ -143,7 +143,7 @@ Running the script from within Hercules via the 'exec' command using the default
 ```
 
 Running the script using 'Subroutine' mode results in:  
-```
+```REXX
         HHC01603I exec example.rexx  one,   Two   "Buckle    MY shoe"
         parse arg str:  one,
         arg(1): one,
@@ -160,7 +160,7 @@ To enable the ability to `exec` Rexx scripts from the Hercules command line (or 
 ## Issuing Hercules Commands
 Rexx scripts run from within Hercules (via the `exec` command) are able to issue Hercules commands via the Rexx "Address" keyword or via the Hercules "AWSCMD" special function:
 
-```
+```REXX
     Address "HERCULES" "command..."
     rc = AWSCMD( "command..." [, stemvar [, errmode]] )
     Call AWSCMD  "command..." [, stemvar [, errmode]]
