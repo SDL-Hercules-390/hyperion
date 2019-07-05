@@ -71,4 +71,4 @@ When your prebuild.bat returns, it then copys all *.c, *.h, *.rc, *.rc2 and *.ms
 When the build is done it then calls your postbld.bat callback if it exists. You can use this callback to copy the resulting binary from Hercules's output directory to your project directory or whatever other post-build processing your product may require.
 
 ## More Information
-For additional information regarding dynamic modules please see the "Hercules Dynamic Loader" readme document called "README.HDL".
+For additional information regarding dynamic modules please see the [Hercules Dynamic Loader](/readme/README.HDL.md) readme document.
