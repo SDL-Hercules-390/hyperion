@@ -7,7 +7,7 @@
 2. [Hercules device statement](#Hercules-device-statement)
 3. [The communication protocol](#The-communication-protocol)
 4. [Dial data format](#Dial-data-format)
-5. [Bugs, Caveats](#Bugs,-Caveats)
+5. [Bugs, Caveats](#Bugs-Caveats)
 
 ## Notes
 Only allows Point to Point connection.
