@@ -4,7 +4,7 @@
 # Hercules PTT Tracing
 ## Contents
 1. [History](#History)
-2. [Using 'PTT'](#Using-'PTT')
+2. [Using PTT](#Using-PTT)
 3. [Future Direction](#Future-Direction)
 4. [ToDo](#ToDo)
 5. [ToDo](#ToDo)
@@ -39,7 +39,7 @@ This allowed us to clean up much of the macro redefinition monkey business origi
 
 Now, the htreads.c module is responsible for calling the proper threading implementation function (pthreads on non-Windows or fthreads on Windows) as well as checking the return code and, if necessary, calling the "PTT" facility to add an entry to the trace table.
 
-## Using 'PTT'
+## Using PTT
 The PTT tracing facility can be used to add generic "events" to the internal trace table, and is thus ideal for helping to debug *ANY* module/driver and not just for debugging lock handling.
 
 To use it, simply add a 'PTT' macro call to your code.  The parameters to the macro are as follows:  
