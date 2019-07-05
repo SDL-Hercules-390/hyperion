@@ -2,7 +2,6 @@
 [Return to master README.MD](/README.md)
 
 # Hercules Rexx Support
-___
 ## Contents
 1. [About](#About)
 2. [Hercules Rexx Settings](#Hercules-Rexx-Settings)
