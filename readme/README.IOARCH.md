@@ -1,17 +1,15 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Hercules Input/Output Architecture
 ## Contents
 1. [About](#About)
-2. [Motivation for I/O Architecture Enhancements](#Motivation-for-I/O-Architecture-Enhancements)
+2. [Motivation for I/O Architecture Enhancements](#Motivation-for-IO-Architecture-Enhancements)
 3. [Architecture Feasibility](#Architecture-Feasibility)
-3. [Channel Input/Output Architecture in ESA/390 or z/Architecture](#Channel-Input/Output-Architecture-in-ESA/390-or-z/Architecture)
-3. [Enabling Channel-based I/O in ESA/390 or z/Architecture](#Enabling-Channel-based-I/O-in-ESA/390-or-z/Architecture)
-3. [Architecture Feasibility](#Architecture-Feasibility)
+4. [Channel Input/Output Architecture in ESA/390 or z/Architecture](#Channel-InputOutput-Architecture-in-ESA/390-or-zArchitecture)
+5. [Enabling Channel-based I/O in ESA/390 or z/Architecture](#Enabling-Channel-based-IO-in-ESA/390-or-zArchitecture)
 
 ## About
-
 Hercules is composed of two related but distinct architectures:
 
   - the Central Processing Unit architecture and
@@ -37,7 +35,6 @@ With the advent of Access Register addressing mode in ESA/390, the System/370 co
 Polling of the Hercules community revealed that channel masks were only disabled when hardware problems made it necessary to do so.  Under Hercules software emulation such problems can not occur.  The Hercules developers concluded that channel masks could be safely eliminated when the CPU architecture requires control register 2 for access register mode.  This is the normal case with a default build of Hercules that includes ESA/390 or z/Architecture.  A non-default build where access register mode is not enabled, for example a build targeted for ESA/370 instead of ESA/390, control register 2 would still be used for channel masks.
 
 ## Channel Input/Output Architecture in ESA/390 or z/Architecture
-
 The input/ouput architecture continues to be fixed to the CPU architecture during the Hercules build process.  Coexistence of both input/output architectures is not possible at this time, although the subchannel-based input/output architecture standard with ESA/390 or z/Architecture can now be replaced with the channel-based input/output architecture expected in System/370.
 
 When either ESA/390 or z/Architecture or both are built with the channel-based input/output architecture, the following changes occur:
