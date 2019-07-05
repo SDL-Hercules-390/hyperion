@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](..\README.MD)
+[Return to master README.md](..\README.MD)
 
 # APL\360 mods by Max H. Parke
 ## Contents
@@ -33,11 +33,10 @@ Connection closed by foreign host.
 0402 2703 dial=in lport=57413 lnctl=ibm1 term=rxvt4apl skip=5EDE code=ebcd iskip=0D0A prepend=16 append=5B1F eol=0A binary=yes crlf=yes sendcr=yes
 ```
 
-3. Logon using `"314159` (do not use = as in 1052).  For rxvt4apl, use the regular right parenthesis.  See also the separate readme file for using
-rxvt4apl.
+3. Logon using `"314159` (do not use = as in 1052).  For rxvt4apl, use the regular right parenthesis.  See also the separate [readme](/readme/README.RXVT4APL.md) file for using rxvt4apl.
 
-4. Use CTRL-C as usual for 2741 ATTN.
+4. Use `CTRL-C` as usual for 2741 ATTN.
 
 5. Only tested in Linux - YMMV
 
-6. TODO: add fix for disconnected TCP connection while signed on to APL, should initiate a session drop
+6. TODO: add fix for disconnected TCP connection while signed on to APL, should initiate a session drop.
