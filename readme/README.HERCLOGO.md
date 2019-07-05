@@ -10,7 +10,7 @@
 ## Customizable hercules 3270 Logo
 The initial welcome screen presented when a TN 3270 terminal connects to a hercules 3270 device can now be customized.
 The customized logo is stored in a plain text file which contains positioning orders, attributes and variable substitutions.
-![](images/herclogo.jpg | width=200)
+![](https://github.com/gsf600y/hyperion/blob/testbranch/readme/images/herclogo.jpg | width=200)
 
 Hercules also contains a built-in logo should no suitable file be found.
 The built-in logo is contained in `cnsllogo.h` and is included in `console.c`.
