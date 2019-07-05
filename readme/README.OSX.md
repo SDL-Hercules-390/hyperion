@@ -4,7 +4,7 @@
 # Building Hercules for OSX
 ## Contents
 1. [About](#About)
-2. [Tun/Tap Information](#Tun/Tap-Information)
+2. [Tun Tap Information](#Tun-Tap-Information)
 
 ## About
 To compile on OS X for another architecture than the one running, or another OS version, you have to supply several arguments to the configure command.
@@ -36,7 +36,7 @@ Building 32-bit Intel for Leopard on Leopard is easier:
 
 Once you have the various architectures built, you can combine them into one binary with lipo. This is done by saying `lipo <input-files> -output <output-file> -create`. The best approach is to automate this with a shell script; I've done this for my own use.
 
-## Tun/Tap Information
+## Tun Tap Information
 From: http://tech.groups.yahoo.com/group/hercules-390/message/61064  
 First, the CTC definition should be set up as follows:  
 `0400.2 3088 CTCI /dev/tun0 1500 192.168.0.12 192.168.0.103 255.255.255.255`  
