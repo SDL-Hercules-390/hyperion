@@ -1,12 +1,12 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Host Resource Access Facility
 ## Contents
 1. [About](#About)
 2. [General Register Usage](#General-Register-Usage)
 3. [Enabling the Host Resouce Access Facility](#Enabling-the-Host-Resouce-Access-Facility)
-4. [DIAGNOSE X'F18' Subcodes](#DIAGNOSE-X'F18'-Subcodes)
+4. [DIAGNOSE X'F18' Subcodes](#DIAGNOSE-XF18-Subcodes)
 5. [Documentation](#Documentation)
 
 ## About
