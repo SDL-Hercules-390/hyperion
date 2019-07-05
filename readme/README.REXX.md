@@ -20,8 +20,11 @@ Support for Open Object Rexx (ooRexx) is automatically provided as long as the p
 
 Support for integrated Regina Rexx however, is NOT automatically provided and must instead be explicitly requested via the `--enable-regina-rexx` configure option at build time.  Even if the package's rexx.h and rexxsaa.h headers are found, support for integrated Regina Rexx will still NOT be provided.  Support is provided ONLY if the headers are found AND the `--enable-regina-rexx` option is specified.
 
-Support for either package can be enabled or disabled (Linux only) by simply specifying the appropriate `--disable-object-rexx` and/or `--enable-regina-rexx` configure option at build time.  On Windows, the only way to purposely disable support is to rename the header file(s) to prevent Hercules from finding them.
-
+Support for either package can be enabled or disabled (Linux only) by simply specifying the appropriate  
+`--disable-object-rexx` and/or  
+`--enable-regina-rexx`  
+configure option at build time.  
+On Windows, the only way to purposely disable support is to rename the header file(s) to prevent Hercules from finding them.
 
 ## Hercules Rexx Settings
 Hercules runtime support for Rexx is completely dynamic based the availability of each package's dynamic libraries which are automatically loaded at startup.
@@ -95,7 +98,6 @@ Entering the 'rexx' command without any arguments displays the current settings.
 ```
 
 ## Running a Rexx Script
-
 The format of the `exec` command is:  
 ```
 exec [mode] scriptname [[args...][&&]]
