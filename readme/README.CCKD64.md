@@ -30,36 +30,17 @@ or
 It is critical the dasd images being converted not have any errors before they are converted.  It is highly recommended that "cckdcdsk -3" be run on each image before converting.  Running cckdcomp is also recommended.
 
 
-  Using the 'convto64' utility to convert existing CCKD files to the CCKD64
-  format is recommended over using dasdcopy64 as it is not only significantly
-  faster than dasdcopy64 but is also able to convert individual CCKD shadow
-  files as well (which dasdcopy64 cannot currently do).  That is to say, if
-  you already have a CCKD format base dasd image file with one or more shadow
-  files associated with it, dasdcopy64 can only copy the base image plus all
-  of its shadow files to a single new CCKD64 base image file (i.e. the shadow
-  files are automatically "merged" during the copy operation, resulting in a
-  single CCKD64 BASE dasd image output file).  The 'convto64' utility however,
-  directly converts base images -OR- shadow files individually, resulting in
-  a new CCKD64 format base image or CCKD64 format shadow file.  It does NOT
-  "merge" them together and, as previously mentioned, is significantly faster
-  than dasdcopy64 too.  It is the recommended way to convert existing CCKD
-  dasd images to the new CCKD64 format.
+Using the 'convto64' utility to convert existing CCKD files to the CCKD64 format is recommended over using dasdcopy64 as it is not only significantly faster than dasdcopy64 but is also able to convert individual CCKD shadow files as well (which dasdcopy64 cannot currently do).  That is to say, if you already have a CCKD format base dasd image file with one or more shadow files associated with it, dasdcopy64 can only copy the base image plus all of its shadow files to a single new CCKD64 base image file (i.e. the shadow files are automatically "merged" during the copy operation, resulting in a single CCKD64 BASE dasd image output file).  The 'convto64' utility however, directly converts base images -OR- shadow files individually, resulting in a new CCKD64 format base image or CCKD64 format shadow file.  It does NOT "merge" them together and, as previously mentioned, is significantly faster than dasdcopy64 too.  It is the recommended way to convert existing CCKD dasd images to the new CCKD64 format.
 
+In addition to the new 'dasdinit64' and 'dasdcopy64' utilities, there are also corresponding CCKD64 versions of:  
+'cckdcdsk' check disk utility called 'cckdcdsk64'  
+'cckdcomp' utility called 'cckdcomp64'  
+'cckdswap' called 'cckdswap64'  
+'cckddiag' diagnostic utility called 'cckddiag64'  
+'dasdconv' utility called 'dasdconv64'  
+'dasdload' utility called 'dasdload64'  
 
-  In addition to the new 'dasdinit64' and 'dasdcopy64' utilities, there are
-  also corresponding CCKD64 versions of the 'cckdcdsk' check disk utility
-  called 'cckdcdsk64', a CCKD64 version of the 'cckdcomp' utility called
-  'cckdcomp64', a CCKD64 version of 'cckdswap' called 'cckdswap64', a CCKD64
-  version of the 'cckddiag' diagnostic utility called 'cckddiag64', a CCKD64
-  version of the 'dasdconv' utility called 'dasdconv64', and a CCKD64 version
-  of the 'dasdload' utility called 'dasdload64'.
-
-
-  The existing dasdls, dasdcat, dasdpdsu, dasdisup, and dasdseq utilities do
-  not have any specialized CCKD64 versions.  However, all of them do support
-  the new CCKD64 file format in addition to the existing CCKD file format;
-  they just don't have separate executable names ending in '64' as they have
-  all been updated to support either of the two formats automatically.
+The existing dasdls, dasdcat, dasdpdsu, dasdisup, and dasdseq utilities do not have any specialized CCKD64 versions.  However, all of them do support the new CCKD64 file format in addition to the existing CCKD file format; they just don't have separate executable names ending in '64' as they have all been updated to support either of the two formats automatically.
 
 ## Procedure
 1. Run `cckdcdsk -3` on all existing 32-bit CCKD dasds to correct any existing errors.
@@ -71,4 +52,4 @@ It is critical the dasd images being converted not have any errors before they a
 4. Optional: run `cckdcdsk64 -3` on all of the newly converted 64-bit CCKD64 dasd images to verify the conversion was successful and that no errors exist on any of the images.
 
 ## Additional Information
-Additional information regarding the new CCKD64 file format can be found on the "Compressed Dasd Emulation" web page (cckddasd.html).
+Additional information regarding the new CCKD64 file format can be found on the "Compressed Dasd Emulation" web page [https://sdl-hercules-390.github.io/html/cckddasd.html])https://sdl-hercules-390.github.io/html/cckddasd.html)
