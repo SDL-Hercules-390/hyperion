@@ -1,12 +1,12 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](..\README.MD)
+[Return to master README.MD](..\README.md)
 
 # Hercules Dynamic Modules (on Windows)
 
 ## Contents
-1. [Requires Files](#Requires-Files)
+1. [Required Files](#Required-Files)
 2. [Required makefile format](#Required-makefile-format)
-3. [Building (making)](#Building-(making))
+3. [Building (making)](#Building-making)
 4. [Pre-Build event and Post-Build event callbacks](#Pre-Build-event-and-Post-Build-event-callbacks)
 5. [Resource Compiler](#Resource-Compiler)
 6. [The Build Process](#The-Build-Process)
