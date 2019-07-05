@@ -4,9 +4,9 @@
 # LOW-LEVEL TEST CASES
 ## Contents
 1. [About](#About)
-2. ["runtest" shell script](#"runtest"-shell-script)
-3. [.tst file runtest command](#.tst-file-runtest-command)
-4. [.tst file directives](#.tst-file-directives)
+2. ["runtest" shell script](#runtest-shell-script)
+3. [.tst file runtest command](#tst-file-runtest-command)
+4. [.tst file directives](#tst-file-directives)
 5. [Predefined variables](#Predefined-variables)
 6. [Creating test files that can run on z/CMS as well as under Hercules](#Creating-test-files-that-can-run-on-z/CMS-as-well-as-under-Hercules)
 
