@@ -106,7 +106,6 @@ void * (*prev_panel_command)(char *);
 }
 ```
 
-/*
 The dependency section is - for all intents and purposes - called before the module is loaded.  Its function is to check that there are no incompatibilities between this module and the version of hercules that we are running.  Dependencies are identified by name, this name is given on the HDL_DEPENDENCY statement.
 
 Each dependency then has a version code, and a size code, where the version code is a character string, and the size code an integer value.  If the version or size codes do not match with those in the hercules main module, the module cannot be loaded.
@@ -130,8 +129,6 @@ When a dependency is given that has not yet been registered, it will be register
 
 The dependency section is mandatory.
 
-*/
-
 ```
 HDL_DEPENDENCY_SECTION;
 {
@@ -144,19 +141,11 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 ```
 
-/*
-    The registration exports labels and their associated entry points
-    to hercules, such that the symbols and associated entry points may
-    be known to hercules and any other module that may have been loaded.
-    The registration section is called once during module load.
+The registration exports labels and their associated entry points to hercules, such that the symbols and associated entry points may    be known to hercules and any other module that may have been loaded. The registration section is called once during module load.
 
-    If we have registered a function that is also called from this DLL,
-    then it must also be listed in the resolver section.  This to ensure
-    that the symbol is properly resolved when other modules are loaded.
+If we have registered a function that is also called from this DLL, then it must also be listed in the resolver section.  This to ensure that the symbol is properly resolved when other modules are loaded.
 
-    The registration section is optional.
-
-*/
+The registration section is optional.
 
 ```
 HDL_REGISTER_SECTION;
@@ -175,31 +164,19 @@ HDL_REGISTER_SECTION;
 END_REGISTER_SECTION;
 ```
 
-/*
-    The resolver section imports the entry points of symbols that
-    have been previously registered.
+The resolver section imports the entry points of symbols that have been previously registered.
 
-    When a symbol is requested that has not been previously registered
-    then the resolve function will search the loaded modules for
-    that symbol, and register it implicitly.  This latter function
-    is mainly provided to support systems that do not have back-link
-    support (most notably Cygwin).
+When a symbol is requested that has not been previously registered then the resolve function will search the loaded modules for that symbol, and register it implicitly.  This latter function is mainly provided to support systems that do not have back-link support (most notably Cygwin).
 
-    Entry points that are resolved should be indirect pointers, for
-    example the panel_command routine is defined as:
+Entry points that are resolved should be indirect pointers, for example the panel_command routine is defined as:
 
        void *(*panel_command)(char *)
 
-    The resolver may be called multiple times, the first time it is
-    called is during module load, immediately after the registration
-    section is called.  It is subsequently called when other modules
-    are loaded or unloaded.
+The resolver may be called multiple times, the first time it is called is during module load, immediately after the registration section is called.  It is subsequently called when other modules are loaded or unloaded.
 
-    When a symbol cannot be resolved it will be set to NULL.
+When a symbol cannot be resolved it will be set to NULL.
 
-    The resolver section is optional.
-
-*/
+The resolver section is optional.
 
 ```
 HDL_RESOLVER_SECTION;
@@ -217,28 +194,17 @@ HDL_RESOLVER_SECTION;
 END_RESOLVER_SECTION;
 ```
 
-/*
-    The device section is to register device drivers with hercules.
-    It associates device types with device handlers
+The device section is to register device drivers with hercules. It associates device types with device handlers
 
-    If a device handler is not registered for a specific device type
-    then and a loadable mode with the name of "hdtxxxx" (where xxxx
-    is the device type) exists then that module is loaded
+If a device handler is not registered for a specific device type then and a loadable mode with the name of "hdtxxxx" (where xxxx is the device type) exists then that module is loaded
 
-    Search order:
-        1) The most recently registered (ie loaded) device of the
-           requested device type.
-        2) Device driver in external loadable module, where the
-           module name is hdtxxxx (where xxxx is the device type
-           ie module name hdtlcs for device type LCS or hdt2703
-           for device type 2703)
-        3) If the device is listed in the alias table (hdteq.c)
-           then external module hdtyyyy will be loaded, where
-           yyyy is the base name as listed in hdteq.c.
-        The device name is always mapped to lower case when searching
-        for loadable modules.
+Search order:
+1) The most recently registered (ie loaded) device of the requested device type.
+2) Device driver in external loadable module, where the module name is hdtxxxx (where xxxx is the device type i.e. module name hdtlcs for device type LCS or hdt2703 for device type 2703)
+3) If the device is listed in the alias table (hdteq.c) then external module hdtyyyy will be loaded, where yyyy is the base name as listed in hdteq.c.
+The device name is always mapped to lower case when searching for loadable modules.
 
-    The device section is optional
+The device section is optional
 */
 ```
 HDL_DEVICE_SECTION;
@@ -249,48 +215,35 @@ HDL_DEVICE_SECTION;
 END_DEVICE_SECTION;
 ```
 
-/*  The instruction section registers inserts optional instructions,
-    or modifies existing instructions.
+The instruction section registers inserts optional instructions, or modifies existing instructions.
 
-    Instructions are generally defined with DEF_INST(instname) which results
-    in an external reference of s370_instname, s390_instname and z900_instname.
-    If an instruction is not defined for a certain architecture mode then
-    UNDEF_INST(instname) must be used for that given architecture mode.
+Instructions are generally defined with DEF_INST(instname) which results in an external reference of s370_instname, s390_instname and z900_instname. If an instruction is not defined for a certain architecture mode then UNDEF_INST(instname) must be used for that given architecture mode.
 
-    The instruction section is optional
-*/
+The instruction section is optional
 
+```
 HDL_INSTRUCTION_SECTION;
 {
     HDL_DEF_INST( HDL_INSTARCH_370, 0xB2FE, new_B2FE_inst_doing_something );
     HDL_DEF_INST( HDL_INSTARCH_390 | HDL_INSTARCH_900, 0xB2FD, new_B2FD_inst_doing_something_else );
 }
 END_INSTRUCTION_SECTION;
+```
 
+The final section is called once, when the module is unloaded or when hercules terminates.
 
-/*
-    The final section is called once, when the module is unloaded
-    or when hercules terminates.
+A dll can reject being unloaded by returning a non-zero value in the final section.
 
-    A dll can reject being unloaded by returning a non-zero value
-    in the final section.
+The final section is intended to be used to perform cleanup or indicate cleanup action to be taken.  It may set a shutdown flag that is used within this dll that all local functions must now terminate.
+The final section is optional
 
-    The final section is intended to be used to perform cleanup or
-    indicate cleanup action to be taken.  It may set a shutdown
-    flag that is used within this dll that all local functions
-    must now terminate.
-
-    The final section is optional
-*/
-
+```
 HDL_FINAL_SECTION;
 {
 
 }
 END_FINAL_SECTION;
-
-
-
+```
 
 Below is Fish's sample code...
 
