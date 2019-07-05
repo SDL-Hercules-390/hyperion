@@ -1,4 +1,4 @@
-![test image](/readme/images/image_header_herculeshyperionSDL.png)  
+![SDL Hyperion](/readme/images/image_header_herculeshyperionSDL.png)  
 [![Build Status](https://travis-ci.org/SDL-Hercules-390/hyperion.svg?branch=master)](https://travis-ci.org/SDL-Hercules-390/hyperion)
 
 ## The [SoftDevLabs](http://www.softdevlabs.com) version of Hercules 4.x (Hyperion)
