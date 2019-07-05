@@ -31,9 +31,15 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 ### Building Hercules
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
+[Budiling Hercules for OSX](readme/README.OSX.md)  
+[Building Hercules under 64-bit Windows](readme/README.WIN64.md)
 [Hercules "External Packages"](readme/README.EXTPKG.md)  
 [HQA Build Scenarios](readme/README.HQA.md)  
 [How to build Hercules from SVN under Solaris](readme/README.SUN.md)  
+OBSOLETE [Building Hercules with MinGW](readme/README.MINGW.md)  
+OBSOLETE [Building Hercules for Windows with Visual C](readme/README.MSVC.md)  
+[LOW-LEVEL TEST CASES](tests/README.md)  
+[HercIFC and Hercules as setuid root programs](readme/README.SETUID.md)  
 
 ### Mods
 [APL/360 mods](readme/README.APL360.md)  
@@ -41,13 +47,21 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 [Preliminary 2703 BSC Support](readme/README.COMMADPT.md)  
 [Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
 [ECPS:VM & Extended VM Assists](readme/README.ECPSVM.md)  
+[RXVT4APL Mods](readme/README.RXVT4APL.md)  
 
-### Features
+### Features and Operation
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules Automatic Operator](readme/README.HAO.md)  
 [Hercules Dynamic Loader](readme/README.HDL.md)  
 [Customizable Hercules 3270 Logo](readme/README.HERCLOGO.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
+[Hercules Networking](readme/README.NETWORKING.md)  
+[Hercules PTT Tracing](readme/README.PTT.md)  
+[Hercules REXX Support](readme/README.REXX.md)  
+[S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
+[Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
+[Guest Access To Host IP Stack - The TCPIP (X'75') Instruction](readme/README.TCPIP.md)  
+[VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
 
 ### Hercules Architecture
 [Hercules Input/Output Architecture](readme/README.IOARCH.md)  
