@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # RXVT4APL Mods
 ## Contents
@@ -21,18 +21,18 @@ then type the standard APL command to sign on
 There is extensive helpful documentation with openAPL if you have problems with X11 fonts or keymaps, etc.
 
 3. Rather than use the right ALT key I used the unused "windows" key for the Mode_switch key in modeswitch.xmap:
-```
-clear Mod5
-clear Mod4
-clear Mod3
-keycode 133 = Mode_switch
-add Mod3 = Mode_switch
-```
+    ```
+    clear Mod5
+    clear Mod4
+    clear Mod3
+    keycode 133 = Mode_switch
+    add Mod3 = Mode_switch
+    ```
 
 4. The terminals must be defined to hercules using the conf file definitions  
-`0402 2703 dial=in lport=57413 lnctl=ibm1 term=rxvt4apl skip=5EDE code=ebcd iskip=0D0A prepend=16 append=5B1F eol=0A binary=yes crlf=yes sendcr=yes`  
+```0402 2703 dial=in lport=57413 lnctl=ibm1 term=rxvt4apl skip=5EDE code=ebcd iskip=0D0A prepend=16 append=5B1F eol=0A binary=yes crlf=yes sendcr=yes```
 
-5. In general when typing a character, rxvt4apl seems to prefer to use the standard ASCII character if it exists, in preference to the APL character.  So for example if you wish to enter the apostrophe (') use your ASCII keyboard's standard apostrophe key, not APL's apostrophe (ordinarily shift-K).
+5. In general when typing a character, rxvt4apl seems to prefer to use the standard ASCII character if it exists, in preference to the APL character.  So for example if you wish to enter the apostrophe (') use your ASCII keyboard's standard apostrophe key, not APL's apostrophe (ordinarily `shift-K`).
 
 6. In this implementation the standard alphabet APL characters A-Z must be typed as lowercase ASCII characters to be properly translated on input.  Also, rxvt4apl is missing the underlined alphabet characters...
 
@@ -40,24 +40,23 @@ add Mod3 = Mode_switch
 
 8. Many quirks exist - a couple of examples:
  - the right arrow key (branch command) must be hit twice
- - Some commands such as up and/or down grade cause unexpected escape
-   to telnet command mode, even in binary mode
+ - Some commands such as up and/or down grade cause unexpected escape to telnet command mode, even in binary mode
 
 9. If you receive this error when running rxvt4apl  
-     `can't open pseudo-tty`  
+    `can't open pseudo-tty`  
 try the following patch (required for recent ubuntu)
-```
-======================= START OF PATCH ====================
---- rxvt4apl_2.4.5/src/command.c        1998-01-01 14:29:08.000000000 -0500
-+++ rxvt4apl_2.4.5-patched/src/command.c        2012-12-06 13:48:12.698068063 -0500
-@@ -448,7 +448,7 @@
-     ptydev = ttydev = _getpty(&fd, O_RDWR | O_NDELAY, 0622, 0);
-     if (ptydev == NULL)
-        goto Failed;
--#elif defined (__svr4__)
-+#elif 1 // defined (__svr4__)
-     {
-        extern char    *ptsname();
+    ```
+    ======================= START OF PATCH ====================
+    --- rxvt4apl_2.4.5/src/command.c        1998-01-01 14:29:08.000000000 -0500
+    +++ rxvt4apl_2.4.5-patched/src/command.c        2012-12-06 13:48:12.698068063 -0500
+    @@ -448,7 +448,7 @@
+         ptydev = ttydev = _getpty(&fd, O_RDWR | O_NDELAY, 0622, 0);
+         if (ptydev == NULL)
+            goto Failed;
+    -#elif defined (__svr4__)
+    +#elif 1 // defined (__svr4__)
+         {
+            extern char    *ptsname();
 
-======================= END OF PATCH ====================
-```
+    ======================= END OF PATCH ====================
+    ```
