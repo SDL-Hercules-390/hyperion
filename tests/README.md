@@ -8,7 +8,7 @@
 3. [.tst file runtest command](#tst-file-runtest-command)
 4. [.tst file directives](#tst-file-directives)
 5. [Predefined variables](#Predefined-variables)
-6. [Creating test files that can run on z/CMS as well as under Hercules](#Creating-test-files-that-can-run-on-z/CMS-as-well-as-under-Hercules)
+6. [Creating test files that can run on z/CMS as well as under Hercules](#Creating-test-files-that-can-run-on-zCMS-as-well-as-under-Hercules)
 
 
 
