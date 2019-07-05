@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Preliminary 2703 BSC Support
 ## Contents
@@ -17,14 +17,13 @@ Only allows Point to Point connection.
 ```
 CCUU 2703 lport=port lhost=host rhost=host rport=port dial=IN|OUT|INOUT|NO
           [pto=nnn|0|-1] [rto=nnn|0|-1] [eto=nnn|0|-1]
-```
 
-`lport`: the local TCP port number or service name on which the line will listen
+lport: the local TCP port number or service name on which the line will listen
         for incoming TCP calls
         This parameter is irrelevant and is ignored for DIAL=OUT
         for DIAL=IN|INOUT|NO, this parameter is mandatory
 
-`cwlhost`: The local interface IP address on which to listen.
+cwlhost: The local interface IP address on which to listen.
         if not specified, all interfaces will be used.
         ex:
         lhost=127.0.0.1 : Only accept calls from local host
@@ -37,17 +36,18 @@ CCUU 2703 lport=port lhost=host rhost=host rport=port dial=IN|OUT|INOUT|NO
         for DIAL=IN|INOUT|NO, this parameter is mandatory
 
 
-`rhost`: the remote host ip address or name
+rhost: the remote host ip address or name
         This parameter is irrelevant and is ignored for DIAL=IN
         for DIAL=OUT|INOUT|NO, this parameter is mandatory
 
-`rport`: the remote port number or service name
+rport: the remote port number or service name
         This parameter is irrelevant and is ignored for DIAL=IN
         for DIAL=OUT|INOUT|NO, this parameter is mandatory
 
-`rto`, `pto`, `eto`: Read, Poll and Enable Timeout values in miliseconds.
+rto, pto, eto: Read, Poll and Enable Timeout values in miliseconds.
         specifying 0 means No Timeout (infinite wait). -1 Means immediate
         timeout.
+```
 
 The read timeout is how long the handler will wait for an ending character after the last character was received or the I/O initiated. The read timeout default is 3000 Miliseconds (3 Seconds)
 
@@ -55,7 +55,7 @@ The poll timeout is how long the handler will wait for a polled station to respo
 
 The enable timeout is how long the handler will wait for the TCP connection to be established. the enable timeout default is 10000 Miliseconds (10 Seconds), except if DIAL=NO is also specified, in which case the enable timeout defaults to 0.
 
-Note : the ETO parameter is ignored if DIAL=NO is not specified. For a dialed line, there is no enable timeout. If the eto parameter is specified and DIAL is not "NO", then a warning message is issued and the parameter is ignored.
+Note: the ETO parameter is ignored if DIAL=NO is not specified. For a dialed line, there is no enable timeout. If the eto parameter is specified and DIAL is not "NO", then a warning message is issued and the parameter is ignored.
 
 `dial=IN`|`OUT`|`INOUT`|`NO`
         Indicate call direction (if any).
@@ -101,7 +101,6 @@ Note : the ETO parameter is ignored if DIAL=NO is not specified. For a dialed li
 ## The communication protocol
 The communication protocol is basic. Every character written by the guest program with a WRITE CCW is transfered to the remote end, untranslated and untouched (except for Transparent BSC rules which deem that DLE characters are doubled when the program has previously written a DLE/STX sequence).
 
-
 ## Dial data format
 Dial data is originally as follows :
 ```
@@ -112,16 +111,14 @@ x x x x 1 1 0 0 : EON
 x x x x 1 1 0 1 : SEP
 ```
 
-In order to perform an outgoing call, the data must follow these specifications:
-        `N[N[N]]SEPN[N[N]]SEPN[N[N]]SEPN[N[N]]]SEPN[..[N]][EON]`
-        Where N is any dialing number from 0 to 9 and SEP is the separator.
+In order to perform an outgoing call, the data must follow these specifications:  
+        `N[N[N]]SEPN[N[N]]SEPN[N[N]]SEPN[N[N]]]SEPN[..[N]][EON]`  
+Where N is any dialing number from 0 to 9 and SEP is the separator.  
 
-        The 4 first group of digits represet the IP address.  The last group represent a TCP port number.
-
-        For example (* is the SEP character representation):
-        192*168*0*1*8888 : will issue a TCP connection to 192.168.0.1 port 8888 
-
-        The EON is optional. If it is present, it must be the last character of the dial data.
+The 4 first group of digits represet the IP address.  The last group represent a TCP port number.
+For example (* is the SEP character representation):  
+        `192*168*0*1*8888 : will issue a TCP connection to 192.168.0.1 port 8888`  
+The EON is optional. If it is present, it must be the last character of the dial data.
 
 ## Bugs, Caveats
 - The Address Prepare is not implemented
@@ -130,4 +127,4 @@ In order to perform an outgoing call, the data must follow these specifications:
 - DIAL CCW Not tested
 - There is 1 thread per line, when there should be 1 thread for ALL lines.
 - MAXDEVT may have to be adjusted under WINDOWS to accomodate for a large number of lines (because some I/O may take an undefinite amount of time).
-- There is no 'REAL' Bsc line support yet.
+- There is no 'REAL' BSC line support yet.
