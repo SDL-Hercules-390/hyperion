@@ -4,7 +4,7 @@
 # Hercules "External Packages"
 ## Contents
 1. [Overview](#Overview)
-2. [LINUX (non-Windows)](#LINUX-(non-Windows))
+2. [Linux](#Linux)
 3. [Building the External Packages for a Windows-based Hyperion](#Building-the-External-Packages-for-a-Windows-based-Hyperion)  
   3a. [Summary of the steps involved](#Summary-of-the-steps-involved)  
   3b. [Detailed Instructions](#Detailed-Instructions)  
@@ -34,7 +34,7 @@ The four repositories for the external packages can be located at these URLs:
 
 The procedure for building each of the external packages is outlined further below.  More information about each of the packages can be found in a README document within each of their respective repositories.
 
-## LINUX (non-Windows)
+## Linux
 The procedure detailed below is explained from a Windows point of view, but the procedure for Linux is virtually identical.  If you are reasonably skilled at Linux you should have no trouble making the needed adjustments.
 
 One of the adjustments that must be made is to either point your "LIBRARY_PATH" and "CPATH" variables to your './extpkgs/lib' and './extpkgs/include' directories or else specify the the top level './extpkgs' directory for your "--enable-extpkgs=DIR" configure option.
