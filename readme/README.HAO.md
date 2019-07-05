@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Hercules Automatic Operator
 ## Contents
@@ -10,24 +10,18 @@
 5. [Giving credit where credit is due](#Giving-credit-where-credit-is-due)
 
 ## About
-
 The Hercules Automatic Operator (HAO) feature is a facility that allows one to automatically issue panel commands in response to certain messages being issued.
 
 To use the Hercules Automatic Operator facility, one first defines a "rule" consisting of a "target" and an associated "command". The "target" is just a regular expression pattern used to match against the text of the various messages that Hercules issues as it runs. Whenever a match is found, the rule "fires" and its associated command is automatically issued.
 
-The Hercules Automatic Operator facility is ONLY for those messages issued BY HERCULES to its HMC (hardware console). It CANNOT be used for whatever messages the guest operating system may issue to any of its terminals. It is only a HERCULES automatic operator and NOT a "VSE", "MVS", "VM", etc, automatic operator!
+The Hercules Automatic Operator facility is **only** for those messages issued **by Hercules** to its HMC (hardware console). It **cannot** be used for whatever messages the guest operating system may issue to any of its terminals. It is only a **Hercules** automatic operator and **not** a "VSE", "MVS", "VM", etc, automatic operator!
 
 ## Defining a rule
-
-To define a HAO rule, enter the command:
-
-    hao  <tgt>
-
-to define the rule's "target" match pattern (a simple regular expression), followed by the command:
-
-    hao  <cmd>
-
-to define the rule's associated panel-command.
+To define a HAO rule, enter the command:  
+    hao  <tgt>  
+to define the rule's "target" match pattern (a simple regular expression), followed by the command:  
+    hao  <cmd>  
+to define the rule's associated panel-command.  
 
 The target pattern is a simple regular expression value as defined by whatever regular expression support your supported host build platform happens to support. For Windows it must be a Perl Compatible Regular Expression (PCRE).
 For other supported build platforms it might be some other supported regular expression syntax. Check your host platform's programming documentation for further details.
@@ -35,7 +29,6 @@ For other supported build platforms it might be some other supported regular exp
 The associated panel-command <cmd> is whatever valid Hercules command you wish to issue in response to a message being issued that matches the given pattern (target). (Okay, that's not completely true. The "command" is actually any text string one desires. It doesn't have to be a valid Hercules command, but it makes infinitely more sense if it is one).
 
 ## Substituting substrings in the command
-
 Substrings may be substituted into a rule's associated panel-command <cmd> by means of the special variables $1, $2, etc, which will be replaced by the values of "capturing groups" in the match pattern. A capturing group is a part of the regular expression enclosed in parentheses which is matched with text in the target message. In this way, commands may be constructed which contain substrings extracted from the message which triggered the command.
 
 The following special variables are recognized:
@@ -58,10 +51,9 @@ Another example, shown below, illustrates how the dot matrix display of a 3480 t
     hao cmd devinit $1 /u/tapes/$2.awstape
 
 ## Other commands and limitations
-
 ALL defined rules are checked for a match each time Hercules issues a message. There is no way to specify "stop processing subsequent rules". If a message is issued that matches two or more rules, each associated command is then issued in sequence.
 
-The current implementation limits the total number of defined rules to 64. If you need to define more than 64 rules you will either have to build Hercules for yourself (increasing the value of the HAO_MAXRULE constant in hao.c) or else beg one of the Hercules developers to please do it for you.
+The current implementation limits the total number of defined rules to 64. If you need to define more than 64 rules you will either have to build Hercules for yourself (increasing the value of the HAO_MAXRULE constant in [hao.c](/hao.c)) or else beg one of the Hercules developers to please do it for you.
 
 To delete a fully or partially defined HAO rule, first use the `hao list` command to list all of the defined (or partially defined) rules, and then use the `hao del <nnn>` command to delete the specific rule identified by 'nnn'. (All rules are assigned numbers as they are defined and are thus identified by their numeric value). Optionally, one may delete ALL defined or partially defined rules by issuing the command 'hao clear'.
 
