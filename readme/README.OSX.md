@@ -1,14 +1,10 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
 [Return to master README.MD](/README.md)
 
-# TITLE
+# Building Hercules for OSX
 ## Contents
 1. [About](#About)
 2. [Tun/Tap Information](#Tun/Tap-Information)
-3. [ToDo](#ToDo)
-4. [ToDo](#ToDo)
-5. [ToDo](#ToDo)
-6. [ToDo](#ToDo)
 
 ## About
 To compile on OS X for another architecture than the one running, or another OS version, you have to supply several arguments to the configure command.
