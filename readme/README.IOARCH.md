@@ -6,8 +6,8 @@
 1. [About](#About)
 2. [Motivation for I/O Architecture Enhancements](#Motivation-for-IO-Architecture-Enhancements)
 3. [Architecture Feasibility](#Architecture-Feasibility)
-4. [Channel Input/Output Architecture in ESA/390 or z/Architecture](#Channel-InputOutput-Architecture-in-ESA/390-or-zArchitecture)
-5. [Enabling Channel-based I/O in ESA/390 or z/Architecture](#Enabling-Channel-based-IO-in-ESA/390-or-zArchitecture)
+4. [Channel Input/Output Architecture in ESA/390 or z/Architecture](#Channel-InputOutput-Architecture-in-ESA390-or-zArchitecture)
+5. [Enabling Channel-based I/O in ESA/390 or z/Architecture](#Enabling-Channel-based-IO-in-ESA390-or-zArchitecture)
 
 ## About
 Hercules is composed of two related but distinct architectures:
