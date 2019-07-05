@@ -1,29 +1,28 @@
---------------------------------------------------------------------------------
+![test image](images/image_header_herculeshyperionSDL.png)
+[Return to master README.MD](/README.md)
 
-                              vmfplc2
+# VMFPLC2 (VM) Formatted Tape Utility
+## Contents
+1. [Description](#Description)
+2. [Synopsis](#Synopsis)
+3. [Arguments](#Arguments)
+4. [Options](#Options)
+5. [Control File](#Control-File)
+6. [Examples](#Examples)
+7. [Bug Reports](#Bug-Reports)
+8. [See Also](#See-Also)
+9. [History](#History)
 
-              Hercules VMFPLC2 (VM) formatted tape utility
+## Description
+Hercules command to manipulate (create or read) VMFPLC2 formatted tapes for VM/CMS use.
 
---------------------------------------------------------------------------------
+## Synopsis
+`    vmfplc2   [options]   VERB  [<ctlfile>]  <tapein> | <tapeout>`
 
+## Arguments
+The vmfplc2 utility requires a function (DUMP, SCAN or LOAD) followed by the name of a control file and the name of an input or output tape file.
 
-DESCRIPTION:
-
-  Hercules command to manipulate (create or read) VMFPLC2 formatted tapes
-  for VM/CMS use.
-
-
-SYNOPSIS:
-
-    vmfplc2   [options]   VERB  [<ctlfile>]  <tapein> | <tapeout>
-
-
-ARGUMENTS:
-
-  The vmfplc2 utility requires a function (DUMP, SCAN or LOAD) followed by
-  the name of a control file and the name of an input or output tape file.
-
-
+```
     DUMP      The DUMP function allows creating a VMFPLC2 formatted tape.
 
     SCAN      The SCAN function allows listing the contents of a VMFPLC2
@@ -41,13 +40,11 @@ ARGUMENTS:
 
     tapeout   The name of the output tape file to be created by the DUMP
               function.
+```
+Surround the name of the control file and/or the name of the input/output tape file with double quotes if it contains any blanks in its name.
 
-  Surround the name of the control file and/or the name of the input/output
-  tape file with double quotes if it contains any blanks in its name.
-
-
-OPTIONS:
-
+## Options
+```
     -c cp     The desired translation code page to be used for ASCII to
               EBCDIC translation (and vice versa).  For a list of valid
               code pages please refer to the Hercules documentation for
@@ -66,17 +63,13 @@ OPTIONS:
               The 'TAPE' DUMP format allows tapes to be read by earlier
               versions of VM/CMS such as VM/370.  The VMFPLC2 format is
               only used by later versions of VM/CMS such as e.g. z/VM.
+```
 
+## Control File
+The control file lets the DUMP/LOAD functions to determine which host files are to be dumped or loaded to/from tape and how they should be interpreted on VM.  Each statement of the control file has the following format:
 
-CONTROL FILE:
-
-  The control file lets the DUMP/LOAD functions to determine which host files
-  are to be dumped or loaded to/from tape and how they should be interpreted
-  on VM.  Each statement of the control file has the following format:
-
-
+```
        [codepage]  <fn>  <ft>  <fm>  <recfm>  [lrecl]  <type>  <hostfile>
-
 
     codepage  Is an optional code page specification to be used when dumping
               or loading the specified file. If the first word contains a '/'
@@ -162,61 +155,44 @@ CONTROL FILE:
               If the full path of the file is not specified then the file is
               treated as being relative to the current directory.  Enclose the
               file name within double quotes if it contains any blanks.
+```
 
 
-EXAMPLES:
+## Examples
+The following creates a VMFPLC2 formatted tape named "vmfplc2.het" containing three files named "mytest.asm", "profile.xedit.txt" and "synonyms.txt", which can then be loaded onto the guest system as CMS files "MYTEST ASSEMBLE A1", "PROFILE XEDIT A1" and "MY SYNONYM A1":
 
-  The following creates a VMFPLC2 formatted tape named "vmfplc2.het" containing
-  three files named "mytest.asm", "profile.xedit.txt" and "synonyms.txt", which
-  can then be loaded onto the guest system as CMS files "MYTEST ASSEMBLE A1",
-  "PROFILE XEDIT A1" and "MY SYNONYM A1":
-
-
+```
     command:        vmfplc2 DUMP myfiles.txt  vmfplc2.het
 
     myfiles.txt:    MYTEST   ASSEMBLE A1  Fixed 80 Text  mytest.asm
                     PROFILE  XEDIT    A1  Variable Text  profile.xedit.txt
                     USER     SYNONYM  A1  Fixed 80 Text  synonyms.txt
+```
 
-
-  The following example reads a VMFPLC2 formatted input tape named "vmfplc2.het"
-  and lists all of the files that are found on the tape:
-
-
+The following example reads a VMFPLC2 formatted input tape named "vmfplc2.het" and lists all of the files that are found on the tape:
+```
     command:        vmfplc2 SCAN vmfplc2.het
+```
 
-
-  The following example reads a VMFPLC2 formatted tape named "vmfplc2.het" and
-  restores onto the host system any files found on the tape that match one of
-  the entries listed in the "myfiles.txt" control file:
-
-
+The following example reads a VMFPLC2 formatted tape named "vmfplc2.het" and restores onto the host system any files found on the tape that match one of the entries listed in the "myfiles.txt" control file:
+```
     command:        vmfplc2 LOAD myfiles.txt  vmfplc2.het
 
     myfiles.txt:    MYTEST XEDIT A1  Variable Text  mytest.rexx
                     MYTEST DATA  A1  Fixed 80 Text  mytest.dat
+```
 
-
-BUG REPORTS:
-
-    Bug reports (together with your diagnosis of the fault please) should
-    be reported to either the main hercules-390 discussion group on Yahoo
-    or preferably, entered into the SDL Hyperion Github issue tracker at:
+## Bug Reports
+Bug reports (together with your diagnosis of the fault please) should be reported to either the main hercules-390 discussion group on Yahoo or preferably, entered into the SDL Hyperion Github issue tracker at:
 
         https://github.com/SDL-Hercules-390/hyperion/issues/
 
-
-SEE ALSO:
-
-    The Hercules emulator homepage at: http://www.sdl-hercules-390.org/
+## See Also
+The Hercules emulator homepage at: http://www.sdl-hercules-390.org/
 
 
-HISTORY:
-
+## History
     2010-08-07  Originally written by Ivan S. Warren
 
     2019-02-29  Program completely rewritten by "Fish" (David B. Trout)
                 Any typos or bugs are purely my own fault and not Ivan's.
-
-
---------------------------------------------------------------------------------
