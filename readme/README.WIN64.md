@@ -4,7 +4,7 @@
 # Building Hercules under 64-bit Windows
 ## Contents
 1. [Command Line Method](#Command-Line-Method)
-2. [The Fish "Visual Studio 2008" method](#The-Fish-"Visual-Studio-2008"-method)
+2. [The Fish "Visual Studio 2008" method](#The-Fish-Visual-Studio-2008-method)
 3. [The Windows batch file method](#The-Windows-batch-file-method)
 
 ## About
