@@ -230,7 +230,7 @@ The following will FAIL:
                 ...(other optional CCWS)...
 ```
 
-Again, please refer to the provided TMOUNT sample for a simple example.
+Again, please refer to the provided [TMOUNT](util/TMOUNT.txt) sample for a simple example.
 
 -- Fish
 28 May 2008
