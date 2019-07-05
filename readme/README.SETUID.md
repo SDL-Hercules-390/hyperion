@@ -5,7 +5,6 @@
 ## Contents
 1. [Rationale](#Rationale)
 2. [Building Hercules with capabilities feature](#Building-Hercules-with-capabilities-feature)
-3. [ToDo](#ToDo)
 
 ## Rationale
 Historically, hercifc is usually setuid root so that it can make changes to the tun and tap interfaces on the system.
