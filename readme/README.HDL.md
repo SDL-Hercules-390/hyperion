@@ -200,7 +200,7 @@ If a device handler is not registered for a specific device type then and a load
 Search order:
 1) The most recently registered (ie loaded) device of the requested device type.
 2) Device driver in external loadable module, where the module name is hdtxxxx (where xxxx is the device type i.e. module name hdtlcs for device type LCS or hdt2703 for device type 2703)
-3) If the device is listed in the alias table (hdteq.c) then external module hdtyyyy will be loaded, where yyyy is the base name as listed in hdteq.c.
+3) If the device is listed in the alias table [hdteq.c](/hdteq.c) then external module hdtyyyy will be loaded, where yyyy is the base name as listed in hdteq.c.
 The device name is always mapped to lower case when searching for loadable modules.
 
 The device section is optional
@@ -500,7 +500,7 @@ HDL_INSTRUCTION_SECTION;
 ### IMPORTANT HERCULES INTERNALS BUILD INFORMATION RELATING TO HDL
 (our 'DLL_EXPORT' and 'DLL_IMPORT' design)
 
-Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), *MUST* have its functon declaration defined in the "hexterns.h" header and *ONLY* in the "hexterns.h" header!
+Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), *MUST* have its functon declaration defined in the [hexterns.h](/hexterns.h) header and *ONLY* in the [hexterns.h](/hexterns.h) header!
 
 That is to say, you must NOT declare the function in a separate header file! (That might be the way you normally do things for a normal project, but that is NOT the way you do it with Hercules)
 
@@ -548,12 +548,11 @@ You need to ensure your .c SOURCE member always begins with the following very s
 
 where 'XXXXX' is the name of your source member, 'ZZZZZ' is the name of the MODULE (.dll or .so) your code will be a part of, and 'DLL_EXPORT' is added to the beginning of each function that needs to be exported.
 
-Refer to the "OBJ_CODE.msvc" and/or "makefile.am" members to see how all of hercules code is divided into separate loadable modules (DLLs) so you know which module (DLL) your function should be a part of.
+Refer to the "OBJ_CODE.msvc" and/or [makefile.am](/makefile.am) members to see how all of hercules code is divided into separate loadable modules (DLLs) so you know which module (DLL) your function should be a part of.
 
 
 #### STEP 2
-
-Add a new entry at the BEGINNING of "hexterns.h" as follows:
+Add a new entry at the BEGINNING of [hexterns.h](/hexterns.h) as follows:
 
 ```
 #ifndef _XXXXXXX_C_
@@ -571,7 +570,7 @@ where 'MMMM' is a unique 2-4 character prefix of your own choosing that identifi
 
 
 #### STEP 3
-Add your exported function declarations to END of "hexterns.h":
+Add your exported function declarations to END of [hexterns.h](/hexterns.h):
 
 ```
     /* Functions in module xxxxxxx.c */
@@ -583,7 +582,7 @@ Add your exported function declarations to END of "hexterns.h":
 
 
 #### STEP 4
-Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your new source member. Be sure to update BOTH files, e.g.:
+Update BOTH the "OBJ_CODE.msvc" and [makefile.am](/makefile.am) members with your new source member. Be sure to update BOTH files, e.g.:
 
 ```
     ---(makefile.am)---
@@ -628,4 +627,4 @@ Update BOTH the "OBJ_CODE.msvc" and "makefile.am" members with your new source m
 
 That's it. That's all you should have to do.
 
-Again, you MAY use a separate #include header file for your new source member with NON-EXPORTED functions declared within it but any function you need to export to another module must NOT be declared there. The function must instead be declared in "hexterns.h" as described above.
+Again, you *may* use a separate #include header file for your new source member with NON-EXPORTED functions declared within it but any function you need to export to another module must **not** be declared there. The function must instead be declared in [hexterns.h](/hexterns.h) as described above.
