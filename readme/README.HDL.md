@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Hercules Dynamic Loader
 ## Contents
@@ -9,7 +9,6 @@
 4. [Resolving Symbols](#Resolving-Symbols)
 5. [Some additional notes](#Some-additional-notes)
 6. [Important Hercules internals build information relating to HDL](#Important-Hercules-internals-build-information-relating-to-HDL)
-2. [Commands](#Commands)
 
 ## About
 The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to hercules, without the need to rebuild or even restart hercules.
