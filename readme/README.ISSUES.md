@@ -5,7 +5,7 @@
 ## Contents
 1. [About](#About)
 2. [Tape Device Handler](#Tape-Device-Handler)
-3. [I/O Subsystem](#I/O-Subsystem)
+3. [I/O Subsystem](#IO-Subsystem)
 3. [Device Handlers](#Device-Handlers)
 3. [Hardware Panel](#Hardware-Panel)
 
