@@ -7,7 +7,7 @@
 2. [Notes](#Notes)
 
 ## About
-Max H. Parke [ikj1234i@yahoo.com](ikj1234i@yahoo.com) has modified the commadpt driver so APL works properly with rxvt4apl.
+Max H. Parke [ikj1234i@yahoo.com](mailto:ikj1234i@yahoo.com) has modified the commadpt driver so APL works properly with rxvt4apl.
 rxvt4apl is an 8-bit clean, colour xterm replacement that has been optimised for use with openAPL.
 Here is Max's README regarding his rxvt4apl mods:
 
