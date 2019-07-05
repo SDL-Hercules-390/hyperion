@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Building Hercules-390 for AIX 5.3      *PRELIMINARY
 ## Contents
@@ -18,19 +18,18 @@ Autoconf/automake require some pre-requisites, such as gettext, info, m4, libsig
 ```
 ./configure  &&  make  &&  make install
 ```
-    (or you can run each command separately if you want).
+(or you can run each command separately if you want).
 
 3. That's it! Enjoy your private mainframe. :)
 
-The above is based on efforts done by Alexey Bozrikov [bozy@fgm.com.cy], Harold Grovesteen [h.grovsteen@tx.rr.com] and Fish [fish@softdevlabs.com] on the Hercules-390 Yahoo group list during the month of October 2009.
+The above is based on efforts done by Alexey Bozrikov [bozy@fgm.com.cy], Harold Grovesteen [h.grovsteen@tx.rr.com] and Fish [fish@softdevlabs.com] on the [Hercules-390 Yahoo group](https://groups.yahoo.com/neo/groups/hercules-390) list during the month of October 2009.
 
 ## ToDo:
 The followings items are still remaining to do: 
-  - Get SCSI tape working: resolve `<sys/mtio.h> header & 'struct mtget'` issue(s).
+  - Get SCSI tape working: resolve `<sys/mtio.h>` header & `struct mtget` issue(s).
 ```
 #if defined( HAVE_STRUCT_MTGET_MT_GSTAT )
 #else // !defined( HAVE_STRUCT_MTGET_MT_GSTAT )
 #endif // defined( HAVE_STRUCT_MTGET_MT_GSTAT )
 ```
-
 - Test networking (did you do this yet Alexey?).
