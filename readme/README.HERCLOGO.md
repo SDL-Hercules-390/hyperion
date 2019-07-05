@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Customizable Hercules 3270 Logo
 ## Contents
@@ -13,7 +13,7 @@ The customized logo is stored in a plain text file which contains positioning or
 <img src="https://github.com/gsf600y/hyperion/blob/testbranch/readme/images/herclogo.jpg" width="500">
 
 Hercules also contains a built-in logo should no suitable file be found.
-The built-in logo is contained in `cnsllogo.h` and is included in `console.c`.
+The built-in logo is contained in [cnsllogo.h](/cnsllogo.h) and is included in [console.c](/console.c).
 
 ## How to specify the logo file
 Upon startup, Hercules will first look for a file named `herclogo.txt` in the current directory.
@@ -30,8 +30,7 @@ Each line in the file represent either an order or a plain text line. The orders
 `@SF [H][P]` Set the Highlight and/or Protected attribute  
 `@NL`        Forces going to the next line  
 `@ALIGN NONE|LEFT|RIGHT|CENTER`  
-Specified the text alignement (relative to the left and right borders of the terminal). When ALIGN is other than "NONE", a new line is automatically
-inserted after each line of text. If ALIGN is "NONE", then the text will be written without skipping to the next line.
+Specified the text alignement (relative to the left and right borders of the terminal). When ALIGN is other than "NONE", a new line is automatically inserted after each line of text. If ALIGN is "NONE", then the text will be written without skipping to the next line.
 
 It is also possible to embbed substitution variables in outgoing text.  Substition is indicated by enclosing the variable name between $( and )
 
@@ -51,7 +50,7 @@ The following variables are defined in that environment :
 
 Additionally, it is also possible to specify environment variable names.
 
-The file `herclogo.txt` is provided in the distribution as a sample template.
+The file [herclogo.txt](/herclogo.txt) is provided in the distribution as a sample template.
 It reflects the contents of the built-in logo.
 
 Ivan Warren 3/1/2006  
