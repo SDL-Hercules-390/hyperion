@@ -6,9 +6,6 @@
 1. [History](#History)
 2. [Using PTT](#Using-PTT)
 3. [Future Direction](#Future-Direction)
-4. [ToDo](#ToDo)
-5. [ToDo](#ToDo)
-6. [ToDo](#ToDo)
 
 ## History
 'PTT' is a misnomer.
