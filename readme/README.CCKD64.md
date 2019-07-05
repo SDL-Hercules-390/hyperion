@@ -52,4 +52,4 @@ The existing dasdls, dasdcat, dasdpdsu, dasdisup, and dasdseq utilities do not h
 4. Optional: run `cckdcdsk64 -3` on all of the newly converted 64-bit CCKD64 dasd images to verify the conversion was successful and that no errors exist on any of the images.
 
 ## Additional Information
-Additional information regarding the new CCKD64 file format can be found on the "Compressed Dasd Emulation" web page [https://sdl-hercules-390.github.io/html/cckddasd.html](https://sdl-hercules-390.github.io/html/cckddasd.html)
+Additional information regarding the new CCKD64 file format can be found on the [Compressed Dasd Emulation](https://sdl-hercules-390.github.io/html/cckddasd.html) web page.
