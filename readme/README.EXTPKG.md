@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Hercules "External Packages"
 ## Contents
@@ -66,7 +66,7 @@ Either download the .msi installer package or the .zip file and install Cmake.  
 
 Place these files into your local 'bin' directory (or if you don't have such a directory, place them into your '\extpkgs' directory that you just created).
 
-Adjust the `ExtPkgs.cmd.ini` as needed for your system (e.g. `cpu = arm`).
+Adjust the "ExtPkgs.cmd.ini" as needed for your system (e.g. `cpu = arm`).
 
 4.  Now clone and build the external packages by making the package install directory your current directory and issuing the `ExtPkgs`(*) command to clone, build and install all of the packages at once directly into your installation directory:  
        chdir  \extpkgs
@@ -74,15 +74,15 @@ Adjust the `ExtPkgs.cmd.ini` as needed for your system (e.g. `cpu = arm`).
 
 Depending on the speed of your system it may take anywhere from a couple of minutes to several minutes to finish building all of the packages.
 
-5.  Update your `LIB` and `INCLUDE` environment variables (on Linux this would be your `LIBRARY_PATH` and `CPATH` variables) to point to the directory where your packages were just installed:  
+5.  Update your "LIB" and "INCLUDE" environment variables (on Linux this would be your "LIBRARY_PATH" and "CPATH" variables) to point to the directory where your packages were just installed:  
         setx LIB "%LIB%;\extpkgs\lib"  
         setx INCLUDE "%INCLUDE%;\extpkgs\include"  
 
 6.  Build Hercules as normal.  (self explanatory)
 
-That concludes the necessary steps to build the external packages.  You now have the 32-bit and 64-bit versions of the Debug and Release builds of the external packages.  If you desire, you may delete both the `\repo` and `\work` directories as they are no longer needed.  You only need to keep the `\extpkgs` directory needed by Hercules (pointed to by your `LIB` environment variable).
+That concludes the necessary steps to build the external packages.  You now have the 32-bit and 64-bit versions of the Debug and Release builds of the external packages.  If you desire, you may delete both the "\repo" and "\work" directories as they are no longer needed.  You only need to keep the "\extpkgs" directory needed by Hercules (pointed to by your "LIB" environment variable).
 
-If you clone the `\hyperion` directory or download a newer Hyperion repository in the future, there is nothing extra you need to do.  You do *NOT* need to rebuild the external packages ever again (unless they are updated of course).
+If you clone the "\hyperion" directory or download a newer Hyperion repository in the future, there is nothing extra you need to do.  You do *NOT* need to rebuild the external packages ever again (unless they are updated of course).
 
 ---------------
 
