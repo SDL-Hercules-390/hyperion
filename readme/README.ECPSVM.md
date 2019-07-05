@@ -1,14 +1,14 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](..\README.MD)
+[Return to master README.md](/README.md)
 
 # ECPS:VM : Extended Control Program Support : VM/370
-### and
+and
 # Extended VM Assists - Partial Privop Simulation And Virtual Interval Timer
 
 ## Contents
 1. [Change Log](#Change-Log)
 2. [Supported Systems](#Supported-Systems)
-3. [How to enable/disable VM Assists](#How-to-enable/disable-VM-Assists)
+3. [How to enable/disable VM Assists](#How-to-enabledisable-VM-Assists)
 4. [New panel command](#New-panel-command)
 5. [Determining if the assist is used by VM](#Determining-if-the-assist-is-used-by-VM)
 6. [Technical information](#Technical-information)
