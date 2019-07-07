@@ -9,34 +9,34 @@
 4. [Samples](#Samples)
 ## Introduction
 
-The "Hercules Quality Assurance" Build Scenarios feature is designed to make it easier for Hercules developers to build Hercules using different predefined build settings called "Build Scenarios". Each predefined Build Scenario is defined in the `hqadefs.h` header which is automatically #included by the `hqainc.h` header whenever the `HAVE_HQA_H` macros is defined at build time.
+The "Hercules Quality Assurance" Build Scenarios feature is designed to make it easier for Hercules developers to build Hercules using different predefined build settings called "Build Scenarios". Each predefined Build Scenario is defined in the [hqadefs.h](/hqadefs.h) header which is automatically #included by the [hqainc.h](/hqainc.h) header whenever the 'HAVE_HQA_H' macros is defined at build time.
 
-The `HQA_H` header (also #included by the `hqainc.h` header when "HAVE_HQA_H" is defined at build time) selects which of the predefined "hqadefs.h" build scenarios you wish to test (build). The "hqa.h" header is a header that you, the Hercules developer, must supply. Hercules does not come with one.
+The `HQA_H` header (also #included by the [hqainc.h](/hqainc.h) header when 'HAVE_HQA_H' is defined at build time) selects which of the predefined [hqadefs.h](/hqadefs.h) build scenarios you wish to test (build). The 'hqa.h' header is a header that you, the Hercules developer, must supply. Hercules does not come with one.
 
 The idea is to be able to quickly and easily build various different "builds" of Hercules (each one using a different set of build options (i.e. each one with a different set of #define OPTION_XXX options defined)) without having to modify the Hercules source code at all. That is to say, The HQA (Hercules Quality Assurance) feature allows the developer to quickly and easily test different predefined "builds" of Hercules without having to manually modify the Hercules source code.
 
 ## How to use HQA
-To use the HQA feature simply define a "HQA_DIR" environment variable with the value of the directory where your "hqa.h" header exists and then rebuild Hercules.
+To use the HQA feature simply define a 'HQA_DIR' environment variable with the value of the directory where your 'hqa.h' header exists and then rebuild Hercules.
 
 To make things easy for you, the Windows and non-Windows versions of Hercules have already been modified to accept new build parameters to easily select whichever HQA Build Scenario you may wish to choose.
 
-On Windows, just pass the "-hqa {directory}" option to makefile.bat. On *nix, you can activate an HQA build in one of several ways:
+On Windows, just pass the `-hqa {directory}` option to [makefile.bat](/makefile.bat). On *nix, you can activate an HQA build in one of several ways:
   -  You can define the HQA_DIR environment variable pointing to the directory containing your `hqa.h` header.
   -  You can prefix your `./configure` command with an appropriate `HQA_DIR=/path/to/my/hqadir` value and let the configure script do the rest.
   -  You can use the `--enable-hqa=/path/to/my/hqadir` configure option (which overrides your HQA_DIR environment variable if defined)
 
-Your "hqa.h" header should then select the desired Build Scenario by appropriately #defining HQA_SCENARIO to the proper value. Refer to the "hqadefs.h" header for the list of currently defined build scenarios.
+Your 'hqa.h' header should then select the desired Build Scenario by appropriately #defining HQA_SCENARIO to the proper value. Refer to the [hqadefs.h](/hqadefs.h) header for the list of currently defined build scenarios.
 
-When Hercules is built, it checks to see if the HQA_DIR variable is defined and if so, checks further to see whether it contains a file called "hqa.h" or not. If both conditions are true, then it defines the HAVE_HQA_H macro which causes the "hqainc.h" header to automatically #include your "hqa.h" header when Hercules is built.
+When Hercules is built, it checks to see if the HQA_DIR variable is defined and if so, checks further to see whether it contains a file called 'hqa.h' or not. If both conditions are true, then it defines the HAVE_HQA_H macro which causes the [hqainc.h](/hqainc.h) header to automatically #include your 'hqa.h' header when Hercules is built.
 
-Your "hqa.h" header then defines "HQA_SCENARIO" to the appropriate value to automatically select the proper build settings (called "Build Scenarios") within the "hqadefs.h" header.
+Your 'hqa.h' header then defines "HQA_SCENARIO" to the appropriate value to automatically select the proper build settings (called "Build Scenarios") within the [hqadefs.h](/hqadefs.h) header.
 
-Also note that while your HQA directory, if defined, must exist, the "hqa.h" header file does not. That is to say, it is not an error for the "hqa.h" header to not exist. It is only an error for the HQA directory, if defined, to not exist. Thus you can have a permanently defined HQA directory and only create an "hqa.h" header file within it whenever you need to.
+Also note that while your HQA directory, if defined, must exist, the 'hqa.h' header file does not. That is to say, it is not an error for the "hqa.h" header to not exist. It is only an error for the HQA directory, if defined, to not exist. Thus you can have a permanently defined HQA directory and only create an "hqa.h" header file within it whenever you need to.
 
 ## Creating new build scenarios
-If none of the predefined set of Build Scenarios within the "hqadefs.h" header suits your needs, then just #define whatever OPTION_XXXX build settings you need within your "hqa.h" header instead, leaving HQA_SCENARIO undefined or set to 0.
+If none of the predefined set of Build Scenarios within the [hqadefs.h](/hqadefs.h) header suits your needs, then just #define whatever OPTION_XXXX build settings you need within your 'hqa.h' header instead, leaving HQA_SCENARIO undefined or set to 0.
 
-Once your new build settings have been fully tested (not only to build properly but also to run properly too!) you are then strongly encouraged add your new set of build settings to the "hqadefs.h" header as a new HQA_SCENARIO Build Scenario so other developers may take advantage of it.
+Once your new build settings have been fully tested (not only to build properly but also to run properly too!) you are then strongly encouraged add your new set of build settings to the [hqadefs.h](/hqadefs.h) header as a new HQA_SCENARIO Build Scenario so other developers may take advantage of it.
 
 ## Samples
 ### SAMPLE "hqa.h" HEADER
