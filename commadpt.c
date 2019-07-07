@@ -1579,13 +1579,6 @@ static void *commadpt_thread(void *vca)
                             }
                         }
                     }
-                    if (IS_ASYNC_LNCTL(ca)) {
-            /* Sleep for 0.01 sec - for faithful emulation we would
-             * slow everything down to 110 or 150 baud or worse :)
-             * Without this sleep, CPU use is excessive.
-             */
-                        usleep(10000);
-                    }
                 }
                 else
                 {
