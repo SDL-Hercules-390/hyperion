@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](/README.md)
 
 # Hercules PTT Tracing
 ## Contents
@@ -30,9 +30,9 @@ As originally written by Greg, the locking call intercept functions were part of
 
 In June of 2013 however, Fish needed to make some enhancements to the lock functions to automatically detect and report errors (non-zero return codes from any of the locking calls) under the guidance of Mark L. Gaubatz.
 
-It was at this time it was recognized that the generalized "PTT intercept" functions that were originally a part of the pttrace.c module as originally written/designed by Greg Smith should actually be moved into a separate "threading/locking" module (hthreads.c), thereby leaving the 'pttrace.c/.h' modules responsible for only what they were meant for: generalized event table tracing.
+It was at this time it was recognized that the generalized "PTT intercept" functions that were originally a part of the pttrace.c module as originally written/designed by Greg Smith should actually be moved into a separate "threading/locking" module ([hthreads.c](/hthreads.c)), thereby leaving the [pttrace.c](/pttrace.c)/[.h](/pttrace.h) modules responsible for only what they were meant for: generalized event table tracing.
 
-This allowed us to clean up much of the macro redefinition monkey business originally in the 'hthreads.h' header that was originally coded solely for the purpose of interfacing with the "PTT" internal trace table facility.
+This allowed us to clean up much of the macro redefinition monkey business originally in the [hthreads.h](/hthreads.h) header that was originally coded solely for the purpose of interfacing with the "PTT" internal trace table facility.
 
 Now, the htreads.c module is responsible for calling the proper threading implementation function (pthreads on non-Windows or fthreads on Windows) as well as checking the return code and, if necessary, calling the "PTT" facility to add an entry to the trace table.
 
@@ -71,11 +71,11 @@ The trace class must be one of the predefined classes listed below:
 
 For generic event type trace entries (as opposed to, say, instruction type trace entries), you should use the 'PTT_CL_INF' class.  Other classes are being developed/defined for future use to make it easier to define your own trace classes separate from the Hercules predefined internal classes.
 
-When a PTT tracing is activated via the 'ptt' command (to define/allocate a non-zero number of entries trace table), the PTT facility will then add your trace event to the table.
+When a PTT tracing is activated via the `ptt` command (to define/allocate a non-zero number of entries trace table), the PTT facility will then add your trace event to the table.
 
 When the entry is added, the thread id of the thread making the call, the current time of day and the source file name and line number where the call was made are added to the trace table entry.
 
-When you later enter the 'ptt' command with no arguments to dump/display the table, the resulting display might then look something like this:
+When you later enter the `ptt` command with no arguments to dump/display the table, the resulting display might then look something like this:
 ```
     qeth.c:3180  20:37:50.942314 000015D0 af select    0000000000000000 0000000000000000 00000001
     qeth.c:3144  20:37:50.942322 000015D0 b4 procinpq  0000000000000000 0000000000000000 00000000
