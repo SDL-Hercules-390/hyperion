@@ -39,7 +39,7 @@ OBSOLETE [Building Hercules for Windows with Visual C](readme/README.MSVC.md)
 [HercIFC and Hercules as setuid root programs](readme/README.SETUID.md)  
 [HQA Build Scenarios](readme/README.HQA.md)  
 [How to build Hercules from SVN under Solaris](readme/README.SUN.md)  
-[LOW-LEVEL TEST CASES](tests/README.md)  
+[Low-level Test Cases](tests/README.md)  
 
 ### Mods
 [APL/360 mods](readme/README.APL360.md)  
