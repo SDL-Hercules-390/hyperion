@@ -641,6 +641,7 @@ static void telnet_ev_handler( telnet_t* telnet, telnet_event_t* ev,
 static BYTE sendto_client( TELNET* tn, const BYTE* buf, unsigned int len )
 {
     BYTE success = TRUE;
+    unsigned int sendbuf_needed;
 
     if (len > 0)
     {
@@ -656,10 +657,18 @@ static BYTE sendto_client( TELNET* tn, const BYTE* buf, unsigned int len )
             telnet_printf( tn->ctl, "%s", buf );
         }
         else // (tn->devclass == 'D' || tn->devclass == 'P')
-            telnet_send( tn->ctl, buf, len );
+        {
+            /* Adjust one shot send buffer */
+            sendbuf_needed = (len * 2) + 2;
+            if (sendbuf_needed > tn->sendbuf_size)
+            {
+                if (tn->sendbuf_size) free( tn->sendbuf );
+                tn->sendbuf_size = sendbuf_needed;
+                tn->sendbuf = (char*) malloc( tn->sendbuf_size );
+            }
 
-        if (!tn->send_err && tn->devclass == 'D')
-            telnet_iac( tn->ctl, TELNET_EOR );
+            telnet_send_one_shot( tn->ctl, buf, len, tn->sendbuf );
+        }
 
         success = !tn->send_err;
     }
@@ -736,6 +745,10 @@ static void  disconnect_telnet_client( TELNET* tn )
     {
         telnet_closesocket( tn->csock );
         telnet_free( tn->ctl );
+
+        /* Free one shot send buffer if necessary */
+        if (tn->sendbuf_size) free( tn->sendbuf );
+        tn->sendbuf_size = 0;
 
         // "%s COMM: disconnected"
         CONDEBUG1( HHC90504, "D", tn->clientid );
@@ -2673,7 +2686,10 @@ static BYTE  solicit_3270_data( DEVBLK* dev, BYTE cmd )
     dev->tn->got_eor = FALSE;
 
     /* Send the 3270 read command to the client */
-    if (!sendto_client( dev->tn, &cmd, 1 ))
+
+    telnet_3270_cmd( dev->tn->ctl, cmd );
+
+    if (dev->tn->send_err)
     {
         /* Close the connection if an error occurred */
         disconnect_console_device( dev );
@@ -3140,6 +3156,9 @@ size_t                  logoheight;     /* Logo file number of lines */
     /* Negotiations are complete; we can begin accepting data now */
     tn->neg_done = TRUE;
 
+    /* Initialize size of send buffer for one shot send operations */
+    tn->sendbuf_size = 0;
+
     /* Try to detect dropped connections */
     set_socket_keepalive( csock, sysblk.kaidle, sysblk.kaintv, sysblk.kacnt );
 
@@ -3212,11 +3231,44 @@ size_t                  logoheight;     /* Logo file number of lines */
 } /* end function connect_client */
 
 /*-------------------------------------------------------------------*/
+/*        Automatic pselect timeout adjustment for IND$FILE          */
+/*-------------------------------------------------------------------*/
+
+struct timespec     slowpoll    = { 0, 100000000 };         /* 100ms */
+struct timespec     fastpoll    = { 0,   1000000 };         /*   1ms */
+struct timespec*    timeout     = &slowpoll;       /* default = slow */
+
+struct timeval  previo = {0,0};              /* TOD of last read I/O */
+struct timeval  currio, diffio;              /* Work variables       */
+
+static void calcto()    // (calculate timeout)
+{
+    struct timespec* prev_timeout = timeout;
+    gettimeofday( &currio, NULL );
+    timeval_subtract( &previo, &currio, &diffio );
+    timeout = (diffio.tv_sec  > 0 || diffio.tv_usec > 100000) ?
+        &slowpoll : &fastpoll;
+    if (timeout != prev_timeout)
+        WRMSG( HHC02917, "I", &slowpoll == prev_timeout ?
+            "slow to FAST" : "FAST to slow" );
+}
+
+static void consio()    // (console read)
+{
+    calcto();
+    memcpy( &previo, &currio, sizeof( struct timeval ));
+}
+
+static void consto()    // (select timeout)
+{
+    calcto();
+}
+
+/*-------------------------------------------------------------------*/
 /*        CONSOLE CONNECTION AND ATTENTION HANDLER THREAD            */
 /*-------------------------------------------------------------------*/
 static void* console_connection_handler( void* arg )
 {
-static const struct timespec tv_100ms = {0, 100000000}; /* Slow poll */
 int                    rc = 0;          /* Return code               */
 int                    lsock;           /* Socket for listening      */
 int                    csock;           /* Socket for conversation   */
@@ -3230,6 +3282,8 @@ TID                    tidneg;          /* Negotiation thread id     */
 DEVBLK                *dev;             /* -> Device block           */
 BYTE                   unitstat;        /* Status after receive data */
 TELNET                *tn;              /* Telnet Control Block      */
+
+int prev_rlen3270;
 
     UNREFERENCED( arg );
 
@@ -3406,10 +3460,7 @@ TELNET                *tn;              /* Telnet Control Block      */
 
         } /* end build pselect() read set */
 
-        /* Wait for a file descriptor to become ready; use a slow poll
-         * to ensure that no hang occurs.  This is consistent with the
-         * operations of real "hardware" controllers providing telnet
-         * services.
+        /* Wait for a file descriptor to become ready.
          *
          * We use the POSIX pselect() function (and NOT the select()
          * function used in previous versions of Hercules) to address
@@ -3429,7 +3480,7 @@ TELNET                *tn;              /* Telnet Control Block      */
          * interrupt mask instead which should be functionally equivalent
          * to select() anyway.
          */
-        rc = pselect( maxfd+1, &readset, NULL, NULL, &tv_100ms, NULL );
+        rc = pselect( maxfd+1, &readset, NULL, NULL, timeout, NULL );
 
         /* Clear the pipe signal if necessary */
         RECV_CONSOLE_THREAD_PIPE_SIGNAL();
@@ -3437,6 +3488,13 @@ TELNET                *tn;              /* Telnet Control Block      */
         /* Check for thread exit condition */
         if (console_cnslcnt <= 0)
             break;
+
+        /* Check for select timeout */
+        if (rc == 0)
+        {
+            consto();
+            continue;
+        }
 
         /* Log pselect error */
         if (rc < 0 )
@@ -3636,16 +3694,32 @@ TELNET                *tn;              /* Telnet Control Block      */
                     || (dev->scsw.flag3 & SCSW3_SC_PEND)
                     || IOPENDING( dev )
                     || !FD_ISSET( dev->fd, &readset )
+                    || sysblk.cnslpipe_flag
                 )
                 {
                     release_lock( &dev->lock );
                     continue;
                 }
 
+                consio();
+
                 /* Receive console input data from the client */
                 if ((dev->devtype == 0x3270) ||
                     (dev->devtype == 0x3287))
-                    unitstat = recv_3270_data( dev );
+                {
+                    do
+                        {
+                            prev_rlen3270 = dev->rlen3270;
+                            unitstat = recv_3270_data( dev );
+
+                            // "%s COMM: recv_3270_data: %d bytes received"
+                            CONDEBUG2( HHC90502, "D", dev->tn->clientid,
+                                dev->rlen3270 - prev_rlen3270 );
+                        }
+                        while ((unitstat == 0) && dev->rlen3270);
+
+                    dev->readpending = 3;
+                }
                 else
                     unitstat = recv_1052_data( dev );
 
@@ -3657,18 +3731,17 @@ TELNET                *tn;              /* Telnet Control Block      */
                     continue;
                 }
 
-                /* Nothing more to do if incomplete record received */
-                if (unitstat == 0)
-                {
-                    release_lock( &dev->lock );
-                    continue;
-                }
-
                 /* Release the device lock */
                 release_lock( &dev->lock );
 
-                /* Raise attention interrupt for the device */
-                raise_device_attention( dev, unitstat );
+                /* Raise attention interrupt for device, but only
+                   if we actually received any 3270 data.  Telnet
+                   keepalive messages for example, arrive as pure
+                   telnet control messages which, once processed,
+                   result in no actual 3270 client data remaining.
+                */
+                if (dev->rlen3270)
+                    raise_device_attention( dev, unitstat );
 
             } /* end scan DEVBLK chain */
 
@@ -3981,7 +4054,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         obtain_lock (&dev->lock);
 
         /* AID is only present during the first read */
-        aid = dev->readpending != 2;
+        aid = dev->readpending;
+        if (dev->readpending == 3) dev->readpending = 1;
 
         /* Receive buffer data from client if not data chained */
         if (!(chained & CCW_FLAGS_CD))
@@ -4013,6 +4087,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 dev->rlen3270 = 3 + num;
             }
         }
+
+        else aid = 0;
 
         /* Calculate number of bytes to move and residual byte count */
         len = dev->rlen3270;
@@ -4071,7 +4147,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         obtain_lock (&dev->lock);
 
         /* AID is only present during the first read */
-        aid = dev->readpending != 2;
+        aid = dev->readpending;
+        if (dev->readpending == 3) dev->readpending = 1;
 
         /* If not data chained from previous Read Modified CCW,
            and if the connection thread has not already accumulated
@@ -4089,6 +4166,11 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 release_lock (&dev->lock);
                 break;
             }
+        }
+
+        if (((chained & CCW_FLAGS_CD) == 0
+            && !aid) || (aid == 3))
+        {
 
             /* Set AID in buffer flag */
             aid = 1;
@@ -4107,6 +4189,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 dev->rlen3270 = 3 + num;
             }
         }
+
+        else aid = 0;
 
         /* Calculate number of bytes to move and residual byte count */
         len = dev->rlen3270;

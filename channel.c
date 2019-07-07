@@ -42,6 +42,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "chsc.h"
 
+#ifdef FEATURE_S370_CHANNEL
+#include "commadpt.h"
+#endif /*FEATURE_S370_CHANNEL*/
+
 DISABLE_GCC_UNUSED_SET_WARNING;
 
 /*-------------------------------------------------------------------*/
@@ -3749,6 +3753,12 @@ do {                                                                   \
             /* Handle Read transfer from I/O buffer */
             else
                 memcpy( dev->mainstor + addr, iobuf, count );
+
+#ifdef FEATURE_S370_CHANNEL
+            if (dev->devtype == 0x2703)
+                if (dev->commadpt->lnctl == COMMADPT_LNCTL_ASYNC)
+                    usleep(5000);
+#endif
 
 #if DEBUG_DUMP
             if (CCW_TRACE_OR_STEP( dev ))

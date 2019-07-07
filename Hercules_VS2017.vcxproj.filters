@@ -130,6 +130,12 @@
     <Filter Include="Other Files\Build\msvc\VS2015">
       <UniqueIdentifier>{65d8ee88-988d-40e5-b27a-a183326d9749}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Other Files\Build\msvc\VS2017">
+      <UniqueIdentifier>{6a452be7-7ba2-404c-9441-2e642e291c6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Build\msvc\VS2019">
+      <UniqueIdentifier>{9C420C3E-E3FC-4eaa-A730-385D018336B9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Other Files\Build\other">
       <UniqueIdentifier>{3bffa35c-5784-4032-bad4-aa9ce018456b}</UniqueIdentifier>
     </Filter>
@@ -219,9 +225,6 @@
     </Filter>
     <Filter Include="Source Files\Hercules\ExtPkgs\telnet\lib">
       <UniqueIdentifier>{7E51CA54-4311-406d-9C9D-ED79986330BB}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Other Files\Build\msvc\VS2017">
-      <UniqueIdentifier>{6a452be7-7ba2-404c-9441-2e642e291c6c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1352,6 +1355,24 @@
     <None Include="Hercules_VS2015.vcxproj.filters">
       <Filter>Other Files\Build\msvc\VS2015</Filter>
     </None>
+    <None Include="Hercules_VS2017.sln">
+      <Filter>Other Files\Build\msvc\VS2017</Filter>
+    </None>
+    <None Include="Hercules_VS2017.vcxproj">
+      <Filter>Other Files\Build\msvc\VS2017</Filter>
+    </None>
+    <None Include="Hercules_VS2017.vcxproj.filters">
+      <Filter>Other Files\Build\msvc\VS2017</Filter>
+    </None>
+    <None Include="Hercules_VS2019.sln">
+      <Filter>Other Files\Build\msvc\VS2019</Filter>
+    </None>
+    <None Include="Hercules_VS2019.vcxproj">
+      <Filter>Other Files\Build\msvc\VS2019</Filter>
+    </None>
+    <None Include="Hercules_VS2019.vcxproj.filters">
+      <Filter>Other Files\Build\msvc\VS2019</Filter>
+    </None>
     <None Include="_dynamic_version">
       <Filter>Other Files\Build\other</Filter>
     </None>
@@ -2365,15 +2386,6 @@
     </None>
     <None Include="tests\CLCL.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>
-    <None Include="Hercules_VS2017.sln">
-      <Filter>Other Files\Build\msvc\VS2017</Filter>
-    </None>
-    <None Include="Hercules_VS2017.vcxproj">
-      <Filter>Other Files\Build\msvc\VS2017</Filter>
-    </None>
-    <None Include="Hercules_VS2017.vcxproj.filters">
-      <Filter>Other Files\Build\msvc\VS2017</Filter>
     </None>
     <None Include="vstools.cmd">
       <Filter>Other Files\Build\msvc</Filter>
