@@ -1,0 +1,58 @@
+# ***************************************************************************
+#     VSVERS.msvc      (!INCLUDE ed by "makefile-dllmod.msvc")
+# --------------------------------------------------------------------------
+# (c) "Fish" (David B. Trout), 2017
+# --------------------------------------------------------------------------
+#
+#              Visual Studio compiler version constants
+#
+# ***************************************************************************
+
+#-------------------------------------------------------------------
+#
+#     The following defines are to more easily test for known
+#     versions of Microsoft's Visual Studio compiler via e.g.
+#     !IF $(vsversion) >= $(vers_vs2008)
+#
+#-------------------------------------------------------------------
+#
+#     Add support for new Visual Studio versions here...
+#
+#     Don't forget to update the 'vsvers.h' header also!
+#     Don't forget to update the 'makefile.bat' file too!
+#
+#-------------------------------------------------------------------
+
+vers_vs2019=16
+vers_vs2017=15
+vers_vs2015=14
+vers_vs2013=12
+vers_vs2012=11
+vers_vs2010=10
+vers_vs2008=9
+vers_vs2005=8
+
+!IFDEF VS160COMNTOOLS
+!MESSAGE Makefile presuming VS2019 (VS16 = _MSC_VER 1920)
+vsversion=$(vers_vs2019)
+!ELSEIFDEF VS150COMNTOOLS
+!MESSAGE Makefile presuming VS2017 (VS15 = _MSC_VER 1910 - 1912)
+vsversion=$(vers_vs2017)
+!ELSEIFDEF VS140COMNTOOLS
+!MESSAGE Makefile presuming VS2015 (VS14 = _MSC_VER 1900)
+vsversion=$(vers_vs2015)
+!ELSEIFDEF VS120COMNTOOLS
+!MESSAGE Makefile presuming VS2013 (VS12 = _MSC_VER 1800)
+vsversion=$(vers_vs2013)
+!ELSEIFDEF VS110COMNTOOLS
+!MESSAGE Makefile presuming VS2012 (VS11 = _MSC_VER 1700)
+vsversion=$(vers_vs2012)
+!ELSEIFDEF VS100COMNTOOLS
+!MESSAGE Makefile presuming VS2010 (VS10 = _MSC_VER 1600)
+vsversion=$(vers_vs2010)
+!ELSEIFDEF VS90COMNTOOLS
+!MESSAGE Makefile presuming VS2008 (VS9 = _MSC_VER 1500)
+vsversion=$(vers_vs2008)
+!ELSE
+!ERROR This build requires at least VS2008 or later (VS9 = _MSC_VER 1500)
+!ENDIF
