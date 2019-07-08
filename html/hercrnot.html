@@ -15,7 +15,7 @@ Hercules: Release Notes
 <a name=4.2></a>
 <hr noshade>
 
-<h2>Release notes for SDL Hyperion 4.2 <small> &nbsp; (under development) </small></h2>
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases">SDL Hyperion 4.2</a></h2>
 <p>
 <dl>
 
@@ -81,23 +81,22 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>Partial implementation of PFPO (Perform Floating Point Operation) instruction
+  <dt>PFPO (Perform Floating Point Operation) instruction
   <dd>
   <p>
-    Thanks to a recent contribution by one of our users, Hercules now has a partial
+    Thanks to hard work of one of our developers, Hercules now has a <i>complete</i>
     implementation of the PFPO (Perform Floating Point Operation) instruction.
-    (Previously we had no implementation at all.)
+    <i>(previously we had no implementation at all!)</i>
     <p>
-    The current implementation is only a partial implementation and does not yet fully
-    conform to the Principles of Operation, but it is better than what we had (which
-    was nothing). Efforts are currently under way to finish the current implementation
-    to make it fully compliant to the published architecture, but the effort has not
-    been completed yet, so it might not execute properly under certain situations.
-    Hopefully it should execute well enough under most common situations however.
+    Efforts are currently under way to develop a formal runtest PFPO instruction
+    verification test for the current implementation to prove that it fully complies
+    with the published architecture, but the effort has not been completed yet.
+    Nevertheless, the current implementation is <i>believed</i> to fully comply
+    with the Principles of Operation even though we can't yet prove that.
   </p>
 
 
-  <dt>VMFPLC2 VM/CMS tape utility enhanced
+  <dt>Enhanced VMFPLC2 VM/CMS tape utility
   <dd>
   <p>
     The VMFPLC2 tape utility has been greatly enhanced and now supports the scan
@@ -108,7 +107,7 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>System/370/390 Vector Facility has been disabled again
+  <dt>System/370/390 Vector Facility has been re-disabled
   <dd>
   <p>
     It was a mistake to enable the System/370 and System/390 Vector Facility
@@ -144,20 +143,22 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>Breakpoint/Stepping commands optional ASID parameter
+  <dt>Optional ASID parameter added to breakpoint/stepping commands
   <dd>
   <p>
     The <code>b</code> (breakpoint) and <code>s</code> (stepping) commands
     now support an optional <b><code>asid</code></b> (<b>A</b>ddress <b>S</b>pace
     <b>ID</b>entifier) parameter. If specified, the breakpoint or stepping
-    will only occur if the instruction being executed is <i>both</i> within
+    will only occur if the instructions being executed are <i>both</i> within
     the specified address range <i><u>and</u></i> are being executed by the
-    specified address space. The breakpoint or stepping will <i>not</i>
-    occur for any other address spaces even if they are within the specified
-    address range.
+    specified address space. If specified, the breakpoint or stepping will
+    <i>not</i> occur for any other address spaces even if the instructions are
+    within the specified address range. If the optional ASID is not specified,
+    breakpoints or steppings occurs normally as before (i.e. if the instruction
+    being executed is within the specified range).
     <p>
     For more information refer to the <code>help</code> command display
-    for the <code>b</code> and/or <code>s</code> commands.
+    for the <code>b</code> and/or <code>s</code> commands (i.e. "help b", "help s", etc).
   </p>
 
 
@@ -166,9 +167,24 @@ Hercules: Release Notes
   <p>
     Release 4.2 introduces a new configuration file option called
     <a href="hercconf.html#PANOPT"><code>PANOPT</code></a>
-    that controls how emulated device files are displayed. The <code>NAMEONLY</code>
-    option will display only the emulated device file's base filename, whereas
-    <u><code>FULLPATH</code></u> displays the device file's full path like before.
+    that controls how emulated device files are displayed on the screen. The
+    <code>NAMEONLY</code> option will display only the emulated device file's
+    base filename, whereas <code>FULLPATH</code> displays the device file's
+    full path like before.
+  </p>
+
+
+  <dt>New Diagnose F09 instruction
+  <dd>
+  <p>
+    Release 4.2 introduces a new Diagnose F09 instruction that is essentially
+    an enhanced version of the existing Diagnose F08 instruction providing
+    access to Hercules's internal instruction counter. For detailed usage
+    information please refer to the
+    <a href="https://github.com/SDL-Hercules-390/hyperion/issues/211#issuecomment-497233616">
+    final comment</a> in GitHub Issue #211:
+    <a href="https://github.com/SDL-Hercules-390/hyperion/issues/211">
+    "Diagnose F08 Improvement"</a>.
   </p>
 
 
