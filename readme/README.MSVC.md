@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.MD](/README.md)
+[Return to master README.md](../README.md)
 
 # NOTE!  This file is OUT OF DATE and should probably be deleted!
 ### Not converted to markdown on that basis.

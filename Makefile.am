@@ -794,40 +794,40 @@ EXTRA_DIST =                  \
   msvc.makefile.includes/BZIP2_RULES.msvc     \
   msvc.makefile.includes/PCRE_RULES.msvc      \
   msvc.makefile.includes/REXX_RULES.msvc      \
-  README.AIX                  \
-  README.APL360               \
-  README.BSD                  \
-  README.CCKD64               \
-  README.CMPSC                \
-  README.COMMADPT             \
-  README.DECNUMBER            \
-  README.DYNMOD               \
-  README.ECPSVM               \
-  README.HAO                  \
-  README.HDL                  \
-  README.HERCLOGO             \
-  README.HQA                  \
-  README.HRAF                 \
-  README.IOARCH               \
-  README.ISSUES               \
-  README.md                   \
-  README.MINGW                \
-  README.MSVC                 \
-  README.NETWORKING           \
-  README.OSX                  \
-  README.PTT                  \
-  README.REXX                 \
-  README.RUNTEST              \
-  README.RXVT4APL             \
-  README.S37X                 \
-  README.SETUID               \
-  README.SOFTFLOAT            \
-  README.SUN                  \
-  README.TAPE                 \
-  README.TCPIP                \
-  README.VMFPLC2              \
-  README.TELNET               \
-  README.WIN64                \
+  README.md                       \
+  readme/README.AIX.md            \
+  readme/README.APL360.md         \
+  readme/README.BSD.md            \
+  readme/README.CCKD64.md         \
+  readme/README.CMPSC.md          \
+  readme/README.COMMADPT.md       \
+  readme/README.DECNUMBER.md      \
+  readme/README.DYNMOD.md         \
+  readme/README.ECPSVM.md         \
+  readme/README.HAO.md            \
+  readme/README.HDL.md            \
+  readme/README.HERCLOGO.md       \
+  readme/README.HQA.md            \
+  readme/README.HRAF.md           \
+  readme/README.IOARCH.md         \
+  readme/README.ISSUES.md         \
+  readme/README.MINGW.md          \
+  readme/README.MSVC.md           \
+  readme/README.NETWORKING.md     \
+  readme/README.OSX.md            \
+  readme/README.PTT.md            \
+  readme/README.REXX.md           \
+  readme/README.RUNTEST.md        \
+  readme/README.RXVT4APL.md       \
+  readme/README.S37X.md           \
+  readme/README.SETUID.md         \
+  readme/README.SOFTFLOAT.md      \
+  readme/README.SUN.md            \
+  readme/README.TAPE.md           \
+  readme/README.TCPIP.md          \
+  readme/README.VMFPLC2.md        \
+  readme/README.TELNET.md         \
+  readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
   scripts/cmpsc.cnf           \

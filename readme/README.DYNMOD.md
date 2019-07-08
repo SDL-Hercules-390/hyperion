@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.md](/README.md)
+[Return to master README.md](../README.md)
 
 # Hercules Dynamic Modules (on Windows)
 

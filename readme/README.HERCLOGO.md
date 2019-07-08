@@ -1,5 +1,5 @@
 ![header image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.md](/README.md)
+[Return to master README.md](../README.md)
 
 # Customizable Hercules 3270 Logo
 ## Contents

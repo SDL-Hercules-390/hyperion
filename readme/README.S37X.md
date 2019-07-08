@@ -1,5 +1,5 @@
 ![header image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.md](/README.md)
+[Return to master README.md](../README.md)
 
 # S/370 Backport of select ESA/390 and z/Architecture instructions
 ## Contents

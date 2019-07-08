@@ -920,7 +920,7 @@
     <None Include="COPYRIGHT">
       <Filter>Other Files\DOC</Filter>
     </None>
-    <None Include="README.ISSUES">
+    <None Include="readme\README.ISSUES.md">
       <Filter>Other Files\DOC</Filter>
     </None>
     <None Include="README.md">
@@ -929,94 +929,94 @@
     <None Include="RELEASE.NOTES">
       <Filter>Other Files\DOC</Filter>
     </None>
-    <None Include="README.AIX">
+    <None Include="readme\README.AIX.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.APL360">
+    <None Include="readme\README.APL360.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.BSD">
+    <None Include="readme\README.BSD.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.CCKD64">
+    <None Include="readme\README.CCKD64.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.CMPSC">
+    <None Include="readme\README.CMPSC.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.COMMADPT">
+    <None Include="readme\README.COMMADPT.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.DYNMOD">
+    <None Include="readme\README.DYNMOD.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.ECPSVM">
+    <None Include="readme\README.ECPSVM.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.EXTPKG">
+    <None Include="readme\README.EXTPKG.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.HAO">
+    <None Include="readme\README.HAO.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.HDL">
+    <None Include="readme\README.HDL.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.HERCLOGO">
+    <None Include="readme\README.HERCLOGO.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.HQA">
+    <None Include="readme\README.HQA.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.HRAF">
+    <None Include="readme\README.HRAF.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.IOARCH">
+    <None Include="readme\README.IOARCH.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.MINGW">
+    <None Include="readme\README.MINGW.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.MSVC">
+    <None Include="readme\README.MSVC.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.NETWORKING">
+    <None Include="readme\README.NETWORKING.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.OSX">
+    <None Include="readme\README.OSX.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.PTT">
+    <None Include="readme\README.PTT.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.REXX">
+    <None Include="readme\README.REXX.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.RUNTEST">
+    <None Include="readme\README.RUNTEST.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.RXVT4APL">
+    <None Include="readme\README.RXVT4APL.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.S37X">
+    <None Include="readme\README.S37X.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.SETUID">
+    <None Include="readme\README.SETUID.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.SUN">
+    <None Include="readme\README.SUN.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.TAPE">
+    <None Include="readme\README.TAPE.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.TCPIP">
+    <None Include="readme\README.TCPIP.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.VMFPLC2">
+    <None Include="readme\README.VMFPLC2.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="README.WIN64">
+    <None Include="readme\README.WIN64.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="html\hercules.css">

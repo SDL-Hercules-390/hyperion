@@ -1,5 +1,5 @@
 ![test image](images/image_header_herculeshyperionSDL.png)
-[Return to master README.md](..\README.MD)
+[Return to master README.md](../README.md)
 
 # APL\360 mods by Max H. Parke
 ## Contents

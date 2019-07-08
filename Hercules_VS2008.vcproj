@@ -2012,10 +2012,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\README.ISSUES"
-					>
-				</File>
-				<File
 					RelativePath=".\README.md"
 					>
 				</File>
@@ -2027,123 +2023,127 @@
 					Name="README"
 					>
 					<File
-						RelativePath=".\README.AIX"
+						RelativePath=".\readme\README.AIX.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.APL360"
+						RelativePath=".\readme\README.APL360.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.BSD"
+						RelativePath=".\readme\README.BSD.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.CCKD64"
+						RelativePath=".\readme\README.CCKD64.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.CMPSC"
+						RelativePath=".\readme\README.CMPSC.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.COMMADPT"
+						RelativePath=".\readme\README.COMMADPT.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.DYNMOD"
+						RelativePath=".\readme\README.DYNMOD.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.ECPSVM"
+						RelativePath=".\readme\README.ECPSVM.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.EXTPKG"
+						RelativePath=".\readme\README.EXTPKG.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.HAO"
+						RelativePath=".\readme\README.HAO.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.HDL"
+						RelativePath=".\readme\README.HDL.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.HERCLOGO"
+						RelativePath=".\readme\README.HERCLOGO.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.HQA"
+						RelativePath=".\readme\README.HQA.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.HRAF"
+						RelativePath=".\readme\README.HRAF.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.IOARCH"
+						RelativePath=".\readme\README.IOARCH.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.MINGW"
+						RelativePath=".\readme\README.ISSUES.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.MSVC"
+						RelativePath=".\readme\README.MINGW.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.NETWORKING"
+						RelativePath=".\readme\README.MSVC.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.OSX"
+						RelativePath=".\readme\README.NETWORKING.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.PTT"
+						RelativePath=".\readme\README.OSX.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.REXX"
+						RelativePath=".\readme\README.PTT.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.RUNTEST"
+						RelativePath=".\readme\README.REXX.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.RXVT4APL"
+						RelativePath=".\readme\README.RUNTEST.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.S37X"
+						RelativePath=".\readme\README.RXVT4APL.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.SETUID"
+						RelativePath=".\readme\README.S37X.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.SUN"
+						RelativePath=".\readme\README.SETUID.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.TAPE"
+						RelativePath=".\readme\README.SUN.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.TCPIP"
+						RelativePath=".\readme\README.TAPE.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.VMFPLC2"
+						RelativePath=".\readme\README.TCPIP.md"
 						>
 					</File>
 					<File
-						RelativePath=".\README.WIN64"
+						RelativePath=".\readme\README.VMFPLC2.md"
+						>
+					</File>
+					<File
+						RelativePath=".\readme\README.WIN64.md"
 						>
 					</File>
 				</Filter>
