@@ -476,7 +476,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00400 "%1d:%04X CKD file: name missing or invalid filename length"
 #define HHC00401 "%1d:%04X CKD file %s: open error: not found"
 #define HHC00402 "%1d:%04X CKD file: parameter %s in argument %d is invalid"
-#define HHC00403 "%1d:%04X CKD file %s: opening as r/o%s"
+#define HHC00403 "%1d:%04X CKD file %s: opened r/o%s"
 #define HHC00404 "%1d:%04X CKD file %s: error in function %s: %s"
 #define HHC00405 "%1d:%04X CKD file %s: only one base file is allowed"
 #define HHC00406 "%1d:%04X CKD file %s: ckd header invalid"
@@ -549,7 +549,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00473 "%1d:%04X CKD64 file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
 #define HHC00474 "%1d:%04X CKD64 file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
 #define HHC00475 "This might take a while... Please wait..."
-//efine HHC00476 - HHC00499 (available)
+#define HHC00476 "%1d:%04X CKD64 file %s: opened r/o%s"
+//efine HHC00477 - HHC00499 (available)
 
 // reserve 005xx for fba dasd device related messages
 #define HHC00500 "%1d:%04X FBA file: name missing or invalid filename length"

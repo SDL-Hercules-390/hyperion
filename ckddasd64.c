@@ -188,11 +188,6 @@ char            filename[FILENAME_MAX]; /* work area for display     */
     dev->ckdcyls = 0;
 
     /* Open all of the CKD image files which comprise this volume */
-    if (dev->ckdrdonly)
-        if (!dev->quiet)
-            // "%1d:%04X CKD file %s: opening as r/o%s"
-            WRMSG( HHC00403, "I", LCSS_DEVNUM,
-                filename, dev->ckdfakewr ? " with fake writing" : "" );
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
@@ -271,6 +266,12 @@ char            filename[FILENAME_MAX]; /* work area for display     */
                 return -1;
             }
         }
+
+        if (dev->ckdrdonly)
+            if (!dev->quiet)
+                // "%1d:%04X CKD64 file %s: opened r/o%s"
+                WRMSG( HHC00476, "I", LCSS_DEVNUM,
+                    filename, dev->ckdfakewr ? " with fake writing" : "" );
 
         /* Read the compressed device header */
         if (cckd)
