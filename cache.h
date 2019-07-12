@@ -179,7 +179,6 @@
 #define  CACHE_6                      6 /*      (available)          */
 #define  CACHE_7                      7 /*      (available)          */
 
-#ifdef _CACHE_C_
 /*-------------------------------------------------------------------*/
 /* Cache entry                                                       */
 /*-------------------------------------------------------------------*/
@@ -214,7 +213,6 @@ typedef struct _CACHEBLK {              /* Cache header              */
       time_t    wtime;                  /* Time last wait            */
       int       adjusts;                /* Number of adjustments     */
     } CACHEBLK;
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Flag definitions                                                  */
@@ -224,7 +222,6 @@ typedef struct _CACHEBLK {              /* Cache header              */
 
 #define CACHE_FREEBUF                 1 /* Free buf on release       */
 
-#ifdef _CACHE_C_
 #define CACHE_MAGIC          0x01CACE10 /* Magic number              */
 #define CACHE_DEFAULT_NBR           229 /* Initial entries (prime)   */
 //FIXME the line below increases the size for CACHE_L2.  Since each
@@ -248,7 +245,6 @@ typedef struct _CACHEBLK {              /* Cache header              */
 #define CACHE_ADJUST_HIT3            90 /*      and hit% this high   */
 #define CACHE_ADJUST_SIZE  (8*1024*1024)/*      and size this high   */
 #define CACHE_ADJUST_WAITTIME        10 /* Increase last wait  (sec) */
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Functions                                                         */
@@ -284,7 +280,6 @@ int         cache_getval(int ix, int i);
 int         cache_setval(int ix, int i, int val);
 int         cache_release(int ix, int i, int flag);
 
-#ifdef _CACHE_C_
 static int  cache_create (int ix);
 static int  cache_destroy (int ix);
 static int  cache_check_ix(int ix);
@@ -293,7 +288,6 @@ static int  cache_check(int ix, int i);
 static int  cache_isbusy(int ix, int i);
 static int  cache_isempty(int ix, int i);
 static void cache_allocbuf(int ix, int i, int len);
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Specific cache definitions (until a better place is found)        */
