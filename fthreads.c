@@ -12,8 +12,33 @@
 
 #include "hercules.h"
 
-#if defined(OPTION_FTHREADS)
+#if defined( OPTION_FTHREADS )
 #include "fthreads.h"
+
+////////////////////////////////////////////////////////////////////////////////////
+// Private implementation helper macros
+
+#define MyInitializeCriticalSection(pCS)                (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(pCS),3000))
+#define MyEnterCriticalSection(pCS)                     (EnterCriticalSection((CRITICAL_SECTION*)(pCS)))
+#define MyTryEnterCriticalSection(pCS)                  (TryEnterCriticalSection((CRITICAL_SECTION*)(pCS)))
+#define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
+#define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
+
+#ifdef _MSVC_
+#define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(unsigned)(stack),(start),(parm),(flags),(tid)))
+#define MyExitThread(code)                              (_endthreadex((code)))
+#else // (Cygwin)
+#define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
+#define MyExitThread(code)                              (ExitThread((code)))
+#endif // _MSVC_
+
+#define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
+#define MySetEvent(h)                                   (SetEvent((h)))
+#define MyResetEvent(h)                                 (ResetEvent((h)))
+#define MyDeleteEvent(h)                                (CloseHandle((h)))
+#define MyCloseHandle(h)                                (CloseHandle((h)))
+
+#define MyWaitForSingleObject(h,millisecs)              (WaitForSingleObject((h),(millisecs)))
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Private internal fthreads structures...

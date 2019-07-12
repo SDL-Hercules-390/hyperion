@@ -11,38 +11,55 @@
 #include "hercules.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
+// fthread mutex attribute types...
+//
+//  FTHREAD_MUTEX_NORMAL      This type of mutex does not detect deadlock. A thread
+//                            attempting to relock this mutex without first unlocking
+//                            it shall deadlock. Attempting to unlock a mutex locked
+//                            by a different thread results in undefined behavior.
+//                            Attempting to unlock an unlocked mutex results in
+//                            undefined behavior. The FTHREAD_MUTEX_NORMAL mutex type
+//                            is not currently supported by fthreads.
+//
+//  FTHREAD_MUTEX_ERRORCHECK  This type of mutex provides error checking. A thread
+//                            attempting to relock this mutex without first unlocking
+//                            it shall return with an error. A thread attempting to
+//                            unlock a mutex which another thread has locked shall
+//                            return with an error. A thread attempting to unlock an
+//                            unlocked mutex shall return with an error.
+//
+//  FTHREAD_MUTEX_RECURSIVE   A thread attempting to relock this mutex without first
+//                            unlocking it shall succeed in locking the mutex. The
+//                            relocking deadlock which can occur with mutexes of type
+//                            FTHREAD_MUTEX_NORMAL cannot occur with this type of mutex.
+//                            Multiple locks of this mutex shall require the same number
+//                            of unlocks to release the mutex before another thread
+//                            can acquire the mutex. A thread attempting to unlock a
+//                            mutex which another thread has locked shall return with
+//                            an error. A thread attempting to unlock an unlocked mutex
+//                            shall return with an error.
+
+#define  FTHREAD_MUTEX_NORMAL       0x44656164                  // "Dead" in ASCII  (*UNSUPPORTED*)
+#define  FTHREAD_MUTEX_ERRORCHECK   0x4F6E6365                  // "Once" in ASCII
+#define  FTHREAD_MUTEX_RECURSIVE    0x4D616E79                  // "Many" in ASCII
+#define  FTHREAD_MUTEX_DEFAULT      FTHREAD_MUTEX_ERRORCHECK
+
+////////////////////////////////////////////////////////////////////////////////////
+// fthread thread attribute types...
+
+#define  FTHREAD_CREATE_JOINABLE    0x4A6F696E                  // "Join" in ASCII
+#define  FTHREAD_CREATE_DETACHED    0x44697363                  // "Disc" in ASCII
+#define  FTHREAD_CREATE_DEFAULT     FTHREAD_CREATE_JOINABLE
+
+////////////////////////////////////////////////////////////////////////////////////
 // Just a handy macro to have around...
 
 #define RC(rc)  (rc)
 
 ////////////////////////////////////////////////////////////////////////////////////
-
-#define MyInitializeCriticalSection(pCS)                (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(pCS),3000))
-#define MyEnterCriticalSection(pCS)                     (EnterCriticalSection((CRITICAL_SECTION*)(pCS)))
-#define MyTryEnterCriticalSection(pCS)                  (TryEnterCriticalSection((CRITICAL_SECTION*)(pCS)))
-#define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
-#define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
-
-#ifdef _MSVC_
-#define MyCreateThread(sec,stack,start,parm,flags,tid)  ((HANDLE) _beginthreadex((sec),(unsigned)(stack),(start),(parm),(flags),(tid)))
-#define MyExitThread(code)                              (_endthreadex((code)))
-#else // (Cygwin)
-#define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
-#define MyExitThread(code)                              (ExitThread((code)))
-#endif // _MSVC_
-
-#define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
-#define MySetEvent(h)                                   (SetEvent((h)))
-#define MyResetEvent(h)                                 (ResetEvent((h)))
-#define MyDeleteEvent(h)                                (CloseHandle((h)))
-#define MyCloseHandle(h)                                (CloseHandle((h)))
-
-#define MyWaitForSingleObject(h,millisecs)              (WaitForSingleObject((h),(millisecs)))
-
-////////////////////////////////////////////////////////////////////////////////////
 // (need struct timespec for fthread_cond_timedwait)
 
-#if !defined(TIMESPEC_IN_SYS_TYPES_H) && !defined(TIMESPEC_IN_TIME_H) && (_MSC_VER < VS2015)
+#if !defined( TIMESPEC_IN_SYS_TYPES_H ) && !defined( TIMESPEC_IN_TIME_H ) && (_MSC_VER < VS2015)
   // Avoid double definition for VS2015 as it defines timespec in ...\ucrt\time.h(39)
   // (need to define it ourselves)
   struct timespec
@@ -84,11 +101,38 @@ typedef struct _tagFTU_ATTR         // fthread "thread attribute" structure
 fthread_attr_t;
 
 ////////////////////////////////////////////////////////////////////////////////////
-// fthread thread attribute types...
+// Thread Scheduling...
 
-#define  FTHREAD_CREATE_JOINABLE    0x4A6F696E                  // "Join" in ASCII
-#define  FTHREAD_CREATE_DETACHED    0x44697363                  // "Disc" in ASCII
-#define  FTHREAD_CREATE_DEFAULT     FTHREAD_CREATE_JOINABLE
+#define SCHED_RR                (1)     // Same as Hercules
+#define FTHREAD_POLICY        SCHED_RR  // Our only valid scheduling policy
+
+// The following relative priority scheme should match hthread's scheme. That
+// is to say, we should have the same number of priority "slots" as hthreads.
+// This allows easy translation of any hthread (pthread) priority value to a
+// Window host priority "slot".
+
+#define FTHREAD_IDLE            (1)     // DEFAULT_XXX_PRIO
+#define FTHREAD_LOWEST          (2)     // DEFAULT_CPU_PRIO
+#define FTHREAD_BELOW_NORMAL    (3)     // DEFAULT_DEV_PRIO
+#define FTHREAD_NORMAL          (4)     // DEFAULT_SRV_PRIO
+#define FTHREAD_ABOVE_NORMAL    (5)     // DEFAULT_HERC_PRIO
+#define FTHREAD_HIGHEST         (6)     // DEFAULT_XXX_PRIO
+#define FTHREAD_TIME_CRITICAL   (7)     // DEFAULT_TOD_PRIO
+
+#define FTHREAD_MIN_PRIO        (0)     // (POSIX Requires at least 32 slots)
+#define FTHREAD_MAX_PRIO       (31)     // (POSIX Requires at least 32 slots)
+
+struct sched_param                      // Scheduling parameters structure...
+{
+    int  sched_priority;                // fthread priority
+};
+typedef struct sched_param sched_param;
+
+FT_DLL_IMPORT  void  fthreads_internal_init   ();
+FT_DLL_IMPORT  int   fthread_getschedparam    ( fthread_t dwThreadID, int* pnPolicy,       struct sched_param* pSCHPARM );
+FT_DLL_IMPORT  int   fthread_setschedparam    ( fthread_t dwThreadID, int   nPolicy, const struct sched_param* pSCHPARM );
+FT_DLL_IMPORT  int   fthread_get_priority_min ( int nPolicy );
+FT_DLL_IMPORT  int   fthread_get_priority_max ( int nPolicy );
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "thread attribute"...
@@ -319,48 +363,6 @@ int  fthread_cond_timedwait
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// fthread mutex attribute types...
-//
-//  FTHREAD_MUTEX_NORMAL      This type of mutex does not detect deadlock. A thread
-//                            attempting to relock this mutex without first unlocking
-//                            it shall deadlock. Attempting to unlock a mutex locked
-//                            by a different thread results in undefined behavior.
-//                            Attempting to unlock an unlocked mutex results in
-//                            undefined behavior. The FTHREAD_MUTEX_NORMAL mutex type
-//                            is not currently supported by fthreads.
-//
-//  FTHREAD_MUTEX_ERRORCHECK  This type of mutex provides error checking. A thread
-//                            attempting to relock this mutex without first unlocking
-//                            it shall return with an error. A thread attempting to
-//                            unlock a mutex which another thread has locked shall
-//                            return with an error. A thread attempting to unlock an
-//                            unlocked mutex shall return with an error.
-//
-//  FTHREAD_MUTEX_RECURSIVE   A thread attempting to relock this mutex without first
-//                            unlocking it shall succeed in locking the mutex. The
-//                            relocking deadlock which can occur with mutexes of type
-//                            FTHREAD_MUTEX_NORMAL cannot occur with this type of mutex.
-//                            Multiple locks of this mutex shall require the same number
-//                            of unlocks to release the mutex before another thread
-//                            can acquire the mutex. A thread attempting to unlock a
-//                            mutex which another thread has locked shall return with
-//                            an error. A thread attempting to unlock an unlocked mutex
-//                            shall return with an error.
-//
-//  FTHREAD_MUTEX_DEFAULT     Attempting to recursively lock a mutex of this type results
-//                            in undefined behavior. Attempting to unlock a mutex of this
-//                            type which was not locked by the calling thread results
-//                            in undefined behavior. Attempting to unlock a mutex of this
-//                            type which is not locked results in undefined behavior.
-//                            An implementation may map this mutex to one of the other
-//                            mutex types.
-
-#define  FTHREAD_MUTEX_NORMAL       0x44656164                  // "Dead" in ASCII  (*UNSUPPORTED*)
-#define  FTHREAD_MUTEX_ERRORCHECK   0x4F6E6365                  // "Once" in ASCII
-#define  FTHREAD_MUTEX_RECURSIVE    0x4D616E79                  // "Many" in ASCII
-#define  FTHREAD_MUTEX_DEFAULT      FTHREAD_MUTEX_ERRORCHECK
-
-////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "mutex" attribute...
 
 FT_DLL_IMPORT
@@ -397,40 +399,6 @@ int fthread_mutexattr_settype
     fthread_mutexattr_t*  pFT_MUTEX_ATTR,
     int                   nMutexType
 );
-
-////////////////////////////////////////////////////////////////////////////////////
-// Thread Scheduling...
-
-#define SCHED_RR                (1)     // Same as Hercules
-#define FTHREAD_POLICY        SCHED_RR  // Our only valid scheduling policy
-
-// The following relative priority scheme should match hthread's scheme. That
-// is to say, we should have the same number of priority "slots" as hthreads.
-// This allows easy translation of any hthread (pthread) priority value to a
-// Window host priority "slot".
-
-#define FTHREAD_IDLE            (1)     // DEFAULT_XXX_PRIO
-#define FTHREAD_LOWEST          (2)     // DEFAULT_CPU_PRIO
-#define FTHREAD_BELOW_NORMAL    (3)     // DEFAULT_DEV_PRIO
-#define FTHREAD_NORMAL          (4)     // DEFAULT_SRV_PRIO
-#define FTHREAD_ABOVE_NORMAL    (5)     // DEFAULT_HERC_PRIO
-#define FTHREAD_HIGHEST         (6)     // DEFAULT_XXX_PRIO
-#define FTHREAD_TIME_CRITICAL   (7)     // DEFAULT_TOD_PRIO
-
-#define FTHREAD_MIN_PRIO        (0)     // (POSIX Requires at least 32 slots)
-#define FTHREAD_MAX_PRIO       (31)     // (POSIX Requires at least 32 slots)
-
-struct sched_param                      // Scheduling parameters structure...
-{
-    int  sched_priority;                // fthread priority
-};
-typedef struct sched_param sched_param;
-
-FT_DLL_IMPORT  void  fthreads_internal_init   ();
-FT_DLL_IMPORT  int   fthread_getschedparam    ( fthread_t dwThreadID, int* pnPolicy,       struct sched_param* pSCHPARM );
-FT_DLL_IMPORT  int   fthread_setschedparam    ( fthread_t dwThreadID, int   nPolicy, const struct sched_param* pSCHPARM );
-FT_DLL_IMPORT  int   fthread_get_priority_min ( int nPolicy );
-FT_DLL_IMPORT  int   fthread_get_priority_max ( int nPolicy );
 
 ////////////////////////////////////////////////////////////////////////////////////
 
