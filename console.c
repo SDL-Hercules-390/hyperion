@@ -3248,9 +3248,10 @@ static void calcto()    // (calculate timeout)
     timeval_subtract( &previo, &currio, &diffio );
     timeout = (diffio.tv_sec  > 0 || diffio.tv_usec > 100000) ?
         &slowpoll : &fastpoll;
-    if (timeout != prev_timeout)
-        WRMSG( HHC02917, "I", &slowpoll == prev_timeout ?
-            "slow to FAST" : "FAST to slow" );
+    if (MLVL( DEBUG ))
+        if (timeout != prev_timeout)
+            WRMSG( HHC02917, "D", &slowpoll == prev_timeout ?
+                "slow to FAST" : "FAST to slow" );
 }
 
 static void consio()    // (console read)
