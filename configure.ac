@@ -135,7 +135,7 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir="/mips"
         ;;
 
-    ppc*)
+    ppc*|powerpc*)
         hc_cv_cpu_arch=ppc
         hc_cv_pkg_lib_subdir="/ppc"
         ;;
@@ -166,7 +166,7 @@ AC_MSG_CHECKING( [target CPU bitness] )
 
 case "$target_cpu" in
 
-    *64)
+    *64|*64le)
         hc_cv_cpu_bits=64
         ;;
     *)
