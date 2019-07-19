@@ -551,25 +551,25 @@
 /* Define to 1 if you have the `strtok_r' function. */
 #undef HAVE_STRTOK_R
 
-/* Define to 1 if `ifr6_addr' is member of `struct in6_ifreq'. */
+/* Define to 1 if `ifr6_addr' is a member of `struct in6_ifreq'. */
 #undef HAVE_STRUCT_IN6_IFREQ_IFR6_ADDR
 
-/* Define to 1 if `ifr_ifru.ifru_flags' is member of `struct in6_ifreq'. */
+/* Define to 1 if `ifr_ifru.ifru_flags' is a member of `struct in6_ifreq'. */
 #undef HAVE_STRUCT_IN6_IFREQ_IFR_IFRU_IFRU_FLAGS
 
-/* Define to 1 if `s_addr' is member of `struct in_addr'. */
+/* Define to 1 if `s_addr' is a member of `struct in_addr'. */
 #undef HAVE_STRUCT_IN_ADDR_S_ADDR
 
-/* Define to 1 if `mt_gstat' is member of `struct mtget'. */
+/* Define to 1 if `mt_gstat' is a member of `struct mtget'. */
 #undef HAVE_STRUCT_MTGET_MT_GSTAT
 
-/* Define to 1 if `sa_sigaction' is member of `struct sigaction'. */
+/* Define to 1 if `sa_sigaction' is a member of `struct sigaction'. */
 #undef HAVE_STRUCT_SIGACTION_SA_SIGACTION
 
-/* Define to 1 if `sin_len' is member of `struct sockaddr_in'. */
+/* Define to 1 if `sin_len' is a member of `struct sockaddr_in'. */
 #undef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
 
-/* Define to 1 if `tv_nsec' is member of `struct timespec'. */
+/* Define to 1 if `tv_nsec' is a member of `struct timespec'. */
 #undef HAVE_STRUCT_TIMESPEC_TV_NSEC
 
 /* Define if '__builtin_bswap32' and friends are available */
@@ -772,6 +772,9 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
@@ -831,6 +834,11 @@
 
 /* Define missing macro on apple darwin (osx) platform */
 #undef _BSD_SOCKLEN_T_
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
