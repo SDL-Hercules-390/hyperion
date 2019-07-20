@@ -1699,10 +1699,18 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
            sense, or control command --
            -- except when multitrack READ or SEARCH [KEY?] command
            operates outside the domain of a locate record */
-        if (code == 0x92 && dev->ckdlaux & CKDLAUX_RDCNTSUF && dev->ckdlcount == 1)
+        if (1
+            && (code & 0x80)
+            && (dev->ckdlaux & CKDLAUX_RDCNTSUF)
+            && dev->ckdlcount > 0
+        )
         {
-            memcpy(rechdr, dev->ckdfcwrk, CKD_RECHDR_SIZE);
-            break;
+            memcpy( rechdr, dev->ckdfcwrk, CKD_RECHDR_SIZE );
+            cyl  = fetch_hw( rechdr->cyl );
+            head = fetch_hw( rechdr->head );
+            if ((rc = ckd_seek( dev, cyl, head, NULL, unitstat )) < 0)
+                return -1;
+            continue;
         }
         if (code != 0xe7)
         {
