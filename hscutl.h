@@ -281,4 +281,9 @@ HUT_DLL_IMPORT int nix_set_thread_name( pthread_t tid, const char* name );
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 
+/*-------------------------------------------------------------------*/
+/* Generate a (hopefully unique!) 12 digit dasd device serial number */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT void gen_dasd_serial( BYTE* serial );
+
 #endif /* __HSCUTL_H__ */

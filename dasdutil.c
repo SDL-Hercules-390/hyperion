@@ -1321,6 +1321,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
+    gen_dasd_serial( devhdr.serial );
 
     if (comp == 0xff) memcpy( devhdr.dh_devid, dh_devid_str( CKD_P370_TYP ), 8 );
     else              memcpy( devhdr.dh_devid, dh_devid_str( CKD_C370_TYP ), 8 );
@@ -2200,6 +2201,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
+    gen_dasd_serial( devhdr.serial );
     memcpy(  devhdr.dh_devid, dh_devid_str( FBA_C370_TYP ), 8 );
 
     STORE_LE_FW( devhdr.dh_heads,   sectors );

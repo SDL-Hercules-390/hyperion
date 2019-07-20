@@ -506,24 +506,25 @@ BYTE buf[256];
     memset( buf, 0, 256 );
 
     /* Bytes 0-31: NED 1  Node element descriptor for the device */
-    store_fw (buf, 0xc4010100);
-    sprintf ((char *)&buf[4], "  %4.4X0%2.2XHRCZZ000000000001",
+    store_fw (buf, 0xdc010100);
+    sprintf ((char *)&buf[4], "  %4.4X0%2.2XHRCZZ",
                         dev->ckdtab->devt, dev->ckdtab->model);
+    memcpy( &buf[18], dev->serial, 12 );
     for (i = 4; i < 30; i++)
-        buf[i] = host_to_guest(buf[i]);
+        buf[i] = host_to_guest( isalnum( buf[i] ) ? buf[i] : '0' );
     store_hw(buf + 30, dev->devnum);        /* Uniquely tag within system */
 
     /* Bytes 32-63: NED 2  Node element descriptor for the string */
-    store_fw (buf + 32, 0xc4000000);
-    sprintf ((char *)&buf[36], "  %4.4X0%2.2XHRCZZ000000000001",
+    store_fw (buf + 32, 0xd4020000);
+    sprintf ((char *)&buf[36], "  %4.4X0%2.2XHRCZZ000000000003",
                         dev->ckdtab->devt, dev->ckdtab->model);
     for (i = 36; i < 62; i++)
         buf[i] = host_to_guest(buf[i]);
     store_hw (buf + 62, 0x0000);
 
     /* Bytes 64-95: NED 3  Node element descriptor for the storage director */
-    store_fw (buf + 64, 0xd4020000);
-    sprintf ((char *)&buf[68], "  %4.4X0%2.2XHRCZZ000000000001",
+    store_fw (buf + 64, 0xd0000000);
+    sprintf ((char *)&buf[68], "  %4.4X0%2.2XHRCZZ000000000002",
                         dev->ckdcu->devt, dev->ckdcu->model);
     for (i = 68; i < 94; i++)
         buf[i] = host_to_guest(buf[i]);

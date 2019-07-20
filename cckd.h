@@ -62,7 +62,8 @@ struct CKD_DEVHDR                       /* Device header             */
                                            on this file, or zero if this
                                            is the last or only file.
                                            CFBA: zero (not used)     */
-        BYTE    resv[492];              /* Reserved                  */
+        BYTE    serial[12];             /* Serial number (ASCII)     */
+        BYTE    resv[480];              /* Reserved                  */
 };
 
 struct CKD_TRKHDR {                     /* Track header              */

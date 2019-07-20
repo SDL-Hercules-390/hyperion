@@ -1711,3 +1711,22 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
 
     return *pargc;
 }
+
+/*-------------------------------------------------------------------*/
+/* Generate a (hopefully unique!) 12 digit dasd device serial number */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void gen_dasd_serial( BYTE* serial )
+{
+    static char prev[12+1]    = {0};
+    char buf[12+1]            = {0};
+    do
+    {
+        int i;
+        for (i=0; i < 12; i++)
+            buf[i] = '0' + (rand() % 10);
+        buf[12] = 0;
+    }
+    while (str_eq( buf, prev )); 
+    memcpy( prev,   buf, 12 );
+    memcpy( serial, buf, 12 );
+}

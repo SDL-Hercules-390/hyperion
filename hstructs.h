@@ -1065,6 +1065,7 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
+        BYTE    serial[12];             /* Serial number (ASCII)     */
         char    filename[PATH_MAX+1];   /* filename (poss. prefixed
                                            with "|") or cmd prefix
                                            str if integrated console */
