@@ -238,6 +238,14 @@ char            filename[FILENAME_MAX]; /* work area for display     */
             return -1;
         }
 
+        /* Save the serial number */
+        memcpy( dev->serial, devhdr.serial, sizeof( dev->serial ));
+        {
+            const BYTE nulls[12] = {0};
+            if (memcmp( dev->serial, nulls, 12 ) == 0)
+                gen_dasd_serial( dev->serial );
+        }
+
         /* Check the device header identifier */
         dev->cckd64 = 1;
         if (!is_dh_devid_typ( devhdr.dh_devid, CKD64_CMP_OR_NML_TYP ))
