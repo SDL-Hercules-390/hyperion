@@ -3991,8 +3991,13 @@ int sns4mat = TAPE_SNS7_FMT_20_3480;
         dev->sense[30] = (BYTE)( dev->devnum & 0x000F ) | ( (BYTE)((BYTE)( dev->devnum & 0x000F )) << 4 );
     }
 
-    if (strcmp(dev->filename,TAPE_UNLOADED) == 0
-        || !dev->tmh->tapeloaded(dev,NULL,0))
+    if (0
+        || strcmp( dev->filename, TAPE_UNLOADED ) == 0
+        || (1
+            &&  dev->tmh
+            && !dev->tmh->tapeloaded( dev, NULL, 0 )
+           )
+    )
     {
         dev->sense[0] |= TAPE_SNS0_INTVREQ;
         dev->sense[1] |= TAPE_SNS1_FILEPROT;
