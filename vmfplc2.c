@@ -1578,7 +1578,7 @@ static const char* validate_cmsfile( const char* fn, const char* ft, const char*
 /*-------------------------------------------------------------------*/
 struct CTLTAB
 {
-    const char*  orec;
+    const char*  orec;          // (original control file record)
     const char*  codepage;
     const char*  fn;            // (tapemark entry if "@TM")
     const char*  ft;
@@ -1588,6 +1588,7 @@ struct CTLTAB
     int          reclen;        // i.e. lrecl
     char         recfm;         // 'F'ixed or 'V'ariable
     char         filefmt;       // 'T'ext, 'B'inary or 'S'truct
+    bool         loaded;        // entry has been LOADed
 };
 typedef struct CTLTAB   CTLTAB;
 
@@ -1626,6 +1627,7 @@ static CTLTAB* find_ctltab_entry( const char* fn, const char* ft, char recfm )
             && strcasecmp( ctltab[i].fn,      fn    ) == 0  // file name matches
             && strcasecmp( ctltab[i].ft,      ft    ) == 0  // file type matches
             &&             ctltab[i].recfm == recfm         // recfm matches
+            &&            !ctltab[i].loaded                 // not already loaded
         )
             return &ctltab[i];  // (found)
     return NULL;                // (not found)
@@ -1712,6 +1714,7 @@ static int parse_ctlfile_stmt( OPTIONS* opts, const char* orec, int recno )
     if (strcasecmp( fn, "@TM" ) == 0)
     {
         ctl.fn = strdup( "@TM" );
+        ctl.loaded = false;
         VERIFY( add_ctltab_entry( &ctl ));
         return 0;
     }
@@ -1835,6 +1838,7 @@ static int parse_ctlfile_stmt( OPTIONS* opts, const char* orec, int recno )
     ctl.reclen   = reclen;
     ctl.recfm    = toupper( recfm  [0] );
     ctl.filefmt  = toupper( filefmt[0] );
+    ctl.loaded   = false;
 
     VERIFY( add_ctltab_entry( &ctl ));
 
@@ -2172,6 +2176,84 @@ static int endof_rec( FILE* ofile, char filefmt, const char* name )
 }
 
 /*-------------------------------------------------------------------*/
+/*                   Show them file being LOADed...                  */
+/*-------------------------------------------------------------------*/
+static void log_fst_loaded( CTLTAB* ctl, FST* fst, OPTIONS* opts )
+{
+    char  info[80];
+    char  msgbuf[80+MAX_PATH];
+
+    // ">>> %s"
+    MSGBUF( msgbuf, "LOADING:    %s", format_fst_info( fst, info, sizeof( info )));
+    WRMSG( HHC02626, "I", msgbuf );
+
+    if (!opts->quiet)
+    {
+        /* Show them where it is being loaded to... */
+        // "    %s"
+        MSGBUF( msgbuf, "     to:    %s", ctl->hostfile );
+        WRMSG( HHC02633, "I", msgbuf );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   Show them file being LOADed...                  */
+/*-------------------------------------------------------------------*/
+static void log_cms_loaded( CTLTAB* ctl, CMS* cms, OPTIONS* opts )
+{
+    char  info[80];
+    char  msgbuf[80+MAX_PATH];
+
+    // ">>> %s"
+    MSGBUF( msgbuf, "LOADING:    %s", format_cms_info( cms, info, sizeof( info )));
+    WRMSG( HHC02626, "I", msgbuf );
+
+    if (!opts->quiet)
+    {
+        /* Show them where it is being loaded to... */
+        // "    %s"
+        MSGBUF( msgbuf, "     to:    %s", ctl->hostfile );
+        WRMSG( HHC02633, "I", msgbuf );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   Show them file being SKIPPED...                 */
+/*-------------------------------------------------------------------*/
+static void log_fst_skipped( CTLTAB* ctl, FST* fst, OPTIONS* opts )
+{
+    if (!opts->quiet)
+    {
+        char  info[80];
+        char  msgbuf[80+MAX_PATH];
+
+        MSGBUF( msgbuf, "SKIPPED:    %s", format_fst_info( fst, info, sizeof( info )));
+        // ">>> %s"
+        // "    %s"
+        WRMSG( HHC02626, "I", msgbuf );
+        WRMSG( HHC02633, "I", "            (no matching ctlfile entry)");
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   Show them file being SKIPPED...                 */
+/*-------------------------------------------------------------------*/
+static void log_cms_skipped( CTLTAB* ctl, CMS* cms, OPTIONS* opts )
+{
+    if (!opts->quiet)
+    {
+        char  info[80];
+        char  msgbuf[80+MAX_PATH];
+
+        MSGBUF( msgbuf, "SKIPPED:    %s", format_cms_info( cms, info, sizeof( info )));
+        // ">>> %s"
+        // "    %s"
+        WRMSG( HHC02626, "I", msgbuf );
+        WRMSG( HHC02633, "I", "            (no matching ctlfile entry)");
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*                   LOAD file onto host system                      */
 /*-------------------------------------------------------------------*/
 static int load_file
@@ -2413,8 +2495,6 @@ static int doload_cms( OPTIONS* opts )
     char  fm [ sizeof( cms.fm ) + 1 ]  = {0};
     char  recfm;
 
-    char  info[80];
-
     bool  rszsplit = false;     // (SPECIAL: rsz split across 2 blocks)
     BYTE  rsz1;                 // (SPECIAL: 1st byte of record size)
 
@@ -2475,13 +2555,21 @@ static int doload_cms( OPTIONS* opts )
 
                     /* Find corresponding CTLTAB entry */
                     if (!(ctl = find_ctltab_entry( fn, ft, recfm )))
+                    {
+                        /* No match in ctlfile; skip loading this file ... */
+                        log_cms_skipped( ctl, &cms, opts );
                         continue; // (skip this file)
+                    }
                 }
                 else /* We WERE loading, but now we're DONE loading */
                 {
                     loading = false;
                     continue;
                 }
+
+                /* Show them the DUMPed file on the tape that we are LOADing... */
+                log_cms_loaded( ctl, &cms, opts );
+                ctl->loaded = true;
 
                 /* Close output file if opened */
                 if (ofile)
@@ -2494,13 +2582,6 @@ static int doload_cms( OPTIONS* opts )
                 if (ctl->filefmt == 'T')
                     if (strcasecmp( ctl->codepage, query_codepage()) != 0)
                         set_codepage( ctl->codepage );
-
-                // ">>> %s"
-                WRMSG( HHC02626, "I", format_cms_info( &cms, info, sizeof( info )));
-
-                if (!opts->quiet)
-                    // "    %s"
-                    WRMSG( HHC02633, "I", ctl->orec );
 
                 /* Create the empty host output file */
                 if (!(ofile = fopen( ctl->hostfile, "wb" )))
@@ -2599,8 +2680,6 @@ static int doload( OPTIONS* opts )
     char  fm [ sizeof( fst.fm ) + 1 ]  = {0};
     char  recfm;
 
-    char  info[80];
-
     bool  rszsplit = false;     // (SPECIAL: rsz split across 2 blocks)
     BYTE  rsz1;                 // (SPECIAL: 1st byte of record size)
 
@@ -2666,19 +2745,20 @@ static int doload( OPTIONS* opts )
 
                 /* Find corresponding CTLTAB entry */
                 if (!(ctl = find_ctltab_entry( fn, ft, recfm )))
+                {
+                    /* No match in ctlfile; skip loading this file ... */
+                    log_fst_skipped( ctl, &fst, opts );
                     continue; // (skip this file)
+                }
+
+                /* Show them the DUMPed file on the tape that we are LOADing... */
+                log_fst_loaded( ctl, &fst, opts );
+                ctl->loaded = true;
 
                 /* Set translation codepage if file is TEXT format */
                 if (ctl->filefmt == 'T')
                     if (strcasecmp( ctl->codepage, query_codepage()) != 0)
                         set_codepage( ctl->codepage );
-
-                // ">>> %s"
-                WRMSG( HHC02626, "I", format_fst_info( &fst, info, sizeof( info )));
-
-                if (!opts->quiet)
-                    // "    %s"
-                    WRMSG( HHC02633, "I", ctl->orec );
 
                 /* Create the empty host output file */
                 if (!(ofile = fopen( ctl->hostfile, "wb" )))
