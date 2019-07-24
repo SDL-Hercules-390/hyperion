@@ -925,7 +925,7 @@
     <None Include="tests\problem.core" />
     <None Include="tests\problem.list" />
     <None Include="tests\problem.tst" />
-    <None Include="tests\README" />
+    <None Include="tests\README.md" />
     <None Include="tests\redtest.rexx" />
     <None Include="tests\runtest" />
     <None Include="tests\runtest.cmd" />

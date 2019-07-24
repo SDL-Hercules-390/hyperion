@@ -1571,7 +1571,7 @@
     <None Include="tests\mkcore.rexx">
       <Filter>Other Files\tests</Filter>
     </None>
-    <None Include="tests\README">
+    <None Include="tests\README.md">
       <Filter>Other Files\tests</Filter>
     </None>
     <None Include="tests\redtest.rexx">
