@@ -2178,79 +2178,55 @@ static int endof_rec( FILE* ofile, char filefmt, const char* name )
 /*-------------------------------------------------------------------*/
 /*                   Show them file being LOADed...                  */
 /*-------------------------------------------------------------------*/
-static void log_fst_loaded( CTLTAB* ctl, FST* fst, OPTIONS* opts )
+static void log_loaded( OPTIONS* opts, CTLTAB* ctl, const char* info )
 {
-    char  info[80];
-    char  msgbuf[80+MAX_PATH];
-
+    char msgbuf[80+MAX_PATH];
     // ">>> %s"
-    MSGBUF( msgbuf, "LOADING:    %s", format_fst_info( fst, info, sizeof( info )));
+    MSGBUF( msgbuf, "LOADING:    %s", info );
     WRMSG( HHC02626, "I", msgbuf );
-
     if (!opts->quiet)
     {
-        /* Show them where it is being loaded to... */
+        /* Show them where file is being loaded to... */
         // "    %s"
         MSGBUF( msgbuf, "     to:    %s", ctl->hostfile );
         WRMSG( HHC02633, "I", msgbuf );
     }
 }
-
-/*-------------------------------------------------------------------*/
-/*                   Show them file being LOADed...                  */
-/*-------------------------------------------------------------------*/
-static void log_cms_loaded( CTLTAB* ctl, CMS* cms, OPTIONS* opts )
+static void log_cms_loaded( CMS* cms, CTLTAB* ctl, OPTIONS* opts )
 {
-    char  info[80];
-    char  msgbuf[80+MAX_PATH];
+    char info[80];
+    log_loaded( opts, ctl, format_cms_info( cms, info, sizeof( info )));
+}
+static void log_fst_loaded( FST* fst, CTLTAB* ctl, OPTIONS* opts )
+{
+    char info[80];
+    log_loaded( opts, ctl, format_fst_info( fst, info, sizeof( info )));
+}
 
+/*-------------------------------------------------------------------*/
+/*                   Show them file being SKIPPED...                 */
+/*-------------------------------------------------------------------*/
+static void log_skipped( const char* info )
+{
+    char msgbuf[80+MAX_PATH];
+    MSGBUF( msgbuf, "SKIPPED:    %s", info );
     // ">>> %s"
-    MSGBUF( msgbuf, "LOADING:    %s", format_cms_info( cms, info, sizeof( info )));
     WRMSG( HHC02626, "I", msgbuf );
-
-    if (!opts->quiet)
-    {
-        /* Show them where it is being loaded to... */
-        // "    %s"
-        MSGBUF( msgbuf, "     to:    %s", ctl->hostfile );
-        WRMSG( HHC02633, "I", msgbuf );
-    }
+    /* Show them why file is being skipped... */
+    // "    %s"
+    WRMSG( HHC02633, "I", "            (no matching ctlfile entry)");
 }
-
-/*-------------------------------------------------------------------*/
-/*                   Show them file being SKIPPED...                 */
-/*-------------------------------------------------------------------*/
-static void log_fst_skipped( CTLTAB* ctl, FST* fst, OPTIONS* opts )
+static void log_cms_skipped( CMS* cms, OPTIONS* opts )
 {
+    char info[80];
     if (!opts->quiet)
-    {
-        char  info[80];
-        char  msgbuf[80+MAX_PATH];
-
-        MSGBUF( msgbuf, "SKIPPED:    %s", format_fst_info( fst, info, sizeof( info )));
-        // ">>> %s"
-        // "    %s"
-        WRMSG( HHC02626, "I", msgbuf );
-        WRMSG( HHC02633, "I", "            (no matching ctlfile entry)");
-    }
+        log_skipped( format_cms_info( cms, info, sizeof( info )));
 }
-
-/*-------------------------------------------------------------------*/
-/*                   Show them file being SKIPPED...                 */
-/*-------------------------------------------------------------------*/
-static void log_cms_skipped( CTLTAB* ctl, CMS* cms, OPTIONS* opts )
+static void log_fst_skipped( FST* fst, OPTIONS* opts )
 {
+    char info[80];
     if (!opts->quiet)
-    {
-        char  info[80];
-        char  msgbuf[80+MAX_PATH];
-
-        MSGBUF( msgbuf, "SKIPPED:    %s", format_cms_info( cms, info, sizeof( info )));
-        // ">>> %s"
-        // "    %s"
-        WRMSG( HHC02626, "I", msgbuf );
-        WRMSG( HHC02633, "I", "            (no matching ctlfile entry)");
-    }
+        log_skipped( format_fst_info( fst, info, sizeof( info )));
 }
 
 /*-------------------------------------------------------------------*/
@@ -2557,7 +2533,7 @@ static int doload_cms( OPTIONS* opts )
                     if (!(ctl = find_ctltab_entry( fn, ft, recfm )))
                     {
                         /* No match in ctlfile; skip loading this file ... */
-                        log_cms_skipped( ctl, &cms, opts );
+                        log_cms_skipped( &cms, opts );
                         continue; // (skip this file)
                     }
                 }
@@ -2568,7 +2544,7 @@ static int doload_cms( OPTIONS* opts )
                 }
 
                 /* Show them the DUMPed file on the tape that we are LOADing... */
-                log_cms_loaded( ctl, &cms, opts );
+                log_cms_loaded( &cms, ctl, opts );
                 ctl->loaded = true;
 
                 /* Close output file if opened */
@@ -2747,12 +2723,12 @@ static int doload( OPTIONS* opts )
                 if (!(ctl = find_ctltab_entry( fn, ft, recfm )))
                 {
                     /* No match in ctlfile; skip loading this file ... */
-                    log_fst_skipped( ctl, &fst, opts );
+                    log_fst_skipped( &fst, opts );
                     continue; // (skip this file)
                 }
 
                 /* Show them the DUMPed file on the tape that we are LOADing... */
-                log_fst_loaded( ctl, &fst, opts );
+                log_fst_loaded( &fst, ctl, opts );
                 ctl->loaded = true;
 
                 /* Set translation codepage if file is TEXT format */
