@@ -317,7 +317,7 @@ EXTRA_DIST =                    \
      pr.subtst                  \
      printer.txt                \
      ptf.txt                    \
-     README                     \
+     README.md                  \
      redtest.rexx               \
      res40002.txt               \
      rnsbg.txt                  \
