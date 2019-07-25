@@ -1300,7 +1300,9 @@ static struct FST_BLOCK* build_fst_block( const char* fn, const char* ft,
 
     numfull = filesz / PLC2_BLOCKSIZE;
     lastsz  = filesz % PLC2_BLOCKSIZE;
-    lastsz  = ROUND_UP( lastsz, CMS_BLOCKSIZE ) / CMS_BLOCKSIZE;
+    if (lastsz)
+        lastsz = ROUND_UP( lastsz, CMS_BLOCKSIZE );
+    lastsz /= CMS_BLOCKSIZE;
 
     store_fw( fstb->fst.numblk, (U32) numfull );
     store_fw( fstb->fst.lastsz, (U32) lastsz  );
