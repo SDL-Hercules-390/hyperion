@@ -2413,6 +2413,11 @@ static int load_file
                             rem -= rem;
                         }
                     }
+                    else // (rem == 0)
+                    {
+                        /* Save unwritten bytes in next block */
+                        *recrem = rsz - rem;
+                    }
                 }
             }
         }
