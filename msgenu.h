@@ -2269,7 +2269,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // range 03700 - 03799 available
 
 // range 03800 - 03849 for qeth related messages
-//efine HHC03800 (available)
+#define HHC03800 "%1d:%04X %s: Adapter mode set to %s"
 #define HHC03801 "%1d:%04X %s: %s: Register guest MAC address %s"
 #define HHC03802 "%1d:%04X %s: %s: Cannot register guest MAC address %s"
 #define HHC03803 "%1d:%04X %s: %s: Unregister guest MAC address %s"

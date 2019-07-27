@@ -5795,6 +5795,9 @@ MPC_PUS *req_pus_0A;
     /* Remember whether we are using layer2 or layer3. */
     grp->l3 = (req_pus_01->vc.pus_01.proto == PROTOCOL_LAYER3);
 
+    // HHC03800 "%1d:%04X %s: Adapter mode set to %s"
+    WRMSG( HHC03800, "I", LCSS_DEVNUM, dev->typname, grp->l3 ? "Layer 3"
+                                                             : "Layer 2" );
     /* Clear any registered IP or MAC addresses. */
     unregister_all_ipv4( grp );
     unregister_all_ipv6( grp );
