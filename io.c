@@ -65,45 +65,54 @@
 /*-------------------------------------------------------------------*/
 /* B230 CSCH  - Clear Subchannel                                 [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(clear_subchannel)
+DEF_INST( clear_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    PTIO( IO, "CSCH" );
+
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-       SIE_INTERCEPT(regs);
-
-    PTIO(IO,"CSCH");
+    {
+        PTIO( IO, "CSCH (sie)" );
+        SIE_INTERCEPT( regs );
+    }
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "CSCH dev", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
-    if (dev == NULL
+    if (0
+        || !dev
         || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0)
+        || (dev->pmcw.flag5 & PMCW5_E) == 0
+    )
     {
-        PTIO(ERR,"*CSCH");
-#if defined(_FEATURE_IO_ASSIST)
-        SIE_INTERCEPT(regs);
+        PTIO( ERR, "*CSCH" );
+#if defined( _FEATURE_IO_ASSIST )
+        PTIO( ERR, "*CSCH (sie)" );
+        SIE_INTERCEPT( regs );
 #endif
         regs->psw.cc = 3;
         return;
     }
 
     /* Perform clear subchannel and set condition code zero */
-    clear_subchan (regs, dev);
+    clear_subchan( regs, dev );
 
     regs->psw.cc = 0;
 }
