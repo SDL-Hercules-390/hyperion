@@ -60,7 +60,7 @@
   PTT( PTT_CL_ ## _class, _name, _op, 0, regs->psw.IA_L )
 #endif
 
-#if defined(FEATURE_CHANNEL_SUBSYSTEM)
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
 
 /*-------------------------------------------------------------------*/
 /* B230 CSCH  - Clear Subchannel                                 [S] */
@@ -69,7 +69,7 @@ DEF_INST( clear_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -92,14 +92,14 @@ DEVBLK *dev;                            /* -> device block           */
     dev = find_device_by_subchan( regs->GR_L( 1 ));
 
     if (dev)
-        PTT( PTT_CL_IO, "CSCH dev", dev->devnum, 0, 0 );
+        PTT( PTT_CL_IO, "CSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
     if (0
         || !dev
-        || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0
+        || !(dev->pmcw.flag5 & PMCW5_V)
+        || !(dev->pmcw.flag5 & PMCW5_E)
     )
     {
         PTIO( ERR, "*CSCH" );
@@ -121,95 +121,110 @@ DEVBLK *dev;                            /* -> device block           */
 /*-------------------------------------------------------------------*/
 /* B231 HSCH  - Halt Subchannel                                  [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(halt_subchannel)
+DEF_INST( halt_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    PTIO( IO, "HSCH" );
+
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-       SIE_INTERCEPT(regs);
-
-    PTIO(IO,"HSCH");
+    {
+        PTIO( IO, "HSCH (sie)" );
+        SIE_INTERCEPT( regs );
+    }
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "HSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
-    if (dev == NULL
-        || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0)
+    if (0
+        || !dev
+        || !(dev->pmcw.flag5 & PMCW5_V)
+        || !(dev->pmcw.flag5 & PMCW5_E)
+    )
     {
-        PTIO(ERR,"*HSCH");
-#if defined(_FEATURE_IO_ASSIST)
-        SIE_INTERCEPT(regs);
+        PTIO( ERR, "*HSCH" );
+#if defined( _FEATURE_IO_ASSIST )
+        PTIO( ERR, "*HSCH (sie)" );
+        SIE_INTERCEPT( regs );
 #endif
         regs->psw.cc = 3;
         return;
     }
 
     /* Perform halt subchannel and set condition code */
-    if ((regs->psw.cc = halt_subchan (regs, dev)) != 0)
-        PTIO(ERR,"*HSCH");
+    if ((regs->psw.cc = halt_subchan( regs, dev )) != 0)
+        PTIO( ERR, "*HSCH" );
 }
 
 
 /*-------------------------------------------------------------------*/
 /* B232 MSCH  - Modify Subchannel                                [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(modify_subchannel)
+DEF_INST( modify_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 PMCW    pmcw;                           /* Path management ctl word  */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    SIE_INTERCEPT(regs);
+    PTIO( IO, "MSCH" );
 
-    PTIO(IO,"MSCH");
+    PTIO( IO, "MSCH (sie)" );
+    SIE_INTERCEPT( regs );
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* Fetch the updated path management control word */
-    ARCH_DEP(vfetchc) ( &pmcw, sizeof(PMCW)-1, effective_addr2, b2, regs );
+    ARCH_DEP( vfetchc )( &pmcw, sizeof(PMCW)-1, effective_addr2, b2, regs );
 
     /* Program check if reserved bits are not zero */
-    if ((pmcw.flag4 & PMCW4_RESV)
+    if (0
+        || (pmcw.flag4 & PMCW4_RESV)
         || (pmcw.flag5 & PMCW5_LM) == PMCW5_LM_RESV
-#if !defined(_FEATURE_IO_ASSIST)
+#if !defined( _FEATURE_IO_ASSIST )
         || (pmcw.flag4 & PMCW4_A)
         || (pmcw.zone != 0)
         || (pmcw.flag25 & PMCW25_VISC)
         || (pmcw.flag27 & PMCW27_I)
 #endif
         || (pmcw.flag26 != 0)
-        || (pmcw.flag27 & PMCW27_RESV))
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+        || (pmcw.flag27 & PMCW27_RESV)
+    )
+        ARCH_DEP( program_interrupt )( regs, PGM_OPERAND_EXCEPTION );
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "MSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist */
-    if (dev == NULL)
+    if (!dev)
     {
-        PTIO(ERR,"*MSCH");
+        PTIO( ERR, "*MSCH" );
         regs->psw.cc = 3;
         return;
     }
@@ -217,95 +232,101 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* If the subchannel is invalid then return cc0 */
     if (!(dev->pmcw.flag5 & PMCW5_V))
     {
-        PTIO(ERR,"*MSCH");
+        PTIO( ERR, "*MSCH" );
         regs->psw.cc = 0;
         return;
     }
 
     /* Perform serialization and checkpoint-synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
     /* Obtain the device lock */
-    obtain_lock (&dev->lock);
-
-    /* Condition code 1 if subchannel is status pending
-       with other than intermediate status */
-    if ((dev->scsw.flag3 & SCSW3_SC_PEND)
-      && !(dev->scsw.flag3 & SCSW3_SC_INTER))
+    obtain_lock( &dev->lock );
     {
-        PTIO(ERR,"*MSCH");
-        regs->psw.cc = 1;
-        release_lock (&dev->lock);
-        return;
+        /* Condition code 1 if subchannel is status pending
+           with other than intermediate status */
+        if (1
+            &&  (dev->scsw.flag3 & SCSW3_SC_PEND)
+            && !(dev->scsw.flag3 & SCSW3_SC_INTER)
+        )
+        {
+            PTIO( ERR, "*MSCH" );
+            regs->psw.cc = 1;
+            release_lock( &dev->lock );
+            return;
+        }
+
+        /* Condition code 2 if subchannel is busy */
+        if (dev->busy || IOPENDING( dev ))
+        {
+            PTIO( ERR, "*MSCH" );
+            regs->psw.cc = 2;
+            release_lock( &dev->lock );
+            return;
+        }
+
+        /* Update the enabled (E), limit mode (LM), and
+           measurement mode (MM), and multipath (D) bits */
+        dev->pmcw.flag5 &=              ~(PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D);
+        dev->pmcw.flag5 |= (pmcw.flag5 & (PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D));
+
+        /* Update the measurement block index */
+        memcpy( dev->pmcw.mbi, pmcw.mbi, sizeof( HWORD ));
+
+        /* Update the interruption parameter */
+        memcpy( dev->pmcw.intparm, pmcw.intparm, sizeof( FWORD ));
+
+        /* Update the ISC and A fields */
+        dev->pmcw.flag4 &=              ~(PMCW4_ISC | PMCW4_A);
+        dev->pmcw.flag4 |= (pmcw.flag4 & (PMCW4_ISC | PMCW4_A));
+
+        /* Update the path management (LPM and POM) fields */
+        dev->pmcw.lpm = pmcw.lpm;
+        dev->pmcw.pom = pmcw.pom;
+
+        /* Update zone, VISC, I and S bit */
+        dev->pmcw.zone    =  pmcw.zone;
+        dev->pmcw.flag25 &=              ~(PMCW25_VISC);
+        dev->pmcw.flag25 |= (pmcw.flag25 & PMCW25_VISC);
+        dev->pmcw.flag26  =  pmcw.flag26;
+        dev->pmcw.flag27  =  pmcw.flag27;
+
+#if defined( _FEATURE_IO_ASSIST )
+        /* Relate the device storage view to the requested zone */
+        {
+            RADR  mso, msl;
+
+            mso =  sysblk.zpb[ dev->pmcw.zone ].mso << 20;
+            msl = (sysblk.zpb[ dev->pmcw.zone ].msl << 20) | 0xFFFFF;
+
+            /* Ensure channel program checks on incorrect zone defs */
+            if (0
+                || mso > (sysblk.mainsize - 1)
+                || msl > (sysblk.mainsize - 1)
+                || mso > msl
+            )
+                mso = msl = 0;
+
+            dev->mainstor = &(sysblk.mainstor[ mso ]);
+            dev->mainlim  = msl - mso;
+            dev->storkeys = &(STORAGE_KEY( mso, &sysblk ));
+        }
+#endif
+
+        /* Set device priority from the interruption subclass bits.
+         * Note: PMCW priorities range from 0 to 7 with 0 having a higher
+         *       priority than 7. Consequently, we'll set the device
+         *       priority bits accordingly.
+         */
+        dev->priority &= 0xFF00FFFFULL;
+        dev->priority |= 0x00800000ULL >> ((dev->pmcw.flag4 & PMCW4_ISC) >> 3);
+
     }
-
-    /* Condition code 2 if subchannel is busy */
-    if (dev->busy || IOPENDING(dev))
-    {
-        PTIO(ERR,"*MSCH");
-        regs->psw.cc = 2;
-        release_lock (&dev->lock);
-        return;
-    }
-
-    /* Update the enabled (E), limit mode (LM),
-       and measurement mode (MM), and multipath (D) bits */
-    dev->pmcw.flag5 &=
-        ~(PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D);
-    dev->pmcw.flag5 |= (pmcw.flag5 &
-        (PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D));
-
-    /* Update the measurement block index */
-    memcpy (dev->pmcw.mbi, pmcw.mbi, sizeof(HWORD));
-
-    /* Update the interruption parameter */
-    memcpy (dev->pmcw.intparm, pmcw.intparm, sizeof(FWORD));
-
-    /* Update the ISC and A fields */
-    dev->pmcw.flag4 &= ~(PMCW4_ISC | PMCW4_A);
-    dev->pmcw.flag4 |= (pmcw.flag4 & (PMCW4_ISC | PMCW4_A));
-
-    /* Update the path management (LPM and POM) fields */
-    dev->pmcw.lpm = pmcw.lpm;
-    dev->pmcw.pom = pmcw.pom;
-
-    /* Update zone, VISC, I and S bit */
-    dev->pmcw.zone = pmcw.zone;
-    dev->pmcw.flag25 &= ~(PMCW25_VISC);
-    dev->pmcw.flag25 |= (pmcw.flag25 & PMCW25_VISC);
-    dev->pmcw.flag26 = pmcw.flag26;
-    dev->pmcw.flag27 = pmcw.flag27;
-
-#if defined(_FEATURE_IO_ASSIST)
-    /* Relate the device storage view to the requested zone */
-    { RADR mso, msl;
-        mso = sysblk.zpb[dev->pmcw.zone].mso << 20;
-        msl = (sysblk.zpb[dev->pmcw.zone].msl << 20) | 0xFFFFF;
-
-        /* Ensure channel program checks on incorrect zone defs */
-        if(mso > (sysblk.mainsize-1) || msl > (sysblk.mainsize-1) || mso > msl)
-            mso = msl = 0;
-
-        dev->mainstor = &(sysblk.mainstor[mso]);
-        dev->mainlim = msl - mso;
-        dev->storkeys = &(STORAGE_KEY(mso, &sysblk));
-    }
-#endif /*defined(_FEATURE_IO_ASSIST)*/
-
-    /* Set device priority from the interruption subclass bits.
-     * Note: PMCW priorities range from 0 to 7 with 0 having a higher
-     *       priority than 7. Consequently, we'll set the device
-     *       priority bits accordingly.
-     */
-    dev->priority &= 0xFF00FFFFULL;
-    dev->priority |= 0x00800000ULL >> ((dev->pmcw.flag4 & PMCW4_ISC) >> 3);
-
-    release_lock (&dev->lock);
+    release_lock( &dev->lock );
 
     /* Set condition code 0 */
     regs->psw.cc = 0;
-
 }
 
 
@@ -343,46 +364,55 @@ BYTE    chpid;
 /*-------------------------------------------------------------------*/
 /* B238 RSCH  - Resume Subchannel                                [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(resume_subchannel)
+DEF_INST( resume_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    PTIO( IO, "RSCH" );
+
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-       SIE_INTERCEPT(regs);
-
-    PTIO(IO,"RSCH");
+    {
+        PTIO( IO, "RSCH (sie)" );
+        SIE_INTERCEPT( regs );
+    }
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "RSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
-    if (dev == NULL
-        || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0)
+    if (0
+        || !dev
+        || !(dev->pmcw.flag5 & PMCW5_V)
+        || !(dev->pmcw.flag5 & PMCW5_E)
+    )
     {
-        PTIO(ERR,"*RSCH");
-#if defined(_FEATURE_IO_ASSIST)
-        SIE_INTERCEPT(regs);
+        PTIO( ERR, "*RSCH" );
+#if defined( _FEATURE_IO_ASSIST )
+        PTIO( ERR, "*RSCH (sie)" );
+        SIE_INTERCEPT( regs );
 #endif
         regs->psw.cc = 3;
         return;
     }
 
     /* Perform resume subchannel and set condition code */
-    if ((regs->psw.cc = resume_subchan (regs, dev)) != 0)
-        PTIO(ERR,"*RSCH");
+    if ((regs->psw.cc = resume_subchan( regs, dev )) != 0)
+        PTIO( ERR, "*RSCH" );
 
     regs->siocount++;
 }
@@ -494,71 +524,82 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* B233 SSCH  - Start Subchannel                                 [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(start_subchannel)
+DEF_INST( start_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 ORB     orb;                            /* Operation request block   */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    PTIO( IO, "SSCH" );
+
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-        SIE_INTERCEPT(regs);
+    {
+        PTIO( IO, "SSCH (sie)" );
+        SIE_INTERCEPT( regs );
+    }
 
-    PTIO(IO,"SSCH");
-
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* Fetch the operation request block */
-    ARCH_DEP(vfetchc) ( &orb, sizeof(ORB)-1, effective_addr2, b2, regs );
+    ARCH_DEP( vfetchc )( &orb, sizeof( ORB )-1, effective_addr2, b2, regs );
 
     /* Program check if reserved bits are not zero */
-    if (orb.flag5 & ORB5_B /* Fiber Channel Extension (FCX) unsupported */
+    if (0
+        || orb.flag5 & ORB5_B /* Fiber Channel Extension (FCX) unsupported */
         || orb.flag7 & ORB7_RESV
-        || orb.ccwaddr[0] & 0x80)
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+        || orb.ccwaddr[0] & 0x80
+    )
+        ARCH_DEP( program_interrupt )( regs, PGM_OPERAND_EXCEPTION );
 
-#if !defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
+#if !defined( FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION )
     /* Program check if incorrect length suppression */
     if (orb.flag7 & ORB7_L)
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-#endif /*!defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)*/
+        ARCH_DEP( program_interrupt )( regs, PGM_OPERAND_EXCEPTION );
+#endif
 
-#if !defined(FEATURE_MIDAW_FACILITY)                            /*@MW*/
+#if !defined( FEATURE_MIDAW_FACILITY )
     /* Program check if modified indirect data addressing requested */
     if (orb.flag7 & ORB7_D)
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-#endif /*!defined(FEATURE_MIDAW_FACILITY)*/                     /*@MW*/
+        ARCH_DEP( program_interrupt )( regs, PGM_OPERAND_EXCEPTION );
+#endif
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "SSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, is not enabled, or no path available */
-    if (dev == NULL
-        || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0
-        || (orb.lpm & dev->pmcw.pam) == 0)
+    if (0
+        || !dev
+        || !(dev->pmcw.flag5 & PMCW5_V)
+        || !(dev->pmcw.flag5 & PMCW5_E)
+        || !(orb.lpm & dev->pmcw.pam)
+    )
     {
-        PTIO(ERR,"*SSCH");
-#if defined(_FEATURE_IO_ASSIST)
-        SIE_INTERCEPT(regs);
+        PTIO( ERR, "*SSCH" );
+#if defined( _FEATURE_IO_ASSIST )
+        PTIO( ERR, "*SSCH (sie)" );
+        SIE_INTERCEPT( regs );
 #endif
         regs->psw.cc = 3;
         return;
     }
 
     /* Perform serialization and checkpoint-synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
     /* Clear the path not operational mask */
     dev->pmcw.pnom = 0;
@@ -567,7 +608,7 @@ ORB     orb;                            /* Operation request block   */
     dev->pmcw.lpm = orb.lpm;
 
     /* Start the channel program and set the condition code */
-    regs->psw.cc = ARCH_DEP(startio) (regs, dev, &orb);        /*@IWZ*/
+    regs->psw.cc = ARCH_DEP( startio )( regs, dev, &orb );
 
     regs->siocount++;
 
@@ -575,7 +616,7 @@ ORB     orb;                            /* Operation request block   */
     if (regs->psw.cc == 0)
         dev->pmcw.lpum = 0x80;
     else
-        PTIO(ERR,"*SSCH");
+        PTIO( ERR, "*SSCH" );
 }
 
 
@@ -695,60 +736,65 @@ U32     crw;                            /* Channel Report Word       */
 /*-------------------------------------------------------------------*/
 /* B234 STSCH - Store Subchannel                                 [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_subchannel)
+DEF_INST( store_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 SCHIB   schib;                          /* Subchannel information blk*/
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    SIE_INTERCEPT(regs);
+    PTIO( IO, "STSCH" );
 
-    PTIO(IO,"STSCH");
+    PTIO( IO, "STSCH (sie)" );
+    SIE_INTERCEPT( regs );
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "STSCH (dev)", dev->devnum, 0, 0 );
 
     /* Set condition code 3 if subchannel does not exist */
-    if (dev == NULL)
+    if (!dev)
     {
-        PTIO(ERR,"*STSCH");
+        PTIO( ERR, "*STSCH" );
         regs->psw.cc = 3;
         return;
     }
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* Perform serialization and checkpoint-synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
     /* Build the subchannel information block */
     schib.pmcw = dev->pmcw;
 
-    obtain_lock (&dev->lock);
-    if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
-        schib.scsw = dev->pciscsw;
-    else
-        schib.scsw = dev->scsw;
-    release_lock (&dev->lock);
+    obtain_lock( &dev->lock );
+    {
+        if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
+            schib.scsw = dev->pciscsw;
+        else
+            schib.scsw = dev->scsw;
+    }
+    release_lock( &dev->lock );
 
-    memset (schib.moddep, 0, sizeof(schib.moddep));
+    memset( schib.moddep, 0, sizeof( schib.moddep ));
 
     /* Store the subchannel information block */
-    ARCH_DEP(vstorec) ( &schib, sizeof(SCHIB)-1, effective_addr2,
+    ARCH_DEP( vstorec )( &schib, sizeof(SCHIB)-1, effective_addr2,
                 b2, regs );
 
     /* Set condition code 0 */
     regs->psw.cc = 0;
-
 }
 
 
@@ -867,117 +913,135 @@ RADR    pfx;                            /* Prefix                    */
 /*-------------------------------------------------------------------*/
 /* B235 TSCH  - Test Subchannel                                  [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(test_subchannel)
+DEF_INST( test_subchannel )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 IRB     irb;                            /* Interruption response blk */
 int     cc;                             /* Condition Code            */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    PTIO( IO, "TSCH" );
+
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-        SIE_INTERCEPT(regs);
+    {
+        PTIO( IO, "TSCH (sie)" );
+        SIE_INTERCEPT( regs );
+    }
 
-    PTIO(IO,"TSCH");
-
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "TSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
-    if (dev == NULL
-        || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0)
+    if (0
+        || !dev
+        || !(dev->pmcw.flag5 & PMCW5_V)
+        || !(dev->pmcw.flag5 & PMCW5_E)
+    )
     {
-        PTIO(ERR,"*TSCH");
-#if defined(_FEATURE_IO_ASSIST)
-        SIE_INTERCEPT(regs);
+        PTIO( ERR, "*TSCH" );
+#if defined( _FEATURE_IO_ASSIST )
+        PTIO( ERR, "*TSCH (sie)" );
+        SIE_INTERCEPT( regs );
 #endif
         regs->psw.cc = 3;
         return;
     }
 
     /* validate operand before taking any action */
-    ARCH_DEP(validate_operand) (effective_addr2, b2, sizeof(IRB)-1,
-                                        ACCTYPE_WRITE_SKP, regs);
+    ARCH_DEP( validate_operand )( effective_addr2, b2, sizeof( IRB ) - 1,
+                                  ACCTYPE_WRITE_SKP, regs );
 
     /* Perform serialization and checkpoint-synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
     /* Test and clear pending status, set condition code */
-    cc = test_subchan (regs, dev, &irb);
+    cc = test_subchan( regs, dev, &irb );
 
     /* Store the interruption response block */
-    ARCH_DEP(vstorec) ( &irb, sizeof(IRB)-1, effective_addr2, b2, regs );
+    ARCH_DEP( vstorec )( &irb, sizeof(IRB)-1, effective_addr2, b2, regs );
 
     regs->psw.cc = cc;
 
     if (regs->psw.cc != 0)
-        PTIO(ERR,"*TSCH");
+        PTIO( ERR, "*TSCH" );
 }
 
 
-#if defined(FEATURE_CANCEL_IO_FACILITY)
+#if defined( FEATURE_CANCEL_IO_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B276 XSCH  - Cancel Subchannel                                [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(cancel_subchannel)
+DEF_INST( cancel_subchannel )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-DEVBLK *dev;                            /* -> device block           */
+DEVBLK* dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    PTIO( IO, "XSCH" );
+
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-       SIE_INTERCEPT(regs);
-
-    PTIO(IO,"XSCH");
+    {
+        PTIO( IO, "XSCH (sie)" );
+        SIE_INTERCEPT( regs );
+    }
 
     /* Program check if the ssid including lcss is invalid */
-    SSID_CHECK(regs);
+    SSID_CHECK( regs );
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1));
+    dev = find_device_by_subchan( regs->GR_L( 1 ));
+
+    if (dev)
+        PTT( PTT_CL_IO, "XSCH (dev)", dev->devnum, 0, 0 );
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
-    if (dev == NULL
-        || (dev->pmcw.flag5 & PMCW5_V) == 0
-        || (dev->pmcw.flag5 & PMCW5_E) == 0)
+    if (0
+        || !dev
+        || !(dev->pmcw.flag5 & PMCW5_V)
+        || !(dev->pmcw.flag5 & PMCW5_E)
+    )
     {
-        PTIO(ERR,"*XSCH");
-#if defined(_FEATURE_IO_ASSIST)
-        SIE_INTERCEPT(regs);
+        PTIO( ERR, "*XSCH" );
+#if defined( _FEATURE_IO_ASSIST )
+        PTIO( ERR, "*XSCH (sie)" );
+        SIE_INTERCEPT( regs );
 #endif
         regs->psw.cc = 3;
         return;
     }
 
     /* Perform cancel subchannel and set condition code */
-    regs->psw.cc = cancel_subchan (regs, dev);
+    regs->psw.cc = cancel_subchan( regs, dev );
 
     if (regs->psw.cc != 0)
-        PTIO(ERR,"*XSCH");
+        PTIO( ERR, "*XSCH" );
 }
-#endif /*defined(FEATURE_CANCEL_IO_FACILITY)*/
-#endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/
+#endif /* defined( FEATURE_CANCEL_IO_FACILITY ) */
+#endif /* defined( FEATURE_CHANNEL_SUBSYSTEM ) */
 
 
 #if defined(FEATURE_S370_CHANNEL)
