@@ -606,7 +606,6 @@ static void DelDevnumFastLookup(U16 lcss,U16 devnum)
 static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 {
     unsigned int schw;
-    TRACE( "DEBUG: DSFL Removing %d\n", subchan );
     if(sysblk.subchan_fl==NULL)
     {
         return;
