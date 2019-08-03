@@ -204,9 +204,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define MSGBUF( _buf, ... )     snprintf(_buf, sizeof(_buf), ## __VA_ARGS__ )
-#define MSG( id, s, ... )       #id s " "  id "\n", ## __VA_ARGS__
-#define MSG_C( id, s, ... )     #id s " "  id  "",  ## __VA_ARGS__
+#define MSGBUF( _buf, ... )     snprintf(_buf, sizeof(_buf),      ## __VA_ARGS__ )
+#define MSG( id, sev, ... )     #id "%s " id "\n", sev,           ## __VA_ARGS__
+#define MSG_C( id, sev, ... )   #id "%s " id "",   sev,           ## __VA_ARGS__
 #define EXTGUIMSG( ... )        do { if (extgui) fprintf( stderr, ## __VA_ARGS__ ); } while (0)
 
 /*-------------------------------------------------------------------*/
