@@ -660,6 +660,28 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
     BUILD_SYSBLK_USER_STREAM( sysblk.bld_opts    );
     BUILD_SYSBLK_USER_STREAM( sysblk.extpkg_vers );
 
+    // Save whether Hercules is running in "elevated" mode or not
+
+    if (StreamNum < MAX_MINIDUMP_USER_STREAMS)
+    {
+        static char   buf[64]    = {0};
+        const  char*  severity   = NULL;
+        const  char*  is_or_not  = NULL;
+        bool          evelated   = false;
+
+        evelated  = are_elevated();
+        severity  = evelated ? "I" : "W";
+        is_or_not = evelated ? ""  : "NOT ";
+
+        // "Hercules is %srunning in elevated mode"
+        MSGBUF( buf, MSG_C( HHC00018, severity, is_or_not ));
+
+        UserStreamArray[ StreamNum ].Type       = CommentStreamA;
+        UserStreamArray[ StreamNum ].Buffer     = (PVOID)                      buf;
+        UserStreamArray[ StreamNum ].BufferSize = (ULONG) (strlen((const char*)buf)+1);
+        StreamNum++;
+    }
+
     // Save last few log messages
 
     if (StreamNum < MAX_MINIDUMP_USER_STREAMS)
