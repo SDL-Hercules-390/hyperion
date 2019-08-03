@@ -3943,9 +3943,8 @@ DLL_EXPORT void *cckd64_sf_stats (void *data)
 {
 DEVBLK         *dev = data;             /* -> DEVBLK                 */
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
-struct stat     st;                     /* File information          */
+struct stat     st = {0};               /* File information          */
 int             i;                      /* Index                     */
-int             rc;                     /* Return code               */
 char           *ost[] = {"  ", "ro", "rd", "rw"};
 U64             usize=0,ufree=0;        /* Total size, free space    */
 S64             free_count=0;           /* Total number free spaces  */
@@ -3980,8 +3979,13 @@ S64             free_count=0;           /* Total number free spaces  */
     }
 
     /* Calculate totals */
-    rc = fstat (cckd->fd[0], &st);
-    for (i = 0; i <= cckd->sfn; i++)
+    if (fstat( cckd->fd[0], &st ) != 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", "fstat()", strerror( errno ));
+        memset( &st, 0, sizeof( st ));
+    }
+    for (i=0; i <= cckd->sfn; i++)
     {
         if (!i) usize = st.st_size;
         else usize += cckd->cdevhdr[i].cdh_size;
@@ -3990,36 +3994,52 @@ S64             free_count=0;           /* Total number free spaces  */
     }
 
     /* header */
+
     // "%1d:%04X   32/64       size free  nbr st   reads  writes l2reads    hits switches"
     WRMSG (HHC00333, "I", LCSS_DEVNUM);
+
     if (cckd->readaheads || cckd->misses)
     // "%1d:%04X                                                      readaheads   misses"
     WRMSG (HHC00334, "I", LCSS_DEVNUM);
+
     // "%1d:%04X ------------------------------------------------------------------------"
     WRMSG (HHC00335, "I", LCSS_DEVNUM);
 
     /* total statistics */
+
     // "%1d:%04X [*] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64"    %7.7d %7.7d %7.7d %7.7d  %7.7d"
-    WRMSG (HHC00336, "I", LCSS_DEVNUM,
-            dev->cckd64 ? "64" : "32",
-            usize, (ufree * 100) / usize, free_count,
-            cckd->totreads, cckd->totwrites, cckd->totl2reads,
-            cckd->cachehits, cckd->switches);
+    WRMSG( HHC00336, "I", LCSS_DEVNUM, dev->cckd64 ? "64" : "32", usize
+
+        , usize ? (ufree * 100) / usize : 999
+        , free_count
+        , cckd->totreads
+        , cckd->totwrites
+        , cckd->totl2reads
+        , cckd->cachehits
+        , cckd->switches
+    );
+
     if (cckd->readaheads || cckd->misses)
     // "%1d:%04X                                                         %7.7d  %7.7d"
     WRMSG (HHC00337, "I", LCSS_DEVNUM,
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
+
     // "%1d:%04X %s"
     WRMSG (HHC00338, "I", LCSS_DEVNUM, dev->filename);
+
     // "%1d:%04X [0] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
-    WRMSG (HHC00339, "I", LCSS_DEVNUM,
-            dev->cckd64 ? "64" : "32",
-            st.st_size,
-            ((S64)(cckd->cdevhdr[0].free_total * 100) / st.st_size),
-            cckd->cdevhdr[0].free_num, ost[cckd->open[0]],
-            cckd->reads[0], cckd->writes[0], cckd->L2_reads[0]);
+    WRMSG( HHC00339, "I", LCSS_DEVNUM, dev->cckd64 ? "64" : "32", st.st_size
+
+        , st.st_size ?
+          ((S64)(cckd->cdevhdr[0].free_total * 100) / st.st_size) : 999
+        ,        cckd->cdevhdr[0].free_num
+        , ost[cckd->open[0]]
+        , cckd->reads[0]
+        , cckd->writes[0]
+        , cckd->L2_reads[0]
+    );
 
     if (dev->dasdsfn != NULL && CCKD_MAX_SF > 0)
         // "%1d:%04X %s"
@@ -4029,13 +4049,16 @@ S64             free_count=0;           /* Total number free spaces  */
     for (i = 1; i <= cckd->sfn; i++)
     {
         // "%1d:%04X [%d] %s %11.11"PRId64" %3.3"PRId64"%% %4.4"PRId64" %s %7.7d %7.7d %7.7d"
-        WRMSG (HHC00341, "I", LCSS_DEVNUM,
-                i,
-                dev->cckd64 ? "64" : "32",
-                (S64)cckd->cdevhdr[i].cdh_size,
-                ((S64)(cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].cdh_size),
-                cckd->cdevhdr[i].free_num, ost[cckd->open[i]],
-                cckd->reads[i], cckd->writes[i], cckd->L2_reads[i]);
+        WRMSG( HHC00341, "I", LCSS_DEVNUM, i, dev->cckd64 ? "64" : "32", (S64)cckd->cdevhdr[i].cdh_size
+
+            , cckd->cdevhdr[i].cdh_size ?
+              ((S64)(cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].cdh_size) : 999
+            ,        cckd->cdevhdr[i].free_num
+            , ost[cckd->open[i]]
+            , cckd->reads[i]
+            , cckd->writes[i]
+            , cckd->L2_reads[i]
+        );
     }
 
     return NULL;
