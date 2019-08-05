@@ -1689,24 +1689,49 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
 
     while (*p && *pargc < maxargc)
     {
-        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
+        while (*p && isspace(*p))
+        {
+            p++;
+        }
+        if (!*p)
+        {
+            break; /* find start of arg */
+        }
 
-        if (*p == '#' && *pargc) break; // stop when line comment reached
+        if (*p == '#' && *pargc)
+        {
+            break; /* stop when line comment reached */
+        }
 
-        *pargv = p; ++*pargc; // count new arg
+        /* Count new arg */
+        *pargv = p;
+        ++*pargc;
 
-        while (*p && !isspace(*p) && *p != '\"' && *p != '\'') p++; if (!*p) break; // find end of arg
+        while (*p && !isspace(*p) && *p != '\"' && *p != '\'')
+        {
+            p++;
+        }
+        if (!*p)
+        {
+            break; /* find end of arg */
+        }
 
         if (*p == '\"' || *p == '\'')
         {
             char delim = *p;
-            if (p == *pargv) *pargv = p+1;
+            if (p == *pargv)
+            {
+                *pargv = p+1;
+            }
             do {} while (*++p && *p != delim);
-            if (!*p) break; // find end of quoted string
+            if (!*p)
+            {
+                break; /* find end of quoted string */
+            }
         }
 
-        *p++ = 0; // mark end of arg
-        pargv++; // next arg ptr
+        *p++ = 0; /* mark end of arg */
+        pargv++; /* next arg ptr */
     }
 
     return *pargc;
