@@ -280,15 +280,6 @@ int         cache_getval(int ix, int i);
 int         cache_setval(int ix, int i, int val);
 int         cache_release(int ix, int i, int flag);
 
-static int  cache_create (int ix);
-static int  cache_destroy (int ix);
-static int  cache_check_ix(int ix);
-static int  cache_check_cache(int ix);
-static int  cache_check(int ix, int i);
-static int  cache_isbusy(int ix, int i);
-static int  cache_isempty(int ix, int i);
-static void cache_allocbuf(int ix, int i, int len);
-
 /*-------------------------------------------------------------------*/
 /* Specific cache definitions (until a better place is found)        */
 /*-------------------------------------------------------------------*/

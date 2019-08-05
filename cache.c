@@ -14,6 +14,15 @@
 
 #include "hercules.h"
 
+static int  cache_create (int ix);
+static int  cache_destroy (int ix);
+static int  cache_check_ix(int ix);
+static int  cache_check_cache(int ix);
+static int  cache_check(int ix, int i);
+static int  cache_isbusy(int ix, int i);
+static int  cache_isempty(int ix, int i);
+static void cache_allocbuf(int ix, int i, int len);
+
 DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 /*-------------------------------------------------------------------*/
