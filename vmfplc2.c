@@ -1414,7 +1414,7 @@ static const char* format_fst_datetime( const FST* fst, char* str, size_t strsz 
 
     // "YYYY-MM-DD HH:MM:SS"    // 19 chars + null = 20 bytes
 
-    snprintf( str, strsz, "%s%s-%s-%s %s:%s:%s",
+    snprintf( str, strsz, "%2.2s%2.2s-%2.2s-%2.2s %2.2s:%2.2s:%2.2s",
                            cc, yy, mo, dd, hh, mi, ss );
     return str;
 }
