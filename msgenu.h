@@ -2238,7 +2238,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC03022I   dh_highcyl:    %u"
 #define HHC03023                                                            "\n" \
        "HHC03023I   cdh_vrm:       %u.%u.%u"                                "\n" \
-       "HHC03023I   cdh_opts:      0x%02.2X"                                "\n" \
+       "HHC03023I   cdh_opts:      0x%2.2X"                                 "\n" \
        "HHC03023I   num_L1tab:     %"PRId32                                 "\n" \
        "HHC03023I   num_L2tab:     %"PRId32                                 "\n" \
        "HHC03023I   cdh_cyls:      %"PRIu32"            (%"PRIu32" tracks)" "\n" \
