@@ -165,4 +165,12 @@ extern U16  CheckSum          ( const BYTE* pBuffer, S32 nBytes );
 extern U16  InetCheckSum      ( const BYTE* pBuffer, S32 nBytes );
 extern U16  PseudoHdrCheckSum ( ip_hdr* pIP );
 
+/*-------------------------------------------------------------------*/
+/*                 Timed read from tuntap device                     */
+/*-------------------------------------------------------------------*/
+
+#define DEF_NET_READ_TIMEOUT_SECS   (5)
+
+extern int read_tuntap( int fd, BYTE* buffer, size_t nBuffLen, int secs );
+
 #endif // _NETSUPP_H_

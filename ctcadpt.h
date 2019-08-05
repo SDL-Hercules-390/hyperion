@@ -274,16 +274,13 @@ typedef struct _IP6FRM IP6FRM, *PIP6FRM;
 // #define LCS_IOBUFFERSIZE). Also note that the minimum and maximum
 // frame buffer size, according to IBM documentation, is 16K to 64K.
 
-#define CTC_FRAME_BUFFER_SIZE     (0x5000)  // 20K CTCI/LCS frame buffer
+#define CTC_MIN_FRAME_BUFFER_SIZE (0x4000)  // Min. frame buffer size
+#define CTC_DEF_FRAME_BUFFER_SIZE (0x5000)  // Def. frame buffer size
+#define CTC_MAX_FRAME_BUFFER_SIZE (0xFFFF)  // Max. frame buffer size
 
-#define CTC_MIN_FRAME_BUFFER_SIZE (0x4000)  // Minimum frame buffer size
-#define CTC_MAX_FRAME_BUFFER_SIZE (0xFFFF)  // Maximum frame buffer size
-
-#define CTC_READ_TIMEOUT_SECS  (5)          // five seconds
-
-#define CTC_DELAY_USECS        (100)        // 100 microseconds delay; used
-                                            // mostly by enqueue frame buffer
-                                            // full delay loop...
+#define CTC_DELAY_USECS           (100)     // 100 microseconds delay;
+                                            // used mostly by enqueue
+                                            // frame buffer delay loop.
 
 struct  _CTCBLK;
 struct  _CTCIHDR;
@@ -308,7 +305,7 @@ struct  _CTCBLK
                                           // 1 - Write subchannel
 
     U16         iMaxFrameBufferSize;      // Device Buffer Size
-    BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
+    BYTE        bFrameBuffer[CTC_DEF_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
     U16         iFrameOffset;             // Curr Offset into Buffer
     U16         sMTU;                     // Max MTU
 
@@ -402,7 +399,7 @@ struct  _LCSDEV
                                         // 1 - Write cubchannel
 
     U16         iMaxFrameBufferSize;    // Device Buffer Size
-    BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
+    BYTE        bFrameBuffer[CTC_DEF_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
     U16         iFrameOffset;           // Curr Offset into Buffer
 
     LOCK        DevDataLock;            // Data LOCK

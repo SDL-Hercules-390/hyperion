@@ -1248,7 +1248,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U32   sCount,
     FD_ZERO( &rfds );
     FD_SET( pDEVBLK->fd, &rfds );
 
-    tv.tv_sec  = CTC_READ_TIMEOUT_SECS;
+    tv.tv_sec  = DEF_NET_READ_TIMEOUT_SECS;
     tv.tv_usec = 0;
 
     iRetVal = select( pDEVBLK->fd + 1, &rfds, NULL, NULL, &tv );

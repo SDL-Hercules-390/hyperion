@@ -7,6 +7,7 @@
 
 #include "hstdinc.h"
 #include "netsupp.h"
+#include "tuntap.h"         // (need TUNTAP_Read function)
 
 /*-------------------------------------------------------------------*/
 /*                     MACTAB functions                              */
@@ -356,4 +357,31 @@ void EtherIpv4CkSumOffload( BYTE* pFrame, size_t nBytes )
         nBytes -= MIN( nBytes, (size_t) nPacketLen );
 
     } // while (nBytes > ip_hdr_size)
+}
+
+/*-------------------------------------------------------------------*/
+/*                 Timed read from tuntap device                     */
+/*-------------------------------------------------------------------*/
+
+int read_tuntap( int fd, BYTE* buffer, size_t nBuffLen, int secs )
+{
+    int nBytesRead;
+
+#if !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
+
+    int rc;
+    fd_set readset;
+    struct timeval tv = {secs,0};
+    FD_ZERO( &readset );
+    FD_SET( fd, &readset );
+    rc = select( fd+1, &readset, NULL, NULL, &tv );
+    if (rc < 0)
+        return -1;
+    if (rc == 0)
+        return 0;
+
+#endif // !defined( OPTION_W32_CTCI ) // (i.e. Linux only)
+
+    nBytesRead = TUNTAP_Read( fd, buffer, nBuffLen );
+    return nBytesRead;
 }

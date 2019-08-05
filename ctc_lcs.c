@@ -754,7 +754,7 @@ int  LCS_Close( DEVBLK* pDEVBLK )
         // notice that we're doing a close (via our setting of the
         // fCloseInProgress flag). Its TUNTAP_Read will eventually
         // timeout after a few seconds (currently 5, which is dif-
-        // ferent than the CTC_READ_TIMEOUT_SECS timeout value the
+        // ferent than the DEF_NET_READ_TIMEOUT_SECS timeout value
         // CTCI_Read function uses) and will then do the close of
         // the adapter for us (TUNTAP_Close) so we don't have to.
         // All we need to do is ask it to exit (via our setting of
@@ -901,7 +901,7 @@ static void  LCS_BegMWrite( DEVBLK* pDEVBLK )
 {
     if (((LCSDEV*)pDEVBLK->dev_data)->pLCSBLK->fNoMultiWrite) return;
     PTT_TIMING( "b4 begmw", 0, 0, 0 );
-    TUNTAP_BegMWrite( pDEVBLK->fd, CTC_FRAME_BUFFER_SIZE );
+    TUNTAP_BegMWrite( pDEVBLK->fd, CTC_DEF_FRAME_BUFFER_SIZE );
     PTT_TIMING( "af begmw", 0, 0, 0);
 }
 
@@ -2035,7 +2035,7 @@ static void*  LCS_PortThread( void* arg)
 
         // Read an IP packet from the TAP device
         PTT_TIMING( "b4 tt read", 0, 0, 0 );
-        iLength = TUNTAP_Read( pLCSPORT->fd, szBuff, sizeof( szBuff ) );
+        iLength = read_tuntap( pLCSPORT->fd, szBuff, sizeof( szBuff ), DEF_NET_READ_TIMEOUT_SECS );
         PTT_TIMING( "af tt read", 0, 0, iLength );
 
         if (iLength == 0)      // (probably EINTR; ignore)
@@ -2539,7 +2539,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
         gettimeofday( &now, NULL );
 
-        waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
+        waittime.tv_sec  = now.tv_sec  + DEF_NET_READ_TIMEOUT_SECS;
         waittime.tv_nsec = now.tv_usec * 1000;
 
         PTT_DEBUG(       "GET  DevEventLock ", 000, pDEVBLK->devnum, -1 );

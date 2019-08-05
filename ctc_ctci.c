@@ -591,7 +591,7 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
         // notice that we're doing a close (via our setting of the
         // fCloseInProgress flag). Its TUNTAP_Read will eventually
         // timeout after a few seconds (currently 5, which is dif-
-        // ferent than the CTC_READ_TIMEOUT_SECS timeout value the
+        // ferent than the DEF_NET_READ_TIMEOUT_SECS timeout value
         // CTCI_Read function uses) and will then do the close of
         // the adapter for us (TUNTAP_Close) so we don't have to.
         // All we need to do is ask it to exit (via our setting of
@@ -731,7 +731,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
                 gettimeofday( &now, NULL );
 
-                waittime.tv_sec  = now.tv_sec  + CTC_READ_TIMEOUT_SECS;
+                waittime.tv_sec  = now.tv_sec  + DEF_NET_READ_TIMEOUT_SECS;
                 waittime.tv_nsec = now.tv_usec * 1000;
 
                 obtain_lock( &pCTCBLK->EventLock );
@@ -1028,7 +1028,7 @@ static void*  CTCI_ReadThread( void* arg )
     while( pCTCBLK->fd != -1 && !pCTCBLK->fCloseInProgress )
     {
         // Read frame from the TUN/TAP interface
-        iLength = TUNTAP_Read( pCTCBLK->fd, szBuff, sizeof(szBuff) );
+        iLength = read_tuntap( pCTCBLK->fd, szBuff, sizeof( szBuff ), DEF_NET_READ_TIMEOUT_SECS );
 
         // Check for error condition
         if( iLength < 0 )
