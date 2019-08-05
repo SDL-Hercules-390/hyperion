@@ -724,13 +724,13 @@ int     i, j;                      /* used to index through string vars    */
         {
             dsn[11] = '.';
             dsn[12] = 'F';
-            strncpy( dsn+13, fseq, 4 );
+            memcpy( dsn+13, fseq, 4 );
         }
         else
         {
             dsn[j] = '.'; j++;
             dsn[j] = 'F'; j++;
-            strncpy( dsn+j, fseq, 4 );
+            memcpy( dsn+j, fseq, 4 );
         }
     }
     else
