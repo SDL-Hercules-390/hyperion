@@ -330,7 +330,7 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
                         *size += extents_array( &f3dscb->ds3extnt[0], 4, count, cifx->heads );
                         *size += extents_array( &f3dscb->ds3adext[0], 9, count, cifx->heads );
                     }
-                    /* Fall through to below 0xf2 case */
+                    /* fall-through to below 0xf2 case */
                 }
                 case 0xf2:
                 {
