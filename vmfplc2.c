@@ -2464,7 +2464,7 @@ static int doload_cms( OPTIONS* opts )
     // it's really the only way we can hope to accomplish our goal!
 
     FILE*    ofile = NULL;
-    CTLTAB*  ctl;
+    CTLTAB*  ctl = NULL;
     CMS      cms;
 
     int   i, rc = 0;
@@ -2476,12 +2476,12 @@ static int doload_cms( OPTIONS* opts )
     char  fn [ sizeof( cms.fn ) + 1 ]  = {0};
     char  ft [ sizeof( cms.ft ) + 1 ]  = {0};
     char  fm [ sizeof( cms.fm ) + 1 ]  = {0};
-    char  recfm;
+    char  recfm = 'F';
 
     bool  rszsplit = false;     // (SPECIAL: rsz split across 2 blocks)
     BYTE  rsz1;                 // (SPECIAL: 1st byte of record size)
 
-    U32   blockid;              // (current file starting data block)
+    U32   blockid = 0;          // (current file starting data block)
     bool  gotblkid = false;     // (false until first data block read)
     bool  loading  = false;     // (false until name block is read)
 
