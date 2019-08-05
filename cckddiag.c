@@ -573,7 +573,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
         switch(argv[0][1])
         {
-            case 'v':  
+            case 'v':
                     if (argv[0][2] != '\0')
                     {
                         syntax (pgm);

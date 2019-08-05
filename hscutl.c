@@ -1751,7 +1751,7 @@ DLL_EXPORT void gen_dasd_serial( BYTE* serial )
             buf[i] = '0' + (rand() % 10);
         buf[12] = 0;
     }
-    while (str_eq( buf, prev )); 
+    while (str_eq( buf, prev ));
     memcpy( prev,   buf, 12 );
     memcpy( serial, buf, 12 );
 }

@@ -17,11 +17,11 @@ To use the Hercules Automatic Operator facility, one first defines a "rule" cons
 The Hercules Automatic Operator facility is **only** for those messages issued **by Hercules** to its HMC (hardware console). It **cannot** be used for whatever messages the guest operating system may issue to any of its terminals. It is only a **Hercules** automatic operator and **not** a "VSE", "MVS", "VM", etc, automatic operator!
 
 ## Defining a rule
-To define a HAO rule, enter the command:  
-    hao  <tgt>  
-to define the rule's "target" match pattern (a simple regular expression), followed by the command:  
-    hao  <cmd>  
-to define the rule's associated panel-command.  
+To define a HAO rule, enter the command:
+    hao  <tgt>
+to define the rule's "target" match pattern (a simple regular expression), followed by the command:
+    hao  <cmd>
+to define the rule's associated panel-command.
 
 The target pattern is a simple regular expression value as defined by whatever regular expression support your supported host build platform happens to support. For Windows it must be a Perl Compatible Regular Expression (PCRE).
 For other supported build platforms it might be some other supported regular expression syntax. Check your host platform's programming documentation for further details.

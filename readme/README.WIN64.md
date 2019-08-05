@@ -15,7 +15,7 @@ There is only one 64-bit architecture supported by 64-bit Windows: the x64 archi
 A 90-day evaluation edition can be downloaded from http://msdn.microsoft.com/en-us/evalcenter/bb633753.aspx
 
 2. 32-bit Windows
-If compiling on a 32-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Cross Tools Command Prompt"  
+If compiling on a 32-bit Windows system, go to the start menu and choose "All Programs" - "Microsoft Visual Studio 2008" - "Visual Studio Tools" - "Visual Studio 2008 x64 Cross Tools Command Prompt"
 Then, at the Cross Tools command prompt, enter this command: `SET CPU=AMD64`
 
 3. 64-bit Windows
@@ -31,10 +31,10 @@ SET BZIP2_DIR=c:\packages\bzip2
 SET PCRE_DIR=c:\packages\pcre
 ```
 
-5. nmake clean -f makefile-dllmod.msvc  
+5. nmake clean -f makefile-dllmod.msvc
 nmake -f makefile-dllmod.msvc
 
-6. The binaries will be installed into subfolder "msvc.AMD64.bin"  
+6. The binaries will be installed into subfolder "msvc.AMD64.bin"
 If you compiled on a 32-bit Windows system, copy this folder to your target 64-bit Windows machine.
 
 7. If you copy the binaries to a machine which does not have Visual Studio 2008 (VS9) installed, then you must also install the Microsoft Visual C++ 2008 Redistributable Package (x64) on the target machine. This package can be downloaded from http://www.microsoft.com/downloads/details.aspx?FamilyID=bd2a6171-e2d6-4230-b809-9a8d7548c1b6&DisplayLang=en
@@ -42,7 +42,7 @@ If you compiled on a 32-bit Windows system, copy this folder to your target 64-b
 ## The Fish "Visual Studio 2008" method
 (which accomplishes virtually the same thing as the above command-line build instructions)
 
-1. Install Visual Studio 2008.  
+1. Install Visual Studio 2008.
 Be sure to select compiler support for "x64" when installing Visual Studio since the Hercules provided Visual Studio Solution expects it.
 2. Open the "Hercules_VS2008.sln" Solution file.
 3. Select your desired Solution Configuration (Debug or Release) and Solution Platform (Win32 or x64) from the appropriate dropdowns.

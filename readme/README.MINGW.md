@@ -4,8 +4,8 @@
 # NOTE!  This file is OBSOLETE and should probably be deleted!
 ### Not converted to markdown on that basis.
 
-Once we got Herc to build successfully using MSVC, I/we stopped all effort on trying to make sure it continued to build under MinGW. At this late stage I doubt it will build at all under MinGW! That is to say, it more than likely will NOT build under MinGW, and thus the reason why this README should be deleted. The only reason I haven't deleted it yet is simply because of its historical value since it might be beneficial to someone should they decide to try on their own to get Herc to build under MinGW.  
-  
+Once we got Herc to build successfully using MSVC, I/we stopped all effort on trying to make sure it continued to build under MinGW. At this late stage I doubt it will build at all under MinGW! That is to say, it more than likely will NOT build under MinGW, and thus the reason why this README should be deleted. The only reason I haven't deleted it yet is simply because of its historical value since it might be beneficial to someone should they decide to try on their own to get Herc to build under MinGW.
+
 -- Fish
 
 ## Original readme now follows:

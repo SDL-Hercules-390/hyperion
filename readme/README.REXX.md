@@ -11,19 +11,19 @@
 6. [Issuing Hercules Commands](#Issuing-Hercules-Commands)
 
 ## About
-Hercules's Rexx support provides support for the following two Rexx packages:  
-    [Open Object Rexx](http://www.oorexx.org/)  
-    [Regina Rexx](http://regina-rexx.sourceforge.net/)  
+Hercules's Rexx support provides support for the following two Rexx packages:
+    [Open Object Rexx](http://www.oorexx.org/)
+    [Regina Rexx](http://regina-rexx.sourceforge.net/)
 Support for either package is not mutually exclusive of support for the other.
 
 Support for Open Object Rexx (ooRexx) is automatically provided as long as the package's rexx.h and oorexxapi.h header files are found during build time.  If the rexx.h and oorexxapi.h headers are found, then integrated OORexx support will be provided.  If you wish to have ooRexx installed on your system but do not want Hercules to provide integrated support for it, you must explicitly request that such support be disabled via the `--disable-object-rexx` option.
 
 Support for integrated Regina Rexx however, is NOT automatically provided and must instead be explicitly requested via the `--enable-regina-rexx` configure option at build time.  Even if the package's rexx.h and rexxsaa.h headers are found, support for integrated Regina Rexx will still NOT be provided.  Support is provided ONLY if the headers are found AND the `--enable-regina-rexx` option is specified.
 
-Support for either package can be enabled or disabled (Linux only) by simply specifying the appropriate  
-`--disable-object-rexx` and/or  
-`--enable-regina-rexx`  
-configure option at build time.  
+Support for either package can be enabled or disabled (Linux only) by simply specifying the appropriate
+`--disable-object-rexx` and/or
+`--enable-regina-rexx`
+configure option at build time.
 On Windows, the only way to purposely disable support is to rename the header file(s) to prevent Hercules from finding them.
 
 ## Hercules Rexx Settings
@@ -36,7 +36,7 @@ Other environment variables can be used to define your own defaults values for s
 
 
 ## rexx Command
-`rexx  [option value] ...`  
+`rexx  [option value] ...`
 
 Entering the 'rexx' command without any arguments displays the current settings. Otherwise an option / value pair must be specified to set the specified option to the specified value.  More than one option/value pair can be specified on the same command:
 
@@ -98,7 +98,7 @@ Entering the 'rexx' command without any arguments displays the current settings.
 ```
 
 ## Running a Rexx Script
-The format of the `exec` command is:  
+The format of the `exec` command is:
 ```
 exec [mode] scriptname [[args...][&&]]
 ```
@@ -114,7 +114,7 @@ In subroutine mode Hercules parses the string normally and passes each argument 
 
 The argument passing style is determined by the 'rexx' command's current "Mode" setting, but can be temporarily overridden for the current execution by simply specifying the 'mode' parameter on the command itself, immediately before the scriptname (e.g. 'exec cmd ...' for command style argument passing, or 'exec sub ...' for subroutine style argument passing):
 
-Contents of script 'example.rexx':  
+Contents of script 'example.rexx':
 ```REXX
         parse arg str
         say "parse arg str: " str
@@ -124,7 +124,7 @@ Contents of script 'example.rexx':
         exit
 ```
 
-Running the script from a command line (outside of Hercules) results in:  
+Running the script from a command line (outside of Hercules) results in:
 ```REXX
         C:\> example.rexx one,   Two   "Buckle    MY shoe"
         parse arg str:  one,   Two   "Buckle    MY shoe"
@@ -133,7 +133,7 @@ Running the script from a command line (outside of Hercules) results in:
         arg(3):
 ```
 
-Running the script from within Hercules via the 'exec' command using the default 'Command' mode setting results in:  
+Running the script from within Hercules via the 'exec' command using the default 'Command' mode setting results in:
 ```REXX
         HHC01603I exec example.rexx  one,   Two   "Buckle    MY shoe"
         parse arg str:  one,   Two   "Buckle    MY shoe"
@@ -142,7 +142,7 @@ Running the script from within Hercules via the 'exec' command using the default
         arg(3):
 ```
 
-Running the script using 'Subroutine' mode results in:  
+Running the script using 'Subroutine' mode results in:
 ```REXX
         HHC01603I exec example.rexx  one,   Two   "Buckle    MY shoe"
         parse arg str:  one,

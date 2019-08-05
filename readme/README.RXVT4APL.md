@@ -14,10 +14,10 @@ Here is Max's README regarding his rxvt4apl mods:
 ## Notes
 1. The rxvt4apl package provides a set of extensions to enable both entry and display of the complete APL character set including the characters without ASCII equivalents.  Although we use the standard version of rxvt4apl [2.4.5] without modifications, there is a small bugfix patch (below) if necessary.
 
-2. Once rxvt4apl has been installed and tested (there are several required materials in openAPL such as X11 fonts and keymaps), you should connect using telnet to the listening port for the terminal in Hercules:  
-    `telnet localhost 57413`  
-then type the standard APL command to sign on  
-    `)1234`  
+2. Once rxvt4apl has been installed and tested (there are several required materials in openAPL such as X11 fonts and keymaps), you should connect using telnet to the listening port for the terminal in Hercules:
+    `telnet localhost 57413`
+then type the standard APL command to sign on
+    `)1234`
 There is extensive helpful documentation with openAPL if you have problems with X11 fonts or keymaps, etc.
 
 3. Rather than use the right ALT key I used the unused "windows" key for the Mode_switch key in modeswitch.xmap:
@@ -29,7 +29,7 @@ There is extensive helpful documentation with openAPL if you have problems with 
     add Mod3 = Mode_switch
     ```
 
-4. The terminals must be defined to hercules using the conf file definitions  
+4. The terminals must be defined to hercules using the conf file definitions
 ```0402 2703 dial=in lport=57413 lnctl=ibm1 term=rxvt4apl skip=5EDE code=ebcd iskip=0D0A prepend=16 append=5B1F eol=0A binary=yes crlf=yes sendcr=yes```
 
 5. In general when typing a character, rxvt4apl seems to prefer to use the standard ASCII character if it exists, in preference to the APL character.  So for example if you wish to enter the apostrophe (') use your ASCII keyboard's standard apostrophe key, not APL's apostrophe (ordinarily `shift-K`).
@@ -42,8 +42,8 @@ There is extensive helpful documentation with openAPL if you have problems with 
  - the right arrow key (branch command) must be hit twice
  - Some commands such as up and/or down grade cause unexpected escape to telnet command mode, even in binary mode
 
-9. If you receive this error when running rxvt4apl  
-    `can't open pseudo-tty`  
+9. If you receive this error when running rxvt4apl
+    `can't open pseudo-tty`
 try the following patch (required for recent ubuntu)
     ```
     ======================= START OF PATCH ====================

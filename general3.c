@@ -3985,7 +3985,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* EBE1 STOCFH - Store High On Condition                       [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST( store_high_on_condition) 
+DEF_INST( store_high_on_condition)
 {
 int     r1, m3;                         /* Register number, mask     */
 int     b2;                             /* Base of effective addr    */

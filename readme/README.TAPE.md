@@ -13,20 +13,20 @@
 ## Version History
     * V1.0  :  08 Mar 2003  :  ISW  :  Initial Release
 
-## Supported Device Type emulations  
-Device Types supported as of now:  
-3410/3411, 3420, 3480, 3490, 9347  
-Upcoming Device type support:  
-3422, 3424, 3490E, 3590, 3430, 8809  
+## Supported Device Type emulations
+Device Types supported as of now:
+3410/3411, 3420, 3480, 3490, 9347
+Upcoming Device type support:
+3422, 3424, 3490E, 3590, 3430, 8809
 
 ## Basic ACF support
 The ACF (Automatic Cartridge Feeder) is a feature on Cartridge type tape drives (3480, 3490, etc..) that automatically loads a new tape when a tape is removed from the drive. There is no real control over this device by the host, as it just keeps on feeding tapes one after the other. Although the ACF feature is unique to cartridge type systems, the emulation accepts to use the same technique for emulated 1/2 inch tapes reel drives as well.
 
-ACF is supported as follows :  
-hercules.cnf syntax:  
-`CUU DEVT @filename <options..>`  
-devinit syntax:  
-`devinit CUU @filename <options..>`  
+ACF is supported as follows :
+hercules.cnf syntax:
+`CUU DEVT @filename <options..>`
+devinit syntax:
+`devinit CUU @filename <options..>`
 
 the 'filename' (without the prefixing @) contains a list of files that will be loaded one after the other. The filenames contained in the file list cannot describe another ACF file nor an SCSI tape handle (/dev/stX). However, the files may be standard AWS, HET or OMA files.
 
@@ -146,7 +146,7 @@ eotmargin=nnnn :
         The default is 131072 (128Kb)
 ```
 
-Caveats:  
+Caveats:
 If the emulated tape file resides on a disk media that reaches full capacity before the tape image exceeds it's size limit, the tape emulation will not detect that situation and will simulate reaching physical end of tape BEFORE reaching the EOT marker.
 This behaviour may be changed at a later time.
 

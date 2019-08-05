@@ -39,10 +39,10 @@ Now, the htreads.c module is responsible for calling the proper threading implem
 ## Using PTT
 The PTT tracing facility can be used to add generic "events" to the internal trace table, and is thus ideal for helping to debug *ANY* module/driver and not just for debugging lock handling.
 
-To use it, simply add a 'PTT' macro call to your code.  The parameters to the macro are as follows:  
-              `PTT( class, msg, p1, p2, rc );`  
+To use it, simply add a 'PTT' macro call to your code.  The parameters to the macro are as follows:
+              `PTT( class, msg, p1, p2, rc );`
 
-Where:  
+Where:
 ```
     U32             class;      /* Trace class (see header)  */
     const char*     msg;        /* Trace message             */

@@ -272,8 +272,8 @@ The configuration statement for CTCE is as follows :
 ````
 where:
 ```
-     <devnum>   is the address of the CTCT device.  
-     <lport>    is the even TCP/IP port on the local system.  
+     <devnum>   is the address of the CTCT device.
+     <lport>    is the even TCP/IP port on the local system.
      <raddress> is the IP address on the remote.
      <rport>    is the even TCP/IP port on the remote system.
      <mtu>      optional mtu buffersize, defaults to 32778

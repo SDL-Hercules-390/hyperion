@@ -111,13 +111,13 @@ x x x x 1 1 0 0 : EON
 x x x x 1 1 0 1 : SEP
 ```
 
-In order to perform an outgoing call, the data must follow these specifications:  
-        `N[N[N]]SEPN[N[N]]SEPN[N[N]]SEPN[N[N]]]SEPN[..[N]][EON]`  
-Where N is any dialing number from 0 to 9 and SEP is the separator.  
+In order to perform an outgoing call, the data must follow these specifications:
+        `N[N[N]]SEPN[N[N]]SEPN[N[N]]SEPN[N[N]]]SEPN[..[N]][EON]`
+Where N is any dialing number from 0 to 9 and SEP is the separator.
 
 The 4 first group of digits represet the IP address.  The last group represent a TCP port number.
-For example (* is the SEP character representation):  
-        `192*168*0*1*8888 : will issue a TCP connection to 192.168.0.1 port 8888`  
+For example (* is the SEP character representation):
+        `192*168*0*1*8888 : will issue a TCP connection to 192.168.0.1 port 8888`
 The EON is optional. If it is present, it must be the last character of the dial data.
 
 ## Bugs, Caveats

@@ -24,12 +24,12 @@ The argument for `--host` is the first part of a build triplet, specified as <ar
 If you're building for an OS that's not the one you're running on, you also need to tell the build environment that you're doing so. For building for Tiger on Leopard, you need to add two arguments to the configure invocation: `CFLAGS='-isysroot/Developer/SDKs/MacOSX10.4u.sdk' LDFLAGS='-isysroot/Developer/SDKs/MacOSX10.4u.sdk -Wl,-syslibroot,/Developer/SDKs/MacOSX10.4u.sdk'`.
 (All on one line, of course.) You also need to add an environment variable that's passed to gcc upon invocation, and this takes adding it to the beginning of the CC value, as in `CC="/usr/bin/env MACOSX_DEPLOYMENT_TARGET=10.4 gcc -arch ix86_64`.
 
-This makes a complete invocation for building for 32-bit Intel for Tiger on Leopard (again, all on one line):  
+This makes a complete invocation for building for 32-bit Intel for Tiger on Leopard (again, all on one line):
 ```
 CC="/usr/bin/env MACOSX_DEPLOYMENT_TARGET=10.4 gcc -arch i386" CFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk' LDFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk -Wl,-syslibroot,/Developer/SDKs/MacOSX10.4u.sdk' ./configure --enable-setuid-hercifc --host=i686-apple-darwin8.8.0
 ```
 
-Building 32-bit Intel for Leopard on Leopard is easier:  
+Building 32-bit Intel for Leopard on Leopard is easier:
 `CC="gcc -arch i386" ./configure --enable-setuid-hercifc --host=i686-apple-darwin9.6.0`
 
 (Note that building a 64-bit Intel version on a Mac with a 64-bit Intel processor still requires explicitly setting the architecture. If you don't, you'll get a 32-bit Intel version.)
@@ -37,24 +37,24 @@ Building 32-bit Intel for Leopard on Leopard is easier:
 Once you have the various architectures built, you can combine them into one binary with lipo. This is done by saying `lipo <input-files> -output <output-file> -create`. The best approach is to automate this with a shell script; I've done this for my own use.
 
 ## Tun Tap Information
-From: http://tech.groups.yahoo.com/group/hercules-390/message/61064  
-First, the CTC definition should be set up as follows:  
-`0400.2 3088 CTCI /dev/tun0 1500 192.168.0.12 192.168.0.103 255.255.255.255`  
+From: http://tech.groups.yahoo.com/group/hercules-390/message/61064
+First, the CTC definition should be set up as follows:
+`0400.2 3088 CTCI /dev/tun0 1500 192.168.0.12 192.168.0.103 255.255.255.255`
 
 Unlike linux, you don't use two consecutive ip addresses on the CTCI definition. You use the HOST ip address (the address that hercules will use) followed by the IP address of the computer that will be hosting Hercules. Note the subnet mask. The whole IP address is the network ID.
 
-Next, IP forwarding needs to be enabled. I wrote a shell script with the command to do the job and have it run when I boot the MAC. The command to enable IP forwarding on the mac is:  
-`sudo sysctl -w net.inet.ip.forwarding=1`  
+Next, IP forwarding needs to be enabled. I wrote a shell script with the command to do the job and have it run when I boot the MAC. The command to enable IP forwarding on the mac is:
+`sudo sysctl -w net.inet.ip.forwarding=1`
 
 `sudo` switches you to root; sysctl with the -w switch means to "write the value" or "set the value" of the variable net.inet.ip.forwarding to 1. This is similar to Linux, except there you use an echo command to set a variable that applies to setting an ip forwarding to 1.
 
-Before doing the above, though, you must assign the root user a password as follows:  
-`sudo passwd root`  
+Before doing the above, though, you must assign the root user a password as follows:
+`sudo passwd root`
 
 passwd is a variable and can be substituted with any password you like. You will need to assign a password to root because the previous command will prompt you for a password for root access to change the variable net.inet.ip.forwarding from the default "0" to "1".
 
-Proxy Arp is already set ON in a mac. This is what really confused me. I kept reading EVERYWHERE in google that it is set ON by default. Then I stumbled on the magic command that ties your hercules host ip address to your ethernet interface so that computers behind the router can get to it and so that hercules can get out to the rest of the world (the internet). It is the ARP command. It needs be be coded like this:  
-`arp -s 192.168.0.12 00:16:cb:aa:d4:4c pub en0`  
+Proxy Arp is already set ON in a mac. This is what really confused me. I kept reading EVERYWHERE in google that it is set ON by default. Then I stumbled on the magic command that ties your hercules host ip address to your ethernet interface so that computers behind the router can get to it and so that hercules can get out to the rest of the world (the internet). It is the ARP command. It needs be be coded like this:
+`arp -s 192.168.0.12 00:16:cb:aa:d4:4c pub en0`
 
 The above command "ties" the host ip address of your hercules machine(in this case 192.168.0,12) to the interface en0 (which happens to be my ethernet card) allowing access to and from the hercules machine from behind the router and out to the internet.
 
