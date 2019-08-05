@@ -718,7 +718,7 @@ int     i, j;                      /* used to index through string vars    */
     if (outGLOBBING == outputUNIQUE)
     {
         /* copy input file sequence number to work variable */
-        MSGBUF( fseq, "%4.4i", (inFileSeq+1));
+        MSGBUF( fseq, "%4.4u", (inFileSeq+1));
 
         if (!j || j > 11)
         {
