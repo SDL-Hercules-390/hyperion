@@ -739,14 +739,14 @@ int     i, j;                      /* used to index through string vars    */
     /* format label based upon passed sequence number */
     if (lseq == '1')                     /* -------- label #1 -------- */
     {
-        strncpy( buf+ 4, dsn, MAXTAPEDSNLEN); /* dataset name          */
-        strncpy( buf+21, volSer,  6);    /* volume serial number       */
-        strncpy( buf+27, "0001",  4);    /* volume sequence number     */
-        strncpy( buf+31, fseq,    4);    /* file number                */
-        strncpy( buf+35, "    ",  4);    /* generation number          */
-        strncpy( buf+39, "  ",    2);    /* version number             */
-        strncpy( buf+42, julianToday, 5);/* creation date              */
-        strncpy( buf+48, "99365", 5);    /* expiration date            */
+        memcpy( buf+ 4, dsn, MAXTAPEDSNLEN); /* dataset name          */
+        memcpy( buf+21, volSer,  6);    /* volume serial number       */
+        memcpy( buf+27, "0001",  4);    /* volume sequence number     */
+        memcpy( buf+31, fseq,    4);    /* file number                */
+        memcpy( buf+35, "    ",  4);    /* generation number          */
+        memcpy( buf+39, "  ",    2);    /* version number             */
+        memcpy( buf+42, julianToday, 5);/* creation date              */
+        memcpy( buf+48, "99365", 5);    /* expiration date            */
 
         if (ansi)
             buf[53] = ' ';
@@ -754,7 +754,7 @@ int     i, j;                      /* used to index through string vars    */
             buf[53] = '0';               /* security - 0 = none        */
 
         if (ltype == 'H')
-            strncpy( buf+54, "000000", 6 ); /* no blk count in hdr */
+            memcpy( buf+54, "000000", 6 ); /* no blk count in hdr */
         else
             snprintf( buf+54, 7, "%6.6i", blkCount );
     }
@@ -765,7 +765,7 @@ int     i, j;                      /* used to index through string vars    */
         snprintf( buf+10, 6, "%5.5i", lrecl );
         buf[15] = '3';                    /* density                   */
         buf[16] = '0';                    /* dataset position          */
-        strncpy( buf+17, "HERCULES/MAKETAPE", 17 );/* job/step creating*/
+        memcpy( buf+17, "HERCULES/MAKETAPE", 17 );/* job/step creating*/
         if (blkfactor != 1)
             buf[38] = 'B';                /* blocked records           */
     }
