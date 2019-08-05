@@ -573,8 +573,13 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
 
         switch(argv[0][1])
         {
-            case 'v':  if (argv[0][2] != '\0') syntax (pgm);
-                       ErrExit( EXIT_NORMAL_SUCCESS );
+            case 'v':  
+                    if (argv[0][2] != '\0')
+                    {
+                        syntax (pgm);
+                    }
+                    ErrExit( EXIT_NORMAL_SUCCESS );
+                    break;  /* Useless but prevents warning */
 
             case 'd':  if (argv[0][2] != '\0') syntax (pgm);
                        cmd_devhdr = true;
