@@ -247,18 +247,50 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (out == 0)
     {
         switch (in) {
-        case CKD:
-        case CKD64:  if (!lfs)        out = CCKD64;
-                     else             out = CKD64;  break;
-        case CCKD:
-        case CCKD64: if (comp == 255) out = CKD64;
-                     else             out = CCKD64; break;
-        case FBA:
-        case FBA64:  if (!lfs)        out = CFBA64;
-                     else             out = FBA64;  break;
-        case CFBA:
-        case CFBA64: if (comp == 255) out = FBA64;
-                     else             out = CFBA64; break;
+                case CKD:
+                case CKD64:
+                    if (!lfs)
+                    {
+                        out = CCKD64;
+                    }
+                    else
+                    {
+                        out = CKD64;
+                    }
+                    break;
+                case CCKD:
+                case CCKD64:
+                    if (comp == 255)
+                    {
+                         out = CKD64;
+                    }
+                    else
+                    {
+                        out = CCKD64;
+                    }
+                    break;
+                case FBA:
+                case FBA64:
+                    if (!lfs)
+                    {
+                        out = CFBA64;
+                    }
+                    else
+                    {
+                        out = FBA64;
+                    }
+                    break;
+                case CFBA:
+                case CFBA64:
+                    if (comp == 255)
+                    {
+                        out = FBA64;
+                    }
+                    else
+                    {
+                        out = CFBA64;
+                    }
+                    break;
         }
     }
 

@@ -233,14 +233,46 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     if (out == 0)
     {
         switch (in) {
-        case CKD:  if (!lfs)        out = CCKD;
-                   else             out = CKD;  break;
-        case CCKD: if (comp == 255) out = CKD;
-                   else             out = CCKD; break;
-        case FBA:  if (!lfs)        out = CFBA;
-                   else             out = FBA;  break;
-        case CFBA: if (comp == 255) out = FBA;
-                   else             out = CFBA; break;
+        case CKD:
+            if (!lfs)
+            {
+                out = CCKD;
+            }
+            else
+            {
+                out = CKD;
+            }
+            break;
+        case CCKD:
+            if (comp == 255)
+            {
+                out = CKD;
+            }
+            else
+            {
+                out = CCKD;
+            }
+            break;
+        case FBA:
+            if (!lfs)
+            {
+                out = CFBA;
+            }
+            else
+            {
+                out = FBA;
+            }
+            break;
+        case CFBA:
+            if (comp == 255)
+            {
+                out = FBA;
+            }
+            else
+            {
+                out = CFBA;
+            }
+            break;
         }
     }
 
