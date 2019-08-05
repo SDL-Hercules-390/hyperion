@@ -275,6 +275,7 @@ char            pathname[MAX_PATH];     /* ofname in host format     */
 
     /* Build the output file name */
     strncpy( ofname, memname, sizeof(ofname) );
+    ofname[8]=0; /* force string termination */
     string_to_lower( ofname );
     STRLCAT( ofname, ".mac" );
 
