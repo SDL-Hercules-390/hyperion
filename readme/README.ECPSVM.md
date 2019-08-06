@@ -92,15 +92,15 @@ To determine the feature names, type `ecpsvm enable ALL`.  All of the enabled fe
 The ecpsvm command is NOT case sensitive.
 
 ## Determining if the assist is used by VM
-Use the 2 following CLASS A commands:
-`CP QUERY CPASSIST`
-`CP QUERY SASSIST`
+Use the 2 following CLASS A commands:  
+`CP QUERY CPASSIST`  
+`CP QUERY SASSIST`  
 
 Both queries should return `ON`.
-Also use the following CLASS G Command:
-`CP QUERY SET`
+Also use the following CLASS G Command:  
+`CP QUERY SET`  
 2nd line should indicate:
-`ASSIST ON SVC TMR`
+`ASSIST ON SVC TMR`  
 
 ## Technical information
 The CP Assists provides the VM System Control Program (SCP) with various microcoded instructions to shorten the supervisor pathlength. All microcoded instructions are privileged instructions and have an opcode of E6xx. They are native representation of what the SCP would do in a similar case. For all cases where the assist is not able to correctly assist the SCP, the E6xx instructions resolve to a no-op, thus leaving the responsibility of the task to the original CP code.
@@ -166,14 +166,14 @@ Therefore, CP will fairly quickly abend because it will find some of the control
 
 This updated version of the ECPS:VM support provides the capability to operate with or without the FREE/FRET trap in effect.  The assist can automatically determine at IPL time whether it needs to operate with the trap or without the trap.  If the trap is enabled, all of the supported assists listed above are enabled.
 
-It is still possible to use ECPS:VM without any additional support for the FREE/FRET trap by simply specifying:
-`ECPSVM YES NOTRAP`
+It is still possible to use ECPS:VM without any additional support for the FREE/FRET trap by simply specifying:  
+`ECPSVM YES NOTRAP`  
 in the Hercules configuration file.  In this case, the assists that cannot operate with the trap in effect will automatically be disabled as before.  This means that the DISP1, DISP2, FREEX, and FRETX assists will be disabled.  If the trap is not present, all assists are enabled and NOTRAP has no meaning.
 
-Otherwise, regardless of whether the FREE/FRET trap is present, ECPS:VM will attempt to operate with all assists enabled with or without the trap when specifying:
-`ECPSVM YES`
-    or
-`ECPSVM YES TRAP`
+Otherwise, regardless of whether the FREE/FRET trap is present, ECPS:VM will attempt to operate with all assists enabled with or without the trap when specifying:  
+`ECPSVM YES`  
+    or  
+`ECPSVM YES TRAP`  
 
 (`ECPSVM YES` and `ECPSVM YES TRAP` are functionally equivalent.)
 

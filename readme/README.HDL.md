@@ -14,7 +14,7 @@
 The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to hercules, without the need to rebuild or even restart hercules.
 
 ## Commands
-The loader can be controlled by the following hercules commands:
+The loader can be controlled by the following hercules commands:  
 ```
 ldmod <module list>    - Load modules named in module list
 rmmod <module list>    - Unload modules named in list
@@ -22,7 +22,7 @@ lsmod                  - List all modules and entry points
 lsdep                  - List all dependencies
 ```
 
-The ldmod statement may also appear in the hercules configuration file.
+The ldmod statement may also appear in the hercules configuration file.  
 ```
 configuration statement:
 modpath <pathname>     - Specifies where modules are loaded from
@@ -32,7 +32,7 @@ modpath <pathname>     - Specifies where modules are loaded from
 The loader has 2 basic functions: module load and module unload.
 
 ###  Module load
-`int hdl_load(char *name, int flags);`
+`int hdl_load(char *name, int flags);`  
 Where name is the module name, this name may include the path.  If no path is given then the module is loaded from the default library search order.  Note that this is different from the standard search order.
 
 Flags may be one of the following:
@@ -45,15 +45,15 @@ Flags may be one of the following:
 This function returns a zero value when the load is successful.
 
 ### Module unload
-`int hdl_dele(char *name);`
+`int hdl_dele(char *name);`  
 Where name is the name of the module that is to be unloaded.
 This function returns a zero value when the unload is successful.
 
 ## Resolving Symbols
-`void * HDL_FINDSYM(char *symbolname);`
+`void * HDL_FINDSYM(char *symbolname);`  
 This function will return the entry point of symbolname or zero when the symbol cannot be resolved.
 
-`void * HDL_FINDNXT(current_entry point);`
+`void * HDL_FINDNXT(current_entry point);`  
 This function will return the previous entry point.
 That is, the entry point which was current before the entry point as identified by current_entry point was registered.
 

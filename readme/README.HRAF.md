@@ -15,7 +15,7 @@ The Host Resource Access Facility (HRAF) provides direct access to host resource
 DIAGNOSE X'F18' utilizes a set of subcodes for selection of the type of resource and the mechanism in use by the program.  Additionally, a subcode allows the DIAGNOSE X'F18' functionality to be queried for the capabilitites provided.  As the functionality is enhanced over time, the query subcode will report a new version number.
 
 ## General Register Usage
-`DIAGNOSE Rx,Ry,X'F18'`
+`DIAGNOSE Rx,Ry,X'F18'`  
 
 The first operand of the DIAGNOSE, Rx, must be an even-odd pair of registers.  The second operand, Ry, may be any register.  The contents of the registers are:
 
@@ -33,11 +33,11 @@ The native mode parameter block will use a different format allowing functional 
 ## Enabling the Host Resouce Access Facility
 By default, the Host Resource Access Facility is disabled.  Use the `archlvl` command to enable the facility:
 
-`archlvl enable HERC_HOST_RESOURCE_ACCESS`
+`archlvl enable HERC_HOST_RESOURCE_ACCESS`  
 
 ## DIAGNOSE X'F18' Subcodes
 
-The following subcodes are supported or planned.  The DIAGNOSE version in which the subcode has been made available is identified.  An '*' indicates a future planned subcode.
+The following subcodes are supported or planned.  The DIAGNOSE version in which the subcode has been made available is identified.  An '*' indicates a future planned subcode.  
 ```
     Subcode    Version  Description
   X'00000000'     1     Query DIAGNOSE X'F18' available functionality
@@ -118,5 +118,5 @@ Jason Winter developed the original support providing users access to host facil
 The compatibility functionality offered by the Host Resource Access Facility is based upon Jason Winter's original code, the licensing to which has been generously provided by Jason to the Hercules community.  See file license_dyn76.txt for the licensing of the Hercules host file system functionality provided by the dyn76 package.  Currently, Hercules has only incorporated the dyn76 Hercules functionality.
 Dyn75 is planned for future Hercules incorporation.  Thank you, Jason Winter.
 
--- Harold Grovesteen
+-- Harold Grovesteen  
 Apr 23, 2011
