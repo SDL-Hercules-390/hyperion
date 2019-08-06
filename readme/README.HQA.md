@@ -132,5 +132,5 @@ Once your new build settings have been fully tested (not only to build properly 
 
 ```
 
-"Fish" (David B. Trout)
+"Fish" (David B. Trout)  
 January 2015

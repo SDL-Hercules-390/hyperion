@@ -15,14 +15,14 @@ Download and install the GNU Compiler and tools.
 To download the tools you will need wget which is installed in `/usr/sfw/bin` on Solaris 9 and 10.
 First add this directory to your path using the command `PATH=${PATH}:/usr/sfw/bin`.
 
-(b) Follow instructions on http://www.blastwave.org/pkg-get.php to install the pkg-get package.
+(b) Follow instructions on http://www.blastwave.org/pkg-get.php to install the pkg-get package.  
 Choose /opt/csw as the package base directory.
 
-Choose a local mirror site from the list at http://www.blastwave.org/mirrors.html and update /opt/csw/etc/pkg-get.conf to point to the /stable directory at the mirror site, for example:
+Choose a local mirror site from the list at http://www.blastwave.org/mirrors.html and update /opt/csw/etc/pkg-get.conf to point to the /stable directory at the mirror site, for example:  
 `url=http://blastwave.informatik.uni-erlangen.de/csw/stable`
-
+  
 Add `/opt/csw/bin` to your path using the command: `PATH=/opt/csw/bin:${PATH}`
-
+  
 (c) Then install the GNU compiler and tools using these commands:
 ```
       pkg-get install textutils
@@ -72,26 +72,26 @@ which should produce output something like this:
 ```
 
 ## Download Source
-Download the Hercules source from SVN.
+Download the Hercules source from SVN.  
 
-Add the following line to your .profile file: `PATH=/opt/csw/bin:${PATH}`
-From your home directory issue this command: `svn checkout svn://svn.hercules-390.org/hercules/trunk hercules`
-Note: svn will fail if you do not have libuuid installed on your system
-    `ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory`
+Add the following line to your .profile file: `PATH=/opt/csw/bin:${PATH}`  
+From your home directory issue this command: `svn checkout svn://svn.hercules-390.org/hercules/trunk hercules`  
+Note: svn will fail if you do not have libuuid installed on your system  
+    `ld.so.1: svn: fatal: libuuid.so.1: open failed: No such file or directory`  
 
-If you get this message, you will need to install a patch from Sun:
-      1. Go to sunsolve.sun.com and select "Patch Finder"
-      2. Scroll down to "Download Product Specific Patches" and select your version of Solaris (for example, Solaris 2.9 SPARC)
-      3. Look for a patch which contains libuuid (for example, 114129-02)
-      4. Download the patch and unzip it into /var/spool/patch
-      5. patchadd /var/spool/patch/114129-02
+If you get this message, you will need to install a patch from Sun:  
+      1. Go to sunsolve.sun.com and select "Patch Finder"  
+      2. Scroll down to "Download Product Specific Patches" and select your version of Solaris (for example, Solaris 2.9 SPARC)  
+      3. Look for a patch which contains libuuid (for example, 114129-02)  
+      4. Download the patch and unzip it into /var/spool/patch  
+      5. patchadd /var/spool/patch/114129-02  
 
 ## Tool Versions
-Check that the required levels of tools are installed. From your home directory issue these commands:
+Check that the required levels of tools are installed. From your home directory issue these commands:  
 ```
       cd hercules
       util/bldlvlck
-```
+```  
 which should produce output something like this:
 ```
        OK      SVN (informational), found x.yy.zz

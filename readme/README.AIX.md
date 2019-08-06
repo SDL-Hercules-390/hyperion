@@ -25,7 +25,7 @@ Autoconf/automake require some pre-requisites, such as gettext, info, m4, libsig
 The above is based on efforts done by Alexey Bozrikov [bozy@fgm.com.cy], Harold Grovesteen [h.grovsteen@tx.rr.com] and Fish [fish@softdevlabs.com] on the [Hercules-390 Yahoo group](https://groups.yahoo.com/neo/groups/hercules-390) list during the month of October 2009.
 
 ## ToDo:
-The followings items are still remaining to do:
+The followings items are still remaining to do: 
   - Get SCSI tape working: resolve `<sys/mtio.h>` header & `struct mtget` issue(s).
 ```
 #if defined( HAVE_STRUCT_MTGET_MT_GSTAT )

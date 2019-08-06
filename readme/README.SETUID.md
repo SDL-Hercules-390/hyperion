@@ -30,16 +30,16 @@ On systems that DO have the capabilities feature implemented and enabled, and pr
 Providing users have the authority to open a tun or tap device, having hercifc setuid root allows those users to create network interfaces with arbitrary network parameters. If this is a concern, those users should either not be allowed access to the tun/tap interface or hercifc should not be setuid root. Using capabilities with hercifc just guarantees that should an exploit exist in hercifc to execute arbitrary code, then the user will be limited to the CAP_NET_ADMIN privilege.
 
 ## Building Hercules with capabilities feature
-A new configure flag has been added: `--[enable|disable]-capabilities`
+A new configure flag has been added: `--[enable|disable]-capabilities`  
 This flag allows building Hercules without capabilities features even on a system that would allow it. This may be necessary if the intended target may be missing the necessary implementation (pre 2.2 linux kernel) and/or library (libcap).
 
-In order for the build to actually implement capabilities, the following files are necessary:
-libcap.a in the libraries directory
-sys/capability.h in the includes directory
-sys/prctl.h in the includes directory (this one is usually std on linux systems)
+In order for the build to actually implement capabilities, the following files are necessary:  
+libcap.a in the libraries directory  
+sys/capability.h in the includes directory  
+sys/prctl.h in the includes directory (this one is usually std on linux systems)  
 
-In order to run a version of Hercules built for capabilities support, the following file is necessary:
-libcap.so.x in the libraries directory (x is currently "1" at the time of writing).
+In order to run a version of Hercules built for capabilities support, the following file is necessary:  
+libcap.so.x in the libraries directory (x is currently "1" at the time of writing).  
 
 On linux systems, these files usually come with the "libcap1" package for the runtime environment and the "libcap-dev" package for the build environment. Depending on your linux distribution, these packages may have other names.
 
