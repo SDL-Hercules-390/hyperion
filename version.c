@@ -869,13 +869,16 @@ static void init_hercver_strings( const char* prog )
 
 static void init_bldopts_strings()
 {
-    int count = 0; const char*** array = &sysblk.bld_opts;
-    char buf[256]; if (*array) return; // (already built)
+    int count = 0;
+    const char*** array;
+    array = &sysblk.bld_opts;
+    if (*array) return; /* already built */
 
     {
         unsigned int num_strs;
         const char** ppszBldInfoStr = NULL;
         char wrkbuf[256];
+        char buf[272];
 
         num_strs = get_buildinfo_strings( &ppszBldInfoStr );
 
@@ -899,11 +902,14 @@ static void init_bldopts_strings()
 
 static void init_extpkgs_strings()
 {
-    int count = 0; const char*** array = &sysblk.extpkg_vers;
-    char buf[256]; if (*array) return; // (already built)
+    int count = 0;
+    const char*** array;
+    array = &sysblk.extpkg_vers;
+    if (*array) return; /* already built */
 
     {
         char pkgbuf[256];
+        char buf[272];  /* to contain pkgbuf + message header and being conservative */
 
         MSGBUF( pkgbuf, "Built with %s external package version %s", "crypto", crypto_version());
         MSGBUF( buf, MSG( HHC01417, "I", pkgbuf ));
