@@ -125,7 +125,7 @@ int tab_pressed(char *cmdlinefull, size_t cmdlinelen, int *cmdoffset) {
 #endif
   if (tmp != NULL) {
     filename = tmp + 1;
-    strncpy(path, part2, strlen(part2)-strlen(filename));
+    memcpy(path, part2, strlen(part2)-strlen(filename));
     path[strlen(part2)-strlen(filename)] = '\0';
     tmp[0] = '\0';
   }
