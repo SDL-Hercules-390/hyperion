@@ -5724,6 +5724,8 @@ DEVBLK *dev;                            /* -> Device control block   */
 int     icode = 0;                      /* Intercept code            */
 int     dotsch = 1;                     /* perform TSCH after int    */
                                         /* except for THININT        */
+bool    saved_dotsch  = dotsch;
+bool    PCI_dequeued  = false;
 
     UNREFERENCED_370(ioparm);
     UNREFERENCED_370(iointid);
@@ -5857,6 +5859,9 @@ retry:
     if (unlikely( FACILITY_ENABLED( HERC_QDIO_THININT, regs )
         && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint) )
     {
+        saved_dotsch = dotsch;
+        PCI_dequeued = false;
+
         dotsch = 0;     /* Do not require TSCH after INT */
 
         *iointid = 0x80000000
@@ -5880,15 +5885,23 @@ retry:
 
         if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
         {
-            /* Clear the pending PCI status */
-            dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
-            dev->pciscsw.flag3 &= ~(SCSW3_SC);
-
             /* Dequeue the interrupt */
-            DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
+            PCI_dequeued = DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint ) == 0 ? true : false;
+
+            if (!PCI_dequeued)
+                dotsch = saved_dotsch; // (restore)
+            else
+            {
+                /* Clear the pending PCI status */
+                dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
+                dev->pciscsw.flag3 &= ~(SCSW3_SC);
+            }
         }
+        else
+            PCI_dequeued = true; // (keep same logic as before!)
     }
-    else
+    /* If no PCI interrupt dequeued, then dequeue a normal interrupt */
+    if (!PCI_dequeued)
 #endif /*defined(FEATURE_QDIO_THININT)*/
         *iointid = (
 #if defined(_FEATURE_IO_ASSIST)
