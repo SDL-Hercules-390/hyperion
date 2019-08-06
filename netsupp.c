@@ -374,7 +374,7 @@ int read_tuntap( int fd, BYTE* buffer, size_t nBuffLen, int secs )
     struct timeval tv = {secs,0};
     FD_ZERO( &readset );
     FD_SET( fd, &readset );
-    rc = select( fd+1, &readset, NULL, NULL, &tv );
+    while ((rc = select( fd+1, &readset, NULL, NULL, &tv )) < 0 && errno == EINTR);
     if (rc < 0)
         return -1;
     if (rc == 0)
