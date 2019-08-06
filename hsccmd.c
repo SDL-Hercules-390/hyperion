@@ -8173,7 +8173,7 @@ int qproc_cmd( int argc, char* argv[], char* cmdline )
 
             if (getrusage( (int) sysblk.cputid[i], &rusage ) == 0)
             {
-                char    kdays[16], udays[16];
+                char    kdays[18], udays[18];
 
                 U64     kdd, khh, kmm, kss, kms,
                         udd, uhh, umm, uss, ums;
