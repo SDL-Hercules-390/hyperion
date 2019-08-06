@@ -191,10 +191,24 @@ static void hao_cpstrp(char *dest, char *src)
 {
     int i;
 
+    /* Find first non space */
     for(i = 0; src[i] == ' '; i++);
-    strncpy(dest, &src[i], HAO_WKLEN);
+    /* Check if we've hit the wall */
+    if(!src[i])
+    {
+        /* Just blanks or empty string */
+        dest[0]=0;
+        return;
+    }
+    /* Copy from that point but no more than our work area */
+    /* No need to copy more than HAO_WKLEN-1 since the last character */
+    /* will be set to 0 anyway */
+    strncpy(dest, &src[i], HAO_WKLEN-1);
+    /* Ensure there is a trailing 0 */
     dest[HAO_WKLEN-1] = 0;
+    /* Find the last non space character from the end */
     for(i = (int)strlen(dest); i && dest[i - 1] == ' '; i--);
+    /* Terminate the string at the last space or empty string */
     dest[i] = 0;
 }
 
