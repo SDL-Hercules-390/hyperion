@@ -59,7 +59,7 @@ int             cyls;                   /* #of cylinders in CKD file */
 int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 int             cckd=0;                 /* 1 if compressed CKD       */
-char            filename[FILENAME_MAX]; /* work area for display     */
+char            filename[FILENAME_MAX+3]; /* work area for display     */
 
     dev->rcd = &dasd_build_ckd_config_data;
 
