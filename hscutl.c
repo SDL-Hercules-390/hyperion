@@ -324,13 +324,16 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym, int alloc)
     {
         return(NULL);
     }
-    tok->var=malloc(MIN(MAX_SYMBOL_SIZE+1,strlen(sym)+1));
+
+    tok->var=malloc(MAX_SYMBOL_SIZE+1);
     if(tok->var==NULL)
     {
         free(tok);
         return(NULL);
     }
-    strncpy(tok->var,sym,MIN(MAX_SYMBOL_SIZE+1,strlen(sym)+1));
+    strncpy(tok->var,sym,MAX_SYMBOL_SIZE);
+    tok->var[MAX_SYMBOL_SIZE]=0;    /* Ensure null termination */
+
     tok->val=NULL;
     symbols[symbol_count]=tok;
     symbol_count++;
