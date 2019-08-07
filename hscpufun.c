@@ -484,7 +484,7 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         char*  orig_loadparm;
         U16    devnum;
         BYTE   c;
-        char   save_ch;
+        char   save_ch=0;
 
         /* Save the LOADPARM in case of error */
         orig_loadparm = strdup( str_loadparm() );
