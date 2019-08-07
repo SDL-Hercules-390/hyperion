@@ -875,9 +875,9 @@ BYTE            chanstat = 0;           /* Subchannel status         */
 
     /* Obtain status, CCW address, and residual byte count */
     lastccw = (dev->scsw.ccwaddr[0] << 24)
-                || (dev->scsw.ccwaddr[1] << 16)
-                || (dev->scsw.ccwaddr[2] << 8)
-                || dev->scsw.ccwaddr[3];
+                | (dev->scsw.ccwaddr[1] << 16)
+                | (dev->scsw.ccwaddr[2] << 8)
+                | dev->scsw.ccwaddr[3];
     unitstat = dev->scsw.unitstat;
     chanstat = dev->scsw.chanstat;
     residual = (dev->scsw.count[0] << 8) || dev->scsw.count[1];
