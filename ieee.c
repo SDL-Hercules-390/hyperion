@@ -323,12 +323,12 @@ static INLINE U32 float128_class( float128_t op )
 {
     int neg =
        (  op.v[1] & 0x8000000000000000ULL ) ? 1 : 0;
-    if (f128_isSignalingNaN( op ))                          return float_class_pos_signaling_nan >> neg;
-    if (FLOAT128_ISNAN( op ))                               return float_class_pos_quiet_nan     >> neg;
-    if (!(op.v[1] & 0x7FFFFFFFFFFFFFFFULL ) && !op.v[0])    return float_class_pos_zero          >> neg;
+    if (f128_isSignalingNaN( op ))                         {return float_class_pos_signaling_nan >> neg;}
+    if (FLOAT128_ISNAN( op ))                              {return float_class_pos_quiet_nan     >> neg;}
+    if (!(op.v[1] & 0x7FFFFFFFFFFFFFFFULL ) && !op.v[0])   {return float_class_pos_zero          >> neg;}
     if ( (op.v[1] & 0x7FFFFFFFFFFFFFFFULL )
-                 == 0x7FFF000000000000ULL   && !op.v[0])    return float_class_pos_infinity      >> neg;
-    if (  op.v[1] & 0x7FFF000000000000ULL )                 return float_class_pos_normal        >> neg;
+                 == 0x7FFF000000000000ULL   && !op.v[0])   {return float_class_pos_infinity      >> neg;}
+    if (  op.v[1] & 0x7FFF000000000000ULL )                {return float_class_pos_normal        >> neg;}
                                                             return float_class_pos_subnormal     >> neg;
 }
 
@@ -336,12 +336,12 @@ static INLINE U32 float64_class( float64_t op )
 {
     int neg =
        (  op.v & 0x8000000000000000ULL ) ? 1 : 0;
-    if (f64_isSignalingNaN( op ))                           return float_class_pos_signaling_nan >> neg;
-    if (FLOAT64_ISNAN( op ))                                return float_class_pos_quiet_nan     >> neg;
-    if (!(op.v & 0x7FFFFFFFFFFFFFFFULL ))                   return float_class_pos_zero          >> neg;
+    if (f64_isSignalingNaN( op ))                          {return float_class_pos_signaling_nan >> neg;}
+    if (FLOAT64_ISNAN( op ))                               {return float_class_pos_quiet_nan     >> neg;}
+    if (!(op.v & 0x7FFFFFFFFFFFFFFFULL ))                  {return float_class_pos_zero          >> neg;}
     if ( (op.v & 0x7FFFFFFFFFFFFFFFULL )
-              == 0x7FF0000000000000ULL )                    return float_class_pos_infinity      >> neg;
-    if (  op.v & 0x7FF0000000000000ULL )                    return float_class_pos_normal        >> neg;
+              == 0x7FF0000000000000ULL )                   {return float_class_pos_infinity      >> neg;}
+    if (  op.v & 0x7FF0000000000000ULL )                   {return float_class_pos_normal        >> neg;}
                                                             return float_class_pos_subnormal     >> neg;
 }
 
@@ -349,13 +349,13 @@ static INLINE U32 float32_class( float32_t op )
 {
     int neg =
        (  op.v & 0x80000000) ? 1 : 0;
-    if (f32_isSignalingNaN( op ))     return float_class_pos_signaling_nan >> neg;
-    if (FLOAT32_ISNAN( op ))          return float_class_pos_quiet_nan     >> neg;
-    if (!(op.v & 0x7FFFFFFF))         return float_class_pos_zero          >> neg;
+    if (f32_isSignalingNaN( op ))                           {return float_class_pos_signaling_nan >> neg;}
+    if (FLOAT32_ISNAN( op ))                                {return float_class_pos_quiet_nan     >> neg;}
+    if (!(op.v & 0x7FFFFFFF))                               {return float_class_pos_zero          >> neg;}
     if ( (op.v & 0x7FFFFFFF)
-              == 0x7F800000)          return float_class_pos_infinity      >> neg;
-    if (  op.v & 0x7F800000)          return float_class_pos_normal        >> neg;
-                                      return float_class_pos_subnormal     >> neg;
+              == 0x7F800000)                                {return float_class_pos_infinity      >> neg;}
+    if (  op.v & 0x7F800000)                                {return float_class_pos_normal        >> neg;}
+                                                             return float_class_pos_subnormal     >> neg;
 }
 
 /* ***************************************************************************************************** */
