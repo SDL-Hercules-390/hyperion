@@ -2188,14 +2188,30 @@ size_t  loopcount;                      /* Number of iterations done */
 
                             while (*p && ncmd_tok < 10 )
                             {
-                                while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
+                                while (*p && isspace(*p)) 
+                                {
+                                    p++;
+                                }
+                                if (!*p)
+                                {
+                                    break; /* find start of arg */
+                                }
 
                                 if (*p == '#') break; // stop on comments
 
                                 cmd_tok[ncmd_tok] = p; ++ncmd_tok; // count new arg
 
-                                while ( *p && !isspace(*p) &&
-                                        *p != '\"' && *p != '\'' ) p++; if (!*p) break; // find end of arg
+                                while ( *p 
+                                        && !isspace(*p)
+                                        && *p != '\"'
+                                        && *p != '\'' )
+                                { 
+                                    p++;
+                                }
+                                if (!*p) 
+                                {
+                                    break; /* find end of arg */
+                                }
 
                                 if (*p == '\"' || *p == '\'')
                                 {
