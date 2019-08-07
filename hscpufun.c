@@ -800,7 +800,7 @@ char sie_flag = 0;
 U32 itimer = 0;
 char itimer_formatted[32];
 char arch370_flag = 0;
-char buf[64];
+char buf[72];
 int rc = 0;
 
     UPPER_ARGV_0( argv );
