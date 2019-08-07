@@ -724,7 +724,9 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         // to the below IPL READ logic...
     }
 
-    // (purposely FALL THROUGH to below IPL READ logic for now)
+    /* (purposely FALL THROUGH to below IPL READ logic for now) */
+    /* comment Below to silent GCC warning */
+    /* FALLTHRU */
 
     /*---------------------------------------------------------------*/
     /* IPL READ  (non-3590)                                          */
