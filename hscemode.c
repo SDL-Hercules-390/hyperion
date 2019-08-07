@@ -1140,7 +1140,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     }
 
     if (stepasid)
-        MSGBUF( asidmsg, " asid x'%04.4"PRIx16"'", stepasid );
+        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"'", stepasid );
 
     /* Display (current or new) settings */
 
