@@ -5724,8 +5724,14 @@ DEVBLK *dev;                            /* -> Device control block   */
 int     icode = 0;                      /* Intercept code            */
 int     dotsch = 1;                     /* perform TSCH after int    */
                                         /* except for THININT        */
+
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
+#if defined(FEATURE_QDIO_THININT)
+/* The 2 following variables are only used for QDIO Thin Interrupt Processing */
 bool    saved_dotsch  = dotsch;
 bool    PCI_dequeued  = false;
+#endif
+#endif
 
     UNREFERENCED_370(ioparm);
     UNREFERENCED_370(iointid);
