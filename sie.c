@@ -327,7 +327,6 @@ U64     dreg;
     {
         GUESTREGS->arch_mode         = ARCH_900_IDX;
         GUESTREGS->program_interrupt = &z900_program_interrupt;
-        GUESTREGS->trace_br          = (func) &z900_trace_br;
 
         icode = z900_load_psw( GUESTREGS, STATEBK->psw );
     }
@@ -354,7 +353,6 @@ U64     dreg;
     {
         GUESTREGS->arch_mode = ARCH_390_IDX;
         GUESTREGS->program_interrupt = &s390_program_interrupt;
-        GUESTREGS->trace_br = (func)&s390_trace_br;
         icode = s390_load_psw(GUESTREGS, STATEBK->psw);
     }
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )

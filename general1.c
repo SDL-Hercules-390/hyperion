@@ -423,8 +423,7 @@ VADR    newia;                          /* New instruction address   */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-        regs->CR(12) = ((ARCH_DEP(trace_br_func))regs->trace_br)
-                        (regs->psw.amode, regs->GR_L(r2), regs);
+        regs->CR(12) = ARCH_DEP(trace_br) (regs->psw.amode, regs->GR_L(r2), regs);
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
 #endif /* defined( FEATURE_TRACING ) */
@@ -497,8 +496,7 @@ VADR    newia;                          /* New instruction address   */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indcates regs->ip not updated
-        regs->CR(12) = ((ARCH_DEP(trace_br_func))regs->trace_br)
-                         (regs->psw.amode, regs->GR_L(r2), regs);
+        regs->CR(12) = ARCH_DEP(trace_br) (regs->psw.amode, regs->GR_L(r2), regs);
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
 #endif /* defined( FEATURE_TRACING ) */

@@ -360,7 +360,6 @@ struct REGS {                           /* Processor registers       */
 
      /* Function pointers */
         pi_func program_interrupt;
-        func    trace_br;
 
      /* Active Facility List */
         BYTE    facility_list[ STFL_HERC_BY_SIZE ];

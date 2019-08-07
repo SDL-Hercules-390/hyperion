@@ -1756,9 +1756,6 @@ int     aswitch;
     }
 
     regs->program_interrupt = &ARCH_DEP(program_interrupt);
-#if defined( FEATURE_TRACING )
-    regs->trace_br = (func)&ARCH_DEP(trace_br);
-#endif
 
     regs->tracing = (sysblk.inststep || sysblk.insttrace);
     regs->ints_state |= sysblk.ints_state;
