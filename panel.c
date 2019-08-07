@@ -2287,7 +2287,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                         }
                                         if ( cmd_tok[ctok] != NULL && strlen( cmd_tok[ctok] ) > 0 )
                                         {
-                                            strncpy(&psz_cmdline[odx], cmd_tok[ctok], strlen( cmd_tok[ctok] ) );
+                                            memcpy(&psz_cmdline[odx], cmd_tok[ctok], strlen( cmd_tok[ctok] ) );
                                             odx += (int)strlen( cmd_tok[ctok] );
                                         }
                                         else
