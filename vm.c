@@ -880,7 +880,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
                 | dev->scsw.ccwaddr[3];
     unitstat = dev->scsw.unitstat;
     chanstat = dev->scsw.chanstat;
-    residual = (dev->scsw.count[0] << 8) || dev->scsw.count[1];
+    residual = (dev->scsw.count[0] << 8) | dev->scsw.count[1];
 
     /* Clear the interrupt pending and device busy conditions */
     obtain_lock (&dev->lock);
