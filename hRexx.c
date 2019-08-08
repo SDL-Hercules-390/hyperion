@@ -1648,7 +1648,10 @@ int exec_cmd( int argc, char* argv[], char* cmdline )
 
     /* Check for asynchronous execution option ("&" as last arg) */
     if (argc > 2 && strcmp( argv[ argc-1 ], "&" ) == 0)
+    {
+        argc--; // (drop last argument)
         async = TRUE;
+    }
 
     /* Save the name of the script they want to execute */
     pscriptname = argv[1];
@@ -1798,7 +1801,11 @@ resolved:
     }
     else // (mode == MODE_COMMAND)
     {
-        /* The only argument to a Rexx script called in command mode
+        /*-------------------------------------------------------------
+
+                             PROGRAMMING NOTE
+
+           The only argument to a Rexx script called in command mode
            is the remainder of the command-line arguments immediately
            following the script name, passed as a single string, which
            is more difficult.  We can't simply build a string from the
@@ -1809,7 +1816,9 @@ resolved:
            we instead simply point to the original unmodified Hercules
            "cmdline" string indexed to where the script's argument(s)
            string actully begins.
-        */
+
+        -------------------------------------------------------------*/
+
         char* script_argstring;         // (script's only argument)
 
         if (argc < 3 || !cmdline)
@@ -1857,6 +1866,15 @@ resolved:
         }
         else
         {
+            /* Remove the " &&" async argument from script's cmdline.
+               PLEASE NOTE that we *MUST* keep any resulting trailing
+               blanks that might result since for command mode scripts
+               we mustn't presume they aren't significant! (Refer to
+               the PROGRAMMING NOTE further above for justification!)
+            */
+            if (script_argstring)
+                script_argstring[ strlen( script_argstring ) - 3 ] = 0;
+
             /* Execute Rexx script asynchronously */
             rc = exec_async( scriptname, mode, script_argstring, 0 );
         }
