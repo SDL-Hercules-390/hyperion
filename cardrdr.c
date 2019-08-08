@@ -944,6 +944,7 @@ U32     num;                            /* Number of bytes to move   */
             *unitstat = CSW_CE | CSW_DE;
             break;
         }
+        /* FALLTHRU */
 
     default:
     /*---------------------------------------------------------------*/
