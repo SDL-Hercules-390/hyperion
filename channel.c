@@ -6195,16 +6195,18 @@ void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
 /*  sysblk.iointqlk is ALWAYS needed to examine sysblk.iointq        */
 /*-------------------------------------------------------------------*/
 
-DLL_EXPORT void Queue_IO_Interrupt( IOINT* io, U8 clrbsy )
+DLL_EXPORT void Queue_IO_Interrupt( IOINT* io, U8 clrbsy, const char* location )
 {
     obtain_lock( &sysblk.iointqlk );
-    Queue_IO_Interrupt_QLocked( io, clrbsy );
+    Queue_IO_Interrupt_QLocked( io, clrbsy, location );
     release_lock( &sysblk.iointqlk );
 }
 
-DLL_EXPORT void Queue_IO_Interrupt_QLocked( IOINT* io, U8 clrbsy )
+DLL_EXPORT void Queue_IO_Interrupt_QLocked( IOINT* io, U8 clrbsy, const char* location )
 {
 IOINT* prev;
+
+    UNREFERENCED( location );
 
     /* Check if an I/O interrupt is already queued for this device */
     for
@@ -6244,20 +6246,32 @@ IOINT* prev;
         io->dev->startpending = 0;
         io->dev->busy = 0;
     }
+
+#if 0 // (debugging example)
+    if (sysblk.fishtest && io->dev->devnum == 0x0604)
+        TRACE("+++ %s interrupt Queued for %4.4X @ %s\n",
+            io->pending     ? "Normal" :
+            io->attnpending ? "ATTN"   :
+            io->pcipending  ? "PCI"    : "UNKNOWN!",
+            io->dev->devnum, location );
+#endif
 }
 
-DLL_EXPORT int Dequeue_IO_Interrupt( IOINT* io )
+DLL_EXPORT int Dequeue_IO_Interrupt( IOINT* io, const char* location )
 {
 int rc;
     obtain_lock( &sysblk.iointqlk );
-    rc = Dequeue_IO_Interrupt_QLocked( io );
+    rc = Dequeue_IO_Interrupt_QLocked( io, location );
     release_lock( &sysblk.iointqlk );
     return rc;
 }
 
-DLL_EXPORT int Dequeue_IO_Interrupt_QLocked( IOINT* io )
+DLL_EXPORT int Dequeue_IO_Interrupt_QLocked( IOINT* io, const char* location )
 {
 IOINT* prev;
+int rc = -1;        /* No I/O interrupts were queued for this device */
+
+    UNREFERENCED( location );
 
     /* Search the I/O interrupt queue for an interrupt
        for this device and dequeue it if one is found. */
@@ -6278,10 +6292,20 @@ IOINT* prev;
             else if (io->pcipending)  io->dev->pcipending  = 0;
             else if (io->attnpending) io->dev->attnpending = 0;
 
-            return 0;   /* I/O interrupt successfully dequeued */
+            rc = 0;   /* I/O interrupt successfully dequeued */
+            break;    /* I/O interrupt successfully dequeued */
         }
     }
-    return -1;   /* No I/O interrupts were queued for this device */
+#if 0 // (debugging example)
+    if (sysblk.fishtest && io->dev->devnum == 0x0604)
+        TRACE("+++ %s interrupt %sDEQueued for %4.4X @ %s\n",
+            io->pending     ? "Normal" :
+            io->attnpending ? "ATTN"   :
+            io->pcipending  ? "PCI"    : "UNKNOWN!",
+            rc == 0 ? "" : "NOT ",
+            io->dev->devnum, location );
+#endif
+    return rc;  /* rc=0: interrupt dequeued, rc=-1: NOTHING dequeued */
 }
 
 /*-------------------------------------------------------------------*/
@@ -6299,7 +6323,7 @@ DLL_EXPORT void Update_IC_IOPENDING()
 
 DLL_EXPORT void Update_IC_IOPENDING_QLocked()
 {
-    if (sysblk.iointq == NULL)
+    if (!sysblk.iointq)
     {
         OFF_IC_IOPENDING;
     }
