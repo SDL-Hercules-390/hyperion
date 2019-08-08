@@ -1376,7 +1376,7 @@ static void *commadpt_thread(void *vca)
                     tv.tv_usec=0;
 
                     release_lock(&ca->lock);
-                    rc=select(ca->pipe[1]+1,&rfd,&wfd,&wfd,&tv);
+                    rc=select(ca->pipe[1]+1,&rfd,&wfd,&xfd,&tv);
                     obtain_lock(&ca->lock);
                     /*
                      * Check for a shutdown condition again after the sleep
