@@ -1316,6 +1316,7 @@ static void* exec_async_thread( void* p )
     void*    args;                  // (depends on mode)
     int      argc;                  // (depends on mode)
     int      rc;                    // ExecCmd/ExecSub return code
+    char*    cmd_cmdline;           // (MODE_COMMAND script cmdline)
 
     /* Retrieve needed arguments */
     obtain_lock( &scr_lock );
@@ -1328,6 +1329,10 @@ static void* exec_async_thread( void* p )
 
         pCtl->scr_ended = FALSE;
 
+        //* Make copy of MODE_COMMAND cmdline before it disappears! */
+        if (pCtl->scr_mode == MODE_COMMAND)
+            cmd_cmdline = args ? strdup( args ) : NULL;
+
         /* Indicate arguments retrieved */
         signal_condition( &scr_cond );
     }
@@ -1336,7 +1341,8 @@ static void* exec_async_thread( void* p )
     /* Execute Rexx script asynchronously */
     if (pCtl->scr_mode == MODE_COMMAND)
     {
-        rc = ExecCmd( pCtl->scr_name, args );
+        rc = ExecCmd( pCtl->scr_name, cmd_cmdline );
+        free( cmd_cmdline );
     }
     else // (pCtl->scr_mode == MODE_SUBROUTINE)
     {
