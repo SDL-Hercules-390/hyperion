@@ -806,7 +806,7 @@ BYTE    area[64];                       /* Data display area         */
 /*-------------------------------------------------------------------*/
 static void display_sense( const DEVBLK* dev )
 {
-    char snsbuf[64];
+    char snsbuf[128];
 
     /* Let the device interpret its own sense bytes if possible */
     if (dev->sns)
