@@ -217,7 +217,9 @@ char           *strtok_str = NULL;      /* last token position       */
 
         if ((tdffilenm[0] != '/') && (tdffilenm[1] != ':'))
         {
-            strncpy( tdftab[filecount].filename, dev->filename, pathlen);
+            /* use memcpy since "pathlen" has already been checked above */
+            memcpy( tdftab[filecount].filename, dev->filename, pathlen);
+            tdftab[filecount].filename[pathlen]=0;
             STRLCAT( tdftab[filecount].filename, "/" );
         }
 
