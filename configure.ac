@@ -26,7 +26,7 @@ AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
 # -----------------------------------------------------------------------------
 
 VERS_MAJ=4                    # first  digit of version
-VERS_INT=2                    # second digit of version
+VERS_INT=3                    # second digit of version
 VERS_MIN=0                    # third  digit of version
 
 AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
