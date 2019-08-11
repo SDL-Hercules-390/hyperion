@@ -518,7 +518,7 @@ U32   code;
         // Condition Code 3 is returned and the r1 or r1 and r1+1
         // return value register(s) is/are not modified.
 
-        U64   instcount;                    // Instruction count
+        U64   instcount=0;                  // Instruction count
         U16   opt = regs->GR_LHH( r3 );     // Option code
 
         if (regs->arch_mode != ARCH_900_IDX)// Not 64-bit architecture?
