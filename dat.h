@@ -1247,6 +1247,7 @@ U16     sx, px;                         /* Segment and page index,
                 tl = rte & REGTAB_TL;
 
                 /* Fall through to perform region-second translation */
+                /* FALLTHRU */
 
             /* Perform region-second translation */
             case TT_R2TABL:
@@ -1300,6 +1301,7 @@ U16     sx, px;                         /* Segment and page index,
                 tl = rte & REGTAB_TL;
 
                 /* Fall through to perform region-third translation */
+                /* FALLTHRU */
 
             /* Perform region-third translation */
             case TT_R3TABL:
