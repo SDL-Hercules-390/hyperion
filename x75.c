@@ -83,6 +83,7 @@ DEF_INST( tcpip )
     /*                     ^^-- becomes yyy+gr[b]+gr[c] */
     /*                 ^^------ becomes access register c */
     /*             ^^---------- becomes to-store register a */
+    UNREFERENCED(r1);
 
     if (!FACILITY_ENABLED( HERC_TCPIP_PROB_STATE, regs )) PRIV_CHECK(regs);
 
