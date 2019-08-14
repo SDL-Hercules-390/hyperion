@@ -1363,9 +1363,15 @@ struct DEVBLK {                         /* Device configuration block*/
 #define FCBSIZE_3211        180         /* FCB image size for 3211   */
 #define FCBSIZE_OTHER       256         /* FCB image size for 3203   */
 #define MAX_FCBSIZE         256
-        int     fcb    [ MAX_FCBSIZE ]; /* FCB image itself          */
+        int     fcb    [ MAX_FCBSIZE ]; /* FCB image itself. The first
+                                           entry is LPP, the remaining
+                                           entries are the line number
+                                           for each of the channels. */
         char*   fcbname;                /* FCB image or cctape name  */
-        U16     cctape [ MAX_FCBSIZE ]; /* Carriage Control Tape     */
+        U16     cctape [ MAX_FCBSIZE ]; /* Carriage Control Tape. The
+                                           1st entry (index 0) is for
+                                           line 1, the 2nd (index 1)
+                                           is for line 2, etc.       */
         int     chan9line;              /* Line number of channel 9  */
         int     chan12line;             /* Line number of channel 12 */
         int     currline;               /* curr line number          */

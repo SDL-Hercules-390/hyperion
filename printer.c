@@ -69,6 +69,9 @@ const int fcbmask_fcb2id1  [ MAX_FCBSIZE ] = {88, 1, 8,15,22,29,36,43,50,57,64,7
 /*-------------------------------------------------------------------*/
 /*                                                                   */
 /*  Each entry in the below table corresponds to a line on a page.   */
+/*  The first entry (index 0) is for line 1, the second (index 1)    */
+/*  is for line 2, etc.                                              */
+/*                                                                   */
 /*  Each entry is a bitmask indicating which of the 12 possible      */
 /*  channels that are punched on that line.  It is thus possible     */
 /*  to not only specify the same channel punch on different lines    */
@@ -78,9 +81,9 @@ const int fcbmask_fcb2id1  [ MAX_FCBSIZE ] = {88, 1, 8,15,22,29,36,43,50,57,64,7
 /*                                                                   */
 /*  Table entry channel numbers, for reference:                      */
 /*                                                                   */
-/*    0x8000   1      0x1000   4      0x0200   7      0x0040  10                    */
-/*    0x4000   2      0x0800   5      0x0100   8      0x0020  11                    */
-/*    0x2000   3      0x0400   6      0x0080   9      0x0010  12                    */
+/*    0x8000   1      0x1000   4      0x0200   7      0x0040  10     */
+/*    0x4000   2      0x0800   5      0x0100   8      0x0020  11     */
+/*    0x2000   3      0x0400   6      0x0080   9      0x0010  12     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*
@@ -697,11 +700,11 @@ static void on_new_cctape( DEVBLK* dev )
     dev->chan12line = 0;    // (reset due to new cctape)
     dev->currline   = 1;    // (reset due to new cctape)
 
-    for (line=1, chan1line=0; line < (int) _countof( dev->cctape); line++)
+    for (line=0, chan1line=0; line < (int) _countof( dev->cctape); line++)
     {
-        if      (dev->cctape[ line ] & 0x8000)      chan1line  = line;
-        else if (dev->cctape[ line ] & 0x0080) dev->chan9line  = line;
-        else if (dev->cctape[ line ] & 0x0010) dev->chan12line = line;
+        if      (dev->cctape[ line ] & 0x8000)      chan1line  = line+1;
+        else if (dev->cctape[ line ] & 0x0080) dev->chan9line  = line+1;
+        else if (dev->cctape[ line ] & 0x0010) dev->chan12line = line+1;
     }
 
     if (!chan1line)
@@ -753,19 +756,19 @@ static BYTE LoadUCB
 static BYTE valid_cctape( DEVBLK* dev )
 {
     int line;
-    int fcbsize = FCBSIZE( dev );
+    int cctape_size = FCBSIZE( dev );
 
     /* PROGRAMMING NOTE: we cannot use dev->lpp for the exit condition
        since we need to always scan the entire cctape since they might
        have defined channel stops beyond the dev->lpp entry, which is
        the very condition we're supposed to detect.
     */
-    for (line=1; line < fcbsize; line++)
+    for (line=0; line < cctape_size; line++)
     {
-        if (!dev->cctape[ line - 1 ])
+        if (!dev->cctape[ line ])
             continue;
 
-        if (line > dev->lpp)
+        if ((line+1) > dev->lpp)
         {
             // "%1d:%04X Printer: incompatible '%s' and 'lpp' values detected"
             WRMSG( HHC01113, "E", SSID_TO_LCSS( dev->ssid ),

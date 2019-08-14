@@ -1466,7 +1466,7 @@ DLL_EXPORT void FormatCCTAPE( char* buf, size_t buflen,
     curlen = strlen( buf );
 
     /* Format: "cctape=(lll=cc,lll=(cc,cc),...)" */
-    for (line=1; line <= lpp; line++)
+    for (line=0; line < lpp; line++)
     {
         /* Skip lines with no channels defined */
         if (!cctape[line])
@@ -1487,7 +1487,7 @@ DLL_EXPORT void FormatCCTAPE( char* buf, size_t buflen,
 
         /* Surround this line's channels with parens if needed */
         MSGBUF( chanlist, "%d=%s%s%s,",
-            line,
+            line+1,
             chans > 1 ? "(" : "",
             allchans,
             chans > 1 ? ")" : "" );
