@@ -1858,772 +1858,239 @@ int i_cmd( int argc, char* argv[], char* cmdline )
 }
 
 
-#if defined(OPTION_INSTRUCTION_COUNTING)
+#if defined( OPTION_INSTRUCTION_COUNTING )
 /*-------------------------------------------------------------------*/
 /* icount command - display instruction counts                       */
 /*-------------------------------------------------------------------*/
-int icount_cmd(int argc, char *argv[], char *cmdline)
+int icount_cmd( int argc, char* argv[], char* cmdline )
 {
     int i, i1, i2, i3;
 
 #define  MAX_ICOUNT_INSTR   1000    /* Maximum number of instructions
                                      in architecture instruction set */
+    U64  total;
+    U64  count[ MAX_ICOUNT_INSTR ];
 
-    unsigned char opcode1[MAX_ICOUNT_INSTR];
-    unsigned char opcode2[MAX_ICOUNT_INSTR];
-    U64 count[MAX_ICOUNT_INSTR];
-    U64 total;
-    char buf[128];
+    unsigned char opcode1[ MAX_ICOUNT_INSTR ];
+    unsigned char opcode2[ MAX_ICOUNT_INSTR ];
 
-    UNREFERENCED(cmdline);
+    char buf[ 128 ];
+
+    UNREFERENCED( cmdline );
 
     UPPER_ARGV_0( argv );
 
-    if ( argc > 1 && CMD(argv[1],clear,5) )
+    if (argc > 1)
     {
-        memset(IMAP_FIRST, 0, IMAP_SIZE);
-        WRMSG(HHC02204, "I", "instruction counts", "zero");
-        return 0;
+        if (argc > 2)
+        {
+            // "Invalid argument(s). Type 'help %s' for assistance."
+            WRMSG( HHC02211, "E", argv[0] );
+            return -1;
+        }
+        if (0
+            || CMD( argv[1], CLEAR, 1 )
+            || CMD( argv[1], RESET, 1 )
+            || CMD( argv[1], ZERO,  1 )
+        )
+        {
+            memset( IMAP_FIRST, 0, IMAP_SIZE );
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], "ZERO" );
+            return 0;
+        }
+        if (0
+            || CMD( argv[1], ENABLE, 1 )
+            || CMD( argv[1], START,  3 )
+        )
+        {
+            sysblk.icount = true;
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], "ENABLE" );
+            return 0;
+        }
+        if (0
+            || CMD( argv[1], DISABLE, 1 )
+            || CMD( argv[1], STOP,    3 )
+        )
+        {
+            sysblk.icount = false;
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], "DISABLE" );
+            return 0;
+        }
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[1], "" );
+        return -1;
     }
 
-    if ( argc > 1 && CMD(argv[1],sort,4) )
+    /* Display sorted counts... */
+
+    memset( opcode1, 0, sizeof( opcode1 ));
+    memset( opcode2, 0, sizeof( opcode2 ));
+    memset( count,   0, sizeof( count   ));
+
+    /* (collect...) */
+
+    i = 0;
+    total = 0;
+
+    for (i1 = 0; i1 < 256; i1++)
     {
-      memset(opcode1,0x00,sizeof(opcode1));
-      memset(opcode2,0x00,sizeof(opcode2));
-      memset(count,0x00,sizeof(count));
-
-      /* Collect */
-      i = 0;
-      total = 0;
-      for ( i1 = 0; i1 < 256; i1++ )
+      switch (i1)
       {
-        switch(i1)
+#define ICOUNT_COLLECT_CASE( _case, _map, _nn )             \
+                                                            \
+        case _case:                                         \
+        {                                                   \
+          for (i2=0; i2 < _nn; i2++)                        \
+          {                                                 \
+            if (sysblk._map[ i2 ])                          \
+            {                                               \
+              opcode1[ i ] = i1;                            \
+              opcode2[ i ] = i2;                            \
+              count[ i++ ] = sysblk._map[ i2 ];             \
+              total += sysblk._map[ i2 ];                   \
+                                                            \
+              if (i == (MAX_ICOUNT_INSTR - 1))              \
+              {                                             \
+                /* "Too many instructions! (Sorry!)" */     \
+                WRMSG( HHC02252, "E" );                     \
+                return -1;                                  \
+              }                                             \
+            }                                               \
+          }                                                 \
+          break;                                            \
+        }
+
+        ICOUNT_COLLECT_CASE( 0x01, imap01, 256 )
+        ICOUNT_COLLECT_CASE( 0xA4, imapa4, 256 )
+        ICOUNT_COLLECT_CASE( 0xA5, imapa5, 256 )
+        ICOUNT_COLLECT_CASE( 0xA6, imapa6, 256 )
+        ICOUNT_COLLECT_CASE( 0xA7, imapa7,  16 )
+        ICOUNT_COLLECT_CASE( 0xB2, imapb2, 256 )
+        ICOUNT_COLLECT_CASE( 0xB3, imapb3, 256 )
+        ICOUNT_COLLECT_CASE( 0xB9, imapb9, 256 )
+        ICOUNT_COLLECT_CASE( 0xC0, imapc0,  16 )
+        ICOUNT_COLLECT_CASE( 0xC2, imapc2,  16 )
+        ICOUNT_COLLECT_CASE( 0xC4, imapc4,  16 )
+        ICOUNT_COLLECT_CASE( 0xC6, imapc6,  16 )
+        ICOUNT_COLLECT_CASE( 0xC8, imapc8,  16 )
+        ICOUNT_COLLECT_CASE( 0xE3, imape3, 256 )
+        ICOUNT_COLLECT_CASE( 0xE4, imape4, 256 )
+        ICOUNT_COLLECT_CASE( 0xE5, imape5, 256 )
+        ICOUNT_COLLECT_CASE( 0xEB, imapeb, 256 )
+        ICOUNT_COLLECT_CASE( 0xEC, imapec, 256 )
+        ICOUNT_COLLECT_CASE( 0xED, imaped, 256 )
+
+        default:
         {
-          case 0x01:
+          if (sysblk.imapxx[ i1 ])
           {
-            for ( i2 = 0; i2 < 256; i2++ )
+            opcode1[ i ] = i1;
+            opcode2[ i ] = 0;
+            count[ i++ ] = sysblk.imapxx[ i1 ];
+            total += sysblk.imapxx[ i1 ];
+
+            if (i == (MAX_ICOUNT_INSTR - 1))
             {
-              if (sysblk.imap01[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imap01[i2];
-                total += sysblk.imap01[i2];
-                if (i == (MAX_ICOUNT_INSTR-1) )
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
+                // "Too many instructions! (Sorry!)"
+                WRMSG( HHC02252, "E" );
+                return -1;
             }
-            break;
           }
-          case 0xA4:
-          {
-            for ( i2 = 0; i2 < 256; i2++ )
-            {
-              if (sysblk.imapa4[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapa4[i2];
-                total += sysblk.imapa4[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xA5:
-          {
-            for ( i2 = 0; i2 < 16; i2++ )
-            {
-              if (sysblk.imapa5[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapa5[i2];
-                total += sysblk.imapa5[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xA6:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imapa6[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapa6[i2];
-                total += sysblk.imapa6[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xA7:
-          {
-            for (i2 = 0; i2 < 16; i2++)
-            {
-              if (sysblk.imapa7[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapa7[i2];
-                total += sysblk.imapa7[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xB2:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imapb2[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapb2[i2];
-                total += sysblk.imapb2[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xB3:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imapb3[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapb3[i2];
-                total += sysblk.imapb3[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xB9:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imapb9[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapb9[i2];
-                total += sysblk.imapb9[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xC0:
-          {
-            for (i2 = 0; i2 < 16; i2++)
-            {
-              if (sysblk.imapc0[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapc0[i2];
-                total += sysblk.imapc0[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xC2:
-          {
-            for (i2 = 0; i2 < 16; i2++)
-            {
-              if (sysblk.imapc2[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapc2[i2];
-                total += sysblk.imapc2[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xC4:
-          {
-            for (i2 = 0; i2 < 16; i2++)
-            {
-              if (sysblk.imapc4[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapc4[i2];
-                total += sysblk.imapc4[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xC6:
-          {
-            for (i2 = 0; i2 < 16; i2++)
-            {
-              if (sysblk.imapc6[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapc6[i2];
-                total += sysblk.imapc6[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xC8:
-          {
-            for (i2 = 0; i2 < 16; i2++)
-            {
-              if (sysblk.imapc8[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapc8[i2];
-                total += sysblk.imapc8[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252, "E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xE3:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imape3[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imape3[i2];
-                total += sysblk.imape3[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xE4:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imape4[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imape4[i2];
-                total += sysblk.imape4[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xE5:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imape5[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imape5[i2];
-                total += sysblk.imape5[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xEB:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imapeb[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapeb[i2];
-                total += sysblk.imapeb[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xEC:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imapec[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imapec[i2];
-                total += sysblk.imapec[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          case 0xED:
-          {
-            for (i2 = 0; i2 < 256; i2++)
-            {
-              if (sysblk.imaped[i2])
-              {
-                opcode1[i] = i1;
-                opcode2[i] = i2;
-                count[i++] = sysblk.imaped[i2];
-                total += sysblk.imaped[i2];
-                if (i == (MAX_ICOUNT_INSTR-1))
-                {
-                  WRMSG(HHC02252,"E");
-                  return 0;
-                }
-              }
-            }
-            break;
-          }
-          default:
-          {
-            if (sysblk.imapxx[i1])
-            {
-              opcode1[i] = i1;
-              opcode2[i] = 0;
-              count[i++] = sysblk.imapxx[i1];
-              total += sysblk.imapxx[i1];
-              if (i == (MAX_ICOUNT_INSTR-1))
-              {
-                WRMSG(HHC02252,"E");
-                return 0;
-              }
-            }
-            break;
-          }
+          break;
         }
       }
+    }
 
-      /* Sort */
-      for (i1 = 0; i1 < i; i1++)
+    /* (sort...) */
+
+    for (i1=0; i1 < i; i1++)
+    {
+      /* (find highest) */
+
+      for (i2 = i1, i3 = i1; i2 < i; i2++)
       {
-        /* Find Highest */
-        for (i2 = i1, i3 = i1; i2 < i; i2++)
-        {
-          if (count[i2] > count[i3])
-            i3 = i2;
-        }
-        /* Exchange */
-        opcode1[(MAX_ICOUNT_INSTR-1)] = opcode1[i1];
-        opcode2[(MAX_ICOUNT_INSTR-1)] = opcode2[i1];
-        count  [(MAX_ICOUNT_INSTR-1)] = count  [i1];
-
-        opcode1[i1] = opcode1[i3];
-        opcode2[i1] = opcode2[i3];
-        count  [i1] = count  [i3];
-
-        opcode1[i3] = opcode1[(MAX_ICOUNT_INSTR-1)];
-        opcode2[i3] = opcode2[(MAX_ICOUNT_INSTR-1)];
-        count  [i3] = count  [(MAX_ICOUNT_INSTR-1)];
+        if (count[ i2 ] > count[ i3 ])
+          i3 = i2;
       }
+
+      /* (exchange) */
+
+      opcode1[ (MAX_ICOUNT_INSTR - 1) ] = opcode1[ i1 ];
+      opcode2[ (MAX_ICOUNT_INSTR - 1) ] = opcode2[ i1 ];
+      count  [ (MAX_ICOUNT_INSTR - 1) ] = count  [ i1 ];
+
+      opcode1[ i1 ] = opcode1[ i3 ];
+      opcode2[ i1 ] = opcode2[ i3 ];
+      count  [ i1 ] = count  [ i3 ];
+
+      opcode1[ i3 ] = opcode1[ (MAX_ICOUNT_INSTR - 1) ];
+      opcode2[ i3 ] = opcode2[ (MAX_ICOUNT_INSTR - 1) ];
+      count  [ i3 ] = count  [ (MAX_ICOUNT_INSTR - 1) ];
+    }
 
 #define  ICOUNT_WIDTH  "12"     /* Print field width */
 
-      /* Print */
-      WRMSG(HHC02292, "I", "Sorted instruction count display:");
-      for (i1 = 0; i1 < i; i1++)
+    /* (print...) */
+
+    // "%s"
+    WRMSG( HHC02292, "I", "Sorted icount display:" );
+
+    for (i1=0; i1 < i; i1++)
+    {
+      switch (opcode1[ i1 ])
       {
-        switch(opcode1[i1])
+        case 0x01:
+        case 0xA4:
+        case 0xA5:
+        case 0xA6:
+        case 0xA7:
+        case 0xB2:
+        case 0xB3:
+        case 0xB9:
+        case 0xC0:
+        case 0xC2:
+        case 0xC4:
+        case 0xC6:
+        case 0xC8:
+        case 0xE3:
+        case 0xE4:
+        case 0xE5:
+        case 0xEB:
+        case 0xEC:
+        case 0xED:
         {
-          case 0x01:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xA4:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xA5:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xA6:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xA7:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xB2:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xB3:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xB9:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xC0:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xC2:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xC4:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xC6:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xC8:
-          {
-            MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xE3:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xE4:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xE5:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xEB:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xEC:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          case 0xED:
-          {
-            MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], opcode2[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
-          default:
-          {
-            MSGBUF( buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH PRIu64" (%2d%%)", opcode1[i1], count[i1], (int) (count[i1] * 100 / total));
-            WRMSG(HHC02292, "I", buf);
-            break;
-          }
+          MSGBUF
+          (
+            buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64 " (%2d%%)",
+            opcode1[ i1 ], opcode2[ i1 ],
+            count[ i1 ],
+            (int) (count[ i1 ] * 100 / total)
+          );
+          // "%s"
+          WRMSG( HHC02292, "I", buf );
+          break;
+        }
+        default:
+        {
+          MSGBUF
+          (
+            buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH PRIu64 " (%2d%%)",
+            opcode1[ i1 ], count[ i1 ],
+            (int) (count[ i1 ] * 100 / total)
+          );
+          // "%s"
+          WRMSG( HHC02292, "I", buf );
+          break;
         }
       }
-      return 0;
     }
 
-    WRMSG(HHC02292, "I", "Instruction count display:");
-    for (i1 = 0; i1 < 256; i1++)
-    {
-        switch (i1)
-        {
-            case 0x01:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imap01[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imap01[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xA4:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapa4[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapa4[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xA5:
-                for (i2 = 0; i2 < 16; i2++)
-                    if (sysblk.imapa5[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapa5[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xA6:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapa6[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapa6[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xA7:
-                for (i2 = 0; i2 < 16; i2++)
-                    if (sysblk.imapa7[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapa7[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xB2:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapb2[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapb2[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xB3:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapb3[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapb3[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xB9:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapb9[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapb9[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xC0:
-                for (i2 = 0; i2 < 16; i2++)
-                    if (sysblk.imapc0[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapc0[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xC2:                                                      /*@Z9*/
-                for (i2 = 0; i2 < 16; i2++)                                  /*@Z9*/
-                    if (sysblk.imapc2[i2])                                   /*@Z9*/
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,  /*@Z9*/
-                            i1, i2, sysblk.imapc2[i2]);                     /*@Z9*/
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;                                                      /*@Z9*/
-            case 0xC4:
-                for (i2 = 0; i2 < 16; i2++)
-                    if (sysblk.imapc4[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapc4[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xC6:
-                for (i2 = 0; i2 < 16; i2++)
-                    if (sysblk.imapc6[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapc6[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xC8:
-                for (i2 = 0; i2 < 16; i2++)
-                    if (sysblk.imapc8[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2Xx%1.1X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapc8[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xE3:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imape3[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imape3[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xE4:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imape4[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imape4[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xE5:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imape5[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imape5[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xEB:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapeb[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapeb[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xEC:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imapec[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imapec[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            case 0xED:
-                for (i2 = 0; i2 < 256; i2++)
-                    if (sysblk.imaped[i2])
-                    {
-                        MSGBUF( buf, "Inst '%2.2X%2.2X' count %" ICOUNT_WIDTH PRIu64,
-                            i1, i2, sysblk.imaped[i2]);
-                        WRMSG(HHC02292, "I", buf);
-                    }
-                break;
-            default:
-                if (sysblk.imapxx[i1])
-                {
-                    MSGBUF( buf, "Inst '%2.2X'   count %" ICOUNT_WIDTH PRIu64,
-                        i1, sysblk.imapxx[i1]);
-                    WRMSG(HHC02292, "I", buf);
-                }
-                break;
-        }
-    }
     return 0;
 }
-#endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
+#endif /* defined( OPTION_INSTRUCTION_COUNTING ) */
 
 
 /*-------------------------------------------------------------------*/

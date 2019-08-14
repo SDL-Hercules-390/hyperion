@@ -159,82 +159,88 @@ extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
 #if defined( OPTION_INSTRUCTION_COUNTING )
 
-#define COUNT_INST(_inst, _regs) \
-do { \
-int used; \
-    switch((_inst)[0]) { \
-    case 0x01: \
-        used = sysblk.imap01[(_inst)[1]]++; \
-        break; \
-    case 0xA4: \
-        used = sysblk.imapa4[(_inst)[1]]++; \
-        break; \
-    case 0xA5: \
-        used = sysblk.imapa5[(_inst)[1] & 0x0F]++; \
-        break; \
-    case 0xA6: \
-        used = sysblk.imapa6[(_inst)[1]]++; \
-        break; \
-    case 0xA7: \
-        used = sysblk.imapa7[(_inst)[1] & 0x0F]++; \
-        break; \
-    case 0xB2: \
-        used = sysblk.imapb2[(_inst)[1]]++; \
-        break; \
-    case 0xB3: \
-        used = sysblk.imapb3[(_inst)[1]]++; \
-        break; \
-    case 0xB9: \
-        used = sysblk.imapb9[(_inst)[1]]++; \
-        break; \
-    case 0xC0: \
-        used = sysblk.imapc0[(_inst)[1] & 0x0F]++; \
-        break; \
-    case 0xC2:                                     /*@Z9*/ \
-        used = sysblk.imapc2[(_inst)[1] & 0x0F]++; /*@Z9*/ \
-        break;                                     /*@Z9*/ \
-    case 0xC4:                                     /*208*/ \
-        used = sysblk.imapc4[(_inst)[1] & 0x0F]++; /*208*/ \
-        break;                                     /*208*/ \
-    case 0xC6:                                     /*208*/ \
-        used = sysblk.imapc6[(_inst)[1] & 0x0F]++; /*208*/ \
-        break;                                     /*208*/ \
-    case 0xC8: \
-        used = sysblk.imapc8[(_inst)[1] & 0x0F]++; \
-        break; \
-    case 0xE3: \
-        used = sysblk.imape3[(_inst)[5]]++; \
-        break; \
-    case 0xE4: \
-        used = sysblk.imape4[(_inst)[1]]++; \
-        break; \
-    case 0xE5: \
-        used = sysblk.imape5[(_inst)[1]]++; \
-        break; \
-    case 0xEB: \
-        used = sysblk.imapeb[(_inst)[5]]++; \
-        break; \
-    case 0xEC: \
-        used = sysblk.imapec[(_inst)[5]]++; \
-        break; \
-    case 0xED: \
-        used = sysblk.imaped[(_inst)[5]]++; \
-        break; \
-    default: \
-        used = sysblk.imapxx[(_inst)[0]]++; \
-    } \
-    if(!used) \
-    { \
-    WRMSG(HHC02292, "I", "First use"); \
-    ARCH_DEP( display_inst ) ((_regs), (_inst)); \
-    } \
-} while(0)
+#define ICOUNT_INST( _inst, _regs )                                 \
+    do                                                              \
+    {                                                               \
+        if (sysblk.icount)                                          \
+        {                                                           \
+            int used;                                               \
+            switch ((_inst)[0]) {                                   \
+            case 0x01:                                              \
+                used = sysblk.imap01[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xA4:                                              \
+                used = sysblk.imapa4[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xA5:                                              \
+                used = sysblk.imapa5[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xA6:                                              \
+                used = sysblk.imapa6[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xA7:                                              \
+                used = sysblk.imapa7[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xB2:                                              \
+                used = sysblk.imapb2[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xB3:                                              \
+                used = sysblk.imapb3[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xB9:                                              \
+                used = sysblk.imapb9[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xC0:                                              \
+                used = sysblk.imapc0[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xC2:                                              \
+                used = sysblk.imapc2[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xC4:                                              \
+                used = sysblk.imapc4[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xC6:                                              \
+                used = sysblk.imapc6[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xC8:                                              \
+                used = sysblk.imapc8[(_inst)[1] & 0x0F]++;          \
+                break;                                              \
+            case 0xE3:                                              \
+                used = sysblk.imape3[(_inst)[5]]++;                 \
+                break;                                              \
+            case 0xE4:                                              \
+                used = sysblk.imape4[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xE5:                                              \
+                used = sysblk.imape5[(_inst)[1]]++;                 \
+                break;                                              \
+            case 0xEB:                                              \
+                used = sysblk.imapeb[(_inst)[5]]++;                 \
+                break;                                              \
+            case 0xEC:                                              \
+                used = sysblk.imapec[(_inst)[5]]++;                 \
+                break;                                              \
+            case 0xED:                                              \
+                used = sysblk.imaped[(_inst)[5]]++;                 \
+                break;                                              \
+            default:                                                \
+                used = sysblk.imapxx[(_inst)[0]]++;                 \
+            }                                                       \
+                                                                    \
+            if (!used)                                              \
+            {                                                       \
+                /* "%s" */                                          \
+                WRMSG( HHC02292, "I", "First use" );                \
+                ARCH_DEP( display_inst )( (_regs), (_inst) );       \
+            }                                                       \
+        }                                                           \
+    } while (0)
 
-#else
+#else // !defined( OPTION_INSTRUCTION_COUNTING )
 
-#define COUNT_INST(_inst, _regs)
+#define ICOUNT_INST(_inst, _regs)
 
-#endif
+#endif // defined( OPTION_INSTRUCTION_COUNTING )
 
 #if defined( _FEATURE_SIE )
 
@@ -359,7 +365,7 @@ do { \
 #define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
 do { \
     FOOTPRINT ((_ip), (_regs)); \
-    COUNT_INST ((_ip), (_regs)); \
+    ICOUNT_INST ((_ip), (_regs)); \
     (_oct)[fetch_hw((_ip))]((_ip), (_regs)); \
 } while(0)
 

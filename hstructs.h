@@ -819,21 +819,25 @@ struct SYSBLK {
         gid_t   rgid, egid, sgid;
 #endif /*!defined(NO_SETUID)*/
 
-#if defined(OPTION_INSTRUCTION_COUNTING)
-#define IMAP_FIRST sysblk.imap01
+#if defined( OPTION_INSTRUCTION_COUNTING )
+
+        bool    icount;                 /* true = enabled, else not. */
+
+#define IMAP_FIRST      sysblk.imap01
+
         U64 imap01[256];
         U64 imapa4[256];
-        U64 imapa5[16];
+        U64 imapa5[ 16];
         U64 imapa6[256];
-        U64 imapa7[16];
+        U64 imapa7[ 16];
         U64 imapb2[256];
         U64 imapb3[256];
         U64 imapb9[256];
-        U64 imapc0[16];
-        U64 imapc2[16];                                         /*@Z9*/
-        U64 imapc4[16];                                         /*208*/
-        U64 imapc6[16];                                         /*208*/
-        U64 imapc8[16];
+        U64 imapc0[ 16];
+        U64 imapc2[ 16];                                         /*@Z9*/
+        U64 imapc4[ 16];                                         /*208*/
+        U64 imapc6[ 16];                                         /*208*/
+        U64 imapc8[ 16];
         U64 imape3[256];
         U64 imape4[256];
         U64 imape5[256];
@@ -841,6 +845,7 @@ struct SYSBLK {
         U64 imapec[256];
         U64 imaped[256];
         U64 imapxx[256];
+
 #define IMAP_SIZE \
             ( sizeof(sysblk.imap01) \
             + sizeof(sysblk.imapa4) \
@@ -862,7 +867,8 @@ struct SYSBLK {
             + sizeof(sysblk.imapec) \
             + sizeof(sysblk.imaped) \
             + sizeof(sysblk.imapxx) )
-#endif
+
+#endif // defined( OPTION_INSTRUCTION_COUNTING )
 
         char    *cnslport;              /* console port string       */
         char    **herclogo;             /* Constructed logo screen   */

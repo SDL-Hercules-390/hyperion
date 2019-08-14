@@ -629,11 +629,29 @@
   "<none>                                - display status of HTTP server\n"
 
 #define i_cmd_desc              "Generate I/O attention interrupt for device"
+
 #define icount_cmd_desc         "Display individual instruction counts"
+#define icount_cmd_help         \
+                                \
+  "Format: \"icount [[Enable|STArt] | [Disable|STOp] | [Clear|Reset|Zero]]\".\n" \
+  "\n"                                                                          \
+  "Enables or disables the counting of, resets the counts for, or\n"            \
+  "displays how often each instruction opcode is executed. This is a\n"         \
+  "debugging command used to determine which instruction opcodes are\n"         \
+  "executed the most frequently for a given workload to help determine\n"       \
+  "which instructions are the best candidates for further optimization.\n"      \
+  "\n"                                                                          \
+  "The ENABLE and DISABLE options start or stop instruction counting.\n"        \
+  "The CLEAR option resets all of the counts back to zero. Use it just\n"       \
+  "before enabling counting when your workload begins. Use the stop\n"          \
+  "option when your workload ends to stop counting. Enter the command\n"        \
+  "with no options to display a list of executed instruction opcodes\n"         \
+  "sorted by frequency/popularity.\n"
+
 #define iodelay_cmd_desc        "Display or set I/O delay value"
 #define iodelay_cmd_help        \
                                 \
-  "Format:  \"iodelay  n\".\n\n"                                                                                                \
+  "Format:  \"iodelay  n\".\n\n"                                                \
   "Specifies the amount of time (in microseconds) to wait after an\n"           \
   "I/O interrupt is ready to be set pending. This value can also be\n"          \
   "set using the Hercules console. The purpose of this parameter is\n"          \
@@ -1937,7 +1955,7 @@ COMMAND( "hao",                     hao_cmd,                SYSPROGDEVEL,       
 #endif
 COMMAND( "http",                    http_cmd,               SYSCONFIG,          http_cmd_desc,          http_cmd_help       )
 #if defined( OPTION_INSTRUCTION_COUNTING )
-COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        icount_cmd_desc,        NULL                )
+COMMAND( "icount",                  icount_cmd,             SYSCMDNOPER,        icount_cmd_desc,        icount_cmd_help     )
 #endif
 #if defined( OPTION_IODELAY_KLUDGE )
 COMMAND( "iodelay",                 iodelay_cmd,            SYSCMDNOPER,        iodelay_cmd_desc,       iodelay_cmd_help    )

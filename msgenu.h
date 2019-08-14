@@ -1361,7 +1361,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02249 "Operation complete"
 #define HHC02250 "Loading file %s to location %s"
 #define HHC02251 "Address exceeds main storage size"
-#define HHC02252 "Sorry, too many instructions"
+#define HHC02252 "Too many instructions! (Sorry!)"
 #define HHC02253 "All CPU's must be stopped %s"
 //efine HHC02254 (available)
 //efine HHC02255 (available)
