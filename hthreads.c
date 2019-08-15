@@ -191,7 +191,7 @@ static ILOCK* hthreads_get_ILOCK( void* addr, const char* name )
             break;
     }
 
-    /* If needed, alloacte a new ILOCK structure for this lock */
+    /* If needed, allocate a new ILOCK structure for this lock */
 
     if (&locklist == ple)
     {

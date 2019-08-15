@@ -26,6 +26,9 @@
 #include "hercules.h"
 #include "hercifc.h"
 
+#define UTILITY_NAME    "hercifc"
+#define UTILITY_DESC    "Hercules Network Interface Configuration Program"
+
 // --------------------------------------------------------------------
 // HERCIFC program entry point
 // --------------------------------------------------------------------
@@ -47,6 +50,8 @@ int main( int argc, char **argv )
     int         answer;                 // 1 = write answer to stdout
 
     UNREFERENCED( argc );
+
+    INITIALIZE_UTILITY( UTILITY_NAME, UTILITY_DESC, &pszProgName );
 
     DROP_PRIVILEGES(CAP_NET_ADMIN);
 
