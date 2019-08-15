@@ -38,7 +38,7 @@
         < 0     Error: Command not executed
         > 1     Failure:  one or more functions could not complete
 
-   int test_cmd( int argc, char* argv[], char* cmdline )
+   int $test_cmd( int argc, char* argv[], char* cmdline )
    {
        .
        .
@@ -120,7 +120,7 @@ static void* test_locks_thread( void* parg)
 #define  NUM_THREADS    10
 #define  MAX_WAIT_SECS  6
 
-int test_cmd(int argc, char *argv[],char *cmdline)
+int $test_cmd(int argc, char *argv[],char *cmdline)
 {
     int i, secs, rc;
     TID tids[ NUM_THREADS ];
@@ -139,6 +139,52 @@ int test_cmd(int argc, char *argv[],char *cmdline)
     if (argc > 1)
     {
         if      (CMD( argv[1], CRASH,   5 )) CRASH();
+        else if (CMD( argv[1], LOCKS,   5 ))
+        {
+            // test thread exit with lock still held
+            static TID tid;
+            VERIFY( create_thread( &tid, DETACHED,
+                test_locks_thread, 0, "test_locks_thread" ) == 0);
+        }
+        else if (CMD( argv[1], NANO,    4 ))
+        {
+            /*-------------------------------------------*/
+            /*             test 'nanosleep'              */
+            /*  Use "$test &" to run test in background  */
+            /*-------------------------------------------*/
+
+            srand( (unsigned int) time( NULL ));
+
+            /* Create the test threads */
+            LOGMSG("*** $test command: creating threads...\n");
+
+            for (i=0; i < NUM_THREADS; i++)
+            {
+                secs = 1 + rand() % MAX_WAIT_SECS;
+
+                if ((rc = create_thread( &tids[i], JOINABLE, test_thread,
+                    (void*)(uintptr_t) secs, "test_thread" )) != 0)
+                {
+                    // "Error in function create_thread(): %s"
+                    WRMSG( HHC00102, "E", strerror( rc ));
+                    tids[i] = 0;
+                }
+
+                secs = rand() % 3;
+                if (secs)
+                    SLEEP(1);
+            }
+
+            /* Wait for all threads to exit */
+
+            LOGMSG("*** $test command: waiting for threads to exit...\n");
+
+            for (i=0; i < NUM_THREADS; i++)
+                if (tids[i])
+                    join_thread( tids[i], NULL );
+
+            LOGMSG("*** $test command: test complete.\n");
+        }
 #if defined( HAVE_SIGNAL_HANDLING )
 #if defined( HAVE_DECL_SIGBUS ) && HAVE_DECL_SIGBUS
         else if (CMD( argv[1], SIGBUS,  6 )) raise( SIGBUS  );
@@ -149,51 +195,15 @@ int test_cmd(int argc, char *argv[],char *cmdline)
         else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
         else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
 #endif
-        else if (CMD( argv[1], LOCKS,   5 ))
-        {
-            // test thread exit with lock still held
-            static TID tid;
-            VERIFY( create_thread( &tid, DETACHED,
-                test_locks_thread, 0, "test_locks_thread" ) == 0);
-        }
         else
             // "%s%s"
-            WRMSG( HHC00001, "E", argv[1], ": unsupported $test argument");
+            WRMSG( HHC00001, "E", argv[1], ": unknown test");
         return 0;
     }
 
-    /*-------------------------------------------*/
-    /*             test 'nanosleep'              */
-    /*  Use "$test &" to run test in background  */
-    /*-------------------------------------------*/
+    // "%s%s"
+    WRMSG( HHC00001, "E", argv[0], ": missing argument");
 
-    srand( (unsigned int) time( NULL ));
-
-    /* Create the test threads */
-    logmsg("*** $test command: creating threads...\n");
-    for (i=0; i < NUM_THREADS; i++)
-    {
-        secs = 1 + rand() % MAX_WAIT_SECS;
-        if ((rc = create_thread( &tids[i], JOINABLE, test_thread,
-            (void*)(uintptr_t) secs, "test_thread" )) != 0)
-        {
-            // "Error in function create_thread(): %s"
-            WRMSG( HHC00102, "E", strerror( rc ));
-            tids[i] = 0;
-        }
-
-        secs = rand() % 3;
-        if (secs)
-            SLEEP(1);
-    }
-
-    /* Wait for all threads to exit */
-    logmsg("*** $test command: waiting for threads to exit...\n");
-    for (i=0; i < NUM_THREADS; i++)
-        if (tids[i])
-            join_thread( tids[i], NULL );
-
-    logmsg("*** $test command: test complete.\n");
     return 0;
 }
 

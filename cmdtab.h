@@ -1704,7 +1704,7 @@
 //       "1...5...9",               function                type flags          description             long help
 CMDABBR( "$locate",        4,       locate_cmd,             SYSPROGDEVELDEBUG,  $locate_cmd_desc,       NULL                )
 COMMAND( "$runtest",                $runtest_cmd,           SYSPROGDEVELDEBUG,  $runtest_cmd_desc,      $runtest_cmd_help   )
-COMMAND( "$test",                   test_cmd,               SYSPROGDEVELDEBUG,  $test_cmd_desc,         $test_cmd_help      )
+COMMAND( "$test",                   $test_cmd,              SYSPROGDEVELDEBUG,  $test_cmd_desc,         $test_cmd_help      )
 CMDABBR( "$zapcmd",        4,       zapcmd_cmd,             SYSPROGDEVELDEBUG,  $zapcmd_cmd_desc,       $zapcmd_cmd_help    )
 
 COMMAND( "cckd",                    cckd_cmd,               SYSCONFIG,          cckd_cmd_desc,          cckd_cmd_help       )
