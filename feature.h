@@ -901,29 +901,7 @@ do { \
 } while (0)
 
 
- /*
-  * Accelerated lookup
-  */
-#define MADDRL(_addr, _len, _arn, _regs, _acctype, _akey) \
- ( \
-       likely((_regs)->AEA_AR((_arn))) \
-   &&  likely( \
-              ((_regs)->CR((_regs)->AEA_AR((_arn))) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
-           || ((_regs)->AEA_COMMON((_regs)->AEA_AR((_arn))) & (_regs)->tlb.common[TLBIX(_addr)]) \
-             ) \
-   &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \
-   &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
-   &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
-   ? ( \
-       ((_acctype) & ACC_CHECK) ? \
-       (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) : \
-       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-     ) \
-   : ( \
-       ARCH_DEP(logical_to_main_l) ((_addr), (_arn), (_regs), (_acctype), (_akey), (_len)) \
-     ) \
- )
+#define MADDRL(_addr, _len, _arn, _regs, _acctype, _akey) ARCH_DEP(maddr_l)((_addr),(_len),(_arn),(_regs),(_acctype),(_akey))
 
 /* Old style accelerated lookup (without length) */
 #define MADDR(_addr, _arn, _regs, _acctype, _akey) \
