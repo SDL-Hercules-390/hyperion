@@ -2415,43 +2415,8 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
 #endif /* defined( _DAT_C ) */
 
  /*
-  * Accelerated lookup
+  * Accelerated TLB lookup
   */
-static inline    BYTE    *ARCH_DEP(maddr_l)(VADR _addr,size_t _len,int _arn,REGS *_regs,int _acctype,BYTE _akey)
-{
-    /* Comment here */
-    if(likely((_regs)->AEA_AR((_arn))))
-    {
-        /* More Access register comment here required */
-        if(likely(((_regs)->CR((_regs)->AEA_AR((_arn))) == (_regs)->tlb.TLB_ASD(TLBIX(_addr)))
-                    || ((_regs)->AEA_COMMON((_regs)->AEA_AR((_arn))) & (_regs)->tlb.common[TLBIX(_addr)])
-                ))
-        {
-            /* Protection key check */
-            if(likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]))
-            {
-                /* Check if this is actual correct segment/region/ID */
-                /* The ID is changed by a PTLB to allow purging the TLB in a single step */
-                if(likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))))
-                {
-                    /* Check access type protection */
-                    if(likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]))
-                    {
-                        /* If we are just checking the access */
-                        if(((_acctype) & ACC_CHECK))
-                        {
-                            (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)];
-                        }
-                        /* Return the actual address */
-                        return  MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr));
-                    }
-                }
-            }
-        }
-    }
-    /* Long route */
-    return ARCH_DEP(logical_to_main_l) ((_addr), (_arn), (_regs), (_acctype), (_akey), (_len));
-}
-
+DAT_DLL_IMPORT BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, int arn, REGS* regs, int acctype, BYTE akey );
 
 /* end of DAT.H */

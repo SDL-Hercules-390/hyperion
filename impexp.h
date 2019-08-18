@@ -248,6 +248,18 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _DAT_C
+  #ifndef  _HENGINE_DLL_
+    #define DAT_DLL_IMPORT          DLL_IMPORT
+  #else
+    #define DAT_DLL_IMPORT          extern
+  #endif
+#else
+  #define   DAT_DLL_IMPORT          DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _HAO_C_
   #ifndef  _HENGINE_DLL_
     #define HAO_DLL_IMPORT          DLL_IMPORT

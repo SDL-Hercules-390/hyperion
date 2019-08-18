@@ -900,8 +900,11 @@ do { \
   } \
 } while (0)
 
-
-#define MADDRL(_addr, _len, _arn, _regs, _acctype, _akey) ARCH_DEP(maddr_l)((_addr),(_len),(_arn),(_regs),(_acctype),(_akey))
+/*
+ * Accelerated TLB lookup
+ */
+#define MADDRL(           _addr,   _len,   _arn,   _regs,   _acctype,   _akey  ) \
+    ARCH_DEP( maddr_l )( (_addr), (_len), (_arn), (_regs), (_acctype), (_akey) )
 
 /* Old style accelerated lookup (without length) */
 #define MADDR(_addr, _arn, _regs, _acctype, _akey) \

@@ -9,29 +9,148 @@
 
 #include "hstdinc.h"
 
-#ifndef _HENGINE_DLL_
-#define _HENGINE_DLL_
-#endif
-#ifndef _DAT_C
 #define _DAT_C
-#endif
+#define _HENGINE_DLL_
 
 #include "hercules.h"
-
 #include "opcode.h"
-#include "inline.h"    /* automatically #includes dat.h and vstore.h */
+#include "inline.h"
 
-#if !defined(_GEN_ARCH)
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "dat.c"
-#endif
+/*-------------------------------------------------------------------*/
+/*                           maddr_l                                 */
+/*-------------------------------------------------------------------*/
+/* Convert logical address to absolute address.  This is the DAT     */
+/* logic that does an accelerated TLB lookup to return the prev-     */
+/* iously determined value from an earlier translation for this      */
+/* logical address.  It performs a series of checks to ensure the    */
+/* values that were used in the previous translation (the results    */
+/* of which are in the corresponding TLB entry) haven't changed      */
+/* for the current address being translated.  If any of the cond-    */
+/* itions have changed (i.e. if any of the comparisons fail) then    */
+/* the TLB cannot be used (TLB miss) and "logical_to_main_l" is      */
+/* called to perform a full address translation.  Otherwise if all   */
+/* of the conditions are still true (nothing has changed from the    */
+/* the last time we translated this address), then the previously    */
+/* translated address from the TLB is returned instead (TLB hit).    */
+/*                                                                   */
+/* PLEASE NOTE that the address that is retrieved from the TLB is    */
+/* an absolute address from the Hercules guest's point of view but   */
+/* the address RETURNED TO THE CALLER is a Hercules host address     */
+/* pointing to MAINSTOR that Hercules can then directly use.         */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr    Logical address to be translated                     */
+/*      len     Length of data access for PER SA purpose             */
+/*      arn     Access register number (or USE_REAL_ADDR,            */
+/*              USE_PRIMARY_SPACE, USE_SECONDARY_SPACE)              */
+/*      regs    Pointer to the CPU register context                  */
+/*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
+/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
+/*      akey    Bits 0-3=access key, 4-7=zeroes                      */
+/*                                                                   */
+/* Returns:                                                          */
+/*      Directly usable guest absolute storage MAINADDR address.     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT BYTE* ARCH_DEP( maddr_l )
+( VADR addr, size_t len, int arn, REGS* regs, int acctype, BYTE akey )
+{
+    /* Note: ALL of the below conditions must be true for a TLB hit
+       to occur.  If ANY of them are false, then it's a TLB miss,
+       requiring us to then perform a full DAT address translation.
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "dat.c"
-#endif
+       Note too that on the grand scheme of things the order/sequence
+       of the below tests (if statements) is completely unimportant
+       since ALL conditions must be checked anyway in order for a hit
+       to occur, and it doesn't matter that a miss tests a few extra
+       conditions since it's going to do a full translation anyway!
+       (which is many, many instructions)
+    */
 
-#endif /*!defined(_GEN_ARCH)*/
+    int  aea_arn  = regs->AEA_AR( arn );
+    U16  tlbix    = TLBIX( addr );
+
+    /* Non-zero AEA Access Register number? */
+    if (aea_arn)
+    {
+        /* Same Addess Space Designator as before? */
+        /* Or if not, is address in a common segment? */
+        if (0
+            || (regs->CR( aea_arn ) == regs->tlb.TLB_ASD( tlbix ))
+            || (regs->AEA_COMMON( aea_arn ) & regs->tlb.common[ tlbix ])
+        )
+        {
+            /* Storage Key zero?
+            /* Or if not, same Storage Key as before? */
+            if (0
+                || akey == 0
+                || akey == regs->tlb.skey[ tlbix ]
+            )
+            {
+                /* Does the page address match the one in the TLB? */
+                /* (does a TLB entry exist for this page address?) */
+                if (
+                    ((addr & TLBID_PAGEMASK) | regs->tlbID)
+                    ==
+                    regs->tlb.TLB_VADDR( tlbix )
+                )
+                {
+                    /* Is storage being accessed same way as before? */
+                    if (acctype & regs->tlb.acc[ tlbix ])
+                    {
+                        /*------------------------------------------*/
+                        /* TLB hit: use previously translated value */
+                        /*------------------------------------------*/
+
+                        if (acctype & ACC_CHECK)
+                            regs->dat.storkey = regs->tlb.storkey[ tlbix ];
+
+                        return MAINADDR( regs->tlb.main[ tlbix ], addr );
+                    }
+                }
+            }
+        }
+    }
+
+    /*---------------------------------------*/
+    /* TLB miss: do full address translation */
+    /*---------------------------------------*/
+
+    return ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
+}
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "dat.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "dat.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+// (we have no non-ARCH_DEP code to place here -- yet!)
+ 
+#endif /* !defined( _GEN_ARCH )*/
