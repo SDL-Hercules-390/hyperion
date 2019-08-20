@@ -117,4 +117,12 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
     return ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
 }
+
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
+U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
+        U32 *asteo, U32 aste[]);
+int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
+        int atemask, REGS *regs);
+#endif
+
 /* end of DAT.H */

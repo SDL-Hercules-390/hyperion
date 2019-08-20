@@ -16,13 +16,6 @@
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
-#if defined( FEATURE_DUAL_ADDRESS_SPACE )
-U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
-        U32 *asteo, U32 aste[]);
-int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
-        int atemask, REGS *regs);
-#endif
-
 #if defined( FEATURE_ACCESS_REGISTERS )
 U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
         int acctype, REGS *regs, U32 *asteo, U32 aste[]);
