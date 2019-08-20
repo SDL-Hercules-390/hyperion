@@ -84,7 +84,7 @@ DLL_EXPORT BYTE* ARCH_DEP( maddr_l )
             || (regs->AEA_COMMON( aea_arn ) & regs->tlb.common[ tlbix ])
         )
         {
-            /* Storage Key zero?
+            /* Storage Key zero? */
             /* Or if not, same Storage Key as before? */
             if (0
                 || akey == 0
