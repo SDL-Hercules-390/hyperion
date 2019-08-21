@@ -44,6 +44,7 @@
 #include "inline.h"
 
 
+#if defined( FEATURE_SUBSPACE_GROUP )
 /*-------------------------------------------------------------------*/
 /* Perform subspace replacement                                      */
 /*                                                                   */
@@ -177,6 +178,7 @@ BYTE    *p;                             /* Mainstor pointer          */
     return std;
 
 } /* end function subspace_replace */
+#endif /* FEATURE_SUBSPACE_GROUP */
 
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */
