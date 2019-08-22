@@ -786,8 +786,11 @@ CKD_TRKHDR     *trkhdr;                 /* -> New track header       */
     LOGDEVTR( HHC00424, "I", dev->filename, trk, dev->bufcur );
 
     /* Calculate cylinder and head */
-    cyl = trk / dev->ckdheads;
-    head = trk % dev->ckdheads;
+    if (dev->ckdheads) /* (might be 0 if init failed!) */
+    {
+        cyl  = trk / dev->ckdheads;
+        head = trk % dev->ckdheads;
+    }
 
     /* Reset buffer offsets */
     dev->bufoff = 0;
