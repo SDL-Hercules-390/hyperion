@@ -3735,6 +3735,10 @@ int prev_rlen3270;
                 /* Release the device lock */
                 release_lock( &dev->lock );
 
+                if ((dev->devtype != 0x3270) &&
+                    (dev->devtype != 0x3287))
+                    raise_device_attention( dev, unitstat );
+                else
                 /* Raise attention interrupt for device, but only
                    if we actually received any 3270 data.  Telnet
                    keepalive messages for example, arrive as pure
