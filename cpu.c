@@ -44,6 +44,33 @@
 #include "inline.h"
 
 /*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+/*-------------------------------------------------------------------*/
+/* Forward references to internal static helper functions at end.    */
+/*-------------------------------------------------------------------*/
+#if !defined( FWD_REFS)
+    #define   FWD_REFS
+  static void  CPU_Wait( REGS* regs );
+  static void* cpu_uninit( int cpu, REGS* regs );
+#endif
+
+/*-------------------------------------------------------------------*/
 /* Put a CPU in check-stop state                                     */
 /* Must hold the system intlock                                      */
 /*-------------------------------------------------------------------*/
@@ -1217,307 +1244,6 @@ RADR    fsta;                           /* Failing storage address   */
     longjmp (regs->progjmp, SIE_INTERCEPT_MCK);
 } /* end function perform_mck_interrupt */
 
-
-#if !defined( _GEN_ARCH )
-
-REGS* s370_run_cpu( int cpu, REGS* oldregs );
-REGS* s390_run_cpu( int cpu, REGS* oldregs );
-REGS* z900_run_cpu( int cpu, REGS* oldregs );
-
-static REGS* (*run_cpu[ NUM_GEN_ARCHS ])( int cpu, REGS* oldregs ) =
-{
-#if defined(      _ARCH_NUM_0 )
-  #if      370 == _ARCH_NUM_0
-          s370_run_cpu,
-
-  #elif    390 == _ARCH_NUM_0
-          s390_run_cpu,
-
-  #else // 900 == _ARCH_NUM_0
-          z900_run_cpu,
-  #endif
-#endif
-#if defined(      _ARCH_NUM_1 )
-  #if      370 == _ARCH_NUM_1
-          s370_run_cpu,
-
-  #elif    390 == _ARCH_NUM_1
-          s390_run_cpu,
-
-  #else // 900 == _ARCH_NUM_1
-          z900_run_cpu,
-  #endif
-#endif
-#if defined(      _ARCH_NUM_2 )
-  #if      370 == _ARCH_NUM_2
-          s370_run_cpu,
-
-  #elif    390 == _ARCH_NUM_2
-          s390_run_cpu,
-
-  #else // 900 == _ARCH_NUM_2
-          z900_run_cpu,
-  #endif
-#endif
-};
-
-/*-------------------------------------------------------------------*/
-/* CPU instruction execution thread                                  */
-/*-------------------------------------------------------------------*/
-void *cpu_thread (void *ptr)
-{
-REGS *regs = NULL;
-int   cpu  = *(int*)ptr;
-char  thread_name[16];
-int   rc;
-
-    OBTAIN_INTLOCK(NULL);
-
-    /* Increment number of CPUs online */
-    sysblk.cpus++;
-
-    /* Set hi CPU */
-    if (cpu >= sysblk.hicpu)
-        sysblk.hicpu = cpu + 1;
-
-    /* Start the TOD clock and CPU timer thread */
-    if (!sysblk.todtid)
-    {
-        rc = create_thread( &sysblk.todtid, DETACHED,
-             timer_thread, NULL, TIMER_THREAD_NAME );
-        if (rc)
-        {
-            WRMSG( HHC00102, "E", strerror( rc ));
-            RELEASE_INTLOCK( NULL );
-            return NULL;
-        }
-    }
-
-    /* Set CPU thread priority */
-    set_thread_priority( sysblk.cpuprio);
-
-    /* Display thread started message on control panel */
-
-    MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
-    LOG_THREAD_BEGIN( thread_name  );
-    SET_THREAD_NAME( thread_name );
-
-    /* Execute the program in specified mode */
-    do {
-        regs = run_cpu[sysblk.arch_mode] (cpu, regs);
-    } while (regs);
-
-    /* Decrement number of CPUs online */
-    sysblk.cpus--;
-
-    /* Reset hi cpu */
-    if (cpu + 1 >= sysblk.hicpu)
-    {
-        int i;
-        for (i = sysblk.maxcpu - 1; i >= 0; i--)
-            if (IS_CPU_ONLINE(i))
-                break;
-        sysblk.hicpu = i + 1;
-    }
-
-    /* Signal cpu has terminated */
-    signal_condition (&sysblk.cpucond);
-
-    /* Display thread ended message on control panel */
-    LOG_THREAD_END( thread_name );
-
-    RELEASE_INTLOCK(NULL);
-
-    return NULL;
-} /* end function cpu_thread */
-
-/*-------------------------------------------------------------------*/
-/* Initialize a CPU                                                  */
-/*-------------------------------------------------------------------*/
-int cpu_init (int cpu, REGS *regs, REGS *hostregs)
-{
-int i;
-
-    obtain_lock (&sysblk.cpulock[cpu]);
-
-    /* initialize eye-catchers */
-    {
-        char    blknam[ sizeof( regs->blknam )];
-        MSGBUF( blknam, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
-        INIT_BLOCK_HEADER_TRAILER_WITH_CUSTOM_NAME( regs, REGS, blknam );
-    }
-
-    regs->cpuad = cpu;
-    regs->cpubit = CPU_BIT(cpu);
-
-    /* Save CPU creation time without epoch set, as epoch may change. When using
-     * the field, subtract the current epoch from any time being used in
-     * relation to the creation time to yield the correct result.
-     */
-    if (sysblk.cpucreateTOD[cpu] == 0)
-        sysblk.cpucreateTOD[cpu] = host_tod(); /* tod_epoch is zero at this point */
-
-    regs->arch_mode = sysblk.arch_mode;
-    regs->mainstor  = sysblk.mainstor;
-    regs->sysblk    = &sysblk;
-    regs->storkeys  = sysblk.storkeys;
-    regs->mainlim   = sysblk.mainsize - 1;
-    regs->tod_epoch = get_tod_epoch();
-
-    /* Set initial CPU ID by REGS context.  Note that this
-       must only be done AFTER regs->arch_mode has been set.
-    */
-    setCpuIdregs( regs, -1, -1, -1, -1 );
-
-    initialize_condition (&regs->intcond);
-    regs->cpulock = &sysblk.cpulock[cpu];
-
-#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
-    regs->vf = &sysblk.vf[cpu];
-    regs->vf->online = (cpu < sysblk.numvec);
-#endif
-    initial_cpu_reset(regs);
-
-    if (hostregs == NULL)
-    {
-        regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_INTERRUPT(regs);
-        regs->hostregs = regs;
-        regs->host = 1;
-        sysblk.regs[cpu] = regs;
-        sysblk.config_mask |= regs->cpubit;
-        sysblk.started_mask |= regs->cpubit;
-    }
-    else
-    {
-        hostregs->guestregs = regs;
-        regs->hostregs = hostregs;
-        regs->guestregs = regs;
-        regs->guest = 1;
-        regs->sie_mode = 1;
-        regs->opinterv = 0;
-        regs->cpustate = CPUSTATE_STARTED;
-    }
-
-    /* Initialize accelerated lookup fields */
-    regs->CR_G(CR_ASD_REAL) = TLB_REAL_ASD;
-
-    for(i = 0; i < 16; i++)
-        regs->AEA_AR(i)               = CR_ASD_REAL;
-    regs->AEA_AR(USE_INST_SPACE)      = CR_ASD_REAL;
-    regs->AEA_AR(USE_REAL_ADDR)       = CR_ASD_REAL;
-    regs->AEA_AR(USE_PRIMARY_SPACE)   =  1;
-    regs->AEA_AR(USE_SECONDARY_SPACE) =  7;
-    regs->AEA_AR(USE_HOME_SPACE)      = 13;
-
-    /* Initialize opcode table pointers */
-    init_opcode_pointers (regs);
-
-    regs->configured = 1;
-
-    release_lock (&sysblk.cpulock[cpu]);
-
-    return 0;
-}
-
-/*-------------------------------------------------------------------*/
-/* Uninitialize a CPU                                                */
-/*-------------------------------------------------------------------*/
-void *cpu_uninit (int cpu, REGS *regs)
-{
-    int processHostRegs = (regs->host &&
-                           regs == sysblk.regs[cpu]);
-
-    if (processHostRegs)
-    {
-        obtain_lock (&sysblk.cpulock[cpu]);
-
-        /* If pointing to guest REGS structure, free the guest REGS
-         * structure ONLY if it is not ourself, and set the guest REGS
-         * pointer to NULL;
-         */
-        if (regs->guestregs)
-            regs->guestregs = regs == regs->guestregs ? NULL :
-                              cpu_uninit (cpu, regs->guestregs);
-    }
-
-    destroy_condition(&regs->intcond);
-
-    if (processHostRegs)
-    {
-#ifdef FEATURE_S370_S390_VECTOR_FACILITY
-        /* Mark Vector Facility offline */
-        regs->vf->online = 0;
-#endif
-
-        /* Remove CPU from all CPU bit masks */
-        sysblk.config_mask &= ~CPU_BIT(cpu);
-        sysblk.started_mask &= ~CPU_BIT(cpu);
-        sysblk.waiting_mask &= ~CPU_BIT(cpu);
-        sysblk.regs[cpu] = NULL;
-        sysblk.cpucreateTOD[cpu] = 0;
-        release_lock (&sysblk.cpulock[cpu]);
-    }
-
-    /* Free the REGS structure */
-    free_aligned(regs);
-
-    return NULL;
-}
-
-/*-------------------------------------------------------------------*/
-/* CPU Wait - Core wait routine for both CPU Wait and Stopped States */
-/*                                                                   */
-/* Locks Held                                                        */
-/*      sysblk.intlock                                               */
-/*-------------------------------------------------------------------*/
-void
-CPU_Wait (REGS* regs)
-{
-    /* Indicate we are giving up intlock */
-    sysblk.intowner = LOCK_OWNER_NONE;
-
-    /* Wait while SYNCHRONIZE_CPUS is in progress */
-    while (sysblk.syncing)
-    {
-        sysblk.sync_mask &= ~regs->hostregs->cpubit;
-        if (!sysblk.sync_mask)
-            signal_condition(&sysblk.sync_cond);
-        wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
-    }
-
-    /*
-    ** Let test script know when a CPU either stops or loads a
-    ** disabled wait state PSW, but NOT when a CPU simply loads
-    ** an ENABLED wait PSW such as when it wishes to simply wait
-    ** for an I/O, External or other type of interrupt.
-    **
-    ** NOTE: we can't rely on just sysblk.started_mask since there
-    ** is no guarantee the last CPU to have its sysblk.started_mask
-    ** cleared will actually be the last CPU to reach this point.
-    */
-    if (WAITSTATE( &regs->psw ) && !IS_IC_DISABLED_WAIT_PSW( regs ))
-        ;   /* enabled wait: do nothing */
-    else
-    {
-        obtain_lock( &sysblk.scrlock );
-        if (sysblk.scrtest)
-        {
-            sysblk.scrtest++;
-            broadcast_condition( &sysblk.scrcond );
-        }
-        release_lock( &sysblk.scrlock );
-    }
-
-    /* Wait for interrupt */
-    wait_condition (&regs->intcond, &sysblk.intlock);
-
-    /* And we're the owner of intlock once again */
-    sysblk.intowner = regs->cpuad;
-}
-
-#endif /*!defined(_GEN_ARCH)*/
-
 /*-------------------------------------------------------------------*/
 /* Process interrupt                                                 */
 /*-------------------------------------------------------------------*/
@@ -1920,19 +1646,362 @@ void ARCH_DEP(process_trace)(REGS *regs)
     }
 } /* process_trace */
 
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
 
-#if !defined(_GEN_ARCH)
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "cpu.c"
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "cpu.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "cpu.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+/*********************************************************************/
+/*                  IMPORTANT PROGRAMMING NOTE                       */
+/*********************************************************************/
+/*                                                                   */
+/* It is CRITICALLY IMPORTANT to not use any architecture dependent  */
+/* macros anywhere in any of your non-arch_dep functions. This means */
+/* you CANNOT use GREG, RADR, VADR, etc. anywhere in your function,  */
+/* nor can you call "ARCH_DEP(func)(args)" anywhere in your code!    */
+/*                                                                   */
+/* Basically you MUST NOT use any architecture dependent macro that  */
+/* is #defined in the "feature.h" header.  If you you need to use    */
+/* any of them, then your function MUST be an "ARCH_DEP" function    */
+/* that is placed within the ARCH_DEP section at the beginning of    */
+/* this module where it can be compiled multiple times, once for     */
+/* each of the supported architectures so the macro gets #defined    */
+/* to its proper value for the architecture. YOU HAVE BEEN WARNED.   */
+/*                                                                   */
+/*********************************************************************/
+
+/*-------------------------------------------------------------------*/
+/* run_cpu jump table -- used by the below "cpu_thread" function to  */
+/* call the proper ARCH_DEP(run_cpu) function for the architecture.  */
+/*-------------------------------------------------------------------*/
+static REGS* (*run_cpu[ NUM_GEN_ARCHS ])( int cpu, REGS* oldregs ) =
+{
+#if defined(      _ARCH_NUM_0 )
+  #if      370 == _ARCH_NUM_0
+          s370_run_cpu,
+  #elif    390 == _ARCH_NUM_0
+          s390_run_cpu,
+  #else // 900 == _ARCH_NUM_0
+          z900_run_cpu,
+  #endif
+#endif
+#if defined(      _ARCH_NUM_1 )
+  #if      370 == _ARCH_NUM_1
+          s370_run_cpu,
+  #elif    390 == _ARCH_NUM_1
+          s390_run_cpu,
+  #else // 900 == _ARCH_NUM_1
+          z900_run_cpu,
+  #endif
+#endif
+#if defined(      _ARCH_NUM_2 )
+  #if      370 == _ARCH_NUM_2
+          s370_run_cpu,
+  #elif    390 == _ARCH_NUM_2
+          s390_run_cpu,
+  #else // 900 == _ARCH_NUM_2
+          z900_run_cpu,
+  #endif
+#endif
+};
+
+/*-------------------------------------------------------------------*/
+/* CPU instruction execution thread                                  */
+/*-------------------------------------------------------------------*/
+void *cpu_thread (void *ptr)
+{
+REGS *regs = NULL;
+int   cpu  = *(int*)ptr;
+char  thread_name[16];
+int   rc;
+
+    OBTAIN_INTLOCK(NULL);
+
+    /* Increment number of CPUs online */
+    sysblk.cpus++;
+
+    /* Set hi CPU */
+    if (cpu >= sysblk.hicpu)
+        sysblk.hicpu = cpu + 1;
+
+    /* Start the TOD clock and CPU timer thread */
+    if (!sysblk.todtid)
+    {
+        rc = create_thread( &sysblk.todtid, DETACHED,
+             timer_thread, NULL, TIMER_THREAD_NAME );
+        if (rc)
+        {
+            WRMSG( HHC00102, "E", strerror( rc ));
+            RELEASE_INTLOCK( NULL );
+            return NULL;
+        }
+    }
+
+    /* Set CPU thread priority */
+    set_thread_priority( sysblk.cpuprio);
+
+    /* Display thread started message on control panel */
+
+    MSGBUF( thread_name, "Processor %s%02X", PTYPSTR( cpu ), cpu );
+    LOG_THREAD_BEGIN( thread_name  );
+    SET_THREAD_NAME( thread_name );
+
+    /* Execute the program in specified mode */
+    do {
+        regs = run_cpu[sysblk.arch_mode] (cpu, regs);
+    } while (regs);
+
+    /* Decrement number of CPUs online */
+    sysblk.cpus--;
+
+    /* Reset hi cpu */
+    if (cpu + 1 >= sysblk.hicpu)
+    {
+        int i;
+        for (i = sysblk.maxcpu - 1; i >= 0; i--)
+            if (IS_CPU_ONLINE(i))
+                break;
+        sysblk.hicpu = i + 1;
+    }
+
+    /* Signal cpu has terminated */
+    signal_condition (&sysblk.cpucond);
+
+    /* Display thread ended message on control panel */
+    LOG_THREAD_END( thread_name );
+
+    RELEASE_INTLOCK(NULL);
+
+    return NULL;
+} /* end function cpu_thread */
+
+/*-------------------------------------------------------------------*/
+/* Initialize a CPU                                                  */
+/*-------------------------------------------------------------------*/
+int cpu_init (int cpu, REGS *regs, REGS *hostregs)
+{
+int i;
+
+    obtain_lock (&sysblk.cpulock[cpu]);
+
+    /* initialize eye-catchers */
+    {
+        char    blknam[ sizeof( regs->blknam )];
+        MSGBUF( blknam, "%-4.4s_%s%02X", HDL_NAME_REGS, PTYPSTR( cpu ), cpu );
+        INIT_BLOCK_HEADER_TRAILER_WITH_CUSTOM_NAME( regs, REGS, blknam );
+    }
+
+    regs->cpuad = cpu;
+    regs->cpubit = CPU_BIT(cpu);
+
+    /* Save CPU creation time without epoch set, as epoch may change. When using
+     * the field, subtract the current epoch from any time being used in
+     * relation to the creation time to yield the correct result.
+     */
+    if (sysblk.cpucreateTOD[cpu] == 0)
+        sysblk.cpucreateTOD[cpu] = host_tod(); /* tod_epoch is zero at this point */
+
+    regs->arch_mode = sysblk.arch_mode;
+    regs->mainstor  = sysblk.mainstor;
+    regs->sysblk    = &sysblk;
+    regs->storkeys  = sysblk.storkeys;
+    regs->mainlim   = sysblk.mainsize - 1;
+    regs->tod_epoch = get_tod_epoch();
+
+    /* Set initial CPU ID by REGS context.  Note that this
+       must only be done AFTER regs->arch_mode has been set.
+    */
+    setCpuIdregs( regs, -1, -1, -1, -1 );
+
+    initialize_condition (&regs->intcond);
+    regs->cpulock = &sysblk.cpulock[cpu];
+
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
+    regs->vf = &sysblk.vf[cpu];
+    regs->vf->online = (cpu < sysblk.numvec);
+#endif
+    initial_cpu_reset(regs);
+
+    if (hostregs == NULL)
+    {
+        regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_INTERRUPT(regs);
+        regs->hostregs = regs;
+        regs->host = 1;
+        sysblk.regs[cpu] = regs;
+        sysblk.config_mask |= regs->cpubit;
+        sysblk.started_mask |= regs->cpubit;
+    }
+    else
+    {
+        hostregs->guestregs = regs;
+        regs->hostregs = hostregs;
+        regs->guestregs = regs;
+        regs->guest = 1;
+        regs->sie_mode = 1;
+        regs->opinterv = 0;
+        regs->cpustate = CPUSTATE_STARTED;
+    }
+
+    /* Initialize accelerated lookup fields */
+    switch (regs->arch_mode)
+    {
+#if defined(_370)
+        case ARCH_370_IDX:
+            regs->CR_G( CR_ASD_REAL ) = TLB_REAL_ASD_L;
+            break;
+#endif
+#if defined(_390)
+        case ARCH_390_IDX:
+            regs->CR_G( CR_ASD_REAL ) = TLB_REAL_ASD_L;
+            break;
+#endif
+#if defined(_900)
+        case ARCH_900_IDX:
+            regs->CR_G( CR_ASD_REAL ) = TLB_REAL_ASD_G;
+            break;
+#endif
+    }
+
+    for (i=0; i < 16; i++)
+        regs->AEA_AR( i )               = CR_ASD_REAL;
+    regs->AEA_AR( USE_INST_SPACE      ) = CR_ASD_REAL;
+    regs->AEA_AR( USE_REAL_ADDR       ) = CR_ASD_REAL;
+    regs->AEA_AR( USE_PRIMARY_SPACE   ) = 1;
+    regs->AEA_AR( USE_SECONDARY_SPACE ) = 7;
+    regs->AEA_AR( USE_HOME_SPACE      ) = 13;
+
+    /* Initialize opcode table pointers */
+    init_opcode_pointers (regs);
+
+    regs->configured = 1;
+
+    release_lock (&sysblk.cpulock[cpu]);
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Uninitialize a CPU                                                */
+/*-------------------------------------------------------------------*/
+static void *cpu_uninit (int cpu, REGS *regs)
+{
+    int processHostRegs = (regs->host &&
+                           regs == sysblk.regs[cpu]);
+
+    if (processHostRegs)
+    {
+        obtain_lock (&sysblk.cpulock[cpu]);
+
+        /* If pointing to guest REGS structure, free the guest REGS
+         * structure ONLY if it is not ourself, and set the guest REGS
+         * pointer to NULL;
+         */
+        if (regs->guestregs)
+            regs->guestregs = regs == regs->guestregs ? NULL :
+                              cpu_uninit (cpu, regs->guestregs);
+    }
+
+    destroy_condition(&regs->intcond);
+
+    if (processHostRegs)
+    {
+#ifdef FEATURE_S370_S390_VECTOR_FACILITY
+        /* Mark Vector Facility offline */
+        regs->vf->online = 0;
 #endif
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "cpu.c"
-#endif
+        /* Remove CPU from all CPU bit masks */
+        sysblk.config_mask &= ~CPU_BIT(cpu);
+        sysblk.started_mask &= ~CPU_BIT(cpu);
+        sysblk.waiting_mask &= ~CPU_BIT(cpu);
+        sysblk.regs[cpu] = NULL;
+        sysblk.cpucreateTOD[cpu] = 0;
+        release_lock (&sysblk.cpulock[cpu]);
+    }
+
+    /* Free the REGS structure */
+    free_aligned(regs);
+
+    return NULL;
+}
+
+/*-------------------------------------------------------------------*/
+/* CPU Wait - Core wait routine for both CPU Wait and Stopped States */
+/*                                                                   */
+/* Locks Held                                                        */
+/*      sysblk.intlock                                               */
+/*-------------------------------------------------------------------*/
+static void CPU_Wait( REGS* regs )
+{
+    /* Indicate we are giving up intlock */
+    sysblk.intowner = LOCK_OWNER_NONE;
+
+    /* Wait while SYNCHRONIZE_CPUS is in progress */
+    while (sysblk.syncing)
+    {
+        sysblk.sync_mask &= ~regs->hostregs->cpubit;
+        if (!sysblk.sync_mask)
+            signal_condition(&sysblk.sync_cond);
+        wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
+    }
+
+    /*
+    ** Let test script know when a CPU either stops or loads a
+    ** disabled wait state PSW, but NOT when a CPU simply loads
+    ** an ENABLED wait PSW such as when it wishes to simply wait
+    ** for an I/O, External or other type of interrupt.
+    **
+    ** NOTE: we can't rely on just sysblk.started_mask since there
+    ** is no guarantee the last CPU to have its sysblk.started_mask
+    ** cleared will actually be the last CPU to reach this point.
+    */
+    if (WAITSTATE( &regs->psw ) && !IS_IC_DISABLED_WAIT_PSW( regs ))
+        ;   /* enabled wait: do nothing */
+    else
+    {
+        obtain_lock( &sysblk.scrlock );
+        if (sysblk.scrtest)
+        {
+            sysblk.scrtest++;
+            broadcast_condition( &sysblk.scrcond );
+        }
+        release_lock( &sysblk.scrlock );
+    }
+
+    /* Wait for interrupt */
+    wait_condition (&regs->intcond, &sysblk.intlock);
+
+    /* And we're the owner of intlock once again */
+    sysblk.intowner = regs->cpuad;
+}
 
 /*-------------------------------------------------------------------*/
 /* Copy program status word                                          */
