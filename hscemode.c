@@ -795,7 +795,7 @@ char  buf[512];
     }
 
     /* Display the PSW and PSW field by field */
-    display_psw( regs, buf, sizeof(buf) );
+    DISPLAY_PSW( regs, buf );
     WRMSG( HHC02278, "I", buf );
     WRMSG( HHC02300, "I",
         regs->psw.sysmask,

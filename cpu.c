@@ -314,7 +314,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
     {
         char buf[40];
-        WRMSG(HHC00800, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
+        WRMSG(HHC00800, "I", PTYPSTR(regs->cpuad), regs->cpuad, STR_PSW( regs, buf ));
     }
 
     TEST_SET_AEA_MODE(regs);
@@ -1008,7 +1008,7 @@ static char *pgmintname[] = {
             char buf[64];
             // "Processor %s%02X: program interrupt loop PSW %s"
             WRMSG(HHC00803, "I", PTYPSTR(realregs->cpuad), realregs->cpuad,
-                     str_psw (realregs, buf));
+                     STR_PSW( realregs, buf ));
             OBTAIN_INTLOCK(realregs);
             realregs->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(realregs);
@@ -1394,7 +1394,7 @@ cpustate_stopping:
         {
             char buf[40];
             // "Processor %s%02X: disabled wait state %s"
-            WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, str_psw(regs, buf));
+            WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, STR_PSW( regs, buf ));
             regs->cpustate = CPUSTATE_STOPPING;
             RELEASE_INTLOCK(regs);
 
@@ -2045,77 +2045,54 @@ int  arch_mode;
 } /* end function copy_psw */
 
 /*-------------------------------------------------------------------*/
-/* Display program status word                                       */
+/* Display program status word taking loadstate into consideration.  */
 /*-------------------------------------------------------------------*/
-int display_psw (REGS *regs, char *buf, int buflen)
+int display_psw( REGS* regs, char* buf, int buflen )
 {
-QWORD   qword;                            /* quadword work area      */
-int     arch_mode;                        /* architecture mode       */
-
     /* Use the architecture mode from SYSBLK if load indicator
        shows IPL in process, otherwise use archmode from REGS */
-    if (regs->loadstate)
-    {
-        arch_mode = sysblk.arch_mode;
-    }
-    else
-    {
-        arch_mode = regs->arch_mode;
-    }
-
-    memset(qword, 0, sizeof(qword));
-
-    if( arch_mode != ARCH_900_IDX )
-    {
-        copy_psw (regs, qword);
-        return(snprintf(buf, buflen,
-                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
-                qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7]));
-    }
-    else
-    {
-        copy_psw (regs, qword);
-        return(snprintf(buf, buflen,
-                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
-                qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7],
-                qword[8], qword[9], qword[10], qword[11],
-                qword[12], qword[13], qword[14], qword[15]));
-    }
-
-} /* end function display_psw */
+    int arch_mode = (regs->loadstate) ? sysblk.arch_mode
+                                      :  regs->arch_mode;
+    return strlen( str_arch_psw( arch_mode, regs, buf, buflen ));
+}
 
 /*-------------------------------------------------------------------*/
-/* Print program status word into buffer                             */
+/* Print program status word into buffer for default REGS arch_mode  */
 /*-------------------------------------------------------------------*/
-char *str_psw (REGS *regs, char *buf)
+char* str_psw( REGS* regs, char* buf, int buflen )
 {
-QWORD   qword;                            /* quadword work area      */
+    return str_arch_psw( regs->arch_mode, regs, buf, buflen );
+}
 
-    memset(qword, 0, sizeof(qword));
+/*-------------------------------------------------------------------*/
+/* Print program status word into buffer for specified arch_mode     */
+/*-------------------------------------------------------------------*/
+char* str_arch_psw( int arch_mode, REGS* regs, char* buf, int buflen )
+{
+    QWORD   qword   = {0};                /* quadword work area      */
 
-    if( regs->arch_mode != ARCH_900_IDX )
+    copy_psw( regs, qword );
+
+    if (arch_mode != ARCH_900_IDX)
     {
-        copy_psw (regs, qword);
-        sprintf(buf, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
-                qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7]);
+        snprintf( buf, buflen,
+            "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
+            qword[0], qword[1], qword[2], qword[3],
+            qword[4], qword[5], qword[6], qword[7] );
     }
     else
     {
-        copy_psw (regs, qword);
-        sprintf(buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
-                     "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
-                qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7],
-                qword[8], qword[9], qword[10], qword[11],
-                qword[12], qword[13], qword[14], qword[15]);
+        snprintf( buf, buflen,
+            "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X "
+            "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",
+            qword[ 0], qword[ 1], qword[ 2], qword[ 3],
+            qword[ 4], qword[ 5], qword[ 6], qword[ 7],
+            qword[ 8], qword[ 9], qword[10], qword[11],
+            qword[12], qword[13], qword[14], qword[15] );
     }
-    return(buf);
 
-} /* end function str_psw */
+    return buf;
+}
 
 /*-------------------------------------------------------------------*/
 /*                      Automatic Tracing                            */
