@@ -147,10 +147,8 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 man1dir = $(mandir)/man1
-am__installdirs = "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man4dir)" \
-	"$(DESTDIR)$(manadir)"
+am__installdirs = "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man4dir)"
 man4dir = $(mandir)/man4
-manadir = $(mandir)/mana
 NROFF = nroff
 MANS = $(man_MANS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
@@ -287,10 +285,12 @@ man_MANS = \
     cckd.4      \
     cckddiag.1  \
     dasdseq.1   \
-    Makefile.am \
     vmfplc2.1
 
-EXTRA_DIST = $(man_MANS)
+EXTRA_DIST = \
+    $(man_MANS) \
+    Makefile.am
+
 all: all-am
 
 .SUFFIXES:
@@ -415,49 +415,6 @@ uninstall-man4:
 	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^4][0-9a-z]*$$,4,;x' \
 	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
 	dir='$(DESTDIR)$(man4dir)'; $(am__uninstall_files_from_dir)
-install-mana: $(man_MANS)
-	@$(NORMAL_INSTALL)
-	@list1=''; \
-	list2='$(man_MANS)'; \
-	test -n "$(manadir)" \
-	  && test -n "`echo $$list1$$list2`" \
-	  || exit 0; \
-	echo " $(MKDIR_P) '$(DESTDIR)$(manadir)'"; \
-	$(MKDIR_P) "$(DESTDIR)$(manadir)" || exit 1; \
-	{ for i in $$list1; do echo "$$i"; done;  \
-	if test -n "$$list2"; then \
-	  for i in $$list2; do echo "$$i"; done \
-	    | sed -n '/\.a[a-z]*$$/p'; \
-	fi; \
-	} | while read p; do \
-	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; echo "$$p"; \
-	done | \
-	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^a][0-9a-z]*$$,a,;x' \
-	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
-	sed 'N;N;s,\n, ,g' | { \
-	list=; while read file base inst; do \
-	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
-	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(manadir)/$$inst'"; \
-	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(manadir)/$$inst" || exit $$?; \
-	  fi; \
-	done; \
-	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
-	while read files; do \
-	  test -z "$$files" || { \
-	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(manadir)'"; \
-	    $(INSTALL_DATA) $$files "$(DESTDIR)$(manadir)" || exit $$?; }; \
-	done; }
-
-uninstall-mana:
-	@$(NORMAL_UNINSTALL)
-	@list=''; test -n "$(manadir)" || exit 0; \
-	files=`{ for i in $$list; do echo "$$i"; done; \
-	l2='$(man_MANS)'; for i in $$l2; do echo "$$i"; done | \
-	  sed -n '/\.a[a-z]*$$/p'; \
-	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^a][0-9a-z]*$$,a,;x' \
-	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
-	dir='$(DESTDIR)$(manadir)'; $(am__uninstall_files_from_dir)
 tags TAGS:
 
 ctags CTAGS:
@@ -502,7 +459,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(MANS)
 installdirs:
-	for dir in "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man4dir)" "$(DESTDIR)$(manadir)"; do \
+	for dir in "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man4dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -571,7 +528,7 @@ install-info: install-info-am
 
 install-info-am:
 
-install-man: install-man1 install-man4 install-mana
+install-man: install-man1 install-man4
 
 install-pdf: install-pdf-am
 
@@ -601,7 +558,7 @@ ps-am:
 
 uninstall-am: uninstall-man
 
-uninstall-man: uninstall-man1 uninstall-man4 uninstall-mana
+uninstall-man: uninstall-man1 uninstall-man4
 
 .MAKE: install-am install-strip
 
@@ -611,13 +568,12 @@ uninstall-man: uninstall-man1 uninstall-man4 uninstall-mana
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
-	install-man1 install-man4 install-mana install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-man1 install-man4 install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags-am uninstall \
-	uninstall-am uninstall-man uninstall-man1 uninstall-man4 \
-	uninstall-mana
+	uninstall-am uninstall-man uninstall-man1 uninstall-man4
 
 .PRECIOUS: Makefile
 
