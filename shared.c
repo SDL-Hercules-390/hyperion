@@ -275,6 +275,18 @@ init_retry:
     }
     dev->numdevid = rc;
 
+    /* Get the serial number */
+    rc = clientRequest (dev, dev->serial, sizeof(dev->serial),
+                        SHRD_QUERY, SHRD_SERIAL, NULL, NULL);
+    if (rc < 0)
+        goto init_retry;
+    else if (rc == 0 || rc > (int)sizeof(dev->serial))
+    {
+        // "%1d:%04X Shared: error retrieving serial number"
+        WRMSG( HHC00716, "S", LCSS_DEVNUM );
+        return -1;
+    }
+
     /* Indicate no active track */
     dev->cache = dev->bufcur = -1;
     dev->buf = NULL;
@@ -540,6 +552,18 @@ init_retry:
         return -1;
     }
     dev->numdevchar = rc;
+
+    /* Get the serial number */
+    rc = clientRequest (dev, dev->serial, sizeof(dev->serial),
+                        SHRD_QUERY, SHRD_SERIAL, NULL, NULL);
+    if (rc < 0)
+        goto init_retry;
+    else if (rc == 0 || rc > (int)sizeof(dev->serial))
+    {
+        // "%1d:%04X Shared: error retrieving serial number"
+        WRMSG( HHC00716, "S", LCSS_DEVNUM );
+        return -1;
+    }
 
     /* Indicate no active track */
     dev->cache = dev->bufcur = -1;
@@ -1956,6 +1980,11 @@ char     trcmsg[32];
         case SHRD_DEVID:
             SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, dev->numdevid);
             serverSend (dev, ix, hdr, dev->devid, dev->numdevid);
+            break;
+
+        case SHRD_SERIAL:
+            SHRD_SET_HDR (hdr, 0, 0, dev->devnum, id, sizeof( dev->serial ));
+            serverSend (dev, ix, hdr, dev->serial, (U32)sizeof( dev->serial ));
             break;
 
         case SHRD_CKDCYLS:

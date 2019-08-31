@@ -11,11 +11,11 @@ Hercules: Shared Device Server
 <hr noshade>
 <h2>Contents</h2>
 <ul>
-<li><a href="#overview">     Overview      </a>
-<li><a href="#commands">     Commands      </a>
-<li><a href="#technical">    Technical BS  </a>
-<li><a href="#caching">      Caching       </a>
-<li><a href="#compression">  Compression   </a>
+<li><a href="#overview">     Overview               </a>
+<li><a href="#commands">     Commands               </a>
+<li><a href="#technical">    Technical Information  </a>
+<li><a href="#caching">      Caching                </a>
+<li><a href="#compression">  Compression            </a>
 </ul>
 
 <p>
@@ -140,7 +140,7 @@ command with no arguments displays the current setting. Use the command
 
 <p><br>
 
-<h2><a NAME="technical">Technical BS</a></h2>
+<h2><a NAME="technical">Technical Information</a></h2>
 <p>
 
 There are (at least) two approaches to sharing devices.  One is to
@@ -164,7 +164,7 @@ Both client and server have a DEVBLK structure for the device.
 Absurdly, perhaps, in originally designing an implementation for
 shared devices it was not clear what type of process should be the
 server.  It was a quantum leap forward to realize that it could
-just be another hercules instance.
+just be another Hercules instance.
 
 <p>
 
@@ -538,7 +538,7 @@ time is required.
 
 If the server is on 'localhost' then you should not specify 'comp='.
 Otherwise you are just stealing processor time to do compression/
-uncompression from hercules.  If the server is on a local network
+uncompression from Hercules.  If the server is on a local network
 then I would recommend specifying a low value such as 1, 2 or 3.
 We are on a curve here, trying to trade cpu cycles for network traffic
 to derive an optimal throughput.

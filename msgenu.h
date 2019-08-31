@@ -626,7 +626,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00713 "%1d:%04X Shared: error during channel program start"
 #define HHC00714 "%1d:%04X Shared: error during channel program end"
 #define HHC00715 "%1d:%04X Shared: remote error reading track %d"
-//efine HHC00716 (available)
+#define HHC00716 "%1d:%04X Shared: error retrieving serial number"
 #define HHC00717 "%1d:%04X Shared: error retrieving usage information"
 #define HHC00718 "%1d:%04X Shared: error writing track %d"
 #define HHC00719 "%1d:%04X Shared: remote error writing track %d %2.2X-%2.2X"
