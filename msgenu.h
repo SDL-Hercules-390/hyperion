@@ -870,7 +870,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01029 "Connection rejected, no available %s device in the %s group"
 #define HHC01030 "Connection rejected, device %04X unavailable"
 #define HHC01031 "Running on %s (%s-%s.%s %s %s)"
-#define HHC01032 "COMM: this hercules build does not support unix domain sockets"
+#define HHC01032 "COMM: this Hercules build does not support Unix domain sockets"
 #define HHC01033 "COMM: error: socket pathname %s exceeds limit %d"
 #define HHC01034 "COMM: error in function %s: %s"
 #define HHC01035 "COMM: failed to determine IP address from node %s"
@@ -1023,7 +1023,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
 #define HHC01407 "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
-#define HHC01409 "Load of dyngui.dll failed, hercules terminated"
+#define HHC01409 "Load of dyngui.dll failed, Hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
 #define HHC01411 "Cannot suppress SIGPIPE signal: %s"
 #define HHC01412 "Hercules terminated"
@@ -1666,7 +1666,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC02448I             (default is EC-mode PSW)\n" \
        "HHC02448I   -m        enable wait PSW in IPL1 record for machine checks\n" \
        "HHC02448I             (default is disabled for machine checks)\n" \
-       "HHC02448I   -linux    null track images will look like linux dasdfmt'ed images\n" \
+       "HHC02448I   -linux    null track images will look like Linux dasdfmt'ed images\n" \
        "HHC02448I             (3390 device type only)\n" \
        "HHC02448I\n" \
        "HHC02448I   filename  name of dasd image file to be created\n" \
