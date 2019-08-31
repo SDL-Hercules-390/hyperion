@@ -2235,7 +2235,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
        "HHC03022I   dh_trksize:    %u"                                      "\n" \
        "HHC03022I   dh_devtyp:     0x%2.2X             (%s)"                "\n" \
        "HHC03022I   dh_fileseq:    0x%2.2X"                                 "\n" \
-       "HHC03022I   dh_highcyl:    %u"
+       "HHC03022I   dh_highcyl:    %u"                                      "\n" \
+       "HHC03022I   dh_serial:     %s"
 #define HHC03023                                                            "\n" \
        "HHC03023I   cdh_vrm:       %u.%u.%u"                                "\n" \
        "HHC03023I   cdh_opts:      0x%2.2X"                                 "\n" \

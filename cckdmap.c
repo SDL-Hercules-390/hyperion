@@ -233,6 +233,7 @@ off_t           curpos;                 /* Work: saved file position */
 CKDDEV*         ckdtab     = NULL;      /* Device table entry        */
 CKD_DEVHDR      devhdr     = {0};       /* CKD device header         */
 SPCTAB64        spc        = {0};       /* Space table entry         */
+char            ser[12+1]  = {0};       /* Serial number             */
 
 int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor integer   */
@@ -454,6 +455,9 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     // dh_devtyp:     0x%02.2X            (%s)
     // dh_fileseq:    0x%02.2X
     // dh_highcyl:    %u
+    // dh_serial:     %s
+
+    memcpy( ser, devhdr.dh_serial, sizeof( devhdr.dh_serial ));
 
     WRMSG( HHC03022, "I", dh_devid_str( imgtyp ),
         cckd64 ? "64"          : "32",
@@ -462,7 +466,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         shadow ? "shadow file" : "base image",
         heads, trksize,
         devhdr.dh_devtyp, ckdtab->name, devhdr.dh_fileseq,
-        fetch_hw( devhdr.dh_highcyl ));
+        fetch_hw( devhdr.dh_highcyl ),
+        ser );
 
     /* Report the compressed device header fields */
 

@@ -200,6 +200,7 @@ int             highcyl;                /* Highest cyl# in CKD file  */
 char           *cu = NULL;              /* Specified control unit    */
 int             cckd=0;                 /* 1 if compressed CKD       */
 char         filename[FILENAME_MAX+3];  /* work area for display     */
+BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
     dev->rcd = &dasd_build_ckd_config_data;
 
@@ -317,6 +318,18 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
             cu = argv[i]+3;
             continue;
         }
+        if (strlen (argv[i]) > 4
+         && memcmp("ser=", argv[i], 4) == 0)
+        {
+            if (1
+                && is_numeric( argv[i]+4 )
+                && strlen( argv[i]+4 ) == sizeof( dev->serial )
+            )
+            {
+                memcpy( serial, argv[i]+4, sizeof( dev->serial ));
+                continue;
+            }
+        }
 
         // "%1d:%04X CKD file: parameter %s in argument %d is invalid"
         WRMSG( HHC00402, "E", LCSS_DEVNUM, argv[i], i + 1 );
@@ -379,9 +392,12 @@ char         filename[FILENAME_MAX+3];  /* work area for display     */
         }
 
         /* Save the serial number */
-        memcpy( dev->serial, devhdr.serial, sizeof( dev->serial ));
+        if (serial[0]) // (override?)
+            memcpy( dev->serial, serial, sizeof( dev->serial ));
+        else
+            memcpy( dev->serial, devhdr.dh_serial, sizeof( dev->serial ));
         {
-            const BYTE nulls[12] = {0};
+            static const BYTE nulls[12] = {0};
             if (memcmp( dev->serial, nulls, 12 ) == 0)
                 gen_dasd_serial( dev->serial );
         }
