@@ -31,61 +31,23 @@ static bool verbose = false;           /* Be chatty about reads etc. */
 static int  nextnum = 0;               /* Next CIFBLK->devblk.devnum */
 
 /*-------------------------------------------------------------------*/
-/* Subroutine to convert a null-terminated string to upper case      */
+/* Generate a (hopefully unique!) 12 digit dasd device serial number */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void string_to_upper (char *source)
+DLL_EXPORT void gen_dasd_serial( BYTE* serial )
 {
-int     i;                              /* Array subscript           */
-
-    for (i = 0; source[i] != '\0'; i++)
-        source[i] = toupper(source[i]);
-
-} /* end function string_to_upper */
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to convert a null-terminated string to lower case      */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void string_to_lower (char *source)
-{
-int     i;                              /* Array subscript           */
-
-    for (i = 0; source[i] != '\0'; i++)
-        source[i] = tolower(source[i]);
-
-} /* end function string_to_lower */
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to convert a string to EBCDIC and pad with blanks      */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void convert_to_ebcdic (BYTE *dest, int len, const char *source)
-{
-int     i;                              /* Array subscript           */
-
-    for (i = 0; i < len && source[i] != '\0'; i++)
-        dest[i] = host_to_guest(source[i]);
-
-    while (i < len)
-        dest[i++] = 0x40;
-
-} /* end function convert_to_ebcdic */
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to convert an EBCDIC string to an ASCIIZ string.       */
-/* Removes trailing blanks and adds a terminating null.              */
-/* Returns the length of the ASCII string excluding terminating null */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT int make_asciiz (char *dest, int destlen, BYTE *src, int srclen)
-{
-int             len;                    /* Result length             */
-
-    for (len=0; len < srclen && len < destlen-1; len++)
-        dest[len] = guest_to_host(src[len]);
-    while (len > 0 && dest[len-1] == SPACE) len--;
-    dest[len] = '\0';
-
-    return len;
-
-} /* end function make_asciiz */
+    static char prev[12+1]    = {0};
+    char buf[12+1]            = {0};
+    do
+    {
+        int i;
+        for (i=0; i < 12; i++)
+            buf[i] = '0' + (rand() % 10);
+        buf[12] = 0;
+    }
+    while (str_eq( buf, prev ));
+    memcpy( prev,   buf, 12 );
+    memcpy( serial, buf, 12 );
+}
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to construct an 80-byte VOL1 label in memory.          */

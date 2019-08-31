@@ -287,14 +287,27 @@ HUT_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 HUT_DLL_IMPORT void init_random();
 
 /*-------------------------------------------------------------------*/
-/* Generate a (hopefully unique!) 12 digit dasd device serial number */
-/*-------------------------------------------------------------------*/
-HUT_DLL_IMPORT void gen_dasd_serial( BYTE* serial );
-
-/*-------------------------------------------------------------------*/
 /* Check if string is numeric                                        */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT bool is_numeric( const char* str );
 HUT_DLL_IMPORT bool is_numeric_l( const char* str, int len );
+
+/*-------------------------------------------------------------------*/
+/* Subroutines to convert strings to upper or lower case             */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT void string_to_upper (char *source);
+HUT_DLL_IMPORT void string_to_lower (char *source);
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to convert a string to EBCDIC and pad with blanks      */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT void convert_to_ebcdic( BYTE* dest, int len, const char* source );
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to convert an EBCDIC string to an ASCIIZ string.       */
+/* Removes trailing blanks and adds a terminating null.              */
+/* Returns the length of the ASCII string excluding terminating null */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 
 #endif /* __HSCUTL_H__ */
