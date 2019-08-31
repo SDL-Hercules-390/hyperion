@@ -1389,6 +1389,9 @@ int initialize_utility( int argc, char* argv[],
     set_codepage( NULL );
     init_hostinfo( &hostinfo );
 
+    /* Seed the pseudo-random number generator */
+    init_random();
+
     strtok_str = NULL;
     if (!(nameonly = strtok_r( exename, ".", &strtok_str )))
         nameonly = exename;
@@ -1744,6 +1747,16 @@ DLL_EXPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc )
 }
 
 /*-------------------------------------------------------------------*/
+/* Ensure all calls to "rand()" return a hopefully unique value      */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void init_random()
+{
+    struct timeval tv = {0};
+    gettimeofday( &tv, NULL );
+    srand( (U32) tv.tv_usec );
+}
+
+/*-------------------------------------------------------------------*/
 /* Generate a (hopefully unique!) 12 digit dasd device serial number */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void gen_dasd_serial( BYTE* serial )
@@ -1760,4 +1773,21 @@ DLL_EXPORT void gen_dasd_serial( BYTE* serial )
     while (str_eq( buf, prev ));
     memcpy( prev,   buf, 12 );
     memcpy( serial, buf, 12 );
+}
+
+/*-------------------------------------------------------------------*/
+/* Check if string is numeric                                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT bool is_numeric( const char* str )
+{
+    return is_numeric_l( str, strlen( str ));
+}
+
+DLL_EXPORT bool is_numeric_l( const char* str, int len )
+{
+    int  i;
+    for (i=0; i < len; i++)
+        if (str[i] < '0' || str[i] > '9')
+            return false;
+    return true;
 }

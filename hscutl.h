@@ -282,8 +282,19 @@ HUT_DLL_IMPORT int nix_set_thread_name( pthread_t tid, const char* name );
 HUT_DLL_IMPORT int parse_args( char* p, int maxargc, char** pargv, int* pargc );
 
 /*-------------------------------------------------------------------*/
+/* Ensure all calls to "rand()" return a hopefully unique value      */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT void init_random();
+
+/*-------------------------------------------------------------------*/
 /* Generate a (hopefully unique!) 12 digit dasd device serial number */
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT void gen_dasd_serial( BYTE* serial );
+
+/*-------------------------------------------------------------------*/
+/* Check if string is numeric                                        */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT bool is_numeric( const char* str );
+HUT_DLL_IMPORT bool is_numeric_l( const char* str, int len );
 
 #endif /* __HSCUTL_H__ */

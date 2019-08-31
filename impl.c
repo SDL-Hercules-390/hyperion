@@ -489,7 +489,7 @@ int     rc;
     SET_THREAD_NAME( IMPL_THREAD_NAME );
 
     /* Seed the pseudo-random number generator */
-    srand( time(NULL) );
+    init_random();
 
     /* Clear the system configuration block */
     memset( &sysblk, 0, sizeof( SYSBLK ) );

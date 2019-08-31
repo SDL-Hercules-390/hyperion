@@ -153,8 +153,6 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
             /*  Use "$test &" to run test in background  */
             /*-------------------------------------------*/
 
-            srand( (unsigned int) time( NULL ));
-
             /* Create the test threads */
             LOGMSG("*** $test command: creating threads...\n");
 
