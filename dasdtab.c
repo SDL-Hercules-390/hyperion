@@ -505,61 +505,68 @@ BYTE buf[256];
     /* Clear the configuration data area */
     memset( buf, 0, 256 );
 
-    /* Bytes 0-31: NED 1  Node element descriptor for the device */
-    store_fw (buf, 0xdc010100);
-    sprintf ((char *)&buf[4], "  %4.4X0%2.2XHRCZZ",
-                        dev->ckdtab->devt, dev->ckdtab->model);
-    memcpy( &buf[18], dev->serial, 12 );
-    for (i = 4; i < 30; i++)
-        buf[i] = host_to_guest( isalnum( buf[i] ) ? buf[i] : '0' );
-    store_hw(buf + 30, dev->devnum);        /* Uniquely tag within system */
+    /* NOTE: ckdtab and/or ckdcu could be NULL if this is a shared
+       device that hasn't connected to the server yet (which would
+       cause a crash), so we have to check.
+    */
+    if (dev->ckdtab && dev->ckdcu)
+    {
+        /* Bytes 0-31: NED 1  Node element descriptor for the device */
+        store_fw (buf, 0xdc010100);
+        sprintf ((char *)&buf[4], "  %4.4X0%2.2XHRCZZ",
+                            dev->ckdtab->devt, dev->ckdtab->model);
+        memcpy( &buf[18], dev->serial, 12 );
+        for (i = 4; i < 30; i++)
+            buf[i] = host_to_guest( isalnum( buf[i] ) ? buf[i] : '0' );
+        store_hw(buf + 30, dev->devnum);        /* Uniquely tag within system */
 
-    /* Bytes 32-63: NED 2  Node element descriptor for the string */
-    store_fw (buf + 32, 0xd4020000);
-    sprintf ((char *)&buf[36], "  %4.4X0%2.2XHRCZZ000000000003",
-                        dev->ckdtab->devt, dev->ckdtab->model);
-    for (i = 36; i < 62; i++)
-        buf[i] = host_to_guest(buf[i]);
-    store_hw (buf + 62, 0x0000);
+        /* Bytes 32-63: NED 2  Node element descriptor for the string */
+        store_fw (buf + 32, 0xd4020000);
+        sprintf ((char *)&buf[36], "  %4.4X0%2.2XHRCZZ000000000003",
+                            dev->ckdtab->devt, dev->ckdtab->model);
+        for (i = 36; i < 62; i++)
+            buf[i] = host_to_guest(buf[i]);
+        store_hw (buf + 62, 0x0000);
 
-    /* Bytes 64-95: NED 3  Node element descriptor for the storage director */
-    store_fw (buf + 64, 0xd0000000);
-    sprintf ((char *)&buf[68], "  %4.4X0%2.2XHRCZZ000000000002",
-                        dev->ckdcu->devt, dev->ckdcu->model);
-    for (i = 68; i < 94; i++)
-        buf[i] = host_to_guest(buf[i]);
-    buf[94] = 0x00;
-    buf[95] = (dev->devnum >> 8) & 0xFF;
+        /* Bytes 64-95: NED 3  Node element descriptor for the storage director */
+        store_fw (buf + 64, 0xd0000000);
+        sprintf ((char *)&buf[68], "  %4.4X0%2.2XHRCZZ000000000002",
+                            dev->ckdcu->devt, dev->ckdcu->model);
+        for (i = 68; i < 94; i++)
+            buf[i] = host_to_guest(buf[i]);
+        buf[94] = 0x00;
+        buf[95] = (dev->devnum >> 8) & 0xFF;
 
-    /* Bytes 96-127: NED 4  Node element descriptor for the subsystem */
-    store_fw (buf + 96, 0xF0000001);
-    sprintf ((char *)&buf[100], "  %4.4X   HRCZZ000000000001",
-                        dev->ckdcu->devt);
-    for (i = 100; i < 126; i++)
-        buf[i] = host_to_guest(buf[i]);
-    store_hw (buf + 126, 0x0000);
+        /* Bytes 96-127: NED 4  Node element descriptor for the subsystem */
+        store_fw (buf + 96, 0xF0000001);
+        sprintf ((char *)&buf[100], "  %4.4X   HRCZZ000000000001",
+                            dev->ckdcu->devt);
+        for (i = 100; i < 126; i++)
+            buf[i] = host_to_guest(buf[i]);
+        store_hw (buf + 126, 0x0000);
 
-    /* Bytes 128-223: zeroes */
+        /* Bytes 128-223: zeroes */
 
-    /* Bytes 224-255: NEQ  Node Element Qualifier */
-    buf[224] = 0x80;                  // flags (general NEQ)
-    buf[225] = 0;                     // record selector
-    store_hw (buf + 226, IFID(dev));  // interface id
-    store_hw (buf + 228, 0);          // must be zero
-    buf[230] = 0x1E;                  // primary missing interrupt timer interval
-    buf[231] = 0x00;                  // secondary missing interrupt timer interval
-    store_hw (buf + 232, SSID(dev));  // subsystem id
-    buf[234] = 0x80;                  // path/cluster id
-    buf[235] = (dev->devnum & 0xFF);  // unit address
-    buf[236] = (dev->devnum & 0xFF);  // physical device id
-    buf[237] = (dev->devnum & 0xFF);  // physical device address
-    buf[238] = buf[227];              // SA ID (same as interface ID, byte 227)
-    store_hw (buf + 239, 0);          // escon link address
-    buf[241] = 0x80;                  // interface protocol type (parallel)
-//  buf[241] = 0x40;                  // interface protocol type (escon)
-    buf[242] = 0x80;                  // NEQ format flags
-    buf[243] = (dev->devnum & 0xFF);  // logical device address (LDA)
-                                      // bytes 244-255 must be zero
+        /* Bytes 224-255: NEQ  Node Element Qualifier */
+        buf[224] = 0x80;                  // flags (general NEQ)
+        buf[225] = 0;                     // record selector
+        store_hw (buf + 226, IFID(dev));  // interface id
+        store_hw (buf + 228, 0);          // must be zero
+        buf[230] = 0x1E;                  // primary missing interrupt timer interval
+        buf[231] = 0x00;                  // secondary missing interrupt timer interval
+        store_hw (buf + 232, SSID(dev));  // subsystem id
+        buf[234] = 0x80;                  // path/cluster id
+        buf[235] = (dev->devnum & 0xFF);  // unit address
+        buf[236] = (dev->devnum & 0xFF);  // physical device id
+        buf[237] = (dev->devnum & 0xFF);  // physical device address
+        buf[238] = buf[227];              // SA ID (same as interface ID, byte 227)
+        store_hw (buf + 239, 0);          // escon link address
+        buf[241] = 0x80;                  // interface protocol type (parallel)
+//      buf[241] = 0x40;                  // interface protocol type (escon)
+        buf[242] = 0x80;                  // NEQ format flags
+        buf[243] = (dev->devnum & 0xFF);  // logical device address (LDA)
+                                          // bytes 244-255 must be zero
+    }
 
     /* Copy data characteristics to the I/O buf */
     count = count > 256 ? 256 : count;
