@@ -231,6 +231,7 @@ bin_PROGRAMS = \
   dasdls       \
   dasdpdsu     \
   dasdseq      \
+  dasdser      \
   dmap2hrc     \
   hercules     \
   hetget       \
@@ -612,6 +613,10 @@ dasdpdsu_LDFLAGS   = $(tools_LD_FLAGS)
 dasdseq_SOURCES    = dasdseq.c
 dasdseq_LDADD      = $(tools_ADDLIBS)
 dasdseq_LDFLAGS    = $(tools_LD_FLAGS)
+
+dasdser_SOURCES    = dasdser.c
+dasdser_LDADD      = $(tools_ADDLIBS)
+dasdser_LDFLAGS    = $(tools_LD_FLAGS)
 
 maketape_SOURCES   = maketape.c
 maketape_LDADD     = $(tools_ADDLIBS)

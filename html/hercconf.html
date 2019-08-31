@@ -137,7 +137,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     0000      <a href="#SYSG">SYSG</a>    SYSGCONS
 
-    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>
+    0100      <a href="#ckddasd">3390</a>    disks/linux.dsk  <a href="#shadow">sf=shadows/linux_*.dsk</a>  <a href="#ckdser">ser=000000000001</a>
 
     0120      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5r.120
     0121      <a href="#3380">3380</a>    <a href="#ENHSYMINC">${DASD_PATH=dasd/}</a>mvsv5d.121
@@ -933,7 +933,7 @@ a real System/390.  The configuration file is an ASCII text file.
 <dt><code>LDMOD &nbsp; <em>module list</em></code>
 <dd><p>
     Specifies additional modules that are to be loaded by the Hercules dynamic loader.
-    The default search order is with the hercules directory in the default DLL search
+    The default search order is with the Hercules directory in the default DLL search
     path. Most systems also support absolute filenames (ie names starting with '/'
     or '.') in which case the default search path is not taken.
     <p>
@@ -4207,7 +4207,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
 <dt><em>CKD DASD devices</em>
 <dd><p>
     The argument specifies the name of a file containing the disk CKD
-    DASD image or the INET address of a <a href="shared.html">Hercules shared device server</a>.
+    DASD image or the INET address of a Hercules <a href="shared.html">Shared Device server</a>.
     <p>
 
     The file consists of a 512-byte device header record
@@ -4230,14 +4230,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
     configuration statement.</em>
     <p>
 
-    If your operating system supports <i>large file sizes</i> (or
-    <i>64-bit offsets</i>) then volumes larger than 2G can be kept
+    If your host operating system supports <i>large file sizes</i>
+    (or <i>64-bit offsets</i>) then volumes larger than 2G can be kept
     in a single file.
     <p>
 
     Alternatively, the argument may specify the name of a file containing
-    a compressed CKD DASD image.  The CKD driver will automatically detect
-    whether the file contains a regular CKD image or a compressed CKD
+    a compressed CCKD DASD image.  The CKD driver will automatically detect
+    whether the file contains a regular CKD image or a compressed CCKD
     image.
     <p>
 
@@ -4259,15 +4259,15 @@ ROUTE  00  172.21.3.32  255.255.255.224
     <dt><code><em>ip-name-or-addr</em>:<em>port</em>:<em>devnum</em></code>
     <dd><p>
         <em>ip-name-or-addr</em> specifies the internet name or address
-        where the <a href="shared.html">Hercules shared device server</a> is running.
+        where the Hercules <a href="shared.html">Shared Device server</a> is running.
         <p>
 
-        <em>port</em> specifies the port number the shared device server
+        <em>port</em> specifies the port number the Shared Device server
         is listening on.  If omitted, the default is 3990.
         <p>
 
-        <em>devnum</em> specifies the device number on the shared
-        device server.  If omitted, the default is the current device number.
+        <em>devnum</em> specifies the device number on the Shared
+        Device server.  If omitted, the default is the current device number.
         <p>
 
     </dl> <!-- end INET parms -->
@@ -4366,6 +4366,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
         not be specified.
         <p>
 
+<a name="ckdser"></a>
+    <dt><code>ser=<em>nnnnnnnnnnnn</em></code>
+    <dd><p>
+        Defines an optional overriding 12-digit serial number to be used for this device.
+        The specified serial number will be used regardless of whatever
+        permanent or randomly assigned serial number the device might have (if any).
+        <p>
+
     </dl> <!-- end (CKD) additional DASD arguments  -->
     <p>
 
@@ -4375,17 +4383,41 @@ ROUTE  00  172.21.3.32  255.255.255.224
 <a name="fbadasd"></a>
 <dt><em>FBA DASD devices</em>
 <dd><p>
-    The argument specifies the name of a file which contains the FBA
-    DASD image or the INET address of a <a href="shared.html">Hercules shared device server</a>.
-    <p>
-
     The file consists of fixed length 512-byte records,
     each of which represents one physical block of the emulated disk.
     <p>
 
+    The first argument specifies the name of a file which contains
+    the FBA DASD image or the INET address of a Hercules
+    <a href="shared.html">Shared Device server</a>.
+    <p>
+
+    If you specify a Shared Device server INET address, the format
+    of the filename is:
+    <p>
+
+    <dl> <!-- begin INET parms -->
+
+    <dt><code><em>ip-name-or-addr</em>:<em>port</em>:<em>devnum</em></code>
+    <dd><p>
+
+        <em>ip-name-or-addr</em> specifies the internet name or address
+        where the Hercules Shared Device server is running.
+        <p>
+
+        <em>port</em> specifies the port number the Shared Device server
+        is listening on.  If omitted, the default is 3990.
+        <p>
+
+        <em>devnum</em> specifies the device number on the Shared
+        Device server.  If omitted, the default is the current device number.
+
+    </dl> <!-- end INET parms -->
+    <p>
+
     To allow access to a minidisk within a full-pack FBA DASD image
-    file, two additional arguments may be specified after the file
-    name:
+    file, <i><u>normal NON-compressed FBA dasds</u></i> also support
+    two additional arguments after the file name:
     <p>
 
     <dl> <!-- begin FBA DASD arguments -->
@@ -4403,49 +4435,27 @@ ROUTE  00  172.21.3.32  255.255.255.224
         Specifies the number of 512-byte blocks in the minidisk.
         This number must not exceed the number of blocks in the file
         minus the origin.
-        If omitted, or if specified as an asterisk, then the minidisk
-        continues to the end of the DASD image file.
+        If omitted, or if specified as an <b>*</b> asterisk,
+        then the minidisk continues to the end of the DASD image file.
         <p>
 
     </dl> <!-- end FBA DASD arguments -->
     <p>
 
-    If you specify an INET address the format is:
+    <i><u>Compressed CFBA dasds</u></i> also support an additional optional argument:
     <p>
 
-    <dl> <!-- begin INET parms -->
-
-    <dt><code><em>ip-name-or-addr</em>:<em>port</em>:<em>devnum</em></code>
-    <dd><p>
-
-        <em>ip-name-or-addr</em> specifies the internet name or address
-        where the <a href="shared.html">Hercules shared device server</a> is running.
-        <p>
-
-        <em>port</em> specifies the port number the shared device server
-        is listening on.  If omitted, the default is 3990.
-        <p>
-
-        <em>devnum</em> specifies the device number on the shared
-        device server.  If omitted, the default is the current device number.
-
-    </dl> <!-- end INET parms -->
-    <p>
-
-    In addition to the above, some additional optional arguments are also
-    supported.
-    <p>
-
-    <dl> <!-- begin (FBA) additional DASD arguments -->
+    <dl> <!-- begin (CFBA) additional DASD arguments -->
 
     <dt><code>sf=<em>shadow-file-name</em></code>
     <dd><p>
-        The handling of shadow files for FBA devices is identical as that for
-        CKD devices. Please refer to the preceding CKD section for information
-        regarding use of the <code>sf=</code> shadow file option.
+        The handling of shadow files for compressed CFBA devices is identical
+        as that for CCKD devices. Please refer to the
+        <a href="#shadow">preceding CKD section</a>
+        for information regarding use of the <code>sf=</code> shadow file option.
         <p>
 
-    </dl> <!-- end (FBA) additional DASD arguments  -->
+    </dl> <!-- end (CFBA) additional DASD arguments  -->
     <p>
 
 <hr width="50%"><p>

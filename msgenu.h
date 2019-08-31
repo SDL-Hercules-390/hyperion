@@ -2261,7 +2261,16 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC03044 "Average L2-to-track seek = %.3f MB"
 //efine HHC03045 - HHC03099 (available)
 
-// range 03100 - 03199 available
+// dasdser
+#define HHC03100 "Usage: %s  image  [serial]"                               "\n" \
+       "HHC03100I   image    base CKD dasd image file"                      "\n" \
+       "HHC03100I   serial   serial number to set. If not given then the"   "\n" \
+       "HHC03100I            existing serial number is simply displayed."
+#define HHC03101 "Invalid %s \"%s\""
+#define HHC03102 "Error in function %s: %s"
+#define HHC03103 "Unsupported dasd image file format"
+//efine HHC03104 - HHC03199 (available)
+
 // range 03200 - 03299 available
 // range 03300 - 03399 available
 // range 03400 - 03499 available

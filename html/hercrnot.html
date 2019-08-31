@@ -15,7 +15,7 @@ Hercules: Release Notes
 <a name=4.3></a>
 <hr noshade>
 
-<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases">SDL Hyperion 4.3</a>
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.3">SDL Hyperion 4.3</a>
 &nbsp;&nbsp; <i>(in development)</i>
 </h2>
 
@@ -23,14 +23,42 @@ Hercules: Release Notes
 <dl>
 
 
-  <dt>XXXXXXXXXXXX
+  <dt>CKD serial number support
   <dd>
   <p>
-    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
-    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
-    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
-    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
-    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
+    Version 4.3 of SDL Hercules Hyperion introduces support for assigning
+    serial numbers to CKD dasd devices. This is usually only a concern for
+    guests which care about the serial number field in the device's Node Element
+    Descriptor (NED) information returned by the RCD (Read Configuration Data)
+    CCW, such as z/VM SSI (Single System Image) configurations. For most
+    other guests the change is transparent.
+  <p>
+    The <code>dasdinit</code> utility now assigns a randomly generated serial
+    number for all CKD dasd images. For existing CKD dasds created with earlier
+    (older) versions of Hercules without serial number support, the CKD dasd's
+    serial number will always be zero.
+  <p>
+    However, if an all zero serial number is detected during Hercules's CKD
+    device initialization (indicating the dasd does not have a permanent serial
+    number), a random serial number value is generated and used instead.
+    Because of this, all older dasd images (created with an older version of
+    Hercules and thus always having an all zero serial number) will always appear
+    to have a completely different (unstable ever changing) serial number
+    each time Hercules is started.
+  <p>
+    To assign a permanent (stable never changing) serial number to a CKD dasd
+    image (including those created with older versions of Hercules) a new
+    dasd utility has been created called <b><code>dasdser</code></b>. (start
+    <code>dasdser</code> without any arguments for usage information.)
+  <p>
+    The serial number that Hercules actually uses for a given CKD dasd
+    (whether internally generated or obtained from the actual dasd image file)
+    can also be overridden via a new
+    <a href="hercconf.html#ckdser"><code>ser=nnnnnnnnnnnn</code></a>
+    device configuration file statement option. This new option is supported
+    only for CKD dasd devices and not FBA dasd devices since FBA devices
+    don't support the RCD (Read Configuration Data) CCW opcode and thus do not
+    have any serial number.
   </p>
 
 
@@ -63,7 +91,7 @@ Hercules: Release Notes
 <a name=4.2></a>
 <hr noshade>
 
-<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases">SDL Hyperion 4.2</a></h2>
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.2">SDL Hyperion 4.2</a></h2>
 
 <p>
 <dl>
@@ -244,7 +272,7 @@ Hercules: Release Notes
 <hr>
 
 <a name=4.1></a>
-<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases">SDL Hyperion 4.1</a></h2>
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.1">SDL Hyperion 4.1</a></h2>
 <p>
 <dl>
 

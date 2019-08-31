@@ -297,6 +297,9 @@
     <ClCompile Include="dasdseq.c">
       <Filter>Source Files\Utilities\disk</Filter>
     </ClCompile>
+    <ClCompile Include="dasdser.c">
+      <Filter>Source Files\Utilities\disk</Filter>
+    </ClCompile>
     <ClCompile Include="hetget.c">
       <Filter>Source Files\Utilities\tape</Filter>
     </ClCompile>

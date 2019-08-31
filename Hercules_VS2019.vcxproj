@@ -342,6 +342,7 @@
     <ClCompile Include="dasdls.c" />
     <ClCompile Include="dasdpdsu.c" />
     <ClCompile Include="dasdseq.c" />
+    <ClCompile Include="dasdser.c" />
     <ClCompile Include="dasdtab.c" />
     <ClCompile Include="dasdutil.c" />
     <ClCompile Include="dasdutil64.c" />

@@ -336,6 +336,10 @@
 						RelativePath=".\dasdseq.c"
 						>
 					</File>
+					<File
+						RelativePath=".\dasdser.c"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="tape"

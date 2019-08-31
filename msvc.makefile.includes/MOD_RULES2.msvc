@@ -228,6 +228,8 @@ $(X)dasdpdsu.exe: $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)her
 
 $(X)dasdseq.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
 
+$(X)dasdser.exe:  $(O)$(@B).obj $(O)hdasd.lib $(O)hsys.lib $(O)hutil.lib $(O)hercdasd.res
+
 # ---------------------------------------------------------------------
 # Tape utilities
 

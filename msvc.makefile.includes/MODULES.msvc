@@ -59,6 +59,7 @@ EXECUTABLES = \
     $(X)dasdls.exe      \
     $(X)dasdpdsu.exe    \
     $(X)dasdseq.exe     \
+    $(X)dasdser.exe     \
     $(X)dmap2hrc.exe    \
     $(X)herclin.exe     \
     $(X)hercules.exe    \
