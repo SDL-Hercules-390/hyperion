@@ -1968,7 +1968,7 @@ DLL_EXPORT size_t parse_devnums( const char* spec, DEVNUMSDESC* dd )
         default:
 
             // "Incorrect %s near character '%c'"
-            WRMSG( HHC01470, "E", "incorrect device specification", *strptr );
+            WRMSG( HHC01470, "E", "device specification", *strptr );
             goto error_ret;
         }
 
