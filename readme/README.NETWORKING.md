@@ -2,39 +2,42 @@
 [Return to master README.md](../README.md)
 
 # Hercules Networking
+
 ## Contents
+
 1. [About](#About)
 2. [Details](#Details)
 3. [Emulation Modes](#Emulation-Modes)
 
 ## About
 
-    *** Please read herctcp.html as Roger explains how to set up TCP/IP networking with Hercules.     ***
+_(Please read [herctcp.html](../html/herctcp.html) as Roger explains how to set up TCP/IP networking with Hercules.)_
 
-All of the communications emulation implemented within Hercules use a CTCA (Channel to Channel Adapter) type device. Depending on the "flavor", the CTCA device will provide either a point-to-point or a virtual network adapter interface to the driving system's TCP/IP stack or in the case of CTCT, a "true" CTCA connection to another instance of Hercules via a TCP/IP connection.
+Most of the network communication emulations implemented within Hercules use a CTCA (Channel to Channel Adapter) type device. Depending on the "flavor", the CTCA device will provide either a point-to-point or a virtual network adapter interface to the driving system's TCP/IP stack or in the case of CTCE, a true CTCA connection to another instance of Hercules via a TCP/IP connection.
 
-All current emulations, with the exception of VMNET, CTCT and CTCE use the Universal TUN/TAP driver on *nix and TunTap32 (WinPCap) on the Windows platforms which creates a network interface on the driving system which allow Hercules to present frames to, and receive frames from the TCP/IP stack. This network interface is configured on *nix platforms by the hercifc program which is invoked by Hercules after the TUN/TAP device is opened. The hercifc program runs as root. Please read herctcp.html for more information on the security implications of the hercifc program.
+Most current emulations, with the exception of, CTCT and CTCE use the Universal TUN/TAP driver on *nix and TunTap32 (WinPCap) on the Windows platforms which creates a network interface on the driving system which allow Hercules to present frames to, and receive frames from the TCP/IP stack. This network interface is configured on *nix platforms by the `hercifc` program which is invoked by Hercules after the TUN/TAP device is opened. The `hercifc` program runs as root. Please read [herctcp.html](../html/herctcp.html) for more information on the security implications of the `hercifc` program.
 
 ## Details
 
-    *** Important information about changes to the Hercules configuration files - PLEASE READ ***
+_(Important information about changes to the Hercules configuration files! **PLEASE READ!**)_
 
-The format of the Hercules configuration file statements for all of the networking emulations have changed from the previous releases of Hercules. The older format will still be accepted to maintain compatibility, however it is the recommendation of the maintainer that the new format be used. Also note that there is no distinction between the CTCI and CTCI-W32 modes any more, in fact CTCI-W32 does not exist in this release (other than to maintain compatibility with previous configuration files).
+The format of the Hercules configuration file statements for all of the networking emulations have changed from the previous releases of Hercules. While the older format may still be accepted for a short while in order to maintain compatibility, it is recommended to switch to the new format as soon as possible. Also note that there is no distinction between the CTCI and CTCI-W32 modes any more, in fact CTCI-W32 does not exist in this release.
 
 In releases prior to Hercules version 3.00, all of the TCP/IP emulations required two addresses to be defined in the Hercules configuration file: one address for the read subchannel and the other for write.
 
-Hercules release version 3.00, however, [temporarily] changed the rules: With [ONLY!] version 3.00 of Hercules, only the FIRST address address need be specified in the configuration file. Hercules version 3.00 automatically creates the second address. Care must be taken to NOT define the second address [with Hercules version 3.00 ONLY!] or a configuration error will occur.
+Hercules release version 3.00, however, [temporarily] changed the rules: With [_**ONLY!**_] version 3.00 of Hercules, only the _first_ address need be specified in the configuration file. Hercules version 3.00 automatically creates the second address. Care must be taken to _not_ define the second address [_with Hercules version 3.00 **ONLY!**_] or a configuration error will occur.
 
-Starting with Hercules version 3.01 however, we've gone back to doing things the way we ORIGINALLY were (and the way most users are used to (i.e. the way most users EXPECT things to work)):
+Starting with Hercules version 3.01 however, we've gone back to doing things the way we were _originally_ (and the way most users were used to) doing them (i.e. the way most users _expect_ things to work):
 
-With Hercules version 3.01 you need to define BOTH addresses!
+With Hercules version 3.01 you need to define _both_ addresses.
 
-Both the even numbered read device AS WELL AS the odd numbered write device must BOTH be defined in your Hercules configuration file starting with Hercules version 3.01. We apologize for the mess, but we thought having Herc automatically define the write
+Both the even numbered read device _as well as_ the odd numbered write device must _both_ be defined in your Hercules configuration file starting with Hercules version 3.01. We apologize for the mess, but we thought having Herc automatically define the write
 device for you (as it does in version 3.00) would be easier for everyone. Turns out it caused a lot of problems with a lot of people, so we decided to go back to the original way. Again, we apologize for whatever headaches this may have caused anyone.
 
-Note that the VMNET and CTCT protocols have ALWAYS required BOTH addresses to be defined (i.e. ALL versions of Hercules, including version 3.00 as well, require BOTH even/odd read/write devices to be defined separately [in your Hercules configuration file]).
+Note that the CTCT protocol has always required both addresses to be defined (i.e. _all_ versions of Hercules, including version 3.00 as well, require _both_ even/odd read/write devices to be defined separately [in your Hercules configuration file]).
 
 ## Emulation Modes
+
 The currently supported emulation modes are:
 
 ```
@@ -42,8 +45,8 @@ CTCT     - CTCA Emulation via TCP connection
 CTCE     - Enhanced CTCA Emulation via CTP connection
 CTCI     - Point-to-point connection to the host IP stack.
 LCS      - LAN Channel Station (3172/OSA)
-VMNET    - Point-to-point link via SLIP/VMNET
 PTP      - Point-to-point connection to the host IP stack.
+OSA      - Open Systems Adapter
 ```
 
 ### CTCT - Channel to Channel Emulation via TCP connection
@@ -70,10 +73,11 @@ where:
 <rport>    is the TCP/IP port on the remote system.
 ```
 
-### CTCI     - Channel to Channel link to Linux TCP/IP stack
+### CTCI     - Channel to Channel link to TCP/IP stack
+
 This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the operating system running in the Hercules machine it appears to be a CTC link to a machine running TCP/IP for MVS or VM.
 
-CTCI uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[[1]](#1).
+CTCI uses the Universal TUN/TAP driver on \*nix and Riverbed Technology's WinPCap packet driver as well as Fish's [CTCI-WIN product](http://www.softdevlabs.com/ctci) on Windows **(*)**.
 
 The configuration statement for CTCI is as follows:
 
@@ -225,10 +229,7 @@ Mode  is the operation mode - IP or SNA
 Port  is the virtual (relative) adapter number.
 ```
 
-When the device is specifies the odd address of the pair,
-then the read/write functions of the pair will be swapped.
-
-For IP modes, the entry specific information is as follows:
+For `IP` modes, the Entry-specific information is as follows:
 
 ```
      PRI|SEC|NO  specifies where a packet with an unknown IP
@@ -236,69 +237,64 @@ For IP modes, the entry specific information is as follows:
                  default entry, SEC specifies the entry to use
                  when the primary is not available, and NO
                  specifies that this is not a default entry.
-````
-`nnn.nnn.nnn.nnn` specifies the home IP address
+```
 
-When the operation mode is IP, specify only the even (read) address. The odd (write) address will be create automatically.
+When the operation mode is `IP`, specify only the even (read) address; the odd (write) address is created automatically. If an odd address is specified the read/write functions of the pair are swapped.
 
 Note: SNA mode does not currently work.
 
-Additionally, two other statements can be included in the address translation file. The HWADD and ROUTE statements.
+Additionally, two other statements can be included in the address translation file. The `HWADD` and `ROUTE` statements.
 
-Use the HWADD to specify a hardware (MAC) address for a virtual adapter. The first parameter after HWADD specifies with relative adapter for which the address is applied.
+Use `HWADD` to specify a hardware (MAC) address for a virtual adapter. The first parameter after `HWADD` specifies with relative adapter for which the address is applied.
 
-The ROUTE statement is included for convenience. This allows the hercifc program to create a network route for this specified virtual adapter. Please note that it is not necessary to include point-to-point routes for each IP address in the table. This is done automatically by the emulation module.
+The `ROUTE` statement is included for convenience. This allows the `hercifc` program to create a network route for this specified virtual adapter. Please note that it is not necessary to include point-to-point routes for each IP address in the table. This is done automatically by the emulation module.
 
-Up to 4 virtual (relative) adapters 00-03 are currently supported.
-
-### SLIP/VMNET  - Channel to Channel link to TCP/IP via SLIP/VMNET
-
-If the emulation mode is not specified on the configuration statement, it is assumed to be a point-to-point link to the driving system's TCP/IP stack using Willem Konynenberg's VMNET package.  This provides the same function as the CTCI mode of operation, except that it uses a virtual SLIP interface instead of the TUN/TAP driver.
-
-Refer to http://www.kiyoinc.com/herc3088.html for more details.
+Up to 4 virtual (relative) adapters (ports) 00-03 are currently supported.
 
 ### CTCE - Enhanced Channel to Channel Emulation via TCP connection
 
-The CTCE device type will emulate a real 3088 Channel to Channnel Adapter also for non-IP traffic, enhancing the CTCT capabilities. CTCE connections are also based on TCP/IP between two (or more) Hercules instances, and requires an even-odd pair of port numbers per device side. Only the even port numbers are to be configured; the odd numbers are just derived by adding 1 to the (configured) even port numbers.  The socket connection pairs cross-connect, the arrows showing the send->receive direction :
+The CTCE device type also emulates a _**real** 3088 Channel to Channnel Adapter_ for non-IP traffic, enhancing the CTCT capabilities. CTCE connections are also based on TCP/IP between two (or more) Hercules instances, and requires an even-odd pair of port numbers per device side. Only the even port numbers are to be configured; the odd numbers are just derived by adding 1 to the (configured) even port numbers.  The socket connection pairs cross-connect, the arrows showing the send->receive direction :
 
 ```
-    x-lport-even -> y-rport-odd
-    x-lport-odd  <- y-rport-even
+    x-lport-even --> y-rport-odd
+    x-lport-odd  <-- y-rport-even
 ```
 
-The configuration statement for CTCE is as follows :
+The configuration statement for CTCE is as follows:
 ```
      <devnum> CTCE <lport> <raddress> <rport> [[<mtu>] <sml>]
-````
+```
 where:
 ```
-     <devnum>   is the address of the CTCT device.  
-     <lport>    is the even TCP/IP port on the local system.  
-     <raddress> is the IP address on the remote.
-     <rport>    is the even TCP/IP port on the remote system.
-     <mtu>      optional mtu buffersize, defaults to 32778
-     <sml>      optional small minimum for mtu, defaults to 8
+     <devnum>     is the address of the CTCT device.  
+     <lport>      is the even TCP/IP port on the local system.  
+     <raddress>   is the IP address on the remote.
+     <rport>      is the even TCP/IP port on the remote system.
+     <mtu>        optional mtu buffersize, defaults to 32778
+     <sml>        optional small minimum for mtu, defaults to 8
 ```
 
 A sample CTCE device configuration is shown below:
 
 ```
-   Hercules PC Host A with IP address 192.168.1.100 :
+   # Hercules PC Host A with IP address 192.168.1.100:
+
       0E40  CTCE  30880  192.168.1.200  30880
       0E41  CTCE  30882  192.168.1.200  30882
 
-   Hercules PC Host B with IP address 192.168.1.200 :
+   # Hercules PC Host B with IP address 192.168.1.200:
+
       0E40  CTCE  30880  192.168.1.100  30880
       0E41  CTCE  30882  192.168.1.100  30882
 ```
 
-CTCE connected Hercules instances can be hosted on either Unix or Windows platforms, both sides do not need to be the same.
+CTCE connected Hercules instances can be hosted on either Unix or Windows platforms. Both sides do _not_ need to be the same.
 
 ### PTP      - MPCPTP/PCPTP6 Channel to Channel link
 
-This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the z/OS V1R5 or later image running in the Hercules machine it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to another z/OS image.
+This is a point-to-point link to the driving system's TCP/IP stack. From the point of view of the z/OS V1R5 or later image running in the Hercules machine, it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to another z/OS image.
 
-TP uses the Universal TUN/TAP driver on *nix and Politecnico di Torino's WinPCap packet driver as well as Fish's TunTap32 and FishPack DLLs on Windows[1].
+PTP uses the Universal TUN/TAP driver on \*nix and Riverbed Technology's WinPCap packet driver as well as Fish's [CTCI-WIN product](http://www.softdevlabs.com/ctci) on Windows **(*)**.
 
 The configuration statement for PTP is as follows:
 ```
@@ -431,14 +427,22 @@ The TUN interface could then be used with a PTP specified as:-
     E20-E21 PTP tun99
 ```
 
-## Notes
-#### 1
-The TunTap32.dll and FishPack.dll are part of Fish's [CTCI-WIN](http://www.softdevlabs.com/ctci-win) package which includes the required [WinPCap](http://www.winpcap.org) packet driver as well.  See Fish's web page for details.
+### OSA - Open Systems Adapter
 
-ALSO NOTE that it is HIGHLY RECOMMENDED that you stick with using only the current RELEASE version of WinPCap and NOT any type of 'alpha' OR 'beta' version! Alpha and Beta versions of WinPCap are NOT SUPPORTED! Only official *release* version are supported!
+The QETH (or OSA) device type emulates an OSA Express card running in QDIO mode. Both layer-2 and layer-3 are currently supported. The mode of operation is selected by the emulated workload and cannot be configured from Hercules.
+
+For more information please refer to the the QETH/OSA section of the Hercules Configuration File web page, [hercconf.html](../html/hercconf.html#QETH).
+
+## Notes
+
+#### (*)
+
+Fish's [CTCI-WIN](http://www.softdevlabs.com/ctci-win) package includes the required [WinPCap](http://www.winpcap.org) packet driver as well.  See Fish's web page for details.
+
+Also note that it is _highly recommended_ that you stick with using _only_ the current official _RELEASE_ version of WinPCap and _**NOT**_ any type of 'alpha' OR 'beta' version! _ALPHA AND BETA VERSIONS OF WINPCAP ARE **NOT SUPPORTED!** Only official RELEASE versions are supported!_
 
 When you visit the WinPCap download web page, you need need to scroll down the page a bit to reach the OFFICIAL RELEASE VERSION of WinPcap. They usually put their Beta versions at the top of the page, and BETA versions ARE NOT SUPPORTED. *Please* scroll down the page and use and official RELEASE version. Thanks.
 
-You may, if you want, use a beta version of WinPCap, but if you do, then you're on your own if you have any problems with it.
+You may, if you want, use a beta version of WinPCap, but if you do, then you're on your own if you have any problems with it!
 
   -- Fish, May 2004.

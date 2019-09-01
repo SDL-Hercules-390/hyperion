@@ -4,7 +4,7 @@
 # NOTE!  This file is OUT OF DATE and should probably be deleted!
 ### Not converted to markdown on that basis.
 
-FOR MORE CURRENT UP-TO-DATE INFORMATION, PLEASE REFER TO THE [README.WIN64.md](/readme/README.WIN64.md) DOCUMENT
+FOR MORE CURRENT UP-TO-DATE INFORMATION, PLEASE REFER TO THE [README.WIN64.md](./README.WIN64.md) DOCUMENT
 
 ## Original readme now follows:
 

@@ -2,12 +2,15 @@
 [Return to master README.md](../README.md)
 
 # Hercules PTT Tracing
+
 ## Contents
+
 1. [History](#History)
 2. [Using PTT](#Using-PTT)
 3. [Future Direction](#Future-Direction)
 
 ## History
+
 'PTT' is a misnomer.
 
 The Hercules "Threading and locking trace debugger" is not just for thread and lock tracing.  It is actually a generic Hercules internal event tracing debugging facility.
@@ -30,13 +33,14 @@ As originally written by Greg, the locking call intercept functions were part of
 
 In June of 2013 however, Fish needed to make some enhancements to the lock functions to automatically detect and report errors (non-zero return codes from any of the locking calls) under the guidance of Mark L. Gaubatz.
 
-It was at this time it was recognized that the generalized "PTT intercept" functions that were originally a part of the pttrace.c module as originally written/designed by Greg Smith should actually be moved into a separate "threading/locking" module ([hthreads.c](/hthreads.c)), thereby leaving the [pttrace.c](/pttrace.c)/[.h](/pttrace.h) modules responsible for only what they were meant for: generalized event table tracing.
+It was at this time it was recognized that the generalized "PTT intercept" functions that were originally a part of the pttrace.c module as originally written/designed by Greg Smith should actually be moved into a separate "threading/locking" module ([hthreads.c](../hthreads.c)), thereby leaving the [pttrace.c](../pttrace.c)/[.h](../pttrace.h) modules responsible for only what they were meant for: generalized event table tracing.
 
-This allowed us to clean up much of the macro redefinition monkey business originally in the [hthreads.h](/hthreads.h) header that was originally coded solely for the purpose of interfacing with the "PTT" internal trace table facility.
+This allowed us to clean up much of the macro redefinition monkey business originally in the [hthreads.h](../hthreads.h) header that was originally coded solely for the purpose of interfacing with the "PTT" internal trace table facility.
 
 Now, the htreads.c module is responsible for calling the proper threading implementation function (pthreads on non-Windows or fthreads on Windows) as well as checking the return code and, if necessary, calling the "PTT" facility to add an entry to the trace table.
 
 ## Using PTT
+
 The PTT tracing facility can be used to add generic "events" to the internal trace table, and is thus ideal for helping to debug *ANY* module/driver and not just for debugging lock handling.
 
 To use it, simply add a 'PTT' macro call to your code.  The parameters to the macro are as follows:  
@@ -51,7 +55,7 @@ Where:
     int             rc;         /* Return code               */
 ```
 
-The message must be a string value which that remains valid for the duration of Hercules execution.  Usually it is coded as a string constant ("message") and not a pointer variable name (since the variable might go out of scope or change in value, which would lead to erroneous/misleading trace messages).
+The message must be a string value that remains valid for the duration of Hercules execution.  Usually it is coded as a string constant ("message") and not a pointer variable name (since the variable might go out of scope or change in value, which would lead to erroneous/misleading trace messages).
 
 The two data pointer values can be anything.  They do not need to actually point to anything.  They could be a 64-bit integer value for example.  Same idea with the return code: it can be any integer value meaningful to you and your code/driver.  It does not have to be an actual return code.
 
@@ -94,12 +98,12 @@ When you later enter the `ptt` command with no arguments to dump/display the tab
 
 
 ## Future Direction
+
 The future direction of the PTT tracing facility is to eventually allow each module/driver define their own private trace event classes allowing the user (or especially you the Hercules developer!) to tell PTT which of your private classes it should trace.  The hope is to provide faster and easier debugging without impacting the overall speed of execution that "logmsg" and "TRACE" macros (which simply call logmsg) normally incur.
 
 Each module will ideally be able to define their own set of classes and class names separate from other modules.  How exactly this is going to work has not been thought out yet.  It is still in the design / "TODO" stage.
 
 Hopefully someone will find the time to take up the challenge and develop it for us.
 
-##
-"Fish" (David B. Trout)
-   June 2, 2013
+"Fish" (David B. Trout)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;June 2, 2013

@@ -111,20 +111,25 @@ x x x x 1 1 0 0 : EON
 x x x x 1 1 0 1 : SEP
 ```
 
-In order to perform an outgoing call, the data must follow these specifications:  
-        `N[N[N]]SEPN[N[N]]SEPN[N[N]]SEPN[N[N]]]SEPN[..[N]][EON]`  
+In order to perform an outgoing call, the data must follow these specifications:
+
+          N[N[N]]SEPN[N[N]]SEPN[N[N]]SEPN[N[N]]]SEPN[..[N]][EON]
+
 Where N is any dialing number from 0 to 9 and SEP is the separator.  
 
-The 4 first group of digits represet the IP address.  The last group represent a TCP port number.
-For example (* is the SEP character representation):  
-        `192*168*0*1*8888 : will issue a TCP connection to 192.168.0.1 port 8888`  
+The 4 first group of digits represent the IP address.  The last group represent a TCP port number.
+For example (* is the SEP character representation):
+  
+        192*168*0*1*8888 : will issue a TCP connection to 192.168.0.1 port 8888
+
 The EON is optional. If it is present, it must be the last character of the dial data.
 
 ## Bugs, Caveats
+
 - The Address Prepare is not implemented
 - The POLL CCW Has not been tested
 - Group DIAL IN is not implemented
 - DIAL CCW Not tested
 - There is 1 thread per line, when there should be 1 thread for ALL lines.
-- MAXDEVT may have to be adjusted under WINDOWS to accomodate for a large number of lines (because some I/O may take an undefinite amount of time).
+- MAXDEVT may have to be adjusted under Windows to accomodate for a large number of lines (because some I/O may take an indefinite amount of time).
 - There is no 'REAL' BSC line support yet.

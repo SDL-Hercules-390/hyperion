@@ -2,7 +2,9 @@
 [Return to master README.md](../README.md)
 
 # Hercules Dynamic Loader
+
 ## Contents
+
 1. [About](#About)
 2. [Commands](#Commands)
 3. [Module load and unload](#Module-load-and-unload)
@@ -11,10 +13,12 @@
 6. [Important Hercules internals build information relating to HDL](#Important-Hercules-internals-build-information-relating-to-HDL)
 
 ## About
-The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to hercules, without the need to rebuild or even restart hercules.
+
+The dynamic loader is intended to supply a loading and linking mechanism, whereby routines, commands, instructions and functions can be dynamically added to Hercules, without the need to rebuild or even restart Hercules.
 
 ## Commands
-The loader can be controlled by the following hercules commands:  
+
+The loader can be controlled by the following Hercules commands:  
 ```
 ldmod <module list>    - Load modules named in module list
 rmmod <module list>    - Unload modules named in list
@@ -22,47 +26,64 @@ lsmod                  - List all modules and entry points
 lsdep                  - List all dependencies
 ```
 
-The ldmod statement may also appear in the hercules configuration file.  
+The ldmod statement may also appear in the Hercules configuration file.  
 ```
 configuration statement:
 modpath <pathname>     - Specifies where modules are loaded from
 ```
 
 ## Module load and unload
-The loader has 2 basic functions: module load and module unload.
+
+The loader has two basic functions: module load and module unload.
 
 ###  Module load
-`int hdl_load(char *name, int flags);`  
+
+
+    int hdl_load(char *name, int flags);
+
+
 Where name is the module name, this name may include the path.  If no path is given then the module is loaded from the default library search order.  Note that this is different from the standard search order.
 
 Flags may be one of the following:
 
          HDL_LOAD_DEFAULT or 0  -  Default load
-         HDL_LOAD_MAIN          -  Reserved for hercules use
+         HDL_LOAD_MAIN          -  Reserved for Hercules use
          HDL_LOAD_NOUNLOAD      -  Module cannot be unloaded
          HDL_LOAD_FORCE         -  Override dependency check
          HDL_LOAD_NOMSG         -  Do not issue any error messages
+
 This function returns a zero value when the load is successful.
 
 ### Module unload
-`int hdl_dele(char *name);`  
+
+
+    int hdl_dele(char *name);
+
+
 Where name is the name of the module that is to be unloaded.
 This function returns a zero value when the unload is successful.
 
 ## Resolving Symbols
-`void * HDL_FINDSYM(char *symbolname);`  
+
+
+    void * HDL_FINDSYM(char *symbolname);
+
+
 This function will return the entry point of symbolname or zero when the symbol cannot be resolved.
 
-`void * HDL_FINDNXT(current_entry point);`  
+
+    void * HDL_FINDNXT(current_entry point);
+    
+    
 This function will return the previous entry point.
 That is, the entry point which was current before the entry point as identified by current_entry point was registered.
 
-This function is intended to allow a module to call the original routine.  An example of this is given in the panel_command entry as listed below.
+This function is intended to allow a module to call the original routine.  An example of this is given in the `panel_command` entry as listed below.
 
 There are some special considerations for systems that do not support the concept of back-linking.  Back-linking is the operating system support of dynamically resolving unresolved external references in a dynamic module, with the main module, or other loaded modules. Cygwin does not support back-linking and Cygwin specials are listed in this example with `#if defined(WIN32)`.
 
-
 ## Some additional notes
+
 Unload will remove all references to a specific module, but currently it will not actually remove the loaded module from memory.  This is because there is no safe way (yet) to synchronize unloading of code and, besides, it may still be in use.  This should however pose no practical limitations.
 
 When a module lists a new dependency, that dependency will be registered.  Unloading the module does not remove the dependency, this is to be consistent with the previous note about unloading.
@@ -105,9 +126,9 @@ void * (*prev_panel_command)(char *);
 }
 ```
 
-The dependency section is - for all intents and purposes - called before the module is loaded.  Its function is to check that there are no incompatibilities between this module and the version of hercules that we are running.  Dependencies are identified by name, this name is given on the HDL_DEPENDENCY statement.
+The dependency section is, for all intents and purposes, called before the module is loaded.  Its purpose is to check that there are no incompatibilities between this module and the version of Hercules that we are running.  Dependencies are identified by name, this name is given on the `HDL_DEPENDENCY` statement.
 
-Each dependency then has a version code, and a size code, where the version code is a character string, and the size code an integer value.  If the version or size codes do not match with those in the hercules main module, the module cannot be loaded.
+Each dependency then has a version code, and a size code, where the version code is a character string, and the size code an integer value.  If the version or size codes do not match with those in the Hercules main module, the module cannot be loaded.
 The version is usually a character string that identifies the version of the component, and the size is to be the size of the component in the case of structures or unions.
 
 Version and size should be coded as following:
@@ -117,7 +138,7 @@ Version and size should be coded as following:
 #define HDL_SIZE_SOMETHING  sizeof(SOMETHING)
 ```
 
-where SOMETHING can be a structure or other component.
+where "SOMETHING" can be a structure or other component.
 
 The associated dependency statement:
 ```
@@ -126,7 +147,7 @@ HDL_DEPENDENCY(SOMETHING);
 
 When a dependency is given that has not yet been registered, it will be registered, such that it can be checked in subsequent module loads.
 
-The dependency section is mandatory.
+**The dependency section is mandatory**.
 
 ```
 HDL_DEPENDENCY_SECTION;
@@ -140,7 +161,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 ```
 
-The registration exports labels and their associated entry points to hercules, such that the symbols and associated entry points may    be known to hercules and any other module that may have been loaded. The registration section is called once during module load.
+The registration exports labels and their associated entry points to Hercules, such that the symbols and associated entry points may    be known to Hercules and any other module that may have been loaded. The registration section is called once during module load.
 
 If we have registered a function that is also called from this DLL, then it must also be listed in the resolver section.  This to ensure that the symbol is properly resolved when other modules are loaded.
 
@@ -169,7 +190,9 @@ When a symbol is requested that has not been previously registered then the reso
 
 Entry points that are resolved should be indirect pointers, for example the panel_command routine is defined as:
 
+
        void *(*panel_command)(char *)
+
 
 The resolver may be called multiple times, the first time it is called is during module load, immediately after the registration section is called.  It is subsequently called when other modules are loaded or unloaded.
 
@@ -193,17 +216,19 @@ HDL_RESOLVER_SECTION;
 END_RESOLVER_SECTION;
 ```
 
-The device section is to register device drivers with hercules. It associates device types with device handlers
+The device section is to register device drivers with Hercules. It associates device types with device handlers.
 
-If a device handler is not registered for a specific device type then and a loadable mode with the name of "hdtxxxx" (where xxxx is the device type) exists then that module is loaded
+If a device handler is not registered for a specific device type then and a loadable mode with the name of "hdtxxxx" exists (where xxxx is the device type), then that module is loaded.
 
-Search order:
-1) The most recently registered (ie loaded) device of the requested device type.
-2) Device driver in external loadable module, where the module name is hdtxxxx (where xxxx is the device type i.e. module name hdtlcs for device type LCS or hdt2703 for device type 2703)
-3) If the device is listed in the alias table [hdteq.c](/hdteq.c) then external module hdtyyyy will be loaded, where yyyy is the base name as listed in hdteq.c.
+**Search order:**
+
+1. The most recently registered (i.e. loaded) device of the requested device type.
+2. Device driver in external loadable module, where the module name is hdtxxxx (where xxxx is the device type i.e. module name `hdtlcs` for device type LCS or `hdt2703` for device type 2703)
+3. If the device is listed in the alias table [hdteq.c](../hdteq.c) then external module hdtyyyy will be loaded, where yyyy is the base name as listed in hdteq.c.
+
 The device name is always mapped to lower case when searching for loadable modules.
 
-The device section is optional
+The device section is optional.
 */
 ```
 HDL_DEVICE_SECTION;
@@ -216,9 +241,9 @@ END_DEVICE_SECTION;
 
 The instruction section registers inserts optional instructions, or modifies existing instructions.
 
-Instructions are generally defined with DEF_INST(instname) which results in an external reference of s370_instname, s390_instname and z900_instname. If an instruction is not defined for a certain architecture mode then UNDEF_INST(instname) must be used for that given architecture mode.
+Instructions are generally defined with `DEF_INST(instname)` which results in an external reference of `s370_instname`, `s390_instname` and `z900_instname`. If an instruction is not defined for a certain architecture mode then `UNDEF_INST(instname)` must be used for that given architecture mode.
 
-The instruction section is optional
+The instruction section is optional.
 
 ```
 HDL_INSTRUCTION_SECTION;
@@ -229,12 +254,13 @@ HDL_INSTRUCTION_SECTION;
 END_INSTRUCTION_SECTION;
 ```
 
-The final section is called once, when the module is unloaded or when hercules terminates.
+The final section is called once, when the module is unloaded or when Hercules terminates.
 
 A dll can reject being unloaded by returning a non-zero value in the final section.
 
 The final section is intended to be used to perform cleanup or indicate cleanup action to be taken.  It may set a shutdown flag that is used within this dll that all local functions must now terminate.
-The final section is optional
+
+The final section is optional.
 
 ```
 HDL_FINAL_SECTION;
@@ -358,7 +384,7 @@ END_FINAL_SECTION;
 /*              HTTP cgi-bin routines                                */
 
 /* This file contains cgi routines that may be executed on the      */
-/* server (ie under control of a hercules thread)                    */
+/* server (ie under control of a Hercules thread)                    */
 /*                                                                   */
 /*                                                                   */
 /* Dynamically loaded cgi routines must be registered under the      */
@@ -498,16 +524,17 @@ HDL_INSTRUCTION_SECTION;
 ```
 
 ### IMPORTANT HERCULES INTERNALS BUILD INFORMATION RELATING TO HDL
-(our 'DLL_EXPORT' and 'DLL_IMPORT' design)
 
-Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), *MUST* have its functon declaration defined in the [hexterns.h](/hexterns.h) header and *ONLY* in the [hexterns.h](/hexterns.h) header!
+(our `DLL_EXPORT` and `DLL_IMPORT` design)
 
-That is to say, you must NOT declare the function in a separate header file! (That might be the way you normally do things for a normal project, but that is NOT the way you do it with Hercules)
+Here's the poop. Any function that needs to be exported/imported to another MODULE (i.e. 'module' is defined as .DLL or .SO, etc), _**MUST**_ have its functon declaration defined in the [hexterns.h](../hexterns.h) header and _ONLY_ in the [hexterns.h](../hexterns.h) header!
+
+That is to say, you _must **NOT**_ declare the function in a separate header file! _(That might be the way you normally do things for a normal project, but that is NOT the way you do it with Hercules)_
 
 
-#### STEP 1
+#### _STEP 1:_
 
-You need to ensure your .c SOURCE member always begins with the following very specific header file #include sequence:
+You need to ensure your .c _source_ member always begins with the following very specific header file #include sequence:
 
  ```
     /*  XXXXXX.C    (C) Copyright XXXXXXXXXXX & Others, yyyy-2011        */
@@ -524,7 +551,6 @@ You need to ensure your .c SOURCE member always begins with the following very s
     #define _ZZZZZZZ_DLL_
 
     #include "hercules.h"
-
     ...(other #includes go here)...
 
 
@@ -546,13 +572,14 @@ You need to ensure your .c SOURCE member always begins with the following very s
     }
 ```
 
-where 'XXXXX' is the name of your source member, 'ZZZZZ' is the name of the MODULE (.dll or .so) your code will be a part of, and 'DLL_EXPORT' is added to the beginning of each function that needs to be exported.
+where 'XXXXX' is the name of your source member, 'ZZZZZ' is the name of the MODULE (.dll or .so) that your code will be a part of, and `DLL_EXPORT` is added to the beginning of each function that needs to be exported.
 
-Refer to the "OBJ_CODE.msvc" and/or [makefile.am](/makefile.am) members to see how all of hercules code is divided into separate loadable modules (DLLs) so you know which module (DLL) your function should be a part of.
+Refer to the `OBJ_CODE.msvc` and/or [Makefile.am](../Makefile.am) members to see how all of Hercules code is divided into separate loadable modules (DLLs) so you know which module (DLL) your function should be a part of.
 
 
-#### STEP 2
-Add a new entry at the BEGINNING of [hexterns.h](/hexterns.h) as follows:
+#### _STEP 2:_
+
+Add a new entry at the _beginning_ of [hexterns.h](../hexterns.h) as follows:
 
 ```
 #ifndef _XXXXXXX_C_
@@ -566,11 +593,12 @@ Add a new entry at the BEGINNING of [hexterns.h](/hexterns.h) as follows:
 #endif
 ```
 
-where 'MMMM' is a unique 2-4 character prefix of your own choosing that identifies your source member export (e.g. HUTL_DLL_IMPORT).
+where 'MMMM' is a unique 2-4 character prefix of your own choosing that identifies your source member export (e.g. `HUTL_DLL_IMPORT`).
 
 
-#### STEP 3
-Add your exported function declarations to END of [hexterns.h](/hexterns.h):
+#### _STEP 3:_
+
+Add your exported function declarations to _end_ of [hexterns.h](../hexterns.h):
 
 ```
     /* Functions in module xxxxxxx.c */
@@ -581,11 +609,12 @@ Add your exported function declarations to END of [hexterns.h](/hexterns.h):
 ```
 
 
-#### STEP 4
-Update BOTH the "OBJ_CODE.msvc" and [makefile.am](/makefile.am) members with your new source member. Be sure to update BOTH files, e.g.:
+#### _STEP 4:_
+
+Update _both_ the `OBJ_CODE.msvc` and [Makefile.am](../Makefile.am) members with your new source member. Be sure to update _BOTH_ files, e.g.:
 
 ```
-    ---(makefile.am)---
+    ---(Makefile.am)---
 
 
       libhercu_la_SOURCES = version.c    \
@@ -627,4 +656,4 @@ Update BOTH the "OBJ_CODE.msvc" and [makefile.am](/makefile.am) members with you
 
 That's it. That's all you should have to do.
 
-Again, you *may* use a separate #include header file for your new source member with NON-EXPORTED functions declared within it but any function you need to export to another module must **not** be declared there. The function must instead be declared in [hexterns.h](/hexterns.h) as described above.
+Again, you _may_ use a separate #include header file for your new source member with _NON-EXPORTED_ functions declared within it, but any function you need to export to another module _must **not**_ be declared there. The function must instead be declared in [hexterns.h](../hexterns.h) as described above.

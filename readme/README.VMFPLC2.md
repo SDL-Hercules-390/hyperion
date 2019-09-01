@@ -2,7 +2,9 @@
 [Return to master README.md](../README.md)
 
 # VMFPLC2 (VM) Formatted Tape Utility
+
 ## Contents
+
 1. [Description](#Description)
 2. [Synopsis](#Synopsis)
 3. [Arguments](#Arguments)
@@ -14,13 +16,19 @@
 9. [History](#History)
 
 ## Description
+
 Hercules command to manipulate (create or read) VMFPLC2 formatted tapes for VM/CMS use.
 
 ## Synopsis
-`    vmfplc2   [options]   VERB  [<ctlfile>]  <tapein> | <tapeout>`
+
+```
+  vmfplc2   [options]   VERB  [<ctlfile>]  <tapein> | <tapeout>
+```
 
 ## Arguments
+
 The vmfplc2 utility requires a function (DUMP, SCAN or LOAD) followed by the name of a control file and the name of an input or output tape file.
+
 
 ```
     DUMP      The DUMP function allows creating a VMFPLC2 formatted tape.
@@ -41,9 +49,12 @@ The vmfplc2 utility requires a function (DUMP, SCAN or LOAD) followed by the nam
     tapeout   The name of the output tape file to be created by the DUMP
               function.
 ```
+
 Surround the name of the control file and/or the name of the input/output tape file with double quotes if it contains any blanks in its name.
 
 ## Options
+
+
 ```
     -c cp     The desired translation code page to be used for ASCII to
               EBCDIC translation (and vice versa).  For a list of valid
@@ -66,7 +77,9 @@ Surround the name of the control file and/or the name of the input/output tape f
 ```
 
 ## Control File
+
 The control file lets the DUMP/LOAD functions to determine which host files are to be dumped or loaded to/from tape and how they should be interpreted on VM.  Each statement of the control file has the following format:
+
 
 ```
        [codepage]  <fn>  <ft>  <fm>  <recfm>  [lrecl]  <type>  <hostfile>
@@ -159,39 +172,47 @@ The control file lets the DUMP/LOAD functions to determine which host files are 
 
 
 ## Examples
-The following creates a VMFPLC2 formatted tape named "vmfplc2.het" containing three files named "mytest.asm", "profile.xedit.txt" and "synonyms.txt", which can then be loaded onto the guest system as CMS files "MYTEST ASSEMBLE A1", "PROFILE XEDIT A1" and "MY SYNONYM A1":
 
-```
-    command:        vmfplc2 DUMP myfiles.txt  vmfplc2.het
+The following creates a VMFPLC2 formatted tape named "vmfplc2.het" containing three files named "mytest.asm", "profile.xedit.txt" and "synonyms.txt", which can then be loaded onto the guest system as CMS files `MYTEST ASSEMBLE A1`, `PROFILE XEDIT A1` and `MY SYNONYM A1`:
 
-    myfiles.txt:    MYTEST   ASSEMBLE A1  Fixed 80 Text  mytest.asm
+
+<pre>
+    <b>command</b>:        vmfplc2  DUMP myfiles.txt  vmfplc2.het
+
+    <b>myfiles.txt</b>:    MYTEST   ASSEMBLE A1  Fixed 80 Text  mytest.asm
                     PROFILE  XEDIT    A1  Variable Text  profile.xedit.txt
                     USER     SYNONYM  A1  Fixed 80 Text  synonyms.txt
-```
+</pre>
 
 The following example reads a VMFPLC2 formatted input tape named "vmfplc2.het" and lists all of the files that are found on the tape:
-```
-    command:        vmfplc2 SCAN vmfplc2.het
-```
+
+
+<pre>
+    <b>command</b>:        vmfplc2  SCAN vmfplc2.het
+</pre>
 
 The following example reads a VMFPLC2 formatted tape named "vmfplc2.het" and restores onto the host system any files found on the tape that match one of the entries listed in the "myfiles.txt" control file:
-```
-    command:        vmfplc2 LOAD myfiles.txt  vmfplc2.het
 
-    myfiles.txt:    MYTEST XEDIT A1  Variable Text  mytest.rexx
+<pre>
+    <b>command</b>:        vmfplc2  LOAD myfiles.txt  vmfplc2.het
+
+    <b>myfiles.txt</b>:    MYTEST XEDIT A1  Variable Text  mytest.rexx
                     MYTEST DATA  A1  Fixed 80 Text  mytest.dat
-```
+</pre>
 
 ## Bug Reports
-Bug reports (together with your diagnosis of the fault please) should be reported to either the main hercules-390 discussion group on Yahoo or preferably, entered into the SDL Hyperion Github issue tracker at:
 
-        https://github.com/SDL-Hercules-390/hyperion/issues/
+Bug reports (together with your diagnosis of the fault please) should be reported to either the main hercules-390 discussion group
+on Yahoo or preferably, entered into the [**SDL Hyperion Github Issues**](https://github.com/SDL-Hercules-390/hyperion/issues/) tracker
+at: https://github.com/SDL-Hercules-390/hyperion/issues/
 
 ## See Also
+
 The Hercules emulator homepage at: http://www.sdl-hercules-390.org/
 
 
 ## History
+
     2010-08-07  Originally written by Ivan S. Warren
 
     2019-02-29  Program completely rewritten by "Fish" (David B. Trout)

@@ -107,11 +107,11 @@ For example, the following device statement:<br>
 <pre>
     0001  2311  VOL111.model-x.ext   sf=VOL111_Shadow_0.model-x.ext
 </pre>
-will cause a shadow file named:
+will cause a shadow file with the following name to be created:
 <pre>
                                         VOL111_Shadow_0.model-1.ext
 </pre>
-to be created, whereas the following slightly different device statement:
+whereas the following slightly different device statement:
 <pre>
     0002  2311  VOL222.model-x.ext   sf=VOL222.model-x_Shadow_0.ext
 </pre>
@@ -122,7 +122,7 @@ will cause a shadow file with the following name to be created:
 
 <p>
 
-Please notice the placement of the shadow file number in the two examples:
+Notice the placement of the shadow file number in the above two examples:
 it is always immediately before the <i>last</i> period of the filename.
 In earlier versions of Hercules the shadow file number was
 erroneously placed immediately before the <i>first</i> period of the
