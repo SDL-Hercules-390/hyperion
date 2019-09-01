@@ -53,11 +53,11 @@ The following subcodes are supported or planned.  The DIAGNOSE version in which 
 
    Subcode   |        Version     |  Description
 ------------ | ------------------ | ----------------------------------------------------
-X'00000000'  | <center>1</center> |  Query DIAGNOSE X'F18' available functionality
-X'00000001'  | <center>-</center> |  Perform a compatibility mode host socket function
-X'00000002'  | <center>1</center> |  Perform a compatibility mode host file system operation
-X'00000003'  | <center>-</center> |  Perform a native mode host socket function
-X'00000004'  | <center>-</center> |  Perform a native mode host file system operation
+X'00000000'  | 1 |  Query DIAGNOSE X'F18' available functionality
+X'00000001'  | - |  Perform a compatibility mode host socket function
+X'00000002'  | 1 |  Perform a compatibility mode host file system operation
+X'00000003'  | - |  Perform a native mode host socket function
+X'00000004'  | - |  Perform a native mode host file system operation
 
 
 ### Subcode X'00000000' - Query DIAGNOSE X'F18'
@@ -84,16 +84,16 @@ The following operations are provided, as identified by the operation field of t
 
   Operation        |  Description
 -------------------| -------------------------------------------------
-<center>0</center> |  Rename a file
-<center>1</center> |  Unlink the file (delete)
-<center>2</center> |  Open a file
-<center>3</center> |  Close a file based upon it's name
-<center>4</center> |  Read from a file in either binary or text modes
-<center>5</center> |  Write to a file in either binary or text modes
-<center>6</center> |  Seek to a position in a file
-<center>7</center> |  Commit any pending writes to the file
-<center>8</center> |  Close a file using its file handle
-<center>9</center> |  Set the file read/write mode to binary or text
+0 |  Rename a file
+1 |  Unlink the file (delete)
+2 |  Open a file
+3 |  Close a file based upon it's name
+4 |  Read from a file in either binary or text modes
+5 |  Write to a file in either binary or text modes
+6 |  Seek to a position in a file
+7 |  Commit any pending writes to the file
+8 |  Close a file using its file handle
+9 |  Set the file read/write mode to binary or text
 
 
 ### Subcode X'00000002' - Limitations

@@ -64,7 +64,7 @@ Refer to the Special Situations section further below for more information about
 
 NOTE: The ECPSVM LEVEL 'n' level number doesn't affect the operations of the assist but rather only defines what level number is reported to the program.
 
-#### <center>_\*\*\* &nbsp; CAUTION!! &nbsp; \*\*\*_</center>
+#### CAUTION!!
 
 _Use of the `LEVEL n` form is **NOT** recommended, and is only provided for engineering use!_
 
