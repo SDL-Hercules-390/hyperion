@@ -4059,9 +4059,12 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         obtain_lock (&dev->lock);
 
         /* AID is only present during the first read */
-        aid = dev->readpending;
-        if (dev->readpending == 3) dev->readpending = 1;
-
+        aid = dev->readpending != 2;
+        if (dev->readpending == 3)
+        {
+            dev->readpending = 1;
+            aid = 3;
+        }
         /* Receive buffer data from client if not data chained */
         if (!(chained & CCW_FLAGS_CD))
         {
@@ -4152,8 +4155,12 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         obtain_lock (&dev->lock);
 
         /* AID is only present during the first read */
-        aid = dev->readpending;
-        if (dev->readpending == 3) dev->readpending = 1;
+        aid = dev->readpending != 2;
+        if (dev->readpending == 3)
+        {
+            dev->readpending = 1;
+            aid = 3;
+        }
 
         /* If not data chained from previous Read Modified CCW,
            and if the connection thread has not already accumulated
@@ -4171,28 +4178,29 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 release_lock (&dev->lock);
                 break;
             }
-        }
-
-        if (((chained & CCW_FLAGS_CD) == 0
-            && !aid) || (aid == 3))
-        {
-
-            /* Set AID in buffer flag */
-            aid = 1;
-
-            dev->aid3270 = dev->buf[0];
-
-            if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+ 
+            if (aid == 3)
             {
-                /* Find offset in buffer of current screen position */
-                off = pos_to_buff_offset( dev->pos3270,
-                    dev->buf, dev->rlen3270 );
 
-                /* Shift out unwanted characters from buffer */
-                num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
-                memmove (dev->buf + 3, dev->buf + off, num);
-                dev->rlen3270 = 3 + num;
+                /* Set AID in buffer flag */
+                aid = 1;
+
+                dev->aid3270 = dev->buf[0];
+
+                if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+                {
+                    /* Find offset in buffer of current screen position */
+                    off = pos_to_buff_offset( dev->pos3270,
+                        dev->buf, dev->rlen3270 );
+
+                    /* Shift out unwanted characters from buffer */
+                    num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
+                    memmove (dev->buf + 3, dev->buf + off, num);
+                    dev->rlen3270 = 3 + num;
+                }
             }
+            /* Set AID in buffer flag anyway */
+            aid = 1;
         }
 
         else aid = 0;
