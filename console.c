@@ -4179,28 +4179,22 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 break;
             }
  
-            if (aid == 3)
-            {
-
-                /* Set AID in buffer flag */
-                aid = 1;
-
-                dev->aid3270 = dev->buf[0];
-
-                if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
-                {
-                    /* Find offset in buffer of current screen position */
-                    off = pos_to_buff_offset( dev->pos3270,
-                        dev->buf, dev->rlen3270 );
-
-                    /* Shift out unwanted characters from buffer */
-                    num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
-                    memmove (dev->buf + 3, dev->buf + off, num);
-                    dev->rlen3270 = 3 + num;
-                }
-            }
-            /* Set AID in buffer flag anyway */
+            /* Set AID in buffer flag */
             aid = 1;
+
+            dev->aid3270 = dev->buf[0];
+
+            if (dev->pos3270 != 0 && dev->aid3270 != SF3270_AID)
+            {
+                /* Find offset in buffer of current screen position */
+                off = pos_to_buff_offset( dev->pos3270,
+                    dev->buf, dev->rlen3270 );
+
+                /* Shift out unwanted characters from buffer */
+                num = (dev->rlen3270 > off ? dev->rlen3270 - off : 0);
+                memmove (dev->buf + 3, dev->buf + off, num);
+                dev->rlen3270 = 3 + num;
+            }
         }
 
         else aid = 0;
