@@ -53,7 +53,6 @@ dist_pkgdata_DATA =   \
     hercules.css      \
     hercules.html     \
     index.html        \
-    Makefile.am       \
     rexx.html         \
     shared.html       \
     tasks.html        \
@@ -124,4 +123,7 @@ images_sources =                        \
 images_pkgdatadir = $(pkgdatadir)/images
 
 dist_images_pkgdata_DATA = $(images_sources)
+
+EXTRA_DIST =        \
+    Makefile.am
 

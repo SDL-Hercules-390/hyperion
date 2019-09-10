@@ -1,6 +1,5 @@
 
 bin_SCRIPTS =       \
-    bldlvlck        \
     dasdlist        \
     voldsext.cmd
 
@@ -18,6 +17,7 @@ dist_pkgdata_DATA = \
 
 
 EXTRA_DIST =        \
+    bldlvlck        \
     configure.ac    \
     dasdlist.bat    \
     Makefile.am
