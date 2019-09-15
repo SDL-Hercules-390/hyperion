@@ -53,7 +53,7 @@
 
 #include "tcpip.h"
 
-static u_int find_slot ( ULONG_PTR address ) {
+static u_int find_slot ( U_LONG_PTR address ) {
     u_int  i;
     i = 0;
     obtain_lock (&tcpip_lock);
@@ -496,7 +496,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         t->len_out = sizeof (Clocal_adx);
         t->buffer_out = (char *)malloc (t->len_out);
-        t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+        t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
         memcpy (t->buffer_out, &Slocal_adx, t->len_out);
         ((SOCKADDR_IN *)(t->buffer_out))->sin_family = htons (((SOCKADDR_IN *)(t->buffer_out))->sin_family);
 
@@ -540,7 +540,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
         }
 
         t->buffer_out = (char *)malloc (aux2);
-        t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+        t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
 
         if ((size = recv (Ccom_han [aux1], t->buffer_out, aux2, 0)) == SOCKET_ERROR) {    /* receive command */
 
@@ -578,7 +578,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         t->len_out = t->len_in;
         t->buffer_out = (char *)malloc (t->len_out);
-        t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+        t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
 
         m = t->len_out;
         i = 0;
@@ -595,7 +595,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         t->len_out = t->len_in;
         t->buffer_out = (char *)malloc (t->len_out);
-        t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+        t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
 
         m = t->len_out;
         i = 0;
@@ -641,7 +641,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         t->len_out = sizeof (Clocal_adx);
         t->buffer_out = (char *)malloc (t->len_out);
-        t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+        t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
 
         isock = t->len_out;
         t->ret_cd = getsockname (Ccom_han [aux1], (struct sockaddr *)(t->buffer_out), &isock);
@@ -799,7 +799,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
             t->len_out = Cselect [m]->len;
             t->buffer_out = (char *)malloc (t->len_out);
-            t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+            t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
             memset (t->buffer_out, 0, t->len_out);
 
             i = 0;
@@ -824,7 +824,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
             t->len_out = Cselect [m]->len;
             t->buffer_out = (char *)malloc (t->len_out);
-            t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+            t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
             memset (t->buffer_out, 0, t->len_out);
 
             i = 0;
@@ -849,7 +849,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
             t->len_out = Cselect [m]->len;
             t->buffer_out = (char *)malloc (t->len_out);
-            t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+            t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
             memset (t->buffer_out, 0, t->len_out);
 
             i = 0;
@@ -915,7 +915,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
                 t->len_out = t->ret_cd;
                 t->buffer_out = (char *) malloc (t->len_out);
-                t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+                t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
 
                 m = t->ret_cd;
                 i = 0;
@@ -934,7 +934,7 @@ static void EZASOKET (u_int  func, int  aux1, int  aux2, talk_ptr t) {
 
         t->len_out = sizeof (Clocal_adx);
         t->buffer_out = (char *) malloc (t->len_out);
-        t->buffer_out_slot = find_slot ((ULONG_PTR)&(t->buffer_out [0]));
+        t->buffer_out_slot = find_slot ((U_LONG_PTR)&(t->buffer_out [0]));
 
         isock = t->len_out;
         t->ret_cd = getpeername (Ccom_han [aux1], (struct sockaddr *)(t->buffer_out), &isock);
@@ -982,11 +982,11 @@ u_int  lar_tcpip (u_int  * regs) {
         if (get_reg (regs, 3) == 0) { /* Alloc memory for this communication. */
 
             t = (talk_ptr)malloc (sizeof (talk));
-            t->slot = find_slot ((ULONG_PTR)t);
+            t->slot = find_slot ((U_LONG_PTR)t);
 
             t->len_in = get_reg (regs, 1);
             t->buffer_in = (char *)malloc (t->len_in + 1);
-            t->buffer_in_slot = find_slot ((ULONG_PTR)&(t->buffer_in [0]));
+            t->buffer_in_slot = find_slot ((U_LONG_PTR)&(t->buffer_in [0]));
             t->buffer_in [t->len_in] = 0; /* NULL Terminator */
 
             t->len_out = 0;

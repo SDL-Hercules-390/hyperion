@@ -4,5 +4,5 @@
 /*-------------------------------------------------------------------*/
 
 extern int lar_tcpip (DW * regs); /* function in tcpip.c             */
-extern ULONG_PTR map32[Ccom];     /* map 64-bit host addresses       */
+extern U_LONG_PTR map32[Ccom];    /* map 64-bit host addresses       */
                                   /* to 32-bit guest registers       */

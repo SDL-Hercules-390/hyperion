@@ -5,10 +5,6 @@
 
 #define Ccom 1024    /* maximum number of concurrent connections + 1 */
 
-#ifndef _MSVC_
-typedef unsigned long ULONG_PTR;
-#endif
-
 #if !defined( _X75_C_ )
 #ifndef _MSVC_
 
@@ -284,5 +280,5 @@ static LOCK tcpip_lock;
 
 static u_int  tcpip_init_req = 1;
 
-ULONG_PTR map32[Ccom];
+U_LONG_PTR map32[Ccom];
 #endif /*!defined( _X75_C_ )*/

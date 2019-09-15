@@ -119,6 +119,16 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 #define  BOOL       int         // (same as Windows)
 #endif
 
+#if defined( _MSVC_ )           // (some code needs the following)
+  #if defined( _WIN64 )
+    typedef unsigned __int64  U_LONG_PTR;   // name unique to Hercules
+  #else // 32-bit x86
+    typedef unsigned __int32  U_LONG_PTR;   // name unique to Hercules
+  #endif
+#else // Linux, etc
+  typedef unsigned long       U_LONG_PTR;   // name unique to Hercules
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                       Socket stuff                                */
 /*-------------------------------------------------------------------*/

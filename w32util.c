@@ -1427,11 +1427,11 @@ DLL_EXPORT int expand_environ_vars( const char* inbuff, char* outbuff, DWORD out
 }
 
 // Helper function to count set bits in the processor mask.
-DWORD CountSetBits(ULONG_PTR bitMask)
+DWORD CountSetBits(U_LONG_PTR bitMask)
 {
-    DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
+    DWORD LSHIFT = sizeof(U_LONG_PTR)*8 - 1;
     DWORD bitSetCount = 0;
-    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
+    U_LONG_PTR bitTest = (U_LONG_PTR)1 << LSHIFT;
     DWORD i;
 
     for (i = 0; i <= LSHIFT; ++i)
@@ -4495,7 +4495,7 @@ DLL_EXPORT void w32_set_thread_name( TID tid, const char* name )
 
     __try
     {
-        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR*)&info );
+        RaiseException( MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const U_LONG_PTR*)&info );
     }
     __except ( EXCEPTION_CONTINUE_EXECUTION )
     {
