@@ -812,7 +812,7 @@ DLL_EXPORT int  hthread_create_thread( TID* ptid, ATTR* pat,
     arg2 = malloc( 3 * sizeof( void* ));
     *(arg2+0) = (void*) pfn;
     *(arg2+1) = (void*) arg;
-    *(arg2+2) = (void*) name;
+    *(arg2+2) = (void*) strdup(name);
     rc = hthread_create( ptid, pat, hthread_func, arg2 );
     PTTRACE( "create", (void*)*ptid, NULL, location, rc );
     return rc;
