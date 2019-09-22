@@ -443,10 +443,9 @@ int mq = dev->qdio.o_qcnt;
 /*-------------------------------------------------------------------*/
 /* Halt device handler                                               */
 /*-------------------------------------------------------------------*/
-static BYTE zfcp_halt_or_clear( DEVBLK* dev )
+static void zfcp_halt_or_clear( DEVBLK* dev )
 {
     ZFCP_GRP* grp = (ZFCP_GRP*) dev->group->grp_data;
-    BYTE unitstat = 0;
 
     /* Signal QDIO end if QDIO is active */
     if (dev->scsw.flag2 & SCSW2_Q)
@@ -457,8 +456,6 @@ static BYTE zfcp_halt_or_clear( DEVBLK* dev )
     else
         if (dev->group->acount == ZFCP_GROUP_SIZE)
             signal_condition( &grp->qcond );
-
-    return unitstat;
 }
 
 

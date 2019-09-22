@@ -3757,10 +3757,8 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
 /*-------------------------------------------------------------------*/
 /* Halt device and Clear Subchannel related functions...             */
 /*-------------------------------------------------------------------*/
-static BYTE qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
+static void qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
 {
-    BYTE unitstat = 0;
-
     obtain_lock( &grp->qlock );
     {
         /* Is read device still active? */
@@ -3779,14 +3777,10 @@ static BYTE qeth_halt_read_device( DEVBLK* dev, OSA_GRP* grp )
         }
     }
     release_lock( &grp->qlock );
-
-    return unitstat;
 }
 
-static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
+static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 {
-    BYTE unitstat = 0;
-
     obtain_lock( &grp->qlock );
     {
         /* Is data device still active? */
@@ -3807,8 +3801,6 @@ static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
         }
     }
     release_lock (&grp->qlock );
-
-    return unitstat;
 }
 
 /*-------------------------------------------------------------------*/
@@ -3818,23 +3810,19 @@ static BYTE qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 /* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
 /* both INTLOCK (sysblk.intlock) and dev->lock are held.             */
 /*-------------------------------------------------------------------*/
-static BYTE qeth_halt_or_clear( DEVBLK* dev )
+static void qeth_halt_or_clear( DEVBLK* dev )
 {
     OSA_GRP* grp = (OSA_GRP*) dev->group->grp_data;
-    BYTE unitstat;
 
     if (QTYPE_READ == dev->qtype)
-        unitstat = qeth_halt_read_device( dev, grp );
+        qeth_halt_read_device( dev, grp );
     else if (QTYPE_DATA == dev->qtype)
-        unitstat = qeth_halt_data_device( dev, grp );
+        qeth_halt_data_device( dev, grp );
     else
     {
-        unitstat = 0;
         DBGTRC( dev, "qeth_halt_or_clear: noop!" );
         PTT_QETH_TRACE( "*halt noop", dev->devnum, 0,0 );
     }
-
-    return unitstat;
 }
 
 /*-------------------------------------------------------------------*/

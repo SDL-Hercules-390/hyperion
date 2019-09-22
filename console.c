@@ -1930,17 +1930,13 @@ static void  loc3270_redrive_pselect( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 /*              Halt device / Clear Subchannel                       */
 /*-------------------------------------------------------------------*/
-static BYTE  constty_halt_or_clear( DEVBLK* dev )
+static void constty_halt_or_clear( DEVBLK* dev )
 {
-    BYTE unitstat = 0;
     constty_redrive_pselect( dev );
-    return unitstat;
 }
-static BYTE  loc3270_halt_or_clear( DEVBLK* dev )
+static void loc3270_halt_or_clear( DEVBLK* dev )
 {
-    BYTE unitstat = 0;
     loc3270_redrive_pselect( dev );
-    return unitstat;
 }
 
 /*-------------------------------------------------------------------*/

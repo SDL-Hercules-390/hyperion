@@ -106,7 +106,7 @@ static void*    CTCE_RecvThread( void* argp );
 
 static void*    CTCE_ListenThread( void* argp );
 
-static BYTE     CTCE_Reset( DEVBLK* pDEVBLK );
+static void     CTCE_Reset( DEVBLK* pDEVBLK );
 
 static U32      CTCE_ChkSum( const BYTE* pBuf, const U16 BufLen );
 
@@ -2782,10 +2782,8 @@ static void*  CTCE_RecvThread( void* argp )
 // CTCE_Reset -- Selective Reset or System Reset a CTCE adapter device
 //
 
-static BYTE   CTCE_Reset( DEVBLK* pDEVBLK )
+static void CTCE_Reset( DEVBLK* pDEVBLK )
 {
-    BYTE unitstat = 0;
-
     // The call already did an obtain_lock( &pDEVBLK->lock )
     // which is either in channel.c or earlier in here.
     // Reset the y-command to 0 and set sense bit 1, and
@@ -2827,7 +2825,6 @@ static BYTE   CTCE_Reset( DEVBLK* pDEVBLK )
             CTCE_StaStr[CTCE_STATE( pDEVBLK->ctceyState )],
             CTCE_CmdStr[CTCE_CMD( pDEVBLK->ctcexCmd )] );
     }
-    return unitstat;
 }
 
 // ---------------------------------------------------------------------

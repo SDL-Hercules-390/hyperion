@@ -2482,7 +2482,7 @@ static int  LCS_DoEnqueueEthFrame( PLCSDEV pLCSDEV, BYTE bPort, BYTE* pData, siz
 // LCS_Read CCW processing loop.
 // --------------------------------------------------------------------
 
-static BYTE lcs_halt_or_clear( DEVBLK* pDEVBLK )
+static void lcs_halt_or_clear( DEVBLK* pDEVBLK )
 {
     PLCSDEV pLCSDEV = (PLCSDEV) pDEVBLK->dev_data;
     obtain_lock( &pLCSDEV->DevEventLock );
@@ -2494,7 +2494,6 @@ static BYTE lcs_halt_or_clear( DEVBLK* pDEVBLK )
         }
     }
     release_lock( &pLCSDEV->DevEventLock );
-    return (CSW_CE | CSW_DE);
 }
 
 // ====================================================================

@@ -77,7 +77,7 @@ static void     write_th( DEVBLK* pDEVBLK,  U32  uCount,
 
 static int      write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH );
 
-static BYTE     ptp_halt_or_clear( DEVBLK* pDEVBLK );
+static void     ptp_halt_or_clear( DEVBLK* pDEVBLK );
 
 static void     ptp_read( DEVBLK* pDEVBLK,  U32   uCount,
                           int     iCCWSeq,  BYTE* pIOBuf,
@@ -1489,7 +1489,7 @@ int   write_rrh_8108( DEVBLK* pDEVBLK, MPC_TH* pMPC_TH, MPC_RRH* pMPC_RRH )
 // instruction and is notifying us of that fact so we can stop our
 // ptp_read CCW processing loop.
 
-static BYTE ptp_halt_or_clear( DEVBLK* pDEVBLK )
+static void ptp_halt_or_clear( DEVBLK* pDEVBLK )
 {
     PTPATH*    pPTPATH  = pDEVBLK->dev_data;
     PTPBLK*    pPTPBLK  = pPTPATH->pPTPBLK;
@@ -1502,7 +1502,6 @@ static BYTE ptp_halt_or_clear( DEVBLK* pDEVBLK )
         }
     }
     release_lock( &pPTPBLK->ReadEventLock );
-    return (CSW_CE | CSW_DE);
 }
 
 /* ------------------------------------------------------------------ */

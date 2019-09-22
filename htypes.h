@@ -218,7 +218,7 @@ typedef void  DEVXF  (DEVBLK *dev, BYTE code, BYTE flags,
                                    BYTE prevcode, int ccwseq,
                                    BYTE *iobuf, BYTE *more,
                                    BYTE *unitstat, U32 *residual);
-typedef BYTE  DEVHF  (DEVBLK *dev);
+typedef void  DEVHF  (DEVBLK *dev);
 typedef int   DEVCF  (DEVBLK *dev);
 typedef void  DEVSF  (DEVBLK *dev);
 typedef int   DEVRF  (DEVBLK *dev, int ix, BYTE *unitstat);

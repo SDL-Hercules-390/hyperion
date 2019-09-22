@@ -2026,10 +2026,8 @@ static void commadpt_wait(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 /* Halt currently executing I/O command                              */
 /*-------------------------------------------------------------------*/
-static BYTE commadpt_halt_or_clear( DEVBLK* dev )
+static void commadpt_halt_or_clear( DEVBLK* dev )
 {
-    BYTE unitstat = 0;
-
     if (dev->busy)
     {
         obtain_lock( &dev->commadpt->lock );
@@ -2050,8 +2048,6 @@ static BYTE commadpt_halt_or_clear( DEVBLK* dev )
         }
         release_lock( &dev->commadpt->lock );
     }
-
-    return unitstat;
 }
 
 /* The following 3 MSG functions ensure only 1 (one)  */

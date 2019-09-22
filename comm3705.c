@@ -1249,16 +1249,12 @@ static void *commadpt_thread(void *vca)
 /*-------------------------------------------------------------------*/
 /* Halt currently executing I/O command                              */
 /*-------------------------------------------------------------------*/
-static BYTE commadpt_halt_or_clear( DEVBLK* dev )
+static void commadpt_halt_or_clear( DEVBLK* dev )
 {
-    BYTE unitstat = 0;
-
     if (dev->busy)
     {
         // TODO: add code to halt/clear subchannel, if needed.
     }
-
-    return unitstat;
 }
 
 /* The following 3 MSG functions ensure only 1 (one)  */
