@@ -963,8 +963,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
             if ((dev->acc_ipaddr = inet_addr( argv[ac] )) == (in_addr_t)(-1))
             {
                 // "%1d:%04X COMM: option %s value %s invalid"
-                WRMSG( HHC01007, "E", LCSS_DEVNUM,
-                      "IP address", argv[ac] );
+                WRMSG( HHC01007, "E", LCSS_DEVNUM, "IP address", argv[ac] );
                 return -1;
             }
             else
@@ -976,11 +975,17 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     dev->acc_ipmask = (in_addr_t)(-1);
                 else
                 {
-                    if ((dev->acc_ipmask = inet_addr(argv[ac])) == (in_addr_t)(-1))
+                    char mask[16] = {0};
+                    static const char* badmask = "0.0.0.0";
+
+                    if (0
+                        || inet_pton( AF_INET, argv[ac], &dev->acc_ipmask ) <= 0
+                        || str_eq( badmask, inet_ntop( AF_INET, &dev->acc_ipmask,
+                                   mask, (int) sizeof( mask )))
+                    )
                     {
                         // "%1d:%04X COMM: option %s value %s invalid"
-                        WRMSG( HHC01007, "E", LCSS_DEVNUM,
-                              "mask value", argv[ac] );
+                        WRMSG( HHC01007, "E", LCSS_DEVNUM, "mask", argv[ac] );
                         return -1;
                     }
 
@@ -990,8 +995,7 @@ static int  loc3270_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     if (argc > 0)   // too many args?
                     {
                         // "%1d:%04X COMM: unrecognized parameter %s"
-                        WRMSG( HHC01019, "E", LCSS_DEVNUM,
-                              argv[ac] );
+                        WRMSG( HHC01019, "E", LCSS_DEVNUM, argv[ac] );
                         return -1;
                     }
                 }
@@ -1098,10 +1102,17 @@ static int  constty_init_handler( DEVBLK* dev, int argc, char* argv[] )
                     dev->acc_ipmask = (in_addr_t)(-1);
                 else
                 {
-                    if ((dev->acc_ipmask = inet_addr( argv[ac] )) == (in_addr_t)(-1))
+                    char mask[16] = {0};
+                    static const char* badmask = "0.0.0.0";
+
+                    if (0
+                        || inet_pton( AF_INET, argv[ac], &dev->acc_ipmask ) <= 0
+                        || str_eq( badmask, inet_ntop( AF_INET, &dev->acc_ipmask,
+                                   mask, (int) sizeof( mask )))
+                    )
                     {
                         // "%1d:%04X COMM: option %s value %s invalid"
-                        WRMSG( HHC01007, "E", LCSS_DEVNUM, "mask value", argv[ac] );
+                        WRMSG( HHC01007, "E", LCSS_DEVNUM, "mask", argv[ac] );
                         return -1;
                     }
 
