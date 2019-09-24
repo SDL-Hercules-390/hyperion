@@ -1,0 +1,576 @@
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     1
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                               2 ***********************************************************************
+                                               3 *
+                                               4 *  Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions
+                                               5 *
+                                               6 ***********************************************************************
+                                               7 *
+                                               8 *  CDSG is one of the instructions that the POP refers to as having
+                                               9 *  Interlocked-Update References, also known as being 'atomic'.  This
+                                              10 *  instruction can be implemented using compiler intrinsics for certain
+                                              11 *  host architectures.  On X86-64 / AMD64 processors, the "cmpxchg16b"
+                                              12 *  instruction can be used when available.
+                                              13 *
+                                              14 *  This means that whilst one CPU performs a CDSG instruction, its
+                                              15 *  memory references are interlocked against those by other CPU's.
+                                              16 *  This test attempts to verify this, with an approach, similar to the
+                                              17 *  one in the CBUC test.
+                                              18 *
+                                              19 *  The STPQ and LPQ instructions also use "cmpxchg" and are tested
+                                              20 *  in hewre as well.
+                                              21 *
+                                              22 ***********************************************************************
+
+                                              24 ***********************************************************************
+                                              25 *
+                                              26 *                       Example test scripts
+                                              27 *
+                                              28 *                            (CDSG.tst)
+                                              29 *
+                                              30 * *Testcase for cmpxchg16 as used by CDSG, STPQ and LPQ instructions
+                                              31 * mainsize    1
+                                              32 * numcpu      2
+                                              33 * sysclear
+                                              34 * archlvl     z/Arch
+                                              35 * loadcore    "$(testpath)/CDSG.core"
+                                              36 * runtest     1
+                                              37 * v 400.38
+                                              38 * v 438.C
+                                              39 * v 444.C
+                                              40 * #v 460.10000
+                                              41 * *Done
+                                              42 *
+                                              43 ***********************************************************************
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     2
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                              45 ***********************************************************************
+                                              46 *
+                                              47 *                        PROGRAMMING NOTE
+                                              48 *
+                                              49 *  During initialisation we test the functionality of the Store Pair
+                                              50 *  to Quadword (STPQ) and load Pair from Quadword (LPQ) instructions.
+                                              51 *  We merely do this as these two intructions also rely on the
+                                              52 *  Hercules macro cmpchxg16 (as of the most recent updates), as does
+                                              53 *  the CDSG implementation.  This cmpxchg16 macro may be assisted,
+                                              54 *  depending on the Hercules host architecture.
+                                              55 *
+                                              56 *  After initialisation, a second CPU is started, at which point in
+                                              57 *  time both CPU's perform a loop lasting LOOPMAX iterations.  The
+                                              58 *  first of the loop centers around the CDSG instruction.  The second
+                                              59 *  loop performs 2 CSG instructions, the first one of which overlaps
+                                              60 *  with the 2nd half destination of CDSG.  These overlapping causes
+                                              61 *  CC=1 when it occurs.  As a result, the non-overlapping destinations
+                                              62 *  gets incremented exactly LOOPMAX times, the overlapping part twice
+                                              63 *  that.  This is what is being checked for success of the test.  By
+                                              64 *  inspecting the CDSGCNTR and CSG_CNTR, one can see how many attempts
+                                              65 *  were needed.  Thes are always higher that LOOPMAX, the exact number
+                                              66 *  varies on every testrun.
+                                              67 *
+                                              68 *  The DESTination area is 24 bytes long, and is initialised as
+                                              69 *  follows :
+                                              70 *
+                                              71 *     '1A1B2A2B3A3B00004A4B5A5B6A6B00007A7B8A8B9A9B0000'X
+                                              72 *
+                                              73 *  The first loop works against DEST1+DEST2 (i.e. the leftmost 16 bytes),
+                                              74 *  the second loop against DEST2+DEST3 (i.e. the rightmost 16 bytes).
+                                              75 *  Both loops implement an atomic "increment" with the value :
+                                              76 *
+                                              77 *     '00000000000000010000000000000001'X
+                                              78 *
+                                              79 *  I.e. for the second loop too :
+                                              80 *
+                                              81 *                     '00000000000000010000000000000001'X
+                                              82 *
+                                              83 *  The process ends when both loops have incremented MAXLOOP times,
+                                              84 *  and the doubleword in the middle will have been incremented
+                                              85 *  exactly twice that amount -- that is, if the CDSG operation is
+                                              86 *  really atomic.  And that is what will decide a successfull CDSG
+                                              87 *  instruction or not.
+                                              88 *
+                                              89 ***********************************************************************
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     3
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                              91          PRINT OFF
+                                            3472          PRINT ON
+
+                                            3474 ***********************************************************************
+                                            3475 *        SATK prolog stuff...
+                                            3476 ***********************************************************************
+
+                                            3478          ARCHLVL  MNOTE=NO
+                                            3480+$AL      OPSYN AL
+                                            3481+$ALR     OPSYN ALR
+                                            3482+$B       OPSYN B
+                                            3483+$BAS     OPSYN BAS
+                                            3484+$BASR    OPSYN BASR
+                                            3485+$BC      OPSYN BC
+                                            3486+$BCTR    OPSYN BCTR
+                                            3487+$BE      OPSYN BE
+                                            3488+$BH      OPSYN BH
+                                            3489+$BL      OPSYN BL
+                                            3490+$BM      OPSYN BM
+                                            3491+$BNE     OPSYN BNE
+                                            3492+$BNH     OPSYN BNH
+                                            3493+$BNL     OPSYN BNL
+                                            3494+$BNM     OPSYN BNM
+                                            3495+$BNO     OPSYN BNO
+                                            3496+$BNP     OPSYN BNP
+                                            3497+$BNZ     OPSYN BNZ
+                                            3498+$BO      OPSYN BO
+                                            3499+$BP      OPSYN BP
+                                            3500+$BXLE    OPSYN BXLE
+                                            3501+$BZ      OPSYN BZ
+                                            3502+$CH      OPSYN CH
+                                            3503+$L       OPSYN L
+                                            3504+$LH      OPSYN LH
+                                            3505+$LM      OPSYN LM
+                                            3506+$LPSW    OPSYN LPSW
+                                            3507+$LR      OPSYN LR
+                                            3508+$LTR     OPSYN LTR
+                                            3509+$NR      OPSYN NR
+                                            3510+$SL      OPSYN SL
+                                            3511+$SLR     OPSYN SLR
+                                            3512+$SR      OPSYN SR
+                                            3513+$ST      OPSYN ST
+                                            3514+$STM     OPSYN STM
+                                            3515+$X       OPSYN X
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     4
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            3517 ***********************************************************************
+                                            3518 *        Initiate the CDSG CSECT in the CODE region
+                                            3519 *        with the location counter at 0
+                                            3520 ***********************************************************************
+
+                                            3522 CDSG     ASALOAD  REGION=CODE
+                            000000  04045B  3523+CDSG     START 0,CODE
+000000  000A0000 00000008                   3525+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+000008                      000008  000058  3526+         ORG   CDSG+X'058'
+000058  000A0000 00000018                   3528+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+000060  000A0000 00000020                   3529+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+000068  000A0000 00000028                   3530+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+000070  000A0000 00000030                   3531+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+000078  000A0000 00000038                   3532+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+000080                      000080  000200  3533+         ORG   CDSG+512
+
+
+
+                                            3535 ***********************************************************************
+                                            3536 *        Define the z/Arch RESTART PSW
+                                            3537 ***********************************************************************
+
+                            000200  000001  3539 PREVORG  EQU   *
+000200                      000200  0001A0  3540          ORG   CDSG+X'1A0'
+                                            3541 *        PSWZ  <sys>,<key>,<mwp>,<prog>,<addr>[,amode]
+0001A0  00000001 80000000                   3542          PSWZ  0,0,0,0,X'200',64
+0001B0                      0001B0  000200  3543          ORG   PREVORG
+
+
+
+                                            3545 ***********************************************************************
+                                            3546 *        Create IPL (restart) PSW
+                                            3547 ***********************************************************************
+
+                                            3549          ASAIPL   IA=BEGIN
+                            000000  04045B  3550+CDSG     CSECT
+000200                      000200  000000  3551+         ORG   CDSG
+000000  00080000 00000200                   3552+         PSW   0,0,0,0,BEGIN,24
+000008                      000008  000200  3553+         ORG   CDSG+512         Reset CSECT to end of assigned storage area
+                            000000  04045B  3554+CDSG     CSECT
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     5
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            3556 ***********************************************************************
+                                            3557 *               The actual CBUC program itself...
+                                            3558 ***********************************************************************
+
+000200                      000000          3560          USING CDSG,R0                  No base registers needed
+
+000200  1F00                                3562 BEGIN    SLR   R0,R0                    Start clean
+000202  4110 0001                   000001  3563          LA    R1,1                     Request z/Arch mode
+000206  1F22                                3564          SLR   R2,R2                    Start clean
+000208  1F33                                3565          SLR   R3,R3                    Start clean
+00020A  AE02 0012                   000012  3566          SIGP  R0,R2,X'12'              Request z/Arch mode
+
+00020E  1F11                                3568          SLR   R1,R1                    Start clean
+000210  4120 0000                   000000  3569          LA    R2,0                     Get our CPU number
+000214  4140 0224                   000224  3570          LA    R4,BEGIN2                Our restart entry point
+000218  4040 01AE                   0001AE  3571          STH   R4,X'1AE'                Update restart PSW
+00021C  AE02 0006                   000006  3572          SIGP  R0,R2,X'06'              Restart our CPU
+000220  47F0 0380                   000380  3573          B     SIG1FAIL                 WTF?! How did we get here?!
+
+000224                                      3575 BEGIN2   DS    0H
+000224  E340 0420 008F              000420  3576          LPQ   R4,INIT1                 Load INIT1+INIT2 using LPQ
+00022A  E340 0420 0020              000420  3577          CG    R4,INIT1                 Did LPQ high DW work ...
+000230  4770 03A0                   0003A0  3578          BNE   LPQFAIL1                 ... or not ?
+000234  E350 0428 0020              000428  3579          CG    R5,INIT2                 Did LPQ low DW work ...
+00023A  4770 03B0                   0003B0  3580          BNE   LPQFAIL2                 ... or not ?
+00023E  E340 0400 008E              000400  3581          STPQ  R4,DEST1                 Store DEST1+DEST2 for CDSG use
+000244  E340 0400 0020              000400  3582          CG    R4,DEST1                 Did STPQ high DW work ...
+00024A  4770 03C0                   0003C0  3583          BNE   STPQFAl1                 ... or not ?
+00024E  E350 0408 0020              000408  3584          CG    R5,DEST2                 Did STPQ low DW work ...
+000254  4770 03D0                   0003D0  3585          BNE   STPQFAL2                 ... or not ?
+000258  41E0 0460                   000460  3586          LA    R14,TRACE                Initialize CDSG trace pointer
+                                            3587 *                                       R4+R5 for CDSGLOOP to use
+
+00025C  B904 0065                           3589          LGR   R6,R5                    R6+R7 for CSG_LOOP to use
+000260  E370 0430 0004              000430  3590          LG    R7,INIT3                 Load INIT3 to initialize ...
+000266  E370 0410 0024              000410  3591          STG   R7,DEST3                 DEST3 so CSG_CPU can use it
+
+00026C  4120 0001                   000001  3593          LA    R2,1                     Second CPU number
+000270  4180 02E2                   0002E2  3594          LA    R8,CSG_CPU               Point to its entry point
+000274  4080 01AE                   0001AE  3595          STH   R8,X'1AE'                Update restart PSW
+000278  AE02 0006                   000006  3596          SIGP  R0,R2,X'06'              Restart second CPU
+00027C  4770 0390                   000390  3597          BNZ   SIG2FAIL                 WTF?! (SIGP failed!)
+                                            3598 *        B     CDSG_CPU                 Enter our own work loop
+
+
+
+
+
+
+000280  B982 00CC                           3600 CDSG_CPU XGR   R12,R12                  Initialise CDSG counter
+000284                                      3601 CDSGLOOP DS    0H
+000284  9201 E003                   000003  3602          MVI   3(R14),X'1'              Trace CC=1 from previous CDSG
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     6
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000288                                      3603 CDSG_CC0 DS    0H
+000288  9500 0454                   000454  3604          CLI   STOPFLAG,X'00'           Are we being asked to stop?
+00028C  4770 0364                   000364  3605          BNE   GOODEOJ                  Yes, then do so.
+000290  41CC 0001                   000001  3606          LA    R12,1(R12)               Increment the CDSG counter
+000294  50C0 0440                   000440  3607          ST    R12,CDSGCNTR             Update CDSG counter
+000298  4184 0001                   000001  3608          LA    R8,1(R4)                 Increment DEST1
+00029C  4195 0001                   000001  3609          LA    R9,1(R5)                 Increment DEST1
+0002A0  41EE 0010                   000010  3610          LA    R14,16(R14)              Point to the next TRACE entry
+0002A4  409E 0000                   000000  3611          STH   R9,0(R14)                Trace the CDSG DEST2 update
+0002A8  408E 0004                   000004  3612          STH   R8,4(R14)                Trace the CDSG DEST1 update
+0002AC  EB48 0400 003E              000400  3613          CDSG  R4,R8,DEST1              CDSG to attempt doing it
+0002B2  4770 0284                   000284  3614          BNE   CDSGLOOP                 The CSG_CPU came in between
+0002B6  BD83 0450                   000450  3615          CLM   R8,B'0011',LOOPMAX       End value reached ?
+0002BA  4780 02CA                   0002CA  3616          BE    CDSGEND                  Yes, CDSG incrementing ended
+0002BE  B904 0048                           3617          LGR   R4,R8                    Copy the incremented DEST1
+0002C2  B904 0059                           3618          LGR   R5,R9                    Copy the incremented DEST2
+0002C6  47F0 0288                   000288  3619          B     CDSG_CC0                 Go try the next CDSG
+0002CA                                      3620 CDSGEND  DS    0H
+0002CA  D501 0416 0450      000416  000450  3621          CLC   DEST3+6(2),LOOPMAX       Is also CSG_LOOP ended yet ?
+0002D0  4770 02CA                   0002CA  3622          BNE   CDSGEND                  Spin-loop style waiting for it
+0002D4                                      3623 FINALTST DS    0H                       OK, both loops are finished
+0002D4  D501 040E 0452      00040E  000452  3624          CLC   DEST2+6(2),LOOPMAX2      DEST2 must be =2*LOOPMAX
+0002DA  4780 0364                   000364  3625          BE    GOODEOJ                  Yes, then we have success !
+0002DE  47F0 0370                   000370  3626          B     FAILEOJ                  No, the test failed !!
+
+
+
+0002E2  B982 00DD                           3628 CSG_CPU  XGR   R13,R13                  Initialise CSG counter
+0002E6  E360 0408 0004              000408  3629          LG    R6,DEST2                 Re-initialise R6
+0002EC  E370 0410 0004              000410  3630          LG    R7,DEST3                 Re-initialise R7
+0002F2  41F0 0468                   000468  3631          LA    R15,TRACE+8              Initialize CSG trace pointer
+0002F6  E370 0418 0024              000418  3632          STG   R7,DEST4                 Debug initial R7 value
+0002FC                                      3633 CSG_LOOP DS    0H
+0002FC  9201 F003                   000003  3634          MVI   3(R15),X'1'              Trace CC=1 from previous CSG
+000300                                      3635 CSG_CC0  DS    0H
+000300  9500 0454                   000454  3636          CLI   STOPFLAG,X'00'           Are we being asked to stop?
+000304  4770 0364                   000364  3637          BNE   GOODEOJ                  Yes, then do so.
+000308  41DD 0001                   000001  3638          LA    R13,1(R13)               Increment the CSG counter
+00030C  50D0 044C                   00044C  3639          ST    R13,CSG_CNTR             Update CSG counter
+000310  41A6 0001                   000001  3640          LA    R10,1(R6)                Increment DEST2
+000314  41FF 0010                   000010  3641          LA    R15,16(R15)              Point to the next TRACE entry
+000318  40AF 0000                   000000  3642          STH   R10,0(R15)               Trace the CSG DEST2 update
+00031C  40BF 0004                   000004  3643          STH   R11,4(R15)               Trace the previous CSG DEST3 update
+000320  EB6A 0408 0030              000408  3644          CSG   R6,R10,DEST2             CSG to attempt doing it
+000326  4770 02FC                   0002FC  3645          BNE   CSG_LOOP                 The CDSG_CPU came in between
+00032A  41B7 0001                   000001  3646          LA    R11,1(R7)                Increments DEST3
+00032E                                      3647 CSGLOOP2 DS    0H
+00032E  EB7B 0410 0030              000410  3648          CSG   R7,R11,DEST3             CSG to attempt doing it
+000334  4770 032E                   00032E  3649          BNE   CSGLOOP2                 CDSGEND read came in between
+000338  BDB3 0450                   000450  3650          CLM   R11,B'0011',LOOPMAX      End value reached ?
+00033C  4780 034C                   00034C  3651          BE    CSG_END                  Yes, CSG incrementing ended
+000340  B904 006A                           3652          LGR   R6,R10                   Copy the incremented DEST2
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     7
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+000344  B904 007B                           3653          LGR   R7,R11                   Copy the incremented DEST3
+000348  47F0 0300                   000300  3654          B     CSG_CC0                  Go try the next CSG
+00034C                                      3655 CSG_END  DS    0H
+00034C  D501 0406 0450      000406  000450  3656          CLC   DEST1+6(2),LOOPMAX       Is also CDSGLOOP ended yet ?
+000352  4770 034C                   00034C  3657          BNE   CSG_END                  Spin-loop style waiting for it
+                                            3658 *        B     FINALTST                 OK, both loops are finished
+000356  D501 040E 0452      00040E  000452  3659          CLC   DEST2+6(2),LOOPMAX2      DEST2 must be =2*LOOPMAX
+00035C  4780 0364                   000364  3660          BE    GOODEOJ                  Yes, then we have success !
+000360  47F0 0370                   000370  3661          B     FAILEOJ                  No, the test failed !!
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     8
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            3663 ***********************************************************************
+                                            3664 *                            PSWs
+                                            3665 ***********************************************************************
+
+
+
+                                            3667 GOODEOJ  DWAITEND LOAD=YES              Normal completion
+000364                                      3669+GOODEOJ  DS    0H
+000364  8200 0368                   000368  3670+         LPSW  DWAT0008
+000368  000A0000 00000000                   3671+DWAT0008 PSW   0,0,2,0,X'000000'
+
+
+
+
+000370  92FF 0454                   000454  3673 FAILEOJ  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3674          DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
+000374  8200 0378                   000378  3675+         LPSW  DWAT0009
+000378  000A0000 00010BAD                   3676+DWAT0009 PSW   0,0,2,0,X'010BAD'
+
+
+
+
+000380  92FF 0454                   000454  3678 SIG1FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3679          DWAIT    LOAD=YES,CODE=111     First SIGP failed
+000384  8200 0388                   000388  3680+         LPSW  DWAT0010
+000388  000A0000 00010111                   3681+DWAT0010 PSW   0,0,2,0,X'010111'
+
+
+
+
+000390  92FF 0454                   000454  3683 SIG2FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3684          DWAIT    LOAD=YES,CODE=222     Second SIGP failed
+000394  8200 0398                   000398  3685+         LPSW  DWAT0011
+000398  000A0000 00010222                   3686+DWAT0011 PSW   0,0,2,0,X'010222'
+
+
+
+
+0003A0  92FF 0454                   000454  3688 LPQFAIL1 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3689          DWAIT    LOAD=YES,CODE=333     Second SIGP failed
+0003A4  8200 03A8                   0003A8  3690+         LPSW  DWAT0012
+0003A8  000A0000 00010333                   3691+DWAT0012 PSW   0,0,2,0,X'010333'
+
+
+
+
+0003B0  92FF 0454                   000454  3693 LPQFAIL2 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3694          DWAIT    LOAD=YES,CODE=444     Second SIGP failed
+0003B4  8200 03B8                   0003B8  3695+         LPSW  DWAT0013
+0003B8  000A0000 00010444                   3696+DWAT0013 PSW   0,0,2,0,X'010444'
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page     9
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+0003C0  92FF 0454                   000454  3698 STPQFAL1 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3699          DWAIT    LOAD=YES,CODE=555     Second SIGP failed
+0003C4  8200 03C8                   0003C8  3700+         LPSW  DWAT0014
+0003C8  000A0000 00010555                   3701+DWAT0014 PSW   0,0,2,0,X'010555'
+
+
+
+
+0003D0  92FF 0454                   000454  3703 STPQFAL2 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                            3704          DWAIT    LOAD=YES,CODE=666     Second SIGP failed
+0003D4  8200 03D8                   0003D8  3705+         LPSW  DWAT0015
+0003D8  000A0000 00010666                   3706+DWAT0015 PSW   0,0,2,0,X'010666'
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    10
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+                                            3708 ***********************************************************************
+                                            3709 *                       Working Storage
+                                            3710 ***********************************************************************
+
+0003E0                                      3712          LTORG ,                        Literals pool
+
+
+
+
+0003E0                      0003E0  000400  3714          ORG   CDSG+X'400'
+000400                                      3715          CNOP  0,16                     MUST be quadword ALIGNED!
+000400  00000000 00000000                   3716 DEST1    DC    XL8'0000000000000000'    DEST1+DEST2 updated using CDSG
+000408  00000000 00000000                   3717 DEST2    DC    XL8'0000000000000000'    DEST2 updated using CSG
+000410  00000000 00000000                   3718 DEST3    DC    XL8'0000000000000000'    DEST3 updated whenever CSG
+000418  00000000 00000000                   3719 DEST4    DC    XL8'0000000000000000'    DEST4 (for debugging purposes)
+                                            3720 *                                       successfully updates DEST
+000420                                      3721          CNOP  0,16                     MUST be quadword ALIGNED!
+000420  1A1B2A2B 3A3B0000                   3722 INIT1    DC    XL8'1A1B2A2B3A3B0000'    Initial value for DEST1
+000428  4A4B5A5B 6A6B0000                   3723 INIT2    DC    XL8'4A4B5A5B6A6B0000'    Initial value for DEST2
+000430  7A7B8A8B 9A9B0000                   3724 INIT3    DC    XL8'7A7B8A8B9A9B0000'    Initial value for DEST3
+
+000438  C3C4E2C7 C3D5E3D9                   3726 CDSGCNTL DC    CL8'CDSGCNTR'            CDSG counter label
+000440  00000000                            3727 CDSGCNTR DC    F'0'                     CDSG instructions attempted
+000444  C3E2C76D C3D5E3D9                   3728 CSG_CNTL DC    CL8'CSG_CNTR'            CSG  counter label
+00044C  00000000                            3729 CSG_CNTR DC    F'0'                     CSG  instructions attempted
+000450  4000                                3730 LOOPMAX  DC    XL2'4000'                Maximum number of loops
+000452  8000                                3731 LOOPMAX2 DC    XL2'8000'                Maximum number of loops * 2
+
+000454  00                                  3733 STOPFLAG DC    X'00'                    Set to non-zero to stop test
+
+000456  07000700 07000700                   3735          CNOP  0,16                     Beautify trace table looks
+000460  00000000 00000000                   3736 TRACE    DC    65535F'0'                Trace area for debugging
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    11
+
+ LOC       OBJECT CODE      ADDR1   ADDR2   STMT
+
+
+
+
+                            000000  000001  3739 R0       EQU   0
+                            000001  000001  3740 R1       EQU   1
+                            000002  000001  3741 R2       EQU   2
+                            000003  000001  3742 R3       EQU   3
+                            000004  000001  3743 R4       EQU   4
+                            000005  000001  3744 R5       EQU   5
+                            000006  000001  3745 R6       EQU   6
+                            000007  000001  3746 R7       EQU   7
+                            000008  000001  3747 R8       EQU   8
+                            000009  000001  3748 R9       EQU   9
+                            00000A  000001  3749 R10      EQU   10
+                            00000B  000001  3750 R11      EQU   11
+                            00000C  000001  3751 R12      EQU   12
+                            00000D  000001  3752 R13      EQU   13
+                            00000E  000001  3753 R14      EQU   14
+                            00000F  000001  3754 R15      EQU   15
+
+
+
+
+                                            3756          END
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    12
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BEGIN               I    000200       2  3562  3552
+BEGIN2              H    000224       2  3575  3570
+CDSG                J    000000  263260  3523  3526  3533  3540  3551  3553  3714  3560
+CDSGCNTL            C    000438       8  3726
+CDSGCNTR            F    000440       4  3727  3607
+CDSGEND             H    0002CA       2  3620  3616  3622
+CDSGLOOP            H    000284       2  3601  3614
+CDSG_CC0            H    000288       2  3603  3619
+CDSG_CPU            I    000280       4  3600
+CODE                2    000000  263260  3523
+CSGLOOP2            H    00032E       2  3647  3649
+CSG_CC0             H    000300       2  3635  3654
+CSG_CNTL            C    000444       8  3728
+CSG_CNTR            F    00044C       4  3729  3639
+CSG_CPU             I    0002E2       4  3628  3594
+CSG_END             H    00034C       2  3655  3651  3657
+CSG_LOOP            H    0002FC       2  3633  3645
+DEST1               X    000400       8  3716  3581  3582  3613  3656
+DEST2               X    000408       8  3717  3584  3624  3629  3644  3659
+DEST3               X    000410       8  3718  3591  3621  3630  3648
+DEST4               X    000418       8  3719  3632
+DWAT0008            3    000368       8  3671  3670
+DWAT0009            3    000378       8  3676  3675
+DWAT0010            3    000388       8  3681  3680
+DWAT0011            3    000398       8  3686  3685
+DWAT0012            3    0003A8       8  3691  3690
+DWAT0013            3    0003B8       8  3696  3695
+DWAT0014            3    0003C8       8  3701  3700
+DWAT0015            3    0003D8       8  3706  3705
+FAILEOJ             I    000370       4  3673  3626  3661
+FINALTST            H    0002D4       2  3623
+GOODEOJ             H    000364       2  3669  3605  3625  3637  3660
+IMAGE               1    000000  263260     0
+INIT1               X    000420       8  3722  3576  3577
+INIT2               X    000428       8  3723  3579
+INIT3               X    000430       8  3724  3590
+LOOPMAX             X    000450       2  3730  3615  3621  3650  3656
+LOOPMAX2            X    000452       2  3731  3624  3659
+LPQFAIL1            I    0003A0       4  3688  3578
+LPQFAIL2            I    0003B0       4  3693  3580
+PREVORG             U    000200       1  3539  3543
+R0                  U    000000       1  3739  3560  3562  3566  3572  3596
+R1                  U    000001       1  3740  3563  3568
+R10                 U    00000A       1  3749  3640  3642  3644  3652
+R11                 U    00000B       1  3750  3643  3646  3648  3650  3653
+R12                 U    00000C       1  3751  3600  3606  3607
+R13                 U    00000D       1  3752  3628  3638  3639
+R14                 U    00000E       1  3753  3586  3602  3610  3611  3612
+R15                 U    00000F       1  3754  3631  3634  3641  3642  3643
+R2                  U    000002       1  3741  3564  3566  3569  3572  3593  3596
+R3                  U    000003       1  3742  3565
+R4                  U    000004       1  3743  3570  3571  3576  3577  3581  3582  3608  3613  3617
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    13
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R5                  U    000005       1  3744  3579  3584  3589  3609  3618
+R6                  U    000006       1  3745  3589  3629  3640  3644  3652
+R7                  U    000007       1  3746  3590  3591  3630  3632  3646  3648  3653
+R8                  U    000008       1  3747  3594  3595  3608  3612  3613  3615  3617
+R9                  U    000009       1  3748  3609  3611  3618
+SIG1FAIL            I    000380       4  3678  3573
+SIG2FAIL            I    000390       4  3683  3597
+STOPFLAG            X    000454       1  3733  3604  3636  3673  3678  3683  3688  3693  3698  3703
+STPQFAL1            I    0003C0       4  3698  3583
+STPQFAL2            I    0003D0       4  3703  3585
+TRACE               F    000460       4  3736  3586  3631
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    14
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        157
+APROB       289
+ARCHIND     449   3479
+ARCHLVL     590   3478
+ASAIPL      716   3549
+ASALOAD     796   3522
+ASAREA      851
+ASAZAREA   1036
+CPUWAIT    1119
+DSECTS     1445
+DWAIT      1648   3668   3674   3679   3684   3689   3694   3699   3704
+DWAITEND   1705   3667
+ENADEV     1713
+ESA390     1813
+IOCB       1824
+IOCBDS     2000
+IOFMT      2034
+IOINIT     2372
+IOTRFR     2413
+ORB        2461
+POINTER    2650
+PSWFMT     2678
+RAWAIT     2812
+RAWIO      2908
+SIGCPU     3066
+SMMGR      3124
+SMMGRB     3224
+TRAP128    3273
+TRAP64     3250   3524   3527
+TRAPS      3286
+ZARCH      3360
+ZEROH      3372
+ZEROL      3400
+ZEROLH     3428
+ZEROLL     3451
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    15
+
+   DESC    SYMBOL   SIZE       POS          ADDR
+
+Entry: 0
+
+Image      IMAGE   263260  00000-4045B  00000-4045B
+  Region   CODE    263260  00000-4045B  00000-4045B
+    CSECT  CDSG    263260  00000-4045B  00000-4045B
+ASMA Ver. 0.2.0   Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions                     23 Sep 2019 18:13:28  Page    16
+
+   STMT                       FILE NAME
+
+1     F:\Qsync\Source\Changes\SDL-hyperion\tests\CDSG.asm
+2     C:\Users\Peter\SATK\srcasm\satk.mac
+
+
+** NO ERRORS FOUND **
+
+
