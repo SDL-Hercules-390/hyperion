@@ -243,8 +243,8 @@ a real System/390.  The configuration file is an ASCII text file.
     <b>Note:</b> The <code>ASN_AND_LX_REUSE</code> statement has been superseded
     by "<code>FACILITY ENABLE/DISABLE 006_ASN_LX_REUSE</code>" and is thus deprecated.
     Existing <code>ASN_AND_LX_REUSE</code> or <code>ALRF</code> statements
-    should be changed to use the new <a href="#ARCHLVL_FACILITY">ARCHLVL
-    facility</a> statement format instead.
+    should be changed to use the new <a href="#FACILITY">FACILITY</a>
+    statement format instead.
     <p>
 
 <a name="AUTOINIT"></a>
@@ -846,10 +846,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <code><em>BITnn</em></code> &nbsp;where 'nn' corresponds to the exact
     STFL/STFLE facility bit you wish to be forced on or off. A popular
     one among the VM crowd is <code>ENABLE BIT44</code> to force the PFPO
-    (Perform Floating-Point Operation Facility) bit on, since, at the time
-    of this writing, it is not currently supported or implemented by Hercules
-    and is thus disabled by default. Specifying <code>ENABLE BIT44</code>
-    turns the bit on anyway allowing your VM system to IPL.
+    (Perform Floating-Point Operation Facility) bit on, since the facility
+    is not enabled by default inSDL Hyperion version 4.1 or earlier. The
+    facility is only enabled by default starting with
+
+    <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.2">SDL Hyperion version 4.2</a>
+
+    or later. Specifying <code>ENABLE BIT44</code> allows z/VM guests running
+    on SDL Hyperion 4.1 or earlier to IPL.
    <p>
     The optional <code><em>archlvl</em></code> &nbsp;argument limits the enable,
     disable or query function to a specific <a href="#ARCHLVL">architecture</a>.
