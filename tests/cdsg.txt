@@ -1,23 +1,67 @@
-* CDSG test
+
+* Simple CDSG/STPQ/LPQ test
+
 sysclear
 archmode esame
+
 r 1a0=00000000000000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
-* CDSG tests
-r 200=E32003200004 # LG R2,TGT+0       R2=Quadword old value part 1
-r 206=E33003280004 # LG R3,TGT+8       R3=Quadword old value part 2
-r 20C=E34003400004 # LG R4,NEW+0       R4=Quadword new value part 1
-r 212=E35003480004 # LG R5,NEW+8       R5=Quadword new value part 2
-r 218=EB240320003E # CDSG R2,R4,TGT    CC0 Compare Double and Swap
-r 21E=B9820022     # XGR R2,R2         R2=Quadword old value part 1
-r 222=B9820033     # XGR R3,R3         R2=Quadword old value part 2
-r 226=EB240320003E # CDSG R2,R4,TGT    CC1 Compare Double and Swap
-r 22C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
-r 300=07020001800000000000000000FED0D0 # Enabled wait state PSW
+
+r 200=E32004000004 # LG R2,TGT+0       R2=Quadword old value part 1
+r 206=E33004080004 # LG R3,TGT+8       R3=Quadword old value part 2
+r 20C=E34004100004 # LG R4,NEW+0       R4=Quadword new value part 1
+r 212=E35004180004 # LG R5,NEW+8       R5=Quadword new value part 2
+r 218=EB240400003E # CDSG R2,R4,TGT    CC0 Compare Double and Swap
+r 21E=47700260     # BC B'0111',FAIL1  Branch if not CC0
+
+r 222=B9820022     # XGR R2,R2         R2=Quadword old value part 1
+r 226=B9820033     # XGR R3,R3         R2=Quadword old value part 2
+r 22A=E34004200004 # LG  R4,NEW2+0     R4=Quadword new value part 1
+r 230=E35004280004 # LG  R5,NEW2+8     R5=Quadword new value part 2
+r 236=EB240400003E # CDSG R2,R4,TGT    CC1 Compare Double and Swap
+r 23C=47B00264     # BC B'1011',FAIL2  Branch if not CC1
+
+r 240=E3200430008E # STPQ R2,STPQLPQW  Store R2,R3 to work area
+r 246=E3600430008F # LPQ  R6,STPQLPQW  Load R6,R6 with what was stored
+r 24C=B9200062     # CGR R6,R2
+r 250=47700268     # BNE FAIL3
+r 254=B9200073     # CGR R7,R3
+r 258=4770026C     # BNE FAIL4
+
+r 25C=B2B20300     # LPSWE GOODPSW     Load SUCCESS disabled wait PSW
+
+r 260=B2B20310     # LPSWE FAILPSW1    Load FAILURE disabled wait PSW
+r 264=B2B20320     # LPSWE FAILPSW2    Load FAILURE disabled wait PSW
+r 268=B2B20330     # LPSWE FAILPSW3    Load FAILURE disabled wait PSW
+r 26C=B2B20340     # LPSWE FAILPSW4    Load FAILURE disabled wait PSW
+
 * Test data
-r 320=0011223344556677 # TGT (Quadword target area part 1)
-r 328=8899AABBCCDDEEFF #  "  (Quadword target area part 2)
-r 340=A1A3A5A7A9ABADAF # NEW (Quadword new value part 1)
-r 348=B1B3B5B7B9BBBDBF #  "  (Quadword new value part 2)
-s+
+
+r 300=00020001800000000000000000000000  # GOODPSW
+r 310=0002000180000000000000000000BAD1  # FAILPSW1 (1st CDSG failed)
+r 320=0002000180000000000000000000BAD2  # FAILPSW2 (2nd CDSG failed)
+r 330=0002000180000000000000000000BAD3  # FAILPSW3 (STPQ failed)
+r 340=0002000180000000000000000000BAD4  # FAILPSW4 (LPQ failed)
+
+r 400=00112233445566778899AABBCCDDEEFF  # TGT
+r 410=A1A3A5A7A9ABADAFB1B3B5B7B9BBBDBF  # NEW 
+r 420=00112233445566778899AABBCCDDEEFF  # NEW2
+r 430=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  # STPQLPQW
+
+*
+*
+*
+r 400.40
+*
+*
+*
+#t+
 restart
+pause 0.5
+*
+*
+*
+r 400.40
+*
+*
+*

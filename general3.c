@@ -82,7 +82,13 @@ int     rc;                             /* Return code               */
         /* Interlocked exchange if operand is on a fullword boundary */
         old = CSWAP32(n);
         new = CSWAP32(result);
-        rc = cmpxchg4(&old, new, m1);
+
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            rc = cmpxchg4( &old, new, m1 );
+        }
+        RELEASE_MAINLOCK( regs );
 
     } while (rc != 0);
 
@@ -145,7 +151,13 @@ int     rc;                             /* Return code               */
         /* Interlocked exchange if operand is on doubleword boundary */
         old = CSWAP64(n);
         new = CSWAP64(result);
-        rc = cmpxchg8(&old, new, m1);
+
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            rc = cmpxchg8( &old, new, m1 );
+        }
+        RELEASE_MAINLOCK( regs );
 
     } while (rc != 0);
 
@@ -2686,7 +2698,13 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
         /* Interlocked exchange to storage location */
         old = CSWAP32(v2);
         new = CSWAP32(result);
-        rc = cmpxchg4 (&old, new, m2);
+
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            rc = cmpxchg4( &old, new, m2 );
+        }
+        RELEASE_MAINLOCK( regs );
 
     } while (rc != 0);
 
@@ -2762,7 +2780,13 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
         /* Interlocked exchange to storage location */
         old = CSWAP64(v2);
         new = CSWAP64(result);
-        rc = cmpxchg8 (&old, new, m2);
+
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            rc = cmpxchg8( &old, new, m2 );
+        }
+        RELEASE_MAINLOCK( regs );
 
     } while (rc != 0);
 

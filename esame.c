@@ -938,6 +938,7 @@ int     r1, r2;                         /* Values of R fields        */
 U64     n2;                             /* Virtual address of op2    */
 BYTE   *main2;                          /* Mainstor address of op2   */
 U64     old;                            /* Old value                 */
+U64     new;                            /* new value                 */
 
     RRE(inst, regs, r1, r2);
 
@@ -959,50 +960,54 @@ U64     old;                            /* Old value                 */
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
-
-    /* Obtain 2nd operand address from r2 */
-    n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFF8ULL & ADDRESS_MAXWRAP(regs);
-    main2 = MADDR (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    old = CSWAP64 (regs->GR_G(r1));
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r1+1)), main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    if (regs->psw.cc == 0)
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
     {
-        /* Perform requested funtion specified as per request code in r2 */
-        if (regs->GR_L(r2) & 3)
+        /* Obtain 2nd operand address from r2 */
+        n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFF8ULL & ADDRESS_MAXWRAP(regs);
+        main2 = MADDR (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+        old = CSWAP64 (regs->GR_G(r1+0));
+        new = CSWAP64 (regs->GR_G(r1+1));
+
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
         {
-            OBTAIN_INTLOCK(regs);
-            SYNCHRONIZE_CPUS(regs);
-            if (regs->GR_L(r2) & 1)
-                ARCH_DEP(purge_tlb_all)();
-            if (regs->GR_L(r2) & 2)
-                ARCH_DEP(purge_alb_all)();
-            RELEASE_INTLOCK(regs);
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg8( &old, new, main2 );
+        }
+        RELEASE_MAINLOCK( regs );
+
+        if (regs->psw.cc == 0)
+        {
+            /* Perform requested funtion specified as per request code in r2 */
+            if (regs->GR_L(r2) & 3)
+            {
+                OBTAIN_INTLOCK( regs );
+                {
+                    SYNCHRONIZE_CPUS( regs );
+
+                    if (regs->GR_L(r2) & 1)
+                        ARCH_DEP(purge_tlb_all)();
+
+                    if (regs->GR_L(r2) & 2)
+                        ARCH_DEP(purge_alb_all)();
+                }
+                RELEASE_INTLOCK( regs );
+            }
+        }
+        else
+        {
+            PTT_CSF("*CSPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+
+            /* Otherwise yield */
+            regs->GR_G(r1) = CSWAP64(old);
+
+            if (sysblk.cpus > 1)
+                sched_yield();
         }
     }
-    else
-    {
-        PTT_CSF("*CSPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
-
-        /* Otherwise yield */
-        regs->GR_G(r1) = CSWAP64(old);
-        if (sysblk.cpus > 1)
-            sched_yield();
-    }
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+    PERFORM_SERIALIZATION( regs );
 
 } /* end DEF_INST(compare_and_swap_and_purge_long) */
 #endif /*defined(FEATURE_003_DAT_ENHANCE_FACILITY_1)*/
@@ -1530,31 +1535,33 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E38E STPQ  - Store Pair to Quadword                         [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_pair_to_quadword)
+DEF_INST( store_pair_to_quadword )
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 QWORD   qwork;                          /* Quadword work area        */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY( inst, regs, r1, b2, effective_addr2 );
 
-    ODD_CHECK(r1, regs);
+    ODD_CHECK( r1, regs );
 
-    QW_CHECK(effective_addr2, regs);
+    QW_CHECK( effective_addr2, regs );
 
     /* Store regs in workarea */
-    STORE_DW(qwork, regs->GR_G(r1));
-    STORE_DW(qwork+8, regs->GR_G(r1+1));
+    STORE_DW( qwork+0, regs->GR_G( r1+0 ));
+    STORE_DW( qwork+8, regs->GR_G( r1+1 ));
 
     /* Store R1 and R1+1 registers to second operand
        Provide storage consistancy by means of obtaining
        the main storage access lock */
-    OBTAIN_MAINLOCK(regs);
-    ARCH_DEP(vstorec) ( qwork, 16-1, effective_addr2, b2, regs );
-    RELEASE_MAINLOCK(regs);
+    OBTAIN_MAINLOCK( regs );
+    {
+        ARCH_DEP( vstorec )( qwork, 16-1, effective_addr2, b2, regs );
+    }
+    RELEASE_MAINLOCK( regs );
 
-} /* end DEF_INST(store_pair_to_quadword) */
+} /* end DEF_INST( store_pair_to_quadword ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
@@ -1562,31 +1569,33 @@ QWORD   qwork;                          /* Quadword work area        */
 /*-------------------------------------------------------------------*/
 /* E38F LPQ   - Load Pair from Quadword                        [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_pair_from_quadword)
+DEF_INST( load_pair_from_quadword )
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 QWORD   qwork;                          /* Quadword work area        */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY( inst, regs, r1, b2, effective_addr2 );
 
-    ODD_CHECK(r1, regs);
+    ODD_CHECK( r1, regs );
 
-    QW_CHECK(effective_addr2, regs);
+    QW_CHECK( effective_addr2, regs );
 
     /* Load R1 and R1+1 registers contents from second operand
        Provide storage consistancy by means of obtaining
        the main storage access lock */
-    OBTAIN_MAINLOCK(regs);
-    ARCH_DEP(vfetchc) ( qwork, 16-1, effective_addr2, b2, regs );
-    RELEASE_MAINLOCK(regs);
+    OBTAIN_MAINLOCK( regs );
+    {
+        ARCH_DEP( vfetchc )( qwork, 16-1, effective_addr2, b2, regs );
+    }
+    RELEASE_MAINLOCK( regs );
 
     /* Load regs from workarea */
-    FETCH_DW(regs->GR_G(r1), qwork);
-    FETCH_DW(regs->GR_G(r1+1), qwork+8);
+    FETCH_DW( regs->GR_G( r1+0 ), qwork+0 );
+    FETCH_DW( regs->GR_G( r1+1 ), qwork+8 );
 
-} /* end DEF_INST(load_pair_from_quadword) */
+} /* end DEF_INST( load_pair_from_quadword ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
@@ -2406,31 +2415,31 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 BYTE   *main2;                          /* mainstor address          */
 U64     old;                            /* old value                 */
+U64     new;                            /* new value                 */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     DW_CHECK(effective_addr2, regs);
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get operand absolute address */
+        main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Get operand absolute address */
-    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        /* Get old value */
+        old = CSWAP64(regs->GR_G(r1+0));
+        new = CSWAP64(regs->GR_G(r3+0));
 
-    /* Get old value */
-    old = CSWAP64(regs->GR_G(r1));
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r3)), main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg8( &old, new, main2 );
+        }
+        RELEASE_MAINLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
     if (regs->psw.cc == 1)
     {
@@ -2457,49 +2466,49 @@ U64     old;                            /* old value                 */
 /*-------------------------------------------------------------------*/
 /* EB3E CDSG  - Compare Double and Swap Long                   [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_double_and_swap_long)
+DEF_INST( compare_double_and_swap_long )
 {
 register int     r1, r3;                /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-BYTE   *main2;                          /* mainstor address          */
-U64     old1, old2;                     /* old value                 */
+BYTE*   main2;                          /* mainstor address          */
+U64     oldhi, oldlo;                   /* old value                 */
+U64     newhi, newlo;                   /* new value                 */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY( inst, regs, r1, r3, b2, effective_addr2 );
 
-    ODD2_CHECK(r1, r3, regs);
+    ODD2_CHECK( r1, r3, regs );
 
-    QW_CHECK(effective_addr2, regs);
+    QW_CHECK( effective_addr2, regs );
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get operand mainstor address */
+        main2 = MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* Get operand mainstor address */
-    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        /* Get old and new values */
+        oldhi = CSWAP64( regs->GR_G( r1+0 ));
+        oldlo = CSWAP64( regs->GR_G( r1+1 ));
+        newhi = CSWAP64( regs->GR_G( r3+0 ));
+        newlo = CSWAP64( regs->GR_G( r3+1 ));
 
-    /* Get old values */
-    old1 = CSWAP64(regs->GR_G(r1));
-    old2 = CSWAP64(regs->GR_G(r1+1));
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg16( &oldhi, &oldlo, newhi, newlo, main2 );
+        }
+        RELEASE_MAINLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg16 (&old1, &old2,
-                              CSWAP64(regs->GR_G(r3)), CSWAP64(regs->GR_G(r3+1)),
-                              main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
-
+    /* Update register values if cmpxchg failed */
     if (regs->psw.cc == 1)
     {
-        regs->GR_G(r1) = CSWAP64(old1);
-        regs->GR_G(r1+1) = CSWAP64(old2);
-#if defined(_FEATURE_ZSIE)
+        regs->GR_G( r1+0 ) = CSWAP64( oldhi );
+        regs->GR_G( r1+1 ) = CSWAP64( oldlo );
+
+#if defined( _FEATURE_ZSIE )
         if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
@@ -2508,7 +2517,7 @@ U64     old1, old2;                     /* old value                 */
                 longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
         }
         else
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif
             if (sysblk.cpus > 1)
                 sched_yield();
     }
@@ -6680,8 +6689,13 @@ BYTE   *dest;                         /* Pointer to target byte      */
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* AND byte with immediate operand, setting condition code */
-    regs->psw.cc = (H_ATOMIC_OP(dest, i2, and, And, &) != 0);
+    /* MAINLOCK may be required if cmpxchg assists unavailable */
+    OBTAIN_MAINLOCK( regs );
+    {
+        /* AND byte with immediate operand, setting condition code */
+        regs->psw.cc = (H_ATOMIC_OP( dest, i2, and, And, & ) != 0);
+    }
+    RELEASE_MAINLOCK( regs );
 
     ITIMER_UPDATE(effective_addr1,0,regs);
 
@@ -6867,26 +6881,24 @@ U32     old;                            /* old value                 */
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get operand mainstor address */
+        main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Get operand mainstor address */
-    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        /* Get old value */
+        old = CSWAP32(regs->GR_L(r1));
 
-    /* Get old value */
-    old = CSWAP32(regs->GR_L(r1));
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg4( &old, CSWAP32( regs->GR_L( r3 )), main2 );
+        }
+        RELEASE_MAINLOCK(regs);
+    }
+    PERFORM_SERIALIZATION( regs );
 
     if (regs->psw.cc == 1)
     {
@@ -6927,27 +6939,25 @@ U64     old, new;                       /* old, new values           */
 
     DW_CHECK(effective_addr2, regs);
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get operand mainstor address */
+        main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Get operand mainstor address */
-    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        /* Get old, new values */
+        old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
+        new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
-    /* Get old, new values */
-    old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
-    new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, new, main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg8( &old, new, main2 );
+        }
+        RELEASE_MAINLOCK(regs);
+    }
+    PERFORM_SERIALIZATION( regs );
 
     if (regs->psw.cc == 1)
     {
@@ -7060,8 +7070,13 @@ BYTE   *dest;                         /* Pointer to target byte      */
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* XOR byte with immediate operand, setting condition code */
-    regs->psw.cc = (H_ATOMIC_OP(dest, i2, xor, Xor, ^) != 0);
+    /* MAINLOCK may be required if cmpxchg assists unavailable */
+    OBTAIN_MAINLOCK( regs );
+    {
+        /* XOR byte with immediate operand, setting condition code */
+        regs->psw.cc = (H_ATOMIC_OP( dest, i2, xor, Xor, ^ ) != 0);
+    }
+    RELEASE_MAINLOCK( regs );
 
     ITIMER_UPDATE(effective_addr1,0,regs);
 
@@ -7435,11 +7450,15 @@ BYTE   *dest;                         /* Pointer to target byte      */
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* OR byte with immediate operand, setting condition code */
-    regs->psw.cc = (H_ATOMIC_OP(dest, i2, or, Or, |) != 0);
+    /* MAINLOCK may be required if cmpxchg assists unavailable */
+    OBTAIN_MAINLOCK( regs );
+    {
+        /* OR byte with immediate operand, setting condition code */
+        regs->psw.cc = (H_ATOMIC_OP( dest, i2, or, Or, | ) != 0);
+    }
+    RELEASE_MAINLOCK( regs );
 
     ITIMER_UPDATE(effective_addr1,0,regs);
-
 
 } /* end DEF_INST(or_immediate_y) */
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */

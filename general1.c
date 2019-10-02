@@ -240,8 +240,13 @@ BYTE   *dest;                         /* Pointer to target byte      */
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* AND byte with immediate operand, setting condition code */
-    regs->psw.cc = (H_ATOMIC_OP(dest, i2, and, And, &) != 0);
+    /* MAINLOCK may be required if cmpxchg assists unavailable */
+    OBTAIN_MAINLOCK( regs );
+    {
+        /* AND byte with immediate operand, setting condition code */
+        regs->psw.cc = (H_ATOMIC_OP( dest, i2, and, And, & ) != 0);
+    }
+    RELEASE_MAINLOCK( regs );
 
     /* Update interval timer if necessary */
     ITIMER_UPDATE(effective_addr1, 0, regs);
@@ -1882,6 +1887,7 @@ int     b2;                             /* effective address base    */
 VADR    addr2;                          /* effective address         */
 BYTE   *main2;                          /* mainstor address          */
 U32     old;                            /* old value                 */
+U32     new;                            /* new value                 */
 
     RS(inst, regs, r1, r3, b2, addr2);
 
@@ -1889,25 +1895,24 @@ U32     old;                            /* old value                 */
 
     ITIMER_SYNC(addr2,4-1,regs);
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get mainstor address */
+        main2 = MADDRL (addr2, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Get mainstor address */
-    main2 = MADDRL (addr2, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        old = CSWAP32(regs->GR_L(r1));
+        new = CSWAP32(regs->GR_L(r3));
 
-    old = CSWAP32(regs->GR_L(r1));
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg4( &old, new, main2 );
+        }
+        RELEASE_MAINLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
     if (regs->psw.cc == 1)
     {
@@ -1951,27 +1956,25 @@ U64     old, new;                       /* old, new values           */
 
     ITIMER_SYNC(addr2,8-1,regs);
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get operand absolute address */
+        main2 = MADDRL (addr2, 8, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Get operand absolute address */
-    main2 = MADDRL (addr2, 8, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        /* Get old, new values */
+        old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
+        new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
 
-    /* Get old, new values */
-    old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
-    new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, new, main2);
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Attempt to exchange the values */
+            regs->psw.cc = cmpxchg8( &old, new, main2 );
+        }
+        RELEASE_MAINLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
     if (regs->psw.cc == 1)
     {
@@ -2097,136 +2100,137 @@ BYTE    sc;                             /* Store characteristic      */
 #endif
     }
 
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
-
-    /* Obtain parameter list address from register 1 bits 0-59 */
-    addrp = regs->GR(rp) & 0xFFFFFFFFFFFFFFF0ULL & ADDRESS_MAXWRAP(regs);
-
-    /* Obtain main storage address of first operand */
-    main1 = MADDRL (addr1, 4, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Ensure second operand storage is writable */
-    ARCH_DEP(validate_operand) (addr2, b2, ln2, ACCTYPE_WRITE_SKP, regs);
-
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
-    /* Load the compare value from the r3 register and also */
-    /* load replacement value from bytes 0-3, 0-7 or 0-15 of parameter list */
-    switch(fc)
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
     {
-        case 0:
-            old4 = CSWAP32(regs->GR_L(r3));
-            new4 = ARCH_DEP(vfetch4) (addrp, rp, regs);
-            new4 = CSWAP32(new4);
-            break;
-        case 1:
-            old8 = CSWAP64(regs->GR_G(r3));
-            new8 = ARCH_DEP(vfetch8) (addrp, rp, regs);
-            new8 = CSWAP64(new8);
-            break;
-#if defined( FEATURE_033_CSS_FACILITY_2 )
-        case 2:
-            old16h = CSWAP64(regs->GR_G(r3));
-            old16l = CSWAP64(regs->GR_G(r3+1));
-            new16h = ARCH_DEP(vfetch8) (addrp, rp, regs);
-            new16l = ARCH_DEP(vfetch8) (addrp+8, rp, regs);
-            new16h = CSWAP64(new16h);
-            new16l = CSWAP64(new16l);
-            break;
-#endif
-    }
+        /* Obtain parameter list address from register 1 bits 0-59 */
+        addrp = regs->GR(rp) & 0xFFFFFFFFFFFFFFF0ULL & ADDRESS_MAXWRAP(regs);
 
-    /* Load the store value from bytes 16-23 of parameter list */
-    addrp += 16;
-    addrp = addrp & ADDRESS_MAXWRAP(regs);
+        /* Obtain main storage address of first operand */
+        main1 = MADDRL (addr1, 4, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    switch(sc)
-    {
-        case 0:
-            stv1 = ARCH_DEP(vfetchb) (addrp, rp, regs);
-            break;
-        case 1:
-            stv2 = ARCH_DEP(vfetch2) (addrp, rp, regs);
-            break;
-        case 2:
-            stv4 = ARCH_DEP(vfetch4) (addrp, rp, regs);
-            break;
-        case 3:
-            stv8 = ARCH_DEP(vfetch8) (addrp, rp, regs);
-            break;
-#if defined( FEATURE_033_CSS_FACILITY_2 )
-        case 4:
-            stv16h = ARCH_DEP(vfetch8) (addrp, rp, regs);
-            stv16l = ARCH_DEP(vfetch8) (addrp+8, rp, regs);
-            break;
-#endif
-    }
+        /* Ensure second operand storage is writable */
+        ARCH_DEP(validate_operand) (addr2, b2, ln2, ACCTYPE_WRITE_SKP, regs);
 
-    switch(fc)
-    {
-        case 0:
-            regs->psw.cc = cmpxchg4 (&old4, new4, main1);
-            break;
-        case 1:
-            regs->psw.cc = cmpxchg8 (&old8, new8, main1);
-            break;
-#if defined( FEATURE_033_CSS_FACILITY_2 )
-        case 2:
-            regs->psw.cc = cmpxchg16 (&old16h, &old16l, new16h, new16l, main1);
-            break;
-#endif
-    }
-    if (regs->psw.cc == 0)
-    {
-        /* Store the store value into the second operand location */
-        switch(sc)
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
         {
-            case 0:
-                ARCH_DEP(vstoreb) (stv1, addr2, b2, regs);
-                break;
-            case 1:
-                ARCH_DEP(vstore2) (stv2, addr2, b2, regs);
-                break;
-            case 2:
-                ARCH_DEP(vstore4) (stv4, addr2, b2, regs);
-                break;
-            case 3:
-                ARCH_DEP(vstore8) (stv8, addr2, b2, regs);
-                break;
+            /* Load the compare value from the r3 register and also */
+            /* load replacement value from bytes 0-3, 0-7 or 0-15 of parameter list */
+            switch(fc)
+            {
+                case 0:
+                    old4 = CSWAP32(regs->GR_L(r3));
+                    new4 = ARCH_DEP(vfetch4) (addrp, rp, regs);
+                    new4 = CSWAP32(new4);
+                    break;
+                case 1:
+                    old8 = CSWAP64(regs->GR_G(r3));
+                    new8 = ARCH_DEP(vfetch8) (addrp, rp, regs);
+                    new8 = CSWAP64(new8);
+                    break;
 #if defined( FEATURE_033_CSS_FACILITY_2 )
-            case 4:
-                ARCH_DEP(vstore8) (stv16h, addr2, b2, regs);
-                ARCH_DEP(vstore8) (stv16l, addr2+8, b2, regs);
-                break;
+                case 2:
+                    old16h = CSWAP64( regs->GR_G( r3+0 ));
+                    old16l = CSWAP64( regs->GR_G( r3+1 ));
+
+                    new16h = ARCH_DEP( vfetch8 )( addrp+0, rp, regs );
+                    new16l = ARCH_DEP( vfetch8 )( addrp+8, rp, regs );
+
+                    new16h = CSWAP64( new16h );
+                    new16l = CSWAP64( new16l );
+                    break;
 #endif
-        }
-    }
-    else
-    {
-        switch(fc)
-        {
-            case 0:
-                regs->GR_L(r3) = CSWAP32(old4);
-                break;
-            case 1:
-                regs->GR_G(r3) = CSWAP64(old8);
-                break;
+            }
+
+            /* Load the store value from bytes 16-23 of parameter list */
+            addrp += 16;
+            addrp = addrp & ADDRESS_MAXWRAP(regs);
+
+            switch(sc)
+            {
+                case 0:
+                    stv1 = ARCH_DEP(vfetchb) (addrp, rp, regs);
+                    break;
+                case 1:
+                    stv2 = ARCH_DEP(vfetch2) (addrp, rp, regs);
+                    break;
+                case 2:
+                    stv4 = ARCH_DEP(vfetch4) (addrp, rp, regs);
+                    break;
+                case 3:
+                    stv8 = ARCH_DEP(vfetch8) (addrp, rp, regs);
+                    break;
 #if defined( FEATURE_033_CSS_FACILITY_2 )
-            case 2:
-                regs->GR_G(r3) = CSWAP64(old16h);
-                regs->GR_G(r3+1) = CSWAP64(old16l);
-                break;
+                case 4:
+                    stv16h = ARCH_DEP(vfetch8) (addrp, rp, regs);
+                    stv16l = ARCH_DEP(vfetch8) (addrp+8, rp, regs);
+                    break;
 #endif
+            }
+
+            switch(fc)
+            {
+                case 0:
+                    regs->psw.cc = cmpxchg4 (&old4, new4, main1);
+                    break;
+                case 1:
+                    regs->psw.cc = cmpxchg8 (&old8, new8, main1);
+                    break;
+#if defined( FEATURE_033_CSS_FACILITY_2 )
+                case 2:
+                    regs->psw.cc = cmpxchg16( &old16h, &old16l, new16h, new16l, main1 );
+                    break;
+#endif
+            }
+            if (regs->psw.cc == 0)
+            {
+                /* Store the store value into the second operand location */
+                switch(sc)
+                {
+                    case 0:
+                        ARCH_DEP(vstoreb) (stv1, addr2, b2, regs);
+                        break;
+                    case 1:
+                        ARCH_DEP(vstore2) (stv2, addr2, b2, regs);
+                        break;
+                    case 2:
+                        ARCH_DEP(vstore4) (stv4, addr2, b2, regs);
+                        break;
+                    case 3:
+                        ARCH_DEP(vstore8) (stv8, addr2, b2, regs);
+                        break;
+#if defined( FEATURE_033_CSS_FACILITY_2 )
+                    case 4:
+                        ARCH_DEP(vstore8) (stv16h, addr2, b2, regs);
+                        ARCH_DEP(vstore8) (stv16l, addr2+8, b2, regs);
+                        break;
+#endif
+                }
+            }
+            else /* (regs->psw.cc != 0) */
+            {
+                /* Update register values if cmpxchg failed */
+                switch(fc)
+                {
+                    case 0:
+                        regs->GR_L(r3) = CSWAP32(old4);
+                        break;
+                    case 1:
+                        regs->GR_G(r3) = CSWAP64(old8);
+                        break;
+#if defined( FEATURE_033_CSS_FACILITY_2 )
+                    case 2:
+                        regs->GR_G( r3+0 ) = CSWAP64( old16h );
+                        regs->GR_G( r3+1 ) = CSWAP64( old16l );
+                        break;
+#endif
+                }
+            }
         }
+        RELEASE_MAINLOCK( regs );
     }
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+    PERFORM_SERIALIZATION( regs );
 
 } /* end DEF_INST(compare_and_swap_and_store) */
 #endif /* defined( FEATURE_032_CSS_FACILITY ) */
@@ -4163,8 +4167,13 @@ BYTE   *dest;                         /* Pointer to target byte      */
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* XOR byte with immediate operand, setting condition code */
-    regs->psw.cc = (H_ATOMIC_OP(dest, i2, xor, Xor, ^) != 0);
+    /* MAINLOCK may be required if cmpxchg assists unavailable */
+    OBTAIN_MAINLOCK( regs );
+    {
+        /* XOR byte with immediate operand, setting condition code */
+        regs->psw.cc = (H_ATOMIC_OP( dest, i2, xor, Xor, ^ ) != 0);
+    }
+    RELEASE_MAINLOCK( regs );
 
     ITIMER_UPDATE(effective_addr1, 0, regs);
 }

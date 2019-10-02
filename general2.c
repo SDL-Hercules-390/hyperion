@@ -97,8 +97,14 @@ BYTE   *dest;                         /* Pointer to target byte      */
     /* Get byte mainstor address */
     dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* OR byte with immediate operand, setting condition code */
-    regs->psw.cc = (H_ATOMIC_OP(dest, i2, or, Or, |) != 0);
+    /* MAINLOCK may be required if cmpxchg assists unavailable */
+    OBTAIN_MAINLOCK( regs );
+    {
+        /* OR byte with immediate operand, setting condition code */
+        regs->psw.cc = (H_ATOMIC_OP( dest, i2, or, Or, | ) != 0);
+    }
+    RELEASE_MAINLOCK( regs );
+
     ITIMER_UPDATE(effective_addr1, 0, regs);
 }
 
@@ -395,124 +401,120 @@ VADR    effective_addr2,
            in the configuration.  We simply use 1 lock which is the
            main storage access lock which is also used by CS, CDS
            and TS.                                               *JJ */
-        OBTAIN_MAINLOCK(regs);
-
-        switch(regs->GR_L(0) & PLO_GPR0_FC)
+        OBTAIN_MAINLOCK( regs );
         {
-            case PLO_CL:
-                regs->psw.cc = ARCH_DEP(plo_cl) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CLG:
-                regs->psw.cc = ARCH_DEP(plo_clg) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CS:
-                regs->psw.cc = ARCH_DEP(plo_cs) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSG:
-                regs->psw.cc = ARCH_DEP(plo_csg) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_DCS:
-                regs->psw.cc = ARCH_DEP(plo_dcs) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_DCSG:
-                regs->psw.cc = ARCH_DEP(plo_dcsg) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSST:
-                regs->psw.cc = ARCH_DEP(plo_csst) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSSTG:
-                regs->psw.cc = ARCH_DEP(plo_csstg) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSDST:
-                regs->psw.cc = ARCH_DEP(plo_csdst) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSDSTG:
-                regs->psw.cc = ARCH_DEP(plo_csdstg) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSTST:
-                regs->psw.cc = ARCH_DEP(plo_cstst) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSTSTG:
-                regs->psw.cc = ARCH_DEP(plo_cststg) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
+            switch(regs->GR_L(0) & PLO_GPR0_FC)
+            {
+                case PLO_CL:
+                    regs->psw.cc = ARCH_DEP(plo_cl) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CLG:
+                    regs->psw.cc = ARCH_DEP(plo_clg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CS:
+                    regs->psw.cc = ARCH_DEP(plo_cs) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSG:
+                    regs->psw.cc = ARCH_DEP(plo_csg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_DCS:
+                    regs->psw.cc = ARCH_DEP(plo_dcs) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_DCSG:
+                    regs->psw.cc = ARCH_DEP(plo_dcsg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSST:
+                    regs->psw.cc = ARCH_DEP(plo_csst) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSSTG:
+                    regs->psw.cc = ARCH_DEP(plo_csstg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSDST:
+                    regs->psw.cc = ARCH_DEP(plo_csdst) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSDSTG:
+                    regs->psw.cc = ARCH_DEP(plo_csdstg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSTST:
+                    regs->psw.cc = ARCH_DEP(plo_cstst) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSTSTG:
+                    regs->psw.cc = ARCH_DEP(plo_cststg) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-            case PLO_CLGR:
-                regs->psw.cc = ARCH_DEP(plo_clgr) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CLX:
-                regs->psw.cc = ARCH_DEP(plo_clx) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSGR:
-                regs->psw.cc = ARCH_DEP(plo_csgr) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSX:
-                regs->psw.cc = ARCH_DEP(plo_csx) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_DCSGR:
-                regs->psw.cc = ARCH_DEP(plo_dcsgr) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_DCSX:
-                regs->psw.cc = ARCH_DEP(plo_dcsx) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSSTGR:
-                regs->psw.cc = ARCH_DEP(plo_csstgr) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSSTX:
-                regs->psw.cc = ARCH_DEP(plo_csstx) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSDSTGR:
-                regs->psw.cc = ARCH_DEP(plo_csdstgr) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSDSTX:
-                regs->psw.cc = ARCH_DEP(plo_csdstx) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSTSTGR:
-                regs->psw.cc = ARCH_DEP(plo_cststgr) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-            case PLO_CSTSTX:
-                regs->psw.cc = ARCH_DEP(plo_cststx) (r1, r3,
-                        effective_addr2, b2, effective_addr4, b4, regs);
-                break;
-#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+                case PLO_CLGR:
+                    regs->psw.cc = ARCH_DEP(plo_clgr) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CLX:
+                    regs->psw.cc = ARCH_DEP(plo_clx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSGR:
+                    regs->psw.cc = ARCH_DEP(plo_csgr) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSX:
+                    regs->psw.cc = ARCH_DEP(plo_csx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_DCSGR:
+                    regs->psw.cc = ARCH_DEP(plo_dcsgr) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_DCSX:
+                    regs->psw.cc = ARCH_DEP(plo_dcsx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSSTGR:
+                    regs->psw.cc = ARCH_DEP(plo_csstgr) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSSTX:
+                    regs->psw.cc = ARCH_DEP(plo_csstx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSDSTGR:
+                    regs->psw.cc = ARCH_DEP(plo_csdstgr) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSDSTX:
+                    regs->psw.cc = ARCH_DEP(plo_csdstx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSTSTGR:
+                    regs->psw.cc = ARCH_DEP(plo_cststgr) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+                case PLO_CSTSTX:
+                    regs->psw.cc = ARCH_DEP(plo_cststx) (r1, r3,
+                            effective_addr2, b2, effective_addr4, b4, regs);
+                    break;
+   #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-
-            default:
-                regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-
+                default:
+                    regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+            }
         }
-
-        /* Release main-storage access lock */
-        RELEASE_MAINLOCK(regs);
+        RELEASE_MAINLOCK( regs );
 
         if(regs->psw.cc && sysblk.cpus > 1)
         {
             PTT_CSF("*PLO",regs->GR_L(0),regs->GR_L(r1),regs->psw.IA_L);
             sched_yield();
         }
-
     }
 }
 #endif /* defined( FEATURE_PERFORM_LOCKED_OPERATION ) */
@@ -1490,44 +1492,43 @@ BYTE    old;                            /* Old value                 */
     S(inst, regs, b2, effective_addr2);
 
     ITIMER_SYNC(effective_addr2,0,regs);
-    /* Perform serialization before starting operation */
-    PERFORM_SERIALIZATION (regs);
 
-    /* Get operand absolute address */
-    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    /* Perform serialization before and after operation */
+    PERFORM_SERIALIZATION( regs );
+    {
+        /* Get operand absolute address */
+        main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
+        /* MAINLOCK may be required if cmpxchg assists unavailable */
+        OBTAIN_MAINLOCK( regs );
+        {
+            /* Get old value */
+            old = *main2;
 
-    /* Get old value */
-    old = *main2;
-
-    /* Attempt to exchange the values */
-    /*  The WHILE statement that follows could lead to a        @PJJ */
-    /*  TS-style lock release never being noticed, because      @PJJ */
-    /*  because such release statements are implemented using   @PJJ */
-    /*  regular instructions such as MVI or even ST which set   @PJJ */
-    /*  [the most significant bit of] the mem_lockbyte to zero; @PJJ */
-    /*  these are NOT being protected using _MAINLOCK.  In the  @PJJ */
-    /*  absence of a machine assist for "cmpxchg1" it is then   @PJJ */
-    /*  possible that this reset occurs in between the test     @PJJ */
-    /*  IF (old == mem_lockbyte), and the updating of           @PJJ */
-    /*  mem_lockbyte = 255;  As this update in the case         @PJJ */
-    /*  old == 255 is not needed to start with, we have         @PJJ */
-    /*  inserted the test IF (old != 255) in front of the       @PJJ */
-    /*  original WHILE statement.                               @PJJ */
-    /*  (The above bug WAS experienced running VM on an ARM     @PJJ */
-    /*  Raspberry PI; this correction fixed it.)                @PJJ */
-    /*                              (Peter J. Jansen, May 2015) @PJJ */
-    if (old != 255)
-        while (cmpxchg1(&old, 255, main2));
-    regs->psw.cc = old >> 7;
-
-    /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Perform serialization after completing operation */
-    PERFORM_SERIALIZATION (regs);
+            /* Attempt to exchange the values */
+            /*  The WHILE statement that follows could lead to a        @PJJ */
+            /*  TS-style lock release never being noticed, because      @PJJ */
+            /*  because such release statements are implemented using   @PJJ */
+            /*  regular instructions such as MVI or even ST which set   @PJJ */
+            /*  [the most significant bit of] the mem_lockbyte to zero; @PJJ */
+            /*  these are NOT being protected using _MAINLOCK.  In the  @PJJ */
+            /*  absence of a machine assist for "cmpxchg1" it is then   @PJJ */
+            /*  possible that this reset occurs in between the test     @PJJ */
+            /*  IF (old == mem_lockbyte), and the updating of           @PJJ */
+            /*  mem_lockbyte = 255;  As this update in the case         @PJJ */
+            /*  old == 255 is not needed to start with, we have         @PJJ */
+            /*  inserted the test IF (old != 255) in front of the       @PJJ */
+            /*  original WHILE statement.                               @PJJ */
+            /*  (The above bug WAS experienced running VM on an ARM     @PJJ */
+            /*  Raspberry PI; this correction fixed it.)                @PJJ */
+            /*                              (Peter J. Jansen, May 2015) @PJJ */
+            if (old != 255)
+                while (cmpxchg1( &old, 255, main2 ));
+            regs->psw.cc = old >> 7;
+        }
+        RELEASE_MAINLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
     if (regs->psw.cc == 1)
     {

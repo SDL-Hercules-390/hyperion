@@ -8,3 +8,4 @@ loadcore    "$(testpath)/CBUC.core"
 script      "$(testpath)/CBUC.subtst"  &      # ('&' = async thread!)
 runtest     300                               # (subtst will stop it)
 *Done
+numcpu 1

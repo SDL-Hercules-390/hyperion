@@ -329,7 +329,7 @@ __asm__ __volatile__ (
 
 #define cmpxchg1(x,y,z) cmpxchg1_amd64(x,y,z)
 static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
+ /* returns 0 on success otherwise returns 1 */
  BYTE code;
  BYTE *ptr_data=ptr;
  __asm__ __volatile__ (
@@ -345,7 +345,8 @@ static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 
 #define cmpxchg4(x,y,z) cmpxchg4_amd64(x,y,z)
 static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
+ /* values passed in guest big-endian format */
+ /* returns 0 on success otherwise returns 1 */
  BYTE code;
  U32 *ptr_data=ptr;
  __asm__ __volatile__ (
@@ -361,7 +362,8 @@ static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 
 #define cmpxchg8(x,y,z) cmpxchg8_amd64(x,y,z)
 static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
+ /* values passed in guest big-endian format */
+ /* returns 0 on success otherwise returns 1 */
  BYTE code;
  U64 *ptr_data=ptr;
  __asm__ __volatile__ (
@@ -427,7 +429,8 @@ LABEL2
 
 #define cmpxchg8(x,y,z) cmpxchg8_ppc(x,y,z)
 static __inline__ BYTE cmpxchg8_ppc(U64 *old, U64 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
+/* values passed in guest big-endian format */
+/* returns 0 on success otherwise returns 1 */
 U64 prev = *old;
 return (prev != (*old = __cmpxchg_u64((U64*)ptr, prev, new)));
 }
@@ -457,14 +460,15 @@ LABEL2
 
 #define cmpxchg4(x,y,z) cmpxchg4_ppc(x,y,z)
 static __inline__ BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
+/* values passed in guest big-endian format */
+/* returns 0 on success otherwise returns 1 */
 U32 prev = *old;
 return (prev != (*old = __cmpxchg_u32((U32*)ptr, prev, new)));
 }
 
 #define cmpxchg1(x,y,z) cmpxchg1_ppc(x,y,z)
 static __inline__ BYTE cmpxchg1_ppc(BYTE *old, BYTE new, void *ptr) {
-/* returns zero on success otherwise returns 1 */
+/* returns 0 on success otherwise returns 1 */
 long  off, shift;
 BYTE  cc;
 U32  *ptr4, val4, old4, new4;
@@ -654,6 +658,7 @@ U32  *ptr4, val4, old4, new4;
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg1
 static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
+ /* returns 0 on success otherwise returns 1 */
  BYTE code;
  if (*old == *(BYTE *)ptr)
  {
@@ -674,6 +679,8 @@ static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg4
 static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
+ /* values passed in guest big-endian format */
+ /* returns 0 on success otherwise returns 1 */
  BYTE code;
  if (*old == *(U32 *)ptr)
  {
@@ -694,6 +701,8 @@ static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg8
 static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
+ /* values passed in guest big-endian format */
+ /* returns 0 on success otherwise returns 1 */
  BYTE code;
  if (*old == *(U64 *)ptr)
  {
@@ -714,6 +723,8 @@ static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg16
 static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+ /* values passed in guest big-endian format */
+ /* returns 0 on success otherwise returns 1 */
  int code;
  if (*old1 == *(U64 *)ptr && *old2 == *((U64 *)ptr + 1))
  {
