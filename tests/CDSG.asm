@@ -1,91 +1,94 @@
- TITLE ' Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions'
+ TITLE '                Testcase for CDSG, STPQ and LPQ Instructions  '
 ***********************************************************************
-*
-*  Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions
-*
+*                                                                     *
+*             Testcase for CDSG, STPQ and LPQ Instructions            *
+*                                                                     *
 ***********************************************************************
-*
-*  CDSG is one of the instructions that the POP refers to as having
-*  Interlocked-Update References, also known as being 'atomic'.  This                                     
-*  instruction can be implemented using compiler intrinsics for certain    
-*  host architectures.  On X86-64 / AMD64 processors, the "cmpxchg16b"     
-*  instruction can be used when available.
-*
-*  This means that whilst one CPU performs a CDSG instruction, its      
-*  memory references are interlocked against those by other CPU's.      
-*  This test attempts to verify this, with an approach, similar to the     
-*  one in the CBUC test.                                                      
-*
-*  The STPQ and LPQ instructions also use "cmpxchg" and are tested      
-*  in hewre as well.                                               
-*
+*                                                                     *
+*  The CDSG, STPQ and LPQ instructions all have 'Interlocked-Update   *
+*  References' as described in the Principles of Operation (POP),     *
+*  also known as being 'atomic'.  Hercules implements these using the *
+*  "cmpxchg16" function, which can be hardware assisted for certain   *
+*  host architectures.  On X86-64 / AMD64 processors, the             *
+*  "cmpxchg16b" instruction can be used when available.               *
+*                                                                     *
+*  This means that whilst one CPU performs a CDSG instruction, its    *
+*  memory references are interlocked against those by other CPU's.    *
+*  This test attempts to verify this, with an approach, similar to    *
+*  the one in the CBUC test.                                          *
+*                                                                     *
+*  The STPQ and LPQ instructions also use "cmpxchg16" and are tested  *
+*  in here as well.                                                   *
+*                                                                     *
 ***********************************************************************
                                                                 SPACE
 ***********************************************************************
-*
-*                       Example test scripts
-*
-*                            (CDSG.tst)
-*
-* *Testcase for cmpxchg16 as used by CDSG, STPQ and LPQ instructions
-* mainsize    1
-* numcpu      2
-* sysclear
-* archlvl     z/Arch
-* loadcore    "$(testpath)/CDSG.core"
-* runtest     1                                
-* v 400.38
-* v 438.C
-* v 444.C
-* #v 460.10000
-* *Done
-*
+*                                                                     *
+*                       Example test scripts                          *
+*                                                                     *
+*                            (CDSG.tst)                               *
+*                                                                     *
+* *Testcase for CDSG, STPQ and LPQ Instructions                       *
+* mainsize    1                                                       *
+* numcpu      2                                                       *
+* sysclear                                                            *
+* archlvl     z/Arch                                                  *
+* loadcore    "$(testpath)/CDSG.core"                                 *
+* runtest     1                                                       *
+* v 900.38                                                            *
+* v 940.70                                                            *
+* *Compare                                                            *
+* v 940.10                                                            *
+* *Want "Success! CDSQ STPQ LPQ" E2A48383 85A2A240 5A40C3C4 E2C76B40  *
+* #v 960.100                                                          *
+* *Done                                                               *
+*                                                                     *
 ***********************************************************************
                                                                 EJECT
 ***********************************************************************
-*
-*                        PROGRAMMING NOTE
-*
-*  During initialisation we test the functionality of the Store Pair    
-*  to Quadword (STPQ) and load Pair from Quadword (LPQ) instructions.
-*  We merely do this as these two intructions also rely on the 
-*  Hercules macro cmpchxg16 (as of the most recent updates), as does
-*  the CDSG implementation.  This cmpxchg16 macro may be assisted, 
-*  depending on the Hercules host architecture.
-*
-*  After initialisation, a second CPU is started, at which point in
-*  time both CPU's perform a loop lasting LOOPMAX iterations.  The
-*  first of the loop centers around the CDSG instruction.  The second
-*  loop performs 2 CSG instructions, the first one of which overlaps
-*  with the 2nd half destination of CDSG.  These overlapping causes
-*  CC=1 when it occurs.  As a result, the non-overlapping destinations
-*  gets incremented exactly LOOPMAX times, the overlapping part twice
-*  that.  This is what is being checked for success of the test.  By
-*  inspecting the CDSGCNTR and CSG_CNTR, one can see how many attempts
-*  were needed.  Thes are always higher that LOOPMAX, the exact number
-*  varies on every testrun. 
-*
-*  The DESTination area is 24 bytes long, and is initialised as
-*  follows :
-*
-*     '1A1B2A2B3A3B00004A4B5A5B6A6B00007A7B8A8B9A9B0000'X
-*
-*  The first loop works against DEST1+DEST2 (i.e. the leftmost 16 bytes),
-*  the second loop against DEST2+DEST3 (i.e. the rightmost 16 bytes).
-*  Both loops implement an atomic "increment" with the value :
-*
-*     '00000000000000010000000000000001'X
-*
-*  I.e. for the second loop too :  
-*
-*                     '00000000000000010000000000000001'X
-*
-*  The process ends when both loops have incremented MAXLOOP times,
-*  and the doubleword in the middle will have been incremented 
-*  exactly twice that amount -- that is, if the CDSG operation is 
-*  really atomic.  And that is what will decide a successfull CDSG
-*  instruction or not.
-*
+*                                                                     *
+*                        PROGRAMMING NOTE                             *
+*                                                                     *
+*  During initialisation we test the functionality of the Store Pair  *
+*  to Quadword (STPQ) and load Pair from Quadword (LPQ) instructions. *
+*  We merely do this as these two intructions also rely on the        *
+*  Hercules macro cmpchxg16 (as of the most recent updates), as does  *
+*  the CDSG implementation.  This cmpxchg16 macro may be assisted,    *
+*  depending on the Hercules host architecture.                       *
+*                                                                     *
+*  After initialisation, a second CPU is started, at which point in   *
+*  time both CPU's perform a loop lasting LOOPMAX iterations.  The    *
+*  first of the loop centers around the CDSG instruction.  The second *
+*  loop performs 2 CSG instructions, the first one of which overlaps  *
+*  with the DEST2 destination of CDSG.  This overlapping causes CC=1  *
+*  when it occurs.  As a result, the non-overlapping destinations     *
+*  get incremented exactly LOOPMAX times, the overlapping part twice  *
+*  that.  This is what is being checked for success of the test.  By  *
+*  inspecting the CDSGCNTR and CSG_CNTR, one can see how many         *
+*  attempts were needed.  These are allmost always higher than        *
+*  LOOPMAX, the exact number varies on every testrun.                 *
+*                                                                     *
+*  The DESTination area DEST1+DEST2+DEST3 is 3 * 8 bytes long,        *
+*  and is initialised as follows :                                    *
+*                                                                     *
+*     '1A1B2A2B3A3B00004A4B5A5B6A6B00007A7B8A8B9A9B0000'X             *
+*                                                                     *
+*  The first loop works against DEST1+DEST2 (the leftmost 16 bytes),  *
+*  the second loop against DEST2+DEST3 (the rightmost 16 bytes).      *
+*  Both loops implement an atomic "increment" with the value :        *
+*                                                                     *
+*     '00000000000000010000000000000001'X                             *
+*                                                                     *
+*  Thus also for the second loop :                                    *
+*                                                                     *
+*                     '00000000000000010000000000000001'X             *
+*                                                                     *
+*  The process ends when both loops have incremented LOOPMAX times,   *
+*  and the doubleword in the middle will have been incremented        *
+*  exactly twice that amount -- that is, if the CDSG operation is     *
+*  really atomic.  And that is what will decide a successfull CDSG    *
+*  instruction or not.                                                *
+*                                                                     *
 ***********************************************************************
                                                                 EJECT
          PRINT OFF
@@ -93,36 +96,36 @@
          PRINT ON
                                                                 SPACE
 ***********************************************************************
-*        SATK prolog stuff...
+*        SATK prolog stuff...                                         *
 ***********************************************************************
                                                                 SPACE
          ARCHLVL  MNOTE=NO
                                                                 EJECT
 ***********************************************************************
-*        Initiate the CDSG CSECT in the CODE region
-*        with the location counter at 0
+*        Initiate the CDSG CSECT in the CODE region                   *
+*        with the location counter at 0                               *
 ***********************************************************************
                                                                 SPACE
-CDSG     ASALOAD  REGION=CODE
+CDSGTEST ASALOAD  REGION=CODE
                                                                 SPACE 3
 ***********************************************************************
-*        Define the z/Arch RESTART PSW
+*        Define the z/Arch RESTART PSW                                *
 ***********************************************************************
                                                                 SPACE
 PREVORG  EQU   *
-         ORG   CDSG+X'1A0'
+         ORG   CDSGTEST+X'1A0'
 *        PSWZ  <sys>,<key>,<mwp>,<prog>,<addr>[,amode]
          PSWZ  0,0,0,0,X'200',64
          ORG   PREVORG
                                                                 SPACE 3
 ***********************************************************************
-*        Create IPL (restart) PSW
+*        Create IPL (restart) PSW                                     *
 ***********************************************************************
                                                                 SPACE
          ASAIPL   IA=BEGIN
                                                                 EJECT
 ***********************************************************************
-*               The actual CBUC program itself...
+*        The actual CDSG program itself...                            *
 ***********************************************************************
                                                                 SPACE
          USING CDSG,R0                  No base registers needed
@@ -145,46 +148,57 @@ BEGIN2   DS    0H
          CG    R4,INIT1                 Did LPQ high DW work ...
          BNE   LPQFAIL1                 ... or not ?
          CG    R5,INIT2                 Did LPQ low DW work ...
-         BNE   LPQFAIL2                 ... or not ?  
+         BNE   LPQFAIL2                 ... or not ?
          STPQ  R4,DEST1                 Store DEST1+DEST2 for CDSG use
+*                                       R4+R5 for CDSGLOOP to use
          CG    R4,DEST1                 Did STPQ high DW work ...
-         BNE   STPQFAl1                 ... or not ?
+         BNE   STPQFAL1                 ... or not ?
          CG    R5,DEST2                 Did STPQ low DW work ...
-         BNE   STPQFAL2                 ... or not ?  
+         BNE   STPQFAL2                 ... or not ?
          LA    R14,TRACE                Initialize CDSG trace pointer
-*                                       R4+R5 for CDSGLOOP to use         
                                                                 SPACE
          LGR   R6,R5                    R6+R7 for CSG_LOOP to use
          LG    R7,INIT3                 Load INIT3 to initialize ...
          STG   R7,DEST3                 DEST3 so CSG_CPU can use it
-                                                                SPACE         
+                                                                SPACE
          LA    R2,1                     Second CPU number
          LA    R8,CSG_CPU               Point to its entry point
          STH   R8,X'1AE'                Update restart PSW
          SIGP  R0,R2,X'06'              Restart second CPU
          BNZ   SIG2FAIL                 WTF?! (SIGP failed!)
-*        B     CDSG_CPU                 Enter our own work loop
-                                                                SPACE 6
+                                                                EJECT
+***********************************************************************
+*  The first loop incremenets the rightmost halfwords of DEST1 and    *
+*  DEST2 with a single atomic CDSG instruction.  But the 2nd CPU will *
+*  attempt to do the same thing against DEST2 with a CSG instruction, *
+*  thus causing collisions now and then.  We keep track of the total  *
+*  CDSG's, which is limited to CNTRMAX.  The loop is expected to end  *
+*  before that, when exactly LOOPMAX successfule increments (i.e.     *
+*  SWAP operations) have taken place.                                 *
+***********************************************************************
+                                                                SPACE 3
 CDSG_CPU XGR   R12,R12                  Initialise CDSG counter
 CDSGLOOP DS    0H
          MVI   3(R14),X'1'              Trace CC=1 from previous CDSG
-CDSG_CC0 DS    0H         
+CDSG_CC0 DS    0H
          CLI   STOPFLAG,X'00'           Are we being asked to stop?
          BNE   GOODEOJ                  Yes, then do so.
          LA    R12,1(R12)               Increment the CDSG counter
          ST    R12,CDSGCNTR             Update CDSG counter
-         LA    R8,1(R4)                 Increment DEST1 
+         C     R12,CNTRMAX              CDSG counter overrun
+         BH    CDSGCNTO                  Yes, that should never happen
+         LA    R8,1(R4)                 Increment DEST1
          LA    R9,1(R5)                 Increment DEST1
          LA    R14,16(R14)              Point to the next TRACE entry
-         STH   R9,0(R14)                Trace the CDSG DEST2 update 
-         STH   R8,4(R14)                Trace the CDSG DEST1 update 
+         STH   R9,0(R14)                Trace the CDSG DEST2 update
+         STH   R8,4(R14)                Trace the CDSG DEST1 update
          CDSG  R4,R8,DEST1              CDSG to attempt doing it
          BNE   CDSGLOOP                 The CSG_CPU came in between
-         CLM   R8,B'0011',LOOPMAX       End value reached ?       
+         CLM   R8,B'0011',LOOPMAX       End value reached ?
          BE    CDSGEND                  Yes, CDSG incrementing ended
          LGR   R4,R8                    Copy the incremented DEST1
          LGR   R5,R9                    Copy the incremented DEST2
-         B     CDSG_CC0                 Go try the next CDSG  
+         B     CDSG_CC0                 Go try the next CDSG
 CDSGEND  DS    0H
          CLC   DEST3+6(2),LOOPMAX       Is also CSG_LOOP ended yet ?
          BNE   CDSGEND                  Spin-loop style waiting for it
@@ -192,47 +206,82 @@ FINALTST DS    0H                       OK, both loops are finished
          CLC   DEST2+6(2),LOOPMAX2      DEST2 must be =2*LOOPMAX
          BE    GOODEOJ                  Yes, then we have success !
          B     FAILEOJ                  No, the test failed !!
+                                                                EJECT
+***********************************************************************
+*  The second loop incremenets the rightmost halfwords of DEST2 and   *
+*  DEST3, both of which use the atomic CSG instruction.  But the one  *
+*  against DEST2 will collide now and then with the CDSG atomic       *
+*  increments of DEST1+DEST2.  We keep track of the total number of   *
+*  CSG's against DEST2, which is limited to CNTRMAX.  The loop is     *
+*  expected to end before that, when DEST2 (and DEST3 also) have been *
+*  able to increment (i.e. SWAP) exactly LOOPMAX times.               *
+***********************************************************************
                                                                 SPACE 3
 CSG_CPU  XGR   R13,R13                  Initialise CSG counter
-         LG    R6,DEST2                 Re-initialise R6
-         LG    R7,DEST3                 Re-initialise R7
-         LA    R15,TRACE+8              Initialize CSG trace pointer         
-         STG   R7,DEST4                 Debug initial R7 value
+         LG    R6,DEST2                 Initialise R6 for CSG
+         LG    R7,DEST3                 Initialise R7 for CSG
+         LA    R15,TRACE+8              Initialize CSG trace pointer
 CSG_LOOP DS    0H
          MVI   3(R15),X'1'              Trace CC=1 from previous CSG
-CSG_CC0  DS    0H   
+CSG_CC0  DS    0H
          CLI   STOPFLAG,X'00'           Are we being asked to stop?
-         BNE   GOODEOJ                  Yes, then do so.
+         BNE   ENDNOTOK                 Yes, then do so.
          LA    R13,1(R13)               Increment the CSG counter
-         ST    R13,CSG_CNTR             Update CSG counter        
+         ST    R13,CSG_CNTR             Update CSG counter
+         C     R13,CNTRMAX              CSG counter overrun
+         BH    CSGCNTO                  Yes, that should never happen
          LA    R10,1(R6)                Increment DEST2
          LA    R15,16(R15)              Point to the next TRACE entry
-         STH   R10,0(R15)               Trace the CSG DEST2 update 
-         STH   R11,4(R15)               Trace the previous CSG DEST3 update         
+         STH   R10,0(R15)               Trace the CSG DEST2 update
+         STH   R11,4(R15)               Trace the previous DEST3 update
          CSG   R6,R10,DEST2             CSG to attempt doing it
          BNE   CSG_LOOP                 The CDSG_CPU came in between
          LA    R11,1(R7)                Increments DEST3
-CSGLOOP2 DS    0H                 
-         CSG   R7,R11,DEST3             CSG to attempt doing it 
-         BNE   CSGLOOP2                 CDSGEND read came in between         
-         CLM   R11,B'0011',LOOPMAX      End value reached ?       
+CSGLOOP2 DS    0H
+         CSG   R7,R11,DEST3             CSG to attempt doing it
+         BNE   CSGLOOP2                 CDSGEND read came in between
+         CLM   R11,B'0011',LOOPMAX      End value reached ?
          BE    CSG_END                  Yes, CSG incrementing ended
          LGR   R6,R10                   Copy the incremented DEST2
          LGR   R7,R11                   Copy the incremented DEST3
-         B     CSG_CC0                  Go try the next CSG  
+         B     CSG_CC0                  Go try the next CSG
 CSG_END  DS    0H
          CLC   DEST1+6(2),LOOPMAX       Is also CDSGLOOP ended yet ?
          BNE   CSG_END                  Spin-loop style waiting for it
-*        B     FINALTST                 OK, both loops are finished
-         CLC   DEST2+6(2),LOOPMAX2      DEST2 must be =2*LOOPMAX
-         BE    GOODEOJ                  Yes, then we have success !
-         B     FAILEOJ                  No, the test failed !!         
+         B     ENDOK                    OK, both loops are finished
                                                                 EJECT
 ***********************************************************************
-*                            PSWs
+*        Final counter updates.                                       *
 ***********************************************************************
                                                                 SPACE 3
-GOODEOJ  DWAITEND LOAD=YES              Normal completion
+GOODEOJ  DS       0H
+         MVC      STATUS,=CL32'Success ! CDSG, STPQ and LPQ: OK'
+         L        R12,CDSGCNTR          Load CSDG counter
+         CVD      R12,PACKED            Convert CDSG counter to packed
+         MVC      CDSGCMPR,EDIT         Copy EDIT mask in CDSG counter
+         ED       CDSGCMPR,PACKED+5     CDSG counter in zoned format
+         LH       R12,DEST1+6           Load CDSG SWAPs counter
+         CVD      R12,PACKED            Convert it to packed
+         MVC      CDSGSWAP,EDIT         Copy EDIT mask in CDSG SWAP ctr
+         ED       CDSGSWAP,PACKED+5     CDSG SWAPS counter in zoned
+         L        R13,CSG_CNTR          Load CSG counter
+         CVD      R13,PACKED            Convert CSG  counter to packed
+         MVC      CSG_CMPR,EDIT         Copy EDIT mask in CSG  counter
+         ED       CSG_CMPR,PACKED+5     CSG  counter in zoned format
+         LH       R13,DEST3+6           Load CSG SWAPs counter
+         CVD      R13,PACKED            Convert it to packed
+         MVC      CSG_SWAP,EDIT         Copy EDIT mask in CSG SWAP cntr
+         ED       CSG_SWAP,PACKED+5     CSG SWAPS counter in zoned
+                                                                EJECT
+***********************************************************************
+*        PSWs and final status update.                                *
+***********************************************************************
+                                                                SPACE 3
+ENDOK    DS       0H
+         DWAITEND LOAD=YES              Normal completion
+                                                                SPACE 4
+ENDNOTOK DS       0H
+         DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
                                                                 SPACE 4
 FAILEOJ  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
          DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
@@ -244,46 +293,74 @@ SIG2FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
          DWAIT    LOAD=YES,CODE=222     Second SIGP failed
                                                                 SPACE 4
 LPQFAIL1 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-         DWAIT    LOAD=YES,CODE=333     Second SIGP failed
+         MVC      STATUS,=CL32'Failure! LPQ  Hi  does NOT match'
+         DWAIT    LOAD=YES,CODE=333     LPQ High part failed
                                                                 SPACE 4
 LPQFAIL2 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-         DWAIT    LOAD=YES,CODE=444     Second SIGP failed
+         MVC      STATUS,=CL32'Failure! LPQ  Lo  does NOT match'
+         DWAIT    LOAD=YES,CODE=444     LPQ Low part failed
                                                                 SPACE 4
 STPQFAL1 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-         DWAIT    LOAD=YES,CODE=555     Second SIGP failed
+         MVC      STATUS,=CL32'Failure! STPQ Hi  does NOT match'
+         DWAIT    LOAD=YES,CODE=555     STPQ High part failes
                                                                 SPACE 4
 STPQFAL2 MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-         DWAIT    LOAD=YES,CODE=666     Second SIGP failed
+         MVC      STATUS,=CL32'Failure! STPQ Lo  does NOT match'
+         DWAIT    LOAD=YES,CODE=666     STPQ Low part failed
+                                                                SPACE 4
+CDSGCNTO MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+         MVC      STATUS,=CL32'Failure! CDSG    Counter Overrun'
+         DWAIT    LOAD=YES,CODE=777     CDSG Counter Overrun
+                                                                SPACE 4
+CSGCNTO  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+         MVC      STATUS,=CL32'Failure! CBG     Counter Overrun'
+         DWAIT    LOAD=YES,CODE=888     CSG Counter Overrun
                                                                 EJECT
 ***********************************************************************
-*                       Working Storage
+*        Working Storage                                              *
 ***********************************************************************
                                                                 SPACE
          LTORG ,                        Literals pool
                                                                 SPACE 4
-         ORG   CDSG+X'400' 
-         CNOP  0,16                     MUST be quadword ALIGNED!         
-DEST1    DC    XL8'0000000000000000'    DEST1+DEST2 updated using CDSG
-DEST2    DC    XL8'0000000000000000'    DEST2 updated using CSG 
-DEST3    DC    XL8'0000000000000000'    DEST3 updated whenever CSG
-DEST4    DC    XL8'0000000000000000'    DEST4 (for debugging purposes)
-*                                       successfully updates DEST 
+         ORG   CDSGTEST+X'900'
          CNOP  0,16                     MUST be quadword ALIGNED!
-INIT1    DC    XL8'1A1B2A2B3A3B0000'    Initial value for DEST1           
+DEST1    DC    XL8'0000000000000000'    DEST1+DEST2 updated using CDSG
+DEST2    DC    XL8'0000000000000000'    DEST2 updated using CSG
+DEST3    DC    XL8'0000000000000000'    DEST3 updated whenever CSG
+*                                       successfully updates DEST
+         CNOP  0,16                     MUST be quadword ALIGNED!
+INIT1    DC    XL8'1A1B2A2B3A3B0000'    Initial value for DEST1
 INIT2    DC    XL8'4A4B5A5B6A6B0000'    Initial value for DEST2
-INIT3    DC    XL8'7A7B8A8B9A9B0000'    Initial value for DEST3 
+INIT3    DC    XL8'7A7B8A8B9A9B0000'    Initial value for DEST3
                                                                 SPACE
-CDSGCNTL DC    CL8'CDSGCNTR'            CDSG counter label      
+         CNOP  0,16                     So that the output looks better
+STATUS   DC    CL32'Failure!'           Overall status message
+COUNTERS DC    CL16'Instr. CMP  SWAP'   Title column
+CDSG     DC    CL4'CDSG'                CDSG Instruction
+CDSGCMPR DC    CL6' '                   CDSG instructions attempted
+CDSGSWAP DC    CL6' '                   CDSG successful swaps done
+CSG      DC    CL4'CSG '                CSG  Instruction
+CSG_CMPR DC    CL6' '                   CSG  DEST2 instructions done
+CSG_SWAP DC    CL6' '                   CSG  DEST2 successful swaps
+                                                                SPACE
+         CNOP  0,16                     So that the output looks better
+CDSGCNTL DC    CL8'CDSGCNTR'            CDSG counter label
+         DC    CL4' '
 CDSGCNTR DC    F'0'                     CDSG instructions attempted
-CSG_CNTL DC    CL8'CSG_CNTR'            CSG  counter label      
+CSG_CNTL DC    CL8'CSG_CNTR'            CSG  counter label
+         DC    CL4' '
 CSG_CNTR DC    F'0'                     CSG  instructions attempted
-LOOPMAX  DC    XL2'4000'                Maximum number of loops
-LOOPMAX2 DC    XL2'8000'                Maximum number of loops * 2
                                                                 SPACE
+CNTRMAX  DC    F'60000'                 Counter Overrun Maximum
+LOOPMAX  DC    H'15000'                 Maximum number of loops
+LOOPMAX2 DC    H'30000'                 Maximum number of loops * 2
+                                                                SPACE
+PACKED   DC    PL8'0'                   Packed decimal work area
+EDIT     DC    XL6'402020202020'        EDIT mask with leading blank
 STOPFLAG DC    X'00'                    Set to non-zero to stop test
                                                                 SPACE
-         CNOP  0,16                     Beautify trace table looks                                           
-TRACE    DC    65535F'0'                Trace area for debugging     
+         CNOP  0,16                     Beautify trace table looks
+TRACE    DC    65535F'0'                Trace area for debugging
                                                                 EJECT
                                                                 SPACE 3
 R0       EQU   0

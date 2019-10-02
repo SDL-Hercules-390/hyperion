@@ -1,13 +1,15 @@
-*Testcase cmpxchg16 as used by CDSG, STPQ and LPQ instructions
+*Testcase for CDSG, STPQ and LPQ Instructions
 mainsize    1
 numcpu      2
 sysclear
 archlvl     z/Arch
 loadcore    "$(testpath)/CDSG.core"
-runtest     1                                 # (subtst will stop it)
-v 400.38
-v 438.C
-v 444.C
-#v 460.10000
+runtest     1 
+v 900.38                                
+v 940.70
+*Compare
+v 940.10
+*Want "Success ! CDSQ, STPQ and LPQ: OK"  E2A48383 85A2A240 5A40C3C4 E2C76B40
+#v 960.100  
 *Done
 
