@@ -29,7 +29,7 @@
   but that slows Hercules down to crawl, which is why we execute multiple
   instructions in a loop in the first place before calling INTERRUPT_PENDING()
   macro. We don't want to call INTERRUPT_PENDING() macro TOO often, but we
-  should MAYBE be callingit more frequently than we are. The trick is to
+  should MAYBE be calling it more frequently than we are. The trick is to
   determine HOW often is should be called for best performance ON A GIVEN
   HOST SYSTEM. It should be a dynamially calculated value that is calculated
   during startup to prevent our current defined fixed value from unfairly
@@ -119,22 +119,6 @@
 
 --------------------------------------------------------------------------------
 
-  Design a more platform generic host cpu features runtime check that
-  checks for the availability of certain host processor features
-  and then point any needed function-pointers to the correct function.
-  That way we can exploit certain host processor features when they're
-  available. Going through a function pointer is inefficient of course
-  (depending on where the function is being used), but depending on
-  what the function provides, it may be more of a gain than a loss.
-
-  E.g. (WIN64):
-
-    init_hostinfo:
-    BOOL WINAPI IsProcessorFeaturePresent( PF_COMPARE_EXCHANGE128 );
-    _INTEGRAL_MAX_BITS (machdep.h ==> _InterlockedCompareExchange128 ==> cmpxchg16b)
-
---------------------------------------------------------------------------------
-
   Design a way for users to define command synonyms. (dynmod?)
 
 --------------------------------------------------------------------------------
@@ -144,8 +128,8 @@
 
 --------------------------------------------------------------------------------
 
-  Full 2540 reader/punch support!   mode=1 (normal), mode=2 (binary/"card image")
-                                    hopper selection, etc.
+  Full 2540 reader/punch support! mode=1 (normal), mode=2 (binary/"card image")
+                                  hopper selection, etc.
 
 --------------------------------------------------------------------------------
 
