@@ -398,7 +398,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*      mainlock is only obtained by a CPU thread                    */
 /*-------------------------------------------------------------------*/
 
-#define OBTAIN_MAINLOCK(_regs) \
+#define OBTAIN_MAINLOCK_UNCONDITIONAL(_regs) \
  do { \
   if ((_regs)->hostregs->cpubit != (_regs)->sysblk->started_mask) { \
    obtain_lock(&(_regs)->sysblk->mainlock); \
@@ -406,13 +406,16 @@ typedef int CMPFUNC(const void*, const void*);
   } \
  } while (0)
 
-#define RELEASE_MAINLOCK(_regs) \
+#define RELEASE_MAINLOCK_UNCONDITIONAL(_regs) \
  do { \
    if ((_regs)->sysblk->mainowner == (_regs)->hostregs->cpuad) { \
      (_regs)->sysblk->mainowner = LOCK_OWNER_NONE; \
      release_lock(&(_regs)->sysblk->mainlock); \
    } \
  } while (0)
+
+#define  OBTAIN_MAINLOCK(_regs)  OBTAIN_MAINLOCK_UNCONDITIONAL((_regs))
+#define RELEASE_MAINLOCK(_regs) RELEASE_MAINLOCK_UNCONDITIONAL((_regs))
 
 /*-------------------------------------------------------------------*/
 /*      Obtain/Release crwlock                                       */

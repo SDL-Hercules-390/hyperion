@@ -2015,8 +2015,8 @@ VADR    addrp;                          /* Parameter list address    */
 BYTE   *main1;                          /* Mainstor address of op1   */
 int     ln2;                            /* Second operand length - 1 */
 #if defined( FEATURE_033_CSS_FACILITY_2 )
-U64     old16l=0, old16h=0,
-        new16l=0, new16h=0,             /* swap values for cmpxchg16 */
+ALIGN_16 U64 old[2] = { 0, 0 };         /* old values for cmpxchg16  */
+U64     new16l=0, new16h=0,             /* swap values for cmpxchg16 */
         stv16h=0,stv16l=0;              /* 16-byte store value pair  */
 #endif
 U64     old8=0, new8=0;                 /* Swap values for cmpxchg8  */
@@ -2131,8 +2131,8 @@ BYTE    sc;                             /* Store characteristic      */
                     break;
 #if defined( FEATURE_033_CSS_FACILITY_2 )
                 case 2:
-                    old16h = CSWAP64( regs->GR_G( r3+0 ));
-                    old16l = CSWAP64( regs->GR_G( r3+1 ));
+                    old[0] = CSWAP64( regs->GR_G( r3+0 ));
+                    old[1] = CSWAP64( regs->GR_G( r3+1 ));
 
                     new16h = ARCH_DEP( vfetch8 )( addrp+0, rp, regs );
                     new16l = ARCH_DEP( vfetch8 )( addrp+8, rp, regs );
@@ -2179,7 +2179,7 @@ BYTE    sc;                             /* Store characteristic      */
                     break;
 #if defined( FEATURE_033_CSS_FACILITY_2 )
                 case 2:
-                    regs->psw.cc = cmpxchg16( &old16h, &old16l, new16h, new16l, main1 );
+                    regs->psw.cc = cmpxchg16( &old[0], &old[1], new16h, new16l, main1 );
                     break;
 #endif
             }
@@ -2221,8 +2221,8 @@ BYTE    sc;                             /* Store characteristic      */
                         break;
 #if defined( FEATURE_033_CSS_FACILITY_2 )
                     case 2:
-                        regs->GR_G( r3+0 ) = CSWAP64( old16h );
-                        regs->GR_G( r3+1 ) = CSWAP64( old16l );
+                        regs->GR_G( r3+0 ) = CSWAP64( old[0] );
+                        regs->GR_G( r3+1 ) = CSWAP64( old[1] );
                         break;
 #endif
                 }

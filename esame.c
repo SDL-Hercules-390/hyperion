@@ -1540,7 +1540,8 @@ DEF_INST( store_pair_to_quadword )
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-QWORD   qwork;                          /* Quadword work area        */
+BYTE   *main2;                          /* mainstor address          */
+ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
 
     RXY( inst, regs, r1, b2, effective_addr2 );
 
@@ -1548,16 +1549,18 @@ QWORD   qwork;                          /* Quadword work area        */
 
     QW_CHECK( effective_addr2, regs );
 
-    /* Store regs in workarea */
-    STORE_DW( qwork+0, regs->GR_G( r1+0 ));
-    STORE_DW( qwork+8, regs->GR_G( r1+1 ));
+    /* Get operand mainstor address */
+    main2 = MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
     /* Store R1 and R1+1 registers to second operand
        Provide storage consistancy by means of obtaining
        the main storage access lock */
     OBTAIN_MAINLOCK( regs );
     {
-        ARCH_DEP( vstorec )( qwork, 16-1, effective_addr2, b2, regs );
+        // The cmpxchg16 either swaps the desired values immediately,
+        // if not then certainly on the second iteration.
+        while( cmpxchg16 ( &old[0], &old[1], CSWAP64( regs->GR_G( r1 ) ), CSWAP64( regs->GR_G( r1+1 ) ), (U64 *)main2 ) )
+        ;
     }
     RELEASE_MAINLOCK( regs );
 
@@ -1574,7 +1577,8 @@ DEF_INST( load_pair_from_quadword )
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-QWORD   qwork;                          /* Quadword work area        */
+BYTE   *main2;                          /* mainstor address          */
+ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
 
     RXY( inst, regs, r1, b2, effective_addr2 );
 
@@ -1582,18 +1586,24 @@ QWORD   qwork;                          /* Quadword work area        */
 
     QW_CHECK( effective_addr2, regs );
 
+    /* Get operand mainstor address */
+    main2 = MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
     /* Load R1 and R1+1 registers contents from second operand
        Provide storage consistancy by means of obtaining
        the main storage access lock */
     OBTAIN_MAINLOCK( regs );
     {
-        ARCH_DEP( vfetchc )( qwork, 16-1, effective_addr2, b2, regs );
+        // We use the 2nd cmpxchg16 trick, which will write a zero only if the
+        // main2 quadword is already zero, effectively a NO-OP.  As we have
+        // initialised old[*] zero, we always achieve what we need.
+        (void) cmpxchg16 (&old[0], &old[1], 0, 0, main2) ;
     }
     RELEASE_MAINLOCK( regs );
 
     /* Load regs from workarea */
-    FETCH_DW( regs->GR_G( r1+0 ), qwork+0 );
-    FETCH_DW( regs->GR_G( r1+1 ), qwork+8 );
+    FETCH_DW( regs->GR_G( r1+0 ), &old[0] );
+    FETCH_DW( regs->GR_G( r1+1 ), &old[1] );
 
 } /* end DEF_INST( load_pair_from_quadword ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2472,7 +2482,7 @@ register int     r1, r3;                /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 BYTE*   main2;                          /* mainstor address          */
-U64     oldhi, oldlo;                   /* old value                 */
+ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED old value         */
 U64     newhi, newlo;                   /* new value                 */
 
     RSY( inst, regs, r1, r3, b2, effective_addr2 );
@@ -2487,16 +2497,16 @@ U64     newhi, newlo;                   /* new value                 */
         main2 = MADDR( effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
         /* Get old and new values */
-        oldhi = CSWAP64( regs->GR_G( r1+0 ));
-        oldlo = CSWAP64( regs->GR_G( r1+1 ));
-        newhi = CSWAP64( regs->GR_G( r3+0 ));
-        newlo = CSWAP64( regs->GR_G( r3+1 ));
+        old[0] = CSWAP64( regs->GR_G( r1+0 ));
+        old[1] = CSWAP64( regs->GR_G( r1+1 ));
+        newhi  = CSWAP64( regs->GR_G( r3+0 ));
+        newlo  = CSWAP64( regs->GR_G( r3+1 ));
 
         /* MAINLOCK may be required if cmpxchg assists unavailable */
         OBTAIN_MAINLOCK( regs );
         {
             /* Attempt to exchange the values */
-            regs->psw.cc = cmpxchg16( &oldhi, &oldlo, newhi, newlo, main2 );
+            regs->psw.cc = cmpxchg16( &old[0], &old[1], newhi, newlo, main2 );
         }
         RELEASE_MAINLOCK( regs );
     }
@@ -2505,8 +2515,8 @@ U64     newhi, newlo;                   /* new value                 */
     /* Update register values if cmpxchg failed */
     if (regs->psw.cc == 1)
     {
-        regs->GR_G( r1+0 ) = CSWAP64( oldhi );
-        regs->GR_G( r1+1 ) = CSWAP64( oldlo );
+        regs->GR_G( r1+0 ) = CSWAP64( old[0] );
+        regs->GR_G( r1+1 ) = CSWAP64( old[1] );
 
 #if defined( _FEATURE_ZSIE )
         if(SIE_STATB(regs, IC0, CS1))
@@ -7459,6 +7469,7 @@ BYTE   *dest;                         /* Pointer to target byte      */
     RELEASE_MAINLOCK( regs );
 
     ITIMER_UPDATE(effective_addr1,0,regs);
+
 
 } /* end DEF_INST(or_immediate_y) */
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */

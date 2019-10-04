@@ -133,6 +133,16 @@
         return cc;
     }
 
+    #pragma intrinsic ( _InterlockedCompareExchange128 )
+    #define cmpxchg16(  x, y, z, r, s  ) cmpxchg16_x86( x, y, z, r, s )
+    static __inline__ int cmpxchg16_x86( U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr)
+    {
+    	// Please note : old1 MUST be 16-byte aligned !
+        // returns 0 == success, 1 otherwise
+        UNREFERENCED( old2 );
+        return ( _InterlockedCompareExchange128( ptr, new2, new1, old1 ) ? 0 : 1 );
+    }
+
     #if defined( MSC_X86_32BIT )
 
       #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
@@ -377,6 +387,20 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
  return code;
 }
 
+#define cmpxchg16(x,y,z,r,s) cmpxchg16_amd64(x,y,z,r,s)
+static __inline__ int cmpxchg16_amd64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+/* returns 0 on success otherwise returns 1 */
+    BYTE code;
+    volatile __int128 *ptr_data=ptr;
+    __asm__ __volatile__ (
+        "lock;   cmpxchg16b %1\n\t"
+        "setnz   %b0\n\t"
+        : "=q" ( code ), "+m" ( *ptr_data ), "+a" ( *old1 ), "+d" ( *old2 )
+        : "c" ( new2 ), "b" ( new1 )
+        : "cc");
+    return (int)code;
+}
+
 #endif /* defined(_ext_amd64) */
 
 /*-------------------------------------------------------------------
@@ -486,6 +510,76 @@ U32  *ptr4, val4, old4, new4;
 
 #endif /* defined(_ext_ppc) */
 
+/*-------------------------------------------------------------------
+ * ARM aarch64 (like the Raspberry Pi 4)
+ *-------------------------------------------------------------------*/
+#if defined(__aarch64__)
+
+#ifndef cmpxchg16
+  #define cmpxchg16(x,y,z,r,s) cmpxchg16_aarch64(x,y,z,r,s)
+static __inline__ int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+/* returns 0 on success otherwise returns 1 */
+    int result = 1;
+    U64 expected1 = *old1;
+    U64 expected2 = *old2;
+   	__asm __volatile(
+   	    "ldaxp %[old1], %[old2], [%[ptr]]"
+     			: [old1] "+r" (*old1), [old2] "+r" (*old2)
+     			: [ptr] "r" (ptr));
+    if ( expected1 == *old1 && expected2 == *old2 )
+    {
+       	__asm __volatile(
+       	    "stlxp %w[result], %[new1], %[new2], [%[ptr]]"
+         			: [result] "+r" (result)
+         			: [new1] "r" (new1), [new2] "r" (new2), [ptr] "r" (ptr)
+         			: "memory");
+    }
+    return result ;
+}
+#endif /* cmpxchg16 */
+
+#endif /* define(__aarch64__) */
+
+/*-------------------------------------------------------------------
+ * C11_ATOMICS_AVAILABLE
+ *-------------------------------------------------------------------*/
+#if defined( C11_ATOMICS_AVAILABLE )
+
+#if defined( cmpxchg1 ) && !defined( C11_ATOMICS_ASSISTS_NOT_PREFERRED )
+  #undef cmpxchg1
+#endif
+#ifndef cmpxchg1
+#define cmpxchg1(x,y,z) cmpxchg1_C11(x,y,z)
+static __inline__ BYTE cmpxchg1_C11(BYTE *old, BYTE new, volatile void *ptr) {
+/* returns 0o on success otherwise returns 1 */
+            return __atomic_compare_exchange_n ((volatile BYTE *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
+        }
+#endif
+
+#if defined( cmpxchg4 ) && !defined( C11_ATOMICS_ASSISTS_NOT_PREFERRED )
+  #undef cmpxchg4
+#endif
+#ifndef cmpxchg4
+#define cmpxchg4(x,y,z) cmpxchg4_C11(x,y,z)
+static __inline__ BYTE cmpxchg4_C11(U32 *old, U32 new, volatile void *ptr) {
+/* returns zero on success otherwise returns 1 */
+            return __atomic_compare_exchange_n ((volatile U32 *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
+        }
+#endif
+
+#if defined( cmpxchg8 ) && !defined( C11_ATOMICS_ASSISTS_NOT_PREFERRED )
+  #undef cmpxchg8
+#endif
+#ifndef cmpxchg8
+#define cmpxchg8(x,y,z) cmpxchg8_C11(x,y,z)
+static __inline__ BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
+/* returns 0 on success otherwise returns 1 */
+            return __atomic_compare_exchange_n ((volatile U64 *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
+        }
+#endif /* cmpxchg8 */
+
+#endif /* defined( C11_ATOMICS_AVAILABLE ) */
+
 #endif // !defined( _MSVC_ )
 
 /*-------------------------------------------------------------------
@@ -513,6 +607,24 @@ U32  *ptr4, val4, old4, new4;
 
 #if defined(store_dw) || defined(store_dw_noswap)
  #define ASSIST_STORE_DW
+#endif
+
+/*-------------------------------------------------------------------
+ * OBTAIN/RELEASE_MAINLOCK is by default identical to
+ * OBTAIN/RELEASE_MAINLOCK_UNCONDTIONAL but can be nullified in case
+ * the required assists are present unless MAINLOCK_ALWAYS overriden.
+ *-------------------------------------------------------------------*/
+
+#if (! defined( MAINLOCK_ALWAYS )) \
+    && defined( H_ATOMIC_OP )      \
+    && defined( cmpxchg1 )         \
+    && defined( cmpxchg4 )         \
+    && defined( cmpxchg8 )         \
+    && defined( cmpxchg16 )
+  #undef  OBTAIN_MAINLOCK
+  #define OBTAIN_MAINLOCK(_regs) {}
+  #undef  RELEASE_MAINLOCK
+  #define RELEASE_MAINLOCK(_regs) {}
 #endif
 
 /*-------------------------------------------------------------------

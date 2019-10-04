@@ -401,7 +401,7 @@ VADR    effective_addr2,
            in the configuration.  We simply use 1 lock which is the
            main storage access lock which is also used by CS, CDS
            and TS.                                               *JJ */
-        OBTAIN_MAINLOCK( regs );
+        OBTAIN_MAINLOCK_UNCONDITIONAL( regs );
         {
             switch(regs->GR_L(0) & PLO_GPR0_FC)
             {
@@ -508,7 +508,7 @@ VADR    effective_addr2,
                     regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
             }
         }
-        RELEASE_MAINLOCK( regs );
+        RELEASE_MAINLOCK_UNCONDITIONAL( regs );
 
         if(regs->psw.cc && sysblk.cpus > 1)
         {
