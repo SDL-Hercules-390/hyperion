@@ -313,7 +313,7 @@ static void logger_logfile_write( const void* pBuff, size_t nBytes )
  */
 static void logger_logfile_timestamp()
 {
-    if (!sysblk.daemon_mode)
+    if (!extgui)
     {
         struct timeval  now;
         time_t          tt;

@@ -212,6 +212,11 @@ Do Forever
    stmt = STRIP( LINEIN( logfile ))     -- (read logfile statement)
    lineno = lineno + 1                  -- (what line number it is)
 
+   /* Remove the logfile "HH:MM:SS" timestamp prefix, if present */
+
+   If isHHMMSS( WORD( stmt, 1 )) Then
+      stmt = STRIP( SUBWORD( stmt, 2 ))
+
    /* Remove any debugging prefix */
 
    Parse Value WORD( stmt, 1 ) With foo '(' bar ')' +0 foobar
@@ -948,6 +953,23 @@ Return
 
 isnum: procedure -- (is it a numeric value?)
 return arg(1) <> "" & datatype(arg(1),"N");
+
+/*********************************************************************/
+/*                          isHHMMSS                                 */
+/*********************************************************************/
+
+isHHMMSS: procedure -- (is it "HH:MM:SS" logfile timestamp prefix?)
+hhmmss = arg(1)
+If LENGTH( hhmmss ) \= 8 Then return 0
+hh = SUBSTR( hhmmss, 1, 2 )
+c1 = SUBSTR( hhmmss, 3, 1 )
+mm = SUBSTR( hhmmss, 4, 2 )
+c2 = SUBSTR( hhmmss, 6, 1 )
+ss = SUBSTR( hhmmss, 7, 2 )
+return isnum(hh) & c1=":" & isnum(mm) & c2=":" & isnum(ss) & ,
+       hh >= 0 & hh <= 24 & ,
+       mm >= 0 & mm <= 60 & ,
+       ss >= 0 & ss <= 60;
 
 /*********************************************************************/
 /*                           ishex                                   */
