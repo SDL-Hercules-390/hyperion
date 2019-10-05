@@ -1,3 +1,24 @@
+   ------------------------------------------------------------------------
+
+                                N O T E
+
+    NOTE: this file only provides a general overview of the Hercules build
+    procedure and is not maintained regularly. Please also refer to the
+    main "Installation and Operation" web page which provides additional
+    more detailed instructions for building Hercules, including building
+    the all important External Packages if necessary. The webpage URL is:
+
+    
+          https://sdl-hercules-390.github.io/html/hercinst.html
+
+    
+    The build for some platforms is also documented in our README document
+    at: https://github.com/SDL-Hercules-390/hyperion/blob/master/README.md
+
+    The information below only provides general overall build information.
+   ------------------------------------------------------------------------
+
+
 Basic Installation
 ==================
 
