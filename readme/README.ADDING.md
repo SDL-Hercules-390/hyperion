@@ -64,7 +64,7 @@ update the `Makefile.am` file in _that_ directory:
 * [`tests/Makefile.am`](https://github.com/SDL-Hercules-390/hyperion/blob/master/tests/Makefile.am)
 
 If you are adding a new `.html` documentation **webpage** to the `html` subdirectory,
-then you need to add yur new file to _that_ subdirectory's `Makefile.am` file:
+then you need to add your new file to _that_ subdirectory's `Makefile.am` file:
 
 * [`html/Makefile.am`](https://github.com/SDL-Hercules-390/hyperion/blob/master/html/Makefile.am)
 
