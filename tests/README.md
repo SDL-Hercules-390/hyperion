@@ -1,7 +1,8 @@
 ![test image](../readme/images/image_header_herculeshyperionSDL.png)
 [Return to master README.MD](../README.md)
 
-# LOW-LEVEL TEST CASES
+# Low-level Test Cases
+
 ## Contents
 
 1. [About](#About)

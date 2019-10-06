@@ -47,7 +47,7 @@ Once your new build settings have been fully tested (not only to build properly 
 ## Samples
 ### SAMPLE "hqa.h" HEADER
 
-```
+```C
   ////////////////////////////////////////////////////////////////////////////
   //    Hercules Quality Assurance Build Configuration Testing Scenarios
   ////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ Once your new build settings have been fully tested (not only to build properly 
 
 ### SAMPLE "HQA.msvc" NMAKE "!INCLUDE" file
 
-```
+```C
   #----------------------------------------------------------------------
   #  Hercules Quality Assurance Testing msvc build settings overrides
   #----------------------------------------------------------------------

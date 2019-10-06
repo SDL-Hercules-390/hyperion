@@ -31,6 +31,14 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 
 ## Additional README files
 
+### Issues/Bugs
+
+[Unresolved Issues](readme/README.ISSUES.md)  
+
+_**Bug reports** (together with your diagnosis of the fault please!)_ should be reported
+to our **bug report tracking system** by adding/creating a new
+[**"GitHub Issue"**](https://github.com/SDL-Hercules-390/hyperion/issues) on GitHub.
+
 ### Building Hercules
 
 [Building Hercules under AIX](readme/README.AIX.md)  
@@ -41,16 +49,12 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 [Building Hercules for Windows with Visual C](readme/README.MSVC.md) &nbsp; _(obsolete)_  
 [Hercules "External Packages"](readme/README.EXTPKG.md)  
 [HercIFC and Hercules as setuid root programs](readme/README.SETUID.md)  
-[HQA Build Scenarios](readme/README.HQA.md)  
 [How to build Hercules from SVN under Solaris](readme/README.SUN.md)  
-[Low-level Test Cases](tests/README.md)  
 
 ### Mods
 
 [APL/360 mods](readme/README.APL360.md)  
 [ECPS:VM & Extended VM Assists](readme/README.ECPSVM.md)  
-[Hercules CMPSC "Compression Call" instruction support](readme/README.CMPSC.md)  
-[Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
 [Preliminary 2703 BSC Support](readme/README.COMMADPT.md)  
 [RXVT4APL Mods](readme/README.RXVT4APL.md)  
 
@@ -60,19 +64,19 @@ To find out more about this particular version of Hercules 4.x Hyperion, follow 
 [Guest Access To Host IP Stack - The TCPIP (X'75') Instruction](readme/README.TCPIP.md)  
 [Hercules Automatic Operator](readme/README.HAO.md)  
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
-[Hercules Dynamic Loader](readme/README.HDL.md)  
 [Hercules Networking](readme/README.NETWORKING.md)  
-[Hercules PTT Tracing](readme/README.PTT.md)  
 [Hercules REXX Support](readme/README.REXX.md)  
 [Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
 [S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
 [VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
 
-### Hercules Architecture
+### HERCULES INTERNAL READMEs
 
-[Hercules Input/Output Architecture](readme/README.IOARCH.md)  
-
-### Issues
-
-[Unresolved Issues](readme/README.ISSUES.md)  
+[Low-level Test Cases](tests/README.md)  
+[HQA Build Scenarios](readme/README.HQA.md)  
+[PTT Tracing](readme/README.PTT.md)  
+[CMPSC "Compression Call" instruction support](readme/README.CMPSC.md)  
+[Hercules Dynamic Loader](readme/README.HDL.md)  
+[Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
+[Input/Output Architecture](readme/README.IOARCH.md)  
