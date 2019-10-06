@@ -226,6 +226,9 @@
     <Filter Include="Source Files\Hercules\ExtPkgs\telnet\lib">
       <UniqueIdentifier>{7E51CA54-4311-406d-9C9D-ED79986330BB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Other Files\DOC\README\images">
+      <UniqueIdentifier>{959cf32d-895f-4258-b529-320fdeeeac1f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cckdcdsk.c">
@@ -2360,6 +2363,21 @@
     <None Include="tests\CCW-ILS.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\CDSG.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CDSG.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CDSG.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CDSG.PDF">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CDSG.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\CLCL-et-al.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -3537,6 +3555,12 @@
     </Image>
     <Image Include="html\images\telnetwin.png">
       <Filter>Other Files\DOC\html\images</Filter>
+    </Image>
+    <Image Include="readme\images\herclogo.jpg">
+      <Filter>Other Files\DOC\README\images</Filter>
+    </Image>
+    <Image Include="readme\images\image_header_herculeshyperionSDL.png">
+      <Filter>Other Files\DOC\README\images</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

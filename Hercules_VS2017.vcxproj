@@ -841,6 +841,11 @@
     <None Include="tests\CCW-ILS.list" />
     <None Include="tests\CCW-ILS.pdf" />
     <None Include="tests\CCW-ILS.tst" />
+    <None Include="tests\CDSG.asm" />
+    <None Include="tests\CDSG.core" />
+    <None Include="tests\CDSG.list" />
+    <None Include="tests\CDSG.PDF" />
+    <None Include="tests\CDSG.tst" />
     <None Include="tests\CLCL-et-al.asm" />
     <None Include="tests\CLCL-et-al.core" />
     <None Include="tests\CLCL-et-al.list" />
@@ -1387,6 +1392,8 @@
     <Image Include="html\images\translucentonu.gif" />
     <Image Include="html\images\waitoffu.gif" />
     <Image Include="html\images\waitonu.gif" />
+    <Image Include="readme\images\herclogo.jpg" />
+    <Image Include="readme\images\image_header_herculeshyperionSDL.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="hercdasd.rc" />

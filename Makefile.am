@@ -800,6 +800,8 @@ EXTRA_DIST =                  \
   msvc.makefile.includes/PCRE_RULES.msvc      \
   msvc.makefile.includes/REXX_RULES.msvc      \
   README.md                       \
+  readme/images/herclogo.jpg        \
+  readme/images/image_header_herculeshyperionSDL.png  \
   readme/README.AIX.md            \
   readme/README.APL360.md         \
   readme/README.BSD.md            \

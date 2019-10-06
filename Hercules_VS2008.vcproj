@@ -2150,6 +2150,18 @@
 						RelativePath=".\readme\README.WIN64.md"
 						>
 					</File>
+					<Filter
+						Name="images"
+						>
+						<File
+							RelativePath=".\readme\images\herclogo.jpg"
+							>
+						</File>
+						<File
+							RelativePath=".\readme\images\image_header_herculeshyperionSDL.png"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="html"
@@ -3331,6 +3343,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\CDSG.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\CLCL-et-al.core"
 						>
 					</File>
@@ -4254,6 +4270,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CDSG.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\cipher.tst"
 							>
 						</File>
@@ -4614,6 +4634,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CDSG.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\CLCL-et-al.asm"
 							>
 						</File>
@@ -4794,6 +4818,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\CCW-ILS.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CDSG.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CDSG.PDF"
 								>
 							</File>
 							<File

@@ -114,12 +114,22 @@ EXTRA_DIST =                    \
      bim-001-add-sub.list       \
      bim-001-add-sub.tst        \
      brc.txt                    \
+     CBUC.asm                   \
+     CBUC.core                  \
+     CBUC.list                  \
+     CBUC.pdf                   \
+     CBUC.tst                   \
      CCW-ILS.asm                \
      CCW-ILS.list               \
      CCW-ILS.pdf                \
      CCW-ILS.core               \
      CCW-ILS.tst                \
      CCWILS.3390-1.comp-z       \
+     CDSG.asm                   \
+     CDSG.core                  \
+     CDSG.list                  \
+     CDSG.pdf                   \
+     CDSG.tst                   \
      CLCL-et-al.asm             \
      CLCL-et-al.core            \
      CLCL-et-al.list            \
