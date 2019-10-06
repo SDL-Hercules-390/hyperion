@@ -73,6 +73,7 @@ to our **bug report tracking system** by adding/creating a new
 
 ### HERCULES INTERNAL READMEs
 
+[_**Adding New Files to Hercules**_](readme/README.ADDING.md)  
 [Low-level Test Cases](tests/README.md)  
 [HQA Build Scenarios](readme/README.HQA.md)  
 [PTT Tracing](readme/README.PTT.md)  

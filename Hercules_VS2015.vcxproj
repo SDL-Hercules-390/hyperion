@@ -671,6 +671,7 @@
     <None Include="msvc.makefile.includes\ZLIB_FLAGS.msvc" />
     <None Include="msvc.makefile.includes\ZLIB_RULES.msvc" />
     <None Include="README.md" />
+    <None Include="readme\README.ADDING.md" />
     <None Include="readme\README.AIX.md" />
     <None Include="readme\README.APL360.md" />
     <None Include="readme\README.BSD.md" />

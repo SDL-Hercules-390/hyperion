@@ -935,6 +935,9 @@
     <None Include="RELEASE.NOTES">
       <Filter>Other Files\DOC</Filter>
     </None>
+    <None Include="readme\README.ADDING.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.AIX.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>

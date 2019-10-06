@@ -2027,6 +2027,10 @@
 					Name="README"
 					>
 					<File
+						RelativePath=".\readme\README.ADDING.md"
+						>
+					</File>
+					<File
 						RelativePath=".\readme\README.AIX.md"
 						>
 					</File>

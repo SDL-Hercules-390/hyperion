@@ -802,6 +802,7 @@ EXTRA_DIST =                  \
   README.md                       \
   readme/images/herclogo.jpg        \
   readme/images/image_header_herculeshyperionSDL.png  \
+  readme/README.ADDING.md         \
   readme/README.AIX.md            \
   readme/README.APL360.md         \
   readme/README.BSD.md            \
