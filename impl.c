@@ -506,7 +506,10 @@ int     rc;
 
     INIT_BLOCK_HEADER_TRAILER( (&sysblk), SYSBLK );
 
+    // Set some defaults
     sysblk.msglvl = DEFAULT_MLVL;
+    sysblk.logoptnotime = 0;
+    sysblk.logoptnodate = 1;
 
     /* Initialize program name and version strings arrays */
     init_progname( argc, argv );

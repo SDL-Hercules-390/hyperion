@@ -599,45 +599,69 @@ int log_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* logopt command - change log options                               */
 /*-------------------------------------------------------------------*/
-int logopt_cmd(int argc, char *argv[], char *cmdline)
+int logopt_cmd( int argc, char* argv[], char* cmdline)
 {
-    int rc = 0;
-    UNREFERENCED(cmdline);
+    int i, rc = 0;
+    char buf[64];
+    bool bDateStamp = !sysblk.logoptnodate;
+    bool bTimeStamp = !sysblk.logoptnotime;
 
+    UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
 
-    if ( argc < 2 )
+    if (argc <= 1)
     {
-        WRMSG( HHC02203, "I", argv[0],
-            sysblk.logoptnotime ? "NOTIMESTAMP" : "TIMESTAMP" );
-    }
-    else
-    {
-        char *cmd = argv[0];
+        MSGBUF( buf, "%s %s"
+            , bDateStamp ? "DATESTAMP" : "NODATESTAMP"
+            , bTimeStamp ? "TIMESTAMP" : "NOTIMESTAMP"
+        );
 
-        while ( argc > 1 )
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], buf );
+        return 0;
+    }
+
+    // ISO 8601: YYYY-MM-DD
+
+    for (i=1; i < argc; i++)
+    {
+        if (CMD( argv[i], DATESTAMP, 4 ))
         {
-            argv++;
-            argc--;
+            bDateStamp = true;
+            continue;
+        }
+        if (CMD( argv[i], NODATESTAMP, 6 ))
+        {
+            bDateStamp = false;
+            continue;
+        }
+        if (CMD( argv[i], TIMESTAMP, 4 ))
+        {
+            bTimeStamp = true;
+            continue;
+        }
+        if (CMD( argv[i], NOTIMESTAMP, 6 ))
+        {
+            bTimeStamp = false;
+            continue;
+        }
 
-            if ( CMD(argv[0],timestamp,4) )
-            {
-                sysblk.logoptnotime = FALSE;
-                WRMSG( HHC02204, "I", cmd, "TIMESTAMP" );
-                continue;
-            }
-            if ( CMD(argv[0],notimestamp,6) )
-            {
-                sysblk.logoptnotime = TRUE;
-                WRMSG( HHC02204, "I", cmd, "NOTIMESTAMP" );
-                continue;
-            }
-
-            WRMSG( HHC02205, "E", argv[0], "" );
-            rc = -1;
-            break;
-        } /* while (argc > 1) */
+        // "Invalid argument %s%s"
+        WRMSG( HHC02205, "E", argv[i], "" );
+        return -1;
     }
+
+    sysblk.logoptnodate = !bDateStamp;
+    sysblk.logoptnotime = !bTimeStamp;
+
+    MSGBUF( buf, "%s %s"
+        , bDateStamp ? "DATESTAMP" : "NODATESTAMP"
+        , bTimeStamp ? "TIMESTAMP" : "NOTIMESTAMP"
+    );
+
+    // "%-14s set to %s"
+    WRMSG( HHC02204, "I", argv[0], buf );
+
     return rc;
 }
 

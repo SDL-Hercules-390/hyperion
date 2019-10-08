@@ -88,7 +88,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
 
-    <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP
+    <a href="#LOGOPT">LOGOPT</a>     NODATESTAMP TIMESTAMP
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
@@ -977,15 +977,15 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="LOGOPT"></a>
-<dt><code>LOGOPT &nbsp; <u>TIMESTAMP</u> &#124; NOTIMESTAMP</code>
+<dt><code>LOGOPT &nbsp; <u>TIMESTAMP</u> &#124 NOTIMESTAMP &#124 DATESTAMP &#124 <u>NODATESTAMP</u> &#124 </code>
 <dd><p>
-    Sets Hercules log options. TIMESTAMP causes messages to the log
-    to be time stamped.  NOTIMESTAMP prevents time stamping of log
-    messages.    TIMESTAMP and NOTIMESTAMP may be abbreviated as
-    TIME and NOTIME respectively.  The current resolution of the
+    Sets logfile options. TIMESTAMP inserts a time stamp in front of
+    each log message. NOTIMESTAMP logs messages without time stamps.
+    Similarly, DATESTAMP and NODATESTAMP prefixes logfile messages
+    with or without the current date. The current resolution of the
     stamp is one second.
     <p>
-    The default is TIMESTAMP.
+    The default is TIMESTAMP NODATESTAMP.
     <p>
 
 <a name="LPARNAME"></a>

@@ -303,25 +303,48 @@ static void logger_logfile_write( const void* pBuff, size_t nBytes )
 }
 
 /* ZZ FIXME:
- * This should really be part of logmsg, as the timestamps have currently
- * the time when the logger reads the message from the log pipe.  There can be
- * quite a delay at times when there is a high system activity. Moving the timestamp
- * to logmsg() will fix this.
- * The timestamp option should also NOT depend on anything like daemon mode.
- * log entries should always be timestamped, in a fixed format, such that
- * log readers may decide to skip the timestamp when displaying (ie panel.c).
+ *
+ * This should really be part of logmsg, as the stamps currently have
+ * the date/time of when the logger READS the message from the pipe.
+ * During periods of high system (message) activity however, there can
+ * be a CONSIDERABLE delay from the time when the message was actually
+ * issued and the time it is actually displayed and/or written to the
+ * logfile. Moving date/time stamping to logmsg() instead fixes this.
+ *
+ * The date/time stamp option should also NOT depend on anything like
+ * daemon mode and should always be date/time stamped in a fixed format
+ * such that log readers (e.g. panel.c for example) can then decide on
+ * their own whether or not to skip the date/time stamp when displaying
+ * and/or logging the message.
  */
 static void logger_logfile_timestamp()
 {
-    if (!extgui)
+    if (!extgui) // FIXME! (see above)
     {
-        struct timeval  now;
-        time_t          tt;
-        char            hhmmss[10];
+        char stamp[32];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
 
-        gettimeofday( &now, NULL ); tt = now.tv_sec;
-        STRLCPY( hhmmss, ctime(&tt)+11 );
-        logger_logfile_write( hhmmss, strlen(hhmmss) );
+        FormatTIMEVAL( NULL, stamp, sizeof( stamp ));
+
+        stamp[19] = ' ';    // "YYYY-MM-DD HH:MM:SS uuuuuu"
+        stamp[20] =  0;     // "YYYY-MM-DD HH:MM:SS "
+
+        if (DATESTAMPLOG && TIMESTAMPLOG)
+        {
+            logger_logfile_write( stamp, strlen( stamp ));
+        }
+        else if (DATESTAMPLOG && !TIMESTAMPLOG)
+        {
+            stamp[11] = 0;  // "YYYY-MM-DD "
+            logger_logfile_write( stamp, strlen( stamp ));
+        }
+        else if (TIMESTAMPLOG && !DATESTAMPLOG)
+        {
+            logger_logfile_write( &stamp[11], strlen( &stamp[11] ));
+        }
+        else // neither!
+        {
+            return;
+        }
     }
 }
 
@@ -329,7 +352,7 @@ DLL_EXPORT void logger_timestamped_logfile_write( const void* pBuff, size_t nByt
 {
     if (logger_hrdcpy)
     {
-        if (!sysblk.logoptnotime)
+        if (STAMPLOG)
             logger_logfile_timestamp();
         logger_logfile_write( pBuff, nBytes );
     }
@@ -415,20 +438,20 @@ static void* logger_thread( void* arg )
             /* Write log data to hardcopy file */
             if (logger_hrdcpy)
             {
-                /* Need to prefix each line with a timestamp. */
+                /* Prefix each line with a date/time stamp if needed */
 
-                static int needstamp = 1;
+                static bool dostamp = true; // (MAYBE!)
                 char*  pLeft  = logger_buffer + logger_currmsg;
                 int    nLeft  = bytes_read;
                 char*  pRight = NULL;
                 int    nRight = 0;
                 char*  pNL    = NULL;   /* (pointer to NEWLINE character) */
 
-                if (needstamp)
+                if (dostamp)
                 {
-                    if (!sysblk.logoptnotime)
+                    if (STAMPLOG)
                         logger_logfile_timestamp();
-                    needstamp = 0;
+                    dostamp = false;
                 }
 
                 while ((pNL = memchr( pLeft, '\n', nLeft )) != NULL)
@@ -445,11 +468,11 @@ static void* logger_thread( void* arg )
 
                     if (!nLeft)
                     {
-                        needstamp = 1;
+                        dostamp = true;
                         break;
                     }
 
-                    if (!sysblk.logoptnotime)
+                    if (STAMPLOG)
                         logger_logfile_timestamp();
                 }
 

@@ -753,6 +753,7 @@ struct SYSBLK {
                 legacysenseid:1,        /* ena/disa senseid on       */
                                         /*   legacy devices          */
                 haveiplparm:1,          /* IPL PARM a la VM          */
+                logoptnodate:1,         /* 1 = don't datestamp log   */
                 logoptnotime:1,         /* 1 = don't timestamp log   */
                 nolrasoe:1,             /* 1 = No trace LRA Special  */
                                         /*     Operation Exceptions  */
