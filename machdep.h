@@ -133,15 +133,19 @@
         return cc;
     }
 
-    #pragma intrinsic ( _InterlockedCompareExchange128 )
-    #define cmpxchg16(  x, y, z, r, s  ) cmpxchg16_x86( x, y, z, r, s )
-    static __inline__ int cmpxchg16_x86( U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr)
-    {
-    	// Please note : old1 MUST be 16-byte aligned !
+    #if !defined( MSC_X86_32BIT ) // 64-bit only!
+
+      #pragma intrinsic ( _InterlockedCompareExchange128 )
+      #define cmpxchg16(  x, y, z, r, s  ) cmpxchg16_x86( x, y, z, r, s )
+      static __inline__ int cmpxchg16_x86( U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr)
+      {
+        // Please note : old1 MUST be 16-byte aligned !
         // returns 0 == success, 1 otherwise
         UNREFERENCED( old2 );
         return ( _InterlockedCompareExchange128( ptr, new2, new1, old1 ) ? 0 : 1 );
-    }
+      }
+
+    #endif // !defined( MSC_X86_32BIT ) // 64-bit only!
 
     #if defined( MSC_X86_32BIT )
 
