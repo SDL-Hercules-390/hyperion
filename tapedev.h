@@ -354,7 +354,7 @@ static inline bool is_tape_feat( const BYTE* feats, U32 flags )
 #define TAPEDEVT_FAKETAPE       5       /* Flex FakeTape disk format */
 #define TAPEDEVT_DWTVF          6       /* DWTVF disk format         */
 
-#define TTYPSTR(i) (i==1?"aws":i==2?"oma":i==3?"scsi":i==4?"het":i==5?"fake":i==6?"dwtvf":"unknown")
+#define TTYPSTR(i) (i==1?"AWS":i==2?"OMA":i==3?"SCSI":i==4?"HET":i==5?"FAKE":i==6?"DWTVF":"UNKNOWN")
 
 /*-------------------------------------------------------------------*/
 /* Fish - macros for checking SCSI tape device-independent status    */
@@ -440,10 +440,8 @@ OMATAPE_BLKHDR;
 /*-------------------------------------------------------------------*/
 typedef struct _OMATAPE_DESC
 {
-    int     fd;                         /* File Descriptor for file  */
-    char    filename[256];              /* Filename of data file     */
+    char    filename[MAX_PATH+1];       /* Filename of data file     */
     char    format;                     /* H=HEADERS,T=TEXT,F=FIXED,X=Tape Mark */
-    BYTE    resv;                       /* Reserved for alignment    */
     U16     blklen;                     /* Fixed block length        */
 }
 OMATAPE_DESC;

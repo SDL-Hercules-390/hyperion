@@ -3128,19 +3128,57 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="OMA"></a>
     <dt><b>Optical Media Attach (OMA) virtual tape files</b>
     <dd><p>
-        These are read-only files which usually reside on CDROM.
-        OMA virtual tapes consist of one CDROM file corresponding
-        to each physical file of the emulated tape.  An ASCII text
-        file called the tape descriptor file (TDF) specifies the
-        names of the files which make up the virtual tape.
+        These are read-only files which usually (but do not necessarily
+        have to) reside on CDROM. OMA virtual tapes consist of one file
+        corresponding to each physical file of the emulated tape.  An
+        ASCII text file called the Tape Descriptor File (TDF) specifies
+        the names of the files which make up the virtual tape.
         The argument specifies the name of the tape descriptor
         file (for example <code>/cdrom/tapes/uaa196.tdf</code>)
         <p>
+        The format of a Tape Descriptor File (TDF) looks like this:
+        <p>
+        <pre>
+        @tdf
+        /home/ivan/hercules/systems/DEB001/kernel.debian    FIXED RECSIZE 80
+        /home/ivan/hercules/systems/DEB001/parmfile.debian  TEXT
+        /home/ivan/hercules/systems/DEB001/initrd.debian    FIXED RECSIZE 80</pre>or:<pre>
+        @TDF
+        "C:\Users\Fish\HercGUI\_Z\zLinux Debian-9.11\kernel.debian"    FIXED RECSIZE 80
+        "C:\Users\Fish\HercGUI\_Z\zLinux Debian-9.11\parmfile.debian"  TEXT
+        "C:\Users\Fish\HercGUI\_Z\zLinux Debian-9.11\initrd.debian"    FIXED RECSIZE 80
+        TM
+        TM
+        EOT</pre>or:<pre>
+        @tdf
+        kernel.debian    FIXED RECSIZE 80
+        parmfile.debian  TEXT
+        initrd.debian    FIXED RECSIZE 80</pre>
 
-        Each file on the virtual tape can be in one of three formats:
+        The filename on each record can be either absolute or relative and must be
+        enclosed within double quotes it it contains any spaces. If relative, the
+        name is appended to the path of the primary OMA (TDF) to create the full
+        path filename of the file being referenced.
+        <p>
+        Each file record must be followed by a file <i>format</i> (and possibly
+        some additional options) indicating how the file should be interpretted.
+        Each file listed in the TDF file must be in one of four formats:
         <p>
 
         <dl>
+        <dt><code>UNDEFINED RECSIZE <em>nnnnn</em></code>
+        <dd><p>
+            <b><i>UNDEFINED</i></b> files are treated identically
+            to FIXED files.
+            <p>
+
+        <dt><code>FIXED RECSIZE <em>nnnnn</em></code>
+        <dd><p>
+            <b><i>FIXED</i></b> files consist of fixed length
+            EBCDIC blocks of the specified length
+            (<code><em>nnnnn</em></code>)
+            <p>
+
         <dt><code>TEXT</code>
         <dd><p>
             <b><i>TEXT</i></b> files consist of variable length
@@ -3150,26 +3188,21 @@ a real System/390.  The configuration file is an ASCII text file.
             one physical tape block.
             <p>
 
-        <dt><code>FIXED <em>nnnnn</em></code>
-        <dd><p>
-            <b><i>FIXED</i></b> files consist of fixed length
-            EBCDIC blocks of the specified length
-            (<code><em>nnnnn</em></code>)
-            <p>
-
         <dt><code>HEADERS</code>
         <dd><p>
             <b><i>HEADERS</i></b> files consist of variable
             length EBCDIC blocks.  Each block is preceded by a
-            12-byte header.
+            16-byte header.
             <p>
 
         </dl>
         <p>
 
         If you have any IBM manuals in Bookmanager format on CDROM,
-        you can see some examples of TDF files in the
-        <code>\TAPES</code> directory on the CDROM.
+        you can see some examples of TDF files in the <code>\TAPES</code>
+        directory on the CDROM. The offical OMA/2 format is described in
+        manual <i>SC52-1200-00 "Optical Media Attach/2 User's Guide"</i>,
+        but is impossible to find.
 
     <p>
 

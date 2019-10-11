@@ -28,262 +28,268 @@
 //#include "dbgtrace.h"                   // (Fish: DEBUGGING)
 
 /*-------------------------------------------------------------------*/
-/* Read the OMA tape descriptor file                                 */
+/* Read and parse the OMA TDF tape descriptor file                   */
 /*-------------------------------------------------------------------*/
-int read_omadesc (DEVBLK *dev)
+int read_omadesc( DEVBLK* dev )
 {
-int             rc;                     /* Return code               */
+FILE*           oma;                    /* OMA tape descriptor file  */
+OMATAPE_DESC*   tdftab;                 /* -> Tape descriptor array  */
 int             i;                      /* Array subscript           */
-size_t          pathlen;                /* Length of TDF path name   */
-int             tdfsize;                /* Size of TDF file in bytes */
-int             filecount;              /* Number of files           */
 int             stmt;                   /* TDF file statement number */
-int             fd;                     /* TDF file descriptor       */
-struct stat     statbuf;                /* TDF file information      */
+int             argc;                   /* Parsed TDF record argc    */
+char*           argv[ 4 ];              /* Parsed TDF record argv    */
+char*           tdffilenm;              /* -> Filename in TDF record */
+char*           tdfformat;              /* -> Format in TDF record   */
+char*           tdfreckwd;              /* -> Keyword in TDF record  */
+char*           tdfblklen;              /* -> Length in TDF record   */
+char            str[512];               /* Stmt. read from OMA file  */
+char            pathname[ MAX_PATH + 1];/* file path in host format  */
+char            buf[ MAX_PATH + 32 ];   /* Work for MSGBUF use       */
+size_t          pathlen;                /* Length of TDF path name   */
+U16             filecount;              /* Number of files           */
 U32             blklen;                 /* Fixed block length        */
-int             tdfpos;                 /* Position in TDF buffer    */
-char           *tdfbuf;                 /* -> TDF file buffer        */
-char           *tdfrec;                 /* -> TDF record             */
-char           *tdffilenm;              /* -> Filename in TDF record */
-char           *tdfformat;              /* -> Format in TDF record   */
-char           *tdfreckwd;              /* -> Keyword in TDF record  */
-char           *tdfblklen;              /* -> Length in TDF record   */
-OMATAPE_DESC   *tdftab;                 /* -> Tape descriptor array  */
 BYTE            c;                      /* Work area for sscanf      */
-char            pathname[MAX_PATH];     /* file path in host format  */
-char           *strtok_str = NULL;      /* last token position       */
+
+    /* Normalize path separators to be all '/' forward slashes */
+    hostpath( pathname, dev->filename, sizeof( pathname ));
 
     /* Isolate the base path name of the TDF file */
-    for (pathlen = strlen(dev->filename); pathlen > 0; )
+    for (pathlen = strlen( pathname ); pathlen > 0; )
     {
         pathlen--;
-        if (dev->filename[pathlen-1] == '/') break;
-
+        if (pathname[ pathlen - 1 ] == '/') break;
     }
 
-    /* Open the tape descriptor file */
-    hostpath(pathname, dev->filename, sizeof(pathname));
-    fd = HOPEN (pathname, O_RDONLY | O_BINARY);
-    if (fd < 0)
+    /* Open the TDF tape descriptor file */
+    if (!(oma = fopen( pathname, "r" )))
     {
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, dev->filename, "oma", "open()", strerror(errno));
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG( HHC00205, "E", LCSS_DEVNUM, dev->filename, "OMA", "fopen()", strerror( errno ));
         return -1;
     }
 
-    /* Determine the size of the tape descriptor file */
-    rc = fstat (fd, &statbuf);
-    if (rc < 0)
+    /* Check that the first record is a @TDF header
+       and count the number of records in the file. */
+    for (filecount = 0; fgets( str, sizeof( str ), oma ); filecount++)
     {
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, dev->filename, "oma", "fstat()", strerror(errno));
-        close (fd);
-        return -1;
-    }
-    tdfsize = statbuf.st_size;
+        if (filecount != 0)     /* If not first record */
+            continue;           /* then just count it  */
 
-    /* Obtain a buffer for the tape descriptor file */
-    tdfbuf = malloc (tdfsize);
-    if (tdfbuf == NULL)
-    {
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, dev->filename, "oma", "malloc()", strerror(errno));
-        close (fd);
-        return -1;
-    }
-
-    /* Read the tape descriptor file into the buffer */
-    rc = read (fd, tdfbuf, tdfsize);
-    if (rc < tdfsize)
-    {
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, dev->filename, "oma", "read()", strerror(errno));
-        free (tdfbuf);
-        close (fd);
-        return -1;
+        /* Check that the first record is a @TDF header */
+        if (0
+            || memcmp( str, "@TDF", 4 ) != 0
+            || (1
+                && str[4] != '\r'
+                && str[4] != '\n'
+               )
+        )
+        {
+            // "%1d:%04X Tape file %s, type %s: not a valid @TDF file"
+            WRMSG( HHC00206, "E", LCSS_DEVNUM, dev->filename, "OMA" );
+            fclose( oma );
+            return -1;
+        }
     }
 
-    /* Close the tape descriptor file */
-    close (fd); fd = -1;
-
-    /* Check that the first record is a TDF header */
-    if (memcmp(tdfbuf, "@TDF", 4) != 0)
+    /* Check for EOF or I/O error */
+    if (ferror( oma ))
     {
-        WRMSG (HHC00206, "E", LCSS_DEVNUM, dev->filename, "oma");
-        free (tdfbuf);
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG( HHC00205, "E", LCSS_DEVNUM, dev->filename, "OMA", "fgets()", strerror( errno ));
+        fclose( oma );
         return -1;
     }
 
-    /* Count the number of linefeeds in the tape descriptor file
-       to determine the size of the descriptor array required */
-    for (i = 0, filecount = 0; i < tdfsize; i++)
+    /* Check for empty file or file with only @TDF statement */
+    if (filecount < 2)
     {
-        if (tdfbuf[i] == '\n') filecount++;
-    } /* end for(i) */
-    /* ISW Add 1 to filecount to add an extra EOT marker */
-    filecount++;
+        // "%1d:%04X Tape file %s, type %s: not a valid @TDF file"
+        WRMSG( HHC00206, "E", LCSS_DEVNUM, dev->filename, "OMA" );
+        fclose( oma );
+        return -1;
+    }
 
     /* Obtain storage for the tape descriptor array */
-    tdftab = (OMATAPE_DESC*)malloc (filecount * sizeof(OMATAPE_DESC));
-    if (tdftab == NULL)
+    if (!(tdftab = (OMATAPE_DESC*) malloc( filecount * sizeof( OMATAPE_DESC ))))
     {
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, dev->filename, "oma", "malloc()", strerror(errno));
-        free (tdfbuf);
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG( HHC00205, "E", LCSS_DEVNUM, dev->filename, "OMA", "malloc()", strerror( errno ));
         return -1;
     }
 
-    /* Build the tape descriptor array */
-    for (filecount = 0, tdfpos = 0, stmt = 1; ; filecount++)
+    /* Rewind OMA file back to the beginning */
+    rewind( oma );
+
+    /* Now read and actually process each statement in the file... */
+    for (filecount = 0, stmt = 1; fgets( str, sizeof( str ), oma ); stmt++)
     {
-        /* Clear the tape descriptor array entry */
-        memset (&(tdftab[filecount]), 0, sizeof(OMATAPE_DESC));
-
-        /* Point past the next linefeed in the TDF file */
-        while (tdfpos < tdfsize && tdfbuf[tdfpos++] != '\n');
-        stmt++;
-
-        /* Exit at end of TDF file */
-        if (tdfpos >= tdfsize) break;
-
-        /* Mark the end of the TDF record with a null terminator */
-        tdfrec = tdfbuf + tdfpos;
-        while (tdfpos < tdfsize && tdfbuf[tdfpos]!='\r'
-            && tdfbuf[tdfpos]!='\n') tdfpos++;
-        c = tdfbuf[tdfpos];
-        if (tdfpos >= tdfsize) break;
-        tdfbuf[tdfpos] = '\0';
-
-        /* Exit if TM or EOT record */
-        if (strcasecmp(tdfrec, "TM") == 0)
-        {
-            tdftab[filecount].format='X';
-            tdfbuf[tdfpos] = c;
+        /* (skip @TDF statement) */
+        if (stmt == 1)
             continue;
-        }
-        if(strcasecmp(tdfrec, "EOT") == 0)
-        {
-            tdftab[filecount].format='E';
+
+        /* (remove trailing whitespace) */
+        RTRIM( str );
+
+        /* Clear the tape descriptor array entry */
+        memset( &(tdftab[ filecount ]), 0, sizeof( OMATAPE_DESC ));
+
+        /* Exit if EOT record encountered */
+        if (str_caseless_eq( str, "EOT" ))
             break;
+
+        /* TM tapemark record? */
+        if (str_caseless_eq( str, "TM" ))
+        {
+            tdftab[ filecount++ ].format = 'X';
+            continue;
         }
 
         /* Parse the TDF record */
-        tdffilenm = strtok_r (tdfrec, " \t", &strtok_str);
-        tdfformat = strtok_r (NULL,   " \t", &strtok_str);
-        tdfreckwd = strtok_r (NULL,   " \t", &strtok_str);
-        tdfblklen = strtok_r (NULL,   " \t", &strtok_str);
+        parse_args( str, 4, argv, &argc );
+
+        tdffilenm = argv[0];            /* -> Filename in TDF record */
+        tdfformat = argv[1];            /* -> Format in TDF record   */
+        tdfreckwd = argv[2];            /* -> Keyword in TDF record  */
+        tdfblklen = argv[3];            /* -> Length in TDF record   */
 
         /* Check for missing fields */
-        if (tdffilenm == NULL || tdfformat == NULL)
+        if (0
+            || !tdffilenm
+            || !tdfformat
+        )
         {
-            WRMSG (HHC00207, "E", LCSS_DEVNUM, dev->filename, "oma", stmt, "filename or format missing");
-            free (tdftab);
-            free (tdfbuf);
-            return -1;
+            // "%1d:%04X Tape file %s, type %s: line %d: %s"
+            WRMSG( HHC00207, "E", LCSS_DEVNUM, dev->filename, "OMA", stmt, "filename or format missing" );
+            goto omadesc_error;
         }
 
         /* Check that the file name is not too long */
-        if (pathlen + 1 + strlen(tdffilenm)
-                > sizeof(tdftab[filecount].filename) - 1)
+        if (pathlen + 1 + strlen( tdffilenm ) + 1 >= sizeof( tdftab[ filecount ].filename ))
         {
-            char buf[MAX_PATH+32];
-
-            if ( strchr(tdffilenm, SPACE) == NULL)
-                MSGBUF(buf, "filename %s too long", tdffilenm);
+            if (!strchr( tdffilenm, SPACE ))
+                MSGBUF( buf, "filename %s too long",   tdffilenm );
             else
-                MSGBUF(buf, "filename '%s' too long", tdffilenm);
+                MSGBUF( buf, "filename '%s' too long", tdffilenm );
 
-            WRMSG (HHC00207, "E", LCSS_DEVNUM, dev->filename, "oma", stmt, buf);
-            free (tdftab);
-            free (tdfbuf);
-            return -1;
+            // "%1d:%04X Tape file %s, type %s: line %d: %s"
+            WRMSG( HHC00207, "E", LCSS_DEVNUM, dev->filename, "OMA", stmt, buf );
+            goto omadesc_error;
         }
 
         /* Convert the file name to Unix format */
-        for (i = 0; i < (int)strlen(tdffilenm); i++)
+        for (i=0; i < (int) strlen( tdffilenm ); i++)
         {
             if (tdffilenm[i] == '\\')
                 tdffilenm[i] = '/';
-/* JCS */
-//            else
-//                tdffilenm[i] = tolower(tdffilenm[i]);
-        } /* end for(i) */
-
-        /* Prefix the file name with the base path name and
-           save it in the tape descriptor array */
-        /* but only if the filename lacks a leading slash - JCS  */
-/*
-        strncpy (tdftab[filecount].filename, dev->filename, pathlen);
-        if (tdffilenm[0] != '/')
-            stlrcat ( tdftab[filecount].filename, "/", sizeof(tdftab[filecount].filename) );
-        STRLCAT( tdftab[filecount].filename, tdffilenm );
-*/
-        tdftab[filecount].filename[0] = 0;
-
-        if ((tdffilenm[0] != '/') && (tdffilenm[1] != ':'))
-        {
-            /* use memcpy since "pathlen" has already been checked above */
-            memcpy( tdftab[filecount].filename, dev->filename, pathlen);
-            tdftab[filecount].filename[pathlen]=0;
-            STRLCAT( tdftab[filecount].filename, "/" );
         }
 
-        STRLCAT( tdftab[filecount].filename, tdffilenm );
+        /* Prefix the file name with the base path name
+           ONLY if the filename is NOT an absolute path.
+        */
+#if defined(_MSVC_)
+        if (tdffilenm[1] != ':')   // (not Windows absolute path)
+#else
+        if (tdffilenm[0] != '/')   // (not Unix absolute path)
+#endif
+        {
+            /* (use memcpy since "pathlen" has already been checked above) */
+            memcpy( tdftab[ filecount ].filename, dev->filename, pathlen );
+            tdftab[ filecount ].filename[ pathlen ] = 0;
+
+            /* Append path separator only if needed */
+            if (tdftab[ filecount ].filename[ pathlen - 1 ] != '/')
+                STRLCAT( tdftab[ filecount ].filename, "/" );
+        }
+
+        /* Save the file name in the tape descriptor array */
+        STRLCAT( tdftab[ filecount ].filename, tdffilenm );
 
         /* Check for valid file format code */
-        if (strcasecmp(tdfformat, "HEADERS") == 0)
+        if (str_caseless_eq( tdfformat, "HEADERS" ))
         {
-            tdftab[filecount].format = 'H';
+            tdftab[ filecount++ ].format = 'H';
+            continue;
         }
-        else if (strcasecmp(tdfformat, "TEXT") == 0)
+
+        if (str_caseless_eq( tdfformat, "TEXT" ))
         {
-            tdftab[filecount].format = 'T';
+            tdftab[ filecount++ ].format = 'T';
+            continue;
         }
-        else if (strcasecmp(tdfformat, "FIXED") == 0)
+
+        if /* (treat UNDEFINED same as FIXED) */
+        (0
+            || str_caseless_eq( tdfformat, "FIXED"     )
+            || str_caseless_eq( tdfformat, "UNDEFINED" )
+        )
         {
             /* Check for RECSIZE keyword */
-            if (tdfreckwd == NULL
-                || strcasecmp(tdfreckwd, "RECSIZE") != 0)
+            if (0
+                || !tdfreckwd
+                || str_caseless_ne( tdfreckwd, "RECSIZE" )
+            )
             {
-                WRMSG (HHC00207, "E", LCSS_DEVNUM, dev->filename, "oma", stmt, "keyword RECSIZE missing");
-                free (tdftab);
-                free (tdfbuf);
-                return -1;
+                // "%1d:%04X Tape file %s, type %s: line %d: %s"
+                WRMSG( HHC00207, "E", LCSS_DEVNUM, dev->filename, "OMA", stmt, "keyword RECSIZE missing" );
+                goto omadesc_error;
             }
 
             /* Check for valid fixed block length */
-            if (tdfblklen == NULL
-                || sscanf(tdfblklen, "%u%c", &blklen, &c) != 1
-                || blklen < 1 || blklen > MAX_TAPE_BLKSIZE)
+            if (0
+                || !tdfblklen
+                || sscanf( tdfblklen, "%u%c", &blklen, &c ) != 1
+                || blklen < 1
+                || blklen > USHRT_MAX  // (max U16)
+            )
             {
-                char buf[40];
-                MSGBUF(buf, "invalid record size %s", tdfblklen);
-                WRMSG (HHC00207, "E", LCSS_DEVNUM, dev->filename, "oma", stmt, buf);
-                free (tdftab);
-                free (tdfbuf);
-                return -1;
+                MSGBUF( buf, "invalid record size %s", tdfblklen );
+
+                // "%1d:%04X Tape file %s, type %s: line %d: %s"
+                WRMSG( HHC00207, "E", LCSS_DEVNUM, dev->filename, "OMA", stmt, buf );
+                goto omadesc_error;
             }
 
             /* Set format and block length in descriptor array */
-            tdftab[filecount].format = 'F';
-            tdftab[filecount].blklen = blklen;
+            tdftab[ filecount ].format = 'F';
+            tdftab[ filecount ].blklen = (U16) blklen;
+            filecount++;
+            continue;
         }
-        else
-        {
-            char buf[40];
-            MSGBUF(buf, "invalid record format '%s'", tdfformat);
-            WRMSG (HHC00207, "E", LCSS_DEVNUM, dev->filename, "oma", stmt, buf);
-            free (tdftab);
-            free (tdfbuf);
-            return -1;
-        }
-        tdfbuf[tdfpos] = c;
-    } /* end for(filecount) */
-    /* Force an EOT as last entry (filecount is correctly adjusted here) */
-    tdftab[filecount].format='E';
+
+        /* Not a TDF format that we recognize/support */
+        MSGBUF( buf, "invalid record format '%s'", tdfformat );
+
+        // "%1d:%04X Tape file %s, type %s: line %d: %s"
+        WRMSG( HHC00207, "E", LCSS_DEVNUM, dev->filename, "OMA", stmt, buf );
+        goto omadesc_error;
+    }
+    /* end for( fgets( str, oma ) ) */
+
+    /* Check for EOF or I/O error */
+    if (ferror( oma ))
+    {
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG( HHC00205, "E", LCSS_DEVNUM, dev->filename, "OMA", "fgets()", strerror( errno ));
+        goto omadesc_error;
+    }
+
+    /* Close the OMA file */
+    fclose( oma );
+
+    /* Force an EOT as last entry */
+    tdftab[ filecount++ ].format = 'E';
 
     /* Save the file count and TDF array pointer in the device block */
-    dev->omafiles = filecount+1;
-    dev->omadesc = tdftab;
+    dev->omafiles = filecount;
+    dev->omadesc  = tdftab;
 
-    /* Release the TDF file buffer and exit */
-    free (tdfbuf);
     return 0;
+
+omadesc_error:
+
+    free( tdftab );
+    fclose( oma );
+    return -1;
 
 } /* end function read_omadesc */
 
@@ -355,7 +361,8 @@ char            pathname[MAX_PATH];     /* file path in host format  */
         if (fd >= 0)            /* (if open was successful, then it) */
             errno = EOVERFLOW;  /* (must have been a lseek overflow) */
 
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, omadesc->filename, "oma", "open()", strerror(errno));
+        // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
+        WRMSG (HHC00205, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "open()", strerror(errno));
 
         if (fd >= 0)
             close(fd);          /* (close the file if it was opened) */
@@ -397,7 +404,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "lseek()", (off_t)blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "lseek()", (off_t)blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -410,7 +417,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read()", (off_t)blkpos,
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read()", (off_t)blkpos,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -421,7 +428,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within block header */
     if (rc < (int)sizeof(omahdr))
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "readhdr_omaheaders()", (off_t)blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "readhdr_omaheaders()", (off_t)blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -442,7 +449,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (curblkl < -1 || curblkl == 0 || curblkl > MAX_TAPE_BLKSIZE
         || memcmp(omahdr.omaid, "@HDF", 4) != 0)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "readhdr_omaheaders()", (off_t)blkpos, "invalid block header");
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "readhdr_omaheaders()", (off_t)blkpos, "invalid block header");
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
@@ -507,7 +514,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read()", (off_t)blkpos,
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read()", (off_t)blkpos,
                 strerror(errno));
 
         /* Set unit check with equipment check */
@@ -518,7 +525,7 @@ S32             nxthdro;                /* Offset of next header     */
     /* Handle end of file within data block */
     if (rc < curblkl)
     {
-        WRMSG(HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read_omaheaders()", (off_t)blkpos, "unexpected end of file");
+        WRMSG(HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read_omaheaders()", (off_t)blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -554,7 +561,7 @@ long            blkpos;                 /* Offset of block in file   */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "lseek()", (off_t)blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "lseek()", (off_t)blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -567,7 +574,7 @@ long            blkpos;                 /* Offset of block in file   */
     /* Handle read error condition */
     if (blklen < 0)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read()", (off_t)blkpos,
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read()", (off_t)blkpos,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -624,7 +631,7 @@ BYTE            c;                      /* Character work area       */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "lseek()", (off_t)blkpos, strerror(errno));
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "lseek()", (off_t)blkpos, strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -679,7 +686,7 @@ BYTE            c;                      /* Character work area       */
     /* Handle read error condition */
     if (rc < 0)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read()", (off_t)blkpos,
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read()", (off_t)blkpos,
                 strerror(errno));
 
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
@@ -689,7 +696,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for block not terminated by newline */
     if (rc < 1)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read_omatext()", (off_t)blkpos, "unexpected end of file");
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read_omatext()", (off_t)blkpos, "unexpected end of file");
 
         /* Set unit check with data check and partial record */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -699,7 +706,7 @@ BYTE            c;                      /* Character work area       */
     /* Check for invalid zero length block */
     if (pos == 0)
     {
-        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "oma", "read_omatext()", (off_t)blkpos, "invalid block header");
+        WRMSG (HHC00204, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "read_omatext()", (off_t)blkpos, "invalid block header");
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_BLOCKSHORT,dev,unitstat,code);
@@ -870,7 +877,7 @@ int             curblkl;                /* Length of current block   */
     {
         /* Handle seek error condition */
         if ( eofpos >= LONG_MAX) errno = EOVERFLOW;
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, omadesc->filename, "oma", "lseek()", strerror(errno));
+        WRMSG (HHC00205, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "lseek()", strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -999,7 +1006,7 @@ S32             nxthdro;                /* Offset of next header     */
     if (pos < 0)
     {
         /* Handle seek error condition */
-        WRMSG (HHC00205, "E", LCSS_DEVNUM, omadesc->filename, "oma", "lseek()", strerror(errno));
+        WRMSG (HHC00205, "E", LCSS_DEVNUM, omadesc->filename, "OMA", "lseek()", strerror(errno));
 
         /* Set unit check with equipment check */
         build_senseX(TAPE_BSENSE_LOCATEERR,dev,unitstat,code);
@@ -1139,7 +1146,7 @@ void close_omatape2(DEVBLK *dev)
 {
     if (dev->fd >= 0)
     {
-        WRMSG (HHC00201, "I", LCSS_DEVNUM, dev->filename, "oma");
+        WRMSG (HHC00201, "I", LCSS_DEVNUM, dev->filename, "OMA");
         close (dev->fd);
     }
     dev->fd=-1;
