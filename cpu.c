@@ -448,7 +448,7 @@ static char *pgmintname[] = {
     if (sysblk.intowner == realregs->cpuad)
         RELEASE_INTLOCK(realregs);
     if (sysblk.mainowner == realregs->cpuad)
-        RELEASE_MAINLOCK(realregs);
+        RELEASE_MAINLOCK_UNCONDITIONAL(realregs);
 
     /* Ensure psw.IA is set and aia invalidated */
     INVALIDATE_AIA(realregs);
@@ -493,7 +493,7 @@ static char *pgmintname[] = {
 
     /* Unlock the main storage lock if held */
     if (realregs->cpuad == sysblk.mainowner)
-        RELEASE_MAINLOCK(realregs);
+        RELEASE_MAINLOCK_UNCONDITIONAL(realregs);
 
     /* Remove PER indication from program interrupt code
        such that interrupt code specific tests may be done.
