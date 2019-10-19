@@ -2205,6 +2205,7 @@ dh_trksize          DS   F
 dh_devtyp           DS   X
 dh_fileseq          DS   X
 dh_highcyl          DS   H
+dh_serial           DS   CL12
                     DS   XL(512-(*-CKD_DEVHDR))
 
 *----------------------------------------------------------------------

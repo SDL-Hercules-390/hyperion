@@ -996,6 +996,7 @@
     <None Include="util\awswrite.jcl" />
     <None Include="util\bldlvlck" />
     <None Include="util\cckddump.hla" />
+    <None Include="util\cckddu64.hla" />
     <None Include="util\cckdload.hla" />
     <None Include="util\configure.ac" />
     <None Include="util\dasdlist" />

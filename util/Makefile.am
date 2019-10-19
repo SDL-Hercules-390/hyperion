@@ -8,6 +8,7 @@ dist_pkgdata_DATA = \
     awssl-v19g      \
     awswrite.jcl    \
     cckddump.hla    \
+    cckddu64.hla    \
     cckdload.hla    \
     rawstape.jcl    \
     scsiboot        \

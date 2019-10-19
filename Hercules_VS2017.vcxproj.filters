@@ -1535,6 +1535,9 @@
     <None Include="util\cckddump.hla">
       <Filter>Other Files\Utilities</Filter>
     </None>
+    <None Include="util\cckddu64.hla">
+      <Filter>Other Files\Utilities</Filter>
+    </None>
     <None Include="util\cckdload.hla">
       <Filter>Other Files\Utilities</Filter>
     </None>

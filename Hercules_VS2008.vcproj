@@ -3124,6 +3124,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\util\cckddu64.hla"
+					>
+				</File>
+				<File
 					RelativePath=".\util\cckddump.hla"
 					>
 				</File>
