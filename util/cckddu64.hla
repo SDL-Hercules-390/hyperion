@@ -1,0 +1,2341 @@
+*/* ----------------------------------------------------------------
+* *      build a dasd file from sysut1 to sysut2
+* * ---------------------------------------------------------------- */
+version  EQU   0
+release  EQU   3
+mod      EQU   1
+
+*/* ----------------------------------------------------------------
+* *      macros
+* * ---------------------------------------------------------------- */
+
+         MACRO
+&L      #MSG   &LVL,&MSG,&TYPE=CALL
+         LCLA  &A,&N,&O
+         LCLC  &C
+         GBLA  &MSG_IX
+         GBLC  &MSGS(256)
+         AIF   ('&TYPE' EQ 'CALL').CALL,                               x
+               ('&TYPE' EQ 'GEN').GEN
+         MNOTE 8,'Invalid type specified'
+         MEXIT
+.*
+.CALL    ANOP
+&C       SETC  '&LVL'
+         AIF   ('&LVL' NE '').LVLOK
+&C       SETC  '1'
+.LVLOK   ANOP
+&L       CLI   msglvl,&C
+         BH    #MG&SYSNDX.X
+&MSG_IX  SETA  &MSG_IX+1
+&MSGS(&MSG_IX) SETC '&MSG'
+         L     re,=A(#MSG&MSG_IX)
+         LA    rf,L'#MSG&MSG_IX
+&A       SETA  1
+&O       SETA  0
+&N       SETA  N'&SYSLIST-2
+         AGO   .PL0
+.PLLOOP  ANOP
+         LA    re,&SYSLIST(&A+2)
+&A       SETA  &A+1
+         AIF   (&A GT &N).PLX14
+         LA    rf,&SYSLIST(&A+2)
+&A       SETA  &A+1
+.PL0     AIF   (&A GT &N).PLX15
+         LA    r0,&SYSLIST(&A+2)
+&A       SETA  &A+1
+         AIF   (&A GT &N).PLX0
+         LA    r1,&SYSLIST(&A+2)
+&A       SETA  &A+1
+         AIF   (&A GT &N).PLX1
+         STM   re,r1,msgl+&O
+&O       SETA  &O+16
+         AGO   .PLLOOP
+.PLX14   ST    re,msgl+&O
+         AGO   .CALL2
+.PLX15   STM   re,rf,msgl+&O
+         AGO   .CALL2
+.PLX0    STM   re,r0,msgl+&O
+         AGO   .CALL2
+.PLX1    STM   re,r1,msgl+&O
+.CALL2   LA    r1,msgl
+         L     rf,=a(msg_rtn)
+         BALR  re,rf
+#MG&SYSNDX.X   DS 0H
+         MEXIT
+.*
+.GEN     ANOP
+         AIF   ('&L' EQ '').GENNOL
+&L       DS    0H
+.GENNOL  ANOP
+&A       SETA  1
+.GENLOOP AIF   (&A GT &MSG_IX).MEND
+#MSG&A   DC    C&MSGS(&A)
+&A       SETA  &A+1
+         AGO   .GENLOOP
+.MEND    MEND
+*/* ----------------------------------------------------------------
+* *                      CCKDDUMP
+* * ---------------------------------------------------------------- */
+main     CSECT ,
+main     RMODE ANY
+main     AMODE 31
+         SAVE  (14,12),,'cckddump main() &SYSDATE &SYSTIME '
+pgmid    EQU   main+5
+         LR    rc,rf
+         USING main,rc,rb
+         LA    rb,4095(,rc)
+         LA    rb,1(,rb)
+         LR    r2,r1
+*/* ----------------------------------------------------------------
+* *      get/clear workareas
+* * ---------------------------------------------------------------- */
+         STORAGE OBTAIN,LENGTH=vdw_len,BNDRY=PAGE
+         ST    r1,8(,rd)
+         ST    rd,4(,r1)
+         LR    rd,r1
+         USING vdw,rd
+         MVC   id,=C'vdw '
+         LA    r0,vdw+8
+         L     r1,=A(vdw_len-8)
+         SLR   rf,rf
+         MVCL  r0,re
+         ST    rd,vdw_31
+         STORAGE OBTAIN,LENGTH=vdw24_len,LOC=BELOW,BNDRY=PAGE
+         ST    r1,vdw_24
+         LR    ra,r1
+         USING vdw24,ra
+         MVC   id24,=C'vdw24'
+         LA    r0,vdw24+4
+         L     r1,=A(vdw24_len-4)
+         SLR   rf,rf
+         MVCL  r0,re
+
+*/* ----------------------------------------------------------------
+* *      try to open print file
+* * ---------------------------------------------------------------- */
+
+         MVC   prdcb,model_prdcb
+         MVC   prdcbe,model_prdcbe
+pr       USING IHADCB,prdcb
+         LA    r1,prdcbe
+         ST    r1,pr.DCBDCBE
+         MVC   devtl,model_devtl
+         DEVTYPE pr.DCBDDNAM,(devta,L'devta),MF=(E,devtl)
+         LTR   rf,rf
+         BNZ   noprint
+         MVC   openl,model_openl
+         OPEN  (pr.IHADCB,OUTPUT),MODE=31,MF=(E,openl)
+        #MSG   1,'%s %d.%d.%d starting',                               x
+               pgmid,=A(version),=A(release),=A(mod)
+        #MSG   0,'main workarea is at address 0x%x, 24-bit workarea is x
+               at address 0x%x',vdw_31,vdw_24
+noprint  DS    0H
+
+*/* ----------------------------------------------------------------
+* *      get parameters
+* * ---------------------------------------------------------------- */
+
+         LR    r1,r2
+         BAS   r9,getopts
+
+*/* ----------------------------------------------------------------
+* *      get device information for sysut1 [the volume to be dumped]
+* * ---------------------------------------------------------------- */
+
+         MVC   devtl,model_devtl
+         DEVTYPE =CL8'SYSUT1',(devta,L'devta),                         x
+               INFOLIST=devt_infol_2,MF=(E,devtl)
+         LTR   rf,rf
+         BNZ   ut1_devt_err
+         TM    devta+2,UCB3DACC          check for dasd device
+         BNO   ut1_not_dasd
+         TM    dev_flags,X'80'           check for eckd
+         BNO   ut1_not_eckd
+         L     r3,cyls
+         M     r2,trks_per_cyl           total number of trks
+         ST    r3,trks
+
+*/* ----------------------------------------------------------------
+* *      get device information for sysut2 [the file to be dumped]
+* * ---------------------------------------------------------------- */
+
+         MVC   devtl,model_devtl
+         DEVTYPE =CL8'SYSUT2',(dw,L'devta),                            x
+               INFOLIST=devt_infol_2,MF=(E,devtl)
+         LTR   rf,rf
+         BNZ   out_devt_err
+         TM    dw+2,UCB3DACC             check for dasd device
+         BNO   out_not_dasd
+
+*/* ----------------------------------------------------------------
+* *      part 1  -- determine which tracks to dump
+* *
+* *      From the vtoc, determine which tracks are to be dumped.
+* *      A vector [trk_vec] is built for each track on the volume.
+* *      If an entry is zero, then the track will not be dumped;
+* *      otherwise, the entry points to an entry in the dataset
+* *      table [dsn_area] which will contain statistics about each
+* *      dataset on the volume.  The first 3 entries in the dataset
+* *      table are special, representing free space [**free**],
+* *      track 0 [**track 0] and the vtoc [**vtoc**], respectively.
+* *
+* * ---------------------------------------------------------------- */
+
+*/* ----------------------------------------------------------------
+* *      open sysut1 vtoc
+* * ---------------------------------------------------------------- */
+
+vt       USING IHADCB,vtdcb
+         MVC   vtdcb,model_vtdcb
+         LA    r1,exlst
+         STCM  r1,B'0111',vt.DCBEXLSA
+         LA    r1,jfcb
+         ST    r1,exlst
+         MVI   exlst,X'87'
+         MVC   openl24,model_openl24
+         RDJFCB (vt.IHADCB,INPUT),MF=(E,openl24)
+         LTR   rf,rf
+         BNZ   ut1_rdjfcb_err
+j        USING INFMJFCB,jfcb
+         MVI   j.JFCBDSNM,4              vtoc name is all x'04's
+         MVC   j.JFCBDSNM+1(L'JFCBDSNM-1),j.JFCBDSNM
+         MVC   volser,j.JFCBVOLS
+         DROP  j
+         OPEN  vt.IHADCB,TYPE=J,MF=(E,openl24)
+         TM    vt.DCBOFLGS,DCBOFOPN
+         BNO   ut1_vtoc_open_err
+         L     r2,vt.DCBDEBAD            load deb address for cvaf
+         N     r2,=A(X'00FFFFFF')
+        #MSG   1,'%s:6 vtoc opened',volser
+        #MSG   0,'%s:6 has %d cyls, %d trks/cyl and %d total trks',    x
+               volser,cyls,trks_per_cyl,trks
+
+*/* ----------------------------------------------------------------
+* *      read the format 4 dscb
+* * ---------------------------------------------------------------- */
+
+h        USING BFLHDR,bflh
+         OI    h.BFLHFL,BFLHDSCB
+         MVI   h.BFLHNOE,1
+e        USING BFLE,bflent
+         LA    r1,dscb4
+         ST    r1,e.BFLEBUF
+         OI    e.BFLEFL,BFLECHR
+         MVI   e.BFLELTH,L'dscb4
+         MVC   cvpl_area,model_cvpl
+         CVAFSEQ ACCESS=GTEQ,BUFLIST=h.BFLHDR,DEB=(r2),                x
+               BRANCH=(YES,PGM),MF=(E,cvpl_area)
+         LTR   rf,rf
+         BNZ   ut1_dscb4_err
+         DROP  h,e
+f4       USING IECSDSL4-44,dscb4
+         CLI   f4.DS4IDFMT,C'4'
+         BNE   ut1_dscb4_err
+
+*/* ----------------------------------------------------------------
+* *      calculate size of the vtoc and get an area for all dscbs
+* * ---------------------------------------------------------------- */
+
+         SLR   r4,r4
+         IC    r4,f4.DS4DEVDT
+         ST    r4,dscbs_per_trk
+         LA    r1,f4.DS4VTOCE
+         BAL   re,cnv_xtnt               r0 - starting track,          x
+                                         r1 - number of tracks
+         ST    r1,vtoc_trks
+         MR    r0,r4
+         ST    r1,total_dscbs            number of dscbs
+         MH    r1,=Y(DS1END-IECSDSL1)
+         ST    r1,vtoc_size              size of vtoc
+         STORAGE OBTAIN,LENGTH=(r1),BNDRY=PAGE   area for the vtoc
+         ST    r1,vtoc_area
+        #MSG   0,'%s:6 vtoc has %d total dscbs',                       x
+               volser,total_dscbs
+        #MSG   0,'storage obtained for vtoc area, addr 0x%x size %d',  x
+               vtoc_area,vtoc_size
+
+*/* ----------------------------------------------------------------
+* *      read the entire vtoc a track at a time
+* * ---------------------------------------------------------------- */
+
+        #MSG   0,'reading %s:6 vtoc',volser
+         L     r3,vtoc_area
+         L     r4,vtoc_trks
+         LA    r5,=XL5'0'
+         BAL   re,cvaf_bld
+         MVC   cvpl_area,model_cvpl      read the first track
+         CVAFSEQ ACCESS=GTEQ,BUFLIST=bflh,DEB=(r2),                    x
+               BRANCH=(YES,PGM),MF=(E,cvpl_area)
+         LTR   rf,rf
+         BNZ   ut1_cvaf_err
+         B     vtocnext
+vtocloop BAL   re,cvaf_bld               read another track
+         CVAFSEQ ACCESS=GT,BUFLIST=bflh,DEB=(r2),                      x
+               BRANCH=(YES,PGM),MF=(E,cvpl_area)
+         LTR   rf,rf
+         BNZ   ut1_cvaf_err
+vtocnext BCT   r4,vtocloop
+         CLOSE vtdcb,MF=(E,openl24)
+        #MSG   0,'%s:6 vtoc closed',volser
+         B     process_vtoc
+
+*/* ----------------------------------------------------------------
+* *      subroutine to build the cvaf control blocks
+* *
+* *      r3 - pointer to buffer for dscb (updated)
+* *      r5 - cchhr of 1st dscb - points to last bflearg on exit
+* * ---------------------------------------------------------------- */
+
+cvaf_bld XC    bflh,bflh
+         USING IECSDSL1,r3
+h        USING BFLHDR,bflh
+         OI    h.BFLHFL,BFLHDSCB
+         L     r0,dscbs_per_trk
+         STC   r0,h.BFLHNOE
+         LA    rf,bflent
+         USING BFLE,rf
+cvaf_bld_loop  DS 0H
+         XC    BFLE(BFLELN),BFLE
+         OI    BFLEFL,BFLECHR
+         MVI   BFLELTH,DS1END-IECSDSF1
+         MVC   BFLEARG,0(r5)             arg only used for 1st entry
+         ST    r3,BFLEBUF
+         LA    r3,DS1END
+         LA    r5,BFLEARG                r5 will point to last bflearg
+         LA    rf,BFLE+BFLELN              on exit
+         BCT   r0,cvaf_bld_loop
+         BR    re
+         DROP  r3,h,rf
+
+*/* ----------------------------------------------------------------
+* *      count nbr datasets and get a dataset area
+* * ---------------------------------------------------------------- */
+
+process_vtoc   DS 0H
+         L     r0,total_dscbs
+         L     r1,vtoc_area
+         USING IECSDSL1,r1
+         SLR   r3,3                      init nbr datasets
+         SLR   rf,rf
+cnt_dsn  CLI   DS1FMTID,C'1'
+         BNE   cnt_dsn_next
+         LA    r3,1(,r3)
+         LR    rf,r1                     remember last fmt1 dscb addr
+cnt_dsn_next   DS 0H
+         LA    r1,DS1END
+         BCT   r0,cnt_dsn
+         DROP  r1
+         ST    r3,dsn_nbr
+         ST    rf,last_f1_dscb
+        #MSG   1,'%d datasets are on %s:6',dsn_nbr,volser
+         LA    r3,3(,r3)                 for free, track 0 and vtoc
+         ST    r3,dsn_nbr
+         M     r2,=A(dsn_area_len)
+         ST    r3,dsn_area_size
+         STORAGE OBTAIN,LENGTH=(R3),BNDRY=PAGE
+         ST    r1,dsn_area_addr
+         LR    r2,r1
+         SLR   rf,rf
+         MVCL  r2,re
+         USING dsn_area,r1
+         MVC   dsn_name,=CL44'*** free ***'
+         LA    r1,dsn_area_len(,r1)
+         MVC   dsn_name,=CL44'*** track 0 ***'
+         MVC   dsn_extents,=A(1)
+         MVC   dsn_trks,=A(1)
+         MVC   dsn_trks_dump,=A(1)
+         DROP  r1
+        #MSG   0,'storage obtained for dsn area, addr 0x%x size %d',   x
+               dsn_area_addr,dsn_area_size
+
+*/* ----------------------------------------------------------------
+* *      get track vector
+* *
+* *      each word corresponds to a track;  if the word is non-zero
+* *      then it points to a dsn_area entry and the track will
+* *      be dumped.
+* * ---------------------------------------------------------------- */
+
+         L     r3,trks
+         SLL   r3,2
+         ST    r3,trk_vec_size
+         STORAGE OBTAIN,LENGTH=(r3),BNDRY=PAGE
+         ST    r1,trk_vec
+         LR    r2,r1
+         SLR   rf,rf
+         MVCL  r2,re
+         TM    opts,ALLTRKS              dumping all tracks ?
+         BNO   init_trk_vec1              no, continue
+         L     r3,trks
+init_trk_vec   DS 0H
+         MVC   0(4,r1),dsn_area_addr     set entry to '*** none ***'
+         LA    r1,4(,r1)
+         BCT   r3,init_trk_vec
+init_trk_vec1  DS 0H
+         L     r1,trk_vec
+         L     r2,dsn_area_addr
+         LA    r2,dsn_area_len(,r2)      track 0 dsn_area [2nd entry]
+         ST    r2,0(,r1)                 set track 0 to dump
+        #MSG   0,'storage obtained for trk vector, addr 0x%x size %d', x
+               trk_vec,trk_vec_size
+
+*/* ----------------------------------------------------------------
+* *      figure out which tracks to dump
+* * ---------------------------------------------------------------- */
+
+         L     r9,vtoc_area
+         L     r4,dsn_area_addr
+         LA    r4,dsn_area_len*2(,r4)    point to 3rd entry [vtoc]
+         USING dsn_area,r4
+
+fmt4     MVC   dsn_name,=CL44'*** vtoc ***'   first dscb is format 4
+         MVC   dsn_extents,=A(1)
+         USING IECSDSL4-44,r9
+         LA    r1,DS4VTOCE
+         BAL   re,cnv_xtnt               get vtoc start trk, size
+         ST    r1,dsn_trks
+         ST    r1,dsn_trks_dump
+         LA    r1,DS4VTOCE
+         LA    r2,1
+         SLR   r3,r3
+         BCTR  r3,0
+         BAL   re,upd_trk_vec
+         LA    r4,dsn_area_len(,r4)
+         DROP  r9
+
+         USING IECSDSL1,r9
+vtoc_loop LA   r9,DS1END
+         CL    r9,last_f1_dscb
+         BH    vtoc_exit
+         CLI   DS1FMTID,C'1'
+         BNE   vtoc_loop
+
+fmt1     MVC   dsn_name,DS1DSNAM         format 1 dscb processing
+         SLR   r2,r2
+         IC    r2,DS1NOEPV
+         ST    r2,dsn_extents
+         LTR   r2,r2
+         BZ    f1_part2
+
+*/*      count number of tracks allocated for the dataset            */
+
+         LA    r6,DS1EXT1
+         LA    r7,3                     format 1 has 3 extents
+f1_xt    LR    r1,r6
+         BAL   re,cnv_xtnt
+         A     r1,dsn_trks
+         ST    r1,dsn_trks
+         SH    r2,=Y(1)
+         BNP   f1_part2
+         LA    r6,10(,r6)
+         BCT   r7,f1_xt
+
+fmt3     LA    r1,DS1PTRDS
+         BAL   re,cnv_ptr
+         LR    r8,r1
+         USING IECSDSL3,r8
+
+         LA    r6,DS3EXTNT              fmt 3 starts off with 4 extents
+         LA    r7,4
+f3_xt1   LR    r1,r6
+         BAL   re,cnv_xtnt
+         A     r1,dsn_trks
+         ST    r1,dsn_trks
+         SH    r2,=Y(1)
+         BNP   f1_part2
+         LA    r6,10(,r6)
+         BCT   r7,f3_xt1
+
+         LA    r6,DS3ADEXT
+         LA    r7,9                      and has 9 additional extents
+f3_xt2   LR    r1,r6
+         BAL   re,cnv_xtnt
+         A     r1,dsn_trks
+         ST    r1,dsn_trks
+         SH    r2,=Y(1)
+         BNP   f1_part2
+         LA    r6,10(,r6)
+         BCT   r7,f3_xt2
+         LA    r1,DS3PTRDS
+         B     fmt3
+         DROP  r8
+
+f1_part2 DS    0H
+
+*/*      check if dataset included or excluded                       */
+
+         L     r1,dsn_incl_list
+         LTR   r1,r1
+         BZ    f1_in_ok
+         LA    r0,DS1DSNAM
+         BAL   re,chk_dsn_list
+         LTR   rf,rf
+         BZ    f1_in_ok
+         OI    dsn_flag,dsn_not_incl
+f1_in_ok L     r1,dsn_excl_list
+         LTR   r1,r1
+         BZ    f1_ex_ok
+         LA    r0,DS1DSNAM
+         BAL   re,chk_dsn_list
+         LTR   rf,rf
+         BNZ   f1_ex_ok
+         OI    dsn_flag,dsn_excl
+        #MSG   1,'%s:44 Excluded',DS1DSNAM  Msg for DS exclude  SOMITCW
+f1_ex_ok TM    dsn_flag,dsn_not_incl+dsn_excl
+         BNZ   f1_exit
+
+*/*      check if we'll use ds1lstar                                 */
+
+         SLR   r3,r3                     presume we won't use ds1lstar
+         BCTR  r3,0
+         TM    opts,ALLDATA+ALLTRKS
+         BNZ   f1_no_lstar
+         TM    DS1SMSFG,DS1PDSE+DS1STRP+DS1PDSEX+DS1DSAE
+         BNZ   f1_no_lstar
+         CLC   DS1DSORG,=AL1(DS1DSGPS,0)
+         BE    f1_lstar_ok
+         CLC   DS1DSORG,=AL1(DS1DSGPO,0)
+         BNE   f1_no_lstar
+f1_lstar_ok    DS 0H
+         SLR   r3,r3
+         ICM   r3,B'0011',DS1LSTAR
+         LA    r3,1(,r3)                 number tracks in use
+f1_no_lstar    DS 0H
+
+*/*      scan the extents                                            */
+
+         LA    r0,3
+         LA    r1,DS1EXT1
+         L     r2,dsn_extents
+f1_xt_2  BAL   re,upd_trk_vec
+         LTR   rf,rf
+         BNZ   f1_exit
+         BCT   r0,f1_xt_2
+         LA    r1,DS1PTRDS
+fmt3_2   BAL   re,cnv_ptr
+         LR    r8,r1
+         USING IECSDSL3,r8
+         LA    r1,DS3EXTNT
+         LA    r0,4
+f3_xt1_2 BAL   re,upd_trk_vec
+         LTR   rf,rf
+         BNZ   f1_exit
+         BCT   r0,f3_xt1_2
+         LA    r1,DS3ADEXT
+         LA    r0,9
+f3_xt2_2 BAL   re,upd_trk_vec
+         LTR   rf,rf
+         BNZ   f1_exit
+         BCT   r0,f3_xt2_2
+         LA    r1,DS3PTRDS
+         B     fmt3_2
+         DROP  r8
+f1_exit  LA    r4,dsn_area_len(,r4)
+         B     vtoc_loop
+vtoc_exit DS   0H
+         DROP  r9,r4
+
+         L     r1,vtoc_area
+         L     r0,vtoc_size
+         STORAGE RELEASE,ADDR=(1),LENGTH=(0)
+        #MSG   0,'storage released for vtoc area, addr 0x%x size %d',  x
+               vtoc_area,vtoc_size
+         XC    vtoc_area,vtoc_area
+         XC    last_f1_dscb,last_f1_dscb
+         XC    vtoc_size,vtoc_size
+
+*        The dsn_excl_list memory is being freed here.          SOMITCW
+
+         L    r1,dsn_excl_list  Load addr. of first list entry  SOMITCW
+in_free  DS   0H                                                SOMITCW
+         LTR  r1,r1         See if a list entry to free         SOMITCW
+         BZ   in_freed      All dsn_excl_list freed, go exit    SOMITCW
+         L    r2,0(,r1)     Save the next address to free       SOMITCW
+         FREEMAIN RU,LV=49,A=(1)  Free the list entry           SOMITCW
+         LR   r1,r2         Set the next address to free        SOMITCW
+         B    in_free       Go to free the next list entry      SOMITCW
+in_freed DS   0H                                                SOMITCW
+         XC   dsn_excl_list(4),dsn_excl_list  Clear the anchor  SOMITCW
+
+
+*/* ----------------------------------------------------------------
+* *      count number of tracks we're going to dump
+* * ---------------------------------------------------------------- */
+
+         SLR   r2,r2
+         L     r1,trk_vec
+         L     r0,trks
+         SLR   rf,rf
+cnt_dump CL    rf,0(,r1)
+         BE    *+8
+         LA    r2,1(,r2)
+         LA    r1,4(,r1)
+         BCT   r0,cnt_dump
+         ST    r2,trks_dump
+        #MSG   0,'%d tracks out of %d will be dumped',                 x
+               trks_dump,trks
+
+*/* ----------------------------------------------------------------
+* *      part 2 -- do the actual work
+*/* ----------------------------------------------------------------
+
+*/* ----------------------------------------------------------------
+* *      open sysut1 in excp mode
+* * ---------------------------------------------------------------- */
+
+ex       USING IHADCB,exdcb
+         MVC   exdcb,model_exdcb
+         LA    r1,exlst
+         STCM  r1,B'0111',ex.DCBEXLSA
+         LA    r1,jfcb
+         ST    r1,exlst
+         MVI   exlst,X'87'
+         MVC   openl24,model_openl24
+         RDJFCB (ex.IHADCB,INPUT),MF=(E,openl24)
+         LTR   rf,rf
+         BNZ   ut1_rdjfcb_err
+j        USING INFMJFCB,jfcb
+         MVI   j.JFCBDSNM,4              vtoc name is all x'04's
+         MVC   j.JFCBDSNM+1(L'JFCBDSNM-1),j.JFCBDSNM
+         DROP  j
+         OPEN  ex.IHADCB,TYPE=J,MF=(E,openl24)
+         TM    ex.DCBOFLGS,DCBOFOPN
+         BNO   ut1_excp_open_err
+
+*/* ----------------------------------------------------------------
+* *      update the deb so we can read the entire volume
+* *      [this requires key 0 - hence supervisor state]
+* * ---------------------------------------------------------------- */
+
+         L     r2,ex.DCBDEBAD            load deb address
+         N     r2,=A(X'00FFFFFF')
+         USING DEBBASIC,r2
+         LA    r3,DEBBASND
+         USING DEBDASD,r3
+         MODESET MODE=SUP
+         IPK   0(r2)
+         SPKA  0
+         SLR   r1,r1
+         STH   r1,DEBSTRCC
+         STH   r1,DEBSTRHH
+         L     r1,cyls
+         BCTR  r1,0
+         STCM  r1,B'0011',DEBENDCC
+         L     r1,trks_per_cyl
+         BCTR  r1,0
+         STCM  r1,B'0011',DEBENDHH
+         L     r1,trks
+         C     r1,=A(65535)
+         BNH   *+8
+         L     r1,=A(65535)
+         STCM  r1,B'0011',DEBNMTRK
+         SPKA  0(r2)
+         MODESET MODE=PROB
+         DROP  r2,r3
+
+*/* ----------------------------------------------------------------
+* *      build the sysut1 iob
+* * ---------------------------------------------------------------- */
+
+i1       USING IOBSTDRD,excp_iob
+         OI    i1.IOBFLAG1,IOBDATCH+IOBCMDCH+IOBUNREL
+         LA    r1,excp_ecb
+         ST    r1,i1.IOBECBPT
+         LA    r1,excp_ccws
+         ST    r1,i1.IOBSTART
+         LA    r1,exdcb
+         ST    r1,i1.IOBDCBPT
+
+*/* ----------------------------------------------------------------
+* *      get area for read track (rt)
+* * ---------------------------------------------------------------- */
+
+         MVC   trkcalcl,model_trkcalcl
+         TRKCALC FUNCTN=TRKBAL,TYPE=devta+3,R=1,K=0,DD=65535,          x
+               MAXSIZE=YES,REGSAVE=YES,MF=(E,trkcalcl)
+         LR    r3,r0                     copy max r1 data size
+         A     r3,=A(ha_len+count_len+8+count_len+8)                   x
+                                         add ha size, r0 size,         x
+                                         r1 count and end-track marker
+         LA    r3,511(,r3)               round_up 512
+         SRL   r3,9
+         SLL   r3,9
+         ST    r3,trk_size
+         M     r2,trks_per_cyl
+         STORAGE OBTAIN,LENGTH=(r3),LOC=BELOW,BNDRY=PAGE
+         ST    r1,excp_io_area
+         ST    r3,excp_io_size
+        #MSG   0,'storage obtained for %s i/o area, addr 0x%x size %d',x
+               volser,excp_io_area,excp_io_size
+
+*/* ----------------------------------------------------------------
+* *      get area for compression
+* * ---------------------------------------------------------------- */
+
+         TM    opts,COMPRESSION
+         BNO   no_compress_1
+         L     r2,trk_size
+         A     r2,=A(4095)
+         SRL   r2,12
+         SLL   r2,12
+         STORAGE OBTAIN,LENGTH=(r2),BNDRY=PAGE
+         ST    r1,compr_area
+         ST    r2,compr_size
+        #MSG   0,'storage obtained for compression, addr 0x%x size %d',x
+               compr_area,compr_size
+         LA    r2,handle
+         LA    r3,=A(32*1024)
+         LA    r4,=A(1)
+         STM   r2,r4,dw
+         OI    dw+8,X'80'
+         LA    r1,dw
+         L     rf,=V(EDCXHOTL)           create persistent c environ
+         BALR  re,rf
+        #MSG   0,'persistent c environment created, handle=0x%x',      x
+               handle
+no_compress_1  DS 0H
+
+*/* ----------------------------------------------------------------
+* *      open sysut2 (output file)
+* * ---------------------------------------------------------------- */
+
+o        USING IHADCB,outdcb
+         MVC   outdcb,model_outdcb
+         MVC   outdcbe,model_outdcbe                            CZV70
+         LA    r1,outdcbe                                       CZV70
+         ST    r1,o.DCBDCBE                                     CZV70
+
+         OPEN  (o.IHADCB,OUTPUT),MF=(E,openl24)
+         TM    o.DCBOFLGS,DCBOFOPN
+         BNO   out_open_err
+        #MSG   1,'file SYSUT2 opened for output'
+
+*/* ----------------------------------------------------------------
+* *      get sysut2 i/o areas
+* * ---------------------------------------------------------------- */
+
+         STORAGE OBTAIN,LENGTH=blksize,BNDRY=PAGE
+         ST    r1,out_buf                first output buffer
+         MVC   out_bufsz,=A(blksize)
+
+*        build the CKD/CCKD headers
+
+         LR    r3,r1
+         USING VDHDR,r3
+         ST    r3,vdhdr_addr
+         LR    r0,r3
+         L     r1,=A(blksize)
+         SLR   rf,rf
+         MVCL  r0,re
+         USING CKD_DEVHDR,VDH_devhdr
+         MVC   dh_devid,devid_CKD_C064
+         L     rf,trks_per_cyl
+         STRV  rf,dh_heads
+         L     rf,trk_size
+         STRV  rf,dh_trksize
+         MVI   dh_devtyp,x'90'            presume 3390 dasd
+         CLI   devta+3,x'0f'              is it a 3390 dasd?
+         BE    *+8                        yes correct guess
+         MVI   dh_devtyp,x'80'            must be 3380 then
+         USING CCKD64_DEVHDR,VDH_devhdr2
+         MVC   cdh_vrm,=AL1(version,release,mod)
+         L     rf,cyls
+         STRV  rf,cdh_cyls
+
+*        calculate number lvl 1 entries
+
+         L     rf,trks                    #of tracks
+         LR    r2,rf
+         SRL   r2,8                       divided by 256 trks/group
+         N     rf,=A(X'000000ff')         evenly divisible ?
+         BZ    *+8                        yes
+         LA    r2,1(,r2)                  no, add one more track group
+         STRV  r2,num_L1tab               save #of l1 tab entries
+         LA    r1,256                     (256 tracks per group)
+         STRV  r1,num_L2tab               save #of tracks per group
+
+         L     r1,cckd_compr
+         STC   r1,cmp_algo
+         L     r1,cckd_compr_level
+         STRVH r1,cmp_parm
+
+*        calculate the first pos past the end of lvl 1 tab
+
+         LLGFR r1,r2                        number of l1 tab entries
+         SLLG  r1,R1,CCKD64_L1ENT_BITSHIFT  times size of each entry
+         ALGFI r1,(VDH_l1tab-VDHDR)         plus file offset to l1tab
+         STG   r1,out_pos                   save current file position
+         STG   r1,bytes_ovh                 init total overhead bytes
+         DROP  r3
+
+*        get area for rewrites
+
+         ALR   r2,r2                     2 entries for ea lvl 2 tab,
+         LA    r2,2(,r2)                 plus the 1st buf, plus spare
+         MH    r2,=Y(rw_len)             times size of each r/w entry
+
+         STORAGE OBTAIN,LENGTH=(r2),BNDRY=PAGE
+         STM   r1,r2,rw_area_size
+
+         LR    r0,r1                     clear the rewrite area
+         LR    r1,r2
+         SLR   rf,rf
+         MVCL  r0,re
+
+         L     r2,rw_area                set first rewrite entry
+         USING rw_ent,r2
+
+         MVC   rw_buf,out_buf
+         ST    r2,last_rw
+         LA    r2,rw_next
+         ST    r2,next_rw
+
+         DROP  r2
+
+*/* ----------------------------------------------------------------
+* *      read tracks
+* * ---------------------------------------------------------------- */
+
+          SLR  r2,r2                     init relative track
+          L    r3,trk_vec
+read_loop CL   r2,trks
+          BNL  read_exit
+          LR   rf,r2                     get dsn area addr for trk
+          SLL  rf,2
+          L    r4,0(rf,r3)
+          LTR  r4,r4
+          BZ   read_next
+          SLR  r6,r6
+          LR   r7,r2
+          D    r6,trks_per_cyl           get cc [r7] and hh [r6]
+          XC   i1.IOBSEEK,i1.IOBSEEK
+          STCM r7,B'0011',i1.IOBCC
+          STCM r6,B'0011',i1.IOBHH
+
+*         build locate record ccw
+
+          XC   excp_ccws,excp_ccws
+          LA   r5,excp_ccws
+          USING ccw0,r5
+          MVI  CCW0CMD,lr
+          LA   r1,lr_parms
+          STCM r1,B'0111',CCW0ADDR
+          OI   CCW0FLAG,CCW0CC
+          LA   r1,L'lr_parms
+          STCM r1,B'0011',CCW0CNT
+          LA   r5,CCW0END
+
+*         build read track ccws, try to read to end-of-cylinder
+
+          L    r0,trk_size
+          L    r1,excp_io_area
+          USING ha,r1
+read_rt   MVI  ha_bin,0                  build a ha
+          STCM r7,B'0011',ha_cc
+          STCM r6,B'0011',ha_hh
+          LA   rf,ha_end
+          DROP r1
+          MVI  CCW0CMD,rt
+          STCM rf,B'0111',CCW0ADDR
+          OI   CCW0FLAG,CCW0SLI+CCW0CC
+          STCM r0,B'0011',CCW0CNT
+          AR   r1,r0                     next i/o area addr
+          LA   r6,1(,r6)                 increment hh
+          C    r6,trks_per_cyl
+          BNL  read_rt_x                 exit if next cylinder
+          LA   r2,1(,r2)                 increment track nbr
+          LR   rf,r2
+          SLL  rf,2
+          L    r4,0(rf,r3)
+          LTR  r4,r4
+          BZ   read_rt_x                 exit if trk_vec entry is 0
+          LA   r5,CCW0END                 else point to next ccw
+          B    read_rt                     and loop back
+read_rt_x NI   CCW0FLAG,255-CCW0CC       unchain last ccw
+          DROP r5
+          SLR  rf,rf
+          ICM  rf,B'0011',i1.IOBHH
+          SR   r6,rf                     number of read rt ccws
+
+*         build locate record parameters
+
+          XC   lr_parms,lr_parms
+          LA   r5,lr_parms
+          USING lr_parm_area,r5
+          MVI  lr_op,lr_orient_home+lr_read_tracks
+          STC  r6,lr_count
+          MVC  lr_seek_addr,i1.IOBCC
+          MVC  lr_search_arg,i1.IOBCC
+          DROP r5
+
+*         issue excp
+
+          XC   excp_ecb,excp_ecb
+          EXCP i1.IOBSTDRD
+          WAIT 1,ECB=excp_ecb
+          CLI  excp_ecb,X'7f'
+          BNE  ut1_io_err
+
+*          process each track image
+
+           L    r1,excp_io_area
+read_proc  LA   r7,ha_len(,r1)          find end of the track
+           USING count,r7
+read_proc1 CLC  =X'ffffffffffffffff',count
+           BE   read_proc2
+           SLR  rf,rf
+           IC   rf,count_key
+           SLR  r0,r0
+           ICM  r0,B'0011',count_data
+           AR   rf,r0
+           LA   r7,count_end(rf)
+           B    read_proc1
+           DROP r7
+read_proc2 LA   r0,8(,r7)               get length of track image
+           SR   r0,r1
+           ST   r1,trk_addr
+           ST   r0,trk_sz
+           ST   r1,ctrk_addr
+           CH   r0,=Y(37)                track just an eof ?
+           BNE  *+6
+           SLR  r0,r0                     yes, use 0 length
+           ST   r0,ctrk_sz
+
+*         compress the track [but not the ha]
+*         void *__xhotu(void *handle, void *function, ...);
+*         int compress(uchar *dest,   ulong *destLen,
+*                      const uchar *source, ulong sourceLen);
+
+          TM   opts,COMPRESSION
+          BNO  no_compress2
+          LA   re,handle                 set parms for edcxhotu
+          LA   rf,=V(COMPRES2)
+          STM  re,rf,zlib_pl
+          LM   re,rf,compr_area          dest area, length
+          MVC  0(ha_len,re),0(r1)        copy the ha
+          MVI  0(re),1                   flag indicating compressed trk
+          LA   re,ha_len(,re)            point past the ha
+          SH   rf,=Y(ha_len)             adjust dest length
+          ST   rf,compr_used             set dest length
+          LA   rf,compr_used             addr dest length
+          STM  re,rf,zlib_pl+8           set dest addr, addr len
+          SH   r0,=Y(ha_len)             adjust source len
+          BNP  no_compress2               don't compress if null track
+          ST   r0,zlib_pl+20             set source length
+          LA   r1,ha_len(,r1)            adjust source addr
+          ST   r1,zlib_pl+16             set source addr
+          L    re,compr_level            get compression level
+          ST   re,zlib_pl+24             set compression level
+          LA   r1,zlib_pl                parameter list addr
+          L    rf,=V(EDCXHOTU)           call zlib compress function
+          BALR re,rf
+          LTR  rf,rf                     test return code
+          BNZ  no_compress2
+          L    r1,compr_used             get compressed length
+          LA   r1,ha_len(,r1)            add size of ha
+          C    r1,trk_sz                 check lengths
+          BNL  no_compress2              use uncompressed img
+          MVC  ctrk_addr,compr_area
+          ST   r1,ctrk_sz
+no_compress2   DS 0H
+
+*         update byte counts
+
+          LG   r0,bytes_read             total bytes read
+          ALGF r0,trk_sz
+          STG  r0,bytes_read
+
+          LG   r0,bytes_written          total bytes written
+          ALGF r0,ctrk_sz
+          STG  r0,bytes_written
+
+          L    r1,ctrk_addr              calculate dsn entry address
+          USING ha_bin,r1
+          SLR  re,re
+          SLR  rf,rf
+          ICM  rf,B'0011',ha_cc
+          M    re,trks_per_cyl
+          SLR  re,re
+          ICM  re,B'0011',ha_hh
+          ALR  rf,re
+          SLL  rf,2
+          L    r4,0(rf,r3)
+          DROP r1
+          USING dsn_area,r4
+
+          LM   r0,r1,dsn_bytes_read      dataset bytes read
+          AL   r1,trk_sz
+          BC   12,*+8
+          AL   r0,=A(1)
+          STM  r0,r1,dsn_bytes_read
+          LM   r0,r1,dsn_bytes_written   dataset bytes written
+          AL   r1,ctrk_sz
+          BC   12,*+8
+          AL   r0,=A(1)
+          STM  r0,r1,dsn_bytes_written
+
+          DROP r4
+
+*         call write track routine
+
+          LA   r1,ctrk_addr              point to addr, len
+          BAL  re,write_track            call write_track()
+
+          L    r1,trk_addr
+          A    r1,trk_size
+          BCT  r6,read_proc              loop back if more tracks
+
+*         next track
+
+read_next LA   r2,1(,r2)
+          B    read_loop
+
+*/* ----------------------------------------------------------------
+* *       finished reading  --  cleanup
+* * ---------------------------------------------------------------- */
+
+read_exit SLR  r1,r1                     nullify parm pointer
+          BAL  re,write_track            call write_track() to finish
+          CLOSE exdcb,MF=(E,openl24)
+         #MSG  1,'file SYSUT1 closed'
+          CLC  =A(0),handle
+          BE   no_c_env
+          LA   r1,handle                 terminate the c environment
+          ST   r1,dw
+          OI   dw,X'80'
+          LA   r1,dw
+          L    rf,=V(EDCXHOTT)
+          BALR re,rf
+no_c_env  LM   r1,r2,excp_io_area
+          STORAGE RELEASE,ADDR=(1),LENGTH=(r2)
+          LM   r1,r2,compr_area
+          LTR  r1,r1
+          BZ   read_term
+          STORAGE RELEASE,ADDR=(1),LENGTH=(r2)
+read_term DS   0H
+
+********* DC   H'0'
+
+*/* ----------------------------------------------------------------
+* *       print statistics
+* * ---------------------------------------------------------------- */
+
+          L    rf,=A(do_stats)       statistics routine addr
+          BALR re,rf                 print the statistics
+
+*/* ----------------------------------------------------------------
+* *       close the print file
+* * ---------------------------------------------------------------- */
+
+          TM   pr.DCBOFLGS,DCBOFOPN  did the print file open
+          BNO  noprint2                nope
+          CLOSE pr.IHADCB,MODE=31,MF=(E,openl)
+noprint2  DS   0H
+
+*/* ----------------------------------------------------------------
+* *       free the workareas and return
+* * ---------------------------------------------------------------- */
+
+          L    r1,vdw_24
+          L    r0,=A(vdw24_len)
+          STORAGE RELEASE,ADDR=(1),LENGTH=(0)
+          LR   r1,rd
+          L    rd,4(,rd)
+          L    r0,=A(vdw_len)
+          STORAGE RELEASE,ADDR=(1),LENGTH=(0)
+          RETURN (14,12),RC=0
+
+*/* ----------------------------------------------------------------
+* *      write_track()  --  output subroutine
+* * ---------------------------------------------------------------- */
+
+write_track    DS 0H
+          STM  re,r8,wt_save
+          LTR  r8,r1                 0 means finish up
+          BZ   wt_finish
+          LM   re,rf,0(r8)           load addr, length
+          LTR  rf,rf                 do nothing for null tracks
+          BZ   wt_return
+          USING ha,re
+          SLR  r1,r1                 calculate track number from ha
+          ICM  r1,B'0011',ha_cc
+          M    r0,trks_per_cyl
+          SLR  r2,r2
+          ICM  r2,B'0011',ha_hh
+          AR   r2,r1
+          DROP re
+
+*         get pos of level 2 table
+
+          L    r3,vdhdr_addr
+          USING VDHDR,r3
+          LR   r4,r2
+          SRL  r4,8                  lvl 1 tab index
+          SLL  r4,3                  lvl 1 tab entry len is 8
+          LA   r4,VDH_l1tab(r4)      addr lvl 2 tab pos in lvl 1 tab
+          DROP r3
+          LRVG r3,0(r4)              lvl 2 tab pos
+          LTGR r3,r3                 does lvl 2 tab exist
+          BNZ  wt_l2t_ok               yes, continue
+
+*         level 2 table doesn't exist yet; build one
+
+          LG    r0,bytes_ovh          update overhead total
+          ALGFI r0,CCKD64_L2TAB_SIZE
+          STG   r0,bytes_ovh
+
+*         get pos range of the new level 2 table
+
+          LG   r3,out_pos            load current pos
+         STRVG r3,0(r4)              update lvl 1 pos
+          LGR  r4,r3                 calculate next pos
+         ALGFI r4,CCKD64_L2TAB_SIZE
+          STG  r4,out_pos            set next available pos
+
+*         set  buffer for rewrite [if it already isn't]
+
+          L    r5,last_rw            see if buf set for rewrite
+          USING rw_ent,r5
+          CLC  rw_pos,out_buf_pos
+          BE   wt_l2t_1                yes, continue
+          LA   r5,rw_next                try next entry
+          CLC  rw_pos,out_buf_pos
+          BE   wt_l2t_1                    yes, continue
+          L    r5,next_rw            no, set this buf for rewrite
+          MVC  rw_pos,out_buf_pos
+          MVC  rw_buf,out_buf
+          LA   r0,rw_next
+          ST   r0,next_rw            set next available rewrite entry
+wt_l2t_1  ST   r5,last_rw            update last rewrite entry addr
+
+*         if the table fills this buffer then write it out
+
+          LGR  r0,r4                 copy next pos
+          NG   r0,mask1              convert to buf pos
+          CLG  r0,out_buf_pos        need to write this buf ?
+          BE   wt_l2t_ok               no, continue
+          L    r6,out_buf            write the current buf
+          WRITE outdecb,SF,outdcb,(r6),MF=E
+          CHECK outdecb
+          NOTE  outdcb               note its file position
+          ST   r1,rw_ttr
+          STORAGE OBTAIN,LENGTH=blksize,BNDRY=PAGE
+          L    r0,out_bufsz
+          AL   r0,=A(blksize)
+          ST   r0,out_bufsz
+          LR   r6,r1
+          ST   r6,out_buf            new output buf
+          LR   r0,r6                 clear the buf
+          L    r1,=A(blksize)
+          SLR  rf,rf
+          MVCL r0,re
+          LG   r1,out_buf_pos        load previous buf pos
+          ALGF r1,=A(blksize)        set new buf pos
+          STG  r1,out_buf_pos        set new buf pos
+
+*         if the table spans into the new buf then set it for rewrite
+
+          CLGR r4,r1                 new pos same as new buf pos ?
+          BE   wt_l2t_ok               yes, table didn't span
+          L    r5,next_rw            get a new rewrite entry
+          STG  r1,rw_pos             set buf pos
+          ST   r6,rw_buf             set buf addr
+          LA   r5,rw_next
+          ST   r5,next_rw            set next available rewrite entry
+          DROP r5
+wt_l2t_ok DS   0H                    r3 has lvl 2 tab pos
+
+*         build the lvl 2 entry in a work area
+*         (this is necessary because the entry might span buffers)
+
+w         USING CCKD64_L2ENT,dw
+          XC   w.L2_entry,w.L2_entry
+          LG   r1,out_pos            get next available pos
+         STRVG r1,w.L2_trkoff        set pos for trk image
+          L    r1,4(,r8)             get length of trk image
+         STRVH r1,w.L2_size          set size of the area
+         STRVH r1,w.L2_len           set length of the trk image
+          DROP w
+
+*         get address of the lvl 2 entry
+
+          SLLG r2,r2,56              shift out all but low 8 bits
+          SRLG r2,r2,52              shift back but multiplied by 16
+          AGR  r2,r3                 have pos for lvl 2 tab entry
+          LGR  rf,r2
+          NG   rf,mask1              pos of buf for this entry
+          L    r4,last_rw            find the rewrite entry
+          USING rw_ent,r4
+          CLG  rf,rw_pos
+          BE   wt_l2t_2                found the entry
+          LA   r4,rw_next            else try the next entry
+          CLG  rf,rw_pos
+          BNE  wt_logic_err            not good
+wt_l2t_2  L    rf,rw_buf             load buf addr for this entry
+          NG   r2,mask2              get buf offset from pos
+          AGFR r2,rf                 now have addr of lvl 2 entry
+
+*         copy the work entry to the actual entry
+
+          USING CCKD64_L2ENT,r2
+          A    rf,=A(blksize)        calculate length
+          SR   rf,r2                 left in this buf
+          CH   rf,=Y(16)             check length to copy
+          BNH  *+8
+          LA   rf,16
+          BCTR rf,0                  decrement for EX
+          EX   rf,wt_l2t_mvc         copy the entry
+          LA   re,14                 calculate length-1
+          SR   re,rf                  to copy
+          BM   wt_l2t_x              exit if finished
+          LA   rf,dw+1(rf)           source address
+          LA   r4,rw_next            to next rewrite entry
+          L    r2,rw_buf             target addr (start of next buf)
+          EX   re,wt_l2t_mvc2        copy the rest
+          B    wt_l2t_x
+wt_l2t_mvc  MVC L2_entry(0),dw
+wt_l2t_mvc2 MVC L2_entry(0),0(rf)
+          DROP r4,r2
+wt_l2t_x  DS   0H                    lvl 2 tab entry built
+
+*         copy the track image
+
+          LM   r4,r5,0(r8)           source addr, length
+wt_data   LTR  r5,r5                 anything left to copy ?
+          BZ   wt_return              no, return
+          LG   r2,out_pos            get current pos
+          NG   r2,mask2              convert to buf offset
+          LGF  r3,out_buf            get current buf addr
+          ALGR r2,r3                 now have target addr
+          ALGF r3,=A(blksize)        calculate target length
+          SLGR r3,r2
+         CLGFR r3,r5                 check lengths
+          BNH  *+6                    and set target length
+          LR   r3,r5                   to the shortest
+          LR   r1,r3                 save target length
+          MVCL r2,r4                 copy
+          LG   r2,out_pos            get old pos
+         ALGFR r2,r1                 new pos
+          STG  r2,out_pos            set new pos
+          LG   r3,out_buf_pos        load current buf pos
+          NG   r2,mask1              new buf pos
+          CLGR r2,r3                 is current buf full ?
+          BE   wt_data                no [but r5 should be 0]
+          STG  r2,out_buf_pos        set new buf pos
+          L    r6,out_buf            write the buffer
+          WRITE outdecb,SF,outdcb,(r6),MF=E
+          CHECK outdecb
+          LR   r1,r6                 copy old buf addr
+          L    r6,last_rw            check for old buf rewrite
+          USING rw_ent,r6
+          CLG  r3,rw_pos
+          BE   wt_data_1               yes ... get new buf
+          LA   r6,rw_next
+          CLG  r3,rw_pos
+          BNE  wt_data_2                no ... use old buf
+wt_data_1 NOTE outdcb                note disk addr for old buf
+          ST   r1,rw_ttr
+          DROP r6
+          STORAGE OBTAIN,LENGTH=blksize,BNDRY=PAGE
+          L    r0,out_bufsz
+          AL   r0,=A(blksize)
+          ST   r0,out_bufsz
+          ST   r1,out_buf            new buf
+wt_data_2 LR   r0,r1                 clear the buf
+          L    r1,=A(blksize)
+          SLR  rf,rf
+          MVCL r0,re
+          B    wt_data
+
+wt_return LM   re,r8,wt_save         return
+          BR   re
+
+*/* ----------------------------------------------------------------
+* *      write_track() finish
+* *      - set free space and write last buffer(s)
+* *      - close & reopen in updat mode
+* *      - rewrite buffers in the rewrite queue
+* *      - close & return
+* * ---------------------------------------------------------------- */
+
+wt_finish DS  0H
+
+*         unused space at the end is free space
+
+          LG   r2,out_pos            get next available pos
+          NG   r2,mask2              convert to buf offset
+          BZ   wt_fsp_ok             if zero then no free space
+          LGF  r3,=A(blksize)        calculate length of free space
+          SLGR r3,r2                   on current block
+          LGR  r4,r3                 copy
+          CH   r4,=Y(16)             minimum free space is 16 bytes
+          BNL  *+10                    otherwise we need
+          ALGF r4,=A(blksize)            another block
+          STG  r4,bytes_free         remember free space
+
+          XC   dw,dw                 build the free entry in a work
+          XC   dw2,dw2               build the free entry in a work
+         STRVG r4,dw+8                area since we may span buffers
+          AL   r2,out_buf            get addr of free space
+          CH   r3,=Y(16)             check length left
+          BNH  *+8                    jumps if not too long
+          LA   r3,16                   else reset
+          BCTR r3,0                  decrement for ex
+          EX   r3,wt_fsp_mvc         copy the free space entry
+          LA   r4,dw+1(r3)           resume copy from here
+          LA   r5,14                 calculate length-1 left to copy
+          SR   r5,r3                  negative if all copied
+
+*         write the last buffer(s)
+
+wt_fsp_wr L    r6,out_buf            write the buffer
+          WRITE outdecb,SF,outdcb,(r6),MF=E
+          CHECK outdecb
+          LR   r1,r6                 copy old buf addr
+          LG   r3,out_buf_pos        get buffer pos
+          L    r6,last_rw            check for old buf rewrite
+          USING rw_ent,r6
+          CLG  r3,rw_pos
+          BE   wt_fsp_1                yes ... get new buf
+          LA   r6,rw_next
+          CLG  r3,rw_pos
+          BNE  wt_fsp_2                 no ... use old buf
+wt_fsp_1  NOTE outdcb                note disk addr for old buf
+          ST   r1,rw_ttr
+          DROP r6
+          STORAGE OBTAIN,LENGTH=blksize,BNDRY=PAGE
+          L    r0,out_bufsz
+          AL   r0,=A(blksize)
+          ST   r0,out_bufsz
+          ST   r1,out_buf            new buf
+wt_fsp_2  ALGF r3,=A(blksize)        new buf pos
+          STG  r3,out_buf_pos        set new pos
+          LR   r0,r1                 clear the buf
+          L    r1,=A(blksize)
+          SLR  rf,rf
+          MVCL r0,re
+          LTR  r5,r5                 more to copy ?
+          BM   wt_fsp_ok              no, continue
+          L    r2,out_buf            get target addr
+          EX   r5,wt_fsp_mvc2        copy the rest of the entry
+          SLR  r5,r5                 make r5 negative
+          BCTR r5,0                   to terminate the loop
+          B    wt_fsp_wr             go write
+wt_fsp_mvc  MVC 0(0,r2),dw
+wt_fsp_mvc2 MVC 0(0,r2),0(r4)
+wt_fsp_ok DS   0H                    last block has been written
+
+*         update the header
+
+          L    r2,vdhdr_addr
+          USING VDHDR,r2
+          USING CCKD64_DEVHDR,VDH_devhdr2
+          LG   re,out_buf_pos
+         STRVG re,cdh_size            set file size
+          LG   rf,out_pos
+         STRVG rf,cdh_used            set bytes used
+          LG   r0,bytes_free
+         STRVG r0,free_total          set total free space
+         STRVG r0,free_largest        set largest free space
+          LTR  r0,r0                  any free space ?
+          BZ   wt_hd2_ok              no, continue
+         STRVG rf,free_off            set offset to free entry
+          LGFI r1,1
+         STRVG r1,free_num            set number free entries
+          DROP r2
+wt_hd2_ok DS   0H
+
+*         close the file and open in update mode
+
+          CLOSE outdcb,MF=(E,openl24)
+         #MSG  1,'file SYSUT2 closed for output'
+o         USING IHADCB,outdcb
+          OPEN (o.IHADCB,UPDAT),MF=(E,openl24)
+          TM   o.DCBOFLGS,DCBOFOPN
+          BNO  out_open_err
+         #MSG  1,'file SYSUT2 opened for update'
+
+*         update the noted buffers
+
+          L    r2,rw_area
+          USING rw_ent,r2
+          L    r3,out_buf             buffer for read/write
+wt_update C    r2,next_rw             at end of entries ?
+          BNL  wt_upd_ok                yes, exit
+          POINT outdcb,rw_ttr         position the file
+          READ outdecb,SF,outdcb,(r3),MF=E
+          CHECK outdecb
+          LR   r0,r3                  copy the rewrite buf
+          L    r1,=A(blksize)
+          L    re,rw_buf
+          LR   rf,r1
+          MVCL r0,re
+          WRITE outdecb,SF,outdcb,(r3),MF=E
+          CHECK outdecb
+          L    r1,rw_buf              free the buf
+          STORAGE RELEASE,ADDR=(1),LENGTH=blksize
+          LA   r2,rw_next             point to the next entry
+          B    wt_update              loop back
+wt_upd_ok CLOSE outdcb,MF=(E,openl24)
+          STORAGE RELEASE,ADDR=(r3),LENGTH=blksize
+          LM   r1,r2,rw_area_size     free stuff
+          STORAGE RELEASE,ADDR=(1),LENGTH=(r2)
+         #MSG  1,'file SYSUT2 closed for update'
+          B    wt_return
+
+*/* ------------------------------------------------------      SOMITCW
+* *      subroutine to check if dsn is in the include or        SOMITCW
+* *      exclude list.                                          SOMITCW
+* *      r0 points to the dsname from the vtoc on entry         SOMITCW
+* *      rf points to the dsname from the vtoc for compare      SOMITCW
+* *      r1 points to the first list entry                      SOMITCW
+* *          A(next-entry-address)                              SOMITCW
+* *          XL1'EX-CLC-compare-length'                         SOMITCW
+* *          CL44'dsn-or-dsn-prefix'                            SOMITCW
+* *      r2 is the length for the EX of the CLC instruction     SOMITCW
+* *      rf will have 0 if dsname found, otherwise 4            SOMITCW
+* * ---------------------------------------------------- */     SOMITCW
+*                                                               SOMITCW
+chk_dsn_list   DS 0H                                            SOMITCW
+         LR    rf,r0        Copy DS1-DSNAME for addressing      SOMITCW
+cdl_loop DS    0H                                               SOMITCW
+         IC    r2,4(,r1)    Load length for EX of CLC           SOMITCW
+         EX    r2,cdl_CLC   See if the data set name found      SOMITCW
+         BE    cdl_ret0     Data set in list, go return         SOMITCW
+         ICM   r1,B'1111',0(r1)  Link to the next entry         SOMITCW
+         BZ    cdl_ret4     End of list, return dsn not found   SOMITCW
+         B     cdl_loop     Go back to try next list entry      SOMITCW
+cdl_ret4 LA    rf,4         Indicate that dsname not found      SOMITCW
+         BR    re           Return to caller                    SOMITCW
+cdl_ret0 SLR   rf,rf        Indicate that dsname was found      SOMITCW
+cdl_ret  BR    re           Return to caller                    SOMITCW
+cdl_CLC  CLC   0(0,rf),5(r1)  See if the dsn is in list         SOMITCW
+
+*/* ----------------------------------------------------------------
+* *      subroutine to convert a 10 byte vtoc extent descriptor [r1]
+* *      to starting track [r0] and number tracks [r1]
+* * ---------------------------------------------------------------- */
+
+cnv_xtnt STM   r2,r5,cnv_xtnt_save
+         SLR   r3,r3                     calculate ending extent
+         ICM   r3,B'0011',6(r1)
+         M     r2,trks_per_cyl
+         AH    r3,8(,r1)
+         SLR   r5,r5                     calculate beginning extent
+         ICM   r5,B'0011',2(r1)
+         M     r4,trks_per_cyl
+         AH    r5,4(,r1)
+         LR    r0,r5
+         SR    r3,r5
+         LA    r1,1(,r3)
+         LM    r2,r5,cnv_xtnt_save
+         BR    re
+
+*/* ----------------------------------------------------------------
+* *      subroutine to convert a 5 byte vtoc pointer [r1]
+* *      to an address in the vtoc area [r1]
+* * ---------------------------------------------------------------- */
+
+cnv_ptr  STM   r2,r5,cnv_ptr_save
+f4       USING IECSDSL4-44,dscb4
+         SLR   r3,r3                     calculate vtoc starting trk
+         ICM   r3,B'0011',f4.DS4VTOCE+2
+         M     r2,trks_per_cyl
+         SLR   r2,r2
+         ICM   r2,B'0011',f4.DS4VTOCE+4
+         AR    r3,r2
+         SLR   r5,r5                     calculate dscb trk
+         ICM   r5,B'0011',0(r1)
+         M     r4,trks_per_cyl
+         AH    r5,2(,r1)
+         SR    r5,r3                     have relative trk
+         M     r4,dscbs_per_trk
+         SLR   r3,r3
+         IC    r3,4(,r1)
+         AR    r5,r3                     now have relative dscb
+         BCTR  r5,0
+         M     r4,=A(DS1END-IECSDSF1)
+         L     r6,vtoc_area
+         LA    r1,0(r5,r6)
+         LM    r2,r6,cnv_ptr_save
+         BR    re
+         DROP  f4
+
+*/* ----------------------------------------------------------------
+* *      subroutine to populate the track vector table
+* *
+* *      r1 - pointer to extent descriptor (incremented)
+* *      r2 - nbr extents left (decremented)
+* *      r3 - -1 or last relative track (decremented)
+* *      r4 - dsn entry address
+* *
+* * ---------------------------------------------------------------- */
+
+upd_trk_vec SAVE (14,12)
+         USING dsn_area,r4
+         LA    rf,4
+         LTR   r2,r2                     exit if no extents left
+         BNP   utvret
+         BCTR  r2,0
+         LTR   r3,r3                     exit if lstar is zero
+         BZ    utvret
+         LA    r5,10(,r1)
+         BAL   re,cnv_xtnt
+         LR    r6,r0
+         SLL   r6,2
+         AL    r6,trk_vec
+         L     r7,dsn_trks_dump
+utvloop  ST    r4,0(,r6)
+         LA    r7,1(,r7)
+         LTR   r3,r3
+         BM    utvnext
+         SH    r3,=Y(1)
+         BNP   utvexit
+utvnext  LA    r6,4(,r6)
+         BCT   r1,utvloop
+         SLR   rf,rf
+utvexit  ST    r7,dsn_trks_dump
+         LR    r1,r5
+utvret   STM   r1,r3,24(rd)
+         RETURN (14,12),RC=(15)
+         DROP  r4
+
+*/* ----------------------------------------------------------------
+* *      retrieve options
+* * ---------------------------------------------------------------- */
+
+getopts  DS    0H
+         MVI   opts,COMPRESSION
+         MVC   compr_level,=A(CCKD_DEFAULT_COMPRESSION)    For this JOB
+         MVC   cckd_compr_level,=A(Z_DEFAULT_COMPRESSION)  In CCKD disk
+         MVC   cckd_compr,=A(CCKD_COMPRESS_ZLIB)
+
+*/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   SOMITCW
+* *      See if a SYSIN file                                    SOMITCW
+* * - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  SOMITCW
+*                                                               SOMITCW
+*  Locate Task I/O Table                                        SOMITCW
+         MVC   extract,model_extract  Move MF=L EXTRACT MACRO   SOMITCW
+         EXTRACT tiot_addr,'S',FIELDS=TIOT,MF=(E,EXTRACT)       SOMITCW
+         L     rf,tiot_addr                                     SOMITCW
+         LA    r1,24        Bump past JOB, STEP, PROCSTEP names SOMITCW
+in_tiot  DS    0H                                               SOMITCW
+         AR    rf,r1        Bump to next TIOT entry             SOMITCW
+         ICM   r1,b'0001',0(rf) Load length of TIOT entry       SOMITCW
+         BZR   r9           No SYSIN, take all defaults         SOMITCW
+*        CLC   in.DCBDDNAM,4(rf)   See if the SYSIN entry       SOMITCW
+    CLC model_indcb+DCBDDNAM-IHADCB(8),4(rf) See if SYSIN entry SOMITCW
+         BNE   in_tiot      Not SYSIN, go check next TIOT entry SOMITCW
+*                                                               SOMITCW
+*/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   SOMITCW
+* *      try to open SYSIN file                                 SOMITCW
+* * - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  SOMITCW
+*                                                               SOMITCW
+         MVC   indcb,model_indcb                                SOMITCW
+         MVC   indcbe,model_indcbe                              SOMITCW
+in       USING IHADCB,indcb                                     SOMITCW
+         LA    r1,indcbe                                        SOMITCW
+         ST    r1,in.DCBDCBE                                    SOMITCW
+
+* SYSIN exists, OPEN it                                         SOMITCW
+* * A list entry will be built for each exclude record          SOMITCW
+* * Format of each list entry will be:                          SOMITCW
+* *    A(next-entry-address)                                    SOMITCW
+* *    XL1'EX-CLC-compare-length'                               SOMITCW
+* *    CL44'dsn-or-dsn-prefix'                                  SOMITCW
+* * r2 will contain the address of the previous list entry,     SOMITCW
+* *    to link the new list entry to the previous.              SOMITCW
+
+         MVC   openl,model_openl   Insure unused bits are zero  SOMITCW
+         OPEN  (in.IHADCB,INPUT),MODE=31,MF=(E,openl)           SOMITCW
+         TM    in.DCBOFLGS,DCBOFOPN  See if SYSIN OPENed        SOMITCW
+         BZ    X'081B'(rb)  Abend S0C6 if OPEN failed           SOMITCW
+         LA    R2,dsn_excl_list  Load address of list anchor    SOMITCW
+in_get   DS    0h                                               SOMITCW
+         GET   in.IHADCB    Read a record                       SOMITCW
+         MVC   in_rec,0(r1) Store record for display            SOMITCW
+        #MSG   1,'SYSIN Read: %s:71',in_rec  Display the record SOMITCW
+         CLI   in_rec,C'*'  See if a comment                    SOMITCW
+         BE    in_get       Is comment, don't process           SOMITCW
+         CLC   =Cl8'EXCLUDE ',in_rec  See if an exclude         SOMITCW
+         BNE   ut1_bad_sysin  Not an exclude, go abend          SOMITCW
+         GETMAIN RU,LV=49   Get memory for a list entry         SOMITCW
+         XC    0(4,r1),0(r1)  Clear link addr.in GETMAINed area SOMITCW
+         ST    r1,0(,r2)    Link to the old list entry          SOMITCW
+         LR    rf,r1        Load the new list entry address     SOMITCW
+         CLI   in_rec+8,X'40' See if a data set name            SOMITCW
+         BE    ut1_bad_sysin  No data set name, go abend        SOMITCW
+         MVC   5(44,rf),in_rec+8  Save entire possible dsname   SOMITCW
+         TRT   in_rec+8(44),in_trt_table find space or asterisk SOMITCW
+         BZ    in_full44    Full data set name, go store        SOMITCW
+         LA    r2,in_rec+8  Load address of start of dsname     SOMITCW
+         CLI   0(r1),X'40'  See if a space found                SOMITCW
+         BE    in_dsn_found Dsn found, go add to list           SOMITCW
+in_prefix_found DS 0H                                           SOMITCW
+         BCTR  r1,0         Drop the asterisk byte for prefix   SOMITCW
+in_dsn_found DS 0H                                              SOMITCW
+*already LA    r2,in_rec+8  Load address of start of dsname     SOMITCW
+         SR    r1,r2        Find the length of the dsname       SOMITCW
+         STC   r1,4(,rf)    Store the length for compare        SOMITCW
+in_next  DS    0H                                               SOMITCW
+         LR    r2,rf        Restore list entry address          SOMITCW
+         B     in_get       Go get the next record              SOMITCW
+in_full44 DS 0H                                                 SOMITCW
+         MVI   4(rf),x'43'  Store EX length of data set name    SOMITCW
+         B     in_next      Go get next SYSIN record            SOMITCW
+in_exit  DS    0H                                               SOMITCW
+         CLOSE in.IHADCB,MODE=31,MF=(E,openl)                   SOMITCW
+         BR    r9           SYSIN processed, return to caller   SOMITCW
+*        BR    re                                       Deleted SOMITCW
+
+*/* ----------------------------------------------------------------
+* *      fatal errors
+* * ---------------------------------------------------------------- */
+
+ut1_bad_sysin  DS 0H                                            SOMITCW
+         LR    r2,r1        Save bad sysin record               SOMITCW
+  #MSG   3,'Bad record on SYSIN, must start with "EXCLUDE dsn"' SOMITCW
+         B     abend                                            SOMITCW
+
+ut1_devt_err   DS 0H
+         STM   rf,r0,retcode
+        #MSG   3,'DEVTYPE failed for SYSUT1; RC=%x reason %x',         x
+               retcode,rsncode
+         B     abend
+
+out_devt_err   DS 0H
+         STM   rf,r0,retcode
+        #MSG   3,'DEVTYPE failed for SYSUT2; RC=%x reason %x',         x
+               retcode,rsncode
+         B     abend
+
+ut1_not_dasd   DS 0H
+        #MSG   3,'SYSUT1 is not a disk device'
+         B     abend
+
+out_not_dasd   DS 0H
+        #MSG   3,'SYSUT2 is not a disk device'
+         B     abend
+
+ut1_not_eckd   DS 0H
+        #MSG   3,'SYSUT1 is not an eckd disk device'
+         B     abend
+
+ut1_rdjfcb_err DS 0H
+         ST    rf,retcode
+        #MSG   3,'RDJFCB failed for SYSUT1; RC=%x',retcode
+         B     abend
+
+ut1_vtoc_open_err DS 0H
+        #MSG   3,'OPEN failed for SYSUT1 vtoc on %s',volser
+         B     abend
+
+out_open_err   DS 0H
+        #MSG   3,'OPEN failed for SYSUT2'
+         B     abend
+
+ut1_dscb4_err     DS 0H
+         ST    rf,retcode
+c        USING CVPL,cvpl_area
+        #MSG   3,'Error processing format 4 dscb on %s; RC=%x CVSTAT=%dx
+               :1',volser,retcode,c.CVSTAT
+         B     abend
+         DROP  c
+
+ut1_cvaf_err      ABEND 6
+         ST    rf,retcode
+c        USING CVPL,cvpl_area
+        #MSG   3,'CVAF error reading %s vtoc; RC=%x CVSTAT=%d:1',      x
+               volser,retcode,c.CVSTAT
+         B     abend
+         DROP  c
+
+ut1_excp_open_err DS 0H
+        #MSG   3,'EXCP OPEN failed for SYSUT1 on %s',volser
+         B     abend
+
+ut1_io_err        DS 0H
+        #MSG   3,'EXCP I/O error for SYSUT1 on %s',volser
+         B     abend
+
+wt_logic_err      DS 0H
+        #MSG   3,'logic error writing track',volser
+         B     abend
+
+abend    ABEND 99,DUMP
+
+*/* ----------------------------------------------------------------
+* *      literals and constants
+* * ---------------------------------------------------------------- */
+
+blksize  EQU   16384
+ablksize DC    A(blksize)
+
+blkshift EQU   14
+
+mask1    DC    AD(x'ffffc000')
+mask2    DC    AD(x'00003fff')
+
+
+                 LTORG ,
+                 WXTRN EDCXHOTL,EDCXHOTU,EDCXHOTT,COMPRESS
+                 PRINT   GEN             Was NOGEN              SOMITCW
+model_extract    EXTRACT *-*,'S',FIELDS=TIOT,MF=L               SOMITCW
+model_extract_l  EQU  *-model_extract                           SOMITCW
+model_indcb      DCB  DDNAME=SYSIN,DSORG=PS,MACRF=GL,DCBE=0     SOMITCW
+model_indcb_l    EQU  *-model_indcb                             SOMITCW
+model_indcbe     DCBE RMODE31=BUFF,EODAD=in_exit                SOMITCW
+model_indcbe_l   EQU  *-model_indcbe                            SOMITCW
+model_prdcb      DCB  DDNAME=SYSPRINT,DSORG=PS,MACRF=PL,DCBE=0
+model_prdcb_l    EQU  *-model_prdcb
+model_prdcbe     DCBE RMODE31=BUFF
+model_prdcbe_l   EQU  *-model_prdcbe
+model_vtdcb      DCB  DDNAME=SYSUT1,DSORG=PS,MACRF=R
+model_vtdcb_l    EQU  *-model_vtdcb
+model_exdcb      DCB  DDNAME=SYSUT1,DSORG=DA,MACRF=E
+model_exdcb_l    EQU  *-model_exdcb
+model_outdcb     DCB  DDNAME=SYSUT2,DSORG=PS,MACRF=(RP,WP),            x
+               RECFM=F,BLKSIZE=blksize,LRECL=blksize,DCBE=0     CZV70
+model_outdcb_l   EQU  *-model_outdcb
+model_outdcbe    DCBE BLOCKTOKENSIZE=LARGE                      CZV70
+model_outdcbe_l  EQU  *-model_outdcbe                           CZV70
+model_openl      OPEN (0),MODE=31,MF=L
+model_openl_l    EQU  *-model_openl
+model_openl24    OPEN (0),MODE=31,MF=L
+model_openl24_l  EQU  *-model_openl24
+model_devtl      DEVTYPE ,,INFOLIST=devt_infol_1,MF=L
+model_devtl_l    EQU  *-model_devtl
+devt_infol_1     DEVTYPE INFO=DEVTYPE
+devt_infol_2     DEVTYPE INFO=(DEVTYPE,DASD)
+model_cvpl       CVAFSEQ MF=L
+model_cvpl_l     EQU  *-model_cvpl
+model_trkcalcl   TRKCALC MF=L
+model_trkcalcl_l EQU  *-model_trkcalcl
+
+devid_CKD_C370  DC  XL8'434B445F43333730'   "CKD_C370" in ascii
+devid_CKD_C064  DC  XL8'434B445F43303634'   "CKD_C064" in ascii
+
+in_trt_table DC 256Xl1'0'   Table to find end of dsname         SOMITCW
+         ORG   in_trt_table+X'40'  Back up the location counter SOMITCW
+         DC    XL1'40'      Overlay the space position          SOMITCW
+         ORG   ,            Set the location counter to normal  SOMITCW
+         ORG   in_trt_table+X'5C'  Back up the location counter SOMITCW
+         DC    XL1'5C'      Overlay the asterisk position       SOMITCW
+         ORG   ,            Set the location counter to normal  SOMITCW
+                 PRINT GEN
+         DROP ,
+
+*/* ----------------------------------------------------------------
+* *      subroutine to issue messages
+* * ---------------------------------------------------------------- */
+
+          USING msg_rtn,rc
+          USING vdw,rd
+          USING vdw24,ra
+msg_rtn   STM  re,rc,mr_save
+          LR   rc,rf
+          LA   r8,prdcb
+          USING IHADCB,r8
+          TM   DCBOFLGS,DCBOFOPN
+          BNO  mr_ret               return if no message file
+          LM   r4,r5,0(r1)          pattern addr, length
+          BCTR r5,0
+          LA   r3,8(,r1)            first parameter
+          LA   r6,msg
+          MVI  msg,C' '             init msg to blanks
+          MVC  msg+1(L'msg-1),msg
+
+mr_loop   LTR  r5,r5
+          BM   mr_exit
+          LA   r1,1(r4,r5)
+          SLR  r2,r2
+          EX   r5,mr_trt1
+          SR   r1,r4                length scanned
+          BNP  mr_skip1
+          LR   rf,r1
+          BCTR rf,0
+          EX   rf,mr_mvc1           copy literal text
+          AR   r6,r1
+mr_skip1  AR   r4,r1
+          SR   r5,r1
+          BM   mr_exit
+          BP   mr_skip2
+
+          MVC  0(1,r6),0(r4)        string ends in special char
+          LA   r6,1(,r6)
+          B    mr_exit
+
+mr_skip2  B    *(r2)                br on special char type
+          B    mr_pct               '%'
+          B    mr_bs                '\'
+
+mr_pct    CLI  1(r4),C's'
+          BE   mr_pct_s
+          CLI  1(r4),C'x'
+          BE   mr_pct_x
+          CLI  1(r4),C'd'
+          BE   mr_pct_d
+          MVC  0(1,r6),0(r4)        tread '%' as any other char
+          LA   r6,1(,r6)
+          LA   r4,1(,r4)
+          BCTR r5,0
+          B    mr_loop
+mr_pct_s  L    r7,0(,r3)            load string ptr
+          LA   r3,4(,r3)
+          LA   r4,2(,r4)            point past '%s'
+          SH   r5,=Y(2)
+          BAL  re,mr_op             r1 - target len, r2 - source len
+          LTR  r2,r2
+          BNZ  mr_pct_s3
+          LR   r2,r7                source len = 0, find end of string
+mr_pct_s1 CLI  0(r2),C' '
+          BNH  mr_pct_s2
+          LA   r2,1(,r2)
+          B    mr_pct_s1
+mr_pct_s2 SR   r2,r7
+          BNP  mr_loop
+mr_pct_s3 LR   rf,r2                copy source string to the msg
+          BCTR rf,0
+          EX   rf,mr_mvc2
+          LTR  r1,r1
+          BNZ  mr_pct_s5
+          AR   r6,r2                truncate trailing spaces if
+mr_pct_s4 BCTR r6,0                  target len is 0
+          CLI  0(r6),C' '
+          BNH  mr_pct_s4
+          LA   r6,1(,r6)
+          B    mr_loop
+mr_pct_s5 CR   r1,r2
+          BH   mr_pct_s6
+          AR   r6,r1                truncate the string
+          B    mr_loop
+mr_pct_s6 AR   r6,r2                pad string with trailing blanks
+          SR   r1,r2
+mr_pct_s7 MVI  0(r6),C' '
+          LA   r6,1(,r6)
+          BCT  r1,mr_pct_s7
+          B    mr_loop
+
+mr_pct_x  L    r7,0(,r3)            load hex ptr
+          LA   r3,4(,r3)
+          LA   r4,2(,r4)            point past '%x'
+          SH   r5,=Y(2)
+          BAL  re,mr_op             r1 - target len, r2 - source len
+          LTR  r2,r2
+          BNZ  *+8
+          LA   r2,4                 default source len is 4
+          EX   r2,mr_pct_x_unpk
+          TR   dw,mr_hextab
+          LTR  r1,r1
+          BNZ  mr_pct_x1
+          LA   r1,8                 determine default target len
+          CLC  =C'00',dw
+          BNE  mr_pct_x1
+          LA   r1,6
+          CLC  =C'0000',dw
+          BNE  mr_pct_x1
+          LA   r1,4
+          CLC  =C'000000',dw
+          BNE  mr_pct_x1
+          LA   r1,2
+mr_pct_x1 LA   r7,dw+8              copy the hex string to the msg
+          SR   r7,r1
+          BCTR r1,0
+          EX   r1,mr_mvc2
+          LA   r6,1(r1,r6)
+          B    mr_loop
+
+mr_pct_d  L    r7,0(,r3)            load decimal ptr
+          LA   r3,4(,r3)
+          LA   r4,2(,r4)            point past '%d'
+          SH   r5,=Y(2)
+          BAL  re,mr_op             r1 - target len, r2 - source len
+          LTR  r2,r2
+          BNZ  *+8
+          LA   r2,4                 default source len is 4
+          LA   rf,4
+          SR   rf,r2
+          LA   re,15
+          SRL  re,0(rf)
+          EX   re,mr_pct_d_icm
+          CVD  rf,dw
+          MVC  dw2(16),=X'40202020202020202020202020202120'
+          ED   dw2(16),dw
+          LTR  r1,r1
+          BNZ  mr_pct_d2
+          LA   rf,dw2+16            default length -
+mr_pct_d1 BCTR rf,0                  truncate leading spaces
+          CLI  0(rf),C' '
+          BH   mr_pct_d1
+          LA   r1,dw2+15
+          SR   r1,rf
+mr_pct_d2 LA   r7,dw2+16
+          SR   r7,r1
+          BCTR r1,0
+          EX   r1,mr_mvc2
+          LA   r6,1(r1,r6)
+          B    mr_loop
+
+mr_bs     MVC  0(1,r6),1(r4)        copy char following '\'
+          LA   r6,1(,r6)
+          LA   r4,2(,r4)
+          SH   r5,=Y(2)
+          B    mr_loop
+
+mr_exit   LA   r1,msg
+          SR   r6,r1                calculate msg length
+          BNP  mr_ret
+          TM   DCBRECFM,DCBRECCA+DCBRECCM
+          BZ   *+8
+          LA   r6,1(,r6)            increment for carriage control
+
+          TM   DCBRECFM,DCBRECU
+          BO   mr_u
+          TM   DCBRECFM,DCBRECF
+          BO   mr_f
+          TM   DCBRECFM,DCBRECV
+          BO   mr_v
+
+mr_u      CH   r6,DCBBLKSI
+          BNH  *+8
+          LH   r6,DCBBLKSI
+          STH  r6,DCBLRECL
+          PUT  IHADCB
+          TM   DCBRECFM,DCBRECCA+DCBRECCM
+          BZ   mr_u1
+          MVI  0(r1),C' '
+          LA   r1,1(,r1)
+          BCTR r6,0
+          TM   DCBRECFM,DCBRECCA
+          BO   mr_u1
+          BCTR r1,0
+          MVI  0(r1),X'09'
+          LA   r1,1(,r1)
+mr_u1     BCTR r6,0
+          EX   r6,mr_mvc3
+          B    mr_ret
+
+mr_f      CH   r6,DCBLRECL
+          BNH  *+8
+          LH   r6,DCBLRECL
+          PUT  IHADCB
+          TM   DCBRECFM,DCBRECCA+DCBRECCM
+          BZ   mr_f1
+          MVI  0(r1),C' '
+          LA   r1,1(,r1)
+          BCTR r6,0
+          TM   DCBRECFM,DCBRECCA
+          BO   mr_f1
+          BCTR r1,0
+          MVI  0(r1),X'09'
+          LA   r1,1(,r1)
+mr_f1     BCTR r6,0
+          EX   r6,mr_mvc3
+          B    mr_ret
+
+mr_v      LA   r6,4(,r6)
+          LH   r1,DCBBLKSI
+          SH   r1,=Y(4)
+          CR   r6,r1
+          BNH  *+6
+          LR   r6,r1
+          STH  r6,DCBLRECL
+          PUT  IHADCB
+          STH  r6,0(,r1)
+          XC   2(2,r1),2(r1)
+          LA   r1,4(,r1)
+          SH   r6,=Y(4)
+          TM   DCBRECFM,DCBRECCA+DCBRECCM
+          BZ   mr_v1
+          MVI  0(r1),C' '
+          LA   r1,1(,r1)
+          BCTR r6,0
+          TM   DCBRECFM,DCBRECCA
+          BO   mr_v1
+          BCTR r1,0
+          MVI  0(r1),X'09'
+          LA   r1,1(,r1)
+mr_v1     BCTR r6,0
+          EX   r6,mr_mvc3
+
+mr_ret    LM   re,rc,mr_save
+          BR   re
+          DROP r8
+
+*/* ----------------------------------------------------------------
+* *       message subroutine to get operand lengths
+* * ---------------------------------------------------------------- */
+
+mr_op     SLR  r1,r1
+          SLR  r2,r2
+mr_op1    LTR  r5,r5                first number is target length
+          BMR  re
+          CLI  0(r4),C'0'
+          BL   mr_op2
+          IC   rf,0(,r4)
+          N    rf,=A(X'0000000f')
+          MH   r1,=Y(10)
+          AR   r1,rf
+          LA   r4,1(,r4)
+          BCTR r5,0
+          B    mr_op1
+mr_op2    CLI  0(r4),C':'          second number follows a ':'
+          BNER re
+mr_op3    LA   r4,1(,r4)           second number is source length
+          SH   r5,=Y(1)
+          BMR  re
+          CLI  0(r4),C'0'
+          BLR  re
+          IC   rf,0(,r4)
+          N    rf,=A(X'0000000f')
+          MH   r2,=Y(10)
+          AR   r2,rf
+          B    mr_op3
+
+*/* ---------------------------------------------------------------- */
+
+mr_mvc1   MVC  0(0,r6),0(r4)
+mr_trt1   TRT  0(0,r4),mr_tab1
+mr_mvc2   MVC  0(0,r6),0(r7)
+mr_mvc3   MVC  0(0,r1),msg
+mr_pct_x_unpk  UNPK dw(9),0(0,r7)
+mr_pct_d_icm   ICM rf,B'0000',0(r7)
+mr_tab1   DC   XL256'0'
+          ORG  mr_tab1+C'%'
+          DC   AL1(4)
+          ORG  mr_tab1+C'\'
+          DC   AL1(8)
+          ORG  mr_tab1+256
+mr_hextab EQU  *-240
+          DC   C'0123456789abcdef'
+do_stats  BR   14
+          LTORG ,
+
+*/* ----------------------------------------------------------------
+* *      messages
+* * ---------------------------------------------------------------- */
+
+         #MSG  TYPE=GEN
+
+*/* ----------------------------------------------------------------
+* *      dynamic storage
+* * ---------------------------------------------------------------- */
+
+vdw            DSECT
+id                DS  0CL4'vdw'
+save              DS  18F
+cnv_xtnt_save     DS  8F                 savearea for cnv_xtnt
+cnv_ptr_save      DS  8F                 savearea for cnv_ptr
+wt_save           DS  12F                savearea for write_track
+mr_save           DS  16F                savearea for msg_rtn
+vdw_31            DS  A                  addr this area
+vdw_24            DS  A                  addr 24 bit area
+opts              DS  X
+ALLTRKS           EQU X'80'              dump all tracks
+ALLDATA           EQU X'40'              dump all data in datasets
+COMPRESSION       EQU X'20'              compress dumped data
+msglvl            DS  X
+volser            DS  CL6
+retcode           DS  F
+rsncode           DS  F
+
+
+dw                DS  D
+dw2               DS  D
+dw3               DS  D
+dw4               DS  D
+
+
+trks              DS  F                  total number tracks
+trks_dump         DS  F                  total number tracks to dump
+trk_size          DS  F                  max track size
+trk_vec           DS  A                  vector of trks to dump
+trk_vec_size      DS  F
+dscbs_per_trk     DS  F                  number dscbs per track
+vtoc_trks         DS  F                  number tracks in vtoc
+total_dscbs       DS  F                  number dscbs in vtoc
+vtoc_area         DS  A                  addr of area to hold all dscbs
+vtoc_size         DS  F                  size of area to hold all dscbs
+last_f1_dscb      DS  A                  addr last format 1 dscb
+dsn_nbr           DS  F                  nbr datasets on volume
+tiot_addr      DS  A        Address of the Task I/O Table       SOMITCW
+in_rec         DS  CL80     Input record for display            SOMITCW
+dsn_area_addr     DS  A
+dsn_area_size     DS  A
+dsn_incl_list     DS  A
+dsn_excl_list     DS  A
+excp_io_area      DS  A
+excp_io_size      DS  F
+
+compr_area        DS  A
+compr_size        DS  F
+
+compr_used        DS  F
+compr_level       DS  F
+cckd_compr        DS  F
+cckd_compr_level  DS  F
+Z_NO_COMPRESSION      EQU  0
+Z_BEST_SPEED          EQU  1
+Z_BEST_COMPRESSION    EQU  9
+Z_DEFAULT_COMPRESSION EQU -1
+CCKD_DEFAULT_COMPRESSION EQU  3
+
+out_buf           DS  A                  current output buf addr
+out_bufsz         DS  F                  total buf size used for output
+out_buf_pos       DS  D                  pos for current buf
+
+vdhdr_addr        DS  A                  buf addr containing VDHDR
+out_pos           DS  D                  current available pos
+
+
+
+rw_area_size      DS  0D                 rewrite area addr and size
+rw_area           DS  A                  rewrite area addr
+rw_size           DS  F                  size of rewrite area
+last_rw           DS  A                  addr last used entries
+next_rw           DS  A                  next available entry
+
+
+
+trk_addr          DS  A
+trk_sz            DS  F
+
+ctrk_addr         DS  A
+ctrk_sz           DS  F
+
+bytes_read        DS  D
+bytes_written     DS  D
+bytes_ovh         DS  D
+bytes_free        DS  D
+
+handle            DS  F
+msgl              DS  16F
+
+extract           DS  XL(model_extract_l)                       SOMITCW
+indcbe            DS  XL(model_indcbe_l)                        SOMITCW
+prdcbe            DS  XL(model_prdcbe_l)
+outdcbe           DS  XL(model_outdcbe_l)                       CZV70
+openl             DS  XL(model_openl_l)
+devtl             DS  XL(model_devtl_l)
+devta             DS  XL(32)
+
+cyls              EQU devta+4,4
+trks_per_cyl      EQU devta+8,4
+dev_flags         EQU devta+12,2
+
+trkcalcl          DS  XL(model_trkcalcl_l)
+
+zlib_pl           DS  8F
+
+dscb4             DS  XL(DS1END-IECSDSF1)
+
+msg               DS  CL256
+
+cvpl_area         DS  XL(model_cvpl_l)
+
+bflh              DS  XL(BFLHLN)
+bflent            DS  256XL(BFLELN)
+bfle_arg          DS  XL(L'BFLEARG)
+
+vdw_len           EQU *-vdw
+
+
+
+
+
+
+vdw24          DSECT  ,
+id24              DS  CL4'vdw24'
+openl24           DS  XL(model_openl24_l)
+exlst             DS  F
+indcb          DS  XL(model_indcb_l)                            SOMITCW
+prdcb             DS  XL(model_prdcb_l)
+vtdcb             DS  XL(model_vtdcb_l)
+exdcb             DS  XL(model_exdcb_l)
+                READ  outdecb,SF,MF=L
+outdcb            DS  XL(model_outdcb_l)
+jfcb              DS  XL(JFCBLGTH)
+excp_ecb          DS  F
+                  DS  0D
+lr_parms          DS  XL16
+excp_iob          DS  XL40
+excp_ccws         DS  XL256
+vdw24_len         EQU *-vdw24
+
+dsn_area       DSECT
+dsn_name          DS  CL44
+dsn_flag          DS  F
+dsn_not_incl      EQU X'80'
+dsn_excl          EQU X'40'
+dsn_extents       DS  F
+dsn_trks          DS  F
+dsn_trks_dump     DS  F
+dsn_bytes_read    DS  2F
+dsn_bytes_written DS  2F
+dsn_next          DS  0F
+dsn_area_len      EQU *-dsn_area
+
+lr_parm_area   DSECT  ,                  locate record parameter area
+lr_op             DS  X                  operation byte
+lr_orient_count   EQU B'00000000'
+lr_orient_home    EQU B'01000000'
+lr_orient_data    EQU B'10000000'
+lr_orient_index   EQU B'11000000'
+lr_orient         EQU X'00'
+lr_write_data     EQU X'01'
+lr_format_write   EQU X'03'
+lr_read_data      EQU X'06'
+lr_write_track    EQU X'0b'
+lr_read_tracks    EQU X'0c'
+lr_read           EQU X'16'
+lr_aux            DS  X                  auxiliary byte
+lr_use_tlf        EQU B'10000000'
+lr_read_count_ccw EQU B'00000001'
+                  DS  X
+lr_count          DS  X                  count parameter
+lr_seek_addr      DS  0XL4               seek addr
+lr_seek_addr_cc   DS  XL2
+lr_seek_addr_hh   DS  XL2
+lr_search_arg     DS  0XL5               search arg
+lr_search_arg_cc  DS  XL2
+lr_search_arg_hh  DS  XL2
+lr_search_arg_r   DS  X
+lr_sector         DS  X
+lr_tlf            DS  XL2                transfer length factor
+lr_parms_l        EQU *-lr_parm_area
+
+count          DSECT  ,                  count area descriptor
+count_cchhr       DS  0XL5               record address
+count_cchh        DS  0XL4               record address
+count_cc          DS  XL2
+count_hh          DS  XL2
+count_r           DS  X
+count_key         DS  X                  key length
+count_data        DS  XL2                data length
+count_end         DS  0X
+count_len         EQU *-count
+
+ha             DSECT  ,                  home area descriptor
+ha_bin            DS  X
+ha_cc             DS  XL2
+ha_hh             DS  XL2
+ha_end            DS  0X
+ha_len            EQU *-ha
+
+*----------------------------------------------------------------------
+*                   Blocks that need to be rewritten
+*----------------------------------------------------------------------
+
+rw_ent              DSECT ,              rewrite entry
+rw_pos              DS   D               file offset of block
+rw_buf              DS   A               pointer to block data
+rw_ttr              DS   F               tttr of block
+rw_next             DS   0F              (next entry)
+rw_len              EQU  *-rw_ent        (length of one entry)
+
+*----------------------------------------------------------------------
+*                   Virtual Disk File Headers
+*----------------------------------------------------------------------
+
+VDHDR               DSECT ,
+VDH_devhdr          DS   XL512
+VDH_devhdr2         DS   XL512
+VDH_l1tab           DS   0X
+
+*----------------------------------------------------------------------
+*                   CKD Device Header
+*----------------------------------------------------------------------
+
+CKD_DEVHDR          DSECT ,
+dh_devid            DS   XL8
+dh_heads            DS   F
+dh_trksize          DS   F
+dh_devtyp           DS   X
+dh_fileseq          DS   X
+dh_highcyl          DS   H
+dh_serial           DS   CL12
+                    DS   XL(512-(*-CKD_DEVHDR))
+
+*----------------------------------------------------------------------
+*                   CCKD64 Compressed Device Header
+*----------------------------------------------------------------------
+
+CCKD64_DEVHDR       DSECT ,              64-bit
+cdh_vrm             DS   XL3
+cdh_opts            DS   X
+num_L1tab           DS   F
+num_L2tab           DS   F
+cdh_cyls            DS   F
+cdh_size            DS   D
+cdh_used            DS   D
+free_off            DS   D
+free_total          DS   D
+free_largest        DS   D
+free_num            DS   D
+free_imbed          DS   D
+cdh_nullfmt         DS   X
+cmp_algo            DS   X
+cmp_parm            DS   H
+                    DS   XL(512-(*-CCKD64_DEVHDR))
+
+CCKD_COMPRESS_ZLIB  EQU  1
+
+*----------------------------------------------------------------------
+
+CCKD64_L1ENT_SIZE      EQU  8            l1 entry size in bytes
+CCKD64_L1ENT_BITSHIFT  EQU  3            l1 entry size in shift bits
+
+*----------------------------------------------------------------------
+*                   Level 2 Lookup Table Entry
+*----------------------------------------------------------------------
+
+CCKD64_L2ENT        DSECT ,              64-bit
+L2_entry            DS   0XL16
+L2_trkoff           DS   XL8             pos of track image
+L2_len              DS   XL2             length of track in area
+L2_size             DS   XL2             size of track area
+L2_pad              DS   XL4             padding
+CCKD64_L2ENT_SIZE   EQU  *-CCKD64_L2ENT
+CCKD64_L2TAB_SIZE   EQU  256*CCKD64_L2ENT_SIZE
+
+*/* ----------------------------------------------------------------
+* *      dsects
+* * ---------------------------------------------------------------- */
+
+ PRINT   GEN           Was NOGEN                                SOMITCW
+ DCBD DSORG=PS
+ IEFUCBOB ,
+ IEFJFCBN ,
+ ICVAFBFL ,
+ ICVAFPL  ,
+ IECSDSL1 (1,3,4)
+ IEZDEB   ,
+ IEZIOB   ,
+ IOSDCCW  ,
+
+*/* ----------------------------------------------------------------
+* *      equates
+* * ---------------------------------------------------------------- */
+
+lr equ  x'47'   locate record
+rt equ  x'de'   read track
+
+r0 equ  0
+r1 equ  1
+r2 equ  2
+r3 equ  3
+r4 equ  4
+r5 equ  5
+r6 equ  6
+r7 equ  7
+r8 equ  8
+r9 equ  9
+ra equ 10
+rb equ 11
+rc equ 12
+rd equ 13
+re equ 14
+rf equ 15
+
+ END   ,
