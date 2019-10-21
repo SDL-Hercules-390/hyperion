@@ -511,7 +511,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
                                      cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
         , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
                                     (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
-                                    (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "bzip2" : "INVALID"
+                                    (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
         , cdevhdr.cmp_parm
         , cdevhdr.cmp_parm <  0 ? ""        : " "
         , cdevhdr.cmp_parm <  0 ? "default" :
