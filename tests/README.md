@@ -259,7 +259,7 @@ timeout factor value which is specified by the `-t` switch on the
 Hercules command.  The test timeout factor value allows for running
 tests on systems that may be slower than the system they were
 originally designed for.  Refer to the documentation describing
-[Hercules's supported command line arguments](../html/hercinst.html#arguments).
+[Hercules's supported command line arguments](http://www.sdl-hercules-390.org/hercinst.html#arguments).
 
 The `runtest` script command is almost always immediately followed
 by Hercules console commands to display storage or registers, etc, as

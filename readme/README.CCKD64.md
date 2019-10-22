@@ -61,4 +61,4 @@ The existing `dasdls`, `dasdcat`, `dasdpdsu`, `dasdisup`, and `dasdseq` utilitie
 
 ## Additional Information
 
-Additional information regarding the new CCKD64 file format can be found on the [Compressed Dasd Emulation](../html/cckddasd.html) web page.
+Additional information regarding the new CCKD64 file format can be found on the [Compressed Dasd Emulation](http://www.sdl-hercules-390.org/cckddasd.html) web page.
