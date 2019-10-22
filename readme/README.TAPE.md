@@ -205,7 +205,7 @@ Using `readonly=1` forces an emulated tape device into read-only mode by emulati
 
 Starting with Hercules version 3.06 a new `AUTOMOUNT` option is available that allows guest operating systems to directly mount, unmount and query tape device filenames for themselves, without any intervention on the part of the Hercules operator.
 
-Automount support is enabled via the [`AUTOMOUNT`](http://www.sdl-hercules-390.org/hercconf.html#AUTOMOUNT) configuration file statement.
+Automount support is enabled via the [`AUTOMOUNT`](https://sdl-hercules-390.github.io/html/hercconf.html#AUTOMOUNT) configuration file statement.
 
 An example guest automount program for VSE called [`TMOUNT`](../util/TMOUNT.txt) is provided in the `util` subdirectory of the Hercules source code distribution.
 

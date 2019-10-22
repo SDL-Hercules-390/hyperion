@@ -11,11 +11,11 @@
 
 ## About
 
-_(Please read [herctcp.html](http://www.sdl-hercules-390.org/herctcp.html) as Roger explains how to set up TCP/IP networking with Hercules.)_
+_(Please read [herctcp.html](https://sdl-hercules-390.github.io/html/herctcp.html) as Roger explains how to set up TCP/IP networking with Hercules.)_
 
 Most of the network communication emulations implemented within Hercules use a CTCA (Channel to Channel Adapter) type device. Depending on the "flavor", the CTCA device will provide either a point-to-point or a virtual network adapter interface to the driving system's TCP/IP stack or in the case of CTCE, a true CTCA connection to another instance of Hercules via a TCP/IP connection.
 
-Most current emulations, with the exception of, CTCT and CTCE use the Universal TUN/TAP driver on *nix and TunTap32 (WinPCap) on the Windows platforms which creates a network interface on the driving system which allow Hercules to present frames to, and receive frames from the TCP/IP stack. This network interface is configured on *nix platforms by the `hercifc` program which is invoked by Hercules after the TUN/TAP device is opened. The `hercifc` program runs as root. Please read [herctcp.html](http://www.sdl-hercules-390.org/herctcp.html) for more information on the security implications of the `hercifc` program.
+Most current emulations, with the exception of, CTCT and CTCE use the Universal TUN/TAP driver on *nix and TunTap32 (WinPCap) on the Windows platforms which creates a network interface on the driving system which allow Hercules to present frames to, and receive frames from the TCP/IP stack. This network interface is configured on *nix platforms by the `hercifc` program which is invoked by Hercules after the TUN/TAP device is opened. The `hercifc` program runs as root. Please read [herctcp.html](https://sdl-hercules-390.github.io/html/herctcp.html) for more information on the security implications of the `hercifc` program.
 
 ## Details
 
@@ -431,7 +431,7 @@ The TUN interface could then be used with a PTP specified as:-
 
 The QETH (or OSA) device type emulates an OSA Express card running in QDIO mode. Both layer-2 and layer-3 are currently supported. The mode of operation is selected by the emulated workload and cannot be configured from Hercules.
 
-For more information please refer to the the QETH/OSA section of the Hercules Configuration File web page, [hercconf.html](http://www.sdl-hercules-390.org/hercconf.html#QETH).
+For more information please refer to the the QETH/OSA section of the Hercules Configuration File web page, [hercconf.html](https://sdl-hercules-390.github.io/html/hercconf.html#QETH).
 
 ## Notes
 
