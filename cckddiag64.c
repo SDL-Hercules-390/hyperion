@@ -607,7 +607,7 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
                        cmd_offset = true;
 
                        argc--; argv++;
-                       op_offset = (int) offtify(*argv);
+                       op_offset = (U64) offtify(*argv);
 
                        argc--; argv++;
                        op_length = (int) offtify(*argv);
