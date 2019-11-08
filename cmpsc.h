@@ -1,4 +1,4 @@
-/* CMPSC.H      (C) Copyright "Fish" (David B. Trout), 2012-2014     */
+/* CMPSC.H      (C) Copyright "Fish" (David B. Trout), 2012-2019     */
 /*              S/390 Compression Call Instruction Functions         */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -32,7 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Dictionary sizes in bytes by CDSS
 
-static const U32 g_nDictSize[ MAX_CDSS ];   // (table of dict sizes in bytes)
+extern const U32 g_nDictSize[ MAX_CDSS ];   // (table of dict sizes in bytes)
 
 ///////////////////////////////////////////////////////////////////////////////
 // CMPSCBLK: Compression Call parameters block

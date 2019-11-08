@@ -1,4 +1,4 @@
-/* CMPSC_2012.C (C) Copyright "Fish" (David B. Trout), 2012-2014     */
+/* CMPSC_2012.C (C) Copyright "Fish" (David B. Trout), 2012-2019     */
 /*              (c) Bernard van der Helm, 2000-2012                  */
 /*              S/390 Compression Call Instruction Functions         */
 /*                                                                   */
@@ -54,7 +54,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 #include "cmpsc.h"                                // (Master header for both)
 
-#ifdef FEATURE_CMPSC
+#if defined( FEATURE_CMPSC )
 ///////////////////////////////////////////////////////////////////////////////
 // Symbols Cache Control Entry
 
@@ -1237,13 +1237,44 @@ DEF_INST( cmpsc_2012 )
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _CMPSC_C_
-#define _CMPSC_C_           // Code to be compiled ONLY ONCE goes after here
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "cmpsc_2012.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "cmpsc_2012.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Dictionary sizes in bytes by CDSS
 
-static const U32 g_nDictSize[ MAX_CDSS ] =
+const U32 g_nDictSize[ MAX_CDSS ] =
 {                 // ------------- Dictionary sizes by CDSS -------------
       512 * 8,    // cdss 1:   512  8-byte entries =    4K   (4096 bytes)
      1024 * 8,    // cdss 2:  1024  8-byte entries =    8K   (2048 bytes)
@@ -1252,21 +1283,8 @@ static const U32 g_nDictSize[ MAX_CDSS ] =
      8192 * 8,    // cdss 5:  8192  8-byte entries =   64K  (65536 bytes)
 };
 
-#endif // _CMPSC_C_         // End of compile ONLY ONCE code...
-
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif /* FEATURE_CMPSC */
+#endif /* !defined( _GEN_ARCH ) */
 
-#ifndef _GEN_ARCH
-  #ifdef _ARCH_NUM_1
-    #define _GEN_ARCH _ARCH_NUM_1
-    #include "cmpsc_2012.c"
-  #endif /* #ifdef _ARCH_NUM_1 */
-  #ifdef _ARCH_NUM_2
-    #undef _GEN_ARCH
-    #define _GEN_ARCH _ARCH_NUM_2
-    #include "cmpsc_2012.c"
-  #endif /* #ifdef _ARCH_NUM_2 */
-
-#endif /* #ifndef _GEN_ARCH */
+#endif /* defined( FEATURE_CMPSC ) */
