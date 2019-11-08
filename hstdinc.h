@@ -1,4 +1,4 @@
-/* HSTDINC.H    (C) Copyright Roger Bowler, 1999-2016                */
+/* HSTDINC.H    (C) Copyright Roger Bowler, 1999-2019                */
 /*              Hercules precompilation-eligible Header Files        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -15,14 +15,54 @@
 #define _HSTDINC_H
 
 #define SDL_HYPERION            /* Distinguish ourselves from others */
+//#define NOT_HERC              /* This is Hercules, NOT the utility */
 
+/*-------------------------------------------------------------------*/
+/*                Linux (non-Windows) CONFIG header                  */
+/*-------------------------------------------------------------------*/
 #ifdef HAVE_CONFIG_H
   #ifndef    _CONFIG_H
   #define    _CONFIG_H
     #include <config.h>         /* Hercules build configuration      */
   #endif /*  _CONFIG_H*/
 #endif
-  #include "hqainc.h"           /* User build settings overrides     */
+
+/*-------------------------------------------------------------------*/
+/*               HQA: User build settings overrides                  */
+/*-------------------------------------------------------------------*/
+#include "hqainc.h"             /* User build settings overrides     */
+
+/*-------------------------------------------------------------------*/
+/*                Normalize Windows Compiler flags                   */
+/*-------------------------------------------------------------------*/
+#if defined(_WIN32) || defined(WIN32)
+   /* Normalize WIN32/_WIN32 flags */
+#  if !defined(_WIN32) && defined(WIN32)
+#    define _WIN32
+#  elif defined(_WIN32) && !defined(WIN32)
+#    define WIN32
+#  endif
+   /* Normalize WIN64/_WIN64 flags */
+#  if defined(_WIN64) || defined(WIN64)
+#    if !defined(_WIN64) && defined(WIN64)
+#      define _WIN64
+#    elif defined(_WIN64) && !defined(WIN64)
+#      define WIN64
+#    endif
+#  endif
+   /* Normalize DEBUG/_DEBUG flags */
+#  if defined(_DEBUG) || defined(DEBUG)
+#    if !defined(_DEBUG) && defined(DEBUG)
+#      define _DEBUG
+#    elif defined(_DEBUG) && !defined(DEBUG)
+#      define DEBUG
+#    endif
+#  endif
+#endif /* defined(_WIN32) || defined(WIN32) */
+
+/*-------------------------------------------------------------------*/
+/*          TARGETVER: Minimum Supported Windows Platform            */
+/*-------------------------------------------------------------------*/
 #ifdef WIN32
   #include "vsvers.h"           /* Visual Studio compiler constants  */
   #include "targetver.h"        /* Minimum Windows platform          */
