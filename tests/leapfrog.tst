@@ -29,4 +29,4 @@ cpu 1 clocks
 ipending
 cr
 *Done
-numcpu 1
+numcpu 1 # reset back to default

@@ -22,4 +22,4 @@ defsym  maxdur   10.5   #  Pessimistic test duration
 script "$(testpath)/runtest.subtst"
 *
 * ----------------------------------------------------------------------------
-numcpu      1           #  Total CPUs needed for this test...
+numcpu      1           #  Clean up own mess
