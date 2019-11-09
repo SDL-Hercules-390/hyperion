@@ -140,6 +140,11 @@ EXTRA_DIST =                    \
      CLCL.list                  \
      CLCL.pdf                   \
      CLCL.tst                   \
+     CMPSC.asm                  \
+     CMPSC.core                 \
+     CMPSC.list                 \
+     CMPSC.pdf                  \
+     CMPSC.tst                  \
      cdfr.txt                   \
      cdgr.txt                   \
      cdsg.txt                   \

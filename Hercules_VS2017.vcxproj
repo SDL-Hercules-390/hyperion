@@ -857,6 +857,11 @@
     <None Include="tests\CLCL.list" />
     <None Include="tests\CLCL.pdf" />
     <None Include="tests\CLCL.tst" />
+    <None Include="tests\CMPSC.asm" />
+    <None Include="tests\CMPSC.core" />
+    <None Include="tests\CMPSC.list" />
+    <None Include="tests\CMPSC.PDF" />
+    <None Include="tests\CMPSC.tst" />
     <None Include="tests\cipher.assemble" />
     <None Include="tests\cipher.listing" />
     <None Include="tests\cipher.tst" />

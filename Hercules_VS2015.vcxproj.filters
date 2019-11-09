@@ -2414,6 +2414,21 @@
     <None Include="tests\CLCL.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\CMPSC.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CMPSC.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CMPSC.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CMPSC.PDF">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CMPSC.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="vstools.cmd">
       <Filter>Other Files\Build\msvc</Filter>
     </None>

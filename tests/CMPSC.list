@@ -1,0 +1,591 @@
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *             CMPSC -- Compression Call instruction test
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 *
+                                                     8 *   PLEASE NOTE that this test only performs the simplest most basic
+                                                     9 *   test of the CMPSC instruction.  It does NOT test all aspects of
+                                                    10 *   the instruction.  We have a separate much more thorough and much
+                                                    11 *   longer running test program for that.  This test only compresses
+                                                    12 *   a small amount of data and then expands it and verifies that what
+                                                    13 *   was expanded matches what it started with.  It does NOT check for
+                                                    14 *   a valid condition code or anything else.  It's designed to be run
+                                                    15 *   as part of "make test" after a build of Hercules and thus cannot
+                                                    16 *   run for a very long time (and besides, as I said, we already have
+                                                    17 *   a separate offline program that does a much better job of that).
+                                                    18 *
+                                                    19 *
+                                                    20 *                    -- Sample runtest script --
+                                                    21 *
+                                                    22 *
+                                                    23 *   *Testcase CMPSC (Compression Call)
+                                                    24 *   mainsize  2
+                                                    25 *   numcpu    1
+                                                    26 *   sysclear
+                                                    27 *   archlvl   z/Arch
+                                                    28 *   loadcore  "$(testpath)/CMPSC.core"
+                                                    29 *   runtest   1
+                                                    30 *   *Compare
+                                                    31 *   r 500.1
+                                                    32 *   *Want "Result Flag"  FF
+                                                    33 *   *Done
+                                                    34 *
+                                                    35 *
+                                                    36 ***********************************************************************
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    38          PRINT OFF
+                                                  3419          PRINT ON
+                                                  3420          PRINT DATA
+
+                                                  3422 ***********************************************************************
+                                                  3423 *        SATK prolog stuff...
+                                                  3424 ***********************************************************************
+
+                                                  3426          ARCHLVL  MNOTE=NO
+                                                  3428+$AL      OPSYN AL
+                                                  3429+$ALR     OPSYN ALR
+                                                  3430+$B       OPSYN B
+                                                  3431+$BAS     OPSYN BAS
+                                                  3432+$BASR    OPSYN BASR
+                                                  3433+$BC      OPSYN BC
+                                                  3434+$BCTR    OPSYN BCTR
+                                                  3435+$BE      OPSYN BE
+                                                  3436+$BH      OPSYN BH
+                                                  3437+$BL      OPSYN BL
+                                                  3438+$BM      OPSYN BM
+                                                  3439+$BNE     OPSYN BNE
+                                                  3440+$BNH     OPSYN BNH
+                                                  3441+$BNL     OPSYN BNL
+                                                  3442+$BNM     OPSYN BNM
+                                                  3443+$BNO     OPSYN BNO
+                                                  3444+$BNP     OPSYN BNP
+                                                  3445+$BNZ     OPSYN BNZ
+                                                  3446+$BO      OPSYN BO
+                                                  3447+$BP      OPSYN BP
+                                                  3448+$BXLE    OPSYN BXLE
+                                                  3449+$BZ      OPSYN BZ
+                                                  3450+$CH      OPSYN CH
+                                                  3451+$L       OPSYN L
+                                                  3452+$LH      OPSYN LH
+                                                  3453+$LM      OPSYN LM
+                                                  3454+$LPSW    OPSYN LPSW
+                                                  3455+$LR      OPSYN LR
+                                                  3456+$LTR     OPSYN LTR
+                                                  3457+$NR      OPSYN NR
+                                                  3458+$SL      OPSYN SL
+                                                  3459+$SLR     OPSYN SLR
+                                                  3460+$SR      OPSYN SR
+                                                  3461+$ST      OPSYN ST
+                                                  3462+$STM     OPSYN STM
+                                                  3463+$X       OPSYN X
+                                                  3464+$AHI     OPSYN AHI
+                                                  3465+$B       OPSYN J
+                                                  3466+$BC      OPSYN BRC
+                                                  3467+$BE      OPSYN JE
+                                                  3468+$BH      OPSYN JH
+                                                  3469+$BL      OPSYN JL
+                                                  3470+$BM      OPSYN JM
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3471+$BNE     OPSYN JNE
+                                                  3472+$BNH     OPSYN JNH
+                                                  3473+$BNL     OPSYN JNL
+                                                  3474+$BNM     OPSYN JNM
+                                                  3475+$BNO     OPSYN JNO
+                                                  3476+$BNP     OPSYN JNP
+                                                  3477+$BNZ     OPSYN JNZ
+                                                  3478+$BO      OPSYN JO
+                                                  3479+$BP      OPSYN JP
+                                                  3480+$BXLE    OPSYN JXLE
+                                                  3481+$BZ      OPSYN JZ
+                                                  3482+$CHI     OPSYN CHI
+                                                  3483+$AHI     OPSYN AGHI
+                                                  3484+$AL      OPSYN ALG
+                                                  3485+$ALR     OPSYN ALGR
+                                                  3486+$BCTR    OPSYN BCTGR
+                                                  3487+$BXLE    OPSYN JXLEG
+                                                  3488+$CH      OPSYN CGH
+                                                  3489+$CHI     OPSYN CGHI
+                                                  3490+$L       OPSYN LG
+                                                  3491+$LH      OPSYN LGH
+                                                  3492+$LM      OPSYN LMG
+                                                  3493+$LPSW    OPSYN LPSWE
+                                                  3494+$LR      OPSYN LGR
+                                                  3495+$LTR     OPSYN LTGR
+                                                  3496+$NR      OPSYN NGR
+                                                  3497+$SL      OPSYN SLG
+                                                  3498+$SLR     OPSYN SLGR
+                                                  3499+$SR      OPSYN SGR
+                                                  3500+$ST      OPSYN STG
+                                                  3501+$STM     OPSYN STMG
+                                                  3502+$X       OPSYN XG
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3504 ***********************************************************************
+                                                  3505 *        Initiate the CMPSC CSECT in the CODE region
+                                                  3506 *        with the location counter at 0
+                                                  3507 ***********************************************************************
+
+                                                  3509 CMPSC    ASALOAD  REGION=CODE
+                              00000000  0003FFFF  3510+CMPSC    START 0,CODE
+00000000  00020000 00000000                       3512+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000008  00000000 00000008
+00000010                      00000010  00000058  3513+         ORG   CMPSC+X'058'
+00000058  00020000 00000000                       3515+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000060  00000000 00000018
+00000068  00020000 00000000                       3516+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000070  00000000 00000020
+00000078  00020000 00000000                       3517+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000080  00000000 00000028
+00000088  00020000 00000000                       3518+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000090  00000000 00000030
+00000098  00020000 00000000                       3519+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+000000A0  00000000 00000038
+000000A8                      000000A8  000001A0  3520+         ORG   CMPSC+X'1A0'
+000001A0  00020000 00000000                       3522+         PSWZ  0,0,2,0,X'120'     Restart ISR Trap New PSW
+000001A8  00000000 00000120
+000001B0  00020000 00000000                       3523+         PSWZ  0,0,2,0,X'130'     External ISR Trap New PSW
+000001B8  00000000 00000130
+000001C0  00020000 00000000                       3524+         PSWZ  0,0,2,0,X'140'     Supervisor Call ISR Trap New PSW
+000001C8  00000000 00000140
+000001D0  00020000 00000000                       3525+         PSWZ  0,0,2,0,X'150'     Program ISR Trap New PSW
+000001D8  00000000 00000150
+000001E0  00020000 00000000                       3526+         PSWZ  0,0,2,0,X'160'     Machine Check Trap New PSW
+000001E8  00000000 00000160
+000001F0  00020000 00000000                       3527+         PSWZ  0,0,2,0,X'170'     Input/Output Trap New PSW
+000001F8  00000000 00000170
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3529 ***********************************************************************
+                                                  3530 *        Define the z/Arch RESTART PSW
+                                                  3531 ***********************************************************************
+
+                              00000200  00000001  3533 PREVORG  EQU   *
+00000200                      00000200  000001A0  3534          ORG   CMPSC+X'1A0'
+                                                  3535 *        PSWZ  <sys>,<key>,<mwp>,<prog>,<addr>[,amode]
+000001A0  00000001 80000000                       3536          PSWZ  0,0,0,0,X'200',64
+000001A8  00000000 00000200
+000001B0                      000001B0  00000200  3537          ORG   PREVORG
+
+
+
+                                                  3539 ***********************************************************************
+                                                  3540 *        Create IPL (restart) PSW
+                                                  3541 ***********************************************************************
+
+                                                  3543          ASAIPL   IA=BEGIN
+                              00000000  0003FFFF  3544+CMPSC    CSECT
+00000200                      00000200  00000000  3545+         ORG   CMPSC
+00000000  00080000 00000200                       3546+         PSWE390 0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3547+         ORG   CMPSC+512        Reset CSECT to end of assigned storage area
+                              00000000  0003FFFF  3548+CMPSC    CSECT
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3550 ***********************************************************************
+                                                  3551 *               The actual CMPSC program itself...
+                                                  3552 ***********************************************************************
+
+00000200                      00000000            3554          USING CMPSC,R0           No base registers needed
+
+
+00000200                                          3556 BEGIN    DS    0H
+                                                  3557 *
+                                                  3558 **       COMPRESS the data...
+                                                  3559 *
+00000200  E300 02D0 0004                000002D0  3560          LG    R0,CMP_R0          R0 <== Compress
+00000206  E310 02E0 0004                000002E0  3561          LG    R1,CMP_R1          R1 <== Compress
+0000020C  E320 02A0 0004                000002A0  3562          LG    R2,=AD(CMPADDR)    R2 --> Compression buffer
+00000212  E330 02A8 0004                000002A8  3563          LG    R3,=AD(1024)       R3 <== Compression buffer size
+00000218  E340 02B0 0004                000002B0  3564          LG    R4,=AD(INADDR)     R4 --> Input data
+0000021E  E350 02B8 0004                000002B8  3565          LG    R5,=AD(INSIZE)     R5 <== Input size
+00000224  B263 0024                               3566          CMPSC R2,R4              Compress data
+                                                  3567 *
+                                                  3568 **       Calculate length of compressed data
+                                                  3569 *
+00000228  E360 02A8 0004                000002A8  3570          LG    R6,=AD(1024)       R6 <== Original R3 value
+0000022E  B909 0063                               3571          SGR   R6,R3              Subtract ending R3 value
+00000232  E360 02C0 0008                000002C0  3572          AG    R6,=AD(1)          Plus +1 to get true length
+                                                  3573 *
+                                                  3574 **       EXPAND what we compressed...
+                                                  3575 *
+00000238  E300 02D8 0004                000002D8  3576          LG    R0,EXP_R0          R0 <== Expand
+0000023E  E310 02E8 0004                000002E8  3577          LG    R1,EXP_R1          R0 <== Expand
+00000244  E320 02C8 0004                000002C8  3578          LG    R2,=AD(EXPADDR)    R2 --> Expansion buffer
+0000024A  E330 02A8 0004                000002A8  3579          LG    R3,=AD(1024)       R3 <== Expansion vuffer size
+00000250  E340 02A0 0004                000002A0  3580          LG    R4,=AD(CMPADDR)    R4 --> Input data
+00000256  B904 0056                               3581          LGR   R5,R6              R5 <== Input size
+0000025A  B263 0024                               3582          CMPSC R2,R4              Expand data
+                                                  3583 *
+                                                  3584 **       VERIFY it matches original input data...
+                                                  3585 *
+0000025E  E320 02B0 0004                000002B0  3586          LG    R2,=AD(INADDR)     R2 --> Original input data
+00000264  E330 02B8 0004                000002B8  3587          LG    R3,=AD(INSIZE)     R3 <== Original input size
+0000026A  E340 02C8 0004                000002C8  3588          LG    R4,=AD(EXPADDR)    R4 --> Expanded data
+00000270  E350 02B8 0004                000002B8  3589          LG    R5,=AD(INSIZE)     R5 <== R3 (same size)
+00000276  0F24                                    3590          CLCL  R2,R4              Compare expanded data with original
+00000278  4780 0280                     00000280  3591          BE    GOODEOJ            If it's identical then all is well
+0000027C  47F0 0290                     00000290  3592          B     FAILEOJ            Otherwise something is VERY WRONG!
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3594 ***********************************************************************
+                                                  3595 *                            PSWs
+                                                  3596 ***********************************************************************
+
+00000280  92FF 0500                     00000500  3598 GOODEOJ  MVI      TESTFLAG,X'FF'        Indicate test SUCCESS
+                                                  3599          DWAITEND LOAD=YES              PSW 0000000000... Test SUCCESS
+00000284  8200 0288                     00000288  3601+         LPSW  DWAT0009
+00000288  000A0000 00000000                       3602+DWAT0009 PSWE390 0,0,2,0,X'000000'
+
+
+                                                  3604 FAILEOJ  DWAIT    LOAD=YES,CODE=BAD     10BAD: One of the tests FAILED!
+00000290                                          3605+FAILEOJ  DS    0H
+00000290  8200 0298                     00000298  3606+         LPSW  DWAT0010
+00000298  000A0000 00010BAD                       3607+DWAT0010 PSWE390 0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3609 ***********************************************************************
+                                                  3610 *                       Working Storage
+                                                  3611 ***********************************************************************
+
+000002A0                                          3613          LTORG ,                  Literals pool
+000002A0  00000000 00002000                       3614                =AD(CMPADDR)
+000002A8  00000000 00000400                       3615                =AD(1024)
+000002B0  00000000 00001000                       3616                =AD(INADDR)
+000002B8  00000000 00000140                       3617                =AD(INSIZE)
+000002C0  00000000 00000001                       3618                =AD(1)
+000002C8  00000000 00003000                       3619                =AD(EXPADDR)
+
+
+
+                              00000500  00000001  3621 FLAGADDR EQU   X'500'             Fixed address of test results flag
+                                                  3622
+                              00001000  00000001  3623 INADDR   EQU   X'1000'            Address of input data
+                              00002000  00000001  3624 CMPADDR  EQU   X'2000'            Address of compression buffer
+                              00003000  00000001  3625 EXPADDR  EQU   X'3000'            Address of expansion buffer
+                              00020000  00000001  3626 CDICTADR EQU   X'20000'           Address of 64K compression dictionary
+                              00030000  00000001  3627 EDICTADR EQU   X'30000'           Address of 64K expansion dictionary
+
+
+
+000002D0                                          3629          DC    0D'0'                    (alignment)
+000002D0  00000000 00005200                       3630 CMP_R0   DC    XL8'0000000000005200'    R0 Compression options
+000002D8  00000000 00005300                       3631 EXP_R0   DC    XL8'0000000000005300'    R0 Expansion options
+000002E0  00000000 00020000                       3632 CMP_R1   DC    AD(CDICTADR)             R1 addr Compression dictionary
+000002E8  00000000 00030000                       3633 EXP_R1   DC    AD(EDICTADR)             R1 addr Expansion dictionary
+
+
+
+000002F0                      000002F0  00000500  3635          ORG   CMPSC+FLAGADDR     Fixed address of result flag
+
+00000500  00                                      3637 TESTFLAG DC    X'00'              Failing test number or X'FF' = good
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3639 ***********************************************************************
+                                                  3640 *                     Input "File" (data)
+                                                  3641 ***********************************************************************
+
+00000501                      00000501  00001000  3643          ORG   CMPSC+INADDR       Fixed address of input buffer
+
+                              00001000  00000001  3645 INFILE   EQU   *                  Original input data
+00001000  02C5E2C4 40404040                       3646  DC X'02C5E2C440404040404000304040000140404040404040400400000000000000'
+00001008  40400030 40400001
+00001010  40404040 40404040
+00001018  04000000 00000000
+00001020  C9C7E6D3 C4E2E3C1                       3647  DC X'C9C7E6D3C4E2E3C10000000006001B00C9C7E6D3D5D9C8C200001B0006000004'
+00001028  00000000 06001B00
+00001030  C9C7E6D3 D5D9C8C2
+00001038  00001B00 06000004
+00001040  40404040 40404040                       3648  DC X'4040404040404040F0F0F0F0F0F0F0F102E3E7E3400000004040003840400002'
+00001048  F0F0F0F0 F0F0F0F1
+00001050  02E3E7E3 40000000
+00001058  40400038 40400002
+00001060  A7F40017 28C9C7E6                       3649  DC X'A7F4001728C9C7E6D3C4E2E3C1F0F561F3F161F1F9C8C4E9F2F2F3F040E4C1F9'
+00001068  D3C4E2E3 C1F0F561
+00001070  F3F161F1 F9C8C4E9
+00001078  F2F2F3F0 40E4C1F9
+00001080  F9F5F2F2 40F1F77A                       3650  DC X'F9F5F2F240F1F77AF0F37AF1F0000BE0B24000E051C00000F0F0F0F0F0F0F0F2'
+00001088  F0F37AF1 F0000BE0
+00001090  B24000E0 51C00000
+00001098  F0F0F0F0 F0F0F0F2
+000010A0  02E3E7E3 40000038                       3651  DC X'02E3E7E340000038404000384040000218CFB91700CC51B0CFFFB91700BBC090'
+000010A8  40400038 40400002
+000010B0  18CFB917 00CC51B0
+000010B8  CFFFB917 00BBC090
+000010C0  00000B75 B9170099                       3652  DC X'00000B75B9170099B24D009C5800900441F00000B24D001C010D41100050010D'
+000010C8  B24D009C 58009004
+000010D0  41F00000 B24D001C
+000010D8  010D4110 0050010D
+000010E0  18FD1BF1 58EF0040                       3653  DC X'18FD1BF158EF0040F0F0F0F0F0F0F0F302C5D5C4404040404040404040404040'
+000010E8  F0F0F0F0 F0F0F0F3
+000010F0  02C5D5C4 40404040
+000010F8  40404040 40404040
+00001100  40404040 40404040                       3654  DC X'40404040404040404040404040404040F2F5F6F9F6F2F3F4F0F040F0F1F0F6F1'
+00001108  40404040 40404040
+00001110  F2F5F6F9 F6F2F3F4
+00001118  F0F040F0 F1F0F6F1
+00001120  F9F1F5F1 D7D361E7                       3655  DC X'F9F1F5F1D7D361E760F3F9F04040F0F2F0F4F1F9F1F5F140F0F0F0F0F0F1F3F6'
+00001128  60F3F9F0 4040F0F2
+00001130  F0F4F1F9 F1F5F140
+00001138  F0F0F0F0 F0F1F3F6
+                              00000140  00000001  3656 INSIZE   EQU   *-INFILE           Size of input data
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3658 ***********************************************************************
+                                                  3659 *                    Compression dictionary
+                                                  3660 ***********************************************************************
+
+00001140                      00001140  00020000  3662          ORG   CMPSC+CDICTADR     Compression dictionary
+
+                              00020000  00000001  3664 CMPDICT  EQU   *                  Compression dictionary
+00020000  DF810000 01385840                       3665  DC X'DF81000001385840DF042A001C47500CDF847CE300C5D940DF4526D0D1D2D3F0'
+00020008  DF042A00 1C47500C
+00020010  DF847CE3 00C5D940
+00020018  DF4526D0 D1D2D3F0
+00020020  DF057758 41500047                       3666  DC X'DF05775841500047DC05B9EF00304B18D1061A40504160C5DC062400FF07D247'
+00020028  DC05B9EF 00304B18
+00020030  D1061A40 504160C5
+00020038  DC062400 FF07D247
+00020040  DF064300 58474140                       3667  DC X'DF0643005847414058067100FF000000B90675405000890520067B0000000000'
+00020048  58067100 FF000000
+00020050  B9067540 50008905
+00020058  20067B00 00000000
+00020060  DF067C00 584147F0                       3668  DC X'DF067C00584147F07C06AB0001040000B806C3400E004147D906D14010D05058'
+00020068  7C06AB00 01040000
+00020070  B806C340 0E004147
+00020078  D906D140 10D05058
+00020080  DFC6DC00 D0F0D1D4                       3669  DC X'DFC6DC00D0F0D1D47C07370043310000DB073C05FF9000440000000000000000'
+00020088  7C073700 43310000
+00020090  DB073C05 FF900044
+00020098  00000000 00000000
+000200A0  DF075C18 12404100                       3670  DC X'DF075C1812404100DD077C004B505818DA078A0547C94058D30797181258054B'
+000200A8  DD077C00 4B505818
+000200B0  DA078A05 47C94058
+000200B8  D3079718 1258054B
+000200C0  DF079E12 581740D2                       3671  DC X'DF079E12581740D26007F00058500000DC07F3F578F05875DF080600F0556678'
+000200C8  6007F000 58500000
+000200D0  DC07F3F5 78F05875
+000200D8  DF080600 F0556678
+000200E0  DC082500 05475841                       3672  DC X'DC0825000547584130083D0000000000AC083E47074041586008454B58FF0000'
+000200E8  30083D00 00000000
+000200F0  AC083E47 07404158
+000200F8  6008454B 58FF0000
+                                                  3673  PRINT OFF
+                                                  5713  PRINT ON
+0002FFE0  00000000 00000000                       5714  DC X'00000000000000000000000000000000201FFFF0000000000000000000000000'
+0002FFE8  00000000 00000000
+0002FFF0  201FFFF0 00000000
+0002FFF8  00000000 00000000
+                              00010000  00000001  5715 CDICTSIZ EQU   *-CMPDICT          Compression dictionary size
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  5717 ***********************************************************************
+                                                  5718 *                     Expansion dictionary
+                                                  5719 ***********************************************************************
+
+00030000                      00030000  00030000  5721          ORG   CMPSC+EDICTADR     Expansion dictionary
+
+                              00030000  00000001  5723 EXPDICT  EQU   *                  Expansion dictionary
+00030000  23700400 D3E9C4C8                       5724  DC X'23700400D3E9C4C800000000004000000002000000010000FFFF000000001EDB'
+00030008  00000000 00400000
+00030010  00020000 00010000
+00030018  FFFF0000 00001EDB
+00030020  00002000 00000020                       5725  DC X'00002000000000200000000000005300000052004654FD380000000000000000'
+00030028  00000000 00005300
+00030030  00005200 4654FD38
+00030038  00000000 00000000
+00030040  00000000 00000000                       5726  DC X'0000000000000000000000000000000000000000000000000000000000000000'
+00030048  00000000 00000000
+00030050  00000000 00000000
+00030058  00000000 00000000
+00030060  00000000 00000000                       5727  DC X'0000000000000000000000000000000000000000000000000000000000000000'
+00030068  00000000 00000000
+00030070  00000000 00000000
+00030078  00000000 00000000
+00030080  00000000 00000000                       5728  DC X'0000000000000000000000000000000000000000000000000000000000000000'
+00030088  00000000 00000000
+00030090  00000000 00000000
+00030098  00000000 00000000
+000300A0  00000000 00000000                       5729  DC X'0000000000000000000000000000000000000000000000000000000000000000'
+000300A8  00000000 00000000
+000300B0  00000000 00000000
+000300B8  00000000 00000000
+000300C0  00000000 00000000                       5730  DC X'0000000000000000000000000000000000000000000000000000000000000000'
+000300C8  00000000 00000000
+000300D0  00000000 00000000
+000300D8  00000000 00000000
+000300E0  00000000 00000000                       5731  DC X'0000000000000000000000000000000000000000000000000000000000000000'
+000300E8  00000000 00000000
+000300F0  00000000 00000000
+000300F8  00000000 00000000
+                                                  5732  PRINT OFF
+                                                  7772  PRINT ON
+0003FFE0  03FF4780 00000000                       7773  DC X'03FF47800000000003FF47700000000003FFF0F00000000004FFF0F0F0000000'
+0003FFE8  03FF4770 00000000
+0003FFF0  03FFF0F0 00000000
+0003FFF8  04FFF0F0 F0000000
+                              00010000  00000001  7774 EDICTSIZ EQU   *-EXPDICT          Expansion dictionary size
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+
+
+                              00000000  00000001  7777 R0       EQU   0
+                              00000001  00000001  7778 R1       EQU   1
+                              00000002  00000001  7779 R2       EQU   2
+                              00000003  00000001  7780 R3       EQU   3
+                              00000004  00000001  7781 R4       EQU   4
+                              00000005  00000001  7782 R5       EQU   5
+                              00000006  00000001  7783 R6       EQU   6
+                              00000007  00000001  7784 R7       EQU   7
+                              00000008  00000001  7785 R8       EQU   8
+                              00000009  00000001  7786 R9       EQU   9
+                              0000000A  00000001  7787 R10      EQU   10
+                              0000000B  00000001  7788 R11      EQU   11
+                              0000000C  00000001  7789 R12      EQU   12
+                              0000000D  00000001  7790 R13      EQU   13
+                              0000000E  00000001  7791 R14      EQU   14
+                              0000000F  00000001  7792 R15      EQU   15
+
+
+
+
+                                                  7794          END
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    13
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BEGIN               H    000200       2  3556  3546
+CDICTADR            U    020000       1  3626  3662  3632
+CDICTSIZ            U    010000       1  5715
+CMPADDR             U    002000       1  3624  3562
+CMPDICT             U    020000       1  3664  5715
+CMPSC               J    000000  262144  3510  3513  3520  3534  3545  3547  3635  3643  3662  5721  3554
+CMP_R0              X    0002D0       8  3630  3560
+CMP_R1              A    0002E0       8  3632  3561
+CODE                2    000000  262144  3510
+DWAT0009            3    000288       8  3602  3601
+DWAT0010            3    000298       8  3607  3606
+EDICTADR            U    030000       1  3627  5721  3633
+EDICTSIZ            U    010000       1  7774
+EXPADDR             U    003000       1  3625  3578
+EXPDICT             U    030000       1  5723  7774
+EXP_R0              X    0002D8       8  3631  3576
+EXP_R1              A    0002E8       8  3633  3577
+FAILEOJ             H    000290       2  3605  3592
+FLAGADDR            U    000500       1  3621  3635
+GOODEOJ             I    000280       4  3598  3591
+IMAGE               1    000000  262144     0
+INADDR              U    001000       1  3623  3643  3564
+INFILE              U    001000       1  3645  3656
+INSIZE              U    000140       1  3656  3565
+PREVORG             U    000200       1  3533  3537
+R0                  U    000000       1  7777  3554  3560  3576
+R1                  U    000001       1  7778  3561  3577
+R10                 U    00000A       1  7787
+R11                 U    00000B       1  7788
+R12                 U    00000C       1  7789
+R13                 U    00000D       1  7790
+R14                 U    00000E       1  7791
+R15                 U    00000F       1  7792
+R2                  U    000002       1  7779  3562  3566  3578  3582  3586  3590
+R3                  U    000003       1  7780  3563  3571  3579  3587
+R4                  U    000004       1  7781  3564  3566  3580  3582  3588  3590
+R5                  U    000005       1  7782  3565  3581  3589
+R6                  U    000006       1  7783  3570  3571  3572  3581
+R7                  U    000007       1  7784
+R8                  U    000008       1  7785
+R9                  U    000009       1  7786
+TESTFLAG            X    000500       1  3637  3598
+=AD(1)              A    0002C0       8  3618  3572
+=AD(1024)           A    0002A8       8  3615  3563  3570  3579
+=AD(CMPADDR)        A    0002A0       8  3614  3562  3580
+=AD(EXPADDR)        A    0002C8       8  3619  3578  3588
+=AD(INADDR)         A    0002B0       8  3616  3564  3586
+=AD(INSIZE)         A    0002B8       8  3617  3565  3587  3589
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    14
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        104
+APROB       236
+ARCHIND     396   3427
+ARCHLVL     537   3426
+ASAIPL      663   3543
+ASALOAD     743   3509
+ASAREA      798
+ASAZAREA    983
+CPUWAIT    1066
+DSECTS     1392
+DWAIT      1595   3600   3604
+DWAITEND   1652   3599
+ENADEV     1660
+ESA390     1760
+IOCB       1771
+IOCBDS     1947
+IOFMT      1981
+IOINIT     2319
+IOTRFR     2360
+ORB        2408
+POINTER    2597
+PSWFMT     2625
+RAWAIT     2759
+RAWIO      2855
+SIGCPU     3013
+SMMGR      3071
+SMMGRB     3171
+TRAP128    3220   3521
+TRAP64     3197   3511   3514
+TRAPS      3233
+ZARCH      3307
+ZEROH      3319
+ZEROL      3347
+ZEROLH     3375
+ZEROLL     3398
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    15
+
+   DESC    SYMBOL   SIZE       POS          ADDR
+
+Entry: 0
+
+Image      IMAGE   262144  00000-3FFFF  00000-3FFFF
+  Region   CODE    262144  00000-3FFFF  00000-3FFFF
+    CSECT  CMPSC   262144  00000-3FFFF  00000-3FFFF
+ASMA Ver. 0.2.0                      CMPSC -- Compression Call instruction test                     09 Nov 2019 12:52:36  Page    16
+
+   STMT                                             FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\CMPSC\CMPSC.asm
+2     C:\Users\Fish\Documents\Visual Studio 2008\Projects\Hercules\_Git\_Harold\SATK-0\srcasm\satk.mac
+
+
+** NO ERRORS FOUND **
+
+

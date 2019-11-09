@@ -3363,6 +3363,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\CMPSC.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\cpu0off.core"
 						>
 					</File>
@@ -4302,6 +4306,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CMPSC.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\cr.tst"
 							>
 						</File>
@@ -4654,6 +4662,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CMPSC.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\dc-float.asm"
 							>
 						</File>
@@ -4850,6 +4862,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\CLCL.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CMPSC.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CMPSC.pdf"
 								>
 							</File>
 							<File
