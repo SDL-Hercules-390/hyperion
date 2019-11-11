@@ -1254,6 +1254,7 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     rmtport;                /* Remote port number        */
         U16     rmtnum;                 /* Remote device number      */
         int     rmtid;                  /* Remote Id                 */
+        int     rmtver;                 /* Remote version level      */
         int     rmtrel;                 /* Remote release level      */
         DBLWRD  rmthdr;                 /* Remote header             */
         int     rmtcomp;                /* Remote compression parm   */

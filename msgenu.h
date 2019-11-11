@@ -631,7 +631,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00718 "%1d:%04X Shared: error writing track %d"
 #define HHC00719 "%1d:%04X Shared: remote error writing track %d %2.2X-%2.2X"
 #define HHC00720 "%1d:%04X Shared: error in function %s: %s"
-#define HHC00721 "%1d:%04X Shared: connected to file %s"
+#define HHC00721 "%1d:%04X Shared: connected to v%d.%d server id %d file %s"
 #define HHC00722 "%1d:%04X Shared: error in connect to file %s: %s"
 #define HHC00723 "%1d:%04X Shared: error in send for %2.2X-%2.2X: %s"
 #define HHC00724 "%1d:%04X Shared: not connected to file %s"

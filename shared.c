@@ -16,6 +16,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "devtype.h"
 #include "ccwarn.h"
+#include "dasdblks.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -275,16 +276,27 @@ init_retry:
     }
     dev->numdevid = rc;
 
-    /* Get the serial number */
-    rc = clientRequest (dev, dev->serial, sizeof(dev->serial),
-                        SHRD_QUERY, SHRD_SERIAL, NULL, NULL);
-    if (rc < 0)
-        goto init_retry;
-    else if (rc == 0 || rc > (int)sizeof(dev->serial))
+    /* Get the serial number if the server supports such a query */
+
+    if (dev->rmtver <  SHARED_VERSION ||
+       (dev->rmtver == SHARED_VERSION &&
+        dev->rmtrel <  SHARED_RELEASE))
     {
-        // "%1d:%04X Shared: error retrieving serial number"
-        WRMSG( HHC00716, "S", LCSS_DEVNUM );
-        return -1;
+        /* Generate a random serial number */
+        gen_dasd_serial( dev->serial );
+    }
+    else /* (server SHOULD support the SHRD_SERIAL query) */
+    {
+        rc = clientRequest (dev, dev->serial, sizeof(dev->serial),
+                            SHRD_QUERY, SHRD_SERIAL, NULL, NULL);
+        if (rc < 0)
+            goto init_retry;
+        else if (rc == 0 || rc > (int)sizeof(dev->serial))
+        {
+            // "%1d:%04X Shared: error retrieving serial number"
+            WRMSG( HHC00716, "S", LCSS_DEVNUM );
+            return -1;
+        }
     }
 
     /* Indicate no active track */
@@ -553,16 +565,27 @@ init_retry:
     }
     dev->numdevchar = rc;
 
-    /* Get the serial number */
-    rc = clientRequest (dev, dev->serial, sizeof(dev->serial),
-                        SHRD_QUERY, SHRD_SERIAL, NULL, NULL);
-    if (rc < 0)
-        goto init_retry;
-    else if (rc == 0 || rc > (int)sizeof(dev->serial))
+    /* Get the serial number if the server supports such a query */
+
+    if (dev->rmtver <  SHARED_VERSION ||
+       (dev->rmtver == SHARED_VERSION &&
+        dev->rmtrel <  SHARED_RELEASE))
     {
-        // "%1d:%04X Shared: error retrieving serial number"
-        WRMSG( HHC00716, "S", LCSS_DEVNUM );
-        return -1;
+        /* Generate a random serial number */
+        gen_dasd_serial( dev->serial );
+    }
+    else /* (server SHOULD support the SHRD_SERIAL query) */
+    {
+        rc = clientRequest (dev, dev->serial, sizeof(dev->serial),
+                            SHRD_QUERY, SHRD_SERIAL, NULL, NULL);
+        if (rc < 0)
+            goto init_retry;
+        else if (rc == 0 || rc > (int)sizeof(dev->serial))
+        {
+            // "%1d:%04X Shared: error retrieving serial number"
+            WRMSG( HHC00716, "S", LCSS_DEVNUM );
+            return -1;
+        }
     }
 
     /* Indicate no active track */
@@ -1151,12 +1174,14 @@ HWORD              comp;                /* Returned compression parm */
                 {
                     dev->connected = 1;             // (SHRD_CONNECT success)
                     dev->rmtid  = fetch_hw( id );   // (must only do ONCE!!!)
-                    dev->rmtrel = flag & 0x0f;
+                    dev->rmtver = flag >> 4;        // (save server version)
+                    dev->rmtrel = flag & 0x0f;      // (save server release)
 
                     if (!dev->batch)
                         if (MLVL( VERBOSE ))
-                            // "%1d:%04X Shared: connected to file %s"
-                            WRMSG( HHC00721, "I", LCSS_DEVNUM, dev->filename );
+                            // "%1d:%04X Shared: connected to v%d.%d server id %d file %s"
+                            WRMSG( HHC00721, "I", LCSS_DEVNUM, dev->rmtver,
+                                dev->rmtrel, dev->rmtid, dev->filename );
                     /*
                      * Negotiate compression - top 4 bits have the compression
                      * algorithms we support (00010000 -> libz; 00100000 ->bzip2,
@@ -1168,7 +1193,6 @@ HWORD              comp;                /* Returned compression parm */
                      * cckd or cfba then the server doesn't have to uncompress
                      * the data for us if we support the compression algorithm.
                      */
-
                     if (dev->rmtcomp || dev->rmtcomps)
                     {
                         rc = clientRequest( dev, comp, 2, SHRD_COMPRESS,
