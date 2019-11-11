@@ -3125,22 +3125,26 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
     if (strcasecmp( kw, "DTAX" ) == 0)  // Dump Table At Exit
     {
         int dtax;
+
         if (!op)
         {
             // "Shared: invalid or missing value %s"
             WRMSG( HHC00740, "E", kw );
-            RELEASE_SHRDTRACE_LOCK();
             return -1;
         }
         if (sscanf( op, "%d%c", &dtax, &c ) != 1)
         {
             // "Shared: invalid or missing value %s"
             WRMSG( HHC00740, "E", op );
-            RELEASE_SHRDTRACE_LOCK();
             return -1;
         }
-        sysblk.shrddtax = dtax ? true : false;
+
+        OBTAIN_SHRDTRACE_LOCK();
+        {
+            sysblk.shrddtax = dtax ? true : false;
+        }
         RELEASE_SHRDTRACE_LOCK();
+
         return 0;
     }
 
