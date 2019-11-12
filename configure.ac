@@ -145,6 +145,11 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir="/sparc"
         ;;
 
+    s390x*)
+        hc_cv_cpu_arch=s390x
+        hc_cv_pkg_lib_subdir="/s390x"
+        ;;
+
     xscale*)
         hc_cv_cpu_arch=xscale
         hc_cv_pkg_lib_subdir="/xscale"
