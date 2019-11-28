@@ -35,7 +35,7 @@
   echo     NOTES
   echo.
   echo         Some flavor of Visual Studio must obviously be installed.
-  echo         Supported versions are Visual Studio 2005 through 2017.
+  echo         Supported versions are Visual Studio 2005 through 2019.
   echo.
   echo         The 'detect' call detects which version of Visual Studio
   echo         is installed and defines certain variables identifying
@@ -51,7 +51,7 @@
   echo         The variables which the 'detect' call returns are:
   echo.
   echo              vsname          Visual Studio's "short name"
-  echo                              (e.g. "vs2017", "vs2008", etc)
+  echo                              (e.g. "vs2019", "vs2008", etc)
   echo.
   echo              vsver           Visual Studio's numeric version
   echo                              (e.g. "150", "90", etc)
@@ -77,7 +77,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.0     (March 3, 2018)
+  echo         3.1     (November 28, 2019)
 
   endlocal
   exit /b 1
