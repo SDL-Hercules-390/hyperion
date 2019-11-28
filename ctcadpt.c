@@ -1847,7 +1847,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
     dev->ctcefd = -1;
 
     // Check for correct number of arguments
-    if( (argc < 3) && (argc > 5) )
+    if( (argc < 3) || (argc > 5) )
     {
         WRMSG( HHC05055, "E",  /* CTCE: Incorrect number of parameters */
             CTCX_DEVNUM( dev ) );

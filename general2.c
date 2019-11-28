@@ -2448,7 +2448,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* WellFormednessChecking */
       if(wfc)
       {
-        if(utf16[2] < 0xdc && utf16[2] > 0xdf)
+        if(utf16[2] < 0xdc || utf16[2] > 0xdf)
         {
           regs->psw.cc = 2;
           return;
