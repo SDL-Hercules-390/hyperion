@@ -395,7 +395,7 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 static __inline__ int cmpxchg16_amd64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
 /* returns 0 on success otherwise returns 1 */
     BYTE code;
-    volatile __int128 *ptr_data=ptr;
+    volatile __int128_t *ptr_data=ptr;
     __asm__ __volatile__ (
         "lock;   cmpxchg16b %1\n\t"
         "setnz   %b0\n\t"
