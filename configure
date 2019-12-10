@@ -22840,21 +22840,9 @@ cat >>confdefs.h <<_ACEOF
 #define HAVE___INT128_T 1
 _ACEOF
 
-hc_cv_have_int128_t=yes
+hc_cv_have___int128_t=yes
 else
-  hc_cv_have_int128_t=no
-fi
-
-ac_fn_c_check_type "$LINENO" "__uint128_t" "ac_cv_type___uint128_t" "$ac_includes_default"
-if test "x$ac_cv_type___uint128_t" = xyes; then :
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE___UINT128_T 1
-_ACEOF
-
-hc_cv_have_u_int128_t=yes
-else
-  hc_cv_have_u_int128_t=no
+  hc_cv_have___int128_t=no
 fi
 
 ac_fn_c_check_type "$LINENO" "u_int8_t" "ac_cv_type_u_int8_t" "$ac_includes_default"
@@ -27268,24 +27256,47 @@ fi
 # "There is no support in GCC for expressing an integer constant of type
 #  __int128 for targets with long long integer less than 128 bits wide."
 
-if test "$hc_cv_have_u_int128_t" != "yes"; then
+if test "$hc_cv_have___int128_t" != "yes"; then
   hc_cv_max_cpu_engines=64
+  { $as_echo "$as_me:${as_lineno-$LINENO}: NOTICE: __int128_t NOT supported; max CPU engines = ${hc_cv_max_cpu_engines} " >&5
+$as_echo "$as_me: NOTICE: __int128_t NOT supported; max CPU engines = ${hc_cv_max_cpu_engines} " >&6;}
+else
+  if test "$cross_compiling" = yes; then :
+  hc_cv_max_cpu_engines=64
+
 else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-    #if SIZEOF_LONG_LONG < 16
-    #error native 128-bit integers are not supported
-    #endif
+          #include <stdio.h>
+          #include <stdlib.h>
+
+          int main()
+          {
+              __int128_t  foo;
+              if (sizeof( foo ) >= 16)
+                return 0;
+              else
+                return -1;
+          }
 
 _ACEOF
-if ac_fn_c_try_cpp "$LINENO"; then :
+if ac_fn_c_try_run "$LINENO"; then :
   hc_cv_max_cpu_engines=128
 else
   hc_cv_max_cpu_engines=64
-
 fi
-rm -f conftest.err conftest.i conftest.$ac_ext
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+  if test "${hc_cv_max_cpu_engines}" = "128"; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: NOTICE: sizeof(__int128_t) >= 16; max CPU engines = ${hc_cv_max_cpu_engines} " >&5
+$as_echo "$as_me: NOTICE: sizeof(__int128_t) >= 16; max CPU engines = ${hc_cv_max_cpu_engines} " >&6;}
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: NOTICE: sizeof(__int128_t) < 16; max CPU engines = ${hc_cv_max_cpu_engines} " >&5
+$as_echo "$as_me: NOTICE: sizeof(__int128_t) < 16; max CPU engines = ${hc_cv_max_cpu_engines} " >&6;}
+  fi
 fi
 
 hc_cv_default_num_cpu_engines=8
