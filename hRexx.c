@@ -1316,7 +1316,7 @@ static void* exec_async_thread( void* p )
     void*    args;                  // (depends on mode)
     int      argc;                  // (depends on mode)
     int      rc;                    // ExecCmd/ExecSub return code
-    char*    cmd_cmdline;           // (MODE_COMMAND script cmdline)
+    char*    cmd_cmdline = NULL;    // (MODE_COMMAND script cmdline)
 
     /* Retrieve needed arguments */
     obtain_lock( &scr_lock );

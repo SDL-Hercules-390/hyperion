@@ -792,8 +792,8 @@ static
 int ckd_dasd_read_track (DEVBLK *dev, int trk, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
-int             cyl;                    /* Cylinder                  */
-int             head;                   /* Head                      */
+int             cyl = 0;                /* Cylinder                  */
+int             head = 0;               /* Head                      */
 U64             offset;                 /* File offsets              */
 int             i,o,f;                  /* Indexes                   */
 CKD_TRKHDR     *trkhdr;                 /* -> New track header       */

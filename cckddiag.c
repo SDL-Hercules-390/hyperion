@@ -23,6 +23,7 @@
 /*-------------------------------------------------------------------*/
 /* Exit codes                                                        */
 /*-------------------------------------------------------------------*/
+#define EXIT_ERROR_LOGIC_ERROR -99
 #define EXIT_ERROR_SYNTAX      -1
 #define EXIT_NORMAL_SUCCESS     0
 #define EXIT_SEEK_ERROR         1
@@ -946,4 +947,5 @@ char            pathname[ MAX_PATH ];   /* file path in host format  */
     /* Close file, exit */
     clean();
     ErrExit( cckd_diag_rc );
+    UNREACHABLE_CODE( return EXIT_ERROR_LOGIC_ERROR );
 }
