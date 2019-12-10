@@ -921,8 +921,7 @@ AC_CACHE_SAVE()
 #   Checks for types...
 ###############################################################################
 
-AC_CHECK_TYPES(__int128_t,  [hc_cv_have_int128_t=yes],   [hc_cv_have_int128_t=no]   )
-AC_CHECK_TYPES(__uint128_t, [hc_cv_have_u_int128_t=yes], [hc_cv_have_u_int128_t=no] )
+AC_CHECK_TYPES(__int128_t,  [hc_cv_have___int128_t=yes], [hc_cv_have___int128_t=no] )
 AC_CHECK_TYPES( u_int8_t,   [hc_cv_have_u_int8_t=yes],   [hc_cv_have_u_int8_t=no]   )
 AC_CHECK_TYPES( useconds_t, [hc_cv_have_useconds_t=yes], [hc_cv_have_useconds_t=no] )
 AC_CHECK_TYPES( id_t,       [hc_cv_have_id_t=yes],       [hc_cv_have_id_t=no]       )
@@ -2273,17 +2272,33 @@ AC_ARG_ENABLE( fthreads,
 # "There is no support in GCC for expressing an integer constant of type
 #  __int128 for targets with long long integer less than 128 bits wide."
 
-if test "$hc_cv_have_u_int128_t" != "yes"; then
+if test "$hc_cv_have___int128_t" != "yes"; then
   hc_cv_max_cpu_engines=64
+  AC_MSG_NOTICE( [NOTICE: __int128_t NOT supported; max CPU engines = ${hc_cv_max_cpu_engines}] )
 else
-  AC_PREPROC_IFELSE([AC_LANG_SOURCE([
-    #if SIZEOF_LONG_LONG < 16
-    #error native 128-bit integers are not supported
-    #endif
-    ])],
-    [hc_cv_max_cpu_engines=128],
-    [hc_cv_max_cpu_engines=64]
+  AC_TRY_RUN(
+      [
+          #include <stdio.h>
+          #include <stdlib.h>
+
+          int main()
+          {
+              __int128_t  foo;
+              if (sizeof( foo ) >= 16)
+                return 0;
+              else
+                return -1;
+          }
+      ],
+      [hc_cv_max_cpu_engines=128],
+      [hc_cv_max_cpu_engines=64],
+      [hc_cv_max_cpu_engines=64]
   )
+  if test "${hc_cv_max_cpu_engines}" = "128"; then
+    AC_MSG_NOTICE( [NOTICE: sizeof(__int128_t) >= 16; max CPU engines = ${hc_cv_max_cpu_engines}] )
+  else
+    AC_MSG_NOTICE( [NOTICE: sizeof(__int128_t) < 16; max CPU engines = ${hc_cv_max_cpu_engines}] )
+  fi
 fi
 
 hc_cv_default_num_cpu_engines=8

@@ -21,7 +21,7 @@
 /*-------------------------------------------------------------------*/
 
 #if !defined( MAX_CPU_ENGINES )
-  #if defined( HAVE___UINT128_T ) && defined( SIZEOF_LONG_LONG ) && SIZEOF_LONG_LONG >= 16
+  #if defined( HAVE___INT128_T )
     #define MAX_CPU_ENGINES     128
   #else
     #define MAX_CPU_ENGINES      64

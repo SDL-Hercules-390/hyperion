@@ -48,14 +48,10 @@
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
 #elif MAX_CPU_ENGINES <= 128
-  #if defined( SIZEOF_LONG_LONG ) && SIZEOF_LONG_LONG >= 16
-    typedef __uint128_t         CPU_BITMAP;
-    // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
-    #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
-    #define F_CPU_BITMAP        "%16.16"PRIX64
-  #else
-    #error MAX_CPU_ENGINES cannot exceed 64
-  #endif
+  typedef __uint128_t         CPU_BITMAP;
+  // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
+  #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
+  #define F_CPU_BITMAP        "%16.16"PRIX64
 #else
   #error MAX_CPU_ENGINES cannot exceed 128
 #endif
