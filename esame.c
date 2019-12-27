@@ -5645,6 +5645,21 @@ int     cc;                             /* Condition code            */
             regs->facility_list[3] );
 #endif
 
+/* Special case : Report the actual GUEST mode */
+/* Some hypervisors do not intercept STFLE */
+#if defined(_FEATURE_SIE)
+if(SIE_MODE(regs))
+{
+#if defined(FEATURE_002_ZARCH_ACTIVE_FACILITY)
+    /* z/Arch SIE Guest */
+    regs->facility_list[0]|=0x20;
+#else
+    /* S/390 SIE Guest */
+    regs->facility_list[0]&=(~0x20);
+#endif
+}
+#endif
+
     /* Store facility list at operand location */
     ARCH_DEP(vstorec) ( regs->facility_list, ndbl*8-1,
                         effective_addr2, b2, regs );
