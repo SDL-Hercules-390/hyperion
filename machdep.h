@@ -526,17 +526,17 @@ static __inline__ int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2
     int result = 1;
     U64 expected1 = *old1;
     U64 expected2 = *old2;
-   	__asm __volatile(
-   	    "ldaxp %[old1], %[old2], [%[ptr]]"
-     			: [old1] "+r" (*old1), [old2] "+r" (*old2)
-     			: [ptr] "r" (ptr));
+    __asm __volatile(
+        "ldaxp %[old1], %[old2], [%[ptr]]"
+            : [old1] "+r" (*old1), [old2] "+r" (*old2)
+            : [ptr] "r" (ptr));
     if ( expected1 == *old1 && expected2 == *old2 )
     {
-       	__asm __volatile(
-       	    "stlxp %w[result], %[new1], %[new2], [%[ptr]]"
-         			: [result] "+r" (result)
-         			: [new1] "r" (new1), [new2] "r" (new2), [ptr] "r" (ptr)
-         			: "memory");
+        __asm __volatile(
+            "stlxp %w[result], %[new1], %[new2], [%[ptr]]"
+                : [result] "+r" (result)
+                : [new1] "r" (new1), [new2] "r" (new2), [ptr] "r" (ptr)
+                : "memory");
     }
     return result ;
 }
@@ -555,7 +555,7 @@ static __inline__ int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2
 #ifndef cmpxchg1
 #define cmpxchg1(x,y,z) cmpxchg1_C11(x,y,z)
 static __inline__ BYTE cmpxchg1_C11(BYTE *old, BYTE new, volatile void *ptr) {
-/* returns 0o on success otherwise returns 1 */
+/* returns 0 on success otherwise returns 1 */
             return __atomic_compare_exchange_n ((volatile BYTE *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
         }
 #endif
