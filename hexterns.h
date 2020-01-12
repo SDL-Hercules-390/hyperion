@@ -270,6 +270,16 @@ SERV_DLL_IMPORT void sclp_sysg_attention();
 int servc_hsuspend(void *file);
 int servc_hresume(void *file);
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+/* Functions in module transact.c */
+TRANS_DLL_IMPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int acctype, BYTE* maddr );
+TRANS_DLL_IMPORT void s370_abort_transaction( REGS* regs, int retry, int txf_abortcode );
+TRANS_DLL_IMPORT void s390_abort_transaction( REGS* regs, int retry, int txf_abortcode );
+TRANS_DLL_IMPORT void z900_abort_transaction( REGS* regs, int retry, int txf_abortcode );
+void alloc_txfmap( REGS* regs );
+void free_txfmap( REGS* regs );
+#endif
+
 /* Functions in module ckddasd.c */
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
 int ckd_dasd_init_handler   ( DEVBLK *dev, int argc, char *argv[]);
@@ -358,6 +368,9 @@ const char* FormatESW( ESW* esw, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatSID( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRCD( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRNI( BYTE* iobuf, int num, char* buf, size_t bufsz );
+HMISC_DLL_IMPORT int s370_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
+HMISC_DLL_IMPORT int s390_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
+HMISC_DLL_IMPORT int z900_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real_or_abs (REGS *regs, int argc, char *argv[], char *cmdline);
 void alter_display_virt (REGS *regs, int argc, char *argv[], char *cmdline);
@@ -377,7 +390,7 @@ int resume_cmd(int argc, char *argv[],char *cmdline);
 /* Functions in ecpsvm.c that are not *direct* instructions */
 /* but support functions either used by other instruction   */
 /* functions or from somewhere else                         */
-#ifdef FEATURE_ECPSVM
+#if defined( _FEATURE_ECPSVM )
 int  ecpsvm_dosvc(REGS *regs, int svccode);
 int  ecpsvm_dossm(REGS *regs,int b,VADR ea);
 int  ecpsvm_dolpsw(REGS *regs,int b,VADR ea);
