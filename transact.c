@@ -162,8 +162,8 @@ REGS     *hregs = regs->hostregs;
       return;
     }
 
-    if (sysblk.tranmodectr > 0)
-      sysblk.tranmodectr--;
+    if (sysblk.txf_transcpus > 0)
+      sysblk.txf_transcpus--;
 
     /*--------------------------------------------------------*/
     /* If an abort code is already set, abort the transaction */
@@ -441,7 +441,7 @@ BYTE    mask = 0x00;
     hregs->conflictaddr = 0;     /* clear conflict address */
     hregs->ntranstorectr = 0;
 
-    sysblk.tranmodectr++;     /* update transaction mode ctr */
+    sysblk.txf_transcpus++;     /* update transaction mode ctr */
     hregs->tranlvl = 1;        /* set now in transaction mode  */
 
     /* following bytes are reversed because i2 is stored as little endian */
@@ -523,7 +523,7 @@ TPAGEMAP *pmap;
         hregs->conflictaddr = 0;    /* clear conflict address */
         hregs->ntranstorectr = 0;
 
-        sysblk.tranmodectr++;   /* increment transaction mode ctr */
+        sysblk.txf_transcpus++;   /* increment transaction mode ctr */
 
         memcpy(&hregs->tranabortpsw, &hregs->psw, sizeof(PSW));   /* save the abort psw */
         memcpy(hregs->tranregs, hregs->gr, sizeof(hregs->tranregs)); /* save the registers */

@@ -166,7 +166,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 /*  the transaction will be aborted if the real page is invalidated.*/
 /*------------------------------------------------------------------*/
 
-    if (sysblk.tranmodectr == 0)        /* no cpus are in tran mode */
+    if (sysblk.txf_transcpus == 0)      /* no cpus are in tran mode */
       return rtnaddr;                   /* return now               */
 
     /*  we are only interested in fetch and store access  */
@@ -251,7 +251,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
             /* the real routine is used here instead of obtain_lock to get around a problem */
             /* compiling dyn76.c, which redefines obtain_lock as EnterCriticalSection */
 
-            hthread_obtain_lock(&rchk->sysblk->tranlock[i], PTT_LOC );  /*get the cpu lock */
+            hthread_obtain_lock(&rchk->sysblk->txf_lock[i], PTT_LOC );  /*get the cpu lock */
             {
               if (rchk->tranlvl > 0)
               {
@@ -259,7 +259,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
                 rchk->abortcode = abortcode;
               }
             }
-            hthread_release_lock(&rchk->sysblk->tranlock[i], PTT_LOC );  /* release the cpu lock */
+            hthread_release_lock(&rchk->sysblk->txf_lock[i], PTT_LOC );  /* release the cpu lock */
             break;
           }
 

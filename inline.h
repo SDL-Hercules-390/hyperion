@@ -690,8 +690,8 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
 
   rmask = hregs->tranregmask;
 
-  if (sysblk.tranmodectr > 0)
-    sysblk.tranmodectr--;
+  if (sysblk.txf_transcpus > 0)
+    sysblk.txf_transcpus--;
 
   /*---------------------------------------------*/
   /*  Clean up the transaction flags             */
@@ -699,11 +699,11 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
   hregs->tranpagenum = 0;
   tranlvl = hregs->tranlvl;
 
-  hthread_obtain_lock(&sysblk.tranlock[hregs->cpuad], PTT_LOC);  /*get the cpu lock */
+  hthread_obtain_lock(&sysblk.txf_lock[hregs->cpuad], PTT_LOC);  /*get the cpu lock */
   {
     hregs->tranlvl = 0;
   }
-  hthread_release_lock(&sysblk.tranlock[hregs->cpuad], PTT_LOC);
+  hthread_release_lock(&sysblk.txf_lock[hregs->cpuad], PTT_LOC);
 
   contran = hregs->contran;
   hregs->contran = 0;

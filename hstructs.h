@@ -511,6 +511,7 @@ struct REGS {                           /* Processor registers       */
      /* TLB - Translation lookaside buffer                           */
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
+
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         BYTE   tranlvl;                 /* transaction mode level    */
         BYTE   contran;                 /*  1 = constrained          */
@@ -698,7 +699,7 @@ struct SYSBLK {
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        LOCK    tranlock[MAX_CPU_ENGINES];  /* CPU transaction lock  */
+        LOCK    txf_lock[MAX_CPU_ENGINES];  /* CPU transaction lock  */
 #endif
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
@@ -1045,7 +1046,7 @@ struct SYSBLK {
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        U32     tranmodectr;            /* number of cpus in transaction mode */
+        U32     txf_transcpus;          /* num of cpus in trans mode */
 #endif
 
         int     regs_copy_len;          /* Length to copy for REGS   */

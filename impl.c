@@ -695,7 +695,7 @@ int     rc;
         {
             initialize_lock (&sysblk.cpulock[i]);
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-            initialize_lock (&sysblk.tranlock[i]);
+            initialize_lock (&sysblk.txf_lock[i]);
 #endif
         }
     }
