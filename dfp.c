@@ -54,8 +54,8 @@ int     i1, i2;                         /* FP register subscripts    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -83,8 +83,8 @@ int     i1, i2;                         /* FP register subscripts    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -113,8 +113,8 @@ U32     sign;                           /* Work area for sign bit    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -151,8 +151,8 @@ int     i1, i2;                         /* FP register subscripts    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -182,8 +182,8 @@ int     i1;                             /* FP register subscript     */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -210,8 +210,8 @@ int     i2;                             /* FP register subscript     */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r2, regs);
     i2 = FPR2I(r2);
@@ -240,8 +240,8 @@ VADR            effective_addr2;        /* Effective address         */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     DFPINST_CHECK(regs);
@@ -340,8 +340,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     DFPINST_CHECK(regs);
@@ -387,8 +387,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     DFPINST_CHECK(regs);
@@ -1836,8 +1836,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -1893,8 +1893,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -1949,8 +1949,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2001,8 +2001,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2052,8 +2052,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2108,8 +2108,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2162,8 +2162,8 @@ decContext      set;                    /* Working context           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2200,8 +2200,8 @@ decContext      set;                    /* Working context           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2240,8 +2240,8 @@ decContext      set;                    /* Working context           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2283,8 +2283,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2327,8 +2327,8 @@ decContext      set;                    /* Working context           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2370,8 +2370,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2414,8 +2414,8 @@ decContext      set;                    /* Working context           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2456,8 +2456,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2508,8 +2508,8 @@ decContext      set;                    /* Working context           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2551,8 +2551,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2596,8 +2596,8 @@ int32_t         scale = 0;              /* Scaling factor            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2648,8 +2648,8 @@ int32_t         scale = 0;              /* Scaling factor            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2698,8 +2698,8 @@ int32_t         scale = 0;              /* Scaling factor            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2757,8 +2757,8 @@ int32_t         scale = 0;              /* Scaling factor            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2816,8 +2816,8 @@ char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -2875,8 +2875,8 @@ char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -2933,8 +2933,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -2991,8 +2991,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     /* Initialise the context for long DFP */
@@ -3047,8 +3047,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3105,8 +3105,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3163,8 +3163,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3221,8 +3221,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3279,8 +3279,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3337,8 +3337,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3395,8 +3395,8 @@ BYTE            pwork[18];              /* 33-digit packed work area */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3451,8 +3451,8 @@ BYTE            pwork[9];               /* 17-digit packed work area */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3504,8 +3504,8 @@ BYTE            pwork[17];              /* 33-digit packed work area */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3560,8 +3560,8 @@ BYTE            pwork[9];               /* 17-digit packed work area */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3616,8 +3616,8 @@ char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -3676,8 +3676,8 @@ char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3732,8 +3732,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -3784,8 +3784,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3835,8 +3835,8 @@ S64             exponent;               /* Biased exponent           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3884,8 +3884,8 @@ S64             exponent;               /* Biased exponent           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -3932,8 +3932,8 @@ S64             digits;                 /* Number of decimal digits  */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -3983,8 +3983,8 @@ S64             digits;                 /* Number of decimal digits  */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4033,8 +4033,8 @@ S64             bexp;                   /* Biased exponent           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
@@ -4111,8 +4111,8 @@ S64             bexp;                   /* Biased exponent           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4188,8 +4188,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -4249,8 +4249,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4309,8 +4309,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
@@ -4392,8 +4392,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4475,8 +4475,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -4551,8 +4551,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4628,8 +4628,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
@@ -4722,8 +4722,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4812,8 +4812,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -4864,8 +4864,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -4915,8 +4915,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -4967,8 +4967,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5019,8 +5019,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
@@ -5083,8 +5083,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5147,8 +5147,8 @@ int             n;                      /* Number of bits to shift   */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
@@ -5216,8 +5216,8 @@ int             n;                      /* Number of bits to shift   */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5284,8 +5284,8 @@ int             n;                      /* Number of bits to shift   */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
@@ -5353,8 +5353,8 @@ int             n;                      /* Number of bits to shift   */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5419,8 +5419,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
@@ -5476,8 +5476,8 @@ BYTE            dxc;                    /* Data exception code       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5534,8 +5534,8 @@ U32             bits;                   /* Low 12 bits of address    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -5576,8 +5576,8 @@ U32             bits;                   /* Low 12 bits of address    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5617,8 +5617,8 @@ U32             bits;                   /* Low 12 bits of address    */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5659,8 +5659,8 @@ int             lmd;                    /* Leftmost digit            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
@@ -5707,8 +5707,8 @@ int             lmd;                    /* Leftmost digit            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 
@@ -5754,8 +5754,8 @@ int             lmd;                    /* Leftmost digit            */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DFPINST_CHECK(regs);
 

@@ -625,7 +625,7 @@ static char *pgmintname[] = {
       if (filt == 1)
       {
         realregs->psw.cc = fcc;
-        ARCH_DEP(abort_transaction)(realregs, 1, 12);
+        ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_CC, ABORT_CODE_FPGM);
       }
       realregs->psw.cc = ucc;
     }
@@ -1085,7 +1085,7 @@ static char *pgmintname[] = {
 
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
     if (realregs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(realregs, 0, 4);
+      ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_RETURN, ABORT_CODE_UPGM);
 #endif
 #if defined(_FEATURE_SIE)
     if(nointercept)
@@ -1181,7 +1181,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 0, 6);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
 #endif
     ARCH_DEP(store_psw) (regs, psa->RSTOLD);
 
@@ -1304,7 +1304,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
         if (regs->tranlvl > 0)
         {
-          ARCH_DEP(abort_transaction)(regs, 0, 6);
+          ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
           regs->psw.cc = 2;
         }
 #endif
@@ -1380,7 +1380,7 @@ RADR    fsta;                           /* Failing storage address   */
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
     if (regs->tranlvl > 0)
     {
-      ARCH_DEP(abort_transaction)(regs, 0, 5);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_MCK);
       regs->psw.cc = 2;
     }
 #endif

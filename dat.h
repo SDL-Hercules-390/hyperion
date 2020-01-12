@@ -249,7 +249,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
       return rtnaddr;                    /* facility is not enabled. */
     /* if an abort has already been requested, call the abort code now */
     if (hregs->abortcode)
-      ARCH_DEP(abort_transaction)(hregs, 1, hregs->abortcode);
+      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->abortcode);
     /*------------------------------------------------------------*/
     /*   We will return an alternate real address to the caller,  */
     /*   which will be visible only to this cpu.  When/if the     */
@@ -290,9 +290,9 @@ static inline  BYTE* ARCH_DEP( maddr_l )
       if (hregs->tranpagenum >= MAX_TRAN_PAGES)
       {
         if (acctype == ACCTYPE_READ)
-          ARCH_DEP(abort_transaction)(hregs, 2, 7);
+          ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
         else
-          ARCH_DEP(abort_transaction)(hregs, 2, 8);
+          ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_STORE_OVF);
       }
       pmap = &hregs->tpagemap[hregs->tranpagenum];
       altpage = pmap->altpageaddr;
@@ -306,7 +306,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
           break;
       }
       if (i >= 128)
-        ARCH_DEP(abort_transaction)(hregs, 1, 9);
+        ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
       pagecap = 1;
       pmap->mainpageaddr = (BYTE *)addrpage;
       hregs->tranpagenum++;
@@ -333,7 +333,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
             break;
         }
         if (i >= 128)
-          ARCH_DEP(abort_transaction)(regs, 1, 9);
+          ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
         pmap->cachemap[cacheidx] = newacc;
         break;
       case 1:

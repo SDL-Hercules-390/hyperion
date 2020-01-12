@@ -359,10 +359,10 @@ do { \
    (_regs)->hostregs->traninstctr++; \
    if ((_regs)->hostregs->contran && (_regs)->hostregs->traninstctr > 32 && \
        memcmp((_ip), "\xb2\xf8", 2) != 0) \
-       ARCH_DEP(abort_transaction)((_regs), 2, 11); \
+       ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR); \
    if ((_regs)->hostregs->traninstctr == (_regs)->hostregs->tranabortnum &&  \
       (_regs)->hostregs->tranabortnum > 0) \
-     ARCH_DEP(abort_transaction)((_regs), 2, (_regs)->rabortcode); \
+     ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, (_regs)->rabortcode); \
 } while(0)
 
 /* Instruction fetching */
@@ -1034,8 +1034,159 @@ do { \
             if (_ilc) (_regs)->psw.ilc = (_ilc); \
         } while(0)
 
-/*                    Instruction decoders
- *
+/*-------------------------------------------------------------------*/
+/*        Transactional-Execution Facility support macros            */
+/*-------------------------------------------------------------------*/
+
+#undef CONTRAN_INSTR_CHECK
+#undef CONTRAN_BRANCH_CHECK
+#undef CONTRAN_RELATIVE_BRANCH_CHECK
+
+#undef TRAN_INSTR_CHECK
+#undef TRAN_FLOAT_INSTR_CHECK
+#undef TRAN_ACCESS_INSTR_CHECK
+#undef TRAN_MC_INSTR_CHECK
+#undef TRAN_NONRELATIVE_BRANCH_CHECK
+#undef TRAN_TLB_PURGE_INSTR_CHECK
+
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+  #define CONTRAN_INSTR_CHECK( _regs )
+  #define CONTRAN_BRANCH_CHECK( _regs, _m3, _i4 )
+  #define CONTRAN_RELATIVE_BRANCH_CHECK( _regs )
+
+  #define TRAN_INSTR_CHECK( _regs )
+  #define TRAN_FLOAT_INSTR_CHECK( _regs )
+  #define TRAN_ACCESS_INSTR_CHECK( _regs )
+  #define TRAN_MC_INSTR_CHECK( _regs )
+  #define TRAN_TLB_PURGE_INSTR_CHECK( _regs )
+  #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )
+
+#else /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+  #define CONTRAN_INSTR_CHECK( _regs )                                                  \
+    /* Restricted instruction in CONSTRAINED transaction mode */                        \
+    do {                                                                                \
+      if ((_regs)->contran)                                                             \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define CONTRAN_BRANCH_CHECK( _regs, _m3, _i4 )                                       \
+    /* Branches restricted in CONSTRAINED mode if mask zero or offset negative */       \
+    do {                                                                                \
+      if ((_regs)->contran &&                                                           \
+      (0                                                                                \
+        || (_m3) == 0x00            /* zero mask (nop)   not allowed */                 \
+        || (_i4) < 0                /* backward branches not allowed */                 \
+      ))                                                                                \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define CONTRAN_RELATIVE_BRANCH_CHECK( _regs )                                        \
+    /* Relative branches restricted in CONSTRAINED mode */                              \
+    /* if the mask is zero or the offset is negative    */                              \
+    do {                                                                                \
+      if ((_regs)->contran &&                                                           \
+      (0                                                                                \
+        || (inst[1] & 0xf0) == 0x00                                                     \
+        || (inst[2] & 0x80)                                                             \
+      ))                                                                                \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_INSTR_CHECK( _regs )                                                     \
+    /* Restricted instruction in any transaction mode */                                \
+    do {                                                                                \
+      if ((_regs)->tranlvl > 0)                                                         \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_FLOAT_INSTR_CHECK( _regs )                                               \
+    /* Restricted instruction if CONSTRAINED mode or float bit zero */                  \
+    do {                                                                                \
+      if (1                                                                             \
+        && (_regs)->tranlvl > 0                                                         \
+        && (0                                                                           \
+          || (_regs)->contran                                                           \
+          || !((_regs)->tranctlflag & TXF_CTL_FLOAT)                                    \
+        )                                                                               \
+      )                                                                                 \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_ACCESS_INSTR_CHECK( _regs )                                              \
+    /* Restricted instruction if access control bit zero */                             \
+    do {                                                                                \
+      if (1                                                                             \
+        && (_regs)->tranlvl > 0                                                         \
+        && !((_regs)->tranctlflag & TXF_CTL_AR)                                         \
+      )                                                                                 \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_MC_INSTR_CHECK( _regs )                                                  \
+    /* Monitor call restricted in CONSTRAINED mode or if monitor trace active */        \
+    do {                                                                                \
+      if ((_regs)->tranlvl > 0 &&                                                       \
+      (0                                                                                \
+        || (_regs)->contran                                                             \
+        || ((_regs)->CR(12) & CR12_MTRACE)                                              \
+      ))                                                                                \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )                                    \
+    /* Non-relative branches restricted in CONSTRAINED mode, or  */                     \
+    /* if branch tracing is enabled and branch register non-zero */                     \
+    do {                                                                                \
+      if ((_regs)->tranlvl > 0 &&                                                       \
+      (0                                                                                \
+        || (_regs)->contran                                                             \
+        || ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                              \
+      ))                                                                                \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_TLB_PURGE_INSTR_CHECK( _regs )                       \
+    /* Flag this CPU for abort if any transaction is active */      \
+    do {                                                            \
+      if (1                                                         \
+        && (_regs)->tranlvl > 0     /* transaction active  */       \
+        && !(_regs)->abortcode      /* not already aborted */       \
+      )                                                             \
+        (_regs)->abortcode = ABORT_CODE_MISC;                       \
+    } while (0)
+
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+
+/*---------------------------------------------------------------------
+ *                    Instruction decoders
+ *---------------------------------------------------------------------
  * A decoder is placed at the start of each instruction. The purpose
  * of a decoder is to extract the operand fields according to the
  * instruction format; to increment the instruction address (IA) field
@@ -1053,7 +1204,8 @@ do { \
  * The "_B" versions for some of the decoders are intended for
  * "branch" type operations where updating the PSW IA to IA+ILC
  * should only be done after the branch is deemed impossible.
- */
+ *-------------------------------------------------------------------*/
+
 #undef DECODER_TEST_RRE
 #define DECODER_TEST_RRF_R
 #define DECODER_TEST_RRF_M

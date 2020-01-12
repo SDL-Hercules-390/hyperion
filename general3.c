@@ -329,7 +329,7 @@ int     cc;                             /* Comparison result         */
    /* restricted when in constrained transaction  */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -364,7 +364,7 @@ int     cc;                             /* Comparison result         */
    /* restricted when in constrained transaction  */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -401,7 +401,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -438,7 +438,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
@@ -470,7 +470,7 @@ int     cc;                             /* Comparison result         */
    /* transaction mode.                             */
    /*-----------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -505,7 +505,7 @@ int     cc;                             /* Comparison result         */
    /* transaction mode.                             */
    /*-----------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
@@ -675,7 +675,7 @@ BYTE    i2;                             /* Immediate value           */
    /* transaction mode.                             */
    /*-----------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -711,7 +711,7 @@ BYTE    i2;                             /* Immediate value           */
    /* transaction mode.                             */
    /*-----------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -748,7 +748,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare signed operands and set comparison result */
@@ -786,7 +786,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
@@ -843,7 +843,7 @@ U16     i2;                             /* 16-bit immediate value    */
 
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S16)i2 ? 1 :
@@ -878,7 +878,7 @@ int     cc;                             /* Comparison result         */
    /* restricted when in constrained transaction  */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare unsigned operands and set comparison result */
@@ -913,7 +913,7 @@ int     cc;                             /* Comparison result         */
    /* restricted when in constrained transaction  */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare unsigned operands and set comparison result */
@@ -950,7 +950,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
@@ -986,7 +986,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
@@ -1073,7 +1073,7 @@ BYTE    i2;                             /* Immediate value           */
    /* restricted when in constrained transaction  */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare unsigned operands and set comparison result */
@@ -1109,7 +1109,7 @@ BYTE    i2;                             /* Immediate value           */
    /* in constrained transaction mode.               */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compare unsigned operands and set comparison result */
@@ -1147,7 +1147,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < i2 ? 1 :
@@ -1184,7 +1184,7 @@ int     cc;                             /* Comparison result         */
    /*-----------------------------------------------*/
    if (regs->contran &&
      (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < i2 ? 1 :
@@ -1540,7 +1540,7 @@ int     ai, li, ti;                     /* Operand address subfields */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Address bit 63 contains the Type Indication (TI) */
     ti = effective_addr2 & 0x1;
@@ -2012,7 +2012,7 @@ VADR    addr2;                          /* Relative operand address  */
    /* in constrained transaction mode.    */
    /*-------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* The Prefetch Data instruction acts as a no-op */
@@ -2430,7 +2430,7 @@ S32     i2;                             /* 32-bit operand value      */
    /* restricted when in constrained transaction  */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -2999,7 +2999,7 @@ DEF_INST(load_and_add)                                          /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 
@@ -3021,7 +3021,7 @@ DEF_INST(load_and_add_long)                                     /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 
@@ -3043,7 +3043,7 @@ DEF_INST(load_and_add_logical)                                  /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_add_logical) */
@@ -3060,7 +3060,7 @@ DEF_INST(load_and_add_logical_long)                             /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_add_logical_long) */
@@ -3077,7 +3077,7 @@ DEF_INST(load_and_and)                                          /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_and) */
@@ -3094,7 +3094,7 @@ DEF_INST(load_and_and_long)                                     /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_and_long) */
@@ -3111,7 +3111,7 @@ DEF_INST(load_and_exclusive_or)                                 /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or) */
@@ -3128,7 +3128,7 @@ DEF_INST(load_and_exclusive_or_long)                            /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or_long) */
@@ -3145,7 +3145,7 @@ DEF_INST(load_and_or)                                           /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_or) */
@@ -3162,7 +3162,7 @@ DEF_INST(load_and_or_long)                                      /*810*/
    /* transaction mode.                              */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_or_long) */
@@ -3188,7 +3188,7 @@ U32     w1, w2;                         /* Refetched values          */
    /* in constrained transaction mode.               */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r3, regs);
 
@@ -3232,7 +3232,7 @@ U64     w1, w2;                         /* Refetched values          */
    /* in constrained transaction mode.               */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r3, regs);
 
@@ -4149,7 +4149,7 @@ int     m1;                             /* Mask value                */
    /* execution mode.                               */
    /*-----------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Depending on the model, the CPU may not implement
@@ -4176,7 +4176,7 @@ int     m1;                             /* Mask value                */
    /* execution mode.                               */
    /*-----------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that

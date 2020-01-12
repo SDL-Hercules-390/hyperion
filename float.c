@@ -3222,8 +3222,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3254,8 +3254,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3287,8 +3287,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3323,8 +3323,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3360,8 +3360,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -3406,8 +3406,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPREG_CHECK(r1, regs);
@@ -3456,8 +3456,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3498,8 +3498,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPODD_CHECK(r1, regs);
@@ -3538,8 +3538,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3567,8 +3567,8 @@ LONG_FLOAT cmp_fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -3599,8 +3599,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3648,8 +3648,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3700,8 +3700,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3742,8 +3742,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3783,8 +3783,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3832,8 +3832,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3881,8 +3881,8 @@ int     i1;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3910,8 +3910,8 @@ int     i1;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3940,8 +3940,8 @@ int     i1;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -3973,8 +3973,8 @@ int     i1;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4007,8 +4007,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -4054,8 +4054,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -4104,8 +4104,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4150,8 +4150,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4195,8 +4195,8 @@ int     r1, r2;                         /* Values of R fields        */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -4221,8 +4221,8 @@ SHORT_FLOAT cmp_fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -4253,8 +4253,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4302,8 +4302,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4356,8 +4356,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4397,8 +4397,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4438,8 +4438,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4487,8 +4487,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -4539,8 +4539,8 @@ U64     dreg;                           /* Double word workarea      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4573,8 +4573,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4614,8 +4614,8 @@ U64     dreg;                           /* Double word workarea      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4647,8 +4647,8 @@ LONG_FLOAT cmp_fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -4681,8 +4681,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4732,8 +4732,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4786,8 +4786,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4830,8 +4830,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4873,8 +4873,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4924,8 +4924,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -4974,8 +4974,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -5000,8 +5000,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -5028,8 +5028,8 @@ SHORT_FLOAT cmp_fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -5062,8 +5062,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -5113,8 +5113,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -5169,8 +5169,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -5212,8 +5212,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -5255,8 +5255,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -5306,8 +5306,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -5358,8 +5358,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5398,8 +5398,8 @@ LONG_FLOAT fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -5430,8 +5430,8 @@ SHORT_FLOAT fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -5463,8 +5463,8 @@ int     i1;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5492,8 +5492,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPODD_CHECK(r1, regs);
@@ -5536,8 +5536,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPODD_CHECK(r1, regs);
@@ -5584,8 +5584,8 @@ U64     msj, lsj;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
 
@@ -5701,8 +5701,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5740,8 +5740,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5790,8 +5790,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5842,8 +5842,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5893,8 +5893,8 @@ int     i1, i2;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -5946,8 +5946,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPREG_CHECK(r1, regs);
@@ -5997,8 +5997,8 @@ BYTE    shift;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -6056,8 +6056,8 @@ BYTE    shift;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD2_CHECK(r1, r2, regs);
 
@@ -6239,8 +6239,8 @@ SHORT_FLOAT fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -6283,8 +6283,8 @@ LONG_FLOAT fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
@@ -6329,8 +6329,8 @@ S64     fix;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -6381,8 +6381,8 @@ S64     fix;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -6432,8 +6432,8 @@ S64     fix;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -6487,8 +6487,8 @@ U64     fix;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -6543,8 +6543,8 @@ U64     fix;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -6600,8 +6600,8 @@ U64     fix;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -6653,8 +6653,8 @@ U32     lsfract;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPM_CHECK(m3, regs);
     HFPREG_CHECK(r2, regs);
@@ -6796,8 +6796,8 @@ U64     lsfract;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPM_CHECK(m3, regs);
     HFPREG_CHECK(r2, regs);
@@ -6938,8 +6938,8 @@ U64     lsfract;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPM_CHECK(m3, regs);
     HFPODD_CHECK(r2, regs);
@@ -7085,8 +7085,8 @@ U32     lsfract;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPM_CHECK(m3, regs);
     HFPREG_CHECK(r2, regs);
@@ -7236,8 +7236,8 @@ U64     lsfract;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPM_CHECK(m3, regs);
     HFPREG_CHECK(r2, regs);
@@ -7385,8 +7385,8 @@ U64     lsfract;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPM_CHECK(m3, regs);
     HFPODD_CHECK(r2, regs);
@@ -7534,8 +7534,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7567,8 +7567,8 @@ U64     wkd;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7613,8 +7613,8 @@ U32     wk;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7661,8 +7661,8 @@ SHORT_FLOAT fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -7695,8 +7695,8 @@ LONG_FLOAT fl;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -7731,8 +7731,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7771,8 +7771,8 @@ int     i1, i2;                         /* Index into fpr array      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPODD2_CHECK(r1, r2, regs);
@@ -7803,8 +7803,8 @@ int     i1;                             /* Index of R1 in fpr array  */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7830,8 +7830,8 @@ int     i1;                             /* Index of R1 in fpr array  */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7858,8 +7858,8 @@ int     i1;                             /* Index of R1 in fpr array  */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     HFPODD_CHECK(r1, regs);
@@ -7893,8 +7893,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -7939,8 +7939,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -7988,8 +7988,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -8034,8 +8034,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
@@ -8085,8 +8085,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -8132,8 +8132,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -8182,8 +8182,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -8229,8 +8229,8 @@ int     pgm_check;
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -8284,8 +8284,8 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -8327,8 +8327,8 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
@@ -8365,8 +8365,8 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
@@ -8409,8 +8409,8 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     HFPREG2_CHECK(r2, r3, regs);
@@ -8448,8 +8448,8 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
@@ -8491,8 +8491,8 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     HFPREG2_CHECK(r2, r3, regs);
@@ -8532,8 +8532,8 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -8577,8 +8577,8 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
 
@@ -8616,8 +8616,8 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     /* Either the low- or high-numbered register of a pair is valid */
@@ -8661,8 +8661,8 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPODD_CHECK(r1, regs);
     HFPREG_CHECK(r3, regs);
@@ -8702,8 +8702,8 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
     i1 = FPR2I(r1);
@@ -8746,8 +8746,8 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG2_CHECK(r1, r3, regs);
 
@@ -8783,8 +8783,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -8811,8 +8811,8 @@ U64     dreg;                           /* Double word workarea      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -8842,8 +8842,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
 
@@ -8870,8 +8870,8 @@ U64     dreg;                           /* Double word workarea      */
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);

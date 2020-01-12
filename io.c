@@ -78,7 +78,7 @@ DEVBLK* dev;                            /* -> device block           */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK( regs );
@@ -143,7 +143,7 @@ DEVBLK* dev;                            /* -> device block           */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK( regs );
 
@@ -206,7 +206,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK( regs );
@@ -370,7 +370,7 @@ BYTE    chpid;
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -410,7 +410,7 @@ DEVBLK* dev;                            /* -> device block           */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK( regs );
 
@@ -473,7 +473,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -504,7 +504,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -595,7 +595,7 @@ ORB     orb;                            /* Operation request block   */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK( regs );
 
@@ -721,7 +721,7 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -783,7 +783,7 @@ U32     crw;                            /* Channel Report Word       */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PTIO(IO,"STCRW");
 
@@ -831,7 +831,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK( regs );
 
@@ -909,7 +909,7 @@ RADR    pfx;                            /* Prefix                    */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK(regs);
 
@@ -1025,7 +1025,7 @@ int     cc;                             /* Condition Code            */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK( regs );
 
@@ -1106,7 +1106,7 @@ DEVBLK* dev;                            /* -> device block           */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK( regs );
 
@@ -1182,7 +1182,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=suspend   */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined(FEATURE_ECPSVM)
     if((inst[1])!=0x02)
@@ -1272,7 +1272,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK(regs);
 
@@ -1321,7 +1321,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -1367,7 +1367,7 @@ U16     tch_ctl;
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK(regs);
 
@@ -1414,7 +1414,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK(regs);
 
@@ -1449,7 +1449,7 @@ int     i;
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK(regs);
 
@@ -1523,7 +1523,7 @@ int     i;
     /* transaction execution mode.             */
     /*-----------------------------------------*/
     if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     PRIV_CHECK(regs);
 

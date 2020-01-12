@@ -715,7 +715,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load operands into work areas */
@@ -798,7 +798,7 @@ int     rc;                             /* Return code               */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load operands into work areas */
@@ -867,7 +867,7 @@ int     signq, signr;                   /* Sign of quotient/remainder*/
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Program check if the second operand length exceeds 15 digits
@@ -949,7 +949,7 @@ BYTE    rbyte;                          /* Result byte               */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* If addr1 crosses page, make sure both pages are accessible */
@@ -1140,7 +1140,7 @@ int     carry;                          /* Carry indicator           */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Program check if the second operand length exceeds 15 digits
@@ -1219,7 +1219,7 @@ int     carry;                          /* Carry indicator           */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Load operand into work area */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec, &count, &sign);
@@ -1322,7 +1322,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load operands into work areas */
@@ -1404,7 +1404,7 @@ int     sign;                           /* Sign                      */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load second operand into work area */
@@ -1455,7 +1455,7 @@ BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
    /*  if a constrained transaction is active.                 */
    /*----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Fetch the packed decimal operand into the work area */

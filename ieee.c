@@ -988,8 +988,8 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     //logmsg("THDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
@@ -1022,8 +1022,8 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
@@ -1059,8 +1059,8 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
@@ -1091,8 +1091,8 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
@@ -1126,8 +1126,8 @@ DEF_INST(add_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair                       */
@@ -1168,8 +1168,8 @@ DEF_INST(add_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -1209,8 +1209,8 @@ DEF_INST(add_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
@@ -1251,8 +1251,8 @@ DEF_INST(add_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -1294,8 +1294,8 @@ DEF_INST(add_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
@@ -1335,8 +1335,8 @@ DEF_INST(compare_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -1368,8 +1368,8 @@ DEF_INST(compare_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -1400,8 +1400,8 @@ DEF_INST(compare_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&      /*  in transaction mode              */
      (regs->contran ||  /* constrained      */
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
@@ -1431,8 +1431,8 @@ DEF_INST(compare_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -1462,8 +1462,8 @@ DEF_INST(compare_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
@@ -1493,8 +1493,8 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -1524,8 +1524,8 @@ DEF_INST(compare_and_signal_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -1555,8 +1555,8 @@ DEF_INST(compare_and_signal_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
@@ -1586,8 +1586,8 @@ DEF_INST(compare_and_signal_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -1617,8 +1617,8 @@ DEF_INST(compare_and_signal_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
@@ -1671,8 +1671,8 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -1715,8 +1715,8 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -1761,8 +1761,8 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -1809,8 +1809,8 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -1858,8 +1858,8 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -1910,8 +1910,8 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -1991,8 +1991,8 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2067,8 +2067,8 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2142,8 +2142,8 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2218,8 +2218,8 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2296,8 +2296,8 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2373,8 +2373,8 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2460,8 +2460,8 @@ DEF_INST(convert_u32_to_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2499,8 +2499,8 @@ DEF_INST(convert_u32_to_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
@@ -2539,8 +2539,8 @@ DEF_INST(convert_u32_to_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
@@ -2578,8 +2578,8 @@ DEF_INST(convert_u64_to_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -2619,8 +2619,8 @@ DEF_INST(convert_u64_to_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
@@ -2663,8 +2663,8 @@ DEF_INST(convert_u64_to_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
@@ -2727,8 +2727,8 @@ DEF_INST(convert_bfp_ext_to_u32_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
@@ -2786,8 +2786,8 @@ DEF_INST(convert_bfp_long_to_u32_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2845,8 +2845,8 @@ DEF_INST(convert_bfp_short_to_u32_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -2903,8 +2903,8 @@ DEF_INST(convert_bfp_ext_to_u64_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
@@ -2962,8 +2962,8 @@ DEF_INST(convert_bfp_long_to_u64_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -3019,8 +3019,8 @@ DEF_INST(convert_bfp_short_to_u64_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -3074,8 +3074,8 @@ DEF_INST(divide_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3117,8 +3117,8 @@ DEF_INST(divide_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -3160,8 +3160,8 @@ DEF_INST(divide_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
@@ -3203,8 +3203,8 @@ DEF_INST(divide_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -3245,8 +3245,8 @@ DEF_INST(divide_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
@@ -3287,8 +3287,8 @@ DEF_INST(load_and_test_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3326,8 +3326,8 @@ DEF_INST(load_and_test_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op, r2, regs );
@@ -3364,8 +3364,8 @@ DEF_INST(load_and_test_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op, r2, regs );
@@ -3409,8 +3409,8 @@ DEF_INST(load_fp_int_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -3454,8 +3454,8 @@ DEF_INST(load_fp_int_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -3499,8 +3499,8 @@ DEF_INST(load_fp_int_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -3552,8 +3552,8 @@ DEF_INST(load_lengthened_bfp_short_to_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op2, r2, regs );
@@ -3588,8 +3588,8 @@ DEF_INST(load_lengthened_bfp_short_to_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -3622,8 +3622,8 @@ DEF_INST(load_lengthened_bfp_long_to_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -3658,8 +3658,8 @@ DEF_INST(load_lengthened_bfp_long_to_ext)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -3693,8 +3693,8 @@ DEF_INST(load_lengthened_bfp_short_to_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -3729,8 +3729,8 @@ DEF_INST(load_lengthened_bfp_short_to_ext)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -3763,8 +3763,8 @@ DEF_INST(load_negative_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3789,8 +3789,8 @@ DEF_INST(load_negative_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -3814,8 +3814,8 @@ DEF_INST(load_negative_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -3839,8 +3839,8 @@ DEF_INST(load_complement_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3865,8 +3865,8 @@ DEF_INST(load_complement_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -3890,8 +3890,8 @@ DEF_INST(load_complement_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -3915,8 +3915,8 @@ DEF_INST(load_positive_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3941,8 +3941,8 @@ DEF_INST(load_positive_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -3966,8 +3966,8 @@ DEF_INST(load_positive_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -4016,8 +4016,8 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op2, r2, regs );
@@ -4075,8 +4075,8 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -4136,8 +4136,8 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -4194,8 +4194,8 @@ DEF_INST(multiply_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -4239,8 +4239,8 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -4298,8 +4298,8 @@ DEF_INST(multiply_bfp_long_to_ext)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -4351,8 +4351,8 @@ DEF_INST(multiply_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -4392,8 +4392,8 @@ DEF_INST(multiply_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
@@ -4437,8 +4437,8 @@ DEF_INST(multiply_bfp_short_to_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -4495,8 +4495,8 @@ DEF_INST(multiply_bfp_short_to_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
@@ -4549,8 +4549,8 @@ DEF_INST(multiply_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -4589,8 +4589,8 @@ DEF_INST(multiply_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
@@ -4630,8 +4630,8 @@ DEF_INST(multiply_add_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4671,8 +4671,8 @@ DEF_INST(multiply_add_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -4712,8 +4712,8 @@ DEF_INST(multiply_add_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4753,8 +4753,8 @@ DEF_INST(multiply_add_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4794,8 +4794,8 @@ DEF_INST(multiply_subtract_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4839,8 +4839,8 @@ DEF_INST(multiply_subtract_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4884,8 +4884,8 @@ DEF_INST(multiply_subtract_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4930,8 +4930,8 @@ DEF_INST(multiply_subtract_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4974,8 +4974,8 @@ DEF_INST(squareroot_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -5012,8 +5012,8 @@ DEF_INST(squareroot_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op2, r2, regs );
@@ -5050,8 +5050,8 @@ DEF_INST(squareroot_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -5087,8 +5087,8 @@ DEF_INST(squareroot_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op2, r2, regs );
@@ -5125,8 +5125,8 @@ DEF_INST(squareroot_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -5164,8 +5164,8 @@ DEF_INST(subtract_bfp_ext_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair for extended format   */
@@ -5209,8 +5209,8 @@ DEF_INST(subtract_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT64_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
@@ -5251,8 +5251,8 @@ DEF_INST(subtract_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT64_OP(op1, r1, regs);                          /* Get register operand value                           */
@@ -5294,8 +5294,8 @@ DEF_INST(subtract_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT32_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
@@ -5337,8 +5337,8 @@ DEF_INST(subtract_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT32_OP(op1, r1, regs);                          /* Get register operand value                           */
@@ -5382,8 +5382,8 @@ DEF_INST(test_data_class_bfp_short)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -5408,8 +5408,8 @@ DEF_INST(test_data_class_bfp_long)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -5434,8 +5434,8 @@ DEF_INST(test_data_class_bfp_ext)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -5480,8 +5480,8 @@ DEF_INST(divide_integer_bfp_long_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
@@ -5687,8 +5687,8 @@ DEF_INST(divide_integer_bfp_short_reg)
   /*  the float control bit is zero.                                  */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */

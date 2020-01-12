@@ -104,7 +104,7 @@ int     rc;
       if (regs->hostregs->tranlvl > 0)
       {
         regs->psw.cc = 2;
-        ARCH_DEP(abort_transaction)(regs, 0, 2);
+        ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_EXT);
       }
 #endif
         /* Store current PSW at PSA+X'18' */

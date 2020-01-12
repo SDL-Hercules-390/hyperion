@@ -55,6 +55,33 @@
 #else
   #error MAX_CPU_ENGINES cannot exceed 128
 #endif
+
+/*-------------------------------------------------------------------*/
+/*          Transactional-Execution Facility constants               */
+/*-------------------------------------------------------------------*/
+#define  MAX_TXF_LEVEL           15   /* Maximum nesting depth       */
+#define  MAX_TXF_PAGES           64   /* Max num of modified pages   */
+#define  MAX_TXF_NTSTG          128   /* Max nontransactional stores */
+#define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
+
+#define  ZCACHE_PAGE_SIZE      4096   /* IBM z page size             */
+#define  ZCACHE_LINE_SIZE       256   /* IBM z cache line size       */
+#define  ZCACHE_LINE_SHIFT        8   /* Cache line size shift value */
+
+#define  ZCACHE_LINE_PAGE  (ZCACHE_PAGE_SIZE/ZCACHE_LINE_SIZE) /* Cache lines per 4K page */
+#define  ZCACHE_LINE_MASK  (ZCACHE_LINE_SIZE-1)                /* Cache line mask         */
+
+/*-------------------------------------------------------------------*/
+/*          abort_transaction function 'retry' code                  */
+/*-------------------------------------------------------------------*/
+#define  ABORT_RETRY_RETURN       0   /* Return to caller. Used when */
+                                      /* abort called from e.g. ext
+                                         or I/O interrupt processing */
+#define  ABORT_RETRY_CC           1   /* Set condition code and then */
+                                      /* longjmp to progjmp.         */
+#define  ABORT_RETRY_PGMCHK       2   /* PGMCHK if CONSTRAINED mode, */
+                                      /* else longjmp to progjmp.    */
+
 /*---------------------------------------------------------------------------*/
 /*               Non transactional store table                               */
 /*      The non-transactional store table is used to track non-transactional */
@@ -65,6 +92,9 @@ struct NTRANTBL {
       int   arn;                       /* access register value              */
       BYTE  skey;                      /* storage key in use                 */
       BYTE  amodebits;                 /* amode bit settings                 */
+#define AMODE_64    3           /* 64-bit: psw.amode64==1            */
+#define AMODE_31    1           /* 31-bit: psw.amode64==0, amode==1  */
+#define AMODE_24    0           /* 24-bit: psw.amode64==0, amode==0  */
       BYTE  resv[2];                   /* reserved                           */
       U64   ntran_data;                /* data to store                      */
 };
@@ -75,6 +105,8 @@ struct NTRANTBL {
 struct TDB {
     BYTE       tdbformat;        /* format, 0 = invalid, 1 = valid   */
     BYTE       tdbflags;         /* flags                            */
+#define TDB_CTV     0x80        /* Conflict-Token Validity           */
+#define TDB_CTI     0x40        /* Constrained-Transaction Indicator */
     BYTE       tdbresv1[4];      /* reserved                         */
     U16        tdbnestl;         /* nesting level at abort time      */
     U64        tdbabortcode;     /* transaction abort code           */
@@ -88,6 +120,23 @@ struct TDB {
     U64        tdbbreakeventaddr;   /* breaking event address        */
     U64        tdbresv3[9];      /* reserved                         */
     U64        tdbgpr[16];       /* register array                   */
+#define ABORT_CODE_EXT           2  /* External interruption         */
+#define ABORT_CODE_UPGM          4  /* PGM interruption (Unfiltered) */
+#define ABORT_CODE_MCK           5  /* Machine-check interruption    */
+#define ABORT_CODE_IO            6  /* I/O interruption              */
+#define ABORT_CODE_FETCH_OVF     7  /* Fetch overflow                */
+#define ABORT_CODE_STORE_OVF     8  /* Store overflow                */
+#define ABORT_CODE_FETCH_CNF     9  /* Fetch conflict                */
+#define ABORT_CODE_STORE_CNF    10  /* Store conflict                */
+#define ABORT_CODE_INSTR        11  /* Restricted instruction        */
+#define ABORT_CODE_FPGM         12  /* PGM interruption (Filtered)   */
+#define ABORT_CODE_NESTING      13  /* Nesting depth exceeded        */
+#define ABORT_CODE_FETCH_OTHER  14  /* Cache -- fetch related        */
+#define ABORT_CODE_STORE_OTHER  15  /* Cache -- store related        */
+#define ABORT_CODE_CACHE_OTHER  16  /* Cache -- other                */
+#define ABORT_CODE_GUARDED      19  /* Guarded-storage event related */
+#define ABORT_CODE_MISC        255  /* Miscellaneous condition       */
+#define ABORT_CODE_TABORT      256  /* TABORT instruction            */
 };
 
 /*-------------------------------------------------------------------*/
@@ -97,7 +146,27 @@ struct TPAGEMAP {
    BYTE  *mainpageaddr;     /* address of main page being mapped      */
    BYTE  *altpageaddr;      /* addesss of alternate page              */
    BYTE  cachemap[CACHE_LINE_PAGE];   /* cache line indicators       */
+#define CM_CLEAN    0           /* clean cache line (init default)   */
+#define CM_FETCHED  1           /* cache line was fetched            */
+#define CM_STORED   2           /* cache line was stored into        */
 };
+
+/*-------------------------------------------------------------------*/
+/*               Transaction Abort Condition Codes                   */
+/*-------------------------------------------------------------------*/
+#define ABORT_CC_SUCCESS        0   /* Trans. successfully initiated */
+
+#define ABORT_CC_INDETERMINATE  1   /* Indeterminate condition;
+                                       successful retry unlikely.    */
+
+#define ABORT_CC_TRANSIENT      2   /* Transient condition;
+                                       successful retry likely.      */
+
+#define ABORT_CC_PERSISTENT     3   /* Persistent condition;
+                                       successful retry NOT likely
+                                       under current conditions. If
+                                       conditions change, then retry
+                                       MIGHT be more productive.     */
 
 /*-------------------------------------------------------------------*/
 /*       Structure definition for CPU register context               */
@@ -443,11 +512,31 @@ struct REGS {                           /* Processor registers       */
         U16     traninstctr;            /* instruction counter for contrained and auto abort */
         U16     tranabortnum;           /* if non-zero, abort when this = traninstctr */
         U16     tranprogfiltlvl;        /* transaction filtering mode  */
+#define TXF_PFIC_NONE       0           /* Exception conditions having
+                                           classes 1, 2 or 3 always
+                                           result in an interruption */
+
+#define TXF_PFIC_LIMITED    1           /* Exception conditions having
+                                           classes 1 or 2 result in an
+                                           interruption; conditions
+                                           having class 3 do not result
+                                           in an interruption.       */
+
+#define TXF_PFIC_MODERATE   2           /* Only exception conditions
+                                           having class 1 result in an
+                                           interruption; conditions
+                                           having classes 2 or 3 do not
+                                           result in an interruption */
+
+#define TXF_PFIC_RESERVED   3           /* Reserved (invalid)        */
         U16     tranhigharchange;       /* highest level that archange is active */
         U16     tranhighfloat;          /* highest level that float is active */
         U16     tranprogfilttab[15];    /* table for nesting levels */
-#define TRAN_MODE_ARCHANGE  0x08        /* ar reg changes allowed in transaction mode */
-#define TRAN_MODE_FLOAT     0x04        /* float and vector allowed in transaction mode */
+#define TXF_CTL_AR      0x08            /* ar reg changes allowed
+                                           in transaction mode       */
+#define TXF_CTL_FLOAT   0x04            /* float and vector allowed
+                                           in transaction mode       */
+#define TXF_CTL_PIFC    0x03            /* float and vector allowed  */
         U32     tranpiid;               /* transaction program interrupt ident */
         U64    conflictaddr;            /* address where conflict detected */
         TPAGEMAP tpagemap[MAX_TRAN_PAGES];  /* address of the page map   */

@@ -131,7 +131,7 @@ int     cc = 0;                         /* Condition code            */
    /* in constrained transaction mode.               */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ITIMER_SYNC( addr1, len, regs );
     ITIMER_SYNC( addr2, len, regs );
@@ -299,7 +299,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
    /* in constrained transaction mode.               */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -371,7 +371,7 @@ VADR    effective_addr2,
    /* transaction execution mode.                    */
    /*------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     if(regs->GR_L(0) & PLO_GPR0_RESV)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -564,7 +564,7 @@ BYTE    termchar;                       /* Terminating character     */
    /* transaction execution mode.                      */
    /*--------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -590,14 +590,14 @@ BYTE    termchar;                       /* Terminating character     */
 
         while (cpu_length)
         {
-					/* We need to check the boundary condition before attempting to access
-		 storage, because of the boundary condition is met, there is no further
-		 need to access storage. */
-					if (addr2 == addr1)
-					{
-						regs->psw.cc = 2;
-						return;
-					}
+                    /* We need to check the boundary condition before attempting to access
+         storage, because of the boundary condition is met, there is no further
+         need to access storage. */
+                    if (addr2 == addr1)
+                    {
+                        regs->psw.cc = 2;
+                        return;
+                    }
             main2 = MADDRL(addr2, cpu_length, r2, regs, ACCTYPE_READ, regs->psw.pkey );
             for (i=0; i < dist; i++)
             {
@@ -641,14 +641,14 @@ BYTE    termchar;                       /* Terminating character     */
        extend the CPU determined length out to the end of the page */
     cpu_length = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
 
-		/* We need to check the boundary condition before attempting to access
-		 storage, because of the boundary condition is met, there is no further
-		 need to access storage. */
-		if (addr2 == addr1)
-		{
-			regs->psw.cc = 2;
-			return;
-		}
+        /* We need to check the boundary condition before attempting to access
+         storage, because of the boundary condition is met, there is no further
+         need to access storage. */
+        if (addr2 == addr1)
+        {
+            regs->psw.cc = 2;
+            return;
+        }
     main2 = MADDRL(addr2, cpu_length, r2, regs, ACCTYPE_READ, regs->psw.pkey );
     for (i=0; i < cpu_length; i++)
     {
@@ -704,8 +704,8 @@ int     r1, r2;                         /* Values of R fields        */
    /* change flag is off at transaction start.   */
    /*--------------------------------------------*/
    if (regs->tranlvl > 0 &&
-     (regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     (regs->tranctlflag & TXF_CTL_AR) == 0x00)
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Copy R2 general register to R1 access register */
     regs->AR(r1) = regs->GR_L(r2);
@@ -1016,8 +1016,8 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
    /* change flag is off at transaction start.     */
    /*----------------------------------------------*/
    if (regs->tranlvl > 0 &&
-     (regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     (regs->tranctlflag & TXF_CTL_AR) == 0x00)
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     FW_CHECK( effective_addr2, regs );
 
@@ -1117,7 +1117,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
    /*  transaction mode.                         */
    /*--------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( _FEATURE_SIE )
 
@@ -1182,7 +1182,7 @@ ETOD    ETOD;                           /* Extended clock work area  */
    /*  in constrained transaction mode.          */
    /*--------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, STCK))
@@ -1508,7 +1508,7 @@ int     rc;                             /* Return code               */
    /* execution mode.                              */
    /*----------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( FEATURE_ECPSVM )
     if(ecpsvm_dosvc(regs,i)==0)
@@ -1770,7 +1770,7 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
    /* in constrained transaction mode                        */
    /*--------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Get destination pointer */
     dest = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -1856,7 +1856,7 @@ bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
    /* in constrained transaction mode                        */
    /*--------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Copy operand-1 data to work area if within same page */
     if (!(op1crosses = CROSSPAGE( addr1, len )))
@@ -1957,7 +1957,7 @@ BYTE    trtab[256];                     /* Translate table           */
    /* transaction mode.                                      */
    /*--------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -2042,7 +2042,7 @@ BYTE    lbyte;                          /* Left result byte of pair  */
    /* in constrained transaction mode                        */
    /*--------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -2118,7 +2118,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
    /* transaction mode.                         */
    /*-------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     UNREFERENCED(inst);
 
@@ -2283,7 +2283,7 @@ DEF_INST(convert_utf8_to_utf32)
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2536,7 +2536,7 @@ DEF_INST(convert_utf16_to_utf32)
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2653,7 +2653,7 @@ DEF_INST(convert_utf32_to_utf8)
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2799,7 +2799,7 @@ DEF_INST(convert_utf32_to_utf16)
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2899,7 +2899,7 @@ DEF_INST(search_string_unicode)
    /* constrained transaction mode.                */
    /*----------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   /* Program check if bits 0-15 of register 0 not zero */
   if(regs->GR_L(0) & 0xFFFF0000)
@@ -2970,7 +2970,7 @@ DEF_INST(translate_and_test_reverse)
    /* in constrained transaction mode.               */
    /*------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   /* Process first operand from right to left*/
   for(i = 0; i <= l; i++)
@@ -3050,7 +3050,7 @@ DEF_INST(translate_and_test_extended)
    /* in constrained transaction mode.          */
    /*-------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   a_bit = ((m3 & 0x08) ? 1 : 0);
   f_bit = ((m3 & 0x04) ? 1 : 0);
@@ -3152,7 +3152,7 @@ DEF_INST(translate_and_test_reverse_extended)
    /* restricted in constrained transaction mode. */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   a_bit = ((m3 & 0x08) ? 1 : 0);
   f_bit = ((m3 & 0x04) ? 1 : 0);

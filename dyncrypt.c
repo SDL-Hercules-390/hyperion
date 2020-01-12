@@ -4009,7 +4009,7 @@ DEF_INST(dyn_compute_intermediate_message_digest)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KIMD_DEBUG
   WRMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
@@ -4120,7 +4120,7 @@ DEF_INST(dyn_compute_last_message_digest)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KLMD_DEBUG
   WRMSG(HHC90100, "D", "KLMD: compute last message digest");
@@ -4219,7 +4219,7 @@ DEF_INST(dyn_cipher_message)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KM_DEBUG
   WRMSG(HHC90100, "D", "KM: cipher message");
@@ -4361,7 +4361,7 @@ DEF_INST(dyn_compute_message_authentication_code)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KMAC_DEBUG
   WRMSG(HHC90100, "D", "KMAC: compute message authentication code");
@@ -4468,7 +4468,7 @@ DEF_INST(dyn_cipher_message_with_chaining)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KMC_DEBUG
   WRMSG(HHC90100, "D", "KMC: cipher message with chaining");
@@ -4610,7 +4610,7 @@ DEF_INST(dyn_cipher_message_with_counter)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KMCTR_DEBUG
   WRMSG(HHC90100, "D", "KMCTR: cipher message with counter");
@@ -4708,7 +4708,7 @@ DEF_INST(dyn_cipher_message_with_cipher_feedback)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
 #ifdef OPTION_KMF_DEBUG
@@ -4809,7 +4809,7 @@ DEF_INST(dyn_cipher_message_with_output_feedback)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #ifdef OPTION_KMO_DEBUG
   WRMSG(HHC90100, "D", "KMO: cipher message with output feedback");
@@ -4893,7 +4893,7 @@ DEF_INST(dyn_perform_cryptographic_computation)
   /* transaction mode.                              */
   /*------------------------------------------------*/
   if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, 2, 11);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
   UNREFERENCED(inst);              /* This operation has no operands */
 

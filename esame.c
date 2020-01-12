@@ -57,8 +57,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -91,8 +91,8 @@ U32     tmp_fpc;
   /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -129,8 +129,8 @@ int     r1, unused;                     /* Values of R fields        */
   /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     BFPINST_CHECK(regs);
 
@@ -163,8 +163,8 @@ int     r1, unused;                     /* Values of R fields        */
   /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -196,8 +196,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -235,8 +235,8 @@ VADR    effective_addr2;                /* Effective address         */
   /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
      (regs->contran ||
-     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ((regs->tranctlflag & TXF_CTL_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     BFPINST_CHECK(regs);
@@ -272,7 +272,7 @@ DEF_INST(trap2)
   /*  in transaction mode (tranlvl > 0)                              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     UNREFERENCED(inst);
@@ -299,7 +299,7 @@ VADR    effective_addr2;                /* Effective address         */
   /*  in transaction mode (tranlvl > 0)                              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ARCH_DEP(trap_x) (1, regs, effective_addr2);
@@ -348,7 +348,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
   /*  abort if in transaction mode (tranlvl > 0)                     */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Determine the address of the parameter list */
@@ -632,7 +632,7 @@ U32     op;                             /* Operand                   */
   /*  in transaction mode (tranlvl > 0)                              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -686,7 +686,7 @@ BYTE    dec[16];                        /* Packed decimal operand    */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Fetch 16-byte packed decimal operand */
     ARCH_DEP(vfetchc) ( dec, 16-1, effective_addr2, b2, regs );
@@ -732,7 +732,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Load signed value of register */
     bin = (S64)(regs->GR_G(r1));
@@ -874,7 +874,7 @@ U64     n;
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -914,7 +914,7 @@ U64     d, r, q;
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -1089,7 +1089,7 @@ U64     new;                            /* new value                 */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -1185,7 +1185,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     SIE_XC_INTERCEPT(regs);
@@ -1317,7 +1317,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     SIE_XC_INTERCEPT(regs);
@@ -1564,7 +1564,7 @@ U64     n;                              /* 64-bit operand values     */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -1602,7 +1602,7 @@ U32     n;                              /* 64-bit operand values     */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -1733,7 +1733,7 @@ ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK( r1, regs );
 
@@ -1778,7 +1778,7 @@ ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK( r1, regs );
 
@@ -1824,7 +1824,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
     if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     SIE_XC_INTERCEPT(regs);
@@ -1856,7 +1856,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
 #if defined( _FEATURE_ZSIE )
@@ -1903,7 +1903,7 @@ int     r1, unused;                     /* Value of R field          */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -2266,7 +2266,7 @@ DEF_INST(branch_relative_on_condition_long)
   /*---------------------------------------------------------------------*/
     if (regs->contran &&
       ((inst[1] & 0xf0) == 0x00 || (inst[2] & 0x80)))
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
@@ -2296,7 +2296,7 @@ U32     i2;                             /* 32-bit operand values     */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if(regs->psw.amode64)
@@ -2375,7 +2375,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     /*   and m3 (r3) is zero.                          */
     /*-------------------------------------------------*/
     if (regs->tranlvl > 0 && (r1 == 6 || r1 == 7) && r3 == 0)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     switch (r3) {
@@ -2432,7 +2432,7 @@ U64     gr0, gr1;                       /* Result register workareas */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC3, SPT))
@@ -2562,7 +2562,7 @@ S64     i,j;                            /* Integer workareas         */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load the increment value from the R3 register */
@@ -2602,7 +2602,7 @@ S64     i,j;                            /* Integer workareas         */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2642,7 +2642,7 @@ S64     i, j;                           /* Integer work areas        */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2682,7 +2682,7 @@ S64     i, j;                           /* Integer work areas        */
   /*  mode, so the transaction is aborted in that case.              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load the increment value from the R3 register */
@@ -2726,7 +2726,7 @@ U64     new;                            /* new value                 */
   /*  mode, the transaction is aborted.                              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     DW_CHECK(effective_addr2, regs);
 
@@ -2793,7 +2793,7 @@ U64     newhi, newlo;                   /* new value                 */
   /*  mode, the transaction is aborted.                              */
   /*-----------------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD2_CHECK( r1, r3, regs );
 
@@ -2862,7 +2862,7 @@ VADR    effective_addr2;                /* Effective address         */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
@@ -2891,7 +2891,7 @@ VADR    newia;                          /* New instruction address   */
    /* This instruction is restricted in constrained transaction */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compute the branch address from the R2 operand */
@@ -3573,7 +3573,7 @@ U16     i2;                             /* 16-bit operand values     */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -4292,7 +4292,7 @@ U32     rwork1[16], rwork2[16];         /* Intermediate work areas   */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     n = ((r3 - r1) & 0xF) + 1;
@@ -4510,7 +4510,7 @@ U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK( regs );
@@ -4569,7 +4569,7 @@ U16     updated = 0;                    /* Updated control regs      */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK( regs );
@@ -4831,7 +4831,7 @@ RADR    n;                              /* Unsigned work             */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -4865,7 +4865,7 @@ RADR    n;                              /* Unsigned work             */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -4905,7 +4905,7 @@ DEF_INST(test_addressing_mode)
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     UNREFERENCED(inst);
@@ -4938,7 +4938,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     UNREFERENCED( inst );
@@ -4984,7 +4984,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     UNREFERENCED( inst );
 
@@ -5024,7 +5024,7 @@ DEF_INST(set_addressing_mode_64)
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     UNREFERENCED(inst);
 
@@ -5104,7 +5104,7 @@ VADR    effective_addr1,
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -5255,7 +5255,7 @@ int     rc;
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -5309,7 +5309,7 @@ int     cc;                             /* Condition code            */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     SIE_XC_INTERCEPT(regs);
@@ -5362,7 +5362,7 @@ DEF_INST(perform_timing_facility_function)
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     SIE_INTERCEPT(regs);
@@ -5432,7 +5432,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PTT_INF("PTF",regs->GR_G(r1),0,regs->psw.IA_L);
@@ -5522,7 +5522,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -5740,7 +5740,7 @@ int     page_offset;                    /* Low order bits of R2      */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK(regs);
@@ -6038,7 +6038,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     PRIV_CHECK( regs );
@@ -6083,7 +6083,7 @@ int     cc;                             /* Condition code            */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
 #if defined(_FEATURE_SIE)
@@ -6307,7 +6307,7 @@ int     i, j;                           /* Array subscripts          */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Program check if operand length (len+1) exceeds 32 bytes */
     if (len > 31)
@@ -6354,7 +6354,7 @@ int     i, j;                           /* Array subscripts          */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Program check if byte count (len+1) exceeds 64 or is odd */
     if (len > 63 || (len & 1) == 0)
@@ -6403,7 +6403,7 @@ int     cc;                             /* Condition code            */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Program check if operand length (len+1) exceeds 32 bytes */
     if (len > 31)
@@ -6463,7 +6463,7 @@ int     cc;                             /* Condition code            */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Program check if byte count (len+1) exceeds 64 or is odd */
     if (len > 63 || (len & 1) == 0)
@@ -6530,7 +6530,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -6633,7 +6633,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD_CHECK(r1, regs);
@@ -6737,7 +6737,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -6845,7 +6845,7 @@ int     tccc;                   /* Test-Character-Comparison Control */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD_CHECK(r1, regs);
@@ -6952,7 +6952,7 @@ int     cpu_length;                     /* cpu determined length     */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD2_CHECK(r1, r3, regs);
@@ -7044,7 +7044,7 @@ int     cpu_length;                     /* cpu determined length     */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD2_CHECK(r1, r3, regs);
@@ -7575,7 +7575,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
@@ -7625,7 +7625,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
@@ -7815,8 +7815,8 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
    /* is aborted.                                               */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
-     (regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     (regs->tranctlflag & TXF_CTL_AR) == 0x00)
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     FW_CHECK( effective_addr2, regs );
@@ -7988,7 +7988,7 @@ VADR    effective_addr2;                /* Effective address         */
    /* mode, so if in that mode, the transaction is aborted.     */
    /*-----------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);

@@ -276,7 +276,7 @@ int     cc = 0;                         /* Condition code            */
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ITIMER_SYNC( addr2, len, regs );
@@ -445,7 +445,7 @@ VADR    newia;                          /* New instruction address   */
     if (regs->tranlvl > 0  &&
       (regs->contran  ||
       (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
@@ -500,7 +500,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -541,7 +541,7 @@ VADR    newia;                          /* New instruction address   */
     if (regs->tranlvl > 0  &&
       (regs->contran  ||
       (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
@@ -594,7 +594,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Save the link information in the R1 register */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -641,7 +641,7 @@ BYTE    *ipsav;                         /* save for ip               */
     if (regs->tranlvl > 0  &&
       (regs->contran  ||
       (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -725,7 +725,7 @@ VADR    newia;                          /* New instruction address   */
     if (regs->tranlvl > 0  &&
       (regs->contran  ||
       (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -791,7 +791,7 @@ DEF_INST(branch_on_condition_register)
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (inst[1] & (0x80 >> regs->psw.cc)))
@@ -850,7 +850,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
@@ -883,7 +883,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
@@ -908,7 +908,7 @@ DEF_INST(nop4)
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 4, 0);
@@ -930,7 +930,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 3)
@@ -958,7 +958,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 2)
@@ -986,7 +986,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc > 1)
@@ -1014,7 +1014,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 1)
@@ -1042,7 +1042,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc & 0x01)
@@ -1070,7 +1070,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc)
@@ -1098,7 +1098,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(!regs->psw.cc)
@@ -1126,7 +1126,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(!(regs->psw.cc & 0x01))
@@ -1155,7 +1155,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     if(regs->psw.cc != 1)
     {
@@ -1182,7 +1182,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc < 2)
@@ -1210,7 +1210,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 2)
@@ -1238,7 +1238,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 3)
@@ -1266,7 +1266,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     RXX0_BC(inst, regs, b2, effective_addr2);
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
@@ -1570,7 +1570,7 @@ U16   i2;                               /* 16-bit operand values     */
    /*-------------------------------------------------*/
     if (regs->contran &&
       ((inst[1] & 0xf0) == 0x00 || inst[2] & 0x80))
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
@@ -1600,7 +1600,7 @@ VADR    newia;                          /* New instruction address   */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Compute the branch address from the R2 operand */
@@ -1633,7 +1633,7 @@ VADR    effective_addr2;                /* Effective address         */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -1663,7 +1663,7 @@ S32     i, j;                           /* Integer work areas        */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load the increment value from the R3 register */
@@ -1702,7 +1702,7 @@ S32     i, j;                           /* Integer work areas        */
    /*  mode.  If in that mode, abort the transaction. */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load the increment value from the R3 register */
@@ -1741,7 +1741,7 @@ U16     i2;                             /* 16-bit operand values     */
    /*  mode, abort the transaction.                   */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Save the link information in the R1 operand */
@@ -1779,7 +1779,7 @@ U16     i2;                             /* 16-bit operand values     */
    /*  mode, abort the transaction.                   */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
@@ -1810,7 +1810,7 @@ S32     i,j;                            /* Integer workareas         */
    /*  mode, abort the transaction.                   */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load the increment value from the R3 register */
@@ -1850,7 +1850,7 @@ S32     i,j;                            /* Integer workareas         */
    /*  mode, abort the transaction.                   */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Load the increment value from the R3 register */
@@ -1896,7 +1896,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
    /*  transaction.                                   */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD_CHECK(r2, regs);
@@ -2086,7 +2086,7 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
    /* transaction if in that mode.                 */
    /*----------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* All operands must be halfword aligned */
     if (0
@@ -2376,7 +2376,7 @@ BYTE    sc;                             /* Store characteristic      */
    /* the transaction in that case              */
    /*-------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Extract function code from register 0 bits 56-63 */
@@ -3102,7 +3102,7 @@ int      rc;                            /* mem_cmp() return code     */
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     rc = ARCH_DEP( mem_cmp )( regs, ea1, b1, ea2, b2, len+1, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
@@ -3127,7 +3127,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ITIMER_SYNC( ea1, len, regs );
     ITIMER_SYNC( ea2, len, regs );
@@ -3327,7 +3327,7 @@ DEF_INST(compare_logical_character_long)
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD2_CHECK( r1, r2, regs );
 
@@ -3466,7 +3466,7 @@ BYTE    pad;                            /* Padding byte              */
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD2_CHECK( r1, r3, regs );
@@ -3557,7 +3557,7 @@ BYTE    termchar;                       /* Terminating character     */
    /*  abort the transaction.                         */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Program check if bits 0-23 of register 0 not zero */
@@ -3780,7 +3780,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
    /*  abort the transaction.                         */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD2_CHECK(r1, r2, regs);
@@ -3990,7 +3990,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD2_CHECK(r1, r2, regs);
@@ -4156,7 +4156,7 @@ int     wfc;                            /* WellFormednessChecking    */
    /*  that mode, abort the transaction.              */
    /*-------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD2_CHECK(r1, r2, regs);
 
@@ -4414,7 +4414,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
    /*  mode.                                               */
    /*------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
@@ -4462,7 +4462,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
    /*  mode.                                                */
    /*-------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
@@ -4492,8 +4492,8 @@ int     r1, r2;                         /* Values of R fields        */
    /*  start.                                               */
    /*-------------------------------------------------------*/
    if (regs->tranlvl > 0 &&
-     (regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     (regs->tranctlflag & TXF_CTL_AR) == 0x00)
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Copy R2 access register to R1 access register */
@@ -4546,7 +4546,7 @@ int     divide_overflow;                /* 1=divide overflow         */
    /*  Divide is restricted in constrained transaction mode.*/
    /*-------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD_CHECK(r1, regs);
 
@@ -4652,7 +4652,7 @@ int     cc = 0;                         /* Condition code            */
    /*  constrained transaction mode.                        */
    /*-------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ITIMER_SYNC( addr1, len, regs );
     ITIMER_SYNC( addr2, len, regs );
@@ -4826,7 +4826,7 @@ BYTE   *ip;                             /* -> executed instruction   */
    /*  Execute is restricted in constrained transaction mode. */
    /*---------------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD_CHECK(regs->ET, regs);
@@ -4889,7 +4889,7 @@ DEF_INST(execute_relative_long)
    /*  Execute is restricted in constrained transaction mode. */
    /*---------------------------------------------------------*/
    if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 #if defined( _FEATURE_SIE )
     /* Ensure that the instruction field is zero, such that
@@ -5226,8 +5226,8 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     /* on when the transaction started.                       */
     /*--------------------------------------------------------*/
     if (regs->tranlvl > 0 &&
-      ((regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00))
-       ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ((regs->tranctlflag & TXF_CTL_AR) == 0x00))
+       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     FW_CHECK(effective_addr2, regs);
@@ -5507,7 +5507,7 @@ CREG    n;                              /* Work                      */
    if (regs->tranlvl > 0 &&
      (regs->contran ||
        (regs->CR(12) & CR12_MTRACE)))
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Program check if monitor class exceeds 15 */
     if ( i2 > 0x0F )
@@ -5660,7 +5660,7 @@ VADR    effective_addr1,
    /*  when in constrained transaction mode.           */
    /*--------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Move characters using current addressing mode and key */
     ARCH_DEP(move_chars) (effective_addr1, b1, regs->psw.pkey,
@@ -5687,7 +5687,7 @@ BYTE    len;                            /* Amount to move minus 1    */
    /*  when in constrained transaction mode.           */
    /*--------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* Copy operand-2 source string to work area */
     op2end = (eff_addr2 - len) & ADDRESS_MAXWRAP( regs );
@@ -5734,7 +5734,7 @@ int     orglen1;                        /* Original dest length      */
    /*  transaction mode.                            */
    /*-----------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ODD2_CHECK( r1, r2, regs );
 
@@ -5921,7 +5921,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
    /*  constrained transaction mode.                */
    /*-----------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ODD2_CHECK(r1, r3, regs);
@@ -6032,7 +6032,7 @@ int     i;                              /* Loop counter              */
    /*  when in constrained transaction mode.           */
    /*--------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     ITIMER_SYNC( addr2, len, regs );
@@ -6174,7 +6174,7 @@ BYTE    termchar;                       /* Terminating character     */
    /* transaction mode.                           */
    /*---------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 
     /* Program check if bits 0-23 of register 0 not zero */
@@ -6262,7 +6262,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
    /*  when in constrained transaction mode.           */
    /*--------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -6341,7 +6341,7 @@ int     i;                              /* Loop counter              */
    /*  when in constrained transaction mode.           */
    /*--------------------------------------------------*/
    if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, 2, 11);
+     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
     ITIMER_SYNC( addr2, len, regs );
 

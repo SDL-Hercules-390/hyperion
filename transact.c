@@ -97,11 +97,11 @@ void ARCH_DEP(process_tbegin)(REGS *hregs, S16 i2, VADR effective_addr1)
     hregs->tranregmask = i2 >> 8;  /* save the register restore mask */
     hregs->tranctlflag = i2 & 0x000c;   /* save the control flags  */
     hregs->tranprogfiltlvl = i2 & 0x0003;  /* program filter level */
-    if (hregs->tranctlflag & TRAN_MODE_ARCHANGE)
+    if (hregs->tranctlflag & TXF_CTL_AR)
       hregs->tranhigharchange = 1;
     else
       hregs->tranhigharchange = 0;
-    if (hregs->tranctlflag & TRAN_MODE_FLOAT)
+    if (hregs->tranctlflag & TXF_CTL_FLOAT)
       hregs->tranhighfloat = 1;
     else
       hregs->tranhighfloat = 0;
@@ -139,16 +139,16 @@ void ARCH_DEP(process_tbegin)(REGS *hregs, S16 i2, VADR effective_addr1)
   }
   else
   {
-    arflag = i2 & TRAN_MODE_ARCHANGE;   /* save the control flags  */
+    arflag = i2 & TXF_CTL_AR;   /* save the control flags  */
     if (hregs->tranhigharchange == hregs->tranlvl - 1 && arflag)
       hregs->tranhigharchange++;
     else
-      hregs->tranctlflag &= ~TRAN_MODE_ARCHANGE;     /* turn off arflag */
-    flflag = i2  & TRAN_MODE_FLOAT;
+      hregs->tranctlflag &= ~TXF_CTL_AR;     /* turn off arflag */
+    flflag = i2  & TXF_CTL_FLOAT;
      if (hregs->tranhigharchange == hregs->tranlvl - 1 && flflag)
       hregs->tranhighfloat++;
     else
-      hregs->tranctlflag &= ~TRAN_MODE_FLOAT;     /* turn off float flag */
+      hregs->tranctlflag &= ~TXF_CTL_FLOAT;     /* turn off float flag */
     filtlvl = i2 & 0x0003;  /* program filter level */
     hregs->tranprogfilttab[hregs->tranlvl - 2] = hregs->tranprogfiltlvl;
     hregs->tranprogfiltlvl = max(hregs->tranprogfiltlvl, filtlvl);
@@ -166,7 +166,7 @@ int     m3;                             /* M3 Mask value             */
 U32     abort_count;                    /* Transaction Abort count   */
     RRF_M( inst, regs, r1, r2, m3 );
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
     /* Retrieve abort count */
     abort_count = regs->GR_L( r1 );
     switch (m3)
@@ -217,7 +217,7 @@ int     r1, r2;                         /* Operand register numbers  */
     if ((regs->CR(0) & 0x0080000000000000ll) == 0x00)
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIAL_OPERATION_EXCEPTION);
     if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
     regs->gr[r1].F.L.F = (U32)regs->tranlvl;
     regs->gr[r1].F.H.F = 0;
     // TODO....
@@ -249,7 +249,7 @@ if ((regs->sysblk->facility_list[2][9] & 0x40) == 0x00)   /* not installed */
     if ((hregs->CR(0) & 0x0080000000000000ll) == 0x00)
       ARCH_DEP(program_interrupt)(hregs, PGM_SPECIAL_OPERATION_EXCEPTION);
      if (hregs->tranabortnum > 0)
-      ARCH_DEP(abort_transaction)(hregs, 2, regs->rabortcode);
+      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, regs->rabortcode);
      if (hregs->tranlvl == 0)
        return;
     OBTAIN_INTLOCK(hregs);
@@ -260,11 +260,11 @@ if ((regs->sysblk->facility_list[2][9] & 0x40) == 0x00)   /* not installed */
       if (hregs->tranhigharchange > hregs->tranlvl)
         hregs->tranhigharchange--;
       if (hregs->tranhigharchange == hregs->tranlvl)
-        hregs->tranctlflag |= TRAN_MODE_ARCHANGE;
+        hregs->tranctlflag |= TXF_CTL_AR;
       if (hregs->tranhighfloat > hregs->tranlvl)
         hregs->tranhighfloat--;
       if (hregs->tranhighfloat == hregs->tranlvl)
-        hregs->tranctlflag |= TRAN_MODE_FLOAT;
+        hregs->tranctlflag |= TXF_CTL_FLOAT;
       hregs->tranprogfiltlvl = hregs->tranprogfilttab[hregs->tranlvl - 1];
       return;
     }
@@ -275,7 +275,7 @@ if ((regs->sysblk->facility_list[2][9] & 0x40) == 0x00)   /* not installed */
     /* and exit                                               */
     /*--------------------------------------------------------*/
     if (hregs->abortcode)
-      ARCH_DEP(abort_transaction)(hregs, 1, hregs->abortcode);
+      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->abortcode);
     hregs->abortcode = 0;    /* clear the abort code */
     hregs->contran = 0;         /* clear the tran type code */
     hregs->tranabortnum = 0;
@@ -304,9 +304,9 @@ if ((regs->sysblk->facility_list[2][9] & 0x40) == 0x00)   /* not installed */
           if (memcmp(saveaddr, mainaddr, CACHE_LINE_SIZE) != 0)
           {
             if (pmap->cachemap[j] == 2)
-              ARCH_DEP(abort_transaction)(hregs, 1, 10);
+              ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_STORE_CNF);
             else
-              ARCH_DEP(abort_transaction)(hregs, 1, 9);  
+              ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);  
           }
         }
       }
@@ -351,8 +351,8 @@ VADR    effective_addr2;                /* Effective address         */
     if ((regs->sysblk->facility_list[2][9] & 0x40) == 0x00)   /* not installed */
       ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
     if (regs->hostregs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
-    ARCH_DEP(abort_transaction)(regs, 1, (int)effective_addr2);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
+    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_CC, (int)effective_addr2);
 
 } /* end DEF_INST( transaction_abort ) */
 /*-------------------------------------------------------------------*/
@@ -372,9 +372,9 @@ NTRANTBL *nt;
     if ((regs->sysblk->facility_list[2][9] & 0x40) == 0x00)   /* not installed */
       ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
     if (hregs->contran)
-      ARCH_DEP(abort_transaction)(regs, 2, 11);
+      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
     if (hregs->ntranstorectr >= MAX_NTRAN_STORE)
-      ARCH_DEP(abort_transaction)(hregs, 2, 7);
+      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
     /* Store regs in workarea */
     STORE_DW(qwork, regs->GR_G(r1));
     /* Store R1 to second operand
@@ -416,7 +416,7 @@ DEF_INST(transaction_begin)
   if ((hregs->CR(0) & 0x0080000000000000ll) == 0x00)
     ARCH_DEP(program_interrupt)(hregs, PGM_SPECIAL_OPERATION_EXCEPTION);
   if (hregs->contran)
-    ARCH_DEP(abort_transaction)(hregs, 2, 11);
+    ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
   OBTAIN_INTLOCK(hregs);
   SYNCHRONIZE_CPUS(hregs);
   ARCH_DEP(process_tbegin)(hregs, i2, effective_addr1);
@@ -458,13 +458,13 @@ BYTE    mask = 0x00;
     if ((regs->CR(0) & 0x0080000000000000ll) == 0x00)
       ARCH_DEP(program_interrupt)(hregs, PGM_SPECIAL_OPERATION_EXCEPTION);
     if (hregs->tranlvl > 14)
-      ARCH_DEP(abort_transaction)(hregs, 2, 13);
+      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_NESTING);
     OBTAIN_INTLOCK(hregs);
     SYNCHRONIZE_CPUS(hregs);
     if (hregs->tranlvl > 0)     /* if alreadyv in transaction mode */
     {
       if (hregs->contran)   /* already in constrained mode     */
-        ARCH_DEP(abort_transaction)(hregs, 2, 11);  /* abort       */
+        ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);  /* abort       */
       ARCH_DEP(process_tbegin)(hregs, i2, effective_addr1);
       return;
     }
