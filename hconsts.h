@@ -32,9 +32,7 @@
 #define PREF_DEF_MAXCPU           8     /*  Default sysblk.maxcpu
                                             to 8 according to old
                                             MAX_CPU_ENGINES default  */
-//  define max pages for transaction processing.   If this is exceeded, the transaction will abort
-#define   MAX_TRAN_PAGES           64
-#define   MAX_NTRAN_STORE         128         /* max nontransactional stores that can be logged */
+
 /*-------------------------------------------------------------------*/
 /*      Some handy quantity definitions                              */
 /*-------------------------------------------------------------------*/

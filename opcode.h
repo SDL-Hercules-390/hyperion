@@ -364,7 +364,7 @@ do { \
        break;      \
    (_regs)->hostregs->traninstctr++; \
    /* Too many CONSTRAINED instructions executed? */                        \
-   if ((_regs)->hostregs->contran && (_regs)->hostregs->traninstctr > 32 && \
+   if ((_regs)->hostregs->contran && (_regs)->hostregs->traninstctr > MAX_TXF_CONTRAN_INSTR && \
        memcmp((_ip), "\xb2\xf8", 2) != 0) \
        ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR); \
    /* Randomly abort the transaction? */                                       \

@@ -62,6 +62,7 @@
 /*          Transactional-Execution Facility constants               */
 /*-------------------------------------------------------------------*/
 #define  MAX_TXF_LEVEL           15   /* Maximum nesting depth       */
+#define  MAX_TXF_CONTRAN_INSTR   32   /* Max CONSTRAINED instr.      */
 #define  MAX_TXF_PAGES           64   /* Max num of modified pages   */
 #define  MAX_TXF_NTSTG          128   /* Max nontransactional stores */
 #define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
@@ -544,7 +545,7 @@ struct REGS {                           /* Processor registers       */
 #define TXF_CTL_PIFC    0x03            /* float and vector allowed  */
         U32     tranpiid;               /* transaction program interrupt ident */
         U64    conflictaddr;            /* address where conflict detected */
-        TPAGEMAP tpagemap[MAX_TRAN_PAGES];  /* address of the page map   */
+        TPAGEMAP tpagemap[MAX_TXF_PAGES];  /* address of the page map   */
         DW     tranregs[16];            /* saved gpr values          */
         TDB    *tdbaddr;                /* transaction diagnostic block address or null */
         int     tranpagenum;            /* number of pages in page map */
@@ -553,7 +554,7 @@ struct REGS {                           /* Processor registers       */
         int     ntranstorectr;          /* non transactional store ctr */
         int     abortcode;              /* transaction abort code   */
         int     rabortcode;             /* random abort code         */
-        NTRANTBL ntrantbl[MAX_NTRAN_STORE];   /* table of non transactional stores */
+        NTRANTBL ntrantbl[MAX_TXF_NTSTG];   /* table of non transactional stores */
         PSW     tranabortpsw;           /* transaction abort psw */
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

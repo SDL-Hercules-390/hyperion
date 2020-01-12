@@ -639,6 +639,7 @@ static inline RADR ARCH_DEP( apply_prefixing )( RADR addr, RADR px )
 {
     return APPLY_PREFIXING( addr, px );
 }
+
 /*------------------------------------------------------*/
 /*  Common routine to abort a transaction.              */
 /*  This routine restores the requested registers from  */
@@ -846,6 +847,7 @@ static inline void ARCH_DEP(abort_transaction)(REGS *regs, int retry,  int abort
   return;
 
 }
+
 #include "dat.h"
 #include "vstore.h"
 

@@ -287,7 +287,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     }
     if (!altpage)
     {
-      if (hregs->tranpagenum >= MAX_TRAN_PAGES)
+      if (hregs->tranpagenum >= MAX_TXF_PAGES)
       {
         if (acctype == ACCTYPE_READ)
           ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
