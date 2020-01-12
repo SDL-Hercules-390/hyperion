@@ -678,6 +678,13 @@ static const char *build_info[] = {
     "Without National Language Support",
     "With    CCKD64 Support",
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    "With    Transactional-Execution Facility support",
+#else
+    "Without Transactional-Execution Facility support",
+#endif
+
+
 /*-------------------------------------------------------------------*/
 /*                 Machine dependent assists:                        */
 /*-------------------------------------------------------------------*/

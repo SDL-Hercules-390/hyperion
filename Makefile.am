@@ -966,6 +966,7 @@ noinst_HEADERS =          \
   tapedev.h               \
   targetver.h             \
   tcpip.h                 \
+  transact.h              \
   tt32api.h               \
   tt32if.h                \
   tuntap.h                \

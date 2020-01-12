@@ -105,8 +105,8 @@ int     rc;
            to continue with external interrupt processing */
         if (regs->hostregs->txf_level)
         {
-            regs->psw.cc = TXF_CC_TRANSIENT;
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, ABORT_CODE_EXT );
+            regs->psw.cc = TXF_CC_TRANSIENT;
         }
 #endif
         /* Store current PSW at PSA+X'18' */

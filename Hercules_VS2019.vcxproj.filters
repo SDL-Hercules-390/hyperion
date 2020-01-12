@@ -2806,6 +2806,9 @@
     <ClInclude Include="tcpip.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="transact.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="version.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

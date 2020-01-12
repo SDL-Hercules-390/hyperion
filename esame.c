@@ -2159,7 +2159,10 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
         && (r1 == 6 || r1 == 7)
         && r3 == 0
     )
+    {
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR );
+        UNREACHABLE_CODE( return );
+    }
 #endif
 
     switch (r3)

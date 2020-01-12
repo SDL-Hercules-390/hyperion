@@ -440,6 +440,18 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _TRANSACT_C_
+  #ifndef  _HENGINE_DLL_
+    #define TRANS_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define TRANS_DLL_IMPORT        extern
+  #endif
+#else
+  #define   TRANS_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _VECTOR_C_
   #ifndef  _HENGINE_DLL_
     #define VECT_DLL_IMPORT         DLL_IMPORT

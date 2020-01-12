@@ -614,11 +614,11 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY)
-  UNDEF_INST(transaction_begin)
-  UNDEF_INST(transaction_abort)
-  UNDEF_INST(transaction_end)
-  UNDEF_INST(nontransactional_store)
-  UNDEF_INST(extract_transaction_nesting_level)
+  UNDEF_INST( transaction_begin )
+  UNDEF_INST( transaction_abort )
+  UNDEF_INST( transaction_end )
+  UNDEF_INST( nontransactional_store )
+  UNDEF_INST( extract_transaction_nesting_depth )
 #endif
 
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) || defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )

@@ -1144,6 +1144,7 @@
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tcpip.h" />
+    <ClInclude Include="transact.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tt32if.h" />
     <ClInclude Include="tuntap.h" />

@@ -991,8 +991,9 @@ DEF_INST(47B0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Branch to operand address if r1 mask bit is set */
     CONTRAN_INSTR_CHECK( regs );
+
+    /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 1)
     {
         RXX0_BC(inst, regs, b2, effective_addr2);
