@@ -438,25 +438,54 @@ static inline void Release_Interrupt_Lock( REGS* regs, const char* location )
 }
 
 /*-------------------------------------------------------------------*/
-/*              Update SYSBLK Instruction Count                      */
+/*           Atomically update 32-bit/64-bit value                   */
 /*-------------------------------------------------------------------*/
-
-#define UPDATE_SYSBLK_INSTCOUNT( _count ) \
-    Update_SYSBLK_instcount(     _count )
-
-static inline void Update_SYSBLK_instcount( int count )
+static inline void atomic_update32( volatile S32* p, S32 count )
 {
-    /* Update system-wide sysblk.instcount instruction counter */
 #if defined( _MSVC_ )
-    InterlockedExchangeAdd64( &sysblk.instcount, count );
+    InterlockedExchangeAdd( p, count );
 #else // GCC (and CLANG?)
   #if defined( HAVE_SYNC_BUILTINS )
-    __sync_fetch_and_add( &sysblk.instcount, count );
+    __sync_fetch_and_add( p, count );
   #else
-    sysblk.instcount += count;  /* (N.B. non-atomic!) */
+    *p += count;  /* (N.B. non-atomic!) */
   #endif
 #endif
 }
+static inline void atomic_update64( volatile S64* p, S64 count )
+{
+#if defined( _MSVC_ )
+    InterlockedExchangeAdd64( p, count );
+#else // GCC (and CLANG?)
+  #if defined( HAVE_SYNC_BUILTINS )
+    __sync_fetch_and_add( p, count );
+  #else
+    *p += count;  /* (N.B. non-atomic!) */
+  #endif
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*           Atomically update SYSBLK Instruction Counter            */
+/*-------------------------------------------------------------------*/
+
+#define UPDATE_SYSBLK_INSTCOUNT( _count ) \
+        atomic_update64( &sysblk.instcount, (_count) )
+
+/*-------------------------------------------------------------------*/
+/*  Atomically update SYSBLK count of CPUs executing a transaction   */
+/*-------------------------------------------------------------------*/
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#define UPDATE_SYSBLK_TRANSCPUS( _count )                           \
+  do                                                                \
+  {                                                                 \
+    atomic_update32( &sysblk.txf_transcpus, (_count) );             \
+    if (sysblk.txf_transcpus < 0)                                   \
+      CRASH();                                                      \
+  }                                                                 \
+  while (0)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Stop ALL CPUs                                      (INTLOCK held) */
