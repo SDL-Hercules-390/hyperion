@@ -125,14 +125,7 @@ int     cc = 0;                         /* Condition code            */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Storage to storage instructions are restricted */
-   /* in constrained transaction mode.               */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
     ITIMER_SYNC( addr1, len, regs );
     ITIMER_SYNC( addr2, len, regs );
 
@@ -161,6 +154,7 @@ int     cc = 0;                         /* Condition code            */
     dest1 = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
     source1 = MADDRL( addr2, len+1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+
     if (NOCROSSPAGE( addr1, len ))
     {
         if (NOCROSSPAGE( addr2, len ))
@@ -293,14 +287,8 @@ BYTE    dbyte;                          /* Destination operand byte  */
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Storage to storage instructions are restricted */
-   /* in constrained transaction mode.               */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
@@ -365,14 +353,8 @@ VADR    effective_addr2,
     SS(inst, regs, r1, r3, b2, effective_addr2,
                                      b4, effective_addr4);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Perform locked operation is restricted when in */
-   /* transaction execution mode.                    */
-   /*------------------------------------------------*/
-    if (regs->contran)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     if(regs->GR_L(0) & PLO_GPR0_RESV)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
 
@@ -558,14 +540,8 @@ BYTE    termchar;                       /* Terminating character     */
 
     RRE( inst, regs, r1, r2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------------*/
-   /* Search string is restricted when in constrained  */
-   /* transaction execution mode.                      */
-   /*--------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
         regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -590,14 +566,16 @@ BYTE    termchar;                       /* Terminating character     */
 
         while (cpu_length)
         {
-                    /* We need to check the boundary condition before attempting to access
-         storage, because of the boundary condition is met, there is no further
-         need to access storage. */
-                    if (addr2 == addr1)
-                    {
-                        regs->psw.cc = 2;
-                        return;
-                    }
+            /* We need to check the boundary condition
+               BEFORE attempting to access storage,
+               because if the boundary condition is met,
+               there is no further need to access storage.
+            */
+            if (addr2 == addr1)
+            {
+                regs->psw.cc = 2;
+                return;
+            }
             main2 = MADDRL(addr2, cpu_length, r2, regs, ACCTYPE_READ, regs->psw.pkey );
             for (i=0; i < dist; i++)
             {
@@ -641,14 +619,17 @@ BYTE    termchar;                       /* Terminating character     */
        extend the CPU determined length out to the end of the page */
     cpu_length = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
 
-        /* We need to check the boundary condition before attempting to access
-         storage, because of the boundary condition is met, there is no further
-         need to access storage. */
-        if (addr2 == addr1)
-        {
-            regs->psw.cc = 2;
-            return;
-        }
+    /* We need to check the boundary condition
+       BEFORE attempting to access storage,
+       because if the boundary condition is met,
+       there is no further need to access storage.
+    */
+    if (addr2 == addr1)
+    {
+        regs->psw.cc = 2;
+        return;
+    }
+
     main2 = MADDRL(addr2, cpu_length, r2, regs, ACCTYPE_READ, regs->psw.pkey );
     for (i=0; i < cpu_length; i++)
     {
@@ -697,16 +678,8 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE0(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------*/
-   /* Set access register is restricted when in  */
-   /* transaction execution mode if the access   */
-   /* change flag is off at transaction start.   */
-   /*--------------------------------------------*/
-   if (regs->tranlvl > 0 &&
-     (regs->tranctlflag & TXF_CTL_AR) == 0x00)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_ACCESS_INSTR_CHECK( regs );
+
     /* Copy R2 general register to R1 access register */
     regs->AR(r1) = regs->GR_L(r2);
     SET_AEA_AR(regs, r1);
@@ -1009,16 +982,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*----------------------------------------------*/
-   /* Store access multiple is restricted when in  */
-   /* transaction execution mode if the access     */
-   /* change flag is off at transaction start.     */
-   /*----------------------------------------------*/
-   if (regs->tranlvl > 0 &&
-     (regs->tranctlflag & TXF_CTL_AR) == 0x00)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_ACCESS_INSTR_CHECK( regs );
     FW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to store */
@@ -1043,7 +1007,6 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     /* Store to next page */
     for (; i < n; i++)
         store_fw( p2++, regs->AR( (r1 + i) & 0xF ));
-
 }
 #endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
@@ -1111,14 +1074,8 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------*/
-   /*  Store clock is restricted in constrained  */
-   /*  transaction mode.                         */
-   /*--------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
 #if defined( _FEATURE_SIE )
 
     if (SIE_STATB( regs, IC2, STCK ))
@@ -1176,14 +1133,8 @@ ETOD    ETOD;                           /* Extended clock work area  */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------*/
-   /*  Store clock extended is restricted when   */
-   /*  in constrained transaction mode.          */
-   /*--------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
 #if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, STCK))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -1502,14 +1453,9 @@ RADR    px;                             /* prefix                    */
 int     rc;                             /* Return code               */
 
     RR_SVC(inst, regs, i);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*----------------------------------------------*/
-   /* Supervisor call is restricted in transaction */
-   /* execution mode.                              */
-   /*----------------------------------------------*/
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    TRAN_INSTR_CHECK( regs );
+
 #if defined( FEATURE_ECPSVM )
     if(ecpsvm_dosvc(regs,i)==0)
     {
@@ -1764,14 +1710,8 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------------------*/
-   /* Storage to storage instructions are restricted when    */
-   /* in constrained transaction mode                        */
-   /*--------------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     /* Get destination pointer */
     dest = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
@@ -1781,8 +1721,6 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
         len2 = len;
         len = PAGEFRAME_BYTEMASK - (addr1 & PAGEFRAME_BYTEMASK);
         len2 -= (len + 1);
-        dest2 = MADDR( (addr1+len+1) & ADDRESS_MAXWRAP( regs ),
-                        b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
         dest2 = MADDRL((addr1+len+1) & ADDRESS_MAXWRAP( regs ),
                   len2, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
     }
@@ -1790,8 +1728,6 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
     /* Fast path if table does not cross a boundary */
     if (NOCROSSPAGE( addr2, 255 ))
     {
-        tab = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
-
         tab = MADDRL(addr2, 256, b2, regs, ACCTYPE_READ, regs->psw.pkey );
         /* Perform translate function */
         for (i=0; i <= len;  i++) dest [i] = tab[dest [i]];
@@ -1805,7 +1741,6 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
         /* Referenced part of the table may or may not span boundary */
         if (b < n)
         {
-
             tab = MADDRL(addr2, n, b2, regs, ACCTYPE_READ, regs->psw.pkey );
             for (i=1; i <= len  && b < n; i++) b = dest [i];
             for (i=0; i <= len2 && b < n; i++) b = dest2[i];
@@ -1816,7 +1751,6 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
         }
         else
         {
-
             tab2 = MADDRL((addr2+n) & ADDRESS_MAXWRAP( regs ),
                   256 - n, b2, regs, ACCTYPE_READ, regs->psw.pkey );
             for (i=1; i <= len  && b >= n; i++) b = dest [i];
@@ -1850,14 +1784,8 @@ bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------------------*/
-   /* Storage to storage instructions are restricted when    */
-   /* in constrained transaction mode                        */
-   /*--------------------------------------------------------*/
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
+
     /* Copy operand-1 data to work area if within same page */
     if (!(op1crosses = CROSSPAGE( addr1, len )))
         ARCH_DEP( vfetchc )( op1, len, addr1, b1, regs );
@@ -1951,14 +1879,7 @@ BYTE    trtab[256];                     /* Translate table           */
 
     RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------------------*/
-   /* Translate extended is restricted when in constrained   */
-   /* transaction mode.                                      */
-   /*--------------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Load the test byte from bits 24-31 of register 0 */
@@ -2036,14 +1957,8 @@ BYTE    lbyte;                          /* Left result byte of pair  */
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*--------------------------------------------------------*/
-   /* Storage to storage instructions are restricted when    */
-   /* in constrained transaction mode                        */
-   /*--------------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
@@ -2112,15 +2027,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 
     E(inst, regs);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------------*/
-   /* Update tree is restricted in constrained  */
-   /* transaction mode.                         */
-   /*-------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
-    UNREFERENCED(inst);
+    CONTRAN_INSTR_CHECK( regs );
 
     /*
     **  GR0, GR1    node values (codeword and other data) of node
@@ -2276,15 +2183,8 @@ DEF_INST(convert_utf8_to_utf32)
 
 //RRF_M(inst, regs, r1, r2, wfc);
   RRE(inst, regs, r1, r2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------------------*/
-   /*  All convert utf instructions are restricted    */
-   /*  when in constrained transaction mode.  If in   */
-   /*  that mode, abort the transaction.              */
-   /*-------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+  CONTRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2529,15 +2429,8 @@ DEF_INST(convert_utf16_to_utf32)
 
 //RRF_M(inst, regs, r1, r2, wfc);
   RRE(inst, regs, r1, r2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------------------*/
-   /*  All convert utf instructions are restricted    */
-   /*  when in constrained transaction mode.  If in   */
-   /*  that mode, abort the transaction.              */
-   /*-------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+  CONTRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2598,7 +2491,7 @@ DEF_INST(convert_utf16_to_utf32)
       /* WellFormednessChecking */
       if(wfc)
       {
-        if(utf16[2] < 0xdc && utf16[2] > 0xdf)
+        if(utf16[2] < 0xdc || utf16[2] > 0xdf)
         {
           regs->psw.cc = 2;
           return;
@@ -2646,15 +2539,8 @@ DEF_INST(convert_utf32_to_utf8)
   int xlated;                      /* characters translated          */
 
   RRE(inst, regs, r1, r2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------------------*/
-   /*  All convert utf instructions are restricted    */
-   /*  when in constrained transaction mode.  If in   */
-   /*  that mode, abort the transaction.              */
-   /*-------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+  CONTRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2792,15 +2678,8 @@ DEF_INST(convert_utf32_to_utf16)
   BYTE zabcd;                      /* Work value                     */
 
   RRE(inst, regs, r1, r2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------------------*/
-   /*  All convert utf instructions are restricted    */
-   /*  when in constrained transaction mode.  If in   */
-   /*  that mode, abort the transaction.              */
-   /*-------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+  CONTRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2893,14 +2772,8 @@ DEF_INST(search_string_unicode)
 
   RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*----------------------------------------------*/
-   /* Search string unicode is restricted when in  */
-   /* constrained transaction mode.                */
-   /*----------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  CONTRAN_INSTR_CHECK( regs );
+
   /* Program check if bits 0-15 of register 0 not zero */
   if(regs->GR_L(0) & 0xFFFF0000)
     regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -2964,14 +2837,8 @@ DEF_INST(translate_and_test_reverse)
 
   SS_L(inst, regs, l, b1, effective_addr1, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Storage to storage instructions are restricted */
-   /* in constrained transaction mode.               */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  CONTRAN_INSTR_CHECK( regs );
+
   /* Process first operand from right to left*/
   for(i = 0; i <= l; i++)
   {
@@ -3044,14 +2911,8 @@ DEF_INST(translate_and_test_extended)
 
   RRF_M(inst, regs, r1, r2, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------------*/
-   /* Translate and test extended is restricted */
-   /* in constrained transaction mode.          */
-   /*-------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  CONTRAN_INSTR_CHECK( regs );
+
   a_bit = ((m3 & 0x08) ? 1 : 0);
   f_bit = ((m3 & 0x04) ? 1 : 0);
   l_bit = ((m3 & 0x02) ? 1 : 0);
@@ -3146,14 +3007,8 @@ DEF_INST(translate_and_test_reverse_extended)
 
   RRF_M(inst, regs, r1, r2, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* Translate and test reverse extended is      */
-   /* restricted in constrained transaction mode. */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  CONTRAN_INSTR_CHECK( regs );
+
   a_bit = ((m3 & 0x08) ? 1 : 0);
   f_bit = ((m3 & 0x04) ? 1 : 0);
   l_bit = ((m3 & 0x02) ? 1 : 0);

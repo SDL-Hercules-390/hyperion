@@ -323,14 +323,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* All non relative branch instrctions are     */
-   /* restricted when in constrained transaction  */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
@@ -358,14 +352,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* All non relative branch instrctions are     */
-   /* restricted when in constrained transaction  */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
@@ -393,16 +381,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is negative.             */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
@@ -430,16 +409,8 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is negative.             */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
+
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
          (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
@@ -464,14 +435,8 @@ int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 
     RRF_M(inst, regs, r1, r2, m3);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode.                             */
-   /*-----------------------------------------------*/
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    TRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
@@ -499,14 +464,8 @@ int     cc;                             /* Comparison result         */
 
     RRF_M(inst, regs, r1, r2, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode.                             */
-   /*-----------------------------------------------*/
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
+
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
          (S64)regs->GR_G(r1) > (S64)regs->GR_G(r2) ? 2 : 0;
@@ -669,14 +628,8 @@ int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode.                             */
-   /*-----------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)(S8)i2 ? 1 :
@@ -705,14 +658,8 @@ int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode.                             */
-   /*-----------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
@@ -740,16 +687,8 @@ S16     i4;                             /* 16-bit immediate offset   */
 int     cc;                             /* Comparison result         */
 
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is zero.                 */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)(S8)i2 ? 1 :
@@ -778,16 +717,8 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is zero.                 */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
+
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
          (S64)regs->GR_G(r1) > (S64)(S8)i2 ? 2 : 0;
@@ -841,10 +772,8 @@ U16     i2;                             /* 16-bit immediate value    */
 
     RIE_RIM(inst, regs, r1, i2, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
+
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S16)i2 ? 1 :
          (S64)regs->GR_G(r1) > (S64)(S16)i2 ? 2 : 0;
@@ -872,14 +801,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* All non relative branch instrctions are     */
-   /* restricted when in constrained transaction  */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
@@ -907,14 +830,8 @@ VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* All non relative branch instrctions are     */
-   /* restricted when in constrained transaction  */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
@@ -942,16 +859,8 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is zero.                 */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
+
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
          regs->GR_L(r1) > regs->GR_L(r2) ? 2 : 0;
@@ -978,16 +887,8 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is zero.                 */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
+
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
          regs->GR_G(r1) > regs->GR_G(r2) ? 2 : 0;
@@ -1067,14 +968,8 @@ int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* All non relative branch instrctions are     */
-   /* restricted when in constrained transaction  */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < i2 ? 1 :
@@ -1103,14 +998,8 @@ int     cc;                             /* Comparison result         */
 BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Storage to storage instructions are restricted */
-   /* in constrained transaction mode.               */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < i2 ? 1 :
@@ -1139,16 +1028,8 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is zero.                 */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
+
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < i2 ? 1 :
          regs->GR_L(r1) > i2 ? 2 : 0;
@@ -1176,16 +1057,8 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B(inst, regs, r1, i2, m3, i4);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in constrained */
-   /* transaction mode if the branch mask is zero   */
-   /* or the branch offset is zero.                 */
-   /*-----------------------------------------------*/
-   if (regs->contran &&
-     (m3 == 0x00 || i4 < 0))
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_BRANCH_CHECK( regs, m3, i4 );
+
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < i2 ? 1 :
          regs->GR_G(r1) > i2 ? 2 : 0;
@@ -1534,14 +1407,8 @@ int     ai, li, ti;                     /* Operand address subfields */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*-----------------------------------------------------------------*/
-  /*  This instruction is restricted when in constrained transaction */
-  /*  mode, so the transaction is aborted in that case.              */
-  /*-----------------------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     /* Address bit 63 contains the Type Indication (TI) */
     ti = effective_addr2 & 0x1;
 
@@ -2006,14 +1873,8 @@ int     m1;                             /* Mask value                */
 VADR    addr2;                          /* Relative operand address  */
 
     RIL_A(inst, regs, m1, addr2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-------------------------------------*/
-   /* This instruction is restricted when */
-   /* in constrained transaction mode.    */
-   /*-------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* The Prefetch Data instruction acts as a no-op */
 
@@ -2424,14 +2285,8 @@ int     opcd;                           /* Opcode                    */
 S32     i2;                             /* 32-bit operand value      */
 
     RIL_B(inst, regs, r1, opcd, i2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*---------------------------------------------*/
-   /* All non relative branch instrctions are     */
-   /* restricted when in constrained transaction  */
-   /*---------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_H(r1)) )
@@ -2993,14 +2848,8 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add)                                          /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 
     /* Program check if fixed-point overflow */
@@ -3015,14 +2864,8 @@ DEF_INST(load_and_add)                                          /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_long)                                     /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 
     /* Program check if fixed-point overflow */
@@ -3037,14 +2880,8 @@ DEF_INST(load_and_add_long)                                     /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_logical)                                  /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_add_logical) */
 
@@ -3054,14 +2891,8 @@ DEF_INST(load_and_add_logical)                                  /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_logical_long)                             /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_add_logical_long) */
 
@@ -3071,14 +2902,8 @@ DEF_INST(load_and_add_logical_long)                             /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_and)                                          /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_and) */
 
@@ -3088,14 +2913,8 @@ DEF_INST(load_and_and)                                          /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_and_long)                                     /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_and_long) */
 
@@ -3105,14 +2924,8 @@ DEF_INST(load_and_and_long)                                     /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_exclusive_or)                                 /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or) */
 
@@ -3122,14 +2935,8 @@ DEF_INST(load_and_exclusive_or)                                 /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_exclusive_or_long)                            /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or_long) */
 
@@ -3139,14 +2946,8 @@ DEF_INST(load_and_exclusive_or_long)                            /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_or)                                           /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_or) */
 
@@ -3156,14 +2957,8 @@ DEF_INST(load_and_or)                                           /*810*/
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_or_long)                                      /*810*/
 {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* This instruction is restricted in constrained  */
-   /* transaction mode.                              */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
+
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_or_long) */
 
@@ -3182,14 +2977,7 @@ U32     w1, w2;                         /* Refetched values          */
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Storage to storage instructions are restricted */
-   /* in constrained transaction mode.               */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r3, regs);
 
     /* Fetch the values of the storage operands */
@@ -3226,14 +3014,7 @@ U64     w1, w2;                         /* Refetched values          */
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*------------------------------------------------*/
-   /* Storage to storage instructions are restricted */
-   /* in constrained transaction mode.               */
-   /*------------------------------------------------*/
-   if (regs->contran)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r3, regs);
 
     /* Fetch the values of the storage operands */
@@ -4143,14 +3924,8 @@ int     b3;                             /* Base of effective address */
 int     m1;                             /* Mask value                */
 
     SMI_A0(inst, regs, m1, addr2, b3, addr3);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in transaction */
-   /* execution mode.                               */
-   /*-----------------------------------------------*/
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+    TRAN_INSTR_CHECK( regs );
 
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that
@@ -4170,14 +3945,8 @@ int     m1;                             /* Mask value                */
 
     MII_A0(inst, regs, m1, addr2, addr3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-   /*-----------------------------------------------*/
-   /* This instruction is restricted in transaction */
-   /* execution mode.                               */
-   /*-----------------------------------------------*/
-   if (regs->tranlvl > 0)
-     ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
+
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that
        are not recognized by the CPU, and for reserved

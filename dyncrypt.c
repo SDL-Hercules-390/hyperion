@@ -4003,14 +4003,8 @@ DEF_INST(dyn_compute_intermediate_message_digest)
 
   RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KIMD_DEBUG
   WRMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
   WRMSG(HHC90101, "D", 1, r1);
@@ -4114,14 +4108,8 @@ DEF_INST(dyn_compute_last_message_digest)
 
   RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KLMD_DEBUG
   WRMSG(HHC90100, "D", "KLMD: compute last message digest");
   WRMSG(HHC90101, "D", 1, r1);
@@ -4213,14 +4201,8 @@ DEF_INST(dyn_cipher_message)
 
   RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KM_DEBUG
   WRMSG(HHC90100, "D", "KM: cipher message");
   WRMSG(HHC90101, "D", 1, r1);
@@ -4355,14 +4337,9 @@ DEF_INST(dyn_compute_message_authentication_code)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
   RRE(inst, regs, r1, r2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KMAC_DEBUG
   WRMSG(HHC90100, "D", "KMAC: compute message authentication code");
   WRMSG(HHC90101, "D", 2, r2);
@@ -4462,14 +4439,8 @@ DEF_INST(dyn_cipher_message_with_chaining)
 
   RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KMC_DEBUG
   WRMSG(HHC90100, "D", "KMC: cipher message with chaining");
   WRMSG(HHC90101, "D", 1, r1);
@@ -4604,14 +4575,8 @@ DEF_INST(dyn_cipher_message_with_counter)
 
   RRF_M(inst, regs, r1, r2, r3);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KMCTR_DEBUG
   WRMSG(HHC90100, "D", "KMCTR: cipher message with counter");
   WRMSG(HHC90101, "D", 1, r1);
@@ -4702,14 +4667,8 @@ DEF_INST(dyn_cipher_message_with_cipher_feedback)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
 
   RRE(inst, regs, r1, r2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+
+  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KMF_DEBUG
   WRMSG(HHC90100, "D", "KMF: cipher message with cipher feedback");
@@ -4803,14 +4762,8 @@ DEF_INST(dyn_cipher_message_with_output_feedback)
 
   RRE(inst, regs, r1, r2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
 #ifdef OPTION_KMO_DEBUG
   WRMSG(HHC90100, "D", "KMO: cipher message with output feedback");
   WRMSG(HHC90101, "D", 1, r1);
@@ -4887,14 +4840,8 @@ DEF_INST(dyn_perform_cryptographic_computation)
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
   };
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-  /*------------------------------------------------*/
-  /* This transaction is restricted in constrained  */
-  /* transaction mode.                              */
-  /*------------------------------------------------*/
-  if (regs->tranlvl > 0)
-    ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+  TRAN_INSTR_CHECK( regs );
+
   UNREFERENCED(inst);              /* This operation has no operands */
 
   /* The following is the same as doing a FACILITY_CHECK */

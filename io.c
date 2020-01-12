@@ -72,15 +72,8 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "CSCH" );
@@ -137,14 +130,7 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "HSCH" );
@@ -200,15 +186,8 @@ DEVBLK* dev;                            /* -> device block           */
 PMCW    pmcw;                           /* Path management ctl word  */
 
     S( inst, regs, b2, effective_addr2 );
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "MSCH" );
@@ -364,17 +343,9 @@ VADR    effective_addr2;                /* Effective address         */
 BYTE    chpid;
 
     S(inst, regs, b2, effective_addr2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     PTIO(IO,"RCHP");
@@ -404,14 +375,7 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "RSCH" );
@@ -467,17 +431,9 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     PTIO(IO,"SAL");
@@ -498,15 +454,8 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
@@ -589,14 +538,7 @@ ORB     orb;                            /* Operation request block   */
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "SSCH" );
@@ -715,17 +657,9 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
 };
 
     S(inst, regs, b2, effective_addr2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     PTIO_CH( IO, "STCPS", 0 );
@@ -777,20 +711,10 @@ U32     crw;                            /* Channel Report Word       */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PTIO(IO,"STCRW");
-
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     FW_CHECK(effective_addr2, regs);
 
     /* Validate write access to operand before taking any
@@ -825,18 +749,9 @@ SCHIB   schib;                          /* Subchannel information blk*/
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
-
     PTIO( IO, "STSCH" );
-
     PTIO( IO, "STSCH (sie)" );
     SIE_INTERCEPT( regs );
 
@@ -903,14 +818,7 @@ RADR    pfx;                            /* Prefix                    */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
@@ -1019,16 +927,8 @@ int     cc;                             /* Condition Code            */
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
-
     PTIO( IO, "TSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
@@ -1100,14 +1000,7 @@ DEVBLK* dev;                            /* -> device block           */
 
     S( inst, regs, b2, effective_addr2 );
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     PTIO( IO, "XSCH" );
@@ -1176,14 +1069,8 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=suspend   */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
+
 #if defined(FEATURE_ECPSVM)
     if((inst[1])!=0x02)
     {
@@ -1266,18 +1153,9 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"TIO");
 
     /* Locate the device block */
@@ -1315,19 +1193,10 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
 
     S(inst, regs, b2, effective_addr2);
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"HIO");
 
     /* Locate the device block */
@@ -1361,16 +1230,8 @@ U16     tch_ctl;
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     PTIO(IO,"TCH");
 
 #if defined(_FEATURE_SIE)
@@ -1408,18 +1269,9 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"STIDC");
 
     /* Store Channel ID and set condition code */
@@ -1443,18 +1295,9 @@ int     i;
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"CONCS");
 
     effective_addr2 &= 0xFFFF;
@@ -1517,18 +1360,9 @@ int     i;
 
     S(inst, regs, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*-----------------------------------------*/
-    /* All I-O instructions are restricted in  */
-    /* transaction execution mode.             */
-    /*-----------------------------------------*/
-    if (regs->tranlvl > 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
-#endif
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
-
     PTIO(IO,"DISCS");
 
     /* Hercules has as many channelsets as CSS's */

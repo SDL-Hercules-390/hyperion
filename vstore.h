@@ -492,8 +492,8 @@ BYTE    temp[8];                        /* Copy destination          */
     len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
     mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp, mn, len);
-    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4 - len, arn,
-                 regs, ACCTYPE_READ, regs->psw.pkey );
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4 - len, arn, regs,
+                  ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp+len, mn, 4 - len);
     return fetch_fw( temp );
 
@@ -538,8 +538,8 @@ BYTE    temp[16];                       /* Copy destination          */
     len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
     mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp, mn, len);
-    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8 - len, arn,
-         regs, ACCTYPE_READ, regs->psw.pkey );
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8 - len, arn, regs,
+                 ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp+len, mn, 8 );
     return fetch_dw( temp );
 

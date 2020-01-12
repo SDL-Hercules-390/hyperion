@@ -1744,12 +1744,8 @@ tran_excp_addr:
 void ARCH_DEP(purge_tlb) (REGS *regs)
 {
     INVALIDATE_AIA(regs);
-    /*------------------------------------------------------*/
-    /* If the CPU represented by this regs structure is in  */
-    /* transaction execution mode, flag it for abort.       */
-    /*------------------------------------------------------*/
-    if (regs->tranlvl > 0  && !regs->abortcode)
-      regs->abortcode = 255;
+    TRAN_TLB_PURGE_INSTR_CHECK( regs );
+
     if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
     {
         memset(&regs->tlb.vaddr, 0, TLBN * sizeof(DW) );
@@ -1811,12 +1807,8 @@ RADR ptemask;
 #endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
     INVALIDATE_AIA(regs);
-    /*------------------------------------------------------*/
-    /* If the CPU represented by this regs structure is in  */
-    /* transaction execution mode, flag it for abort.       */
-    /*------------------------------------------------------*/
-    if (regs->tranlvl > 0  && !regs->abortcode)
-      regs->abortcode = 255;
+    TRAN_TLB_PURGE_INSTR_CHECK( regs );
+
     for (i = 0; i < TLBN; i++)
         if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)
             regs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
@@ -1826,7 +1818,6 @@ RADR ptemask;
     if (regs->host && regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
-        for (i = 0; i < TLBN; i++)
 /************************************************************************** @PJJ */
 /* The guest registers in the SIE copy TLB PTE entries for DAT-OFF guests * @PJJ */
 /* like CMS do NOT actually contain the PTE (but rather the host primary  * @PJJ */
@@ -1841,6 +1832,7 @@ RADR ptemask;
 /*                                                                        * @PJJ */
 /*                                        (Peter J. Jansen, 29-Jul-2016)  * @PJJ */
 /************************************************************************** @PJJ */
+        for (i = 0; i < TLBN; i++)
             if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte ||    /* @PJJ */
                  (regs->hostregs->tlb.TLB_PTE(i) & ptemask) == pte)      /* @PJJ */
                 regs->guestregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;

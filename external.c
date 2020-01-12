@@ -101,6 +101,8 @@ int     rc;
        )
     {
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+      /* Abort any active transaction and then return back to here
+         to continue with external interrupt processing */
       if (regs->hostregs->tranlvl > 0)
       {
         regs->psw.cc = 2;
