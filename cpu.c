@@ -332,6 +332,12 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+int     iclass;                         /* interrupt class */
+int      ucc;
+int      fcc;
+int      filt;
+#endif
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /** FIXME : SEE ISW20090110-1 */
 void   *zmoncode=NULL;                  /* special reloc for z/Arch  */
@@ -350,7 +356,6 @@ int     nointercept;                    /* True for virtual pgmint   */
 U32     n;
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
 char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
-
 static char *pgmintname[] = {
         /* 01 */        "Operation exception",
         /* 02 */        "Privileged-operation exception",
@@ -501,6 +506,130 @@ static char *pgmintname[] = {
        code */
     code = pcode & ~PGM_PER_EVENT;
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    if (realregs->tranlvl > 0)
+    {
+      switch (code)
+      {
+      case 1:           /* operation exception */
+      case 2:           /* privliged operation */
+      case 3:           /* execute */
+        iclass = 1;     /* class 1 (cant be filtered */
+        ucc = 3;        /* condition code */
+        break;
+      case 4:           /* protection exception */
+      case 5:           /* addressing exception */
+      case 16:          /* segment translation */
+      case 17:          /* page translation */
+      case 56:          /* asce */
+      case 57:          /* region first translation */           
+      case 58:          /* region second translation */
+      case 59:          /* region third translation */
+        if (realregs->tranlastaccess == ACCTYPE_INSTFETCH  &&
+            realregs->tranlastarn == USE_INST_SPACE)
+        {
+          filt = 0;
+          iclass = 1;
+        }
+        else
+        {
+          filt = 1;
+          iclass = 2;
+        }
+        ucc = 2;
+        fcc = 3;
+        break;
+      case 7:           /* data exception       */
+        switch (realregs->dxc)      /* test the dxc (data exception code) */
+        {
+        case 01:
+        case 02:
+        case 03:
+        case 254:
+          iclass = 1;
+          ucc = 2;
+          filt = 0;
+          break;
+        default:
+          iclass = 3;
+          ucc = 2;
+          fcc = 3;
+          filt = 1;
+        }
+        break;
+      case 8:                            /* fixed point overflow */
+      case 9:                            /* fixed point divide */
+      case 10:                           /* decimal overflow */
+      case 11:                           /* decimal divide */
+      case 12:                           /* hfp exponent overflow */
+      case 13:                           /* hfp exponent underflow */
+      case 14:                           /* hfp significance */
+      case 15:                           /* hfp divide */
+      case 27:                           /* vector processing */
+      case 29:                           /* hfp square root */
+        iclass = 3;
+        fcc = 3;
+        ucc = 2;
+        filt = 1;
+        break;
+      case 18:                           /* translation exception */
+      case 19:                           /* special operation */
+      case 24:                           /* transation constraint */
+        iclass = 1;
+        ucc = 3;
+        filt = 0;
+        break;
+      case 40:                            /* alet specification */
+      case 41:                            /* alen translation */
+      case 42:                            /* ale sequence */
+      case 43:                            /* aste validity */
+      case 44:                            /* aste sequence */
+      case 45:                            /* extended authority */
+        iclass = 2;
+        ucc = 2;
+        fcc = 3;
+        filt = 1;
+        break;
+      default:
+        iclass = 0;
+        ucc = 0; 
+        filt = 0;
+      }
+      if (realregs->contran)
+        filt = 0;
+      if (filt == 1)
+      {
+        if (realregs->CR(0) & 0x0040000000000000ll)
+          filt = 0;
+        else
+        {
+          switch (realregs->tranprogfiltlvl)
+          {
+          case 0:
+            filt = 0;
+            break;
+          case 1:
+            if (iclass < 3)
+              filt = 0;
+            else
+              filt = 1;
+            break;
+          default:
+            if (iclass < 2)
+              filt = 0;
+            else
+              filt = 1;
+          }
+        }
+      }
+      if (filt == 1)
+      {
+        realregs->psw.cc = fcc;
+        ARCH_DEP(abort_transaction)(realregs, 1, 12);
+      }
+      realregs->psw.cc = ucc;
+    }
+#endif
     /* If this is a concurrent PER event then we must add the PER
        bit to the interrupts code */
     if( OPEN_IC_PER(realregs) )
@@ -819,6 +948,8 @@ static char *pgmintname[] = {
         psa->pgmint[0] = 0;
         psa->pgmint[1] = ilc;
         STORE_HW(psa->pgmint + 2, pcode);
+        if (realregs->tranlvl > 0)
+          memcpy(&realregs->tranpiid, psa->pgmint, 4);
 
         /* Store the exception access identification at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
@@ -952,6 +1083,10 @@ static char *pgmintname[] = {
     realregs->hostint = 0;
 #endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    if (realregs->tranlvl > 0)
+      ARCH_DEP(abort_transaction)(realregs, 0, 4);
+#endif
 #if defined(_FEATURE_SIE)
     if(nointercept)
 #endif /*defined(_FEATURE_SIE)*/
@@ -1044,6 +1179,10 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     psa = (PSA*)(regs->mainstor + regs->PX);
 
     /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    if (regs->tranlvl > 0)
+      ARCH_DEP(abort_transaction)(regs, 0, 6);
+#endif
     ARCH_DEP(store_psw) (regs, psa->RSTOLD);
 
     /* Load new PSW from PSA+X'0' or PSA+X'1A0' for ESAME */
@@ -1162,6 +1301,13 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #endif
     {
         /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+        if (regs->tranlvl > 0)
+        {
+          ARCH_DEP(abort_transaction)(regs, 0, 6);
+          regs->psw.cc = 2;
+        }
+#endif
         ARCH_DEP(store_psw) ( regs, psa->iopold );
 
         /* Load new PSW from PSA+X'78' or PSA+X'1F0' for ESAME */
@@ -1231,6 +1377,13 @@ RADR    fsta;                           /* Failing storage address   */
 #endif
 
     /* Store current PSW at PSA+X'30' */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    if (regs->tranlvl > 0)
+    {
+      ARCH_DEP(abort_transaction)(regs, 0, 5);
+      regs->psw.cc = 2;
+    }
+#endif
     ARCH_DEP(store_psw) ( regs, psa->mckold );
 
     /* Load new PSW from PSA+X'70' */
@@ -1442,7 +1595,10 @@ const INSTR_FUNC   *current_opcode_table;
 register REGS   *regs;
 BYTE   *ip;
 int     i;
+TPAGEMAP *pmap;
+BYTE *altpage;
 int     aswitch;
+U64     msize;
 
     /* Assign new regs if not already assigned */
     regs = sysblk.regs[cpu] ?
@@ -1453,6 +1609,11 @@ int     aswitch;
     {
         if (oldregs != regs)
         {
+            if (oldregs->tpagemap[0].altpageaddr)
+            {
+              free_aligned(oldregs->tpagemap[0].altpageaddr);
+              oldregs->tpagemap[0].altpageaddr = NULL;
+            }
             memcpy (regs, oldregs, sizeof(REGS));
             free_aligned(oldregs);
             regs->blkloc = CSWAP64((U64)((uintptr_t)regs));
@@ -1522,6 +1683,20 @@ int     aswitch;
     /* Initialize Facilities List */
     init_cpu_facilities( regs );
 
+    regs->tranlvl = 0;
+    msize = PAGEFRAME_PAGESIZE * MAX_TRAN_PAGES * 2;
+    altpage = (BYTE *)malloc_aligned(msize, 4096);
+    pmap = regs->tpagemap;
+    for (i = 0; i < MAX_TRAN_PAGES; i++, pmap++, altpage += (PAGEFRAME_PAGESIZE * 2))
+    {
+      memset(pmap->cachemap, 0x00, sizeof(pmap->cachemap));
+      pmap->mainpageaddr = NULL;
+      pmap->altpageaddr = altpage;
+    }
+    regs->tranabortnum = 0;
+    regs->contran = 0;
+    regs->traninstctr = 0;
+    regs->tranpagenum = 0;
     /* Get pointer to primary opcode table */
     current_opcode_table = regs->ARCH_DEP( runtime_opcode_xxxx );
 
@@ -1556,7 +1731,6 @@ int     aswitch;
             ARCH_DEP( process_interrupt )( regs );
 
         ip = INSTRUCTION_FETCH( regs, 0 );
-
         EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
 
         /* BHe: I have tried several settings. But 2 unrolled
@@ -1897,7 +2071,7 @@ int i;
     regs->AEA_AR( USE_PRIMARY_SPACE   ) = 1;
     regs->AEA_AR( USE_SECONDARY_SPACE ) = 7;
     regs->AEA_AR( USE_HOME_SPACE      ) = 13;
-
+    regs->CR(2) = (regs->CR(2) >> 3) << 3;
     /* Initialize opcode table pointers */
     init_opcode_pointers (regs);
 
@@ -1948,6 +2122,11 @@ static void *cpu_uninit (int cpu, REGS *regs)
     }
 
     /* Free the REGS structure */
+    if (regs->tpagemap[0].altpageaddr)
+    {
+      free_aligned(regs->tpagemap[0].altpageaddr);
+      regs->tpagemap[0].altpageaddr = NULL;
+    }
     free_aligned(regs);
 
     return NULL;

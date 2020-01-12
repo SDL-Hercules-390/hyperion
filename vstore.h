@@ -35,6 +35,14 @@
 /* wmove_chars                                                       */
 /* wvalidate_operand                                                 */
 /*-------------------------------------------------------------------*/
+/* 2019-12-05  Bob Wood                                              */
+/* Code modified to pass the correct length when needed for MADDR.   */
+/* This is needed to support transaction execution mode.  Note that  */
+/* for most of these instructions, no change is required.  Since     */
+/* transaction mode operates at the cache line level (per the POP)   */
+/* it is only an issue if the actual length spans a cache line       */
+/* boundary but not a page boundary.                                 */
+/*-------------------------------------------------------------------*/
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
         s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
@@ -374,17 +382,18 @@ void ARCH_DEP( vfetchc )( void* dest, BYTE len, VADR addr, int arn, REGS* regs )
 BYTE   *main1, *main2;                  /* Main storage addresses    */
 int     len2;                           /* Length to copy on page    */
 
-    main1 = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
 
     if (NOCROSSPAGE( addr, len ))
     {
         ITIMER_SYNC( addr, len, regs );
+        main1 = MADDRL( addr, len + 1, arn, regs, ACCTYPE_READ, regs->psw.pkey );
         memcpy( dest, main1, len + 1 );
     }
     else
     {
         len2 = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-        main2 = MADDR( (addr + len2) & ADDRESS_MAXWRAP( regs ),
+        main1 = MADDRL( addr, len2, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+        main2 = MADDRL( (addr + len2) & ADDRESS_MAXWRAP( regs ), len + 1 - len2,
                         arn, regs, ACCTYPE_READ, regs->psw.pkey );
         memcpy(        dest,        main1,           len2 );
         memcpy( (BYTE*)dest + len2, main2, len + 1 - len2 );
@@ -453,7 +462,7 @@ U16 ARCH_DEP( vfetch2 )( VADR addr, int arn, REGS* regs )
     {
         BYTE *mn;
         ITIMER_SYNC( addr, 2-1, regs );
-        mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+        mn = MADDRL( addr, 2,arn, regs, ACCTYPE_READ, regs->psw.pkey );
         return fetch_hw( mn );
     }
     return ARCH_DEP( vfetch2_full )( addr, arn, regs );
@@ -480,12 +489,12 @@ BYTE   *mn;                             /* Main storage addresses    */
 int     len;                            /* Length to end of page     */
 BYTE    temp[8];                        /* Copy destination          */
 
-    mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp, mn, 4 );
     len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-    mn = MADDR( (addr + len) & ADDRESS_MAXWRAP( regs ), arn, regs,
-                 ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp+len, mn, 4 );
+    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp, mn, len);
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4 - len, arn,
+                 regs, ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp+len, mn, 4 - len);
     return fetch_fw( temp );
 
 } /* end function ARCH_DEP(vfetch4_full) */
@@ -498,7 +507,7 @@ U32 ARCH_DEP( vfetch4 )( VADR addr, int arn, REGS* regs )
     {
         BYTE *mn;
         ITIMER_SYNC( addr, 4-1, regs );
-        mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+        mn = MADDRL( addr, 4,arn, regs, ACCTYPE_READ, regs->psw.pkey );
         return fetch_fw( mn );
     }
     return ARCH_DEP( vfetch4_full )( addr, arn, regs );
@@ -526,11 +535,11 @@ int     len;                            /* Length to end of page     */
 BYTE    temp[16];                       /* Copy destination          */
 
     /* Get absolute address of first byte of operand */
-    mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp, mn, 8 );
     len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-    mn = MADDR( (addr + len) & ADDRESS_MAXWRAP( regs ), arn, regs,
-                ACCTYPE_READ, regs->psw.pkey );
+    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp, mn, len);
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8 - len, arn,
+         regs, ACCTYPE_READ, regs->psw.pkey );
     memcpy( temp+len, mn, 8 );
     return fetch_dw( temp );
 
@@ -545,7 +554,7 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
         /* doubleword aligned fetch */
         U64 *mn;
         ITIMER_SYNC( addr, 8-1, regs );
-        mn = (U64*)MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+        mn = (U64*)MADDRL( addr, 8, arn, regs, ACCTYPE_READ, regs->psw.pkey );
         if (regs->cpubit == regs->sysblk->started_mask)
             return CSWAP64( *mn );
         return fetch_dw( mn );
@@ -558,7 +567,7 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
             /* unaligned, non-crossing doubleword fetch */
             BYTE *mn;
             ITIMER_SYNC( addr, 8-1, regs );
-            mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+            mn = MADDRL( addr, 8, arn, regs, ACCTYPE_READ, regs->psw.pkey );
             return fetch_dw( mn );
         }
     }
@@ -833,7 +842,7 @@ int     len2, len3;                     /* Lengths to copy           */
     }
 
     /* Translate addresses of leftmost operand bytes */
-    source1 = MADDR( addr2, arn2, regs, ACCTYPE_READ, key2 );
+    source1 = MADDRL( addr2, len+1, arn2, regs, ACCTYPE_READ, key2 );
     dest1   = MADDRL( addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, key1 );
     sk1 = regs->dat.storkey;
 
@@ -860,8 +869,8 @@ int     len2, len3;                     /* Lengths to copy           */
         {
             /* (2) - Second operand crosses a boundary */
             len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                              arn2, regs, ACCTYPE_READ, key2 );
+            source2 = MADDRL( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+                   len + 1 - len2, arn2, regs, ACCTYPE_READ, key2 );
             concpy( regs, dest1,        source1,       len2     );
             concpy( regs, dest1 + len2, source2, len - len2 + 1 );
         }
@@ -871,8 +880,8 @@ int     len2, len3;                     /* Lengths to copy           */
     {
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-                        arn1, regs, ACCTYPE_WRITE_SKP, key1 );
+        dest2 = MADDRL( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+           len + 1 - len2, arn1, regs, ACCTYPE_WRITE_SKP, key1 );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2, len ))
@@ -885,8 +894,8 @@ int     len2, len3;                     /* Lengths to copy           */
         {
             /* (4) - Both operands cross a boundary */
             len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-                              arn2, regs, ACCTYPE_READ, key2 );
+            source2 = MADDRL( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+             len + 1 - len3, arn2, regs, ACCTYPE_READ, key2 );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -973,7 +982,7 @@ int     len1, len2, len3;               /* Work areas for lengths    */
     }
 
     /* Translate addresses of leftmost operand bytes */
-    main2 = MADDR( addr2, space2, regs, ACCTYPE_READ, key2 );
+    main2 = MADDRL( addr2, len, space2, regs, ACCTYPE_READ, key2 );
     main1 = MADDRL( addr1, len, space1, regs, ACCTYPE_WRITE, key1 );
 
     /* Copy the largest chunks which do not cross a page
@@ -1000,8 +1009,8 @@ int     len1, len2, len3;               /* Work areas for lengths    */
 
         /* Adjust addresses for start of next chunk, or
            translate again if a 2K boundary was crossed */
-        main2 = (addr2 & PAGEFRAME_BYTEMASK) ? main2 + len3 : MADDR( addr2, space2, regs, ACCTYPE_READ,  key2 );
-        main1 = (addr1 & PAGEFRAME_BYTEMASK) ? main1 + len3 : MADDR( addr1, space1, regs, ACCTYPE_WRITE, key1 );
+        main2 = (addr2 & PAGEFRAME_BYTEMASK) ? main2 + len3 : MADDRL( addr2, len, space2, regs, ACCTYPE_READ,  key2 );
+        main1 = (addr1 & PAGEFRAME_BYTEMASK) ? main1 + len3 : MADDRL( addr1, len, space1, regs, ACCTYPE_WRITE, key1 );
 
     } /* end while(len) */
 

@@ -65,11 +65,41 @@ static inline  BYTE* ARCH_DEP( maddr_l )
        conditions since it's going to do a full translation anyway!
        (which is many, many instructions)
     */
-
     int  aea_arn  = regs->AEA_AR( arn );
     U16  tlbix    = TLBIX( addr );
+    BYTE *rtnaddr = NULL;
+#if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if _GEN_ARCH == 900
+    BYTE *altaddr;
+    BYTE *savepage;
+    BYTE *pageaddr;
+    BYTE *altpage;
+    BYTE *savepagec;
+    BYTE *altpagec;
+    BYTE *pageaddrc;
+    U64  cacheidx;
+    U64  cacheidxe;
+    U64  pageoffs;
+    U64  pageoffe;
+    U64  addrwork;
+    U64  addrpage;
+    U64  plen;
+    U64  elen;
+    int pagecap;
+    TPAGEMAP *pmap;
+    BYTE newacc;
+    int abortcode;
+    int i;
+    int j;
+    int k;
+    REGS *rchk;
+    REGS *hregs;
+#endif
+#endif
 
     /* Non-zero AEA Access Register number? */
+    regs->hostregs->tranlastaccess = acctype;
+    regs->hostregs->tranlastarn = arn;
     if (aea_arn)
     {
         /* Same Addess Space Designator as before? */
@@ -103,19 +133,222 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
                         if (acctype & ACC_CHECK)
                             regs->dat.storkey = regs->tlb.storkey[ tlbix ];
-
-                        return MAINADDR( regs->tlb.main[ tlbix ], addr );
+                        rtnaddr = MAINADDR(regs->tlb.main[tlbix], addr);
                     }
                 }
             }
         }
     }
-
     /*---------------------------------------*/
     /* TLB miss: do full address translation */
     /*---------------------------------------*/
-
-    return ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
+    if (!rtnaddr)
+      rtnaddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
+#if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
+/*------------------------------------------------------------------*/
+/*  The following code supports the transaction execution facility. */
+/*  If the CPU is in transaction execution mode (constrained or     */
+/*  unconstrained), the actual real storage address is saved in the */
+/*  transaction data area, and then it is mapped to an alternate    */
+/*  address.  The contents of the real page are also saved.  The    */
+/*  cache line within the page is marked as having been fetched or  */
+/*  stored.   The first time that a cache line is accessed, it is   */
+/*  captured from the real page.  When a cache line or page is      */
+/*  captured, two copies are made.  One copy is presented to the    */
+/*  caller, and one is a save copy which will be used to see if the */
+/*  cache line has changed.  In order to make sure that the capture */
+/*  is clean, the two copies must match.  If they do not match,     */
+/*  the copy is retried up to 128 times.  If a copy cannot be made  */
+/*  in that many tries, the transaction is aborted with a fetch     */
+/*  conflict.  Note that it is OK to use real addresses here because*/
+/*  the transaction will be aborted if the real page is invalidated.*/
+/*------------------------------------------------------------------*/
+    if (sysblk.tranmodectr == 0)        /* no cpus are in tran mode */
+      return rtnaddr;                   /* return now               */
+     /*  we are only interested in fetch and store access  */
+    if (acctype != ACCTYPE_READ && acctype != ACCTYPE_WRITE && acctype != ACCTYPE_WRITE_SKP)
+      return rtnaddr;
+    if (arn == USE_INST_SPACE || arn == USE_REAL_ADDR)  /* should only be set for instruction fetch */
+      return rtnaddr;     
+    hregs = regs->hostregs;
+    addrwork = (U64)rtnaddr;                    
+    pageoffs = addrwork & PAGEFRAME_BYTEMASK;       
+    cacheidx = pageoffs >> CACHE_LINE_SHIFT;  
+    addrpage = addrwork & PAGEFRAME_PAGEMASK;  
+    /* find the length to the end of the page */
+    plen = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    /* if the length to the end of the page is less than the length passed */
+    /* reset to the end of page length */
+    if (plen < len)
+      elen = plen;
+    else
+      elen = len;
+    pageoffe = pageoffs + elen; 
+    cacheidxe = pageoffe >> CACHE_LINE_SHIFT;
+/*------------------------------------------------------------------*/
+/*   if any cpus are in transaction mode, we need to see if this    */
+/*   cpu is storing or fetching into a cache line that has been     */
+/*   touched by a cpu in transaction mode.  If that is the case,    */
+/*   we will flag the other cpu for abort.  The actual abort will   */
+/*   happen the next time the transaction cpu references storage or */
+/*   gets to transaction end.                                       */
+/*                                                                  */
+/*   The process of moving CPUS in and out of transaction mode is   */
+/*   serialized, so that state will not change during the check.    */
+/*   The scan of the cache lines for the cpu is serialized by       */
+/*   obtaining the cpu lock for that cpu.  The cpu lock is also     */
+/*   obtained to update the pagemap and/or cachemap.                */
+/*------------------------------------------------------------------*/
+    for (i = 0; i < sysblk.hicpu; i++)
+    {
+      if (sysblk.regs[i]->hostregs == hregs)        /* skip my entry       */
+        continue;
+      rchk = sysblk.regs[i];             /* point to other cpu entry */
+      if (rchk->tranlvl == 0)            /* this cpu not in transaction mode */
+        continue;                        /* skip it */
+      if (rchk->abortcode)               /* abort already detected */
+        continue;                        /* no need to check it */
+      if (rchk->cpustate != CPUSTATE_STARTED)  /* skip cpus not started*/
+        continue;
+      abortcode = 0;                     /* clear abort code */
+      pmap = rchk->tpagemap;
+      for (j = 0; j < rchk->tranpagenum; j++, pmap++)  /* scan the page map  */
+      {
+        if ((U64)pmap->mainpageaddr == addrpage)  /* same page ?*/
+        {
+          for (k = cacheidx; k <= cacheidxe; k++)
+          {
+            if (pmap->cachemap[k] == 0)  /* no conflict */
+              continue;
+            if (pmap->cachemap[k] == 1)  /* transactional reference was fetch */
+            {
+              if (acctype == ACCTYPE_READ)  /* current access also read */
+                continue;                /* if both are fetch, not a conflict */
+              abortcode = 9;       /* set fetch conflict */
+            }
+            else
+              abortcode = 10;      /* store conflict */
+            /* the real routine is used here instead of obtain_lock to get around a problem */
+            /* compiling dyn76.c, which redefines obtain_lock as EnterCriticalSection */
+            hthread_obtain_lock(&rchk->sysblk->tranlock[i], PTT_LOC );  /*get the cpu lock */
+            if (rchk->tranlvl > 0)
+            {
+              rchk->conflictaddr = hregs->psw.ia.D - hregs->psw.ilc;
+              rchk->abortcode = abortcode;
+            }
+            hthread_release_lock(&rchk->sysblk->tranlock[i], PTT_LOC );  /* release the cpu lock */
+            break;
+          }
+          if (abortcode)                   /* conflict found, stop scanning */
+            break;
+        }
+      }
+     
+    }
+    if (hregs->tranlvl == 0)              /* tranlvl will always be zero if the transaction */
+      return rtnaddr;                    /* facility is not enabled. */
+    /* if an abort has already been requested, call the abort code now */
+    if (hregs->abortcode)
+      ARCH_DEP(abort_transaction)(hregs, 1, hregs->abortcode);
+    /*------------------------------------------------------------*/
+    /*   We will return an alternate real address to the caller,  */
+    /*   which will be visible only to this cpu.  When/if the     */
+    /*   transaction is commited, the alternate page will be      */
+    /*   copied to the real page, as long as there are no changes */
+    /*   to the cache lines we touched. The size of the cache     */
+    /*   line is 256 bytes.  We will mark all cache lines that    */
+    /*   were touched (fetched or modified).  All cache lines     */
+    /*   that were touched must not have changed in the original  */
+    /*   page, or the transaction will abort.   We can safely use */
+    /*   real addresses, because if a page fault occurs, the      */
+    /*   transaction will abort and we will start over.           */
+    /*   In most cases, the length passed to MADDRL is correct,   */
+    /*   but in some cases the source length is one byte instead  */
+    /*   of the true length.  In those cases,  we must check to   */
+    /*   see if more than one cache line is crossed.              */
+    /*------------------------------------------------------------*/
+    /*------------------------------------------------------------*/
+    /*  See if we have already captured this page, if not, we     */
+    /*  will capture the real page and also save a copy.  The     */
+    /*  copy will be used to determine if unexpected changes have */
+    /*  been made at commit time.                                 */
+    /*------------------------------------------------------------*/
+    altpage = 0;
+    pmap = hregs->tpagemap;
+    for (i = 0; i < hregs->tranpagenum; i++, pmap++)
+    {
+      /*  if this page has already been mapped, us it*/
+      if (addrpage == (U64)pmap->mainpageaddr)
+      {
+        altpage = pmap->altpageaddr;
+        pagecap = 0;        /* page not captured */
+        break;
+      }
+    }
+    if (!altpage)
+    {
+      if (hregs->tranpagenum >= MAX_TRAN_PAGES)
+      {
+        if (acctype == ACCTYPE_READ)
+          ARCH_DEP(abort_transaction)(hregs, 2, 7);
+        else
+          ARCH_DEP(abort_transaction)(hregs, 2, 8);
+      }
+      pmap = &hregs->tpagemap[hregs->tranpagenum];
+      altpage = pmap->altpageaddr;
+      savepage = altpage + PAGEFRAME_PAGESIZE;
+      pageaddr = (BYTE *)addrpage;
+      for (i = 0; i < 128; i++)
+      {
+        memcpy(altpage, pageaddr, PAGEFRAME_PAGESIZE);
+        memcpy(savepage, pageaddr, PAGEFRAME_PAGESIZE);
+        if (memcmp(altpage, savepage, PAGEFRAME_PAGESIZE) == 0)
+          break;
+      }
+      if (i >= 128)
+        ARCH_DEP(abort_transaction)(hregs, 1, 9);
+      pagecap = 1;
+      pmap->mainpageaddr = (BYTE *)addrpage;
+      hregs->tranpagenum++;
+    }
+    altaddr = altpage + pageoffs;
+    if (acctype == ACCTYPE_READ)
+      newacc = 1;
+    else
+      newacc = 2;
+    for (; cacheidx <= cacheidxe; cacheidx++)
+    {
+      switch (pmap->cachemap[cacheidx])
+      {
+      case 0:
+     /*   if the cache line has not been touched, refresh it */
+        pageaddrc = pmap->mainpageaddr + (cacheidx << CACHE_LINE_SHIFT);
+        altpagec = pmap->altpageaddr + (cacheidx << CACHE_LINE_SHIFT);
+        savepagec = altpagec + PAGEFRAME_PAGESIZE;
+        for (i = 0; i < 128; i++)
+        {
+          memcpy(altpagec, pageaddrc, CACHE_LINE_SIZE);
+          memcpy(savepagec, pageaddrc, CACHE_LINE_SIZE);
+          if (memcmp(altpagec, savepagec, CACHE_LINE_SIZE) == 0)
+            break;
+        }
+        if (i >= 128)
+          ARCH_DEP(abort_transaction)(regs, 1, 9);
+        pmap->cachemap[cacheidx] = newacc;
+        break;
+      case 1:
+        if (newacc == 0)
+          break;
+        pmap->cachemap[cacheidx] = newacc;
+        break;
+      case 2:
+        break;
+      }
+    }
+    return altaddr;
+#else
+    return rtnaddr;
+#endif
 }
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )

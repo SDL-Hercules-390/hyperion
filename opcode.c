@@ -574,6 +574,9 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( perform_processor_assist );
 #endif
 
+#if !defined(FEATURE_050_CONSTR_TRANSACT_FACILITY)
+ UNDEF_INST(transaction_begin_constrained)
+#endif
 #if !defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
  UNDEF_INST( load_halfword_high_immediate_on_condition );
  UNDEF_INST( load_halfword_immediate_on_condition );
@@ -607,6 +610,14 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #if !defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
  UNDEF_INST( load_sampling_controls )
  UNDEF_INST( query_sampling_information )
+#endif
+
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY)
+  UNDEF_INST(transaction_begin)
+  UNDEF_INST(transaction_abort)
+  UNDEF_INST(transaction_end)
+  UNDEF_INST(nontransactional_store)
+  UNDEF_INST(extract_transaction_nesting_level)
 #endif
 
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) || defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )
@@ -2771,7 +2782,7 @@ static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B2E9*/ GENx___x___x___ ,
  /*B2EA*/ GENx___x___x___ ,
  /*B2EB*/ GENx___x___x___ ,
- /*B2EC*/ GENx___x___x___ ,
+ /*B2EC*/ GENx___x___x900 (extract_transaction_nesting_depth, RRE, "ETND"),
  /*B2ED*/ GENx___x___x900 (extract_coprocessor_group_address,RRE,"ECPGA"), /*  CMCF */
  /*B2EE*/ GENx___x___x___ ,
  /*B2EF*/ GENx___x___x___ ,
@@ -2783,11 +2794,11 @@ static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B2F5*/ GENx___x___x___ ,
  /*B2F6*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2F7*/ GENx___x___x___ ,
- /*B2F8*/ GENx___x___x___ ,
+ /*B2F8*/ GENx___x___x900 (transaction_end, S, "TEND") ,
  /*B2F9*/ GENx___x___x___ ,
  /*B2FA*/ GENx___x___x900 (next_instruction_access_intent,IE,"NIAI"),              /*912*/
  /*B2FB*/ GENx___x___x___ ,
- /*B2FC*/ GENx___x___x___ ,
+ /*B2FC*/ GENx___x___x900 (transaction_abort, S , "TABORT"),
  /*B2FD*/ GENx___x___x___ ,
  /*B2FE*/ GENx___x___x___ ,
  /*B2FF*/ GENx___x390x900 (trap4,S,"TRAP4")
@@ -3472,7 +3483,7 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E322*/ GENx___x___x___ ,
  /*E323*/ GENx___x___x___ ,
  /*E324*/ GENx___x___x900 (store_long,RXY,"STG"),
- /*E325*/ GENx___x___x___ ,
+ /*E325*/ GENx___x___x900 (nontransactional_store, RXY, "NTSTG"),
  /*E326*/ GENx37Xx___x900 (convert_to_decimal_y,RXY,"CVDY"),
  /*E327*/ GENx___x___x___ ,
  /*E328*/ GENx___x___x___ ,
@@ -3801,8 +3812,8 @@ static INSTR_FUNC opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
  /*E55D*/ GENx37Xx390x900 (compare_logical_immediate_fullword_storage,SIL,"CLFHSI"), /*208*/
  /*E55E*/ GENx___x___x___ ,
  /*E55F*/ GENx___x___x___ ,
- /*E560*/ GENx___x___x___ ,
- /*E561*/ GENx___x___x___ ,
+ /*E560*/ GENx___x___x900 (transaction_begin, SIL, "TBEGIN"),
+ /*E561*/ GENx___x___x900 (transaction_begin_constrained, SIL, "TBEGINC"),
  /*E562*/ GENx___x___x___ ,
  /*E563*/ GENx___x___x___ ,
  /*E564*/ GENx___x___x___ ,

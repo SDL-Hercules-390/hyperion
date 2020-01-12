@@ -352,6 +352,18 @@ do { \
    && _PSW_IA_MAIN((_regs), (_regs)->ET) < (_regs)->aie \
     ) \
 )
+#define CHECK_TRANCTR(_ip, _regs) \
+do { \
+     if (!(_regs)->hostregs->tranlvl)  \
+       break;      \
+   (_regs)->hostregs->traninstctr++; \
+   if ((_regs)->hostregs->contran && (_regs)->hostregs->traninstctr > 32 && \
+       memcmp((_ip), "\xb2\xf8", 2) != 0) \
+       ARCH_DEP(abort_transaction)((_regs), 2, 11); \
+   if ((_regs)->hostregs->traninstctr == (_regs)->hostregs->tranabortnum &&  \
+      (_regs)->hostregs->tranabortnum > 0) \
+     ARCH_DEP(abort_transaction)((_regs), 2, (_regs)->rabortcode); \
+} while(0)
 
 /* Instruction fetching */
 
@@ -364,6 +376,7 @@ do { \
 
 #define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
 do { \
+    CHECK_TRANCTR((_ip), (_regs));  \
     FOOTPRINT ((_ip), (_regs)); \
     ICOUNT_INST ((_ip), (_regs)); \
     (_oct)[fetch_hw((_ip))]((_ip), (_regs)); \
@@ -3065,6 +3078,7 @@ void s390_process_trace (REGS *regs);
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
 void z900_process_trace (REGS *regs);
+void z900_abort_transaction(REGS *regs, int retry, int abortcode);
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
@@ -3843,6 +3857,14 @@ DEF_INST( rotate_then_insert_selected_bits_long_reg_n );        /*912*/
 
 #if defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
 DEF_INST( perform_processor_assist );
+#endif
+#if defined(FEATURE_050_CONSTR_TRANSACT_FACILITY)
+DEF_INST(transaction_end);
+DEF_INST(extract_transaction_nesting_depth);
+DEF_INST(transaction_abort);
+DEF_INST(nontransactional_store);
+DEF_INST(transaction_begin);
+DEF_INST(transaction_begin_constrained);
 #endif
 
 #if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )

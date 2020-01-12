@@ -269,6 +269,16 @@ int     cc = 0;                         /* Condition code            */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Storage to storage instructions are restricted */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
+
     ITIMER_SYNC( addr2, len, regs );
     ITIMER_SYNC( addr1, len, regs );
 
@@ -296,7 +306,7 @@ int     cc = 0;                         /* Condition code            */
     /* Translate addresses of leftmost operand bytes */
     dest1 = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
-    source1 = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    source1 = MADDRL( addr2,len + 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     if (NOCROSSPAGE( addr1,len ))
     {
@@ -311,8 +321,8 @@ int     cc = 0;                         /* Condition code            */
         {
              /* (2) - Second operand crosses a boundary */
              len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-             source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                               b2, regs, ACCTYPE_READ, regs->psw.pkey );
+             source2 = MADDRL((addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+                len + 1 - len2,b2, regs, ACCTYPE_READ, regs->psw.pkey );
              for (i=0; i < len2; i++)
                  if (*dest1++ &= *source1++)
                      cc = 1;
@@ -329,8 +339,8 @@ int     cc = 0;                         /* Condition code            */
     {
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-                        b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dest2 = MADDRL((addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+         len + 1 - len2, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2,len ))
@@ -350,8 +360,8 @@ int     cc = 0;                         /* Condition code            */
         {
             /* (4) - Both operands cross a boundary */
             len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-                              b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL((addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+             len + 1 - len3, b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -423,6 +433,20 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  Branch and link is also restricted in   */
+   /*  unconstrained transaction mode if branch       */
+   /*  tracing is enabled and the branch register is  */
+   /*  not zero.                                      */
+   /*-------------------------------------------------*/
+    if (regs->tranlvl > 0  &&
+      (regs->contran  ||
+      (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
@@ -469,6 +493,15 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if( regs->psw.amode64 )
@@ -496,6 +529,20 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  Branch and save is also restricted in   */
+   /*  unconstrained transaction mode if branch       */
+   /*  tracing is enabled and the branch register is  */
+   /*  not zero.                                      */
+   /*-------------------------------------------------*/
+    if (regs->tranlvl > 0  &&
+      (regs->contran  ||
+      (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
@@ -540,6 +587,15 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Save the link information in the R1 register */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if ( regs->psw.amode64 )
@@ -573,6 +629,20 @@ BYTE    *ipsav;                         /* save for ip               */
 
     RR_B(inst, regs, r1, r2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  Branch and save and set mode is also    */
+   /*  restricted in unconstrained transaction mode   */
+   /*  if branch tracing is enabled and the branch    */
+   /*  register is not zero.                          */
+   /*-------------------------------------------------*/
+    if (regs->tranlvl > 0  &&
+      (regs->contran  ||
+      (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
@@ -643,6 +713,20 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  Branch and set mode is also restricted  */
+   /*  in unconstrained transaction mode if branch    */
+   /*  tracing is enabled and the branch register is  */
+   /*  not zero.                                      */
+   /*-------------------------------------------------*/
+    if (regs->tranlvl > 0  &&
+      (regs->contran  ||
+      (r2 != 0 && (regs->CR(12) & CR12_BRTRACE))))
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
 
@@ -700,6 +784,15 @@ DEF_INST(branch_on_condition_register)
 
 //  RR(inst, regs, r1, r2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (inst[1] & (0x80 >> regs->psw.cc)))
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
@@ -750,6 +843,15 @@ DEF_INST(branch_on_condition)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
@@ -774,6 +876,15 @@ DEF_INST(47_0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
@@ -790,6 +901,15 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(nop4)
 {
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 4, 0);
 
@@ -803,6 +923,15 @@ DEF_INST(4710)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 3)
     {
@@ -822,6 +951,15 @@ DEF_INST(4720)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 2)
     {
@@ -841,6 +979,15 @@ DEF_INST(4730)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc > 1)
     {
@@ -860,6 +1007,15 @@ DEF_INST(4740)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 1)
     {
@@ -879,6 +1035,15 @@ DEF_INST(4750)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc & 0x01)
     {
@@ -898,6 +1063,15 @@ DEF_INST(4770)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc)
     {
@@ -917,6 +1091,15 @@ DEF_INST(4780)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(!regs->psw.cc)
     {
@@ -936,6 +1119,15 @@ DEF_INST(47A0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(!(regs->psw.cc & 0x01))
     {
@@ -956,6 +1148,15 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     /* Branch to operand address if r1 mask bit is set */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     if(regs->psw.cc != 1)
     {
         RXX0_BC(inst, regs, b2, effective_addr2);
@@ -974,6 +1175,15 @@ DEF_INST(47C0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc < 2)
     {
@@ -993,6 +1203,15 @@ DEF_INST(47D0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 2)
     {
@@ -1012,6 +1231,15 @@ DEF_INST(47E0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 3)
     {
@@ -1031,6 +1259,15 @@ DEF_INST(47F0)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+    if (regs->contran)
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     RXX0_BC(inst, regs, b2, effective_addr2);
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
@@ -1322,6 +1559,19 @@ DEF_INST(branch_relative_on_condition)
 {
 U16   i2;                               /* 16-bit operand values     */
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch relative is valid when in constrained   */
+   /*  transaction mode only if the condition mask    */
+   /*  is non-zero and the relative branch offset is  */
+   /*  positive.  If in constrained transaction mode  */
+   /*  and those conditions are not met, abort the    */
+   /*  transaction.                                   */
+   /*-------------------------------------------------*/
+    if (regs->contran &&
+      ((inst[1] & 0xf0) == 0x00 || inst[2] & 0x80))
+      ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
@@ -1343,6 +1593,15 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -1367,6 +1626,15 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+   if (regs->tranlvl > 0)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
@@ -1388,6 +1656,15 @@ VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+   if (regs->tranlvl > 0)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1418,6 +1695,15 @@ VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch instructions that are not relative are  */
+   /*  restricted when in constrained transaction     */
+   /*  mode.  If in that mode, abort the transaction. */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load the increment value from the R3 register */
     i = regs->GR_L(r3);
@@ -1448,6 +1734,15 @@ int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI_B(inst, regs, r1, opcd, i2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch relative and save is restricted when    */
+   /*  in constrained transaction mode.  If in that   */
+   /*  mode, abort the transaction.                   */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -1477,6 +1772,15 @@ int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
     RI_B(inst, regs, r1, opcd, i2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch relative on count is restricted when    */
+   /*  in constrained transaction mode.  If in that   */
+   /*  mode, abort the transaction.                   */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
@@ -1499,6 +1803,15 @@ U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
     RI_B(inst, regs, r1, r3, i2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch relative on index is restricted when    */
+   /*  in constrained transaction mode.  If in that   */
+   /*  mode, abort the transaction.                   */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1530,6 +1843,15 @@ U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
     RI_B(inst, regs, r1, r3, i2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Branch relative on index is restricted when    */
+   /*  in constrained transaction mode.  If in that   */
+   /*  mode, abort the transaction.                   */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1567,6 +1889,15 @@ U64     dreg;                           /* Checksum accumulator      */
 BYTE    *main2;                         /* Operand-2 mainstor addr   */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Checksum is restricted when in constrained     */
+   /*  transaction mode.  If in that mode, abort the  */
+   /*  transaction.                                   */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     ODD_CHECK(r2, regs);
 
@@ -1634,7 +1965,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
            register r2+1  */
         cpu_length = PAGEFRAME_PAGESIZE - ( addr2 & PAGEFRAME_BYTEMASK );
         cpu_length = min( cpu_length, len );
-        main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+        main2 = MADDRL(addr2, cpu_length, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
         /* Compute number of 4-byte elements we can process within this page
            and compute the number of bytes that will be processed.  Remainder
@@ -1748,6 +2079,15 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
 
     S(inst, regs, b2, op2_effective_addr);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------*/
+   /* Compare and form codeword is restricted when */
+   /* in constrained transaction mode.  Abort the  */
+   /* transaction if in that mode.                 */
+   /*----------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* All operands must be halfword aligned */
     if (0
         || GR_A(1,regs) & 1
@@ -2029,6 +2369,15 @@ BYTE    fc;                             /* Function code             */
 BYTE    sc;                             /* Store characteristic      */
 
     SSF(inst, regs, b1, addr1, b2, addr2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------*/
+   /* Compare swap and store is restricted when */
+   /* in constrained transaction mode.  Abort   */
+   /* the transaction in that case              */
+   /*-------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Extract function code from register 0 bits 56-63 */
     fc = regs->GR_LHLCL(0);
@@ -2450,7 +2799,7 @@ int ARCH_DEP( mem_pad_cmp )
     ITIMER_SYNC( ea1, len-1, regs );
 
     // Translate leftmost byte of each operand
-    m1 = neq1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1 = neq1 = MADDRL(ea1, len, b1, regs, ACCTYPE_READ, regs->psw.pkey );
     m2 = neq2 = pad;
 
     // Quick out if comparing just 1 byte
@@ -2504,8 +2853,8 @@ int ARCH_DEP( mem_pad_cmp )
         if (rc == 0)
         {
             neqidx += neqlen;
-            m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                b1, regs, ACCTYPE_READ, regs->psw.pkey );
+            m1 = neq1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                    len - len1 ,b1, regs, ACCTYPE_READ, regs->psw.pkey );
             rc = memcmp( m1, neq2 = m2, neqlen = len - len1 );
         }
     }
@@ -2560,8 +2909,8 @@ int ARCH_DEP( mem_cmp )
     ITIMER_SYNC( ea1, len-1, regs );
 
     // Translate leftmost byte of each operand
-    m1 = neq1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
-    m2 = neq2 = MADDR( ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1 = neq1 = MADDRL(ea1, len, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = neq2 = MADDRL(ea2, len, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     //----------------------------------------------------------------
     //
@@ -2637,8 +2986,8 @@ int ARCH_DEP( mem_cmp )
             if (rc == 0)
             {
                 neqidx += neqlen;
-                m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                    b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                m2 = neq2 = MADDRL((ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                    len + 1 - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( neq1 = m1 + len2, m2, neqlen = len - len2 );
              }
         }
@@ -2654,8 +3003,8 @@ int ARCH_DEP( mem_cmp )
             if (rc == 0)
             {
                 neqidx += neqlen;
-                m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                    b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                m1 = neq1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                        len - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( m1, neq2 = m2 + len1, neqlen = len - len1 );
              }
         }
@@ -2670,10 +3019,10 @@ int ARCH_DEP( mem_cmp )
                 if (rc == 0)
                 {
                     neqidx += neqlen;
-                    m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                        b1, regs, ACCTYPE_READ, regs->psw.pkey );
-                    m2 = neq2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
-                                        b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m1 = neq1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                            len - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = neq2 = MADDRL((ea2 + len1) & ADDRESS_MAXWRAP( regs ),
+                            len - len1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, m2, neqlen = len - len1 );
                 }
             }
@@ -2685,14 +3034,14 @@ int ARCH_DEP( mem_cmp )
                 if (rc == 0)
                 {
                     neqidx += neqlen;
-                    m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                        b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m1 = neq1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                            len - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, neq2 = m2 + len1, neqlen = len2 - len1 );
                     if (rc == 0)
                     {
                         neqidx += neqlen;
-                        m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                            b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                        m2 = neq2 = MADDRL((ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                                len - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                         rc = memcmp( neq1 = m1 + len2 - len1, m2, neqlen = len - len2 );
                     }
                 }
@@ -2705,14 +3054,14 @@ int ARCH_DEP( mem_cmp )
                 if (rc == 0)
                 {
                     neqidx += neqlen;
-                    m2 = neq2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                        b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = neq2 = MADDRL((ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                            len - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( neq1 = m1 + len2, m2, neqlen = len1 - len2 );
                     if (rc == 0)
                     {
                         neqidx += neqlen;
-                        m1 = neq1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                            b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                        m1 = neq1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                                len - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
                         rc = memcmp( m1, neq2 = m2 + len1 - len2, neqlen = len - len1 );
                     }
                 }
@@ -2738,7 +3087,7 @@ int ARCH_DEP( mem_cmp )
 /*-------------------------------------------------------------------*/
 /* D5   CLC   - Compare Logical Character                       [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( compare_logical_character )
+DEF_INST(compare_logical_character)
 {
 VADR     ea1, ea2;                      /* Effective addresses       */
 int      b1, b2;                        /* Base registers            */
@@ -2746,6 +3095,15 @@ U32      len;                           /* Length minus 1            */
 int      rc;                            /* mem_cmp() return code     */
 
     SS_L( inst, regs, len, b1, ea1, b2, ea2 );
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Storage to storage instructions are restricted */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     rc = ARCH_DEP( mem_cmp )( regs, ea1, b1, ea2, b2, len+1, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
 }
@@ -2753,7 +3111,7 @@ int      rc;                            /* mem_cmp() return code     */
 /*-------------------------------------------------------------------*/
 /* D5   CLC   - Compare Logical Character                       [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( compare_logical_character )
+DEF_INST(compare_logical_character)
 {
 unsigned int len, len1, len2;           /* Lengths                   */
 int      rc;                            /* memcmp() return code      */
@@ -2762,13 +3120,21 @@ VADR     ea1, ea2;                      /* Effective addresses       */
 BYTE    *m1, *m2;                       /* Mainstor addresses        */
 
     SS_L( inst, regs, len, b1, ea1, b2, ea2 );
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Storage to storage instructions are restricted */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ITIMER_SYNC( ea1, len, regs );
     ITIMER_SYNC( ea2, len, regs );
 
     /* Translate addresses of leftmost operand bytes */
-    m1 = MADDR( ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
-    m2 = MADDR( ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    m1 = MADDRL( ea1, len + 1,b1, regs, ACCTYPE_READ, regs->psw.pkey );
+    m2 = MADDRL( ea2, len + 1,b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     /* Quick out if comparing just 1 byte */
     if (unlikely( !len ))
@@ -2845,8 +3211,8 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
             rc = memcmp( m1, m2, len2 );
             if (rc == 0)
             {
-                m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                             b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                m2 = MADDRL((ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                    len + 1 - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( m1 + len2, m2, len - len2 + 1 );
              }
         }
@@ -2861,8 +3227,8 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
             rc = memcmp( m1, m2, len1 );
             if (rc == 0)
             {
-                m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                             b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                m1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                   len + 1 - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
                 rc = memcmp( m1, m2 + len1, len - len1 + 1 );
              }
         }
@@ -2876,10 +3242,10 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                 rc = memcmp( m1, m2, len1 );
                 if (rc == 0)
                 {
-                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
-                    m2 = MADDR( (ea2 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                      len + 1 - len1,b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = MADDRL((ea2 + len1) & ADDRESS_MAXWRAP( regs ),
+                      len + 1 - len1,b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, m2, len - len1 +1 );
                 }
             }
@@ -2889,14 +3255,14 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                 rc = memcmp( m1, m2, len1 );
                 if (rc == 0)
                 {
-                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                       len + 1 - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, m2 + len1, len2 - len1 );
                 }
                 if (rc == 0)
                 {
-                    m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = MADDRL((ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                       len + 1 - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1 + len2 - len1, m2, len - len2 + 1 );
                 }
             }
@@ -2906,14 +3272,14 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                 rc = memcmp( m1, m2, len2 );
                 if (rc == 0)
                 {
-                    m2 = MADDR( (ea2 + len2) & ADDRESS_MAXWRAP( regs ),
-                                 b2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m2 = MADDRL((ea2 + len2) & ADDRESS_MAXWRAP( regs ),
+                     len + 1 - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1 + len2, m2, len1 - len2 );
                 }
                 if (rc == 0)
                 {
-                    m1 = MADDR( (ea1 + len1) & ADDRESS_MAXWRAP( regs ),
-                                 b1, regs, ACCTYPE_READ, regs->psw.pkey );
+                    m1 = MADDRL((ea1 + len1) & ADDRESS_MAXWRAP( regs ),
+                     len + 1 - len1, b1, regs, ACCTYPE_READ, regs->psw.pkey );
                     rc = memcmp( m1, m2 + len1 - len2, len - len1 + 1 );
                 }
             }
@@ -2940,7 +3306,7 @@ CASSERT( CHUNK_AMT      <   (PAGEFRAME_PAGESIZE), general1_c );
 CASSERT( MAX_CPU_AMT    >   (PAGEFRAME_PAGESIZE), general1_c );
 #endif
 
-DEF_INST( compare_logical_character_long )
+DEF_INST(compare_logical_character_long)
 {
     VADR  addr1, addr2;         // Operand addresses
     U32   len1,  len2;          // Operand lengths
@@ -2954,6 +3320,15 @@ DEF_INST( compare_logical_character_long )
     int   rc = 0;               // memcmp() return code
 
     RR( inst, regs, r1, r2 );
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Compare logical character long is restricted   */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ODD2_CHECK( r1, r2, regs );
 
     // Determine the destination and source addresses
@@ -3071,7 +3446,7 @@ DEF_INST( compare_logical_character_long )
 /*-------------------------------------------------------------------*/
 /* A9   CLCLE - Compare Logical Long Extended                   [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( compare_logical_long_extended )
+DEF_INST(compare_logical_long_extended)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -3084,6 +3459,15 @@ BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    pad;                            /* Padding byte              */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Compare logical character long is restricted   */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     ODD2_CHECK( r1, r3, regs );
 
@@ -3154,7 +3538,7 @@ BYTE    pad;                            /* Padding byte              */
 /*-------------------------------------------------------------------*/
 /* B25D CLST  - Compare Logical String                         [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST( compare_logical_string )
+DEF_INST(compare_logical_string)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
@@ -3166,6 +3550,15 @@ BYTE    *main1, *main2;                 /* ptrs to compare bytes     */
 BYTE    termchar;                       /* Terminating character     */
 
     RRE( inst, regs, r1, r2 );
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Compare logical string is restricted when in   */
+   /*  constrained transaction mode.  If in that mode */
+   /*  abort the transaction.                         */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -3197,8 +3590,8 @@ BYTE    termchar;                       /* Terminating character     */
             usable = min( dist1, dist2 );
             usable = min( usable, cpu_length );
 
-            main1 = MADDR( addr1, r1, regs, ACCTYPE_READ, regs->psw.pkey );
-            main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+            main1 = MADDRL(addr1, usable, r1, regs, ACCTYPE_READ, regs->psw.pkey );
+            main2 = MADDRL(addr2, usable, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
             for (i=0; i < usable; i++)
             {
@@ -3287,9 +3680,8 @@ BYTE    termchar;                       /* Terminating character     */
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
 
     cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
-
-    main1 = MADDR( addr1, r1, regs, ACCTYPE_READ, regs->psw.pkey );
-    main2 = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+    main1 = MADDRL(addr1, cpu_length, r1, regs, ACCTYPE_READ, regs->psw.pkey );
+    main2 = MADDRL(addr2, cpu_length, r2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     for (i=0; i < cpu_length; i++)
     {
@@ -3361,7 +3753,7 @@ BYTE    termchar;                       /* Terminating character     */
 /*-------------------------------------------------------------------*/
 /* B257 CUSE  - Compare Until Substring Equal                  [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST( compare_until_substring_equal )
+DEF_INST(compare_until_substring_equal)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
@@ -3381,6 +3773,15 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
 #endif
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  Compare substring equal is restricted when in  */
+   /*  constrained transaction mode.  If in that mode */
+   /*  abort the transaction.                         */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -3582,6 +3983,15 @@ int     wfc;                            /* Well-Formedness-Checking  */
 
 //  RRF_M(inst, regs, r1, r2, wfc);
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  All convert utf instructions are restricted    */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -3739,6 +4149,15 @@ int     wfc;                            /* WellFormednessChecking    */
 //  RRF_M(inst, regs, r1, r2, wfc);
     RRE(inst, regs, r1, r2);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------*/
+   /*  All convert utf instructions are restricted    */
+   /*  when in constrained transaction mode.  If in   */
+   /*  that mode, abort the transaction.              */
+   /*-------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
@@ -3988,7 +4407,15 @@ int     dxf;                            /* 1=data exception          */
 BYTE    dec[8];                         /* Packed decimal operand    */
 
     RX(inst, regs, r1, b2, effective_addr2);
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*------------------------------------------------------*/
+   /*  Convert to binary is restricted when in constrained */
+   /*  transaction mode.  Abort the transaction if in that */
+   /*  mode.                                               */
+   /*------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
 
@@ -4028,7 +4455,15 @@ VADR    effective_addr2;                /* Effective address         */
 BYTE    dec[16];                        /* Packed decimal result     */
 
     RX(inst, regs, r1, b2, effective_addr2);
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------------*/
+   /*  Convert to decimal is restricted when in constrained */
+   /*  transaction mode.  Abort the transaction if in that  */
+   /*  mode.                                                */
+   /*-------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
 
@@ -4041,7 +4476,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
 } /* end DEF_INST(convert_to_decimal) */
 
 
-#if defined( FEATURE_ACCESS_REGISTERS )
+#if defined( FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
 /* B24D CPYA  - Copy Access                                    [RRE] */
 /*-------------------------------------------------------------------*/
@@ -4050,6 +4485,16 @@ DEF_INST(copy_access)
 int     r1, r2;                         /* Values of R fields        */
 
     RRE0(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------------*/
+   /*  Copy access is restricted in transaction execution   */
+   /*  mode if the ar change flag is not on at transaction  */
+   /*  start.                                               */
+   /*-------------------------------------------------------*/
+   if (regs->tranlvl > 0 &&
+     (regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Copy R2 access register to R1 access register */
     regs->AR(r1) = regs->AR(r2);
@@ -4096,7 +4541,13 @@ U32     n;                              /* 32-bit operand values     */
 int     divide_overflow;                /* 1=divide overflow         */
 
     RX(inst, regs, r1, b2, effective_addr2);
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------------*/
+   /*  Divide is restricted in constrained transaction mode.*/
+   /*-------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ODD_CHECK(r1, regs);
 
     /* Load second operand from operand address */
@@ -4182,7 +4633,7 @@ BYTE   *dest;                         /* Pointer to target byte      */
 /*-------------------------------------------------------------------*/
 /* D7   XC    - Exclusive Or Character                          [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( exclusive_or_character )
+DEF_INST(exclusive_or_character)
 {
 int     len, len2, len3;                /* Lengths to copy           */
 int     b1, b2;                         /* Base register numbers     */
@@ -4195,6 +4646,14 @@ int     cc = 0;                         /* Condition code            */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-------------------------------------------------------*/
+   /*  Storage to storage instructions are restricted in    */
+   /*  constrained transaction mode.                        */
+   /*-------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ITIMER_SYNC( addr1, len, regs );
     ITIMER_SYNC( addr2, len, regs );
 
@@ -4222,9 +4681,9 @@ int     cc = 0;                         /* Condition code            */
      */
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDRL( addr1, len, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+    dest1 = MADDRL( addr1, len + 1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
-    source1 = MADDR( addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    source1 = MADDRL(addr2, len + 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     if (NOCROSSPAGE( addr1, len ))
     {
@@ -4248,8 +4707,8 @@ int     cc = 0;                         /* Condition code            */
         {
              /* (2) - Second operand crosses a boundary */
              len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-             source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                               b2, regs, ACCTYPE_READ, regs->psw.pkey );
+             source2 = MADDRL((addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+               len + 1 - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
              for (i=0; i < len2; i++)
                  if (*dest1++ ^= *source1++)
                      cc = 1;
@@ -4266,8 +4725,8 @@ int     cc = 0;                         /* Condition code            */
     {
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-                        b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dest2 = MADDRL((addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+         len + 1 - len2, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2, len ))
@@ -4287,8 +4746,8 @@ int     cc = 0;                         /* Condition code            */
         {
             /* (4) - Both operands cross a boundary */
             len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-                              b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL((addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+              len + 1 - len3, b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -4362,6 +4821,13 @@ int     b2;                             /* Base of effective addr    */
 BYTE   *ip;                             /* -> executed instruction   */
 
     RX(inst, regs, r1, b2, regs->ET);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*---------------------------------------------------------*/
+   /*  Execute is restricted in constrained transaction mode. */
+   /*---------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     ODD_CHECK(regs->ET, regs);
 
@@ -4411,13 +4877,20 @@ BYTE   *ip;                             /* -> executed instruction   */
 /*-------------------------------------------------------------------*/
 /* C6_0 EXRL  - Execute Relative Long                          [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST( execute_relative_long )
+DEF_INST(execute_relative_long)
 {
     int    r1;                          /* Register number           */
     BYTE*  ip;                          /* -> executed instruction   */
 
     RIL_A( inst, regs, r1, regs->ET );
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*---------------------------------------------------------*/
+   /*  Execute is restricted in constrained transaction mode. */
+   /*---------------------------------------------------------*/
+   if (regs->tranlvl > 0)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 #if defined( _FEATURE_SIE )
     /* Ensure that the instruction field is zero, such that
        zeros are stored in the interception parm field, if
@@ -4737,7 +5210,7 @@ LRgenr2(F)
 /*-------------------------------------------------------------------*/
 /* 9A   LAM   - Load Access Multiple                            [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( load_access_multiple )
+DEF_INST(load_access_multiple)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -4746,6 +5219,16 @@ int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    /*--------------------------------------------------------*/
+    /* Load access multiple is restricted when in transaction */
+    /* execution mode if the access mode change flag was not  */
+    /* on when the transaction started.                       */
+    /*--------------------------------------------------------*/
+    if (regs->tranlvl > 0 &&
+      ((regs->tranctlflag & TRAN_MODE_ARCHANGE) == 0x00))
+       ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     FW_CHECK(effective_addr2, regs);
 
@@ -4756,11 +5239,11 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     m = (PAGEFRAME_PAGESIZE - (effective_addr2 & PAGEFRAME_BYTEMASK)) >> 2;
 
     /* Address of operand beginning */
-    p1 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    p1 = (U32*) MADDRL(effective_addr2, n << 2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     /* Get address of next page if boundary crossed */
     if (unlikely( m < n ))
-        p2 = (U32*) MADDR( effective_addr2 + (m*4), b2, regs, ACCTYPE_READ, regs->psw.pkey );
+        p2 = (U32*) MADDRL( effective_addr2 + (m*4), (n - m) << 2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
     else
         m = n;
 
@@ -4877,7 +5360,7 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 98   LM    - Load Multiple                                   [RS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( load_multiple )
+DEF_INST(load_multiple)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -4895,7 +5378,7 @@ BYTE   *bp1;                            /* Unaligned maintstor ptr   */
     m = PAGEFRAME_PAGESIZE - ((VADR_L)effective_addr2 & PAGEFRAME_BYTEMASK);
 
     /* Address of operand beginning */
-    bp1 = (BYTE*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    bp1 = (BYTE*) MADDRL(effective_addr2, n, b2, regs, ACCTYPE_READ, regs->psw.pkey );
     p1 = (U32*) bp1;
 
     if (likely( n <= m ))
@@ -4918,7 +5401,7 @@ BYTE   *bp1;                            /* Unaligned maintstor ptr   */
         /* Boundary crossed, get 2nd page address */
         effective_addr2 += m;
         effective_addr2 &= ADDRESS_MAXWRAP( regs );
-        p2 = (U32*) MADDR( effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+        p2 = (U32*) MADDRL(effective_addr2, n - m, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
         if (likely( (m & 0x3) == 0 ))
         {
@@ -5015,6 +5498,17 @@ CREG    n;                              /* Work                      */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*--------------------------------------------------*/
+   /*  Monitor call is restricted when in constrained  */
+   /*  transaction mode, or in unconstrained mode if   */
+   /*  monitor trace is active.                        */
+   /*--------------------------------------------------*/
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+       (regs->CR(12) & CR12_MTRACE)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Program check if monitor class exceeds 15 */
     if ( i2 > 0x0F )
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5160,7 +5654,14 @@ VADR    effective_addr1,
 
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*--------------------------------------------------*/
+   /*  Storage to storage instructions are restricted  */
+   /*  when in constrained transaction mode.           */
+   /*--------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Move characters using current addressing mode and key */
     ARCH_DEP(move_chars) (effective_addr1, b1, regs->psw.pkey,
                 effective_addr2, b2, regs->psw.pkey, l, regs);
@@ -5170,7 +5671,7 @@ VADR    effective_addr1,
 /*-------------------------------------------------------------------*/
 /* E8   MVCIN - Move Inverse                                    [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( move_inverse )
+DEF_INST(move_inverse)
 {
 CACHE_ALIGN BYTE wrk[256];              /* Cache-aligned Work area   */
 BYTE   *p1, *p2;                        /* Work ptrs for reversing   */
@@ -5180,7 +5681,14 @@ int     b1, b2;                         /* Base registers            */
 BYTE    len;                            /* Amount to move minus 1    */
 
     SS_L( inst, regs, len, b1, eff_addr1, b2, eff_addr2 );
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*--------------------------------------------------*/
+   /*  Storage to storage instructions are restricted  */
+   /*  when in constrained transaction mode.           */
+   /*--------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Copy operand-2 source string to work area */
     op2end = (eff_addr2 - len) & ADDRESS_MAXWRAP( regs );
     ARCH_DEP( vfetchc )( wrk, len, op2end, b2, regs );
@@ -5205,7 +5713,7 @@ BYTE    len;                            /* Amount to move minus 1    */
 /*-------------------------------------------------------------------*/
 /* 0E   MVCL  - Move Long                                       [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST( move_long )
+DEF_INST(move_long)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2;                   /* Operand addresses         */
@@ -5220,6 +5728,14 @@ int     orglen1;                        /* Original dest length      */
 
     RR( inst, regs, r1, r2 );
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-----------------------------------------------*/
+   /*  Move long is restricted when in constrained  */
+   /*  transaction mode.                            */
+   /*-----------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ODD2_CHECK( r1, r2, regs );
 
     /* Determine the destination and source addresses */
@@ -5283,7 +5799,7 @@ int     orglen1;                        /* Original dest length      */
     if (len1)
     {
         if (len2)
-            source = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source = MADDRL(addr2, len2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
         else
             source = NULL;
 
@@ -5361,7 +5877,7 @@ int     orglen1;                        /* Original dest length      */
                 if (addr2 & PAGEFRAME_BYTEMASK)
                     source += len;
                 else
-                    source = MADDR( addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
+                    source = MADDRL(addr2, len2, r2, regs, ACCTYPE_READ, regs->psw.pkey );
             }
             if (addr1 & PAGEFRAME_BYTEMASK)
                 dest += len;
@@ -5398,6 +5914,15 @@ BYTE    *dest;                          /* Maint storage pointers    */
 size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
+
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*-----------------------------------------------*/
+   /*  Move long extended is restricted when in     */
+   /*  constrained transaction mode.                */
+   /*-----------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -5439,7 +5964,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
         /* here if we need to copy data */
         BYTE *source;
         /* get source frame and copy concurrently */
-        source = MADDR (addr2, r3, regs, ACCTYPE_READ, regs->psw.pkey);
+        source = MADDRL(addr2, copylen, r3, regs, ACCTYPE_READ, regs->psw.pkey);
         concpy(regs,dest,source,(int)copylen);
         /* Adjust operands */
         addr2+=(int)copylen;
@@ -5489,7 +6014,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
 /*-------------------------------------------------------------------*/
 /* D1   MVN   - Move Numerics                                   [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( move_numerics )
+DEF_INST(move_numerics)
 {
 VADR    addr1, addr2;                   /* Operand virtual addresses */
 int     len, arn1, arn2;                /* Operand values            */
@@ -5501,12 +6026,21 @@ int     i;                              /* Loop counter              */
 
     SS_L( inst, regs, len, arn1, addr1, arn2, addr2 );
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*--------------------------------------------------*/
+   /*  Storage to storage instructions are restricted  */
+   /*  when in constrained transaction mode.           */
+   /*--------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
+
     ITIMER_SYNC( addr2, len, regs );
 
     /* Translate addresses of leftmost operand bytes */
     dest1 = MADDRL( addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
-    source1 = MADDR( addr2, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
+    source1 = MADDRL(addr2, len+1, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     /* There are several scenarios (in optimal order):
      * (1) dest boundary and source boundary not crossed
@@ -5530,8 +6064,8 @@ int     i;                              /* Loop counter              */
         {
             /* (2) - Second operand crosses a boundary */
             len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                              arn2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL((addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+              len + 1 - len2, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
 
             for (i=0; i < len2; i++)
                 MOVE_NUMERIC_BUMP( dest1, source1 );
@@ -5547,8 +6081,8 @@ int     i;                              /* Loop counter              */
     {
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-                        arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dest2 = MADDRL((addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+            len + 1 - len2, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2, len ))
@@ -5566,8 +6100,8 @@ int     i;                              /* Loop counter              */
         {
             /* (4) - Both operands cross a boundary */
             len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-                              arn2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL((addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+              len + 1 - len3, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -5623,7 +6157,7 @@ int     i;                              /* Loop counter              */
 /*-------------------------------------------------------------------*/
 /* B255 MVST  - Move String                                    [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST( move_string )
+DEF_INST(move_string)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
@@ -5634,6 +6168,14 @@ BYTE    *main1, *main2;                 /* ptrs to compare bytes     */
 BYTE    termchar;                       /* Terminating character     */
 
     RRE( inst, regs, r1, r2 );
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*---------------------------------------------*/
+   /* Move string is restricted in constrained    */
+   /* transaction mode.                           */
+   /*---------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -5655,9 +6197,8 @@ BYTE    termchar;                       /* Terminating character     */
     dist2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
 
     cpu_length = min( dist1, dist2 ); /* (nearest end of page) */
-
-    main1 = MADDR( addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
-    main2 = MADDR( addr2, r2, regs, ACCTYPE_READ,  regs->psw.pkey );
+    main1 = MADDRL( addr1, cpu_length, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
+    main2 = MADDRL( addr2, cpu_length, r2, regs, ACCTYPE_READ,  regs->psw.pkey );
 
     for (i=0; i < cpu_length; i++)
     {
@@ -5715,7 +6256,14 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*--------------------------------------------------*/
+   /*  Storage to storage instructions are restricted  */
+   /*  when in constrained transaction mode.           */
+   /*--------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
         ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
@@ -5776,7 +6324,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 /*-------------------------------------------------------------------*/
 /* D3   MVZ   - Move Zones                                      [SS] */
 /*-------------------------------------------------------------------*/
-DEF_INST( move_zones )
+DEF_INST(move_zones)
 {
 VADR    addr1, addr2;                   /* Operand virtual addresses */
 int     len, arn1, arn2;                /* Operand values            */
@@ -5787,13 +6335,20 @@ int     len2, len3;                     /* Lengths to copy           */
 int     i;                              /* Loop counter              */
 
     SS_L( inst, regs, len, arn1, addr1, arn2, addr2 );
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*--------------------------------------------------*/
+   /*  Storage to storage instructions are restricted  */
+   /*  when in constrained transaction mode.           */
+   /*--------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     ITIMER_SYNC( addr2, len, regs );
 
     /* Translate addresses of leftmost operand bytes */
     dest1 = MADDRL( addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
-    source1 = MADDR( addr2, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
+    source1 = MADDRL(addr2, len+1, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     /* There are several scenarios (in optimal order):
      * (1) dest boundary and source boundary not crossed
@@ -5817,8 +6372,8 @@ int     i;                              /* Loop counter              */
         {
             /* (2) - Second operand crosses a boundary */
             len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                              arn2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL((addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+             len + 1 - len2, arn2, regs, ACCTYPE_READ, regs->psw.pkey );
 
             for (i=0; i < len2; i++)
                 MOVE_ZONE_BUMP( dest1, source1 );
@@ -5834,8 +6389,8 @@ int     i;                              /* Loop counter              */
     {
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDR( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-                        arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dest2 = MADDRL((addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+         len + 1 - len2,arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2, len ))
@@ -5853,8 +6408,8 @@ int     i;                              /* Loop counter              */
         {
             /* (4) - Both operands cross a boundary */
             len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDR( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-                              arn2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL((addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+             len + 1 - len3,  arn2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */

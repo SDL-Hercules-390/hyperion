@@ -48,6 +48,15 @@ int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
@@ -68,6 +77,15 @@ int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
@@ -89,6 +107,15 @@ int     i1, i2, i3;                     /* FP register subscripts    */
 U32     sign;                           /* Work area for sign bit    */
 
     RRF_M(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
     i1 = FPR2I(r1);
@@ -118,6 +145,15 @@ int     r1, r2;                         /* Values of R fields        */
 int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     HFPREG2_CHECK(r1, r2, regs);
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
@@ -140,6 +176,15 @@ int     r1, r2;                         /* Values of R fields        */
 int     i1;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
 
@@ -159,6 +204,15 @@ int     r1, r2;                         /* Values of R fields        */
 int     i2;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     HFPREG_CHECK(r2, regs);
     i2 = FPR2I(r2);
 
@@ -180,6 +234,15 @@ int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     DFPINST_CHECK(regs);
 
@@ -271,6 +334,15 @@ U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
     S(inst, regs, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     DFPINST_CHECK(regs);
 
@@ -309,6 +381,15 @@ U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, unused);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     DFPINST_CHECK(regs);
 
@@ -1749,6 +1830,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -1797,6 +1887,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -1844,6 +1943,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -1887,6 +1995,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -1929,6 +2046,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -1976,6 +2102,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2021,6 +2156,15 @@ decNumber       d1, d2;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -2050,6 +2194,15 @@ decNumber       d1, d2;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2081,6 +2234,15 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2115,6 +2277,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2150,6 +2321,15 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2184,6 +2364,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2219,6 +2408,15 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2252,6 +2450,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2295,6 +2502,15 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2329,6 +2545,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2365,6 +2590,15 @@ BYTE            pwork[16];              /* 31-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
     ODD_CHECK(r2, regs);
@@ -2408,6 +2642,15 @@ BYTE            pwork[8];               /* 15-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2449,6 +2692,15 @@ BYTE            pwork[17];              /* 33-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
     ODD_CHECK(r2, regs);
@@ -2499,6 +2751,15 @@ BYTE            pwork[9];               /* 17-digit packed work area */
 int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2549,6 +2810,15 @@ decContext      set;                    /* Working context           */
 char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2599,6 +2869,15 @@ decContext      set;                    /* Working context           */
 char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Program check if operand length exceeds maximum */
@@ -2648,6 +2927,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2697,8 +2985,16 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
-
     /* Initialise the context for long DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL64);
     ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
@@ -2745,6 +3041,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2794,6 +3099,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2843,6 +3157,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_M(inst, regs, r1, r2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2892,6 +3215,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_M(inst, regs, r1, r2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2941,6 +3273,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2990,6 +3331,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3039,6 +3389,15 @@ int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[18];              /* 33-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
     ODD_CHECK(r1, regs);
@@ -3086,6 +3445,15 @@ int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[9];               /* 17-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3130,6 +3498,15 @@ int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[17];              /* 33-digit packed work area */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
     ODD_CHECK(r1, regs);
@@ -3177,6 +3554,15 @@ int32_t         scale;                  /* Scaling factor            */
 BYTE            pwork[9];               /* 17-digit packed work area */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3224,6 +3610,15 @@ int             cc;                     /* Condition code            */
 char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -3275,6 +3670,15 @@ int             cc;                     /* Condition code            */
 char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Program check if operand length exceeds 16 */
@@ -3322,6 +3726,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -3365,6 +3778,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3407,6 +3829,15 @@ decContext      set;                    /* Working context           */
 S64             exponent;               /* Biased exponent           */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -3447,6 +3878,15 @@ decContext      set;                    /* Working context           */
 S64             exponent;               /* Biased exponent           */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3486,6 +3926,15 @@ decContext      set;                    /* Working context           */
 S64             digits;                 /* Number of decimal digits  */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -3528,6 +3977,15 @@ decContext      set;                    /* Working context           */
 S64             digits;                 /* Number of decimal digits  */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3569,6 +4027,15 @@ decContext      set;                    /* Working context           */
 S64             bexp;                   /* Biased exponent           */
 
     RRF_M(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -3638,6 +4105,15 @@ decContext      set;                    /* Working context           */
 S64             bexp;                   /* Biased exponent           */
 
     RRF_M(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3706,6 +4182,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3758,6 +4243,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3809,6 +4303,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3883,6 +4386,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3957,6 +4469,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_M4(inst, regs, r1, r2, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -4024,6 +4545,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_M4(inst, regs, r1, r2, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4092,6 +4622,15 @@ BYTE            pwork[17];              /* 33-digit packed work area */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -4177,6 +4716,15 @@ BYTE            pwork[9];               /* 17-digit packed work area */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4258,6 +4806,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -4301,6 +4858,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4343,6 +4909,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -4386,6 +4961,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4429,6 +5013,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -4484,6 +5077,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4539,6 +5141,15 @@ decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -4599,6 +5210,15 @@ decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Isolate rightmost 6 bits of second operand address */
@@ -4658,6 +5278,15 @@ decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -4718,6 +5347,15 @@ decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Isolate rightmost 6 bits of second operand address */
@@ -4775,6 +5413,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -4823,6 +5470,15 @@ decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4872,6 +5528,15 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -4905,6 +5570,15 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4937,6 +5611,15 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for short DFP */
@@ -4970,6 +5653,15 @@ U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -5009,6 +5701,15 @@ U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -5047,6 +5748,15 @@ U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     DFPINST_CHECK(regs);
 
     /* Initialise the context for short DFP */

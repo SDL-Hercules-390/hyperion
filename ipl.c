@@ -620,6 +620,8 @@ int i, rc = 0;                          /* Array subscript           */
     regs->checkstop = 0;
     regs->sigp_reset = 0;
     regs->extccpu = 0;
+    regs->tranlvl = 0;
+    regs->contran = 0;
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
@@ -704,6 +706,8 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 
     regs->todpr  = 0;
     regs->clkc   = 0;
+    regs->tranlvl = 0;
+    regs->contran = 0;
     set_cpu_timer( regs, 0 );
 #if defined( _FEATURE_INTERVAL_TIMER )
     set_int_timer( regs, 0 );
@@ -718,7 +722,10 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 
 #if defined( FEATURE_S370_CHANNEL ) && !defined( FEATURE_ACCESS_REGISTERS )
     /* For S/370 initialize the channel masks in CR2 */
-    regs->CR(2) = 0xFFFFFFFF;
+    regs->CR(2) = (U32)0xFFFFFFFFF;
+#endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    regs->CR(2) &= 0xFFFFFFFFFFFFFFF8ll;  /* turn off transact bits*/
 #endif
 
     regs->chanset =

@@ -708,6 +708,15 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -782,6 +791,15 @@ int     rc;                             /* Return code               */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -842,6 +860,15 @@ int     signq, signr;                   /* Sign of quotient/remainder*/
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
@@ -915,6 +942,15 @@ BYTE    rbyte;                          /* Result byte               */
 
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* If addr1 crosses page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -1097,6 +1133,15 @@ int     carry;                          /* Carry indicator           */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
@@ -1167,7 +1212,15 @@ int     carry;                          /* Carry indicator           */
 
     SS(inst, regs, l1, i3, b1, effective_addr1,
                                      b2, effective_addr2);
-
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     /* Load operand into work area */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec, &count, &sign);
 
@@ -1262,6 +1315,15 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -1335,6 +1397,15 @@ int     sign;                           /* Sign                      */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Load second operand into work area */
     ARCH_DEP(load_decimal) (effective_addr2, l2, b2, regs, dec, &count, &sign);
@@ -1377,6 +1448,15 @@ int     cc = 0;                         /* Condition code            */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
     RSL(inst, regs, l1, b1, effective_addr1);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+   /*----------------------------------------------------------*/
+   /*  Decimal instructions are restricted when in constrained */
+   /*  transaction mode, so abort the transaction if a         */
+   /*  if a constrained transaction is active.                 */
+   /*----------------------------------------------------------*/
+   if (regs->contran)
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     /* Fetch the packed decimal operand into the work area */
     ARCH_DEP(vfetchc) (pack, l1, effective_addr1, b1, regs);

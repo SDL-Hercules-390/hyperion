@@ -982,6 +982,15 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
     struct lbfp op2;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     //logmsg("THDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -1007,6 +1016,15 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
     struct lbfp lbfp_op2;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -1035,6 +1053,15 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
     struct lbfp op1;
 
     RRF_M(inst, regs, r1, r2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -1058,6 +1085,15 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     U64 fract;
 
     RRF_M(inst, regs, r1, r2, m3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -1084,6 +1120,15 @@ DEF_INST(add_bfp_ext_reg)
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair                       */
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );             /* Get operand values                                   */
@@ -1117,6 +1162,15 @@ DEF_INST(add_bfp_long_reg)
     int ieee_trap_conds = 0;                /* start out with no traps detected   */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -1149,6 +1203,15 @@ DEF_INST(add_bfp_long)
     int ieee_trap_conds = 0;                /* start out with no traps detected   */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -1182,6 +1245,15 @@ DEF_INST(add_bfp_short_reg)
     int ieee_trap_conds = 0;                /* start out with no traps detected   */
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -1216,6 +1288,15 @@ DEF_INST(add_bfp_short)
     int ieee_trap_conds = 0;                /* start out with no traps detected   */
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -1248,6 +1329,15 @@ DEF_INST(compare_bfp_ext_reg)
     BYTE newcc;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
@@ -1272,6 +1362,15 @@ DEF_INST(compare_bfp_long_reg)
     BYTE newcc;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -1295,6 +1394,15 @@ DEF_INST(compare_bfp_long)
     BYTE newcc;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&      /*  in transaction mode              */
+     (regs->contran ||  /* constrained      */
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))  /* float flag is off   */
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -1317,6 +1425,15 @@ DEF_INST(compare_bfp_short_reg)
     BYTE newcc;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -1339,6 +1456,15 @@ DEF_INST(compare_bfp_short)
     BYTE newcc;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -1361,6 +1487,15 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
     BYTE newcc;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
@@ -1383,6 +1518,15 @@ DEF_INST(compare_and_signal_bfp_long_reg)
     BYTE newcc;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -1405,6 +1549,15 @@ DEF_INST(compare_and_signal_bfp_long)
     BYTE newcc;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -1427,6 +1580,15 @@ DEF_INST(compare_and_signal_bfp_short_reg)
     BYTE newcc;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -1449,6 +1611,15 @@ DEF_INST(compare_and_signal_bfp_short)
     BYTE newcc;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -1494,6 +1665,15 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -1529,6 +1709,15 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
     float64_t op1;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1566,6 +1755,15 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1605,6 +1803,15 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
     float128_t op1;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -1645,6 +1852,15 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1688,6 +1904,15 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1760,6 +1985,15 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
 #endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
@@ -1827,6 +2061,15 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
 #endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -1892,6 +2135,15 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
 #else
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
+#endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
 #endif
 
     BFPINST_CHECK(regs);
@@ -1959,6 +2211,15 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
 #else
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
+#endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2029,6 +2290,15 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
 #endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
@@ -2096,6 +2366,15 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
 #else
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
+#endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2175,6 +2454,15 @@ DEF_INST(convert_u32_to_bfp_ext_reg)
     float128_t op1;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
@@ -2205,6 +2493,15 @@ DEF_INST(convert_u32_to_bfp_long_reg)
     float64_t op1;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact            */
@@ -2236,6 +2533,15 @@ DEF_INST(convert_u32_to_bfp_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 
@@ -2266,6 +2572,15 @@ DEF_INST(convert_u64_to_bfp_ext_reg)
     float128_t op1;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
@@ -2298,6 +2613,15 @@ DEF_INST(convert_u64_to_bfp_long_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 
@@ -2333,6 +2657,15 @@ DEF_INST(convert_u64_to_bfp_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 
@@ -2388,6 +2721,15 @@ DEF_INST(convert_bfp_ext_to_u32_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
@@ -2438,6 +2780,15 @@ DEF_INST(convert_bfp_long_to_u32_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
@@ -2488,6 +2839,15 @@ DEF_INST(convert_bfp_short_to_u32_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT32_OP(op2, r2, regs);
@@ -2537,6 +2897,15 @@ DEF_INST(convert_bfp_ext_to_u64_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
@@ -2587,6 +2956,15 @@ DEF_INST(convert_bfp_long_to_u64_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT64_OP(op2, r2, regs);
@@ -2635,6 +3013,15 @@ DEF_INST(convert_bfp_short_to_u64_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
     GET_FLOAT32_OP(op2, r2, regs);
@@ -2681,6 +3068,15 @@ DEF_INST(divide_bfp_ext_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
@@ -2715,6 +3111,15 @@ DEF_INST(divide_bfp_long_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -2749,6 +3154,15 @@ DEF_INST(divide_bfp_long)
     U32 ieee_trap_conds = 0;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -2783,6 +3197,15 @@ DEF_INST(divide_bfp_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -2816,6 +3239,15 @@ DEF_INST(divide_bfp_short)
     U32 ieee_trap_conds = 0;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -2849,6 +3281,15 @@ DEF_INST(load_and_test_bfp_ext_reg)
     float128_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP( op, r2, regs );
@@ -2879,6 +3320,15 @@ DEF_INST(load_and_test_bfp_long_reg)
     float64_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op, r2, regs );
 
@@ -2908,6 +3358,15 @@ DEF_INST(load_and_test_bfp_short_reg)
     float32_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op, r2, regs );
 
@@ -2943,6 +3402,15 @@ DEF_INST(load_fp_int_bfp_short_reg)
 #else
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
+#endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
 #endif
 
     BFPINST_CHECK(regs);
@@ -2980,6 +3448,15 @@ DEF_INST(load_fp_int_bfp_long_reg)
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
 #endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
@@ -3015,6 +3492,15 @@ DEF_INST(load_fp_int_bfp_ext_reg)
 #else
     RRF_M(inst, regs, r1, r2, m3);
     m4 = 0;
+#endif
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
 #endif
 
     BFPINST_CHECK(regs);
@@ -3060,6 +3546,15 @@ DEF_INST(load_lengthened_bfp_short_to_long_reg)
     float64_t op1;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op2, r2, regs );
 
@@ -3087,6 +3582,15 @@ DEF_INST(load_lengthened_bfp_short_to_long)
     float64_t op1;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
 
@@ -3112,6 +3616,15 @@ DEF_INST(load_lengthened_bfp_long_to_ext_reg)
     float128_t op1;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     GET_FLOAT64_OP( op2, r2, regs );
@@ -3139,6 +3652,15 @@ DEF_INST(load_lengthened_bfp_long_to_ext)
     float128_t op1;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -3165,6 +3687,15 @@ DEF_INST(load_lengthened_bfp_short_to_ext_reg)
     float128_t op1;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     GET_FLOAT32_OP( op2, r2, regs );
@@ -3192,6 +3723,15 @@ DEF_INST(load_lengthened_bfp_short_to_ext)
     float128_t op1;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -3217,6 +3757,15 @@ DEF_INST(load_negative_bfp_ext_reg)
     float128_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3234,6 +3783,15 @@ DEF_INST(load_negative_bfp_long_reg)
     float64_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3250,6 +3808,15 @@ DEF_INST(load_negative_bfp_short_reg)
     float32_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3266,6 +3833,15 @@ DEF_INST(load_complement_bfp_ext_reg)
     float128_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3283,6 +3859,15 @@ DEF_INST(load_complement_bfp_long_reg)
     float64_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3299,6 +3884,15 @@ DEF_INST(load_complement_bfp_short_reg)
     float32_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3315,6 +3909,15 @@ DEF_INST(load_positive_bfp_ext_reg)
     float128_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3332,6 +3935,15 @@ DEF_INST(load_positive_bfp_long_reg)
     float64_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3348,6 +3960,15 @@ DEF_INST(load_positive_bfp_short_reg)
     float32_t op;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3389,6 +4010,15 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op2, r2, regs );
 
@@ -3439,6 +4069,15 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3491,6 +4130,15 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
 
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3540,6 +4188,15 @@ DEF_INST(multiply_bfp_ext_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OPS(op1, r1, op2, r2, regs);
@@ -3576,6 +4233,15 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
     float128_t iop1, iop2, ans;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -3626,6 +4292,15 @@ DEF_INST(multiply_bfp_long_to_ext)
     float128_t iop1, iop2, ans;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     GET_FLOAT64_OP( op1, r1, regs );
@@ -3670,6 +4345,15 @@ DEF_INST(multiply_bfp_long_reg)
     U32 ieee_trap_conds =0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -3702,6 +4386,15 @@ DEF_INST(multiply_bfp_long)
     U32 ieee_trap_conds =0;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -3738,6 +4431,15 @@ DEF_INST(multiply_bfp_short_to_long_reg)
     float64_t iop1, iop2, ans;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -3787,6 +4489,15 @@ DEF_INST(multiply_bfp_short_to_long)
     float64_t iop1, iop2, ans;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -3832,6 +4543,15 @@ DEF_INST(multiply_bfp_short_reg)
     U32 ieee_trap_conds =0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -3863,6 +4583,15 @@ DEF_INST(multiply_bfp_short)
     U32 ieee_trap_conds =0;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -3895,6 +4624,15 @@ DEF_INST(multiply_add_bfp_long_reg)
     U32 ieee_trap_conds =0;
 
     RRF_R(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT64_OP( op2, r2, regs );
@@ -3927,6 +4665,15 @@ DEF_INST(multiply_add_bfp_long)
     U32 ieee_trap_conds =0;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -3959,6 +4706,15 @@ DEF_INST(multiply_add_bfp_short_reg)
     U32 ieee_trap_conds =0;
 
     RRF_R(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT32_OP( op2, r2, regs );
@@ -3991,6 +4747,15 @@ DEF_INST(multiply_add_bfp_short)
     U32 ieee_trap_conds =0;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -4023,6 +4788,15 @@ DEF_INST(multiply_subtract_bfp_long_reg)
     U32 ieee_trap_conds =0;
 
     RRF_R(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT64_OP( op2, r2, regs );
@@ -4059,6 +4833,15 @@ DEF_INST(multiply_subtract_bfp_long)
     U32 ieee_trap_conds =0;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -4095,6 +4878,15 @@ DEF_INST(multiply_subtract_bfp_short_reg)
     U32 ieee_trap_conds =0;
 
     RRF_R(inst, regs, r1, r2, r3);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT32_OP( op2, r2, regs );
@@ -4132,6 +4924,15 @@ DEF_INST(multiply_subtract_bfp_short)
     U32 ieee_trap_conds = 0;
 
     RXF(inst, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -4167,6 +4968,15 @@ DEF_INST(squareroot_bfp_ext_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OP( op2, r2, regs );
@@ -4196,6 +5006,15 @@ DEF_INST(squareroot_bfp_long_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op2, r2, regs );
 
@@ -4225,6 +5044,15 @@ DEF_INST(squareroot_bfp_long)
     U32 ieee_trap_conds = 0;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
 
@@ -4253,6 +5081,15 @@ DEF_INST(squareroot_bfp_short_reg)
     U32 ieee_trap_conds = 0;
 
     RRE(inst, regs, r1, r2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op2, r2, regs );
 
@@ -4282,6 +5119,15 @@ DEF_INST(squareroot_bfp_short)
     U32 ieee_trap_conds = 0;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
 
@@ -4312,6 +5158,15 @@ DEF_INST(subtract_bfp_ext_reg)
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair for extended format   */
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );             /* Get operand values                                   */
@@ -4348,6 +5203,15 @@ DEF_INST(subtract_bfp_long_reg)
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT64_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
 
@@ -4381,6 +5245,15 @@ DEF_INST(subtract_bfp_long)
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
 
     RXE(inst, regs, r1, b2, effective_addr2);               /* decode operand register and address                  */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT64_OP(op1, r1, regs);                          /* Get register operand value                           */
     VFETCH_FLOAT64_OP(op2, effective_addr2, b2, regs);
@@ -4415,6 +5288,15 @@ DEF_INST(subtract_bfp_short_reg)
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT32_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
 
@@ -4449,6 +5331,15 @@ DEF_INST(subtract_bfp_short)
     U32 ieee_trap_conds = 0;                                /* start out with no traps detected                     */
 
     RXE(inst, regs, r1, b2, effective_addr2);               /* decode operand register and address                  */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     GET_FLOAT32_OP(op1, r1, regs);                          /* Get register operand value                           */
     VFETCH_FLOAT32_OP(op2, effective_addr2, b2, regs);
@@ -4485,6 +5376,15 @@ DEF_INST(test_data_class_bfp_short)
     float32_t op1;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op1, r1, regs );
@@ -4502,6 +5402,15 @@ DEF_INST(test_data_class_bfp_long)
     float64_t op1;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op1, r1, regs );
@@ -4519,6 +5428,15 @@ DEF_INST(test_data_class_bfp_ext)
     float128_t op1;
 
     RXE(inst, regs, r1, b2, effective_addr2);
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -4556,6 +5474,15 @@ DEF_INST(divide_integer_bfp_long_reg)
                                                             /* Test Data Class instruction                          */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4754,6 +5681,15 @@ DEF_INST(divide_integer_bfp_short_reg)
     U32 op1_data_class, op2_data_class;                     /* Saved class of operands in same form as tested by    */
                                                             /* Test Data Class instruction                          */
     RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
+#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+  /*  Floating point instructions are restricted when in constrained  */
+  /*  transaction mode, or when in unconstrained transaction mode and */
+  /*  the float control bit is zero.                                  */
+   if (regs->tranlvl > 0 &&
+     (regs->contran ||
+     ((regs->tranctlflag & TRAN_MODE_FLOAT) == 0x00)))
+     ARCH_DEP(abort_transaction)(regs, 2, 11);
+#endif
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);

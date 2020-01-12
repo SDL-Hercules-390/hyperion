@@ -1744,6 +1744,12 @@ tran_excp_addr:
 void ARCH_DEP(purge_tlb) (REGS *regs)
 {
     INVALIDATE_AIA(regs);
+    /*------------------------------------------------------*/
+    /* If the CPU represented by this regs structure is in  */
+    /* transaction execution mode, flag it for abort.       */
+    /*------------------------------------------------------*/
+    if (regs->tranlvl > 0  && !regs->abortcode)
+      regs->abortcode = 255;
     if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
     {
         memset(&regs->tlb.vaddr, 0, TLBN * sizeof(DW) );
@@ -1805,6 +1811,12 @@ RADR ptemask;
 #endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
     INVALIDATE_AIA(regs);
+    /*------------------------------------------------------*/
+    /* If the CPU represented by this regs structure is in  */
+    /* transaction execution mode, flag it for abort.       */
+    /*------------------------------------------------------*/
+    if (regs->tranlvl > 0  && !regs->abortcode)
+      regs->abortcode = 255;
     for (i = 0; i < TLBN; i++)
         if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)
             regs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
@@ -2445,5 +2457,5 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
 /*-------------------------------------------------------------------*/
 
 // (we have no non-ARCH_DEP code to place here -- yet!)
- 
+
 #endif /* !defined( _GEN_ARCH )*/

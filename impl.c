@@ -692,7 +692,10 @@ int     rc;
     {
         int i;
         for (i = 0; i < MAX_CPU_ENGINES; i++)
+        {
             initialize_lock (&sysblk.cpulock[i]);
+            initialize_lock (&sysblk.tranlock[i]);
+        }
     }
     initialize_condition (&sysblk.sync_cond);
     initialize_condition (&sysblk.sync_bc_cond);

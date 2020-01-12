@@ -180,6 +180,9 @@ typedef  uint8_t    QWORD[16];  // unsigned quadword   (16 bytes)
 
 typedef struct SYSBLK    SYSBLK;    // System configuration block
 typedef struct REGS      REGS;      // CPU register context
+typedef struct TPAGEMAP  TPAGEMAP;  // transaction page map table
+typedef struct NTRANTBL  NTRANTBL;  // non transactional store table
+typedef struct TDB       TDB;       // transaction dianostic block
 typedef struct VFREGS    VFREGS;    // Vector Facility Registers
 typedef struct ZPBLK     ZPBLK;     // Zone Parameter Block
 typedef struct TELNET    TELNET;    // Telnet Control Block

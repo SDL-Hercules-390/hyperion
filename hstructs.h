@@ -55,6 +55,49 @@
 #else
   #error MAX_CPU_ENGINES cannot exceed 128
 #endif
+/*---------------------------------------------------------------------------*/
+/*               Non transactional store table                               */
+/*      The non-transactional store table is used to track non-transactional */
+/*      stores that occur during an unconstrained transaction.  The table is */
+/*      needed to commit the changes when an abort occurs.                   */
+struct NTRANTBL {
+      U64   effective_addr;            /* virtual address of the store       */
+      int   arn;                       /* access register value              */
+      BYTE  skey;                      /* storage key in use                 */
+      BYTE  amodebits;                 /* amode bit settings                 */
+      BYTE  resv[2];                   /* reserved                           */
+      U64   ntran_data;                /* data to store                      */
+};
+
+/*-------------------------------------------------------------------*/
+/*          Transaction diagnostic block                             */
+/*-------------------------------------------------------------------*/
+struct TDB {
+    BYTE       tdbformat;        /* format, 0 = invalid, 1 = valid   */
+    BYTE       tdbflags;         /* flags                            */
+    BYTE       tdbresv1[4];      /* reserved                         */
+    U16        tdbnestl;         /* nesting level at abort time      */
+    U64        tdbabortcode;     /* transaction abort code           */
+    U64        tdbconfict;       /* conflict token                   */
+    U64        tdbinstaddr;      /* transaction abort inst addr      */
+    BYTE       tdbeaid;          /* exception access id              */
+    BYTE       tdbdxc;           /* data exception code              */
+    BYTE       tdbresv2[2];      /* reserved                         */
+    U32        tdbpgmintid;      /* program interrupt identification */
+    U64        tdbtranexcid;     /* transaction exception ident      */
+    U64        tdbbreakeventaddr;   /* breaking event address        */
+    U64        tdbresv3[9];      /* reserved                         */
+    U64        tdbgpr[16];       /* register array                   */
+};
+
+/*-------------------------------------------------------------------*/
+/*      Transaction page map                                         */
+/*-------------------------------------------------------------------*/
+struct TPAGEMAP {
+   BYTE  *mainpageaddr;     /* address of main page being mapped      */
+   BYTE  *altpageaddr;      /* addesss of alternate page              */
+   BYTE  cachemap[CACHE_LINE_PAGE];   /* cache line indicators       */
+};
 
 /*-------------------------------------------------------------------*/
 /*       Structure definition for CPU register context               */
@@ -393,6 +436,31 @@ struct REGS {                           /* Processor registers       */
      /* TLB - Translation lookaside buffer                           */
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
+        BYTE   tranlvl;                 /* transaction mode level    */
+        BYTE   contran;                 /*  1 = constrained          */
+        BYTE   tranregmask;             /* register restore mask     */
+        BYTE   tranctlflag;             /* flags for access mode change, float allowed */
+        U16     traninstctr;            /* instruction counter for contrained and auto abort */
+        U16     tranabortnum;           /* if non-zero, abort when this = traninstctr */
+        U16     tranprogfiltlvl;        /* transaction filtering mode  */
+        U16     tranhigharchange;       /* highest level that archange is active */
+        U16     tranhighfloat;          /* highest level that float is active */
+        U16     tranprogfilttab[15];    /* table for nesting levels */
+#define TRAN_MODE_ARCHANGE  0x08        /* ar reg changes allowed in transaction mode */
+#define TRAN_MODE_FLOAT     0x04        /* float and vector allowed in transaction mode */
+        U32     tranpiid;               /* transaction program interrupt ident */
+        U64    conflictaddr;            /* address where conflict detected */
+        TPAGEMAP tpagemap[MAX_TRAN_PAGES];  /* address of the page map   */
+        DW     tranregs[16];            /* saved gpr values          */
+        TDB    *tdbaddr;                /* transaction diagnostic block address or null */
+        int     tranpagenum;            /* number of pages in page map */
+        int     tranlastaccess;         /* last access type */
+        int     tranlastarn;            /* last arn */
+        int     ntranstorectr;          /* non transactional store ctr */
+        int     abortcode;              /* transaction abort code   */
+        int     rabortcode;             /* random abort code         */
+        NTRANTBL ntrantbl[MAX_NTRAN_STORE];   /* table of non transactional stores */
+        PSW     tranabortpsw;           /* transaction abort psw */
 
         BLOCK_TRAILER;                  /* Name of block  END        */
 };
@@ -532,6 +600,7 @@ struct SYSBLK {
         U8      unused1;                /* (pad/align/unused/avail)  */
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
+        LOCK    tranlock[MAX_CPU_ENGINES];  /* CPU transaction lock  */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
         clockid_t                              /* CPU clock     @PJJ */
@@ -876,6 +945,7 @@ struct SYSBLK {
         U64     instcount;              /* Instruction counter       */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
+        U32     tranmodectr;            /* number of cpus in transaction mode */
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 

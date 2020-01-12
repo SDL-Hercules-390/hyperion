@@ -1081,6 +1081,7 @@ typedef struct PSA_900  PSA_900;
 #define PGM_OPERAND_EXCEPTION                           0x0015
 #define PGM_TRACE_TABLE_EXCEPTION                       0x0016
 #define PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION     0x0017
+#define PGM_TRANSACTION_CONSTRAINT_EXCEPTION            0x0018
 #define PGM_VECTOR_OPERATION_EXCEPTION                  0x0019
 #define PGM_SPACE_SWITCH_EVENT                          0x001C
 #define PGM_SQUARE_ROOT_EXCEPTION                       0x001D
