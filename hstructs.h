@@ -142,6 +142,8 @@ struct TDB {
 #define ABORT_CODE_TABORT      256  /* TABORT instruction            */
 };
 
+CASSERT( sizeof( struct TDB ) == 256, hstructs_h );
+
 /*-------------------------------------------------------------------*/
 /*      Transaction page map                                         */
 /*-------------------------------------------------------------------*/
