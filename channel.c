@@ -1047,6 +1047,7 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
 
     /* Store the channel id word at PSA+X'A8' */
     psa = (PSA_3XX*)(regs->mainstor + regs->PX);
+    TXF_STOREREF( ((BYTE*)(psa)) + offsetof( PSA_3XX, chanid ), 4 );
     STORE_FW(psa->chanid, chanid);
 
     /* Exit with condition code 0 indicating channel id stored */
@@ -2871,6 +2872,7 @@ BYTE   *ccw;                            /* CCW pointer               */
 
     /* Point to the CCW in main storage */
     ccw = dev->mainstor + ccwaddr;
+    TXF_FETCHREF( ccw, 8 );
 
     /* Extract CCW opcode, flags, byte count, and data address */
     if (ccwfmt == 0)
@@ -2947,9 +2949,10 @@ BYTE    storkey;                        /* Storage key               */
     if (idawfmt == 2)                                          /*@IWZ*/
     {                                                          /*@IWZ*/
         /* Fetch format-2 IDAW */                              /*@IWZ*/
+        TXF_FETCHREF( dev->mainstor + idawaddr, 8 );
         FETCH_DW(idaw2, dev->mainstor + idawaddr);             /*@IWZ*/
 
-       #ifndef FEATURE_001_ZARCH_INSTALLED_FACILITY                                   /*@IWZ*/
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )           /*@IWZ*/
         /* Channel program check in ESA/390 mode
            if the format-2 IDAW exceeds 2GB-1 */               /*@IWZ*/
         if (idaw2 > 0x7FFFFFFF)                                /*@IWZ*/
@@ -2957,14 +2960,14 @@ BYTE    storkey;                        /* Storage key               */
             *chanstat = CSW_PROGC;                             /*@IWZ*/
             return;                                            /*@IWZ*/
         }                                                      /*@IWZ*/
-       #endif /*!FEATURE_001_ZARCH_INSTALLED_FACILITY*/                               /*@IWZ*/
-
+#endif                                                         /*@IWZ*/
         /* Save contents of format-2 IDAW */                   /*@IWZ*/
         idaw = idaw2;                                          /*@IWZ*/
     }                                                          /*@IWZ*/
     else                                                       /*@IWZ*/
     {                                                          /*@IWZ*/
         /* Fetch format-1 IDAW */                              /*@IWZ*/
+        TXF_FETCHREF( dev->mainstor + idawaddr, 4 );
         FETCH_FW(idaw1, dev->mainstor + idawaddr);             /*@IWZ*/
 
         /* Channel program check if bit 0 of
@@ -3079,6 +3082,7 @@ U16     maxlen;                         /* Maximum allowable length  */
 
     /* Fetch MIDAW from main storage (MIDAW is quadword
        aligned and so cannot cross a page boundary) */
+    TXF_FETCHREF( dev->mainstor + midawadr, 8+8 );
     FETCH_DW(mword1, dev->mainstor + midawadr);
     FETCH_DW(mword2, dev->mainstor + midawadr + 8);
 
@@ -3359,6 +3363,7 @@ do {                                                                   \
                     if (readbackwards)
                     {
                         midawdat = (midawdat - midawlen) + 1;
+                        TXF_STOREREF( dev->mainstor + midawdat, midawlen );
                         memcpy_backwards (dev->mainstor + midawdat,
                                           iobufptr,
                                           midawlen);
@@ -3370,6 +3375,7 @@ do {                                                                   \
                     {
                         if (to_iobuf)
                         {
+                            TXF_FETCHREF( dev->mainstor + midawdat, midawlen );
                             memcpy (iobuf,
                                     dev->mainstor + midawdat,
                                     midawlen);
@@ -3378,9 +3384,12 @@ do {                                                                   \
                                 prefetch->datalen[ps] = midawlen;
                         }
                         else
+                        {
+                            TXF_STOREREF( dev->mainstor + midawdat, midawlen );
                             memcpy (dev->mainstor + midawdat,
                                     iobuf,
                                     midawlen);
+                        }
 
                         /* Increment buffer pointer */
                         iobuf += midawlen;
@@ -3562,6 +3571,7 @@ do {                                                                   \
                 if (readbackwards)
                 {
                     idadata = (idadata - idalen) + 1;
+                    TXF_STOREREF( dev->mainstor + idadata, idalen );
                     memcpy_backwards( dev->mainstor + idadata,
                                       iobuf + dev->curblkrem + idacount - idalen,
                                       idalen );
@@ -3572,9 +3582,15 @@ do {                                                                   \
                 else
                 {
                     if (to_iobuf)
+                    {
+                        TXF_FETCHREF( dev->mainstor + idadata, idalen );
                         memcpy( iobuf, dev->mainstor + idadata, idalen );
+                    }
                     else
+                    {
+                        TXF_STOREREF( dev->mainstor + idadata, idalen );
                         memcpy( dev->mainstor + idadata, iobuf, idalen );
+                    }
 
                     /* Increment buffer pointer for next IDAW*/
                     iobuf += idalen;
@@ -3607,7 +3623,6 @@ do {                                                                   \
     }
     else                              /* Non-IDA data addressing */
     {
-
         /* Point to start of data for read backward command */
         if (readbackwards)
             addr = addr - (count - 1);
@@ -3725,9 +3740,12 @@ do {                                                                   \
                     iobufptr < iobufstart)
                     *chanstat = CSW_CDC;
                 else
+                {
                     /* read backward  - use END of buffer */
+                    TXF_STOREREF( dev->mainstor + addr, count );
                     memcpy_backwards( dev->mainstor + addr,
                         iobufptr, count );
+                }
             }
 
             /* Channel check if outside buffer                       */
@@ -3741,6 +3759,7 @@ do {                                                                   \
             /* Handle Write and Control transfer to I/O buffer */
             else if (to_iobuf)
             {
+                TXF_FETCHREF( dev->mainstor + addr, count );
                 memcpy( iobuf, dev->mainstor + addr, count );
 
                 prefetch->pos += count;
@@ -3752,7 +3771,10 @@ do {                                                                   \
 
             /* Handle Read transfer from I/O buffer */
             else
+            {
+                TXF_STOREREF( dev->mainstor + addr, count );
                 memcpy( dev->mainstor + addr, iobuf, count );
+            }
 
 #ifdef FEATURE_S370_CHANNEL
             if (dev->devtype == 0x2703)
@@ -4336,8 +4358,10 @@ resume_suspend:
         {
             STORAGE_KEY(mbaddr, dev) |= (STORKEY_REF | STORKEY_CHANGE);
             mbk = (MBK*)&dev->mainstor[mbaddr];
+            TXF_FETCHREF( ((BYTE*)(mbk)) + offsetof( MBK, srcount ), 2 );
             FETCH_HW(mbcount,mbk->srcount);
             mbcount++;
+            TXF_STOREREF( ((BYTE*)(mbk)) + offsetof( MBK, srcount ), 2 );
             STORE_HW(mbk->srcount,mbcount);
         } else {
             /* Generate subchannel logout indicating program
