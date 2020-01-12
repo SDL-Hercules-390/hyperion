@@ -68,6 +68,14 @@
   #endif
 #endif
 
+#if defined( OPTION_TXF_SLOWLOOP ) && defined( OPTION_NO_TXF_SLOWLOOP )
+  #error Either OPTION_TXF_SLOWLOOP -or- OPTION_NO_TXF_SLOWLOOP must be specified, but not both
+#elif !defined( OPTION_TXF_SLOWLOOP ) && !defined( OPTION_NO_TXF_SLOWLOOP )
+  #define OPTION_TXF_SLOWLOOP
+#elif defined( OPTION_NO_TXF_SLOWLOOP )
+  #undef OPTION_TXF_SLOWLOOP
+#endif // OPTION_TXF_SLOWLOOP
+
 #if (CKD_MAXFILES > 35)
   #error CKD_MAXFILES can not exceed design limit of 35
 #endif
