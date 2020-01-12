@@ -1449,7 +1449,7 @@ int     ai, li, ti;                     /* Operand address subfields */
        set register r1 to indicate a fictitious cache line size */
     if (ai == 1 && li == 0)
     {
-        regs->GR(r1) = 256;
+        regs->GR(r1) = ZCACHE_LINE_SIZE;
         return;
     }
 
@@ -1457,7 +1457,7 @@ int     ai, li, ti;                     /* Operand address subfields */
        set register r1 to indicate a fictitious total cache size */
     if (ai == 2 && li == 0)
     {
-        regs->GR(r1) = 256 * 2048;
+        regs->GR(r1) = ZCACHE_LINE_SIZE * 2048;
         return;
     }
 
