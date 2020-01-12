@@ -68,6 +68,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     int  aea_arn  = regs->AEA_AR( arn );
     U16  tlbix    = TLBIX( addr );
     BYTE *rtnaddr = NULL;
+
 #if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
 #if _GEN_ARCH == 900
     BYTE *altaddr;
@@ -144,6 +145,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     /*---------------------------------------*/
     if (!rtnaddr)
       rtnaddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
+
 #if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
 /*------------------------------------------------------------------*/
 /*  The following code supports the transaction execution facility. */
@@ -163,28 +165,37 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 /*  conflict.  Note that it is OK to use real addresses here because*/
 /*  the transaction will be aborted if the real page is invalidated.*/
 /*------------------------------------------------------------------*/
+
     if (sysblk.tranmodectr == 0)        /* no cpus are in tran mode */
       return rtnaddr;                   /* return now               */
-     /*  we are only interested in fetch and store access  */
+
+    /*  we are only interested in fetch and store access  */
     if (acctype != ACCTYPE_READ && acctype != ACCTYPE_WRITE && acctype != ACCTYPE_WRITE_SKP)
       return rtnaddr;
+
     if (arn == USE_INST_SPACE || arn == USE_REAL_ADDR)  /* should only be set for instruction fetch */
       return rtnaddr;     
+
     hregs = regs->hostregs;
     addrwork = (U64)rtnaddr;                    
     pageoffs = addrwork & PAGEFRAME_BYTEMASK;       
     cacheidx = pageoffs >> CACHE_LINE_SHIFT;  
     addrpage = addrwork & PAGEFRAME_PAGEMASK;  
+
     /* find the length to the end of the page */
     plen = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+
     /* if the length to the end of the page is less than the length passed */
     /* reset to the end of page length */
+
     if (plen < len)
       elen = plen;
     else
       elen = len;
+
     pageoffe = pageoffs + elen; 
     cacheidxe = pageoffe >> CACHE_LINE_SHIFT;
+
 /*------------------------------------------------------------------*/
 /*   if any cpus are in transaction mode, we need to see if this    */
 /*   cpu is storing or fetching into a cache line that has been     */
@@ -199,57 +210,72 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 /*   obtaining the cpu lock for that cpu.  The cpu lock is also     */
 /*   obtained to update the pagemap and/or cachemap.                */
 /*------------------------------------------------------------------*/
-    for (i = 0; i < sysblk.hicpu; i++)
+
+    for (i=0; i < sysblk.hicpu; i++)
     {
       if (sysblk.regs[i]->hostregs == hregs)        /* skip my entry       */
         continue;
+
       rchk = sysblk.regs[i];             /* point to other cpu entry */
+
       if (rchk->tranlvl == 0)            /* this cpu not in transaction mode */
         continue;                        /* skip it */
+
       if (rchk->abortcode)               /* abort already detected */
         continue;                        /* no need to check it */
+
       if (rchk->cpustate != CPUSTATE_STARTED)  /* skip cpus not started*/
         continue;
+
       abortcode = 0;                     /* clear abort code */
       pmap = rchk->tpagemap;
-      for (j = 0; j < rchk->tranpagenum; j++, pmap++)  /* scan the page map  */
+
+      for (j=0; j < rchk->tranpagenum; j++, pmap++)  /* scan the page map  */
       {
         if ((U64)pmap->mainpageaddr == addrpage)  /* same page ?*/
         {
           for (k = cacheidx; k <= cacheidxe; k++)
           {
-            if (pmap->cachemap[k] == 0)  /* no conflict */
+            if (pmap->cachemap[k] == CM_CLEAN)  /* no conflict */
               continue;
-            if (pmap->cachemap[k] == 1)  /* transactional reference was fetch */
+
+            if (pmap->cachemap[k] == CM_FETCHED)  /* transactional reference was fetch */
             {
               if (acctype == ACCTYPE_READ)  /* current access also read */
                 continue;                /* if both are fetch, not a conflict */
-              abortcode = 9;       /* set fetch conflict */
+              abortcode = ABORT_CODE_FETCH_CNF;       /* set fetch conflict */
             }
             else
-              abortcode = 10;      /* store conflict */
+              abortcode = ABORT_CODE_STORE_CNF;      /* store conflict */
+
             /* the real routine is used here instead of obtain_lock to get around a problem */
             /* compiling dyn76.c, which redefines obtain_lock as EnterCriticalSection */
+
             hthread_obtain_lock(&rchk->sysblk->tranlock[i], PTT_LOC );  /*get the cpu lock */
-            if (rchk->tranlvl > 0)
             {
-              rchk->conflictaddr = hregs->psw.ia.D - hregs->psw.ilc;
-              rchk->abortcode = abortcode;
+              if (rchk->tranlvl > 0)
+              {
+                rchk->conflictaddr = hregs->psw.ia.D - hregs->psw.ilc;
+                rchk->abortcode = abortcode;
+              }
             }
             hthread_release_lock(&rchk->sysblk->tranlock[i], PTT_LOC );  /* release the cpu lock */
             break;
           }
+
           if (abortcode)                   /* conflict found, stop scanning */
             break;
         }
       }
-     
     }
+
     if (hregs->tranlvl == 0)              /* tranlvl will always be zero if the transaction */
       return rtnaddr;                    /* facility is not enabled. */
+
     /* if an abort has already been requested, call the abort code now */
     if (hregs->abortcode)
       ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->abortcode);
+
     /*------------------------------------------------------------*/
     /*   We will return an alternate real address to the caller,  */
     /*   which will be visible only to this cpu.  When/if the     */
@@ -267,14 +293,17 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     /*   of the true length.  In those cases,  we must check to   */
     /*   see if more than one cache line is crossed.              */
     /*------------------------------------------------------------*/
+
     /*------------------------------------------------------------*/
     /*  See if we have already captured this page, if not, we     */
     /*  will capture the real page and also save a copy.  The     */
     /*  copy will be used to determine if unexpected changes have */
     /*  been made at commit time.                                 */
     /*------------------------------------------------------------*/
+
     altpage = 0;
     pmap = hregs->tpagemap;
+
     for (i = 0; i < hregs->tranpagenum; i++, pmap++)
     {
       /*  if this page has already been mapped, us it*/
@@ -285,6 +314,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
         break;
       }
     }
+
     if (!altpage)
     {
       if (hregs->tranpagenum >= MAX_TXF_PAGES)
@@ -294,54 +324,70 @@ static inline  BYTE* ARCH_DEP( maddr_l )
         else
           ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_STORE_OVF);
       }
+
       pmap = &hregs->tpagemap[hregs->tranpagenum];
       altpage = pmap->altpageaddr;
       savepage = altpage + PAGEFRAME_PAGESIZE;
       pageaddr = (BYTE *)addrpage;
-      for (i = 0; i < 128; i++)
+
+      for (i=0; i < MAX_CAPTURE_TRIES; i++)
       {
         memcpy(altpage, pageaddr, PAGEFRAME_PAGESIZE);
         memcpy(savepage, pageaddr, PAGEFRAME_PAGESIZE);
+
         if (memcmp(altpage, savepage, PAGEFRAME_PAGESIZE) == 0)
           break;
       }
-      if (i >= 128)
+
+      if (i >= MAX_CAPTURE_TRIES)
         ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
+
       pagecap = 1;
       pmap->mainpageaddr = (BYTE *)addrpage;
       hregs->tranpagenum++;
     }
+
     altaddr = altpage + pageoffs;
+
     if (acctype == ACCTYPE_READ)
-      newacc = 1;
+      newacc = CM_FETCHED;
     else
-      newacc = 2;
+      newacc = CM_STORED;
+
     for (; cacheidx <= cacheidxe; cacheidx++)
     {
       switch (pmap->cachemap[cacheidx])
       {
-      case 0:
-     /*   if the cache line has not been touched, refresh it */
+      case CM_CLEAN:
+
+        /* if the cache line has not been touched, refresh it */
         pageaddrc = pmap->mainpageaddr + (cacheidx << CACHE_LINE_SHIFT);
         altpagec = pmap->altpageaddr + (cacheidx << CACHE_LINE_SHIFT);
         savepagec = altpagec + PAGEFRAME_PAGESIZE;
-        for (i = 0; i < 128; i++)
+
+        for (i=0; i < MAX_CAPTURE_TRIES; i++)
         {
           memcpy(altpagec, pageaddrc, CACHE_LINE_SIZE);
           memcpy(savepagec, pageaddrc, CACHE_LINE_SIZE);
+
           if (memcmp(altpagec, savepagec, CACHE_LINE_SIZE) == 0)
             break;
         }
-        if (i >= 128)
+
+        if (i >= MAX_CAPTURE_TRIES)
           ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
+
         pmap->cachemap[cacheidx] = newacc;
         break;
-      case 1:
-        if (newacc == 0)
+
+      case CM_FETCHED:
+        if (newacc == CM_CLEAN)
           break;
+
         pmap->cachemap[cacheidx] = newacc;
         break;
-      case 2:
+
+      case CM_STORED:
         break;
       }
     }
