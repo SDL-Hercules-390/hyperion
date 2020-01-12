@@ -20,6 +20,7 @@
 #include "telnet.h"         // Need telnet_t
 #include "stfl.h"           // Need STFL_HERC_BY_SIZE
 #include "cckd.h"           // Need CCKD structs
+#include "transact.h"       // Need Transactional Execution Facility
 
 /*-------------------------------------------------------------------*/
 /*              Typedefs for CPU bitmap fields                       */
@@ -55,124 +56,6 @@
 #else
   #error MAX_CPU_ENGINES cannot exceed 128
 #endif
-
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-
-/*-------------------------------------------------------------------*/
-/*          Transactional-Execution Facility constants               */
-/*-------------------------------------------------------------------*/
-#define  MAX_TXF_LEVEL           15   /* Maximum nesting depth       */
-#define  MAX_TXF_CONTRAN_INSTR   32   /* Max CONSTRAINED instr.      */
-#define  MAX_TXF_PAGES           64   /* Max num of modified pages   */
-#define  MAX_TXF_NTSTG          128   /* Max nontransactional stores */
-#define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
-
-#define  ZCACHE_PAGE_SIZE      4096   /* IBM z page size (4K)        */
-#define  ZCACHE_LINE_SIZE       256   /* IBM z cache line size       */
-#define  ZCACHE_LINE_SHIFT        8   /* Cache line size shift value */
-                                      /* Cache lines per 4K page     */
-#define  ZCACHE_LINE_PAGE           (ZCACHE_PAGE_SIZE/ZCACHE_LINE_SIZE)
-
-/*-------------------------------------------------------------------*/
-/*          abort_transaction function 'retry' code                  */
-/*-------------------------------------------------------------------*/
-#define  ABORT_RETRY_RETURN       0   /* Return to caller. Used when */
-                                      /* abort called from e.g. ext
-                                         or I/O interrupt processing */
-#define  ABORT_RETRY_CC           1   /* Set condition code and then */
-                                      /* longjmp to progjmp.         */
-#define  ABORT_RETRY_PGMCHK       2   /* PGMCHK if CONSTRAINED mode, */
-                                      /* else longjmp to progjmp.    */
-
-/*---------------------------------------------------------------------------*/
-/*               Non transactional store table                               */
-/*      The non-transactional store table is used to track non-transactional */
-/*      stores that occur during an unconstrained transaction.  The table is */
-/*      needed to commit the changes when an abort occurs.                   */
-struct NTRANTBL {
-      U64   effective_addr;            /* virtual address of the store       */
-      int   arn;                       /* access register value              */
-      BYTE  skey;                      /* storage key in use                 */
-      BYTE  amodebits;                 /* amode bit settings                 */
-#define AMODE_64    3           /* 64-bit: psw.amode64==1            */
-#define AMODE_31    1           /* 31-bit: psw.amode64==0, amode==1  */
-#define AMODE_24    0           /* 24-bit: psw.amode64==0, amode==0  */
-      BYTE  resv[2];                   /* reserved                           */
-      U64   ntran_data;                /* data to store                      */
-};
-
-/*-------------------------------------------------------------------*/
-/*          Transaction diagnostic block                             */
-/*-------------------------------------------------------------------*/
-struct TDB {
-    BYTE       tdbformat;        /* format, 0 = invalid, 1 = valid   */
-    BYTE       tdbflags;         /* flags                            */
-#define TDB_CTV     0x80        /* Conflict-Token Validity           */
-#define TDB_CTI     0x40        /* Constrained-Transaction Indicator */
-    BYTE       tdbresv1[4];      /* reserved                         */
-    U16        tdbnestl;         /* nesting level at abort time      */
-    U64        tdbabortcode;     /* transaction abort code           */
-    U64        tdbconfict;       /* conflict token                   */
-    U64        tdbinstaddr;      /* transaction abort inst addr      */
-    BYTE       tdbeaid;          /* exception access id              */
-    BYTE       tdbdxc;           /* data exception code              */
-    BYTE       tdbresv2[2];      /* reserved                         */
-    U32        tdbpgmintid;      /* program interrupt identification */
-    U64        tdbtranexcid;     /* transaction exception ident      */
-    U64        tdbbreakeventaddr;   /* breaking event address        */
-    U64        tdbresv3[9];      /* reserved                         */
-    U64        tdbgpr[16];       /* register array                   */
-#define ABORT_CODE_EXT           2  /* External interruption         */
-#define ABORT_CODE_UPGM          4  /* PGM interruption (Unfiltered) */
-#define ABORT_CODE_MCK           5  /* Machine-check interruption    */
-#define ABORT_CODE_IO            6  /* I/O interruption              */
-#define ABORT_CODE_FETCH_OVF     7  /* Fetch overflow                */
-#define ABORT_CODE_STORE_OVF     8  /* Store overflow                */
-#define ABORT_CODE_FETCH_CNF     9  /* Fetch conflict                */
-#define ABORT_CODE_STORE_CNF    10  /* Store conflict                */
-#define ABORT_CODE_INSTR        11  /* Restricted instruction        */
-#define ABORT_CODE_FPGM         12  /* PGM interruption (Filtered)   */
-#define ABORT_CODE_NESTING      13  /* Nesting depth exceeded        */
-#define ABORT_CODE_FETCH_OTHER  14  /* Cache -- fetch related        */
-#define ABORT_CODE_STORE_OTHER  15  /* Cache -- store related        */
-#define ABORT_CODE_CACHE_OTHER  16  /* Cache -- other                */
-#define ABORT_CODE_GUARDED      19  /* Guarded-storage event related */
-#define ABORT_CODE_MISC        255  /* Miscellaneous condition       */
-#define ABORT_CODE_TABORT      256  /* TABORT instruction            */
-};
-
-CASSERT( sizeof( struct TDB ) == 256, hstructs_h );
-
-/*-------------------------------------------------------------------*/
-/*      Transaction page map                                         */
-/*-------------------------------------------------------------------*/
-struct TPAGEMAP {
-   BYTE  *mainpageaddr;     /* address of main page being mapped     */
-   BYTE  *altpageaddr;      /* addesss of alternate page             */
-   BYTE  cachemap[ZCACHE_LINE_PAGE];   /* cache line indicators      */
-#define CM_CLEAN    0           /* clean cache line (init default)   */
-#define CM_FETCHED  1           /* cache line was fetched            */
-#define CM_STORED   2           /* cache line was stored into        */
-};
-
-/*-------------------------------------------------------------------*/
-/*        Transactional-Execution Facility Condition Codes           */
-/*-------------------------------------------------------------------*/
-#define TXF_CC_SUCCESS          0   /* Trans. successfully initiated */
-
-#define TXF_CC_INDETERMINATE    1   /* Indeterminate condition;
-                                       successful retry unlikely.    */
-
-#define TXF_CC_TRANSIENT        2   /* Transient condition;
-                                       successful retry likely.      */
-
-#define TXF_CC_PERSISTENT       3   /* Persistent condition;
-                                       successful retry NOT likely
-                                       under current conditions. If
-                                       conditions change, then retry
-                                       MIGHT be more productive.     */
-
-#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
 /*       Structure definition for CPU register context               */
@@ -513,55 +396,79 @@ struct REGS {                           /* Processor registers       */
         TLB     tlb;                    /* Translation lookaside buf */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        BYTE   txf_level;               /* transaction mode level    */
-        bool   txf_contran;             /*  true = constrained       */
-        BYTE   txf_gprmask;             /* register restore mask     */
-        BYTE   txf_ctlflag;             /* flags for access mode change, float allowed */
+     /* Transactional-Execution Facility                             */
+
+        bool    txf_contran;            /* true = CONSTRAINED mode   */
+        BYTE    txf_level;              /* transaction nesting depth */
+
+        BYTE    txf_ctlflag;            /* flags for access mode
+                                           change, float allowed     */
 
 #define TXF_CTL_AR      0x08            /* ar reg changes allowed
                                            in transaction mode       */
 #define TXF_CTL_FLOAT   0x04            /* float and vector allowed
                                            in transaction mode       */
-#define TXF_CTL_PIFC    0x03            /* float and vector allowed  */
+#define TXF_CTL_PIFC    0x03            /* pgm. 'rupt filtering ctl. */
 
-        U16    txf_instctr;             /* instruction counter for contrained and auto abort */
-        U16    txf_abortnum;            /* if non-zero, abort when this = txf_instctr */
-        U16    txf_pfic;                /* transaction filtering mode  */
+        U16     txf_higharchange;       /* highest level that
+                                           ar change is active       */
 
-#define TXF_PFIC_NONE       0           /* Exception conditions having
+        U16     txf_highfloat;          /* highest level that
+                                           float is active           */
+
+        U16     txf_instctr;            /* instruction counter for
+                                           contran and auto abort*/
+
+        U16     txf_abortnum;           /* if non-zero, abort when
+                                           txf_instctr >= this value */
+
+        U16     txf_pifc;               /* Program-Interruption
+                                           Filtering Control (PIFC)  */
+
+#define TXF_PIFC_NONE       0           /* Exception conditions having
                                            classes 1, 2 or 3 always
                                            result in an interruption */
 
-#define TXF_PFIC_LIMITED    1           /* Exception conditions having
+#define TXF_PIFC_LIMITED    1           /* Exception conditions having
                                            classes 1 or 2 result in an
                                            interruption; conditions
                                            having class 3 do not result
                                            in an interruption.       */
 
-#define TXF_PFIC_MODERATE   2           /* Only exception conditions
+#define TXF_PIFC_MODERATE   2           /* Only exception conditions
                                            having class 1 result in an
                                            interruption; conditions
                                            having classes 2 or 3 do not
                                            result in an interruption */
 
-#define TXF_PFIC_RESERVED   3           /* Reserved (invalid)        */
+#define TXF_PIFC_RESERVED   3           /* Reserved (invalid)        */
 
-        U16    txf_higharchange;        /* highest level that archange is active */
-        U16    txf_highfloat;           /* highest level that float is active */
-        U16    txf_progfilttab[MAX_TXF_LEVEL];     /* table for nesting levels */
-        U32    txf_piid;                /* transaction program interrupt ident */
-        U64    txf_conflict;            /* address where conflict detected */
-        TPAGEMAP txf_pagesmap[MAX_TXF_PAGES];  /* address of the page map   */
-        DW     txf_savedgr[16];         /* saved gpr values          */
-        TDB   *txf_tdb;                 /* transaction diagnostic block address or null */
-        int    txf_pgcnt;               /* number of pages in page map */
-        int    txf_lastaccess;          /* last access type */
-        int    txf_lastarn;             /* last arn */
-        int    txf_ntstgcnt;            /* non transactional store ctr */
-        int    txf_abortcode;           /* transaction abort code   */
-        int    txf_rabortcode;          /* random abort code         */
-        NTRANTBL txf_ntstgtbl[MAX_TXF_NTSTG];   /* table of non transactional stores */
-        PSW    txf_abortpsw;            /* transaction abort psw */
+        U64     txf_tdb;                /* TDB address or NULL       */
+        int     txf_tdb_arn;            /* arn used to address TDB   */
+        U64     txf_conflict;           /* logical address where
+                                           conflict was detected     */
+
+        TPAGEMAP  txf_pagesmap[ MAX_TXF_PAGES ]; /* page addresses   */
+        NTRANTBL  txf_ntstgtbl[ MAX_TXF_NTSTG ]; /* non-trans stores */
+
+        int     txf_pgcnt;              /* entries in TPAGEMAP table */
+        int     txf_ntstgcnt;           /* entries in NTRANTBL table */
+
+        BYTE    txf_gprmask;            /* gpr register restore mask */
+        DW      txf_savedgr[16];        /* saved gpr register values */
+
+        int     txf_abortcode;          /* transaction abort code    */
+        int     txf_rabortcode;         /* random abort code         */
+        PSW     txf_abortpsw;           /* transaction abort psw     */
+
+        U32     txf_piid;               /* transaction program
+                                           interrupt ident           */
+        BYTE    txf_dxcvxc;             /* Data/Vector Exception Code*/
+
+        int     txf_lastaccess;         /* last access type          */
+        int     txf_lastarn;            /* last arn                  */
+
+        U16     txf_progfilttab[ MAX_TXF_LEVEL ];   /* PIFC table */
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
@@ -701,15 +608,19 @@ struct SYSBLK {
         U8      cpcai;                  /* Dynamic CP capacity adj.  */
         U8      hhc_111_112;            /* HHC00111/HHC00112 issued  */
         U8      unused1;                /* (pad/align/unused/avail)  */
-        COND    cpucond;                /* CPU config/deconfig cond  */
-        LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
+
+        COND    cpucond;                        /* CPU config/deconfig cond */
+        LOCK    cpulock[MAX_CPU_ENGINES];       /* CPU lock                 */
+
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        LOCK    txf_lock[MAX_CPU_ENGINES];  /* CPU transaction lock  */
+        LOCK    txf_lock[ MAX_CPU_ENGINES ];    /* CPU transaction lock     */
 #endif
-        TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
-        TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
-        clockid_t                              /* CPU clock     @PJJ */
-                cpuclockid[MAX_CPU_ENGINES];   /* identifiers   @PJJ */
+
+        TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time        */
+        TID     cputid[MAX_CPU_ENGINES];        /* CPU thread identifiers   */
+        clockid_t                               /* CPU clock           @PJJ */
+                cpuclockid[MAX_CPU_ENGINES];    /* identifiers         @PJJ */
+
         BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
@@ -1050,8 +961,17 @@ struct SYSBLK {
         U64     instcount;              /* Instruction counter       */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
+
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        U32     txf_transcpus;          /* num of cpus in trans mode */
+
+        // PROGRAMMING NOTE: we purposely define the below count
+        // as a signed value (rather then unsigned) so that we can
+        // detect if, due to a bug, it ever goes negative (which
+        // would indicate a serious logic error!). This is checked
+        // by the UPDATE_SYSBLK_TRANSCPUS macro, which should be
+        // the only way this field is ever updated.
+
+        int     txf_transcpus;          /* counts transacting CPUs   */
 #endif
 
         int     regs_copy_len;          /* Length to copy for REGS   */
