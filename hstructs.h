@@ -56,6 +56,8 @@
   #error MAX_CPU_ENGINES cannot exceed 128
 #endif
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
 /*-------------------------------------------------------------------*/
 /*          Transactional-Execution Facility constants               */
 /*-------------------------------------------------------------------*/
@@ -167,6 +169,8 @@ struct TPAGEMAP {
                                        under current conditions. If
                                        conditions change, then retry
                                        MIGHT be more productive.     */
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
 /*       Structure definition for CPU register context               */
@@ -505,6 +509,7 @@ struct REGS {                           /* Processor registers       */
      /* TLB - Translation lookaside buffer                           */
         unsigned int tlbID;             /* Validation identifier     */
         TLB     tlb;                    /* Translation lookaside buf */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         BYTE   tranlvl;                 /* transaction mode level    */
         BYTE   contran;                 /*  1 = constrained          */
         BYTE   tranregmask;             /* register restore mask     */
@@ -550,6 +555,7 @@ struct REGS {                           /* Processor registers       */
         int     rabortcode;             /* random abort code         */
         NTRANTBL ntrantbl[MAX_NTRAN_STORE];   /* table of non transactional stores */
         PSW     tranabortpsw;           /* transaction abort psw */
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
         BLOCK_TRAILER;                  /* Name of block  END        */
 };
@@ -689,7 +695,9 @@ struct SYSBLK {
         U8      unused1;                /* (pad/align/unused/avail)  */
         COND    cpucond;                /* CPU config/deconfig cond  */
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         LOCK    tranlock[MAX_CPU_ENGINES];  /* CPU transaction lock  */
+#endif
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
         clockid_t                              /* CPU clock     @PJJ */

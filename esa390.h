@@ -258,6 +258,14 @@ typedef struct DAT  DAT;
 
 #define CR0_MCX_AUTH    0x0001000000000000ULL   /* Measurement Counter
                                                    Extraction Authority       */
+
+#define CR0_TXC         0x0080000000000000ULL   /* Tranactional-Execution
+                                                   Control                    */
+
+#define CR0_PIFO        0x0040000000000000ULL   /* Tranactional-Execution
+                                                   Program-Interruption-
+                                                   Filtering Overide          */
+
 #define CR0_TRACE_TOD           0x80000000      /* TRACE TOD-clock control    */
 #define CR0_BMPX                0x80000000      /* Block multiplex ctl  S/370 */
 #define CR0_SSM_SUPP            0x40000000      /* SSM suppression control    */
@@ -307,6 +315,14 @@ typedef struct DAT  DAT;
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 2 */
+
+#define CR2_TDS         0x0000000000000004ULL /* Tranaction Diagnostic Scope   */
+#define CR2_TDC         0x0000000000000003ULL /* Tranaction Diagnostic Control */
+
+#define TDC_NORMAL          0     /* Normal operation                */
+#define TDC_ALWAYS_RANDOM   1     /* Abort all transactions randomly */
+#define TDC_MAYBE_RANDOM    2     /* Randomly abort transactions     */
+#define TDC_RESERVED        3     /* (reserved)                      */
 
 #define CR2_DUCTO       0x7FFFFFC0      /* DUCT origin               */
 /* For S/370, CR2 contains channel masks for channels 0-31 */
@@ -1083,6 +1099,7 @@ typedef struct PSA_900  PSA_900;
 #define PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION     0x0017
 #define PGM_TRANSACTION_CONSTRAINT_EXCEPTION            0x0018
 #define PGM_VECTOR_OPERATION_EXCEPTION                  0x0019
+#define PGM_VECTOR_PROCESSING_EXCEPTION                 0x001B
 #define PGM_SPACE_SWITCH_EVENT                          0x001C
 #define PGM_SQUARE_ROOT_EXCEPTION                       0x001D
 #define PGM_UNNORMALIZED_OPERAND_EXCEPTION              0x001E
@@ -2559,6 +2576,7 @@ typedef struct PTFFQSI PTFFQSI;
 #define DXC_IEEE_DIV_ZERO_IISE  0x43    /* IEEE div by zero(IISE) DFP*/
 #define DXC_IEEE_INVALID_OP     0x80    /* IEEE invalid operation    */
 #define DXC_IEEE_INV_OP_IISE    0x83    /* IEEE invalid op (IISE) DFP*/
+#define DXC_VECTOR_INSTRUCTION  0xFE    /* Vector instruction        */
 #define DXC_COMPARE_AND_TRAP    0xFF    /* Compare-and-trap exception*/
 /* Note: IISE = IEEE-interruption-simulation event */
 

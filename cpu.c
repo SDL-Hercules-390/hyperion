@@ -333,6 +333,13 @@ RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+/*
+   Next three variables: Transaction-Exection (TX) Class, boolean
+   whether interrupt should be filtered or not, and the Condition Code
+   to set depending on whether the interrupt is filtered or not: refer
+   to Figure 5-16 on page 5-104 (and 5-14 on page 5-102) of manual
+   SA22-7832-12 "z/Architecture Principles of Operation"
+*/
 int     iclass;                         /* interrupt class */
 int      ucc;
 int      fcc;
@@ -380,10 +387,10 @@ static char *pgmintname[] = {
         /* 15 */        "Operand exception",
         /* 16 */        "Trace-table exception",
         /* 17 */        "ASN-translation exception",
-        /* 18 */        "Page access exception",
+        /* 18 */        "Transaction constraint exception",
         /* 19 */        "Vector/Crypto operation exception",
         /* 1A */        "Page state exception",
-        /* 1B */        "Page transition exception",
+        /* 1B */        "Vector processing exception",
         /* 1C */        "Space-switch event",
         /* 1D */        "Square-root exception",
         /* 1E */        "Unnormalized-operand exception",
@@ -507,24 +514,33 @@ static char *pgmintname[] = {
     code = pcode & ~PGM_PER_EVENT;
 
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+    /*
+       Determine proper CC (Condition Code) based on Exception
+       Condition (pgm interrupt code) and Transactional-Execution
+       class, which depends on whether interrupt should (or can)
+       be filtered or not. Refer to Figure 5-16 on page 5-104
+       (and 5-14 on page 5-102) of manual SA22-7832-12 "z/Arch
+       Principles of Operation"
+    */
     if (realregs->tranlvl > 0)
     {
-      switch (code)
+      switch (code)  // (interrupt code)
       {
-      case 1:           /* operation exception */
-      case 2:           /* privliged operation */
-      case 3:           /* execute */
+      case PGM_OPERATION_EXCEPTION:
+      case PGM_PRIVILEGED_OPERATION_EXCEPTION:
+      case PGM_EXECUTE_EXCEPTION:
         iclass = 1;     /* class 1 (cant be filtered */
         ucc = 3;        /* condition code */
         break;
-      case 4:           /* protection exception */
-      case 5:           /* addressing exception */
-      case 16:          /* segment translation */
-      case 17:          /* page translation */
-      case 56:          /* asce */
-      case 57:          /* region first translation */           
-      case 58:          /* region second translation */
-      case 59:          /* region third translation */
+      case PGM_PROTECTION_EXCEPTION:
+      case PGM_ADDRESSING_EXCEPTION:
+      case PGM_SEGMENT_TRANSLATION_EXCEPTION:
+      case PGM_PAGE_TRANSLATION_EXCEPTION:
+      case PGM_ASCE_TYPE_EXCEPTION:
+      case PGM_REGION_FIRST_TRANSLATION_EXCEPTION:
+      case PGM_REGION_SECOND_TRANSLATION_EXCEPTION:
+      case PGM_REGION_THIRD_TRANSLATION_EXCEPTION:
+        /* Did interrupt occur during instruction fetch? */
         if (realregs->tranlastaccess == ACCTYPE_INSTFETCH  &&
             realregs->tranlastarn == USE_INST_SPACE)
         {
@@ -539,13 +555,14 @@ static char *pgmintname[] = {
         ucc = 2;
         fcc = 3;
         break;
-      case 7:           /* data exception       */
-        switch (realregs->dxc)      /* test the dxc (data exception code) */
+      case PGM_DATA_EXCEPTION:
+        /* Check Data Exception Code (DXC) */
+        switch (realregs->dxc)
         {
-        case 01:
-        case 02:
-        case 03:
-        case 254:
+        case DXC_AFP_REGISTER:
+        case DXC_BFP_INSTRUCTION:
+        case DXC_DFP_INSTRUCTION:
+        case DXC_VECTOR_INSTRUCTION:
           iclass = 1;
           ucc = 2;
           filt = 0;
@@ -555,36 +572,36 @@ static char *pgmintname[] = {
           ucc = 2;
           fcc = 3;
           filt = 1;
-        }
+        } /* end switch (realregs->dxc) */
         break;
-      case 8:                            /* fixed point overflow */
-      case 9:                            /* fixed point divide */
-      case 10:                           /* decimal overflow */
-      case 11:                           /* decimal divide */
-      case 12:                           /* hfp exponent overflow */
-      case 13:                           /* hfp exponent underflow */
-      case 14:                           /* hfp significance */
-      case 15:                           /* hfp divide */
-      case 27:                           /* vector processing */
-      case 29:                           /* hfp square root */
+      case PGM_FIXED_POINT_OVERFLOW_EXCEPTION:
+      case PGM_FIXED_POINT_DIVIDE_EXCEPTION:
+      case PGM_DECIMAL_OVERFLOW_EXCEPTION:
+      case PGM_DECIMAL_DIVIDE_EXCEPTION:
+      case PGM_EXPONENT_OVERFLOW_EXCEPTION:
+      case PGM_EXPONENT_UNDERFLOW_EXCEPTION:
+      case PGM_SIGNIFICANCE_EXCEPTION:
+      case PGM_FLOATING_POINT_DIVIDE_EXCEPTION:
+      case PGM_VECTOR_PROCESSING_EXCEPTION:
+      case PGM_SQUARE_ROOT_EXCEPTION:
         iclass = 3;
         fcc = 3;
         ucc = 2;
         filt = 1;
         break;
-      case 18:                           /* translation exception */
-      case 19:                           /* special operation */
-      case 24:                           /* transation constraint */
+      case PGM_TRANSLATION_SPECIFICATION_EXCEPTION:
+      case PGM_SPECIAL_OPERATION_EXCEPTION:
+      case PGM_TRANSACTION_CONSTRAINT_EXCEPTION:
         iclass = 1;
         ucc = 3;
         filt = 0;
         break;
-      case 40:                            /* alet specification */
-      case 41:                            /* alen translation */
-      case 42:                            /* ale sequence */
-      case 43:                            /* aste validity */
-      case 44:                            /* aste sequence */
-      case 45:                            /* extended authority */
+      case PGM_ALET_SPECIFICATION_EXCEPTION:
+      case PGM_ALEN_TRANSLATION_EXCEPTION:
+      case PGM_ALE_SEQUENCE_EXCEPTION:
+      case PGM_ASTE_VALIDITY_EXCEPTION:
+      case PGM_ASTE_SEQUENCE_EXCEPTION:
+      case PGM_EXTENDED_AUTHORITY_EXCEPTION:
         iclass = 2;
         ucc = 2;
         fcc = 3;
@@ -594,26 +611,31 @@ static char *pgmintname[] = {
         iclass = 0;
         ucc = 0; 
         filt = 0;
-      }
+      } /* end switch (code) */
+      /* CONSTRAINED transactions cannot be filtered */
       if (realregs->contran)
         filt = 0;
       if (filt == 1)
       {
-        if (realregs->CR(0) & 0x0040000000000000ll)
-          filt = 0;
+        /* Is Program-Interruption-Filtering Overide enabled? */
+        if (realregs->CR(0) & CR0_PIFO)
+          filt = 0; /* Then interrupt cannot be filtered */
         else
         {
+          /* Check PFIC (see Fig. 5-15 on page 5-104) */
           switch (realregs->tranprogfiltlvl)
           {
-          case 0:
+          case TXF_PFIC_NONE:
             filt = 0;
             break;
-          case 1:
+          case TXF_PFIC_LIMITED:
             if (iclass < 3)
               filt = 0;
             else
               filt = 1;
             break;
+          case TXF_PFIC_MODERATE:
+          case TXF_PFIC_RESERVED:
           default:
             if (iclass < 2)
               filt = 0;
@@ -622,14 +644,18 @@ static char *pgmintname[] = {
           }
         }
       }
+      /* Can interrupt ABSOLUTELY be filtered? */
       if (filt == 1)
       {
+        /* Yes, set filtered condition code and abort transaction */
         realregs->psw.cc = fcc;
         ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_CC, ABORT_CODE_FPGM);
       }
+      /* No, set unfiltered condition code */
       realregs->psw.cc = ucc;
     }
-#endif
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
     /* If this is a concurrent PER event then we must add the PER
        bit to the interrupts code */
     if( OPEN_IC_PER(realregs) )
@@ -948,9 +974,12 @@ static char *pgmintname[] = {
         psa->pgmint[0] = 0;
         psa->pgmint[1] = ilc;
         STORE_HW(psa->pgmint + 2, pcode);
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        /* Save program interrupt code if transaction active */
         if (realregs->tranlvl > 0)
           memcpy(&realregs->tranpiid, psa->pgmint, 4);
-
+#endif
         /* Store the exception access identification at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
           || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
@@ -1083,7 +1112,10 @@ static char *pgmintname[] = {
     realregs->hostint = 0;
 #endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* If transaction active, abort it with unfiltered pgm interrupt
+       and then return back to here to continue with program interrupt
+       processing */
     if (realregs->tranlvl > 0)
       ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_RETURN, ABORT_CODE_UPGM);
 #endif
@@ -1178,11 +1210,13 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Point to PSA in main storage */
     psa = (PSA*)(regs->mainstor + regs->PX);
 
-    /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* Abort any active transaction and then return back to here
+       to continue with restart interrupt processing */
     if (regs->tranlvl > 0)
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
 #endif
+    /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
     ARCH_DEP(store_psw) (regs, psa->RSTOLD);
 
     /* Load new PSW from PSA+X'0' or PSA+X'1A0' for ESAME */
@@ -1297,17 +1331,19 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #endif /* FEATURE_CHANNEL_SUBSYSTEM */
 
 #if defined( _FEATURE_IO_ASSIST )
-    if(icode == SIE_NO_INTERCEPT)
+    if (icode == SIE_NO_INTERCEPT)
 #endif
     {
-        /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        /* Abort any active transaction and then return back to here
+           to continue with I/O interrupt processing */
         if (regs->tranlvl > 0)
         {
           ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
           regs->psw.cc = 2;
         }
 #endif
+        /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
         ARCH_DEP(store_psw) ( regs, psa->iopold );
 
         /* Load new PSW from PSA+X'78' or PSA+X'1F0' for ESAME */
@@ -1376,14 +1412,16 @@ RADR    fsta;                           /* Failing storage address   */
     STORE_FW(psa->mcstorad, fsta);
 #endif
 
-    /* Store current PSW at PSA+X'30' */
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* Abort any active transaction and then return back to here
+       to continue with machine check interrupt processing */
     if (regs->tranlvl > 0)
     {
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_MCK);
       regs->psw.cc = 2;
     }
 #endif
+    /* Store current PSW at PSA+X'30' */
     ARCH_DEP(store_psw) ( regs, psa->mckold );
 
     /* Load new PSW from PSA+X'70' */
@@ -1595,10 +1633,12 @@ const INSTR_FUNC   *current_opcode_table;
 register REGS   *regs;
 BYTE   *ip;
 int     i;
+int     aswitch;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 TPAGEMAP *pmap;
 BYTE *altpage;
-int     aswitch;
 U64     msize;
+#endif
 
     /* Assign new regs if not already assigned */
     regs = sysblk.regs[cpu] ?
@@ -1609,11 +1649,14 @@ U64     msize;
     {
         if (oldregs != regs)
         {
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+            /* Free REGS Transactional-Execution Facility memory */
             if (oldregs->tpagemap[0].altpageaddr)
             {
               free_aligned(oldregs->tpagemap[0].altpageaddr);
               oldregs->tpagemap[0].altpageaddr = NULL;
             }
+#endif
             memcpy (regs, oldregs, sizeof(REGS));
             free_aligned(oldregs);
             regs->blkloc = CSWAP64((U64)((uintptr_t)regs));
@@ -1683,6 +1726,7 @@ U64     msize;
     /* Initialize Facilities List */
     init_cpu_facilities( regs );
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     regs->tranlvl = 0;
     msize = PAGEFRAME_PAGESIZE * MAX_TRAN_PAGES * 2;
     altpage = (BYTE *)malloc_aligned(msize, 4096);
@@ -1697,6 +1741,8 @@ U64     msize;
     regs->contran = 0;
     regs->traninstctr = 0;
     regs->tranpagenum = 0;
+#endif
+
     /* Get pointer to primary opcode table */
     current_opcode_table = regs->ARCH_DEP( runtime_opcode_xxxx );
 
@@ -2071,7 +2117,11 @@ int i;
     regs->AEA_AR( USE_PRIMARY_SPACE   ) = 1;
     regs->AEA_AR( USE_SECONDARY_SPACE ) = 7;
     regs->AEA_AR( USE_HOME_SPACE      ) = 13;
-    regs->CR(2) = (regs->CR(2) >> 3) << 3;
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    regs->CR(2) &= ~(CR2_TDS | CR2_TDC);
+#endif
+
     /* Initialize opcode table pointers */
     init_opcode_pointers (regs);
 
@@ -2121,12 +2171,16 @@ static void *cpu_uninit (int cpu, REGS *regs)
         release_lock (&sysblk.cpulock[cpu]);
     }
 
-    /* Free the REGS structure */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* Free REGS Transactional-Execution Facility memory */
     if (regs->tpagemap[0].altpageaddr)
     {
       free_aligned(regs->tpagemap[0].altpageaddr);
       regs->tpagemap[0].altpageaddr = NULL;
     }
+#endif
+
+    /* Free the REGS structure */
     free_aligned(regs);
 
     return NULL;

@@ -620,8 +620,10 @@ int i, rc = 0;                          /* Array subscript           */
     regs->checkstop = 0;
     regs->sigp_reset = 0;
     regs->extccpu = 0;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     regs->tranlvl = 0;
     regs->contran = 0;
+#endif
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
     regs->instinvalid = 1;
@@ -706,8 +708,10 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 
     regs->todpr  = 0;
     regs->clkc   = 0;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     regs->tranlvl = 0;
     regs->contran = 0;
+#endif
     set_cpu_timer( regs, 0 );
 #if defined( _FEATURE_INTERVAL_TIMER )
     set_int_timer( regs, 0 );
@@ -725,7 +729,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->CR(2) = (U32)0xFFFFFFFFF;
 #endif
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    regs->CR(2) &= 0xFFFFFFFFFFFFFFF8ll;  /* turn off transact bits*/
+    regs->CR(2) &= ~(CR2_TDS | CR2_TDC);
 #endif
 
     regs->chanset =

@@ -694,7 +694,9 @@ int     rc;
         for (i = 0; i < MAX_CPU_ENGINES; i++)
         {
             initialize_lock (&sysblk.cpulock[i]);
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
             initialize_lock (&sysblk.tranlock[i]);
+#endif
         }
     }
     initialize_condition (&sysblk.sync_cond);

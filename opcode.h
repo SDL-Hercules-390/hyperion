@@ -352,18 +352,27 @@ do { \
    && _PSW_IA_MAIN((_regs), (_regs)->ET) < (_regs)->aie \
     ) \
 )
+
+#undef CHECK_TRANCTR
+
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+  #define CHECK_TRANCTR(_ip, _regs)
+#else
 #define CHECK_TRANCTR(_ip, _regs) \
 do { \
      if (!(_regs)->hostregs->tranlvl)  \
        break;      \
    (_regs)->hostregs->traninstctr++; \
+   /* Too many CONSTRAINED instructions executed? */                        \
    if ((_regs)->hostregs->contran && (_regs)->hostregs->traninstctr > 32 && \
        memcmp((_ip), "\xb2\xf8", 2) != 0) \
        ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR); \
+   /* Randomly abort the transaction? */                                       \
    if ((_regs)->hostregs->traninstctr == (_regs)->hostregs->tranabortnum &&  \
       (_regs)->hostregs->tranabortnum > 0) \
      ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, (_regs)->rabortcode); \
 } while(0)
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /* Instruction fetching */
 
@@ -374,6 +383,7 @@ do { \
 
 /* Instruction execution */
 
+#undef EXECUTE_INSTRUCTION
 #define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
 do { \
     CHECK_TRANCTR((_ip), (_regs));  \
