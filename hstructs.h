@@ -514,7 +514,7 @@ struct REGS {                           /* Processor registers       */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         BYTE   txf_level;               /* transaction mode level    */
-        BYTE   txf_contran;             /*  1 = constrained          */
+        bool   txf_contran;             /*  true = constrained       */
         BYTE   txf_gprmask;             /* register restore mask     */
         BYTE   txf_ctlflag;             /* flags for access mode change, float allowed */
 

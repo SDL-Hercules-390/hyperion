@@ -332,6 +332,7 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
+
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
 /*
    Next three variables: Transaction-Exection (TX) Class, boolean
@@ -340,10 +341,9 @@ int     ilc;                            /* instruction length        */
    to Figure 5-16 on page 5-104 (and 5-14 on page 5-102) of manual
    SA22-7832-12 "z/Architecture Principles of Operation"
 */
-int     txclass;                         /* interrupt class */
-int      ucc;
-int      fcc;
-int      filt;
+int     txclass;                        /* Trans. Exec. class        */
+bool    filt;                           /* true == filter interrupt  */
+int     ucc, fcc;                       /* Un-/Filtered Cond. Code   */
 #endif
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /** FIXME : SEE ISW20090110-1 */
@@ -522,7 +522,7 @@ static char *pgmintname[] = {
     /*  (and 5-14 on page 5-102) of manual SA22-7832-12 "z/Arch      */
     /*  Principles of Operation"                                     */
     /*---------------------------------------------------------------*/
-    if (realregs->txf_level > 0)
+    if (realregs->txf_level)
     {
       switch (code)  // (interrupt code)
       {
@@ -530,8 +530,8 @@ static char *pgmintname[] = {
       case PGM_PRIVILEGED_OPERATION_EXCEPTION:
       case PGM_EXECUTE_EXCEPTION:
 
-        txclass = 1;     /* class 1 (cant be filtered */
-        ucc = TXF_CC_PERSISTENT;        /* condition code */
+        txclass = 1;
+        ucc = TXF_CC_PERSISTENT;
         break;
 
       case PGM_PROTECTION_EXCEPTION:
@@ -547,16 +547,15 @@ static char *pgmintname[] = {
         if (realregs->txf_lastaccess == ACCTYPE_INSTFETCH  &&
             realregs->txf_lastarn == USE_INST_SPACE)
         {
-          filt = 0;
           txclass = 1;
+          filt = false;
         }
         else
         {
-          filt = 1;
           txclass = 2;
+          filt = true;
         }
-        ucc = TXF_CC_TRANSIENT;
-        fcc = TXF_CC_PERSISTENT;
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
         break;
 
       case PGM_DATA_EXCEPTION:
@@ -570,16 +569,16 @@ static char *pgmintname[] = {
         case DXC_VECTOR_INSTRUCTION:
 
           txclass = 1;
+          filt = false;
           ucc = TXF_CC_TRANSIENT;
-          filt = 0;
           break;
 
         default:
 
           txclass = 3;
-          ucc = TXF_CC_TRANSIENT;
-          fcc = TXF_CC_PERSISTENT;
-          filt = 1;
+          filt = true;
+          ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
+          break;
 
         } /* end switch (realregs->dxc) */
         break;
@@ -596,9 +595,8 @@ static char *pgmintname[] = {
       case PGM_SQUARE_ROOT_EXCEPTION:
 
         txclass = 3;
-        fcc = TXF_CC_PERSISTENT;
-        ucc = TXF_CC_TRANSIENT;
-        filt = 1;
+        filt = true;
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
         break;
 
       case PGM_TRANSLATION_SPECIFICATION_EXCEPTION:
@@ -606,8 +604,8 @@ static char *pgmintname[] = {
       case PGM_TRANSACTION_CONSTRAINT_EXCEPTION:
 
         txclass = 1;
+        filt = false;
         ucc = TXF_CC_PERSISTENT;
-        filt = 0;
         break;
 
       case PGM_ALET_SPECIFICATION_EXCEPTION:
@@ -618,28 +616,28 @@ static char *pgmintname[] = {
       case PGM_EXTENDED_AUTHORITY_EXCEPTION:
 
         txclass = 2;
-        ucc = TXF_CC_TRANSIENT;
-        fcc = TXF_CC_PERSISTENT;
-        filt = 1;
+        filt = true;
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
         break;
 
       default:
 
         txclass = 0;
-        ucc = TXF_CC_SUCCESS; 
-        filt = 0;
+        filt = false;
+        ucc = TXF_CC_SUCCESS;
+        break; 
 
       } /* end switch (code) */
 
       /* CONSTRAINED transactions cannot be filtered */
       if (realregs->txf_contran)
-        filt = 0;
+        filt = false;
 
-      if (filt == 1)
+      if (filt)
       {
         /* Is Program-Interruption-Filtering Overide enabled? */
         if (realregs->CR(0) & CR0_PIFO)
-          filt = 0; /* Then interrupt cannot be filtered */
+          filt = false; /* Then interrupt cannot be filtered */
         else
         {
           /* Check PFIC (see Fig. 5-15 on page 5-104) */
@@ -647,15 +645,15 @@ static char *pgmintname[] = {
           {
           case TXF_PFIC_NONE:
 
-            filt = 0;
+            filt = false;
             break;
 
           case TXF_PFIC_LIMITED:
 
             if (txclass < 3)
-              filt = 0;
+              filt = false;
             else
-              filt = 1;
+              filt = true;
             break;
 
           case TXF_PFIC_MODERATE:
@@ -663,15 +661,16 @@ static char *pgmintname[] = {
           default:
 
             if (txclass < 2)
-              filt = 0;
+              filt = false;
             else
-              filt = 1;
-          } /* end switch (realregs->txf_pfic) */
+              filt = true;
+            break;
+          }
         }
       }
 
       /* Can interrupt ABSOLUTELY be filtered? */
-      if (filt == 1)
+      if (filt)
       {
         /* Yes, set filtered condition code and abort transaction */
         realregs->psw.cc = fcc;
@@ -1004,7 +1003,7 @@ static char *pgmintname[] = {
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Save program interrupt code if transaction active */
-        if (realregs->txf_level > 0)
+        if (realregs->txf_level)
           memcpy(&realregs->txf_piid, psa->pgmint, 4);
 #endif
         /* Store the exception access identification at PSA+160 */
@@ -1143,7 +1142,7 @@ static char *pgmintname[] = {
     /* If transaction active, abort it with unfiltered pgm interrupt
        and then return back to here to continue with program interrupt
        processing */
-    if (realregs->txf_level > 0)
+    if (realregs->txf_level)
       ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_RETURN, ABORT_CODE_UPGM);
 #endif
 #if defined(_FEATURE_SIE)
@@ -1240,7 +1239,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction and then return back to here
        to continue with restart interrupt processing */
-    if (regs->txf_level > 0)
+    if (regs->txf_level)
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
 #endif
     /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
@@ -1364,10 +1363,10 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Abort any active transaction and then return back to here
            to continue with I/O interrupt processing */
-        if (regs->txf_level > 0)
+        if (regs->txf_level)
         {
           ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
-          regs->psw.cc = 2;
+          regs->psw.cc = TXF_CC_TRANSIENT;
         }
 #endif
         /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
@@ -1442,10 +1441,10 @@ RADR    fsta;                           /* Failing storage address   */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction and then return back to here
        to continue with machine check interrupt processing */
-    if (regs->txf_level > 0)
+    if (regs->txf_level)
     {
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_MCK);
-      regs->psw.cc = 2;
+      regs->psw.cc = TXF_CC_TRANSIENT;
     }
 #endif
     /* Store current PSW at PSA+X'30' */

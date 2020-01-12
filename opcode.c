@@ -574,9 +574,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( perform_processor_assist );
 #endif
 
-#if !defined(FEATURE_050_CONSTR_TRANSACT_FACILITY)
- UNDEF_INST(transaction_begin_constrained)
+#if !defined( FEATURE_050_CONSTR_TRANSACT_FACILITY )
+ UNDEF_INST( transaction_begin_constrained )
 #endif
+
 #if !defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
  UNDEF_INST( load_halfword_high_immediate_on_condition );
  UNDEF_INST( load_halfword_immediate_on_condition );

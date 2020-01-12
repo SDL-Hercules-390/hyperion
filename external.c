@@ -100,14 +100,14 @@ int     rc;
 #endif
        )
     {
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-      /* Abort any active transaction and then return back to here
-         to continue with external interrupt processing */
-      if (regs->hostregs->txf_level > 0)
-      {
-        regs->psw.cc = TXF_CC_TRANSIENT;
-        ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_EXT);
-      }
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        /* Abort any active transaction and then return back to here
+           to continue with external interrupt processing */
+        if (regs->hostregs->txf_level)
+        {
+            regs->psw.cc = TXF_CC_TRANSIENT;
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, ABORT_CODE_EXT );
+        }
 #endif
         /* Store current PSW at PSA+X'18' */
         ARCH_DEP(store_psw) (regs, psa->extold);

@@ -119,7 +119,6 @@ int     r1, unused;                     /* Values of R fields        */
     RRE(inst, regs, r1, unused);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
-
     BFPINST_CHECK(regs);
 
     /* Load R1 register bits 32-63 from FPC register */
@@ -141,7 +140,6 @@ VADR    effective_addr2;                /* Effective address         */
     S(inst, regs, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
-
     BFPINST_CHECK(regs);
 
     /* Set FPC register BFP rounding mode bits from operand address */
@@ -169,7 +167,6 @@ VADR    effective_addr2;                /* Effective address         */
     S(inst, regs, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
-
     BFPINST_CHECK(regs);
 
     /* Program check if operand address bits 56-60 are non-zero */
@@ -199,7 +196,6 @@ DEF_INST(trap2)
     E(inst, regs);
 
     TRAN_INSTR_CHECK( regs );
-
     UNREFERENCED(inst);
 
     ARCH_DEP(trap_x) (0, regs, 0);
@@ -541,9 +537,7 @@ U32     op;                             /* Operand                   */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
-
     FW_CHECK(effective_addr2, regs);
 
     /* Exit if explicit tracing (control reg 12 bit 31) is off */
@@ -966,9 +960,7 @@ U64     new;                            /* new value                 */
     RRE(inst, regs, r1, r2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
-
     ODD_CHECK(r1, regs);
 
 #if defined(_FEATURE_SIE)
@@ -1056,9 +1048,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT(regs);
-
     PRIV_CHECK(regs);
 
     /* Program check if bits 44-51 of r2 register are non-zero */
@@ -1182,9 +1172,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT(regs);
-
     PRIV_CHECK(regs);
 
     /* The m4 field determines which address space to use */
@@ -1655,7 +1643,6 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     RRE(inst, regs, r1, r2);
 
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT(regs);
 
     /* Find the virtual address of the entry descriptor
@@ -1720,7 +1707,6 @@ int     r1, unused;                     /* Value of R field          */
     RRE(inst, regs, r1, unused);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
 
     regs->GR_LHH(r1) = regs->CR_LHH(8);
@@ -2165,13 +2151,15 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*---------------------------------------------------------------*/
-    /* This instruction is restricted in transaction execution mode  */
-    /* when the code in r1 is 6 or 7 and m3 (r3) is zero.            */
-    /*---------------------------------------------------------------*/
-    if (regs->txf_level > 0 && (r1 == 6 || r1 == 7) && r3 == 0)
-      ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* This instruction is restricted in transaction execution
+       mode when the code in r1 is 6 or 7 and m3 (r3) is zero. */
+    if (1
+        && regs->txf_level
+        && (r1 == 6 || r1 == 7)
+        && r3 == 0
+    )
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR );
 #endif
 
     switch (r3)
@@ -4229,9 +4217,7 @@ U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     RSY( inst, regs, r1, r3, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK( regs );
-
     DW_CHECK( effective_addr2, regs );
 
 #if defined( _FEATURE_ZSIE )
@@ -4282,9 +4268,7 @@ U16     updated = 0;                    /* Updated control regs      */
     RSY( inst, regs, r1, r3, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK( regs );
-
     DW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to load */
@@ -4538,7 +4522,6 @@ RADR    n;                              /* Unsigned work             */
     RRE(inst, regs, r1, r2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
 
     /* R2 register contains operand real storage address */
@@ -4566,7 +4549,6 @@ RADR    n;                              /* Unsigned work             */
     RRE(inst, regs, r1, r2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
 
     /* R2 register contains operand real storage address */
@@ -4599,7 +4581,6 @@ DEF_INST(test_addressing_mode)
 {
     E(inst, regs);
     CONTRAN_INSTR_CHECK( regs );
-
     UNREFERENCED(inst);
 
     regs->psw.cc =
@@ -4625,7 +4606,6 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
     E( inst, regs );
 
     CONTRAN_INSTR_CHECK( regs );
-
     UNREFERENCED( inst );
 
 #if !defined( FEATURE_370_EXTENSION )
@@ -4771,9 +4751,7 @@ VADR    effective_addr1,
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
-
     DW_CHECK(effective_addr1, regs);
 
     /* Translate virtual address to real address */
@@ -4916,9 +4894,7 @@ int     rc;
     S(inst, regs, b2, effective_addr2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
-
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
@@ -4964,9 +4940,7 @@ int     cc;                             /* Condition code            */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT(regs);
-
     PRIV_CHECK(regs);
 
     /* Translate the effective address to a real address */
@@ -5011,7 +4985,6 @@ DEF_INST(perform_timing_facility_function)
     E( inst, regs );
 
     TRAN_INSTR_CHECK( regs );
-
     SIE_INTERCEPT(regs);
 
     if(regs->GR_L(0) & PTFF_GPR0_RESV)
@@ -5075,11 +5048,8 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     RRE(inst, regs, r1, unused);
 
     TRAN_INSTR_CHECK( regs );
-
     PTT_INF("PTF",regs->GR_G(r1),0,regs->psw.IA_L);
-
     PRIV_CHECK(regs);
-
     SIE_INTERCEPT(regs);
 
     /* Specification Exception if bits 0-55 of general register R1
@@ -5159,7 +5129,6 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
     RRE(inst, regs, r1, r2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
 
     /* Load 4K block address from R2 register */
@@ -5371,7 +5340,6 @@ int     page_offset;                    /* Low order bits of R2      */
     RRE(inst, regs, r1, r2);
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK(regs);
 
     if((regs->GR_L(r1) & (PFMF_RESERVED|PFMF_FMFI_RESV|PFMF_FMFI_FSC_RESV))
@@ -5663,7 +5631,6 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     S( inst, regs, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
-
     PRIV_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
@@ -6229,7 +6196,6 @@ int     tccc;                   /* Test-Character-Comparison Control */
     RRE(inst, regs, r1, r2);
 
     CONTRAN_INSTR_CHECK( regs );
-
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
@@ -6427,7 +6393,6 @@ int     tccc;                   /* Test-Character-Comparison Control */
     RRE(inst, regs, r1, r2);
 
     CONTRAN_INSTR_CHECK( regs );
-
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
@@ -6528,7 +6493,6 @@ int     cpu_length;                     /* cpu determined length     */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
-
     ODD2_CHECK(r1, r3, regs);
 
     /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
@@ -6614,7 +6578,6 @@ int     cpu_length;                     /* cpu determined length     */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
-
     ODD2_CHECK(r1, r3, regs);
 
     /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
@@ -7365,7 +7328,6 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     RSY( inst, regs, r1, r3, b2, effective_addr2 );
 
     TRAN_ACCESS_INSTR_CHECK( regs );
-
     FW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to load */

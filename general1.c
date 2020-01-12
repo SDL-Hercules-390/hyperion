@@ -297,7 +297,7 @@ int     cc = 0;                         /* Condition code            */
     /* Translate addresses of leftmost operand bytes */
     dest1 = MADDRL( addr1, len+1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
     sk1 = regs->dat.storkey;
-    source1 = MADDRL( addr2,len + 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+    source1 = MADDRL( addr2, len + 1, b2, regs, ACCTYPE_READ, regs->psw.pkey );
 
     if (NOCROSSPAGE( addr1,len ))
     {
@@ -312,8 +312,8 @@ int     cc = 0;                         /* Condition code            */
         {
              /* (2) - Second operand crosses a boundary */
              len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-             source2 = MADDRL((addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                len + 1 - len2,b2, regs, ACCTYPE_READ, regs->psw.pkey );
+             source2 = MADDRL( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+                 len + 1 - len2, b2, regs, ACCTYPE_READ, regs->psw.pkey );
              for (i=0; i < len2; i++)
                  if (*dest1++ &= *source1++)
                      cc = 1;
@@ -330,8 +330,8 @@ int     cc = 0;                         /* Condition code            */
     {
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDRL((addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-         len + 1 - len2, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+        dest2 = MADDRL( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
+            len + 1 - len2, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2,len ))
@@ -351,8 +351,8 @@ int     cc = 0;                         /* Condition code            */
         {
             /* (4) - Both operands cross a boundary */
             len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDRL((addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-             len + 1 - len3, b2, regs, ACCTYPE_READ, regs->psw.pkey );
+            source2 = MADDRL( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
+                len + 1 - len3, b2, regs, ACCTYPE_READ, regs->psw.pkey );
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -588,7 +588,7 @@ BYTE    *ipsav;                         /* save for ip               */
     newia = regs->GR(r2);
 
 #if defined( FEATURE_TRACING )
-     #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
@@ -601,7 +601,7 @@ BYTE    *ipsav;                         /* save for ip               */
         regs->ip = ipsav;
     }
     else
-     #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
@@ -660,7 +660,7 @@ VADR    newia;                          /* New instruction address   */
     newia = regs->GR(r2);
 
 #if defined( FEATURE_TRACING )
-     #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
@@ -668,7 +668,7 @@ VADR    newia;                          /* New instruction address   */
         regs->psw.ilc = 2;
         regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
     }
-     #endif
+#endif
 #endif
 
     /* Insert addressing mode into bit 0 of R1 operand */
@@ -4122,7 +4122,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
 } /* end DEF_INST(convert_to_decimal) */
 
 
-#if defined( FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* B24D CPYA  - Copy Access                                    [RRE] */
 /*-------------------------------------------------------------------*/

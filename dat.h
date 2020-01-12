@@ -65,11 +65,12 @@ static inline  BYTE* ARCH_DEP( maddr_l )
        conditions since it's going to do a full translation anyway!
        (which is many, many instructions)
     */
+
     int  aea_arn  = regs->AEA_AR( arn );
     U16  tlbix    = TLBIX( addr );
     BYTE *maddr = NULL;
 
-#if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 #if _GEN_ARCH == 900
     BYTE *altaddr;
     BYTE *savepage;
@@ -95,8 +96,8 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     int k;
     REGS *rchk;
     REGS *hregs;
-#endif
-#endif
+#endif // _GEN_ARCH
+#endif // FEATURE_073_TRANSACT_EXEC_FACILITY
 
     regs->hostregs->txf_lastaccess = acctype;
     regs->hostregs->txf_lastarn = arn;
@@ -135,19 +136,21 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
                         if (acctype & ACC_CHECK)
                             regs->dat.storkey = regs->tlb.storkey[ tlbix ];
+
                         maddr = MAINADDR(regs->tlb.main[tlbix], addr);
                     }
                 }
             }
         }
     }
+
     /*---------------------------------------*/
     /* TLB miss: do full address translation */
     /*---------------------------------------*/
     if (!maddr)
-      maddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
+        maddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
 
-#if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 /*------------------------------------------------------------------*/
 /*  The following code supports the transaction execution facility. */
 /*  If the CPU is in transaction execution mode (constrained or     */
@@ -168,14 +171,14 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 /*------------------------------------------------------------------*/
 
     if (sysblk.txf_transcpus == 0)      /* no cpus are in tran mode */
-      return maddr;                   /* return now               */
+        return maddr;                   /* return now               */
 
     /*  we are only interested in fetch and store access  */
     if (acctype != ACCTYPE_READ && acctype != ACCTYPE_WRITE && acctype != ACCTYPE_WRITE_SKP)
-      return maddr;
+        return maddr;
 
     if (arn == USE_INST_SPACE || arn == USE_REAL_ADDR)  /* should only be set for instruction fetch */
-      return maddr;     
+        return maddr;     
 
     hregs = regs->hostregs;
     addrwork = (U64)maddr;                    
@@ -190,9 +193,9 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     /* reset to the end of page length */
 
     if (plen < len)
-      elen = plen;
+        elen = plen;
     else
-      elen = len;
+        elen = len;
 
     pageoffe = pageoffs + elen; 
     cacheidxe = pageoffe >> ZCACHE_LINE_SHIFT;
@@ -214,68 +217,68 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
     for (i=0; i < sysblk.hicpu; i++)
     {
-      if (sysblk.regs[i]->hostregs == hregs)        /* skip my entry       */
-        continue;
+        if (sysblk.regs[i]->hostregs == hregs)        /* skip my entry       */
+            continue;
 
-      rchk = sysblk.regs[i];             /* point to other cpu entry */
+        rchk = sysblk.regs[i];             /* point to other cpu entry */
 
-      if (rchk->txf_level == 0)            /* this cpu not in transaction mode */
-        continue;                        /* skip it */
+        if (rchk->txf_level == 0)            /* this cpu not in transaction mode */
+            continue;                        /* skip it */
 
-      if (rchk->txf_abortcode)               /* abort already detected */
-        continue;                        /* no need to check it */
+        if (rchk->txf_abortcode)               /* abort already detected */
+            continue;                        /* no need to check it */
 
-      if (rchk->cpustate != CPUSTATE_STARTED)  /* skip cpus not started*/
-        continue;
+        if (rchk->cpustate != CPUSTATE_STARTED)  /* skip cpus not started*/
+            continue;
 
-      txf_abortcode = 0;                     /* clear abort code */
-      pmap = rchk->txf_pagesmap;
+        txf_abortcode = 0;                     /* clear abort code */
+        pmap = rchk->txf_pagesmap;
 
-      for (j=0; j < rchk->txf_pgcnt; j++, pmap++)  /* scan the page map  */
-      {
-        if ((U64)pmap->mainpageaddr == addrpage)  /* same page ?*/
+        for (j=0; j < rchk->txf_pgcnt; j++, pmap++)  /* scan the page map  */
         {
-          for (k = cacheidx; k <= cacheidxe; k++)
-          {
-            if (pmap->cachemap[k] == CM_CLEAN)  /* no conflict */
-              continue;
-
-            if (pmap->cachemap[k] == CM_FETCHED)  /* transactional reference was fetch */
+            if ((U64)pmap->mainpageaddr == addrpage)  /* same page ?*/
             {
-              if (acctype == ACCTYPE_READ)  /* current access also read */
-                continue;                /* if both are fetch, not a conflict */
-              txf_abortcode = ABORT_CODE_FETCH_CNF;       /* set fetch conflict */
+                for (k = cacheidx; k <= cacheidxe; k++)
+                {
+                    if (pmap->cachemap[k] == CM_CLEAN)  /* no conflict */
+                        continue;
+
+                    if (pmap->cachemap[k] == CM_FETCHED)  /* transactional reference was fetch */
+                    {
+                        if (acctype == ACCTYPE_READ)  /* current access also read */
+                            continue;                /* if both are fetch, not a conflict */
+                        txf_abortcode = ABORT_CODE_FETCH_CNF;       /* set fetch conflict */
+                    }
+                    else
+                        txf_abortcode = ABORT_CODE_STORE_CNF;      /* store conflict */
+
+                    /* the real routine is used here instead of obtain_lock to get around a problem */
+                    /* compiling dyn76.c, which redefines obtain_lock as EnterCriticalSection */
+
+                    hthread_obtain_lock(&rchk->sysblk->txf_lock[i], PTT_LOC );  /*get the cpu lock */
+                    {
+                        if (rchk->txf_level > 0)
+                        {
+                            rchk->txf_conflict = hregs->psw.ia.D - hregs->psw.ilc;
+                            rchk->txf_abortcode = txf_abortcode;
+                        }
+                    }
+                    hthread_release_lock(&rchk->sysblk->txf_lock[i], PTT_LOC );  /* release the cpu lock */
+                    break;
+                }
+
+                if (txf_abortcode)                   /* conflict found, stop scanning */
+                    break;
             }
-            else
-              txf_abortcode = ABORT_CODE_STORE_CNF;      /* store conflict */
-
-            /* the real routine is used here instead of obtain_lock to get around a problem */
-            /* compiling dyn76.c, which redefines obtain_lock as EnterCriticalSection */
-
-            hthread_obtain_lock(&rchk->sysblk->txf_lock[i], PTT_LOC );  /*get the cpu lock */
-            {
-              if (rchk->txf_level > 0)
-              {
-                rchk->txf_conflict = hregs->psw.ia.D - hregs->psw.ilc;
-                rchk->txf_abortcode = txf_abortcode;
-              }
-            }
-            hthread_release_lock(&rchk->sysblk->txf_lock[i], PTT_LOC );  /* release the cpu lock */
-            break;
-          }
-
-          if (txf_abortcode)                   /* conflict found, stop scanning */
-            break;
         }
-      }
     }
 
     if (hregs->txf_level == 0)              /* txf_level will always be zero if the transaction */
-      return maddr;                    /* facility is not enabled. */
+        return maddr;                    /* facility is not enabled. */
 
     /* if an abort has already been requested, call the abort code now */
     if (hregs->txf_abortcode)
-      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->txf_abortcode);
+        ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->txf_abortcode);
 
     /*------------------------------------------------------------*/
     /*   We will return an alternate real address to the caller,  */
@@ -307,90 +310,91 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
     for (i = 0; i < hregs->txf_pgcnt; i++, pmap++)
     {
-      /*  if this page has already been mapped, us it*/
-      if (addrpage == (U64)pmap->mainpageaddr)
-      {
-        altpage = pmap->altpageaddr;
-        pagecap = 0;        /* page not captured */
-        break;
-      }
+        /*  if this page has already been mapped, us it*/
+        if (addrpage == (U64)pmap->mainpageaddr)
+        {
+            altpage = pmap->altpageaddr;
+            pagecap = 0;        /* page not captured */
+            break;
+        }
     }
 
     if (!altpage)
     {
-      if (hregs->txf_pgcnt >= MAX_TXF_PAGES)
-      {
-        if (acctype == ACCTYPE_READ)
-          ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
-        else
-          ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_STORE_OVF);
-      }
+        if (hregs->txf_pgcnt >= MAX_TXF_PAGES)
+        {
+            if (acctype == ACCTYPE_READ)
+                ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
+            else
+                ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_STORE_OVF);
+        }
 
-      pmap = &hregs->txf_pagesmap[hregs->txf_pgcnt];
-      altpage = pmap->altpageaddr;
-      savepage = altpage + ZCACHE_PAGE_SIZE;
-      pageaddr = (BYTE *)addrpage;
+        pmap = &hregs->txf_pagesmap[hregs->txf_pgcnt];
+        altpage = pmap->altpageaddr;
+        savepage = altpage + ZCACHE_PAGE_SIZE;
+        pageaddr = (BYTE *)addrpage;
 
-      for (i=0; i < MAX_CAPTURE_TRIES; i++)
-      {
-        memcpy(altpage, pageaddr, ZCACHE_PAGE_SIZE);
-        memcpy(savepage, pageaddr, ZCACHE_PAGE_SIZE);
+        for (i=0; i < MAX_CAPTURE_TRIES; i++)
+        {
+            memcpy(altpage, pageaddr, ZCACHE_PAGE_SIZE);
+            memcpy(savepage, pageaddr, ZCACHE_PAGE_SIZE);
 
-        if (memcmp(altpage, savepage, ZCACHE_PAGE_SIZE) == 0)
-          break;
-      }
+            if (memcmp(altpage, savepage, ZCACHE_PAGE_SIZE) == 0)
+                break;
+        }
 
-      if (i >= MAX_CAPTURE_TRIES)
-        ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
+        if (i >= MAX_CAPTURE_TRIES)
+            ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
 
-      pagecap = 1;
-      pmap->mainpageaddr = (BYTE *)addrpage;
-      hregs->txf_pgcnt++;
+        pagecap = 1;
+        pmap->mainpageaddr = (BYTE *)addrpage;
+        hregs->txf_pgcnt++;
     }
 
     altaddr = altpage + pageoffs;
 
     if (acctype == ACCTYPE_READ)
-      newacc = CM_FETCHED;
+        newacc = CM_FETCHED;
     else
-      newacc = CM_STORED;
+        newacc = CM_STORED;
 
     for (; cacheidx <= cacheidxe; cacheidx++)
     {
-      switch (pmap->cachemap[cacheidx])
-      {
-      case CM_CLEAN:
-
-        /* if the cache line has not been touched, refresh it */
-        pageaddrc = pmap->mainpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
-        altpagec = pmap->altpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
-        savepagec = altpagec + ZCACHE_PAGE_SIZE;
-
-        for (i=0; i < MAX_CAPTURE_TRIES; i++)
+        switch (pmap->cachemap[cacheidx])
         {
-          memcpy(altpagec, pageaddrc, ZCACHE_LINE_SIZE);
-          memcpy(savepagec, pageaddrc, ZCACHE_LINE_SIZE);
+        case CM_CLEAN:
 
-          if (memcmp(altpagec, savepagec, ZCACHE_LINE_SIZE) == 0)
+            /* if the cache line has not been touched, refresh it */
+            pageaddrc = pmap->mainpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
+            altpagec = pmap->altpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
+            savepagec = altpagec + ZCACHE_PAGE_SIZE;
+
+            for (i=0; i < MAX_CAPTURE_TRIES; i++)
+            {
+                memcpy(altpagec, pageaddrc, ZCACHE_LINE_SIZE);
+                memcpy(savepagec, pageaddrc, ZCACHE_LINE_SIZE);
+
+                if (memcmp(altpagec, savepagec, ZCACHE_LINE_SIZE) == 0)
+                    break;
+            }
+
+            if (i >= MAX_CAPTURE_TRIES)
+                ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
+
+            pmap->cachemap[cacheidx] = newacc;
+            break;
+
+        case CM_FETCHED:
+
+            if (newacc == CM_CLEAN)
+                break;
+
+            pmap->cachemap[cacheidx] = newacc;
+            break;
+
+        case CM_STORED:
             break;
         }
-
-        if (i >= MAX_CAPTURE_TRIES)
-          ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF);
-
-        pmap->cachemap[cacheidx] = newacc;
-        break;
-
-      case CM_FETCHED:
-        if (newacc == CM_CLEAN)
-          break;
-
-        pmap->cachemap[cacheidx] = newacc;
-        break;
-
-      case CM_STORED:
-        break;
-      }
     }
     return altaddr;
 #else

@@ -1751,11 +1751,13 @@ void ARCH_DEP(purge_tlb) (REGS *regs)
         memset(&regs->tlb.vaddr, 0, TLBN * sizeof(DW) );
         regs->tlbID = 1;
     }
+
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
     if(regs->host && regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
+
         if (((++regs->guestregs->tlbID) & TLBID_BYTEMASK) == 0)
         {
             memset(&regs->guestregs->tlb.vaddr, 0, TLBN * sizeof(DW));
@@ -1818,6 +1820,7 @@ RADR ptemask;
     if (regs->host && regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
+
 /************************************************************************** @PJJ */
 /* The guest registers in the SIE copy TLB PTE entries for DAT-OFF guests * @PJJ */
 /* like CMS do NOT actually contain the PTE (but rather the host primary  * @PJJ */
@@ -1832,16 +1835,15 @@ RADR ptemask;
 /*                                                                        * @PJJ */
 /*                                        (Peter J. Jansen, 29-Jul-2016)  * @PJJ */
 /************************************************************************** @PJJ */
-        for (i = 0; i < TLBN; i++)
+        for (i=0; i < TLBN; i++)                                         /* @PJJ */
             if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte ||    /* @PJJ */
                  (regs->hostregs->tlb.TLB_PTE(i) & ptemask) == pte)      /* @PJJ */
                 regs->guestregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
     }
-    else
-    /* For guests, clear any host entries */
-    if (regs->guest)
+    else if (regs->guest)  /* For guests, clear any host entries */
     {
         INVALIDATE_AIA(regs->hostregs);
+
         for (i = 0; i < TLBN; i++)
             if ((regs->hostregs->tlb.TLB_PTE(i) & ptemask) == pte)
                 regs->hostregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;

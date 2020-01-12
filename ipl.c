@@ -621,8 +621,9 @@ int i, rc = 0;                          /* Array subscript           */
     regs->sigp_reset = 0;
     regs->extccpu = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* EXIT SILENTLY from transactional execution mode */
     regs->txf_level = 0;
-    regs->txf_contran = 0;
+    regs->txf_contran = false;
 #endif
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
@@ -709,8 +710,9 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->todpr  = 0;
     regs->clkc   = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* EXIT SILENTLY from transactional execution mode */
     regs->txf_level = 0;
-    regs->txf_contran = 0;
+    regs->txf_contran = false;
 #endif
     set_cpu_timer( regs, 0 );
 #if defined( _FEATURE_INTERVAL_TIMER )
@@ -728,7 +730,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     /* For S/370 initialize the channel masks in CR2 */
     regs->CR(2) = (U32)0xFFFFFFFFF;
 #endif
-#if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     regs->CR(2) &= ~(CR2_TDS | CR2_TDC);
 #endif
 
