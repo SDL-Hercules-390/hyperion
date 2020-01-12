@@ -292,6 +292,7 @@ NTRANTBL *nt;
         ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
     // CONTRAN_INSTR_CHECK( hregs );
 
+
     if (hregs->ntranstorectr >= MAX_TXF_NTSTG)
       ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
 

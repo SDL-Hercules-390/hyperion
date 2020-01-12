@@ -1045,7 +1045,9 @@ struct SYSBLK {
         U64     instcount;              /* Instruction counter       */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         U32     tranmodectr;            /* number of cpus in transaction mode */
+#endif
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 

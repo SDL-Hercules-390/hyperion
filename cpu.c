@@ -514,14 +514,14 @@ static char *pgmintname[] = {
     code = pcode & ~PGM_PER_EVENT;
 
 #if defined(FEATURE_073_TRANSACT_EXEC_FACILITY)
-    /*
-       Determine proper CC (Condition Code) based on Exception
-       Condition (pgm interrupt code) and Transactional-Execution
-       class, which depends on whether interrupt should (or can)
-       be filtered or not. Refer to Figure 5-16 on page 5-104
-       (and 5-14 on page 5-102) of manual SA22-7832-12 "z/Arch
-       Principles of Operation"
-    */
+    /*---------------------------------------------------------------*/
+    /*  Determine proper CC (Condition Code) based on Exception      */
+    /*  Condition (pgm interrupt code) and Transactional-Execution   */
+    /*  class, which depends on whether interrupt should (or can)    */
+    /*  be filtered or not. Refer to Figure 5-16 on page 5-104       */
+    /*  (and 5-14 on page 5-102) of manual SA22-7832-12 "z/Arch      */
+    /*  Principles of Operation"                                     */
+    /*---------------------------------------------------------------*/
     if (realregs->tranlvl > 0)
     {
       switch (code)  // (interrupt code)
@@ -529,9 +529,11 @@ static char *pgmintname[] = {
       case PGM_OPERATION_EXCEPTION:
       case PGM_PRIVILEGED_OPERATION_EXCEPTION:
       case PGM_EXECUTE_EXCEPTION:
+
         iclass = 1;     /* class 1 (cant be filtered */
-        ucc = 3;        /* condition code */
+        ucc = ABORT_CC_PERSISTENT;        /* condition code */
         break;
+
       case PGM_PROTECTION_EXCEPTION:
       case PGM_ADDRESSING_EXCEPTION:
       case PGM_SEGMENT_TRANSLATION_EXCEPTION:
@@ -540,6 +542,7 @@ static char *pgmintname[] = {
       case PGM_REGION_FIRST_TRANSLATION_EXCEPTION:
       case PGM_REGION_SECOND_TRANSLATION_EXCEPTION:
       case PGM_REGION_THIRD_TRANSLATION_EXCEPTION:
+
         /* Did interrupt occur during instruction fetch? */
         if (realregs->tranlastaccess == ACCTYPE_INSTFETCH  &&
             realregs->tranlastarn == USE_INST_SPACE)
@@ -552,10 +555,12 @@ static char *pgmintname[] = {
           filt = 1;
           iclass = 2;
         }
-        ucc = 2;
-        fcc = 3;
+        ucc = ABORT_CC_TRANSIENT;
+        fcc = ABORT_CC_PERSISTENT;
         break;
+
       case PGM_DATA_EXCEPTION:
+
         /* Check Data Exception Code (DXC) */
         switch (realregs->dxc)
         {
@@ -563,17 +568,22 @@ static char *pgmintname[] = {
         case DXC_BFP_INSTRUCTION:
         case DXC_DFP_INSTRUCTION:
         case DXC_VECTOR_INSTRUCTION:
+
           iclass = 1;
-          ucc = 2;
+          ucc = ABORT_CC_TRANSIENT;
           filt = 0;
           break;
+
         default:
+
           iclass = 3;
-          ucc = 2;
-          fcc = 3;
+          ucc = ABORT_CC_TRANSIENT;
+          fcc = ABORT_CC_PERSISTENT;
           filt = 1;
+
         } /* end switch (realregs->dxc) */
         break;
+
       case PGM_FIXED_POINT_OVERFLOW_EXCEPTION:
       case PGM_FIXED_POINT_DIVIDE_EXCEPTION:
       case PGM_DECIMAL_OVERFLOW_EXCEPTION:
@@ -584,37 +594,47 @@ static char *pgmintname[] = {
       case PGM_FLOATING_POINT_DIVIDE_EXCEPTION:
       case PGM_VECTOR_PROCESSING_EXCEPTION:
       case PGM_SQUARE_ROOT_EXCEPTION:
+
         iclass = 3;
-        fcc = 3;
-        ucc = 2;
+        fcc = ABORT_CC_PERSISTENT;
+        ucc = ABORT_CC_TRANSIENT;
         filt = 1;
         break;
+
       case PGM_TRANSLATION_SPECIFICATION_EXCEPTION:
       case PGM_SPECIAL_OPERATION_EXCEPTION:
       case PGM_TRANSACTION_CONSTRAINT_EXCEPTION:
+
         iclass = 1;
-        ucc = 3;
+        ucc = ABORT_CC_PERSISTENT;
         filt = 0;
         break;
+
       case PGM_ALET_SPECIFICATION_EXCEPTION:
       case PGM_ALEN_TRANSLATION_EXCEPTION:
       case PGM_ALE_SEQUENCE_EXCEPTION:
       case PGM_ASTE_VALIDITY_EXCEPTION:
       case PGM_ASTE_SEQUENCE_EXCEPTION:
       case PGM_EXTENDED_AUTHORITY_EXCEPTION:
+
         iclass = 2;
-        ucc = 2;
-        fcc = 3;
+        ucc = ABORT_CC_TRANSIENT;
+        fcc = ABORT_CC_PERSISTENT;
         filt = 1;
         break;
+
       default:
+
         iclass = 0;
-        ucc = 0; 
+        ucc = ABORT_CC_SUCCESS; 
         filt = 0;
+
       } /* end switch (code) */
+
       /* CONSTRAINED transactions cannot be filtered */
       if (realregs->contran)
         filt = 0;
+
       if (filt == 1)
       {
         /* Is Program-Interruption-Filtering Overide enabled? */
@@ -626,24 +646,30 @@ static char *pgmintname[] = {
           switch (realregs->tranprogfiltlvl)
           {
           case TXF_PFIC_NONE:
+
             filt = 0;
             break;
+
           case TXF_PFIC_LIMITED:
+
             if (iclass < 3)
               filt = 0;
             else
               filt = 1;
             break;
+
           case TXF_PFIC_MODERATE:
           case TXF_PFIC_RESERVED:
           default:
+
             if (iclass < 2)
               filt = 0;
             else
               filt = 1;
-          }
+          } /* end switch (realregs->tranprogfiltlvl) */
         }
       }
+
       /* Can interrupt ABSOLUTELY be filtered? */
       if (filt == 1)
       {
@@ -651,6 +677,7 @@ static char *pgmintname[] = {
         realregs->psw.cc = fcc;
         ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_CC, ABORT_CODE_FPGM);
       }
+
       /* No, set unfiltered condition code */
       realregs->psw.cc = ucc;
     }
@@ -1733,7 +1760,7 @@ U64     msize;
     pmap = regs->tpagemap;
     for (i = 0; i < MAX_TXF_PAGES; i++, pmap++, altpage += (PAGEFRAME_PAGESIZE * 2))
     {
-      memset(pmap->cachemap, 0x00, sizeof(pmap->cachemap));
+      memset(pmap->cachemap, CM_CLEAN, sizeof(pmap->cachemap));
       pmap->mainpageaddr = NULL;
       pmap->altpageaddr = altpage;
     }
