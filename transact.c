@@ -427,7 +427,7 @@ BYTE    mask = 0x00;
         memset(pmap->cachemap, CM_CLEAN, sizeof(pmap->cachemap));
     }
 
-    hregs->psw.cc = ABORT_CC_SUCCESS;         /* clear the condition code   */
+    hregs->psw.cc = TXF_CC_SUCCESS;         /* clear the condition code   */
     i2union.i2num = i2;       /* save the flag halfword   */
     hregs->txf_pgcnt = 0;    /* clear number of mapped pages  */
 
@@ -503,7 +503,7 @@ U16     filtlvl;
 TPAGEMAP *pmap;
 
     hregs->txf_level++;         /* increase the nesting level */
-    hregs->psw.cc = ABORT_CC_SUCCESS;        /* set cc=0 to indicate tranaction start */
+    hregs->psw.cc = TXF_CC_SUCCESS;        /* set cc=0 to indicate tranaction start */
 
     if (hregs->txf_level == 1)  /* if starting the transaction  */
     {

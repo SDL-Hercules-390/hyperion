@@ -67,7 +67,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     */
     int  aea_arn  = regs->AEA_AR( arn );
     U16  tlbix    = TLBIX( addr );
-    BYTE *rtnaddr = NULL;
+    BYTE *maddr = NULL;
 
 #if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
 #if _GEN_ARCH == 900
@@ -98,9 +98,10 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 #endif
 #endif
 
-    /* Non-zero AEA Access Register number? */
     regs->hostregs->txf_lastaccess = acctype;
     regs->hostregs->txf_lastarn = arn;
+
+    /* Non-zero AEA Access Register number? */
     if (aea_arn)
     {
         /* Same Addess Space Designator as before? */
@@ -134,7 +135,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
                         if (acctype & ACC_CHECK)
                             regs->dat.storkey = regs->tlb.storkey[ tlbix ];
-                        rtnaddr = MAINADDR(regs->tlb.main[tlbix], addr);
+                        maddr = MAINADDR(regs->tlb.main[tlbix], addr);
                     }
                 }
             }
@@ -143,8 +144,8 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     /*---------------------------------------*/
     /* TLB miss: do full address translation */
     /*---------------------------------------*/
-    if (!rtnaddr)
-      rtnaddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
+    if (!maddr)
+      maddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
 
 #if defined (FEATURE_073_TRANSACT_EXEC_FACILITY)
 /*------------------------------------------------------------------*/
@@ -167,17 +168,17 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 /*------------------------------------------------------------------*/
 
     if (sysblk.txf_transcpus == 0)      /* no cpus are in tran mode */
-      return rtnaddr;                   /* return now               */
+      return maddr;                   /* return now               */
 
     /*  we are only interested in fetch and store access  */
     if (acctype != ACCTYPE_READ && acctype != ACCTYPE_WRITE && acctype != ACCTYPE_WRITE_SKP)
-      return rtnaddr;
+      return maddr;
 
     if (arn == USE_INST_SPACE || arn == USE_REAL_ADDR)  /* should only be set for instruction fetch */
-      return rtnaddr;     
+      return maddr;     
 
     hregs = regs->hostregs;
-    addrwork = (U64)rtnaddr;                    
+    addrwork = (U64)maddr;                    
     pageoffs = addrwork & PAGEFRAME_BYTEMASK;       
     cacheidx = pageoffs >> ZCACHE_LINE_SHIFT;  
     addrpage = addrwork & PAGEFRAME_PAGEMASK;  
@@ -270,7 +271,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     }
 
     if (hregs->txf_level == 0)              /* txf_level will always be zero if the transaction */
-      return rtnaddr;                    /* facility is not enabled. */
+      return maddr;                    /* facility is not enabled. */
 
     /* if an abort has already been requested, call the abort code now */
     if (hregs->txf_abortcode)
@@ -393,7 +394,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     }
     return altaddr;
 #else
-    return rtnaddr;
+    return maddr;
 #endif
 }
 

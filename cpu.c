@@ -340,7 +340,7 @@ int     ilc;                            /* instruction length        */
    to Figure 5-16 on page 5-104 (and 5-14 on page 5-102) of manual
    SA22-7832-12 "z/Architecture Principles of Operation"
 */
-int     iclass;                         /* interrupt class */
+int     txclass;                         /* interrupt class */
 int      ucc;
 int      fcc;
 int      filt;
@@ -530,8 +530,8 @@ static char *pgmintname[] = {
       case PGM_PRIVILEGED_OPERATION_EXCEPTION:
       case PGM_EXECUTE_EXCEPTION:
 
-        iclass = 1;     /* class 1 (cant be filtered */
-        ucc = ABORT_CC_PERSISTENT;        /* condition code */
+        txclass = 1;     /* class 1 (cant be filtered */
+        ucc = TXF_CC_PERSISTENT;        /* condition code */
         break;
 
       case PGM_PROTECTION_EXCEPTION:
@@ -548,15 +548,15 @@ static char *pgmintname[] = {
             realregs->txf_lastarn == USE_INST_SPACE)
         {
           filt = 0;
-          iclass = 1;
+          txclass = 1;
         }
         else
         {
           filt = 1;
-          iclass = 2;
+          txclass = 2;
         }
-        ucc = ABORT_CC_TRANSIENT;
-        fcc = ABORT_CC_PERSISTENT;
+        ucc = TXF_CC_TRANSIENT;
+        fcc = TXF_CC_PERSISTENT;
         break;
 
       case PGM_DATA_EXCEPTION:
@@ -569,16 +569,16 @@ static char *pgmintname[] = {
         case DXC_DFP_INSTRUCTION:
         case DXC_VECTOR_INSTRUCTION:
 
-          iclass = 1;
-          ucc = ABORT_CC_TRANSIENT;
+          txclass = 1;
+          ucc = TXF_CC_TRANSIENT;
           filt = 0;
           break;
 
         default:
 
-          iclass = 3;
-          ucc = ABORT_CC_TRANSIENT;
-          fcc = ABORT_CC_PERSISTENT;
+          txclass = 3;
+          ucc = TXF_CC_TRANSIENT;
+          fcc = TXF_CC_PERSISTENT;
           filt = 1;
 
         } /* end switch (realregs->dxc) */
@@ -595,9 +595,9 @@ static char *pgmintname[] = {
       case PGM_VECTOR_PROCESSING_EXCEPTION:
       case PGM_SQUARE_ROOT_EXCEPTION:
 
-        iclass = 3;
-        fcc = ABORT_CC_PERSISTENT;
-        ucc = ABORT_CC_TRANSIENT;
+        txclass = 3;
+        fcc = TXF_CC_PERSISTENT;
+        ucc = TXF_CC_TRANSIENT;
         filt = 1;
         break;
 
@@ -605,8 +605,8 @@ static char *pgmintname[] = {
       case PGM_SPECIAL_OPERATION_EXCEPTION:
       case PGM_TRANSACTION_CONSTRAINT_EXCEPTION:
 
-        iclass = 1;
-        ucc = ABORT_CC_PERSISTENT;
+        txclass = 1;
+        ucc = TXF_CC_PERSISTENT;
         filt = 0;
         break;
 
@@ -617,16 +617,16 @@ static char *pgmintname[] = {
       case PGM_ASTE_SEQUENCE_EXCEPTION:
       case PGM_EXTENDED_AUTHORITY_EXCEPTION:
 
-        iclass = 2;
-        ucc = ABORT_CC_TRANSIENT;
-        fcc = ABORT_CC_PERSISTENT;
+        txclass = 2;
+        ucc = TXF_CC_TRANSIENT;
+        fcc = TXF_CC_PERSISTENT;
         filt = 1;
         break;
 
       default:
 
-        iclass = 0;
-        ucc = ABORT_CC_SUCCESS; 
+        txclass = 0;
+        ucc = TXF_CC_SUCCESS; 
         filt = 0;
 
       } /* end switch (code) */
@@ -652,7 +652,7 @@ static char *pgmintname[] = {
 
           case TXF_PFIC_LIMITED:
 
-            if (iclass < 3)
+            if (txclass < 3)
               filt = 0;
             else
               filt = 1;
@@ -662,7 +662,7 @@ static char *pgmintname[] = {
           case TXF_PFIC_RESERVED:
           default:
 
-            if (iclass < 2)
+            if (txclass < 2)
               filt = 0;
             else
               filt = 1;

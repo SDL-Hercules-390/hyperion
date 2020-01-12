@@ -156,17 +156,17 @@ struct TPAGEMAP {
 };
 
 /*-------------------------------------------------------------------*/
-/*               Transaction Abort Condition Codes                   */
+/*        Transactional-Execution Facility Condition Codes           */
 /*-------------------------------------------------------------------*/
-#define ABORT_CC_SUCCESS        0   /* Trans. successfully initiated */
+#define TXF_CC_SUCCESS          0   /* Trans. successfully initiated */
 
-#define ABORT_CC_INDETERMINATE  1   /* Indeterminate condition;
+#define TXF_CC_INDETERMINATE    1   /* Indeterminate condition;
                                        successful retry unlikely.    */
 
-#define ABORT_CC_TRANSIENT      2   /* Transient condition;
+#define TXF_CC_TRANSIENT        2   /* Transient condition;
                                        successful retry likely.      */
 
-#define ABORT_CC_PERSISTENT     3   /* Persistent condition;
+#define TXF_CC_PERSISTENT       3   /* Persistent condition;
                                        successful retry NOT likely
                                        under current conditions. If
                                        conditions change, then retry

@@ -870,7 +870,7 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int tx
     if (txf_abortcode < 17)
       hregs->psw.cc = acodetab[txf_abortcode];
     else
-      hregs->psw.cc = ABORT_CC_PERSISTENT;
+      hregs->psw.cc = TXF_CC_PERSISTENT;
   }
 
   /*  return now if requested  */
