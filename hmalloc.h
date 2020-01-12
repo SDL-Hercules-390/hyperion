@@ -38,7 +38,7 @@
         #error Invalid cache line size specified
     #endif
 #else
-    #define  CACHE_LINE_SIZE    256
+    #define  CACHE_LINE_SIZE    64
 #endif /* CACHE_LINE_SIZE */
 
 #if !defined(CACHE_ALIGN)
@@ -69,46 +69,6 @@
     #define ALIGN_64K           __ALIGN(65536)
 
 #endif /* CACHE_ALIGN */
-#if CACHE_LINE_SIZE == 32
-#define  CACHE_LINE_PAGE        128
-#define  CACHE_LINE_MASK        31
-#define  CACHE_LINE_SHIFT       5
-#endif
-#if CACHE_LINE_SIZE == 64
-#define  CACHE_LINE_PAGE        64
-#define  CACHE_LINE_MASK        63
-#define  CACHE_LINE_SHIFT       6
-#endif
-#if CACHE_LINE_SIZE == 128
-#define  CACHE_LINE_PAGE        32
-#define  CACHE_LINE_MASK        127
-#define  CACHE_LINE_SHIFT       7
-#endif
-#if CACHE_LINE_SIZE == 256
-#define  CACHE_LINE_PAGE        16
-#define  CACHE_LINE_MASK        255
-#define  CACHE_LINE_SHIFT       8
-#endif
-#if CACHE_LINE_SIZE == 512
-#define  CACHE_LINE_PAGE        8
-#define  CACHE_LINE_MASK        511
-#define  CACHE_LINE_SHIFT       9
-#endif
-#if CACHE_LINE_SIZE == 1024
-#define  CACHE_LINE_PAGE        4
-#define  CACHE_LINE_MASK        1023
-#define  CACHE_LINE_SHIFT       10
-#endif
-#if CACHE_LINE_SIZE == 2048
-#define  CACHE_LINE_PAGE        2
-#define  CACHE_LINE_MASK        2047
-#define  CACHE_LINE_SHIFT       11
-#endif
-#if CACHE_LINE_SIZE == 4096
-#define  CACHE_LINE_PAGE        1 
-#define  CACHE_LINE_MASK        4095
-#define  CACHE_LINE_SHIFT       12
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Struture definition for block headers                             */

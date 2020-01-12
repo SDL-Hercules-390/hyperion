@@ -179,11 +179,11 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     hregs = regs->hostregs;
     addrwork = (U64)rtnaddr;                    
     pageoffs = addrwork & PAGEFRAME_BYTEMASK;       
-    cacheidx = pageoffs >> CACHE_LINE_SHIFT;  
+    cacheidx = pageoffs >> ZCACHE_LINE_SHIFT;  
     addrpage = addrwork & PAGEFRAME_PAGEMASK;  
 
     /* find the length to the end of the page */
-    plen = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    plen = ZCACHE_PAGE_SIZE - (addr & PAGEFRAME_BYTEMASK);
 
     /* if the length to the end of the page is less than the length passed */
     /* reset to the end of page length */
@@ -194,7 +194,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
       elen = len;
 
     pageoffe = pageoffs + elen; 
-    cacheidxe = pageoffe >> CACHE_LINE_SHIFT;
+    cacheidxe = pageoffe >> ZCACHE_LINE_SHIFT;
 
 /*------------------------------------------------------------------*/
 /*   if any cpus are in transaction mode, we need to see if this    */
@@ -327,15 +327,15 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 
       pmap = &hregs->tpagemap[hregs->tranpagenum];
       altpage = pmap->altpageaddr;
-      savepage = altpage + PAGEFRAME_PAGESIZE;
+      savepage = altpage + ZCACHE_PAGE_SIZE;
       pageaddr = (BYTE *)addrpage;
 
       for (i=0; i < MAX_CAPTURE_TRIES; i++)
       {
-        memcpy(altpage, pageaddr, PAGEFRAME_PAGESIZE);
-        memcpy(savepage, pageaddr, PAGEFRAME_PAGESIZE);
+        memcpy(altpage, pageaddr, ZCACHE_PAGE_SIZE);
+        memcpy(savepage, pageaddr, ZCACHE_PAGE_SIZE);
 
-        if (memcmp(altpage, savepage, PAGEFRAME_PAGESIZE) == 0)
+        if (memcmp(altpage, savepage, ZCACHE_PAGE_SIZE) == 0)
           break;
       }
 
@@ -361,16 +361,16 @@ static inline  BYTE* ARCH_DEP( maddr_l )
       case CM_CLEAN:
 
         /* if the cache line has not been touched, refresh it */
-        pageaddrc = pmap->mainpageaddr + (cacheidx << CACHE_LINE_SHIFT);
-        altpagec = pmap->altpageaddr + (cacheidx << CACHE_LINE_SHIFT);
-        savepagec = altpagec + PAGEFRAME_PAGESIZE;
+        pageaddrc = pmap->mainpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
+        altpagec = pmap->altpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
+        savepagec = altpagec + ZCACHE_PAGE_SIZE;
 
         for (i=0; i < MAX_CAPTURE_TRIES; i++)
         {
-          memcpy(altpagec, pageaddrc, CACHE_LINE_SIZE);
-          memcpy(savepagec, pageaddrc, CACHE_LINE_SIZE);
+          memcpy(altpagec, pageaddrc, ZCACHE_LINE_SIZE);
+          memcpy(savepagec, pageaddrc, ZCACHE_LINE_SIZE);
 
-          if (memcmp(altpagec, savepagec, CACHE_LINE_SIZE) == 0)
+          if (memcmp(altpagec, savepagec, ZCACHE_LINE_SIZE) == 0)
             break;
         }
 

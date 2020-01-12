@@ -1755,10 +1755,10 @@ U64     msize;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     regs->tranlvl = 0;
-    msize = PAGEFRAME_PAGESIZE * MAX_TXF_PAGES * 2;
+    msize = ZCACHE_PAGE_SIZE * MAX_TXF_PAGES * 2;
     altpage = (BYTE *)malloc_aligned(msize, 4096);
     pmap = regs->tpagemap;
-    for (i = 0; i < MAX_TXF_PAGES; i++, pmap++, altpage += (PAGEFRAME_PAGESIZE * 2))
+    for (i = 0; i < MAX_TXF_PAGES; i++, pmap++, altpage += (ZCACHE_PAGE_SIZE * 2))
     {
       memset(pmap->cachemap, CM_CLEAN, sizeof(pmap->cachemap));
       pmap->mainpageaddr = NULL;

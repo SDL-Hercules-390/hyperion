@@ -193,14 +193,14 @@ REGS     *hregs = regs->hostregs;
 
     for (i = 0; i < hregs->tranpagenum; i++, pmap++)
     {
-      for (j = 0; j < CACHE_LINE_PAGE; j++)
+      for (j = 0; j < ZCACHE_LINE_PAGE; j++)
       {
         if (pmap->cachemap[j] > CM_CLEAN)
         {
-          saveaddr = pmap->altpageaddr + (j << CACHE_LINE_SHIFT) + PAGEFRAME_PAGESIZE;
-          mainaddr = pmap->mainpageaddr + (j << CACHE_LINE_SHIFT);
+          saveaddr = pmap->altpageaddr + (j << ZCACHE_LINE_SHIFT) + ZCACHE_PAGE_SIZE;
+          mainaddr = pmap->mainpageaddr + (j << ZCACHE_LINE_SHIFT);
 
-          if (memcmp(saveaddr, mainaddr, CACHE_LINE_SIZE) != 0)
+          if (memcmp(saveaddr, mainaddr, ZCACHE_LINE_SIZE) != 0)
           {
             if (pmap->cachemap[j] == CM_STORED)
               ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, ABORT_CODE_STORE_CNF);
@@ -220,13 +220,13 @@ REGS     *hregs = regs->hostregs;
 
     for (i = 0; i < hregs->tranpagenum; i++, pmap++)
     {
-      for (j = 0; j < CACHE_LINE_PAGE; j++)
+      for (j = 0; j < ZCACHE_LINE_PAGE; j++)
       {
         if (pmap->cachemap[j] > CM_CLEAN)
         {
-          altaddr = pmap->altpageaddr + (j << CACHE_LINE_SHIFT);
-          mainaddr = pmap->mainpageaddr + (j << CACHE_LINE_SHIFT);
-          memcpy(mainaddr, altaddr, CACHE_LINE_SIZE);
+          altaddr = pmap->altpageaddr + (j << ZCACHE_LINE_SHIFT);
+          mainaddr = pmap->mainpageaddr + (j << ZCACHE_LINE_SHIFT);
+          memcpy(mainaddr, altaddr, ZCACHE_LINE_SIZE);
         }
       }
     }

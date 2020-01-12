@@ -67,12 +67,11 @@
 #define  MAX_TXF_NTSTG          128   /* Max nontransactional stores */
 #define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
 
-#define  ZCACHE_PAGE_SIZE      4096   /* IBM z page size             */
+#define  ZCACHE_PAGE_SIZE      4096   /* IBM z page size (4K)        */
 #define  ZCACHE_LINE_SIZE       256   /* IBM z cache line size       */
 #define  ZCACHE_LINE_SHIFT        8   /* Cache line size shift value */
-
-#define  ZCACHE_LINE_PAGE  (ZCACHE_PAGE_SIZE/ZCACHE_LINE_SIZE) /* Cache lines per 4K page */
-#define  ZCACHE_LINE_MASK  (ZCACHE_LINE_SIZE-1)                /* Cache line mask         */
+                                      /* Cache lines per 4K page     */
+#define  ZCACHE_LINE_PAGE           (ZCACHE_PAGE_SIZE/ZCACHE_LINE_SIZE)
 
 /*-------------------------------------------------------------------*/
 /*          abort_transaction function 'retry' code                  */
@@ -148,9 +147,9 @@ CASSERT( sizeof( struct TDB ) == 256, hstructs_h );
 /*      Transaction page map                                         */
 /*-------------------------------------------------------------------*/
 struct TPAGEMAP {
-   BYTE  *mainpageaddr;     /* address of main page being mapped      */
-   BYTE  *altpageaddr;      /* addesss of alternate page              */
-   BYTE  cachemap[CACHE_LINE_PAGE];   /* cache line indicators       */
+   BYTE  *mainpageaddr;     /* address of main page being mapped     */
+   BYTE  *altpageaddr;      /* addesss of alternate page             */
+   BYTE  cachemap[ZCACHE_LINE_PAGE];   /* cache line indicators      */
 #define CM_CLEAN    0           /* clean cache line (init default)   */
 #define CM_FETCHED  1           /* cache line was fetched            */
 #define CM_STORED   2           /* cache line was stored into        */
