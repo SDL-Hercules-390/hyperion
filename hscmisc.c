@@ -1697,8 +1697,8 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 /*      if a translation exception occurs), the translation is       */
 /*      performed using a temporary copy of the CPU registers.       */
 /*-------------------------------------------------------------------*/
-static U16 ARCH_DEP(virt_to_real) (RADR *raptr, int *siptr,
-                        VADR vaddr, int arn, REGS *regs, int acctype)
+DLL_EXPORT int ARCH_DEP(virt_to_real) (U64* raptr, int* siptr,
+                        U64 vaddr, int arn, REGS *regs, int acctype)
 {
 int icode;
 
@@ -1710,11 +1710,11 @@ int icode;
         if (SIE_MODE(regs))
             memcpy(regs->hostregs->progjmp, regs->progjmp,
                    sizeof(jmp_buf));
-        ARCH_DEP(logical_to_main) (vaddr, temp_arn, regs, acctype, 0);
+        ARCH_DEP(logical_to_main) ((VADR)vaddr, temp_arn, regs, acctype, 0);
     }
 
     *siptr = regs->dat.stid;
-    *raptr = regs->hostregs->dat.raddr;
+    *raptr = (U64) regs->hostregs->dat.raddr;
 
     return icode;
 
