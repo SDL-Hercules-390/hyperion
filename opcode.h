@@ -355,7 +355,7 @@ do { \
 
 #undef CHECK_TRANCTR
 
-#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+#if !defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
   #define CHECK_TRANCTR(_ip, _regs)
 #else
 #define CHECK_TRANCTR(_ip, _regs)                                                        \
@@ -377,7 +377,7 @@ do {                                                                            
    )                                                                                     \
       ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, (_regs)->txf_rabortcode); \
 } while(0)
-#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /* Instruction fetching */
 
