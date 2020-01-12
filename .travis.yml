@@ -40,7 +40,7 @@ matrix:
 #
 before_install:
   - sudo apt-get install -y regina-rexx libregina3-dev
-  - sudo apt-get install -y binutils-2.23
+  - sudo apt-get install -y binutils binutils-dev
   - eval "${MATRIX_EVAL}"
 
 #
