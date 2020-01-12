@@ -361,40 +361,6 @@ struct REGS {                           /* Processor registers       */
      /* Active Facility List */
         BYTE    facility_list[ STFL_HERC_BY_SIZE ];
 
-     /* ------------------------------------------------------------ */
-        U64     regs_copy_end;          /* Copy regs to here         */
-     /* ------------------------------------------------------------ */
-
-     /* Runtime opcode tables. Use 'replace_opcode' to modify */
-
-        const INSTR_FUNC    *s370_runtime_opcode_xxxx,
-                            *s370_runtime_opcode_e3________xx,
-                            *s370_runtime_opcode_eb________xx,
-                            *s370_runtime_opcode_ec________xx,
-                            *s370_runtime_opcode_ed________xx;
-
-        const INSTR_FUNC    *s390_runtime_opcode_xxxx,
-                            *s390_runtime_opcode_e3________xx,
-                            *s390_runtime_opcode_eb________xx,
-                            *s390_runtime_opcode_ec________xx,
-                            *s390_runtime_opcode_ed________xx;
-
-        const INSTR_FUNC    *z900_runtime_opcode_xxxx,
-                            *z900_runtime_opcode_e3________xx,
-                            *z900_runtime_opcode_eb________xx,
-                            *z900_runtime_opcode_ec________xx,
-                            *z900_runtime_opcode_ed________xx;
-
-#if !defined( OPTION_NO_E3_OPTINST )
-        const INSTR_FUNC    *s370_runtime_opcode_e3_0______xx,
-                            *s390_runtime_opcode_e3_0______xx,
-                            *z900_runtime_opcode_e3_0______xx;
-#endif
-
-     /* TLB - Translation lookaside buffer                           */
-        unsigned int tlbID;             /* Validation identifier     */
-        TLB     tlb;                    /* Translation lookaside buf */
-
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
      /* Transactional-Execution Facility                             */
 
@@ -471,6 +437,40 @@ struct REGS {                           /* Processor registers       */
         U16     txf_progfilttab[ MAX_TXF_LEVEL ];   /* PIFC table */
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+     /* ------------------------------------------------------------ */
+        U64     regs_copy_end;          /* Copy regs to here         */
+     /* ------------------------------------------------------------ */
+
+     /* Runtime opcode tables. Use 'replace_opcode' to modify */
+
+        const INSTR_FUNC    *s370_runtime_opcode_xxxx,
+                            *s370_runtime_opcode_e3________xx,
+                            *s370_runtime_opcode_eb________xx,
+                            *s370_runtime_opcode_ec________xx,
+                            *s370_runtime_opcode_ed________xx;
+
+        const INSTR_FUNC    *s390_runtime_opcode_xxxx,
+                            *s390_runtime_opcode_e3________xx,
+                            *s390_runtime_opcode_eb________xx,
+                            *s390_runtime_opcode_ec________xx,
+                            *s390_runtime_opcode_ed________xx;
+
+        const INSTR_FUNC    *z900_runtime_opcode_xxxx,
+                            *z900_runtime_opcode_e3________xx,
+                            *z900_runtime_opcode_eb________xx,
+                            *z900_runtime_opcode_ec________xx,
+                            *z900_runtime_opcode_ed________xx;
+
+#if !defined( OPTION_NO_E3_OPTINST )
+        const INSTR_FUNC    *s370_runtime_opcode_e3_0______xx,
+                            *s390_runtime_opcode_e3_0______xx,
+                            *z900_runtime_opcode_e3_0______xx;
+#endif
+
+     /* TLB - Translation lookaside buffer                           */
+        unsigned int tlbID;             /* Validation identifier     */
+        TLB     tlb;                    /* Translation lookaside buf */
 
         BLOCK_TRAILER;                  /* Name of block  END        */
 };
