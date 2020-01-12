@@ -358,19 +358,24 @@ do { \
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
   #define CHECK_TRANCTR(_ip, _regs)
 #else
-#define CHECK_TRANCTR(_ip, _regs) \
-do { \
-     if (!(_regs)->hostregs->tranlvl)  \
-       break;      \
-   (_regs)->hostregs->traninstctr++; \
-   /* Too many CONSTRAINED instructions executed? */                        \
-   if ((_regs)->hostregs->contran && (_regs)->hostregs->traninstctr > MAX_TXF_CONTRAN_INSTR && \
-       memcmp((_ip), "\xb2\xf8", 2) != 0) \
-       ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR); \
-   /* Randomly abort the transaction? */                                       \
-   if ((_regs)->hostregs->traninstctr == (_regs)->hostregs->tranabortnum &&  \
-      (_regs)->hostregs->tranabortnum > 0) \
-     ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, (_regs)->rabortcode); \
+#define CHECK_TRANCTR(_ip, _regs)                                                        \
+do {                                                                                     \
+     if (!(_regs)->hostregs->txf_level)                                                  \
+       break;                                                                            \
+   (_regs)->hostregs->txf_instctr++;                                                     \
+   /* Too many CONSTRAINED instructions executed? */                                     \
+   if (1                                                                                 \
+       && (_regs)->hostregs->txf_contran                                                 \
+       && (_regs)->hostregs->txf_instctr > MAX_TXF_CONTRAN_INSTR                         \
+       && memcmp((_ip), "\xb2\xf8", 2) != 0                                              \
+   )                                                                                     \
+      ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);        \
+   /* Randomly abort the transaction? */                                                 \
+   if (1                                                                                 \
+       && (_regs)->hostregs->txf_instctr == (_regs)->hostregs->txf_abortnum              \
+       && (_regs)->hostregs->txf_abortnum > 0                                            \
+   )                                                                                     \
+      ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, (_regs)->txf_rabortcode); \
 } while(0)
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
@@ -1077,7 +1082,7 @@ do { \
   #define CONTRAN_INSTR_CHECK( _regs )                                                  \
     /* Restricted instruction in CONSTRAINED transaction mode */                        \
     do {                                                                                \
-      if ((_regs)->contran)                                                             \
+      if ((_regs)->txf_contran)                                                         \
       {                                                                                 \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
         UNREACHABLE_CODE(;);                                                            \
@@ -1087,7 +1092,7 @@ do { \
   #define CONTRAN_BRANCH_CHECK( _regs, _m3, _i4 )                                       \
     /* Branches restricted in CONSTRAINED mode if mask zero or offset negative */       \
     do {                                                                                \
-      if ((_regs)->contran &&                                                           \
+      if ((_regs)->txf_contran &&                                                       \
       (0                                                                                \
         || (_m3) == 0x00            /* zero mask (nop)   not allowed */                 \
         || (_i4) < 0                /* backward branches not allowed */                 \
@@ -1102,7 +1107,7 @@ do { \
     /* Relative branches restricted in CONSTRAINED mode */                              \
     /* if the mask is zero or the offset is negative    */                              \
     do {                                                                                \
-      if ((_regs)->contran &&                                                           \
+      if ((_regs)->txf_contran &&                                                       \
       (0                                                                                \
         || (inst[1] & 0xf0) == 0x00                                                     \
         || (inst[2] & 0x80)                                                             \
@@ -1116,7 +1121,7 @@ do { \
   #define TRAN_INSTR_CHECK( _regs )                                                     \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
-      if ((_regs)->tranlvl > 0)                                                         \
+      if ((_regs)->txf_level > 0)                                                       \
       {                                                                                 \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
         UNREACHABLE_CODE(;);                                                            \
@@ -1127,10 +1132,10 @@ do { \
     /* Restricted instruction if CONSTRAINED mode or float bit zero */                  \
     do {                                                                                \
       if (1                                                                             \
-        && (_regs)->tranlvl > 0                                                         \
+        && (_regs)->txf_level > 0                                                       \
         && (0                                                                           \
-          || (_regs)->contran                                                           \
-          || !((_regs)->tranctlflag & TXF_CTL_FLOAT)                                    \
+          || (_regs)->txf_contran                                                       \
+          || !((_regs)->txf_ctlflag & TXF_CTL_FLOAT)                                    \
         )                                                                               \
       )                                                                                 \
       {                                                                                 \
@@ -1143,8 +1148,8 @@ do { \
     /* Restricted instruction if access control bit zero */                             \
     do {                                                                                \
       if (1                                                                             \
-        && (_regs)->tranlvl > 0                                                         \
-        && !((_regs)->tranctlflag & TXF_CTL_AR)                                         \
+        && (_regs)->txf_level > 0                                                       \
+        && !((_regs)->txf_ctlflag & TXF_CTL_AR)                                         \
       )                                                                                 \
       {                                                                                 \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
@@ -1155,9 +1160,9 @@ do { \
   #define TRAN_MC_INSTR_CHECK( _regs )                                                  \
     /* Monitor call restricted in CONSTRAINED mode or if monitor trace active */        \
     do {                                                                                \
-      if ((_regs)->tranlvl > 0 &&                                                       \
+      if ((_regs)->txf_level > 0 &&                                                     \
       (0                                                                                \
-        || (_regs)->contran                                                             \
+        || (_regs)->txf_contran                                                         \
         || ((_regs)->CR(12) & CR12_MTRACE)                                              \
       ))                                                                                \
       {                                                                                 \
@@ -1170,9 +1175,9 @@ do { \
     /* Non-relative branches restricted in CONSTRAINED mode, or  */                     \
     /* if branch tracing is enabled and branch register non-zero */                     \
     do {                                                                                \
-      if ((_regs)->tranlvl > 0 &&                                                       \
+      if ((_regs)->txf_level > 0 &&                                                     \
       (0                                                                                \
-        || (_regs)->contran                                                             \
+        || (_regs)->txf_contran                                                         \
         || ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                              \
       ))                                                                                \
       {                                                                                 \
@@ -1185,10 +1190,10 @@ do { \
     /* Flag this CPU for abort if any transaction is active */      \
     do {                                                            \
       if (1                                                         \
-        && (_regs)->tranlvl > 0     /* transaction active  */       \
-        && !(_regs)->abortcode      /* not already aborted */       \
+        &&  (_regs)->txf_level > 0      /* transaction active  */   \
+        && !(_regs)->txf_abortcode      /* not already aborted */   \
       )                                                             \
-        (_regs)->abortcode = ABORT_CODE_MISC;                       \
+        (_regs)->txf_abortcode = ABORT_CODE_MISC;                   \
     } while (0)
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -3240,7 +3245,7 @@ void s390_process_trace (REGS *regs);
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
 void z900_process_trace (REGS *regs);
-void z900_abort_transaction(REGS *regs, int retry, int abortcode);
+void z900_abort_transaction(REGS *regs, int retry, int txf_abortcode);
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);

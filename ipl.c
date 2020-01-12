@@ -621,8 +621,8 @@ int i, rc = 0;                          /* Array subscript           */
     regs->sigp_reset = 0;
     regs->extccpu = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    regs->tranlvl = 0;
-    regs->contran = 0;
+    regs->txf_level = 0;
+    regs->txf_contran = 0;
 #endif
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
@@ -709,8 +709,8 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->todpr  = 0;
     regs->clkc   = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    regs->tranlvl = 0;
-    regs->contran = 0;
+    regs->txf_level = 0;
+    regs->txf_contran = 0;
 #endif
     set_cpu_timer( regs, 0 );
 #if defined( _FEATURE_INTERVAL_TIMER )

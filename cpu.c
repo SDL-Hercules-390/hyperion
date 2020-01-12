@@ -522,7 +522,7 @@ static char *pgmintname[] = {
     /*  (and 5-14 on page 5-102) of manual SA22-7832-12 "z/Arch      */
     /*  Principles of Operation"                                     */
     /*---------------------------------------------------------------*/
-    if (realregs->tranlvl > 0)
+    if (realregs->txf_level > 0)
     {
       switch (code)  // (interrupt code)
       {
@@ -544,8 +544,8 @@ static char *pgmintname[] = {
       case PGM_REGION_THIRD_TRANSLATION_EXCEPTION:
 
         /* Did interrupt occur during instruction fetch? */
-        if (realregs->tranlastaccess == ACCTYPE_INSTFETCH  &&
-            realregs->tranlastarn == USE_INST_SPACE)
+        if (realregs->txf_lastaccess == ACCTYPE_INSTFETCH  &&
+            realregs->txf_lastarn == USE_INST_SPACE)
         {
           filt = 0;
           iclass = 1;
@@ -632,7 +632,7 @@ static char *pgmintname[] = {
       } /* end switch (code) */
 
       /* CONSTRAINED transactions cannot be filtered */
-      if (realregs->contran)
+      if (realregs->txf_contran)
         filt = 0;
 
       if (filt == 1)
@@ -643,7 +643,7 @@ static char *pgmintname[] = {
         else
         {
           /* Check PFIC (see Fig. 5-15 on page 5-104) */
-          switch (realregs->tranprogfiltlvl)
+          switch (realregs->txf_pfic)
           {
           case TXF_PFIC_NONE:
 
@@ -666,7 +666,7 @@ static char *pgmintname[] = {
               filt = 0;
             else
               filt = 1;
-          } /* end switch (realregs->tranprogfiltlvl) */
+          } /* end switch (realregs->txf_pfic) */
         }
       }
 
@@ -1004,8 +1004,8 @@ static char *pgmintname[] = {
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Save program interrupt code if transaction active */
-        if (realregs->tranlvl > 0)
-          memcpy(&realregs->tranpiid, psa->pgmint, 4);
+        if (realregs->txf_level > 0)
+          memcpy(&realregs->txf_piid, psa->pgmint, 4);
 #endif
         /* Store the exception access identification at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
@@ -1143,7 +1143,7 @@ static char *pgmintname[] = {
     /* If transaction active, abort it with unfiltered pgm interrupt
        and then return back to here to continue with program interrupt
        processing */
-    if (realregs->tranlvl > 0)
+    if (realregs->txf_level > 0)
       ARCH_DEP(abort_transaction)(realregs, ABORT_RETRY_RETURN, ABORT_CODE_UPGM);
 #endif
 #if defined(_FEATURE_SIE)
@@ -1240,7 +1240,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction and then return back to here
        to continue with restart interrupt processing */
-    if (regs->tranlvl > 0)
+    if (regs->txf_level > 0)
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
 #endif
     /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
@@ -1364,7 +1364,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Abort any active transaction and then return back to here
            to continue with I/O interrupt processing */
-        if (regs->tranlvl > 0)
+        if (regs->txf_level > 0)
         {
           ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_IO);
           regs->psw.cc = 2;
@@ -1442,7 +1442,7 @@ RADR    fsta;                           /* Failing storage address   */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction and then return back to here
        to continue with machine check interrupt processing */
-    if (regs->tranlvl > 0)
+    if (regs->txf_level > 0)
     {
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_RETURN, ABORT_CODE_MCK);
       regs->psw.cc = 2;
@@ -1678,10 +1678,10 @@ U64     msize;
         {
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
             /* Free REGS Transactional-Execution Facility memory */
-            if (oldregs->tpagemap[0].altpageaddr)
+            if (oldregs->txf_pagesmap[0].altpageaddr)
             {
-              free_aligned(oldregs->tpagemap[0].altpageaddr);
-              oldregs->tpagemap[0].altpageaddr = NULL;
+              free_aligned(oldregs->txf_pagesmap[0].altpageaddr);
+              oldregs->txf_pagesmap[0].altpageaddr = NULL;
             }
 #endif
             memcpy (regs, oldregs, sizeof(REGS));
@@ -1754,20 +1754,20 @@ U64     msize;
     init_cpu_facilities( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    regs->tranlvl = 0;
+    regs->txf_level = 0;
     msize = ZCACHE_PAGE_SIZE * MAX_TXF_PAGES * 2;
     altpage = (BYTE *)malloc_aligned(msize, 4096);
-    pmap = regs->tpagemap;
+    pmap = regs->txf_pagesmap;
     for (i = 0; i < MAX_TXF_PAGES; i++, pmap++, altpage += (ZCACHE_PAGE_SIZE * 2))
     {
       memset(pmap->cachemap, CM_CLEAN, sizeof(pmap->cachemap));
       pmap->mainpageaddr = NULL;
       pmap->altpageaddr = altpage;
     }
-    regs->tranabortnum = 0;
-    regs->contran = 0;
-    regs->traninstctr = 0;
-    regs->tranpagenum = 0;
+    regs->txf_abortnum = 0;
+    regs->txf_contran = 0;
+    regs->txf_instctr = 0;
+    regs->txf_pgcnt = 0;
 #endif
 
     /* Get pointer to primary opcode table */
@@ -2200,10 +2200,10 @@ static void *cpu_uninit (int cpu, REGS *regs)
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Free REGS Transactional-Execution Facility memory */
-    if (regs->tpagemap[0].altpageaddr)
+    if (regs->txf_pagesmap[0].altpageaddr)
     {
-      free_aligned(regs->tpagemap[0].altpageaddr);
-      regs->tpagemap[0].altpageaddr = NULL;
+      free_aligned(regs->txf_pagesmap[0].altpageaddr);
+      regs->txf_pagesmap[0].altpageaddr = NULL;
     }
 #endif
 

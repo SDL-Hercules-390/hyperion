@@ -94,10 +94,10 @@ int     r1, r2;                         /* Operand register numbers  */
     if (!(regs->CR(0) & CR0_TXC))
       ARCH_DEP(program_interrupt)(regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-    if (regs->contran)
+    if (regs->txf_contran)
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 
-    regs->gr[r1].F.L.F = (U32)regs->tranlvl;
+    regs->gr[r1].F.L.F = (U32)regs->txf_level;
     regs->gr[r1].F.H.F = 0;
 
 } /* end DEF_INST( extract_transaction_nesting_depth ) */
@@ -128,10 +128,10 @@ REGS     *hregs = regs->hostregs;
     if (!(hregs->CR(0) & CR0_TXC))
         ARCH_DEP(program_interrupt)(hregs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
-    if (hregs->tranabortnum > 0)
-        ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, regs->rabortcode);
+    if (hregs->txf_abortnum > 0)
+        ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, regs->txf_rabortcode);
 
-    if (hregs->tranlvl == 0)
+    if (hregs->txf_level == 0)
         return;
 
     /*-----------------------------------------------------*/
@@ -142,23 +142,23 @@ REGS     *hregs = regs->hostregs;
     OBTAIN_INTLOCK(hregs);
     SYNCHRONIZE_CPUS(hregs);
 
-    hregs->tranlvl--;
+    hregs->txf_level--;
 
-    if (hregs->tranlvl > 0)
+    if (hregs->txf_level > 0)
     {
-      if (hregs->tranhigharchange > hregs->tranlvl)
-        hregs->tranhigharchange--;
+      if (hregs->txf_higharchange > hregs->txf_level)
+        hregs->txf_higharchange--;
 
-      if (hregs->tranhigharchange == hregs->tranlvl)
-        hregs->tranctlflag |= TXF_CTL_AR;
+      if (hregs->txf_higharchange == hregs->txf_level)
+        hregs->txf_ctlflag |= TXF_CTL_AR;
 
-      if (hregs->tranhighfloat > hregs->tranlvl)
-        hregs->tranhighfloat--;
+      if (hregs->txf_highfloat > hregs->txf_level)
+        hregs->txf_highfloat--;
 
-      if (hregs->tranhighfloat == hregs->tranlvl)
-        hregs->tranctlflag |= TXF_CTL_FLOAT;
+      if (hregs->txf_highfloat == hregs->txf_level)
+        hregs->txf_ctlflag |= TXF_CTL_FLOAT;
 
-      hregs->tranprogfiltlvl = hregs->tranprogfilttab[hregs->tranlvl - 1];
+      hregs->txf_pfic = hregs->txf_progfilttab[hregs->txf_level - 1];
       return;
     }
 
@@ -169,12 +169,12 @@ REGS     *hregs = regs->hostregs;
     /* If an abort code is already set, abort the transaction */
     /* and exit                                               */
     /*--------------------------------------------------------*/
-    if (hregs->abortcode)
-      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->abortcode);
+    if (hregs->txf_abortcode)
+      ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_CC, hregs->txf_abortcode);
 
-    hregs->abortcode = 0;    /* clear the abort code */
-    hregs->contran = 0;         /* clear the tran type code */
-    hregs->tranabortnum = 0;
+    hregs->txf_abortcode = 0;    /* clear the abort code */
+    hregs->txf_contran = 0;         /* clear the tran type code */
+    hregs->txf_abortnum = 0;
 
     /*--------------------------------------------------------*/
     /*  Scan the page map table.  There is one entry in the   */
@@ -189,9 +189,9 @@ REGS     *hregs = regs->hostregs;
     /*  a conflict, since that means that some other CPU or   */
     /*  the channel subsystem has stored into the cache line, */
     /*--------------------------------------------------------*/
-    pmap = hregs->tpagemap;
+    pmap = hregs->txf_pagesmap;
 
-    for (i = 0; i < hregs->tranpagenum; i++, pmap++)
+    for (i = 0; i < hregs->txf_pgcnt; i++, pmap++)
     {
       for (j = 0; j < ZCACHE_LINE_PAGE; j++)
       {
@@ -216,9 +216,9 @@ REGS     *hregs = regs->hostregs;
     /*  touched, and all other CPUs are dormant.   Now update  */
     /*  the real cache lines from the shadow cache lines.      */
     /*---------------------------------------------------------*/
-    pmap = hregs->tpagemap;
+    pmap = hregs->txf_pagesmap;
 
-    for (i = 0; i < hregs->tranpagenum; i++, pmap++)
+    for (i = 0; i < hregs->txf_pgcnt; i++, pmap++)
     {
       for (j = 0; j < ZCACHE_LINE_PAGE; j++)
       {
@@ -236,7 +236,7 @@ REGS     *hregs = regs->hostregs;
     /*  and exit.                                               */
     /*----------------------------------------------------------*/
     hregs->psw.cc = 0;
-    hregs->tranpagenum = 0;
+    hregs->txf_pgcnt = 0;
 
     RELEASE_INTLOCK(hregs);
 
@@ -288,12 +288,12 @@ NTRANTBL *nt;
 
 
     // FIXME: BUG? checking 'hregs', but calling abort with 'regs'! Is that right?
-    if (hregs->contran)
+    if (hregs->txf_contran)
         ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
     // CONTRAN_INSTR_CHECK( hregs );
 
 
-    if (hregs->ntranstorectr >= MAX_TXF_NTSTG)
+    if (hregs->txf_ntstgcnt >= MAX_TXF_NTSTG)
       ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF);
 
     /* Store regs in workarea */
@@ -304,9 +304,9 @@ NTRANTBL *nt;
        the main storage access lock */
     ARCH_DEP(vstorec) (qwork, 8 - 1, effective_addr2, b2, regs);
 
-    hregs->ntranstorectr++;
+    hregs->txf_ntstgcnt++;
 
-    nt = &hregs->ntrantbl[hregs->ntranstorectr - 1];
+    nt = &hregs->txf_ntstgtbl[hregs->txf_ntstgcnt - 1];
     nt->effective_addr = effective_addr2;
     nt->arn = b2;
     nt->skey = regs->psw.pkey;
@@ -405,21 +405,21 @@ BYTE    mask = 0x00;
         ARCH_DEP(program_interrupt)(hregs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     // FIXME: why -1?
-    if (hregs->tranlvl > (MAX_TXF_LEVEL-1))
+    if (hregs->txf_level > (MAX_TXF_LEVEL-1))
         ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_NESTING);
 
     OBTAIN_INTLOCK(hregs);
     SYNCHRONIZE_CPUS(hregs);
 
-    if (hregs->tranlvl > 0)     /* if alreadyvin transaction mode */
+    if (hregs->txf_level > 0)     /* if alreadyvin transaction mode */
     {
-        if (hregs->contran)   /* already in constrained mode     */
+        if (hregs->txf_contran)   /* already in constrained mode     */
             ARCH_DEP(abort_transaction)(hregs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);  /* abort       */
         ARCH_DEP(process_tbegin)(hregs, i2, effective_addr1);
         return;
     }
 
-    pmap = hregs->tpagemap;
+    pmap = hregs->txf_pagesmap;
 
     for (i = 0; i < MAX_TXF_PAGES; i++, pmap++)
     {
@@ -429,28 +429,28 @@ BYTE    mask = 0x00;
 
     hregs->psw.cc = ABORT_CC_SUCCESS;         /* clear the condition code   */
     i2union.i2num = i2;       /* save the flag halfword   */
-    hregs->tranpagenum = 0;    /* clear number of mapped pages  */
+    hregs->txf_pgcnt = 0;    /* clear number of mapped pages  */
 
-    memcpy(&hregs->tranabortpsw, &hregs->psw, sizeof(PSW));   /* save the abort psw */
-    memcpy(hregs->tranregs, hregs->gr, sizeof(hregs->tranregs));  /* save the registers  */
+    memcpy(&hregs->txf_abortpsw, &hregs->psw, sizeof(PSW));   /* save the abort psw */
+    memcpy(hregs->txf_savedgr, hregs->gr, sizeof(hregs->txf_savedgr));  /* save the registers  */
 
-    hregs->contran = 1;          /* set transaction type to constrained  */
-    hregs->abortcode = 0;        /* clear the abort code  */
-    hregs->traninstctr = 0;      /* instruction counter    */
-    hregs->tranabortnum = 0;        /* abort number          */
-    hregs->conflictaddr = 0;     /* clear conflict address */
-    hregs->ntranstorectr = 0;
+    hregs->txf_contran = 1;          /* set transaction type to constrained  */
+    hregs->txf_abortcode = 0;        /* clear the abort code  */
+    hregs->txf_instctr = 0;      /* instruction counter    */
+    hregs->txf_abortnum = 0;        /* abort number          */
+    hregs->txf_conflict = 0;     /* clear conflict address */
+    hregs->txf_ntstgcnt = 0;
 
     sysblk.txf_transcpus++;     /* update transaction mode ctr */
-    hregs->tranlvl = 1;        /* set now in transaction mode  */
+    hregs->txf_level = 1;        /* set now in transaction mode  */
 
     /* following bytes are reversed because i2 is stored as little endian */
-    hregs->tranregmask = i2union.i2byte[1];   /* save mask of regsiters to restore on abort */
-    hregs->tranctlflag = i2union.i2byte[0];     /* save the control flags */
+    hregs->txf_gprmask = i2union.i2byte[1];   /* save mask of regsiters to restore on abort */
+    hregs->txf_ctlflag = i2union.i2byte[0];     /* save the control flags */
     instaddr = (U64)hregs->aiv.D;    /*  get the logical beginning of page address */
     ioffset = (U64)(hregs->ip - 6) & PAGEFRAME_BYTEMASK;   /* get the page offset */
     instaddr += ioffset;    /* get the instruction address */
-    hregs->tranabortpsw.ia.D = instaddr;  /* set it in the abort PSW */
+    hregs->txf_abortpsw.ia.D = instaddr;  /* set it in the abort PSW */
 
     ctlmask1 = hregs->CR(2) & CR2_TDC;  /* isolate last two bits */
 
@@ -462,8 +462,8 @@ BYTE    mask = 0x00;
 
     case TDC_ALWAYS_RANDOM:
         rand1 = (U16)(rand() % _countof( racode ));
-        hregs->tranabortnum = (U16)(rand() % MAX_TXF_CONTRAN_INSTR);
-        hregs->rabortcode = racode[rand1];
+        hregs->txf_abortnum = (U16)(rand() % MAX_TXF_CONTRAN_INSTR);
+        hregs->txf_rabortcode = racode[rand1];
         break;
 
     case TDC_MAYBE_RANDOM:
@@ -473,8 +473,8 @@ BYTE    mask = 0x00;
         if (rand1 < rand2)        /*  abort randomly */
         {
             rand1 = (U16)(rand() % _countof( racode ));
-            hregs->tranabortnum = (U16)(rand() % MAX_TXF_CONTRAN_INSTR);
-            hregs->rabortcode = racode[rand1];
+            hregs->txf_abortnum = (U16)(rand() % MAX_TXF_CONTRAN_INSTR);
+            hregs->txf_rabortcode = racode[rand1];
         }
     }
     RELEASE_INTLOCK(regs);
@@ -502,12 +502,12 @@ int     i;
 U16     filtlvl;
 TPAGEMAP *pmap;
 
-    hregs->tranlvl++;         /* increase the nesting level */
+    hregs->txf_level++;         /* increase the nesting level */
     hregs->psw.cc = ABORT_CC_SUCCESS;        /* set cc=0 to indicate tranaction start */
 
-    if (hregs->tranlvl == 1)  /* if starting the transaction  */
+    if (hregs->txf_level == 1)  /* if starting the transaction  */
     {
-        pmap = hregs->tpagemap;
+        pmap = hregs->txf_pagesmap;
 
         for (i = 0; i < MAX_TXF_PAGES; i++, pmap++)
         {
@@ -515,47 +515,47 @@ TPAGEMAP *pmap;
             memset(pmap->cachemap, CM_CLEAN, sizeof(pmap->cachemap));
         }
 
-        hregs->tranpagenum = 0;   /* clear the mapped page counter     */
-        hregs->contran = 0;       /* not a contrained transaction    */
-        hregs->traninstctr = 0;   /* instruction counter    */
-        hregs->tranabortnum = 0;  /* abort number          */
-        hregs->abortcode = 0;     /* clear the abort code */
-        hregs->conflictaddr = 0;    /* clear conflict address */
-        hregs->ntranstorectr = 0;
+        hregs->txf_pgcnt = 0;   /* clear the mapped page counter     */
+        hregs->txf_contran = 0;       /* not a contrained transaction    */
+        hregs->txf_instctr = 0;   /* instruction counter    */
+        hregs->txf_abortnum = 0;  /* abort number          */
+        hregs->txf_abortcode = 0;     /* clear the abort code */
+        hregs->txf_conflict = 0;    /* clear conflict address */
+        hregs->txf_ntstgcnt = 0;
 
         sysblk.txf_transcpus++;   /* increment transaction mode ctr */
 
-        memcpy(&hregs->tranabortpsw, &hregs->psw, sizeof(PSW));   /* save the abort psw */
-        memcpy(hregs->tranregs, hregs->gr, sizeof(hregs->tranregs)); /* save the registers */
+        memcpy(&hregs->txf_abortpsw, &hregs->psw, sizeof(PSW));   /* save the abort psw */
+        memcpy(hregs->txf_savedgr, hregs->gr, sizeof(hregs->txf_savedgr)); /* save the registers */
 
         /* following bytes are reversed because i2 is stored as little endian */
-        hregs->tranregmask = i2 >> 8;  /* save the register restore mask */
-        hregs->tranctlflag = i2 & (TXF_CTL_AR | TXF_CTL_FLOAT);   /* save the control flags  */
-        hregs->tranprogfiltlvl = i2 & TXF_CTL_PIFC;  /* program filter level */
+        hregs->txf_gprmask = i2 >> 8;  /* save the register restore mask */
+        hregs->txf_ctlflag = i2 & (TXF_CTL_AR | TXF_CTL_FLOAT);   /* save the control flags  */
+        hregs->txf_pfic = i2 & TXF_CTL_PIFC;  /* program filter level */
 
-        if (hregs->tranctlflag & TXF_CTL_AR)
-            hregs->tranhigharchange = 1;
+        if (hregs->txf_ctlflag & TXF_CTL_AR)
+            hregs->txf_higharchange = 1;
         else
-            hregs->tranhigharchange = 0;
+            hregs->txf_higharchange = 0;
 
-        if (hregs->tranctlflag & TXF_CTL_FLOAT)
-            hregs->tranhighfloat = 1;
+        if (hregs->txf_ctlflag & TXF_CTL_FLOAT)
+            hregs->txf_highfloat = 1;
         else
-            hregs->tranhighfloat = 0;
+            hregs->txf_highfloat = 0;
 
         if (PROBSTATE(&hregs->psw))    /* problem state */
-            hregs->tdbaddr = (TDB *)effective_addr1;     /* save the tcb address */
+            hregs->txf_tdb = (TDB *)effective_addr1;     /* save the tcb address */
         else
             if (hregs->CR(2) & CR2_TDS)       /* tdb only in problem state */
-                hregs->tdbaddr = 0;
+                hregs->txf_tdb = 0;
             else
-                hregs->tdbaddr = (TDB *)effective_addr1;  /* set the tdb address */
+                hregs->txf_tdb = (TDB *)effective_addr1;  /* set the tdb address */
 
         instaddr = (U64)hregs->aiv.D;       /* get logical start of page address  */
         ioffset = (U64)hregs->ip & PAGEFRAME_BYTEMASK;   /* get instruction offset */
         instaddr += ioffset;   /* compute logical instruction address */
-        hregs->tranabortpsw.ia.D = instaddr;  /* save abort address */
-        hregs->tranprogfiltlvl = i2 & TXF_CTL_PIFC;  /* set initial filter level */
+        hregs->txf_abortpsw.ia.D = instaddr;  /* save abort address */
+        hregs->txf_pfic = i2 & TXF_CTL_PIFC;  /* set initial filter level */
 
         ctlmask1 = hregs->CR(2) & CR2_TDC;  /* isolate last two bits */
 
@@ -566,8 +566,8 @@ TPAGEMAP *pmap;
             break;
 
         case TDC_ALWAYS_RANDOM:
-            hregs->tranabortnum = (U16)(rand());
-            hregs->rabortcode = 0;
+            hregs->txf_abortnum = (U16)(rand());
+            hregs->txf_rabortcode = 0;
             break;
 
         case TDC_MAYBE_RANDOM:
@@ -576,8 +576,8 @@ TPAGEMAP *pmap;
 
             if (rand1 < rand2)
             {
-                hregs->tranabortnum = (U16)rand();
-                hregs->rabortcode = 0;
+                hregs->txf_abortnum = (U16)rand();
+                hregs->txf_rabortcode = 0;
             }
         }
     }
@@ -585,22 +585,22 @@ TPAGEMAP *pmap;
     {
         arflag = i2 & TXF_CTL_AR;   /* save the control flags  */
 
-        if (hregs->tranhigharchange == hregs->tranlvl - 1 && arflag)
-            hregs->tranhigharchange++;
+        if (hregs->txf_higharchange == hregs->txf_level - 1 && arflag)
+            hregs->txf_higharchange++;
         else
-            hregs->tranctlflag &= ~TXF_CTL_AR;     /* turn off arflag */
+            hregs->txf_ctlflag &= ~TXF_CTL_AR;     /* turn off arflag */
 
         flflag = i2  & TXF_CTL_FLOAT;
 
-        if (hregs->tranhigharchange == hregs->tranlvl - 1 && flflag)
-            hregs->tranhighfloat++;
+        if (hregs->txf_higharchange == hregs->txf_level - 1 && flflag)
+            hregs->txf_highfloat++;
         else
-            hregs->tranctlflag &= ~TXF_CTL_FLOAT;     /* turn off float flag */
+            hregs->txf_ctlflag &= ~TXF_CTL_FLOAT;     /* turn off float flag */
 
         filtlvl = i2 & TXF_CTL_PIFC;  /* program filter level */
 
-        hregs->tranprogfilttab[hregs->tranlvl - 2] = hregs->tranprogfiltlvl;
-        hregs->tranprogfiltlvl = max(hregs->tranprogfiltlvl, filtlvl);
+        hregs->txf_progfilttab[hregs->txf_level - 2] = hregs->txf_pfic;
+        hregs->txf_pfic = max(hregs->txf_pfic, filtlvl);
     }
 
     RELEASE_INTLOCK(hregs);

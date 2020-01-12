@@ -2170,7 +2170,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     /* This instruction is restricted in transaction execution mode  */
     /* when the code in r1 is 6 or 7 and m3 (r3) is zero.            */
     /*---------------------------------------------------------------*/
-    if (regs->tranlvl > 0 && (r1 == 6 || r1 == 7) && r3 == 0)
+    if (regs->txf_level > 0 && (r1 == 6 || r1 == 7) && r3 == 0)
       ARCH_DEP(abort_transaction)(regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);
 #endif
 

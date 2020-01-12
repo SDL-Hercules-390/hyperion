@@ -42,7 +42,7 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey, size_t len);
-static inline void ARCH_DEP(abort_transaction)(REGS *regs, int retry, int abortcode);
+static inline void ARCH_DEP(abort_transaction)(REGS *regs, int retry, int txf_abortcode);
 
 #if defined( _FEATURE_SIE ) && ARCH_IDX != ARCH_900_IDX
 _LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
@@ -656,7 +656,7 @@ static inline RADR ARCH_DEP( apply_prefixing )( RADR addr, RADR px )
 /*               program check, otherwise longjmp to    */
 /*               projjmp.                               */
 /*------------------------------------------------------*/
-static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int abortcode )
+static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int txf_abortcode )
 {
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
@@ -665,9 +665,9 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
   int asmode;
   U64 abortcode64;
   int saveamode;
-  BYTE contran;
+  BYTE txf_contran;
   int intheld;
-  int tranlvl;
+  int txf_level;
   int ntranctr;
   U64 tdbpgmaddr = 0x1800;
   int acodetab[16] = {3, 3, 2, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3};
@@ -688,7 +688,7 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
     intheld = 0;
   }
 
-  rmask = hregs->tranregmask;
+  rmask = hregs->txf_gprmask;
 
   if (sysblk.txf_transcpus > 0)
     sysblk.txf_transcpus--;
@@ -696,29 +696,29 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
   /*---------------------------------------------*/
   /*  Clean up the transaction flags             */
   /*---------------------------------------------*/
-  hregs->tranpagenum = 0;
-  tranlvl = hregs->tranlvl;
+  hregs->txf_pgcnt = 0;
+  txf_level = hregs->txf_level;
 
   hthread_obtain_lock(&sysblk.txf_lock[hregs->cpuad], PTT_LOC);  /*get the cpu lock */
   {
-    hregs->tranlvl = 0;
+    hregs->txf_level = 0;
   }
   hthread_release_lock(&sysblk.txf_lock[hregs->cpuad], PTT_LOC);
 
-  contran = hregs->contran;
-  hregs->contran = 0;
-  hregs->abortcode = 0;
-  hregs->tranabortnum = 0;
-  hregs->traninstctr = 0;
-  ntranctr = hregs->ntranstorectr;
-  hregs->ntranstorectr = 0;
+  txf_contran = hregs->txf_contran;
+  hregs->txf_contran = 0;
+  hregs->txf_abortcode = 0;
+  hregs->txf_abortnum = 0;
+  hregs->txf_instctr = 0;
+  ntranctr = hregs->txf_ntstgcnt;
+  hregs->txf_ntstgcnt = 0;
 
   /*---------------------------------------------*/
   /*  Set the break PSW and set the current PSW  */
   /*  to the abort PSW                           */
   /*---------------------------------------------*/
   memcpy(&breakaddr, &hregs->psw.ia.D, 8);
-  memcpy(&hregs->psw, &hregs->tranabortpsw, sizeof(PSW));
+  memcpy(&hregs->psw, &hregs->txf_abortpsw, sizeof(PSW));
   hregs->aie = 0;
 
   /*---------------------------------------------*/
@@ -728,29 +728,29 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
   if (!intheld || retry > ABORT_RETRY_RETURN)
     RELEASE_INTLOCK(hregs);
 
-  if (abortcode == ABORT_CODE_UPGM)  /* program interrupt */
+  if (txf_abortcode == ABORT_CODE_UPGM)  /* program interrupt */
   {
     tdb = (TDB *)MADDRL(tdbpgmaddr, sizeof( TDB ), USE_REAL_ADDR, hregs, ACCTYPE_WRITE, 0);
     tdb->tdbflags = 0x00;          /* conflict address unknown */
-    tdb->tdbnestl = (U16)tranlvl;   /* nesting level     */
-    abortcode64 = (U64)abortcode;    /* convert to 64 bit number */
+    tdb->tdbnestl = (U16)txf_level;   /* nesting level     */
+    abortcode64 = (U64)txf_abortcode;    /* convert to 64 bit number */
     tdb->tdbabortcode = SWAP64(abortcode64);  /* abort code               */
     tdb->tdbinstaddr = breakaddr;  /* save breaking psw address */
     tdb->tdbeaid = hregs->excarid;   /* set action id            */
     tdb->tdbtranexcid = hregs->TEA;      /* save translation execption id */
-    tdb->tdbpgmintid = hregs->tranpiid;    /* save possible program interrupt id */
+    tdb->tdbpgmintid = hregs->txf_piid;    /* save possible program interrupt id */
 
     for (i = 0; i < 16; i++)        /*  make a copy of the registers */
       tdb->tdbgpr[i] = hregs->GR_G(i);
 
-    if (hregs->conflictaddr)
+    if (hregs->txf_conflict)
     {
-      tdb->tdbconfict = hregs->conflictaddr;
+      tdb->tdbconfict = hregs->txf_conflict;
       tdb->tdbflags = TDB_CTV;
     }
   }
 
-  if (!contran && hregs->tdbaddr)
+  if (!txf_contran && hregs->txf_tdb)
   {
     // FIXME: 'case' values look wrong!!
     switch (hregs->psw.asc)
@@ -767,7 +767,7 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
       break;
     }
 
-    tdbmain = MADDRL((U64)hregs->tdbaddr, sizeof( TDB ), asmode, hregs, ACCTYPE_WRITE, hregs->psw.pkey);
+    tdbmain = MADDRL((U64)hregs->txf_tdb, sizeof( TDB ), asmode, hregs, ACCTYPE_WRITE, hregs->psw.pkey);
     tdb = (TDB *)tdbmain;          /* point to the structure   */
 
     // FIXME: I question this! The format flag should be set when
@@ -781,29 +781,29 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
     if (tdb->tdbformat & 0x01)     /* only valid if one        */     
     {
       tdb->tdbflags = 0x00;          /* conflict address unknown */
-      tdb->tdbnestl = (U16)tranlvl;   /* nesting level     */
-      abortcode64 = (U64)abortcode;    /* convert to 64 bit number */
+      tdb->tdbnestl = (U16)txf_level;   /* nesting level     */
+      abortcode64 = (U64)txf_abortcode;    /* convert to 64 bit number */
       tdb->tdbabortcode = SWAP64(abortcode64);  /* abort code               */
       tdb->tdbinstaddr = breakaddr;  /* save breaking psw address */
       tdb->tdbeaid = hregs->excarid;   /* set action id            */
       tdb->tdbtranexcid = hregs->TEA;      /* save translation execption id */
-      tdb->tdbpgmintid = hregs->tranpiid;    /* save possible program interrupt id */
+      tdb->tdbpgmintid = hregs->txf_piid;    /* save possible program interrupt id */
 
       for (i = 0; i < 16; i++)        /*  make a copy of the registers */
         tdb->tdbgpr[i] = hregs->GR_G(i);
 
-      if (hregs->conflictaddr)
+      if (hregs->txf_conflict)
       {
-        tdb->tdbconfict = hregs->conflictaddr;
+        tdb->tdbconfict = hregs->txf_conflict;
         tdb->tdbflags = TDB_CTV;
       }
 
-      if (abortcode == ABORT_CODE_UPGM && retry == ABORT_RETRY_CC)
+      if (txf_abortcode == ABORT_CODE_UPGM && retry == ABORT_RETRY_CC)
         tdb->tdbbreakeventaddr = breakaddr;
     }
   }
 
-  for (nt = hregs->ntrantbl, i = 0; i < ntranctr; i++, nt++)
+  for (nt = hregs->txf_ntstgtbl, i = 0; i < ntranctr; i++, nt++)
   {
     if (hregs->psw.amode64)
       saveamode = AMODE_64;
@@ -859,16 +859,16 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
   {
     if (rmask & 0x80)
     {
-      hregs->gr[i] = hregs->tranregs[i];
-      hregs->gr[i + 1] = hregs->tranregs[i + 1];
+      hregs->gr[i] = hregs->txf_savedgr[i];
+      hregs->gr[i + 1] = hregs->txf_savedgr[i + 1];
     }
   }
 
-  if (abortcode != ABORT_CODE_UPGM)
+  if (txf_abortcode != ABORT_CODE_UPGM)
   {
     //  FIXME: 'acodetab' has only 16 entries, not 17!
-    if (abortcode < 17)
-      hregs->psw.cc = acodetab[abortcode];
+    if (txf_abortcode < 17)
+      hregs->psw.cc = acodetab[txf_abortcode];
     else
       hregs->psw.cc = ABORT_CC_PERSISTENT;
   }
@@ -878,7 +878,7 @@ static inline void ARCH_DEP( abort_transaction )( REGS* regs, int retry,  int ab
     return;
 
   /* if retry == ABORT_RETRY_PGMCHK and in constrained mode, generate a program exception */
-  if (retry == ABORT_RETRY_PGMCHK && contran)
+  if (retry == ABORT_RETRY_PGMCHK && txf_contran)
     ARCH_DEP(program_interrupt)(hregs, PGM_TRANSACTION_CONSTRAINT_EXCEPTION);
   else
   /*  do the long jump   */

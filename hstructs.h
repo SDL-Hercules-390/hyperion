@@ -513,13 +513,21 @@ struct REGS {                           /* Processor registers       */
         TLB     tlb;                    /* Translation lookaside buf */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        BYTE   tranlvl;                 /* transaction mode level    */
-        BYTE   contran;                 /*  1 = constrained          */
-        BYTE   tranregmask;             /* register restore mask     */
-        BYTE   tranctlflag;             /* flags for access mode change, float allowed */
-        U16     traninstctr;            /* instruction counter for contrained and auto abort */
-        U16     tranabortnum;           /* if non-zero, abort when this = traninstctr */
-        U16     tranprogfiltlvl;        /* transaction filtering mode  */
+        BYTE   txf_level;               /* transaction mode level    */
+        BYTE   txf_contran;             /*  1 = constrained          */
+        BYTE   txf_gprmask;             /* register restore mask     */
+        BYTE   txf_ctlflag;             /* flags for access mode change, float allowed */
+
+#define TXF_CTL_AR      0x08            /* ar reg changes allowed
+                                           in transaction mode       */
+#define TXF_CTL_FLOAT   0x04            /* float and vector allowed
+                                           in transaction mode       */
+#define TXF_CTL_PIFC    0x03            /* float and vector allowed  */
+
+        U16    txf_instctr;             /* instruction counter for contrained and auto abort */
+        U16    txf_abortnum;            /* if non-zero, abort when this = txf_instctr */
+        U16    txf_pfic;                /* transaction filtering mode  */
+
 #define TXF_PFIC_NONE       0           /* Exception conditions having
                                            classes 1, 2 or 3 always
                                            result in an interruption */
@@ -537,27 +545,24 @@ struct REGS {                           /* Processor registers       */
                                            result in an interruption */
 
 #define TXF_PFIC_RESERVED   3           /* Reserved (invalid)        */
-        U16     tranhigharchange;       /* highest level that archange is active */
-        U16     tranhighfloat;          /* highest level that float is active */
-        U16     tranprogfilttab[15];    /* table for nesting levels */
-#define TXF_CTL_AR      0x08            /* ar reg changes allowed
-                                           in transaction mode       */
-#define TXF_CTL_FLOAT   0x04            /* float and vector allowed
-                                           in transaction mode       */
-#define TXF_CTL_PIFC    0x03            /* float and vector allowed  */
-        U32     tranpiid;               /* transaction program interrupt ident */
-        U64    conflictaddr;            /* address where conflict detected */
-        TPAGEMAP tpagemap[MAX_TXF_PAGES];  /* address of the page map   */
-        DW     tranregs[16];            /* saved gpr values          */
-        TDB    *tdbaddr;                /* transaction diagnostic block address or null */
-        int     tranpagenum;            /* number of pages in page map */
-        int     tranlastaccess;         /* last access type */
-        int     tranlastarn;            /* last arn */
-        int     ntranstorectr;          /* non transactional store ctr */
-        int     abortcode;              /* transaction abort code   */
-        int     rabortcode;             /* random abort code         */
-        NTRANTBL ntrantbl[MAX_TXF_NTSTG];   /* table of non transactional stores */
-        PSW     tranabortpsw;           /* transaction abort psw */
+
+        U16    txf_higharchange;        /* highest level that archange is active */
+        U16    txf_highfloat;           /* highest level that float is active */
+        U16    txf_progfilttab[MAX_TXF_LEVEL];     /* table for nesting levels */
+        U32    txf_piid;                /* transaction program interrupt ident */
+        U64    txf_conflict;            /* address where conflict detected */
+        TPAGEMAP txf_pagesmap[MAX_TXF_PAGES];  /* address of the page map   */
+        DW     txf_savedgr[16];         /* saved gpr values          */
+        TDB   *txf_tdb;                 /* transaction diagnostic block address or null */
+        int    txf_pgcnt;               /* number of pages in page map */
+        int    txf_lastaccess;          /* last access type */
+        int    txf_lastarn;             /* last arn */
+        int    txf_ntstgcnt;            /* non transactional store ctr */
+        int    txf_abortcode;           /* transaction abort code   */
+        int    txf_rabortcode;          /* random abort code         */
+        NTRANTBL txf_ntstgtbl[MAX_TXF_NTSTG];   /* table of non transactional stores */
+        PSW    txf_abortpsw;            /* transaction abort psw */
+
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
         BLOCK_TRAILER;                  /* Name of block  END        */
