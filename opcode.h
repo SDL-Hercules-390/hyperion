@@ -280,192 +280,6 @@ do { \
 #define FOOTPRINT(_ip, _regs)
 #endif
 
-/* PSW Instruction Address manipulation */
-
-#define _PSW_IA(_regs, _n) \
- (VADR)((_regs)->AIV + ((intptr_t)(_regs)->ip - (intptr_t)(_regs)->aip) + (_n))
-
-#define PSW_IA(_regs, _n) \
- (_PSW_IA((_regs), (_n)) & ADDRESS_MAXWRAP((_regs)))
-
-#define SET_PSW_IA(_regs) \
-do { \
-  if ((_regs)->aie) (_regs)->psw.IA = PSW_IA((_regs), 0); \
-} while (0)
-
-#define UPD_PSW_IA(_regs, _addr) \
-do { \
-  (_regs)->psw.IA = (_addr) & ADDRESS_MAXWRAP(_regs); \
-  if (likely((_regs)->aie != NULL)) { \
-    if (likely((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1)))) \
-      (_regs)->ip = _PSW_IA_MAIN((_regs), (_regs)->psw.IA); \
-    else \
-      (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-/*
- * The next three macros are used by branch-and-link type instructions
- * where the addressing mode is known.
- * Note that wrap is not performed for PSW_IA64 and for PSW_IA31.
- * For the latter, we expect branch-and-link code to `or' the hi bit
- * on so there is no need to `and' it off.
- */
-#define PSW_IA64(_regs, _n) \
-  ((_regs)->AIV \
-   + (((uintptr_t)(_regs)->ip + (unsigned int)(_n)) - (uintptr_t)(_regs)->aip))
-
-#define PSW_IA31(_regs, _n) \
-  ((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
-   - (uintptr_t)(_regs)->aip)
-
-#define PSW_IA24(_regs, _n) \
- (((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
-   - (uintptr_t)(_regs)->aip) & AMASK24)
-
-/* Accelerator for instruction addresses */
-
-#define INVALIDATE_AIA(_regs) \
-do { \
-  if ((_regs)->aie) { \
-    (_regs)->psw.IA = PSW_IA((_regs), 0); \
-    (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-#define INVALIDATE_AIA_MAIN(_regs, _main) \
-do { \
-  if ((_main) == (_regs)->aip && (_regs)->aie) { \
-    (_regs)->psw.IA = PSW_IA((_regs), 0); \
-    (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-#define _PSW_IA_MAIN(_regs, _addr) \
- ((BYTE *)((uintptr_t)(_regs)->aip | (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)))
-
-#define _VALID_IP(_regs, _exec) \
-( \
-    ( !(_exec) && (_regs)->ip <  (_regs)->aie ) \
- || \
-    ( (_exec) && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV \
-   && _PSW_IA_MAIN((_regs), (_regs)->ET) < (_regs)->aie \
-    ) \
-)
-
-#undef CHECK_TRANCTR
-
-#if !defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-  #define CHECK_TRANCTR(_ip, _regs)
-#else
-#define CHECK_TRANCTR(_ip, _regs)                                                        \
-do {                                                                                     \
-     if (!(_regs)->hostregs->txf_level)                                                  \
-       break;                                                                            \
-   (_regs)->hostregs->txf_instctr++;                                                     \
-   /* Too many CONSTRAINED instructions executed? */                                     \
-   if (1                                                                                 \
-       && (_regs)->hostregs->txf_contran                                                 \
-       && (_regs)->hostregs->txf_instctr > MAX_TXF_CONTRAN_INSTR                         \
-       && memcmp((_ip), "\xb2\xf8", 2) != 0                                              \
-   )                                                                                     \
-      ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR);        \
-   /* Randomly abort the transaction? */                                                 \
-   if (1                                                                                 \
-       && (_regs)->hostregs->txf_instctr == (_regs)->hostregs->txf_abortnum              \
-       && (_regs)->hostregs->txf_abortnum > 0                                            \
-   )                                                                                     \
-      ARCH_DEP(abort_transaction)((_regs), ABORT_RETRY_PGMCHK, (_regs)->txf_rabortcode); \
-} while(0)
-#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
-/* Instruction fetching */
-
-#define INSTRUCTION_FETCH(_regs, _exec) \
-  likely(_VALID_IP((_regs),(_exec))) \
-  ? ((_exec) ? _PSW_IA_MAIN((_regs), (_regs)->ET) : (_regs)->ip) \
-  : ARCH_DEP( instfetch ) ((_regs), (_exec))
-
-/* Instruction execution */
-
-#undef EXECUTE_INSTRUCTION
-#define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
-do { \
-    CHECK_TRANCTR((_ip), (_regs));  \
-    FOOTPRINT ((_ip), (_regs)); \
-    ICOUNT_INST ((_ip), (_regs)); \
-    (_oct)[fetch_hw((_ip))]((_ip), (_regs)); \
-} while(0)
-
-#define UNROLLED_EXECUTE(_oct, _regs) \
- if ((_regs)->ip >= (_regs)->aie) break; \
- EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
-
-/* Branching */
-
-#define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
-do { \
-  VADR _newia; \
-  UPDATE_BEAR((_regs), 0); \
-  _newia = (_addr) & ADDRESS_MAXWRAP((_regs)); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV)) { \
-    (_regs)->ip = (BYTE *)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
-    return; \
-  } else { \
-    if (unlikely((_regs)->execflag)) \
-      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
-    (_regs)->psw.IA = _newia; \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-
-#define SUCCESSFUL_RELATIVE_BRANCH(_regs, _offset, _len) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-
-/* BRCL, BRASL can branch +/- 4G.  This is problematic on a 32 bit host */
-#define SUCCESSFUL_RELATIVE_BRANCH_LONG(_regs, _offset) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_offset) > -4096) \
-   && likely((_offset) <  4096) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), 6 - ((_regs)->exrl ? 6 : 4)); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
-} while (0)
-
 /* CPU Stepping or Tracing */
 
 #define CPU_STEPPING(_regs, _ilc) \
@@ -721,6 +535,289 @@ do { \
 /* The following macros are undef'ed and then re-defined differently */
 /* for each subsequent new build architecture.                       */
 /*-------------------------------------------------------------------*/
+
+/* PSW Instruction Address manipulation */
+
+#undef  _PSW_IA
+#define _PSW_IA(_regs, _n) \
+ (VADR)((_regs)->AIV + ((intptr_t)(_regs)->ip - (intptr_t)(_regs)->aip) + (_n))
+
+#undef  PSW_IA
+#define PSW_IA(_regs, _n) \
+ (_PSW_IA((_regs), (_n)) & ADDRESS_MAXWRAP((_regs)))
+
+#undef  SET_PSW_IA
+#define SET_PSW_IA(_regs) \
+do { \
+  if ((_regs)->aie) (_regs)->psw.IA = PSW_IA((_regs), 0); \
+} while (0)
+
+#undef  UPD_PSW_IA
+#define UPD_PSW_IA(_regs, _addr) \
+do { \
+  (_regs)->psw.IA = (_addr) & ADDRESS_MAXWRAP(_regs); \
+  if (likely((_regs)->aie != NULL)) { \
+    if (likely((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1)))) \
+      (_regs)->ip = _PSW_IA_MAIN((_regs), (_regs)->psw.IA); \
+    else \
+      (_regs)->aie = NULL; \
+  } \
+} while (0)
+
+/*
+ * The next three macros are used by branch-and-link type instructions
+ * where the addressing mode is known.
+ * Note that wrap is not performed for PSW_IA64 and for PSW_IA31.
+ * For the latter, we expect branch-and-link code to `or' the hi bit
+ * on so there is no need to `and' it off.
+ */
+#undef  PSW_IA64
+#define PSW_IA64(_regs, _n) \
+  ((_regs)->AIV \
+   + (((uintptr_t)(_regs)->ip + (unsigned int)(_n)) - (uintptr_t)(_regs)->aip))
+
+#undef  PSW_IA31
+#define PSW_IA31(_regs, _n) \
+  ((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
+   - (uintptr_t)(_regs)->aip)
+
+#undef  PSW_IA24
+#define PSW_IA24(_regs, _n) \
+ (((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
+   - (uintptr_t)(_regs)->aip) & AMASK24)
+
+/* Accelerator for instruction addresses */
+
+#undef  INVALIDATE_AIA
+#define INVALIDATE_AIA(_regs) \
+do { \
+  if ((_regs)->aie) { \
+    (_regs)->psw.IA = PSW_IA((_regs), 0); \
+    (_regs)->aie = NULL; \
+  } \
+} while (0)
+
+#undef  INVALIDATE_AIA_MAIN
+#define INVALIDATE_AIA_MAIN(_regs, _main) \
+do { \
+  if ((_main) == (_regs)->aip && (_regs)->aie) { \
+    (_regs)->psw.IA = PSW_IA((_regs), 0); \
+    (_regs)->aie = NULL; \
+  } \
+} while (0)
+
+#undef  _PSW_IA_MAIN
+#define _PSW_IA_MAIN(_regs, _addr) \
+ ((BYTE *)((uintptr_t)(_regs)->aip | (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)))
+
+#undef  _VALID_IP
+#define _VALID_IP(_regs, _exec) \
+( \
+    ( !(_exec) && (_regs)->ip <  (_regs)->aie ) \
+ || \
+    ( (_exec) && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV \
+   && _PSW_IA_MAIN((_regs), (_regs)->ET) < (_regs)->aie \
+    ) \
+)
+
+/* Instruction fetching */
+
+#undef  INSTRUCTION_FETCH
+#define INSTRUCTION_FETCH(_regs, _exec) \
+  likely(_VALID_IP((_regs),(_exec))) \
+  ? ((_exec) ? _PSW_IA_MAIN((_regs), (_regs)->ET) : (_regs)->ip) \
+  : ARCH_DEP( instfetch ) ((_regs), (_exec))
+
+/* Instruction execution */
+
+#if !defined( OPTION_TXF_SLOWLOOP )
+
+  #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+    #undef  EXECUTE_INSTRUCTION
+    #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
+    do {                                                      \
+        FOOTPRINT ((_ip), (_regs));                           \
+        ICOUNT_INST ((_ip), (_regs));                         \
+        (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
+    } while(0)
+
+  #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+    #undef  CHECK_TXFCTR
+    #define CHECK_TXFCTR( _ip, _regs )                                                    \
+    do {                                                                                  \
+      if (!regs->txf_level)           /* Any transaction in progress? */                  \
+        break;                        /* No skip past the below logic */                  \
+                                                                                          \
+      regs->txf_instctr++;            /* Count instructions executed  */                  \
+                                                                                          \
+      /*            Too many CONSTRAINED instructions executed? */                        \
+      if (1                                                                               \
+        && regs->txf_contran                            /* if in CONSTRAINED mode, */     \
+        && regs->txf_instctr > MAX_TXF_CONTRAN_INSTR    /* and max instr. exceeded */     \
+        && memcmp( (_ip), "\xb2\xf8", 2 ) != 0          /* and not the TEND instr. */     \
+      )                                                                                   \
+      {                                                                                   \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR );      \
+        UNREACHABLE_CODE(;);                                                              \
+      }                                                                                   \
+                                                                                          \
+      /*                  Randomly abort the transaction? */                              \
+      if (1                                                                               \
+        && regs->txf_abortnum                                                             \
+        && regs->txf_instctr == regs->txf_abortnum                                        \
+      )                                                                                   \
+      {                                                                                   \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_rabortcode );  \
+        UNREACHABLE_CODE(;);                                                              \
+      }                                                                                   \
+    } while(0)
+
+    #undef  EXECUTE_INSTRUCTION
+    #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
+    do {                                                      \
+        CHECK_TXFCTR((_ip), (_regs));  /* (do TXF stuff) */   \
+        FOOTPRINT ((_ip), (_regs));                           \
+        ICOUNT_INST ((_ip), (_regs));                         \
+        (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
+    } while(0)
+
+  #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+#else /* defined( OPTION_TXF_SLOWLOOP ) */
+
+  #undef  EXECUTE_INSTRUCTION
+  #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
+  do {                                                      \
+      FOOTPRINT ((_ip), (_regs));                           \
+      ICOUNT_INST ((_ip), (_regs));                         \
+      (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
+  } while(0)
+
+  #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+    #undef  CHECK_TXFCTR
+    #define CHECK_TXFCTR( _ip, _regs )                                                    \
+    do {                                                                                  \
+      if (!regs->txf_level)           /* Any transaction in progress? */                  \
+        break;                        /* No skip past the below logic */                  \
+                                                                                          \
+      regs->txf_instctr++;            /* Count instructions executed  */                  \
+                                                                                          \
+      /*            Too many CONSTRAINED instructions executed? */                        \
+      if (1                                                                               \
+        && regs->txf_contran                            /* if in CONSTRAINED mode, */     \
+        && regs->txf_instctr > MAX_TXF_CONTRAN_INSTR    /* and max instr. exceeded */     \
+        && memcmp( (_ip), "\xb2\xf8", 2 ) != 0          /* and not the TEND instr. */     \
+      )                                                                                   \
+      {                                                                                   \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR );      \
+        UNREACHABLE_CODE(;);                                                              \
+      }                                                                                   \
+                                                                                          \
+      /*                  Randomly abort the transaction? */                              \
+      if (1                                                                               \
+        && regs->txf_abortnum                                                             \
+        && regs->txf_instctr == regs->txf_abortnum                                        \
+      )                                                                                   \
+      {                                                                                   \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_rabortcode );  \
+        UNREACHABLE_CODE(;);                                                              \
+      }                                                                                   \
+    } while(0)
+
+    #undef  TXF_EXECUTE_INSTRUCTION
+    #define TXF_EXECUTE_INSTRUCTION(_oct, _ip, _regs)         \
+    do {                                                      \
+        CHECK_TXFCTR((_ip), (_regs));  /* (do TXF stuff) */   \
+        FOOTPRINT ((_ip), (_regs));                           \
+        ICOUNT_INST ((_ip), (_regs));                         \
+        (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
+    } while(0)
+
+    #undef  TXF_UNROLLED_EXECUTE
+    #define TXF_UNROLLED_EXECUTE(_oct, _regs)                 \
+      if ((_regs)->ip >= (_regs)->aie) break;                 \
+      TXF_EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
+
+  #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+#endif /* defined( OPTION_TXF_SLOWLOOP ) */
+
+#undef  UNROLLED_EXECUTE
+#define UNROLLED_EXECUTE(_oct, _regs)                     \
+  if ((_regs)->ip >= (_regs)->aie) break;                 \
+  EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
+
+/* Branching */
+
+#undef  SUCCESSFUL_BRANCH
+#define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
+do { \
+  VADR _newia; \
+  UPDATE_BEAR((_regs), 0); \
+  _newia = (_addr) & ADDRESS_MAXWRAP((_regs)); \
+  if (likely(!(_regs)->permode && !(_regs)->execflag) \
+   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV)) { \
+    (_regs)->ip = (BYTE *)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
+    return; \
+  } else { \
+    if (unlikely((_regs)->execflag)) \
+      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
+    (_regs)->psw.IA = _newia; \
+    (_regs)->aie = NULL; \
+    PER_SB((_regs), (_regs)->psw.IA); \
+  } \
+} while (0)
+
+#undef  SUCCESSFUL_RELATIVE_BRANCH
+#define SUCCESSFUL_RELATIVE_BRANCH(_regs, _offset, _len) \
+do { \
+  UPDATE_BEAR((_regs), 0); \
+  if (likely(!(_regs)->permode && !(_regs)->execflag) \
+   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
+   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
+    (_regs)->ip += (_offset); \
+    return; \
+  } else { \
+    if (likely(!(_regs)->execflag)) \
+      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
+    else { \
+      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
+      (_regs)->psw.IA = (_regs)->ET + (_offset); \
+      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
+    } \
+    (_regs)->aie = NULL; \
+    PER_SB((_regs), (_regs)->psw.IA); \
+  } \
+} while (0)
+
+/* BRCL, BRASL can branch +/- 4G.  This is problematic on a 32 bit host */
+
+#undef  SUCCESSFUL_RELATIVE_BRANCH_LONG
+#define SUCCESSFUL_RELATIVE_BRANCH_LONG(_regs, _offset) \
+do { \
+  UPDATE_BEAR((_regs), 0); \
+  if (likely(!(_regs)->permode && !(_regs)->execflag) \
+   && likely((_offset) > -4096) \
+   && likely((_offset) <  4096) \
+   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
+   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
+    (_regs)->ip += (_offset); \
+    return; \
+  } else { \
+    if (likely(!(_regs)->execflag)) \
+      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
+    else { \
+      UPDATE_BEAR((_regs), 6 - ((_regs)->exrl ? 6 : 4)); \
+      (_regs)->psw.IA = (_regs)->ET + (_offset); \
+      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
+    } \
+    (_regs)->aie = NULL; \
+    PER_SB((_regs), (_regs)->psw.IA); \
+  } \
+} while (0)
 
 /* Program check if fpc is not valid contents for FPC register */
 
@@ -1056,28 +1153,40 @@ do { \
 #undef CONTRAN_INSTR_CHECK
 #undef CONTRAN_BRANCH_CHECK
 #undef CONTRAN_RELATIVE_BRANCH_CHECK
-
 #undef TRAN_INSTR_CHECK
 #undef TRAN_FLOAT_INSTR_CHECK
 #undef TRAN_ACCESS_INSTR_CHECK
 #undef TRAN_MC_INSTR_CHECK
 #undef TRAN_NONRELATIVE_BRANCH_CHECK
 #undef TRAN_TLB_PURGE_INSTR_CHECK
+#undef TRAN_EXECUTE_INSTR_CHECK
+#undef ALLOC_TXFMAP
+#undef FREE_TXFMAP
+#undef TXF_FETCHREF
+#undef TXF_STOREREF
+#undef TXF_MADDRL
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
   #define CONTRAN_INSTR_CHECK( _regs )
   #define CONTRAN_BRANCH_CHECK( _regs, _m3, _i4 )
   #define CONTRAN_RELATIVE_BRANCH_CHECK( _regs )
-
   #define TRAN_INSTR_CHECK( _regs )
   #define TRAN_FLOAT_INSTR_CHECK( _regs )
   #define TRAN_ACCESS_INSTR_CHECK( _regs )
   #define TRAN_MC_INSTR_CHECK( _regs )
   #define TRAN_TLB_PURGE_INSTR_CHECK( _regs )
   #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )
+  #define TRAN_EXECUTE_INSTR_CHECK( _regs )
+  #define ALLOC_TXFMAP( _regs )
+  #define FREE_TXFMAP( _regs )
+  #define TXF_FETCHREF( _maddr, _len )
+  #define TXF_STOREREF( _maddr, _len )
 
-#else /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+  #define TXF_MADDRL( _vaddr, _len, _arn, _regs, _acctype, _maddr ) \
+    /* Return the very same address as what was passed */ (_maddr)
+
+#else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
   #define CONTRAN_INSTR_CHECK( _regs )                                                  \
     /* Restricted instruction in CONSTRAINED transaction mode */                        \
@@ -1121,7 +1230,7 @@ do { \
   #define TRAN_INSTR_CHECK( _regs )                                                     \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
-      if ((_regs)->txf_level > 0)                                                       \
+      if ((_regs)->txf_level)                                                           \
       {                                                                                 \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
         UNREACHABLE_CODE(;);                                                            \
@@ -1132,7 +1241,7 @@ do { \
     /* Restricted instruction if CONSTRAINED mode or float bit zero */                  \
     do {                                                                                \
       if (1                                                                             \
-        && (_regs)->txf_level > 0                                                       \
+        && (_regs)->txf_level                                                           \
         && (0                                                                           \
           || (_regs)->txf_contran                                                       \
           || !((_regs)->txf_ctlflag & TXF_CTL_FLOAT)                                    \
@@ -1148,7 +1257,7 @@ do { \
     /* Restricted instruction if access control bit zero */                             \
     do {                                                                                \
       if (1                                                                             \
-        && (_regs)->txf_level > 0                                                       \
+        && (_regs)->txf_level                                                           \
         && !((_regs)->txf_ctlflag & TXF_CTL_AR)                                         \
       )                                                                                 \
       {                                                                                 \
@@ -1160,7 +1269,7 @@ do { \
   #define TRAN_MC_INSTR_CHECK( _regs )                                                  \
     /* Monitor call restricted in CONSTRAINED mode or if monitor trace active */        \
     do {                                                                                \
-      if ((_regs)->txf_level > 0 &&                                                     \
+      if ((_regs)->txf_level &&                                                         \
       (0                                                                                \
         || (_regs)->txf_contran                                                         \
         || ((_regs)->CR(12) & CR12_MTRACE)                                              \
@@ -1175,7 +1284,7 @@ do { \
     /* Non-relative branches restricted in CONSTRAINED mode, or  */                     \
     /* if branch tracing is enabled and branch register non-zero */                     \
     do {                                                                                \
-      if ((_regs)->txf_level > 0 &&                                                     \
+      if ((_regs)->txf_level &&                                                         \
       (0                                                                                \
         || (_regs)->txf_contran                                                         \
         || ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                              \
@@ -1190,14 +1299,35 @@ do { \
     /* Flag this CPU for abort if any transaction is active */      \
     do {                                                            \
       if (1                                                         \
-        &&  (_regs)->txf_level > 0      /* transaction active  */   \
-        && !(_regs)->txf_abortcode      /* not already aborted */   \
+        &&  (_regs)->txf_level        /* transaction active  */     \
+        && !(_regs)->txf_abortcode    /* not already aborted */     \
       )                                                             \
         (_regs)->txf_abortcode = ABORT_CODE_MISC;                   \
     } while (0)
 
-#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+  #define TRAN_EXECUTE_INSTR_CHECK( _regs )                             \
+    /* Most all TXF instructions cannot be executed */                  \
+    do {                                                                \
+      if ((_regs)->execflag)                                            \
+      {                                                                 \
+        ARCH_DEP( program_interrupt )( (_regs), PGM_EXECUTE_EXCEPTION );\
+        UNREACHABLE_CODE(;);                                            \
+      }                                                                 \
+    } while (0)
 
+  #define TXF_MADDRL(   _vaddr,   _len,   _arn,   _regs,   _acctype,   _maddr  ) \
+          txf_maddr_l( (_vaddr), (_len), (_arn), (_regs), (_acctype), (_maddr) )
+
+  #define TXF_FETCHREF( _maddr, _len ) \
+          TXF_MADDRL( 0, (_len), 0, NULL, ACCTYPE_READ, (_maddr) )
+
+  #define TXF_STOREREF( _maddr, _len ) \
+          TXF_MADDRL( 0, (_len), 0, NULL, ACCTYPE_WRITE, (_maddr) )
+
+  #define ALLOC_TXFMAP( _regs )     alloc_txfmap( _regs )
+  #define FREE_TXFMAP( _regs )      free_txfmap( _regs )
+
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /*---------------------------------------------------------------------
  *                    Instruction decoders
@@ -3245,7 +3375,6 @@ void s390_process_trace (REGS *regs);
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
 void z900_process_trace (REGS *regs);
-void z900_abort_transaction(REGS *regs, int retry, int txf_abortcode);
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
@@ -4025,13 +4154,9 @@ DEF_INST( rotate_then_insert_selected_bits_long_reg_n );        /*912*/
 #if defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
 DEF_INST( perform_processor_assist );
 #endif
-#if defined(FEATURE_050_CONSTR_TRANSACT_FACILITY)
-DEF_INST(transaction_end);
-DEF_INST(extract_transaction_nesting_depth);
-DEF_INST(transaction_abort);
-DEF_INST(nontransactional_store);
-DEF_INST(transaction_begin);
-DEF_INST(transaction_begin_constrained);
+
+#if defined( FEATURE_050_CONSTR_TRANSACT_FACILITY )
+DEF_INST( transaction_begin_constrained );
 #endif
 
 #if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )
@@ -4067,6 +4192,14 @@ DEF_INST( set_peripheral_counter );
 #if defined( FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
 DEF_INST( load_sampling_controls );
 DEF_INST( query_sampling_information );
+#endif
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY)
+DEF_INST( transaction_end );
+DEF_INST( extract_transaction_nesting_depth );
+DEF_INST( transaction_abort );
+DEF_INST( nontransactional_store );
+DEF_INST( transaction_begin );
 #endif
 
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
