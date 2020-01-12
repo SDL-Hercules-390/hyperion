@@ -697,6 +697,9 @@ REGS *hregs = regs->hostregs;
     hregs->txf_pgcnt = 0;
     txf_level = hregs->txf_level;
 
+    /* the real routine is used here instead of obtain_lock to get around a problem */
+    /* compiling dyn76.c, which redefines obtain_lock as EnterCriticalSection */
+
     hthread_obtain_lock( &sysblk.txf_lock[ hregs->cpuad ], PTT_LOC );  /*get the cpu lock */
     {
         hregs->txf_level = 0;
