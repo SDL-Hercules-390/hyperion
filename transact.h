@@ -63,16 +63,7 @@
 /*-------------------------------------------------------------------*/
 struct NTRANTBL
 {
-    U64     effective_addr;     /* virtual address of the store      */
-    int     arn;                /* access register value             */
-    BYTE    skey;               /* storage key in use                */
-    BYTE    amodebits;          /* addressing mode (see below)       */
-
-#define AMODE_64    3           /* 64-bit: psw.amode64==1            */
-#define AMODE_31    1           /* 31-bit: psw.amode64==0, amode==1  */
-#define AMODE_24    0           /* 24-bit: psw.amode64==0, amode==0  */
-
-    BYTE    resv[2];            /* reserved                          */
+    BYTE*   mainaddr;           /* mainstor address of NTSG data     */
     U64     ntran_data;         /* non-transactional data already
                                    in guest big-endian format.       */
 };

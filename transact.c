@@ -351,6 +351,9 @@ DBLWRD    ntran_data;               /* non-transactional data already
         UNREACHABLE_CODE( return );
     }
 
+    /* Check that all bytes of the NTSG data are accessible */
+    ARCH_DEP( validate_operand )( effective_addr2, b2, 8-1, ACCTYPE_WRITE, 0 );
+
     /* Save a copy of the non-transactional data in our table
        in pre-converted guest big-endian format.
     */
@@ -360,13 +363,13 @@ DBLWRD    ntran_data;               /* non-transactional data already
     STORE_DW( ntran_data, regs->GR_G(r1) );    /* save data in guest */
     memcpy( &nt->ntran_data, ntran_data, 8 );  /* big-endian format  */
 
-    nt->effective_addr = effective_addr2;
-    nt->arn            = b2;
-    nt->skey           = regs->psw.pkey;
-
-         if (regs->psw.amode64) nt->amodebits = AMODE_64;
-    else if (regs->psw.amode)   nt->amodebits = AMODE_31;
-    else                        nt->amodebits = AMODE_24;
+    /* Save mainstor address of where NTSG data is to be stored */
+    {
+        RADR  raddr;
+        int   stid;
+        ARCH_DEP( virt_to_real )( &raddr, &stid, effective_addr2, b2, regs, ACCTYPE_WRITE );
+        nt->mainaddr = regs->mainstor + APPLY_PREFIXING( raddr, regs->PX );
+    }
 
     /* Now store the non-transactional data into guest storage too.
 
@@ -716,12 +719,11 @@ DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_ab
 #else /* only Z900 supports Transactional-Execution Facility */
 
 BYTE       txf_gprmask;
-int        txf_level,   txf_ntstgcnt, i, saveamode;
+int        txf_level,   txf_ntstgcnt, i;
 bool       txf_contran, had_INTLOCK;
 U32        txf_piid;
 U64        txf_conflict;
 U64        bear;
-U64*       maddr;
 NTRANTBL*  nt;
 TDB*       pi_tdb  = NULL;  /* Program Interrupt TDB @ fixed 0x1800  */
 TDB*       tb_tdb  = NULL;  /* TBEGIN-specified TDB @ operand-1 addr */
@@ -903,55 +905,9 @@ VADR       pswia   = PSW_IA( regs, 0 );
     /*---------------------------------------------*/
     /*  Keep all non-transactionally stored data   */
     /*---------------------------------------------*/
+
     for (nt = regs->txf_ntstgtbl, i=0; i < txf_ntstgcnt; i++, nt++)
-    {
-        /* Save the current addressing mode */
-             if (regs->psw.amode64) saveamode = AMODE_64;
-        else if (regs->psw.amode)   saveamode = AMODE_31;
-        else                        saveamode = AMODE_24;
-
-        /* Set proper addressing mode needed for MADDRL call */
-        if (nt->amodebits == AMODE_64)
-        {
-            regs->psw.amode64 = true;
-            regs->psw.amode   = true;
-        }
-        else if (nt->amodebits == AMODE_31)
-        {
-            regs->psw.amode64 = false;
-            regs->psw.amode   = true;
-        }
-        else // (nt->amodebits == AMODE_24)
-        {
-            regs->psw.amode64 = false;
-            regs->psw.amode   = false;
-        }
-
-        /* Get the address of where the nontransactional data exists */
-        maddr  = (U64*) MADDRL( nt->effective_addr, 8, nt->arn, regs, ACCTYPE_WRITE, nt->skey );
-
-        /* Plug the non-transactional data (saved already
-           in big-endian format) directly into storage.
-        */
-        *maddr = nt->ntran_data; /* already big-endian */
-
-        /* Restore the original addressing mode */
-        if (saveamode == AMODE_64)
-        {
-            regs->psw.amode64 = true;
-            regs->psw.amode   = true;
-        }
-        else if (saveamode == AMODE_31)
-        {
-            regs->psw.amode64 = false;
-            regs->psw.amode   = true;
-        }
-        else // (saveamode == AMODE_24)
-        {
-            regs->psw.amode64 = false;
-            regs->psw.amode   = false;
-        }
-    }
+        *nt->mainaddr = nt->ntran_data;  /* (already big-endian) */
 
     /*---------------------------------------------*/
     /*      Restore the requested registers        */
