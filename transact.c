@@ -1179,7 +1179,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         return maddr;
 
     /* Save last translation access type and arn */
-    if (regs)
+    if (regs && regs->txf_level)
     {
         regs->txf_lastaccess = acctype;
         regs->txf_lastarn    = arn;
@@ -1228,7 +1228,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         rchk = sysblk.regs[i];
 
         /* Check both hostregs *AND* guestregs for storage conflict
-           with this CPU (as long as it's not our!)
+           with this CPU (as long as it's not ours!)
 
            PROGRAMMING NOTE: it's safe to stop checking if our
            store or fetch access to this cache line conflicts
@@ -1312,11 +1312,9 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         /* Abort transaction if too many pages were touched */
         if (regs->txf_pgcnt >= MAX_TXF_PAGES)
         {
-            if (acctype == ACCTYPE_READ)
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF );
-            else
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_STORE_OVF );
-
+            int txf_abortcode = (acctype == ACCTYPE_READ) ?
+                ABORT_CODE_FETCH_OVF : ABORT_CODE_STORE_OVF;
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, txf_abortcode );
             UNREACHABLE_CODE( return maddr );
         }
 
