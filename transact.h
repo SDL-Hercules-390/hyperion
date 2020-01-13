@@ -14,7 +14,6 @@
 #define  MAX_TXF_LEVEL           15   /* Max nesting depth           */
 #define  MAX_TXF_CONTRAN_INSTR   32   /* Max CONSTRAINED instr.      */
 #define  MAX_TXF_PAGES           64   /* Max num of modified pages   */
-#define  MAX_TXF_NTSTG          128   /* Max nontransactional stores */
 #define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
 
 #define  ZPAGEFRAME_PAGESIZE   4096   /* IBM z page size (4K)        */
@@ -53,21 +52,6 @@
                                       /* longjmp to progjmp.         */
 #define  ABORT_RETRY_PGMCHK     2     /* PGMCHK if CONSTRAINED mode, */
                                       /* else longjmp to progjmp.    */
-
-/*-------------------------------------------------------------------*/
-/*               Non-transactional store table                       */
-/*-------------------------------------------------------------------*/
-/* The non-transactional store table tracks non-transactional stores */
-/* that occur during an unconstrained transaction.  It is needed to  */
-/* commit the changes when a transaction abort occurs.               */
-/*-------------------------------------------------------------------*/
-struct NTRANTBL
-{
-    BYTE*   mainaddr;           /* mainstor address of NTSG data     */
-    U64     ntran_data;         /* non-transactional data already
-                                   in guest big-endian format.       */
-};
-typedef struct NTRANTBL  NTRANTBL;   // Non-transactional store table
 
 /*-------------------------------------------------------------------*/
 /*                   Transaction Page Map                            */

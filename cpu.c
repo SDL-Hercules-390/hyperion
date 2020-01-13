@@ -515,6 +515,10 @@ static char *pgmintname[] = {
     code = pcode & ~PGM_PER_EVENT;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+    /* Always reset the NTSTG indicator on any program interrupt */
+    realregs->txf_NTSTG = false;
+
     /*---------------------------------------------------------------*/
     /*  Determine proper CC (Condition Code) based on Exception      */
     /*  Condition (pgm interrupt code) and Transactional-Execution   */

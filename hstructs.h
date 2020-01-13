@@ -364,7 +364,8 @@ struct REGS {                           /* Processor registers       */
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
      /* Transactional-Execution Facility                             */
 
-        bool    txf_contran;            /* true = CONSTRAINED mode   */
+        bool    txf_NTSTG;              /* true == NTSTG instruction */
+        bool    txf_contran;            /* true == CONSTRAINED mode  */
         BYTE    txf_level;              /* transaction nesting depth */
 
         BYTE    txf_ctlflag;            /* flags for access mode
@@ -415,10 +416,7 @@ struct REGS {                           /* Processor registers       */
                                            conflict was detected     */
 
         TPAGEMAP  txf_pagesmap[ MAX_TXF_PAGES ]; /* page addresses   */
-        NTRANTBL  txf_ntstgtbl[ MAX_TXF_NTSTG ]; /* non-trans stores */
-
         int     txf_pgcnt;              /* entries in TPAGEMAP table */
-        int     txf_ntstgcnt;           /* entries in NTRANTBL table */
 
         BYTE    txf_gprmask;            /* gpr register restore mask */
         DW      txf_savedgr[16];        /* saved gpr register values */

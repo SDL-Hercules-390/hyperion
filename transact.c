@@ -333,70 +333,18 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST( nontransactional_store )
 {
-int       r1;                       /* Value of R1 field             */
-int       b2;                       /* Base of effective address     */
-VADR      effective_addr2;          /* Effective address             */
-NTRANTBL* nt;                       /* non-transactional store table */
-DBLWRD    ntran_data;               /* non-transactional data already
-                                       in guest big-endian format    */
+int     r1;                             /* Value of r1 field         */
+int     b2;                             /* Base of effective address */
+VADR    effective_addr2;                /* Effective address         */
 
     RXY( inst, regs, r1, b2, effective_addr2 );
 
     DW_CHECK( effective_addr2, regs );
     CONTRAN_INSTR_CHECK( regs );
 
-    if (regs->txf_ntstgcnt >= MAX_TXF_NTSTG)
-    {
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_FETCH_OVF );
-        UNREACHABLE_CODE( return );
-    }
-
-    /* Check that all bytes of the NTSG data are accessible */
-    ARCH_DEP( validate_operand )( effective_addr2, b2, 8-1, ACCTYPE_WRITE, 0 );
-
-    /* Save a copy of the non-transactional data in our table
-       in pre-converted guest big-endian format.
-    */
-    nt = &regs->txf_ntstgtbl[ regs->txf_ntstgcnt ];   /* (curr slot) */
-    regs->txf_ntstgcnt++;                             /* (next slot) */
-
-    STORE_DW( ntran_data, regs->GR_G(r1) );    /* save data in guest */
-    memcpy( &nt->ntran_data, ntran_data, 8 );  /* big-endian format  */
-
-    /* Save mainstor address of where NTSG data is to be stored */
-    {
-        RADR  raddr;
-        int   stid;
-        ARCH_DEP( virt_to_real )( &raddr, &stid, effective_addr2, b2, regs, ACCTYPE_WRITE );
-        nt->mainaddr = regs->mainstor + APPLY_PREFIXING( raddr, regs->PX );
-    }
-
-    /* Now store the non-transactional data into guest storage too.
-
-       IMPORTANT PROGRAMMING NOTE: we must NOT simply store the value
-       into guest storage via the STORE_DW macro/function. Instead,
-       we MUST use one of the vstore functions defined in vstore.h.
-
-       THIS IS CRITICAL because it is only in the vstore functions
-       that we test for and handle Transactional-Execution Facility
-       storage accesses, whereas the STORE_DW/store_dw macro/function
-       copies data directly into guest storage, effectively bypassing
-       our Transactional-Execution Facility logic.
-
-       Thus we store their data into a temporary variable and then
-       copy it from there into guest storage via 'vstorec', allowing
-       our Transactional-Execution Facility logic to properly detect
-       any potential store conflict to any active transaction.
-
-       Our Transactional-Execution Facility logic is actually in the
-       maddr_l function called by the MADDRL macro (which itself is
-       called by the MADDR macro), which all of the vstore functions
-       always use, whereas the STORE_DW macro/function does not use
-       the MADDR/MADDRL macros since it expects that to already have
-       been done by the caller (i.e. the address passed to STORE_DW
-       is a MAINSTORE address which it uses to do a simple memcpy).
-    */
-    ARCH_DEP( vstorec )( ntran_data, 8-1, effective_addr2, b2, regs );
+    /* Nontransactionally store register contents at operand address */
+    regs->txf_NTSTG = true;
+    ARCH_DEP( vstore8 )( regs->GR_G( r1 ), effective_addr2, b2, regs );
 
 } /* end DEF_INST( nontransactional_store ) */
 
@@ -541,7 +489,6 @@ TPAGEMAP   *pmap;
         regs->txf_abortnum   = 0;           /* abort number              */
         regs->txf_abortcode  = 0;           /* clear the abort code      */
         regs->txf_conflict   = 0;           /* clear conflict address    */
-        regs->txf_ntstgcnt   = 0;           /* clear nontrans stores ctr */
         regs->txf_piid       = 0;           /* program interrupt id      */
         regs->txf_lastaccess = 0;           /* last access type          */
         regs->txf_lastarn    = 0;           /* last arn                  */
@@ -719,12 +666,11 @@ DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_ab
 #else /* only Z900 supports Transactional-Execution Facility */
 
 BYTE       txf_gprmask;
-int        txf_level,   txf_ntstgcnt, i;
+int        txf_level, i;
 bool       txf_contran, had_INTLOCK;
 U32        txf_piid;
 U64        txf_conflict;
 U64        bear;
-NTRANTBL*  nt;
 TDB*       pi_tdb  = NULL;  /* Program Interrupt TDB @ fixed 0x1800  */
 TDB*       tb_tdb  = NULL;  /* TBEGIN-specified TDB @ operand-1 addr */
 VADR       pswia   = PSW_IA( regs, 0 );
@@ -753,7 +699,6 @@ VADR       pswia   = PSW_IA( regs, 0 );
 
     txf_level    = regs->txf_level;      /* save orig value */
     txf_contran  = regs->txf_contran;    /* save orig value */
-    txf_ntstgcnt = regs->txf_ntstgcnt;   /* save orig value */
     txf_gprmask  = regs->txf_gprmask;    /* save orig value */
     txf_conflict = regs->txf_conflict;   /* save orig value */
     txf_piid     = regs->txf_piid;       /* save orig value */
@@ -765,11 +710,11 @@ VADR       pswia   = PSW_IA( regs, 0 );
     }
     release_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
 
+    regs->txf_NTSTG     = false;
     regs->txf_contran   = false;
     regs->txf_abortcode = 0;
     regs->txf_abortnum  = 0;
     regs->txf_instctr   = 0;
-    regs->txf_ntstgcnt  = 0;
     regs->txf_pgcnt     = 0;
     regs->txf_conflict  = 0;
     regs->txf_piid      = 0;
@@ -901,13 +846,6 @@ VADR       pswia   = PSW_IA( regs, 0 );
         for (i=0; i < 16; i++)
             STORE_DW( tb_tdb->tdbgpr[i], regs->GR_G( i ));
     }
-
-    /*---------------------------------------------*/
-    /*  Keep all non-transactionally stored data   */
-    /*---------------------------------------------*/
-
-    for (nt = regs->txf_ntstgtbl, i=0; i < txf_ntstgcnt; i++, nt++)
-        *nt->mainaddr = nt->ntran_data;  /* (already big-endian) */
 
     /*---------------------------------------------*/
     /*      Restore the requested registers        */
@@ -1217,6 +1155,13 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     /* Quick exit if no CPUs executing any transactions */
     if (!sysblk.txf_transcpus)
         return maddr;
+
+    /* Quick exit if NTSTG call */
+    if (regs && regs->txf_NTSTG)
+    {
+        regs->txf_NTSTG = false;
+        return maddr;
+    }
 
     /* We are only interested in fetch and store accesses */
     if (1
