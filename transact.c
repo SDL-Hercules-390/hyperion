@@ -20,7 +20,7 @@
 /*                      TXF Debugging                                */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_TXF_DEBUG   1     // 0: never, 1: always, #undef: maybe
+#define ENABLE_TXF_DEBUG   0     // 0: never, 1: always, #undef: maybe
 
 // If no debugging preference specified, but this is a debug build ...
 #if (!defined( ENABLE_TXF_DEBUG ) && defined( DEBUG )) \
@@ -36,7 +36,7 @@
 
 #if defined( NO_TXF_OPTIMIZE )
   #if defined( _MSVC_ )
-    #pragma optimize( "", off )
+    #pragma optimize( "", off )       // (for reliable breakpoints)
   #else // e.g. Linux/gcc
     // FIXME: how do you disable optimization on Linux/gcc?
   #endif
@@ -281,6 +281,7 @@ int         txf_abortcode;
             }
         }
 
+        /* Mark the page map as now being empty */
         regs->txf_pgcnt = 0;
 
         /*------------------------------------------*/
@@ -1174,7 +1175,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     /* Not interested in instruction fetches either */
     if (0
         || arn == USE_INST_SPACE
-        || arn == USE_REAL_ADDR
+        || arn == USE_REAL_ADDR     // FIXME? (Fish questions this!)
     )
         return maddr;
 
