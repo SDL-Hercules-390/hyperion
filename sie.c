@@ -317,6 +317,7 @@ U64     dreg;
             return;
         }
         cpu_init( regs->cpuad, GUESTREGS, regs );
+        alloc_txfmap(GUESTREGS);
     }
 
     /* Direct pointer to state descriptor block */
