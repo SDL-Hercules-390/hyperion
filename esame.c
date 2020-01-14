@@ -8598,6 +8598,8 @@ int     b2;                             /* Base of effective addr    */
 U64     effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    
+    TRAN_INSTR_CHECK( regs );
 
     PRIV_CHECK(regs);
 
