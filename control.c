@@ -843,7 +843,7 @@ U32     old;                            /* old value                 */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_MISC_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
     ODD_CHECK(r1, regs);
 
