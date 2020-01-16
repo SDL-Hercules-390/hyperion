@@ -145,7 +145,8 @@ int         txf_abortcode;
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 
     if (regs->txf_abortnum)
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_rabortcode );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK,
+                                       regs->txf_rabortcode );
 
     /* Set condition code based on CURRENT transaction level */
     if (!regs->txf_level)
@@ -206,7 +207,8 @@ int         txf_abortcode;
         if (regs->txf_abortcode)
         {
             regs->txf_level++; // (prevent 'abort_transaction' crash)
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_abortcode );
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC,
+                                           regs->txf_abortcode );
             UNREACHABLE_CODE( return );
         }
 
@@ -233,8 +235,9 @@ int         txf_abortcode;
         /*---------------------------------------------------------*/
 
         regs->txf_conflict = 0;
+        pmap = regs->txf_pagesmap;
 
-        for (pmap = regs->txf_pagesmap, i=0; i < regs->txf_pgcnt; i++, pmap++)
+        for (i=0; i < regs->txf_pgcnt; i++, pmap++)
         {
             for (j=0; j < ZCACHE_LINE_PAGE; j++)
             {
@@ -256,7 +259,8 @@ int         txf_abortcode;
                     ABORT_CODE_STORE_CNF : ABORT_CODE_FETCH_CNF;
 
                 regs->txf_level++; // (prevent 'abort_transaction' crash)
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_abortcode );
+                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC,
+                                               txf_abortcode );
                 UNREACHABLE_CODE( return );
             }
         }
@@ -267,7 +271,9 @@ int         txf_abortcode;
         /*  the real cache lines from the shadow cache lines.      */
         /*---------------------------------------------------------*/
 
-        for (pmap = regs->txf_pagesmap, i=0; i < regs->txf_pgcnt; i++, pmap++)
+        pmap = regs->txf_pagesmap;
+
+        for (i=0; i < regs->txf_pgcnt; i++, pmap++)
         {
             for (j=0; j < ZCACHE_LINE_PAGE; j++)
             {
@@ -323,7 +329,8 @@ VADR    effective_addr2;                /* Effective address         */
     regs->txf_abortpsw.cc = (effective_addr2 & 0x1) == 0 ? 2 : 3;
 
     /* Abort the transaction */
-    ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, (int) effective_addr2 );
+    ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC,
+                                   (int) effective_addr2 );
     UNREACHABLE_CODE( return );
 
 } /* end DEF_INST( transaction_abort ) */
@@ -463,7 +470,7 @@ TPAGEMAP   *pmap;
         UNREACHABLE_CODE( return );
     }
 
-    CONTRAN_INSTR_CHECK( regs );    /* Nested CONSTRAINED disallowed */
+    CONTRAN_INSTR_CHECK( regs );    /* Disallowed in CONSTRAINED mode*/
 
     regs->txf_level++;              /* increase the nesting level    */
     regs->psw.cc = TXF_CC_SUCCESS;  /* set cc=0 at transaction start */

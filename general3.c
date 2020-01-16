@@ -1396,9 +1396,9 @@ U32     n;                              /* Relative operand value    */
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
-/* EB4C ECAG  - Extract Cache Attribute                        [RSY] */
+/* EB4C ECAG  - Extract CPU Attribute                          [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(extract_cache_attribute)
+DEF_INST(extract_cpu_attribute)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -1465,7 +1465,7 @@ int     ai, li, ti;                     /* Operand address subfields */
        attribute indication is reserved */
     regs->GR(r1) = 0xFFFFFFFFFFFFFFFFULL;
 
-} /* end DEF_INST(extract_cache_attribute) */
+} /* end DEF_INST(extract_cpu_attribute) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 

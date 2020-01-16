@@ -2537,7 +2537,6 @@ U64     newhi, newlo;                   /* new value                 */
 
     CONTRAN_INSTR_CHECK( regs );
     ODD2_CHECK( r1, r3, regs );
-
     QW_CHECK( effective_addr2, regs );
 
     PERFORM_SERIALIZATION( regs );
@@ -4583,6 +4582,7 @@ RADR    n;                              /* Unsigned work             */
 DEF_INST(test_addressing_mode)
 {
     E(inst, regs);
+
     CONTRAN_INSTR_CHECK( regs );
     UNREFERENCED(inst);
 
@@ -8598,7 +8598,7 @@ int     b2;                             /* Base of effective addr    */
 U64     effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
-    
+
     TRAN_INSTR_CHECK( regs );
 
     PRIV_CHECK(regs);

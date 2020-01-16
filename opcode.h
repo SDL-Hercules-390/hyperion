@@ -3883,7 +3883,7 @@ DEF_INST( compare_logical_relative_long_long_halfword );        /*208*/
 DEF_INST( compare_relative_long );                              /*208*/
 DEF_INST( compare_relative_long_long );                         /*208*/
 DEF_INST( compare_relative_long_long_fullword );                /*208*/
-DEF_INST( extract_cache_attribute );                            /*208*/
+DEF_INST( extract_cpu_attribute );                              /*208*/
 DEF_INST( load_address_extended_y );                            /*208*/
 DEF_INST( load_and_test_long_fullword );                        /*208*/
 DEF_INST( load_halfword_relative_long );                        /*208*/

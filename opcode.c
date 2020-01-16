@@ -306,7 +306,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( compare_relative_long )
  UNDEF_INST( compare_relative_long_long )
  UNDEF_INST( compare_relative_long_long_fullword )
- UNDEF_INST( extract_cache_attribute )
+ UNDEF_INST( extract_cpu_attribute )
  UNDEF_INST( load_address_extended_y )
  UNDEF_INST( load_and_test_long_fullword )
  UNDEF_INST( load_halfword_relative_long )
@@ -4313,7 +4313,7 @@ static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
  /*EB49*/ GENx___x___x___ ,
  /*EB4A*/ GENx___x___x___ ,
  /*EB4B*/ GENx___x___x___ ,
- /*EB4C*/ GENx___x___x900 (extract_cache_attribute,RSY,"ECAG"),                    /*208*/
+ /*EB4C*/ GENx___x___x900 (extract_cpu_attribute,RSY,"ECAG"),                      /*208*/
  /*EB4D*/ GENx___x___x___ ,
  /*EB4E*/ GENx___x___x___ ,
  /*EB4F*/ GENx___x___x___ ,
