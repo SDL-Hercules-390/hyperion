@@ -557,8 +557,10 @@ static char *pgmintname[] = {
         case PGM_REGION_THIRD_TRANSLATION_EXCEPTION:
 
             /* Did interrupt occur during instruction fetch? */
-            if (realregs->txf_lastaccess == ACCTYPE_INSTFETCH  &&
-                realregs->txf_lastarn == USE_INST_SPACE)
+            if (1
+                && realregs->txf_lastacctyp == ACCTYPE_INSTFETCH
+                && realregs->txf_lastarn    == USE_INST_SPACE
+            )
             {
                 txclass = 1;        /* Class 1 can't be filtered */
                 filt = false;
@@ -637,7 +639,7 @@ static char *pgmintname[] = {
 
             txclass = 0;        /* Class 0 can't be filtered */
             filt = false;
-            ucc = TXF_CC_SUCCESS; 
+            ucc = TXF_CC_SUCCESS;
             break;
 
         } /* end switch (code) */
