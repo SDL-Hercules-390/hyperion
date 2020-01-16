@@ -429,8 +429,8 @@ struct REGS {                           /* Processor registers       */
                                            interrupt ident           */
         BYTE    txf_dxcvxc;             /* Data/Vector Exception Code*/
 
-        int     txf_lastaccess;         /* last access type          */
-        int     txf_lastarn;            /* last arn                  */
+        int     txf_lastacctyp;         /* last access type          */
+        int     txf_lastarn;            /* last access arn           */
 
         U16     txf_progfilttab[ MAX_TXF_LEVEL ];   /* PIFC table */
 

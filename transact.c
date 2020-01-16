@@ -492,14 +492,14 @@ TPAGEMAP   *pmap;
 
         /* Initialize other fields */
 
-        regs->txf_contran    = txf_contran; /* set transaction type      */
-        regs->txf_instctr    = 0;           /* instruction counter       */
-        regs->txf_abortnum   = 0;           /* abort number              */
-        regs->txf_abortcode  = 0;           /* clear the abort code      */
-        regs->txf_conflict   = 0;           /* clear conflict address    */
-        regs->txf_piid       = 0;           /* program interrupt id      */
-        regs->txf_lastaccess = 0;           /* last access type          */
-        regs->txf_lastarn    = 0;           /* last arn                  */
+        regs->txf_contran    = txf_contran;/* set transaction type   */
+        regs->txf_instctr    = 0;          /* instruction counter    */
+        regs->txf_abortnum   = 0;          /* abort number           */
+        regs->txf_abortcode  = 0;          /* clear the abort code   */
+        regs->txf_conflict   = 0;          /* clear conflict address */
+        regs->txf_piid       = 0;          /* program interrupt id   */
+        regs->txf_lastacctyp = 0;          /* last access type       */
+        regs->txf_lastarn    = 0;          /* last access arn        */
 
         memcpy( regs->txf_savedgr, regs->gr, sizeof( regs->txf_savedgr ));
         memset( regs->txf_progfilttab, 0, sizeof( regs->txf_progfilttab ));
@@ -1189,7 +1189,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     /* Save last translation access type and arn */
     if (regs && regs->txf_level)
     {
-        regs->txf_lastaccess = acctype;
+        regs->txf_lastacctyp = acctype;
         regs->txf_lastarn    = arn;
     }
 
