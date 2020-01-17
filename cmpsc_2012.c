@@ -1198,6 +1198,8 @@ DEF_INST( cmpsc_2012 )
     int  r1, r2;                        /* Operand register numbers          */
     RRE( inst, regs, r1, r2 );          /* Decode the instruction...         */
 
+    TRAN_INSTR_CHECK( regs );
+
     /* Build our internal Compression Call parameters block */
 
     ARCH_DEP( cmpsc_SetCMPSC )( &cmpsc, regs, r1, r2 );

@@ -1744,7 +1744,6 @@ tran_excp_addr:
 void ARCH_DEP(purge_tlb) (REGS *regs)
 {
     INVALIDATE_AIA(regs);
-    TRAN_TLB_PURGE_INSTR_CHECK( regs );
 
     if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
     {
@@ -1809,7 +1808,6 @@ RADR ptemask;
 #endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
 
     INVALIDATE_AIA(regs);
-    TRAN_TLB_PURGE_INSTR_CHECK( regs );
 
     for (i = 0; i < TLBN; i++)
         if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)

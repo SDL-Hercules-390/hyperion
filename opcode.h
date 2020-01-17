@@ -1156,9 +1156,10 @@ do { \
 #undef TRAN_INSTR_CHECK
 #undef TRAN_FLOAT_INSTR_CHECK
 #undef TRAN_ACCESS_INSTR_CHECK
-#undef TRAN_MC_INSTR_CHECK
 #undef TRAN_NONRELATIVE_BRANCH_CHECK
-#undef TRAN_TLB_PURGE_INSTR_CHECK
+#undef TRAN_BRANCH_SET_MODE_CHECK
+#undef TRAN_SET_ADDRESSING_MODE_CHECK
+#undef TRAN_MISC_INSTR_CHECK
 #undef TRAN_EXECUTE_INSTR_CHECK
 #undef ALLOC_TXFMAP
 #undef FREE_TXFMAP
@@ -1174,9 +1175,10 @@ do { \
   #define TRAN_INSTR_CHECK( _regs )
   #define TRAN_FLOAT_INSTR_CHECK( _regs )
   #define TRAN_ACCESS_INSTR_CHECK( _regs )
-  #define TRAN_MC_INSTR_CHECK( _regs )
-  #define TRAN_TLB_PURGE_INSTR_CHECK( _regs )
+  #define TRAN_MISC_INSTR_CHECK( _regs )
   #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )
+  #define TRAN_BRANCH_SET_MODE_CHECK( _regs, _r2 )
+  #define TRAN_SET_ADDRESSING_MODE_CHECK( _regs )
   #define TRAN_EXECUTE_INSTR_CHECK( _regs )
   #define ALLOC_TXFMAP( _regs )
   #define FREE_TXFMAP( _regs )
@@ -1266,43 +1268,55 @@ do { \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_MC_INSTR_CHECK( _regs )                                                  \
-    /* Monitor call restricted in CONSTRAINED mode or if monitor trace active */        \
-    do {                                                                                \
-      if ((_regs)->txf_level &&                                                         \
-      (0                                                                                \
-        || (_regs)->txf_contran                                                         \
-        || ((_regs)->CR(12) & CR12_MTRACE)                                              \
-      ))                                                                                \
-      {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
-        UNREACHABLE_CODE(;);                                                            \
-      }                                                                                 \
-    } while (0)
-
   #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )                                    \
-    /* Non-relative branches restricted in CONSTRAINED mode, or  */                     \
-    /* if branch tracing is enabled and branch register non-zero */                     \
+    /* BALR/BASR/BASSM are restricted when the branch     */                            \
+    /* register is non-zero and BRANCH tracing is enabled */                            \
     do {                                                                                \
-      if ((_regs)->txf_level &&                                                         \
-      (0                                                                                \
-        || (_regs)->txf_contran                                                         \
-        || ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                              \
-      ))                                                                                \
+      if (1                                                                             \
+          && (_regs)->txf_level                                                         \
+          && ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                            \
+      )                                                                                 \
       {                                                                                 \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_TLB_PURGE_INSTR_CHECK( _regs )                       \
-    /* Flag this CPU for abort if any transaction is active */      \
-    do {                                                            \
-      if (1                                                         \
-        &&  (_regs)->txf_level        /* transaction active  */     \
-        && !(_regs)->txf_abortcode    /* not already aborted */     \
-      )                                                             \
-        (_regs)->txf_abortcode = ABORT_CODE_MISC;                   \
+  #define TRAN_BRANCH_SET_MODE_CHECK( _regs, _r2 )                                      \
+    /* BASSM/BSM are restricted if the r2 field */                                      \
+    /* is non-zero and MODE tracing is enabled. */                                      \
+    do {                                                                                \
+      if (1                                                                             \
+          && (_regs)->txf_level                                                         \
+          && ((_r2) != 0 && ((_regs)->CR(12) & CR12_MTRACE))                            \
+      )                                                                                 \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_SET_ADDRESSING_MODE_CHECK( _regs )                                       \
+    /* SAM24/31/64 is restricted if mode tracing is enabled. */                         \
+    do {                                                                                \
+      if (1                                                                             \
+          &&  (_regs)->txf_level                                                        \
+          && ((_regs)->CR(12) & CR12_MTRACE)                                            \
+      )                                                                                 \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
+    } while (0)
+
+  #define TRAN_MISC_INSTR_CHECK( _regs )                                                \
+    /* Restricted instruction in any transaction mode */                                \
+    do {                                                                                \
+      if ((_regs)->txf_level)                                                           \
+      {                                                                                 \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_MISC );  \
+        UNREACHABLE_CODE(;);                                                            \
+      }                                                                                 \
     } while (0)
 
   #define TRAN_EXECUTE_INSTR_CHECK( _regs )                             \

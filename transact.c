@@ -59,7 +59,7 @@ U32     abort_count;                    /* Transaction Abort count   */
 
     RRF_M( inst, regs, r1, r2, m3 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
 
     /* Retrieve abort count */
     abort_count = regs->GR_L( r1 );
@@ -312,6 +312,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     S( inst, regs, b2, effective_addr2 );
 
+    CONTRAN_INSTR_CHECK( regs );
     TRAN_EXECUTE_INSTR_CHECK( regs );
 
     if (effective_addr2 <= 255)
@@ -347,8 +348,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     RXY( inst, regs, r1, b2, effective_addr2 );
 
-    DW_CHECK( effective_addr2, regs );
     CONTRAN_INSTR_CHECK( regs );
+    DW_CHECK( effective_addr2, regs );
 
     /* Nontransactionally store register contents at operand address */
     regs->txf_NTSTG = true;

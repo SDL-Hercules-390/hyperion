@@ -1385,6 +1385,7 @@ int     cc = 0;                         /* Condition code            */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
     RSL(inst, regs, l1, b1, effective_addr1);
+
     CONTRAN_INSTR_CHECK( regs );
 
     /* Fetch the packed decimal operand into the work area */

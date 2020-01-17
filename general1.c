@@ -270,6 +270,7 @@ int     cc = 0;                         /* Condition code            */
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
     CONTRAN_INSTR_CHECK( regs );
+
     ITIMER_SYNC( addr2, len, regs );
     ITIMER_SYNC( addr1, len, regs );
 
@@ -424,6 +425,7 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
 
 #if defined( FEATURE_TRACING )
@@ -501,6 +503,7 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
 
 #if defined( FEATURE_TRACING )
@@ -582,7 +585,9 @@ BYTE    *ipsav;                         /* save for ip               */
 
     RR_B(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
+    TRAN_BRANCH_SET_MODE_CHECK( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -654,7 +659,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-    TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
+    CONTRAN_INSTR_CHECK( regs );
+    TRAN_BRANCH_SET_MODE_CHECK( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -1417,7 +1423,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
 
-    TRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
@@ -1440,7 +1446,7 @@ S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    TRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1957,6 +1963,7 @@ U32     new;                            /* new value                 */
 
     RS(inst, regs, r1, r3, b2, addr2);
 
+    CONTRAN_INSTR_CHECK( regs );
     FW_CHECK(addr2, regs);
 
     ITIMER_SYNC(addr2,4-1,regs);
@@ -2016,8 +2023,8 @@ U64     old, new;                       /* old, new values           */
 
     RS(inst, regs, r1, r3, b2, addr2);
 
+    CONTRAN_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r3, regs);
-
     DW_CHECK(addr2, regs);
 
     ITIMER_SYNC(addr2,8-1,regs);
@@ -2096,7 +2103,7 @@ BYTE    sc;                             /* Store characteristic      */
 
     SSF(inst, regs, b1, addr1, b2, addr2, r3);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
 
     /* Extract function code from register 0 bits 56-63 */
     fc = regs->GR_LHLCL(0);
@@ -2816,6 +2823,7 @@ int      rc;                            /* mem_cmp() return code     */
     SS_L( inst, regs, len, b1, ea1, b2, ea2 );
 
     CONTRAN_INSTR_CHECK( regs );
+
     rc = ARCH_DEP( mem_cmp )( regs, ea1, b1, ea2, b2, len+1, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
 }
@@ -2834,6 +2842,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     SS_L( inst, regs, len, b1, ea1, b2, ea2 );
 
     CONTRAN_INSTR_CHECK( regs );
+
     ITIMER_SYNC( ea1, len, regs );
     ITIMER_SYNC( ea2, len, regs );
 
@@ -3659,7 +3668,7 @@ int     wfc;                            /* Well-Formedness-Checking  */
 //  RRF_M(inst, regs, r1, r2, wfc);
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
@@ -3816,7 +3825,7 @@ int     wfc;                            /* WellFormednessChecking    */
 //  RRF_M(inst, regs, r1, r2, wfc);
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
@@ -4281,6 +4290,7 @@ int     cc = 0;                         /* Condition code            */
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
     CONTRAN_INSTR_CHECK( regs );
+
     ITIMER_SYNC( addr1, len, regs );
     ITIMER_SYNC( addr2, len, regs );
 
@@ -5104,8 +5114,6 @@ CREG    n;                              /* Work                      */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
-    TRAN_MC_INSTR_CHECK( regs );
-
     /* Program check if monitor class exceeds 15 */
     if ( i2 > 0x0F )
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -5114,6 +5122,10 @@ CREG    n;                              /* Work                      */
     n = (regs->CR(8) & CR8_MCMASK) << i2;
     if ((n & 0x00008000) == 0)
         return;
+
+    /* The Monitor Call instruction is restricted in transaction
+       execution mode when a monitor-event conditon recognized */
+    TRAN_INSTR_CHECK( regs );
 
 #if defined( FEATURE_036_ENH_MONITOR_FACILITY )
     /* Perform Monitor Event Counting Operation if enabled */

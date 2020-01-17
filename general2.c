@@ -126,6 +126,7 @@ int     cc = 0;                         /* Condition code            */
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
     CONTRAN_INSTR_CHECK( regs );
+
     ITIMER_SYNC( addr1, len, regs );
     ITIMER_SYNC( addr2, len, regs );
 
@@ -286,7 +287,6 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
-
     CONTRAN_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
@@ -352,8 +352,7 @@ VADR    effective_addr2,
 
     SS(inst, regs, r1, r3, b2, effective_addr2,
                                      b4, effective_addr4);
-
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
 
     if(regs->GR_L(0) & PLO_GPR0_RESV)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -1074,7 +1073,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 
     S( inst, regs, b2, effective_addr2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
 
@@ -1133,7 +1132,7 @@ ETOD    ETOD;                           /* Extended clock work area  */
 
     S(inst, regs, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TRAN_INSTR_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
     if(SIE_STATB(regs, IC2, STCK))
@@ -1526,6 +1525,8 @@ BYTE    old;                            /* Old value                 */
 
     S(inst, regs, b2, effective_addr2);
 
+    CONTRAN_INSTR_CHECK( regs );
+
     ITIMER_SYNC(effective_addr2,0,regs);
 
     /* Perform serialization before and after operation */
@@ -1784,7 +1785,7 @@ bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
 
     SS_L( inst, regs, len, b1, addr1, b2, addr2 );
 
-    TRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Copy operand-1 data to work area if within same page */
     if (!(op1crosses = CROSSPAGE( addr1, len )))
@@ -1956,7 +1957,6 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 
     SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
-
     CONTRAN_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
@@ -2184,7 +2184,7 @@ DEF_INST(convert_utf8_to_utf32)
 //RRF_M(inst, regs, r1, r2, wfc);
   RRE(inst, regs, r1, r2);
 
-  CONTRAN_INSTR_CHECK( regs );
+  TRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2430,7 +2430,7 @@ DEF_INST(convert_utf16_to_utf32)
 //RRF_M(inst, regs, r1, r2, wfc);
   RRE(inst, regs, r1, r2);
 
-  CONTRAN_INSTR_CHECK( regs );
+  TRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2540,7 +2540,7 @@ DEF_INST(convert_utf32_to_utf8)
 
   RRE(inst, regs, r1, r2);
 
-  CONTRAN_INSTR_CHECK( regs );
+  TRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2679,7 +2679,7 @@ DEF_INST(convert_utf32_to_utf16)
 
   RRE(inst, regs, r1, r2);
 
-  CONTRAN_INSTR_CHECK( regs );
+  TRAN_INSTR_CHECK( regs );
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */

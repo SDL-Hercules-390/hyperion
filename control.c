@@ -843,7 +843,7 @@ U32     old;                            /* old value                 */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_INSTR_CHECK( regs );
+    TRAN_MISC_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
     ODD_CHECK(r1, regs);
 
@@ -1688,9 +1688,7 @@ int     op3;
     RRE(inst, regs, r1, r2);
 #endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
 
-    /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
-
+    TRAN_MISC_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     op1 = regs->GR(r1);
@@ -2274,7 +2272,6 @@ int     cc;                             /* Condition code            */
 
     SIE_XC_INTERCEPT(regs);
 
-    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     /* Translate the effective address to a real address */

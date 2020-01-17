@@ -436,8 +436,6 @@ int     cc;                             /* Comparison result         */
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    TRAN_INSTR_CHECK( regs );
-
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
          (S32)regs->GR_L(r1) > (S32)regs->GR_L(r2) ? 2 : 0;
@@ -463,8 +461,6 @@ int     m3;                             /* Mask bits                 */
 int     cc;                             /* Comparison result         */
 
     RRF_M(inst, regs, r1, r2, m3);
-
-    TRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
@@ -771,8 +767,6 @@ int     cc;                             /* Comparison result         */
 U16     i2;                             /* 16-bit immediate value    */
 
     RIE_RIM(inst, regs, r1, i2, m3);
-
-    TRAN_INSTR_CHECK( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S16)i2 ? 1 :
@@ -1876,7 +1870,14 @@ VADR    addr2;                          /* Relative operand address  */
 
     CONTRAN_INSTR_CHECK( regs );
 
-    /* The Prefetch Data instruction acts as a no-op */
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* This instruction is restricted in transaction execution
+       mode when the m1 field is either 6 or 7. */
+    if (m1 == 6 || m1 == 7)
+        TRAN_INSTR_CHECK( regs );
+#endif
+
+    /* On Hercules the Prefetch Data instruction acts as a no-op */
 
 } /* end DEF_INST(prefetch_data_relative_long) */
 
@@ -3925,7 +3926,7 @@ int     m1;                             /* Mask value                */
 
     SMI_A0(inst, regs, m1, addr2, b3, addr3);
 
-    TRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that
@@ -3945,7 +3946,7 @@ int     m1;                             /* Mask value                */
 
     MII_A0(inst, regs, m1, addr2, addr3);
 
-    TRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that
