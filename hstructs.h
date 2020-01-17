@@ -410,8 +410,7 @@ struct REGS {                           /* Processor registers       */
 
 #define TXF_PIFC_RESERVED   3           /* Reserved (invalid)        */
 
-        U64     txf_tdb;                /* TDB address or NULL       */
-        int     txf_tdb_arn;            /* arn used to address TDB   */
+        TDB*    txf_tdb;                /* mainstor pointer to TDB   */
         U64     txf_conflict;           /* logical address where
                                            conflict was detected     */
 

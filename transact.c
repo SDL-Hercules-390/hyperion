@@ -359,8 +359,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /* (forward reference) */
-void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, int arn, VADR effective_addr1 );
-
+void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, TDB* tdb );
 
 /*-------------------------------------------------------------------*/
 /* E560 TBEGIN - Transaction Begin      (unconstrained)        [SIL] */
@@ -374,6 +373,7 @@ DEF_INST( transaction_begin )
 S16     i2;                             /* 16-bit immediate value    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
+TDB*    tdb = NULL;                     /* Pointer to TDB            */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
 
@@ -389,18 +389,27 @@ VADR    effective_addr1;                /* Effective address         */
     /* Unconstrained: if b1 non-zero TDB must be aligned else ignore */
     if (b1)
     {
+        RADR  real_tdb;
+        int   stid;
+
         DW_CHECK( effective_addr1, regs );
 
         /* Check that all bytes of the TDB are accessible */
-        ARCH_DEP( validate_operand )( effective_addr1, b1, sizeof( TDB ) - 1, ACCTYPE_WRITE, 0 );
+        ARCH_DEP( validate_operand )( effective_addr1, b1,
+                                      sizeof( TDB ) - 1,
+                                      ACCTYPE_WRITE, regs );
+
+        /* Convert TDB address to absolute mainstor address */
+        VERIFY( ARCH_DEP( virt_to_real )( &real_tdb, &stid, effective_addr1,
+                                  b1, regs, ACCTYPE_WRITE ) == 0);
+        real_tdb = APPLY_PREFIXING( real_tdb, regs->PX );
+        tdb = (TDB*)(regs->mainstor + real_tdb);
     }
-    else
-        effective_addr1 = 0;
 
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
-        ARCH_DEP( process_tbegin )( false, regs, i2, b1, effective_addr1 );
+        ARCH_DEP( process_tbegin )( false, regs, i2, tdb );
     }
     RELEASE_INTLOCK( regs );
 
@@ -441,7 +450,7 @@ VADR    effective_addr1;                /* Effective address         */
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
-        ARCH_DEP( process_tbegin )( true, regs, i2, 0, 0 );
+        ARCH_DEP( process_tbegin )( true, regs, i2, NULL );
     }
     RELEASE_INTLOCK( regs );
 
@@ -455,7 +464,7 @@ VADR    effective_addr1;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /*    The interrupt lock (INTLOCK) *MUST* be held upon entry!        */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, int arn, VADR effective_addr1 )
+void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, TDB* tdb )
 {
 int         i, tdc;
 TPAGEMAP   *pmap;
@@ -510,8 +519,7 @@ TPAGEMAP   *pmap;
         regs->txf_gprmask      = (i2 >> 8) & (0xFF);
         regs->txf_higharchange = (regs->txf_ctlflag & TXF_CTL_AR)    ? regs->txf_level : 0;
         regs->txf_highfloat    = (regs->txf_ctlflag & TXF_CTL_FLOAT) ? regs->txf_level : 0;
-        regs->txf_tdb          = effective_addr1;
-        regs->txf_tdb_arn      = arn;
+        regs->txf_tdb          = tdb;
 
         /* Save the abort PSW */
         {
@@ -786,21 +794,12 @@ VADR       pswia   = PSW_IA( regs, 0 );
     {
         RADR tdb = 0x1800;
         tdb = APPLY_PREFIXING( tdb, regs->PX );
-        pi_tdb = (TDB*) regs->mainstor + tdb;
+        pi_tdb = (TDB*)(regs->mainstor + tdb);
     }
 
     /* TBEGIN-specified TDB? */
     if (!txf_contran && regs->txf_tdb)
-    {
-        RADR  raddr;
-        int   stid;
-
-        if (ARCH_DEP( virt_to_real )( &raddr, &stid,
-            regs->txf_tdb, regs->txf_tdb_arn, regs, ACCTYPE_WRITE ) == 0)
-        {
-            tb_tdb = (TDB*) regs->mainstor + raddr;
-        }
-    }
+        tb_tdb = regs->txf_tdb;
 
     /* Populate the TDBs */
 
