@@ -529,6 +529,9 @@ static char *pgmintname[] = {
     /*---------------------------------------------------------------*/
     if (realregs->txf_level)
     {
+        /* Indicate TXF aborted event in interrupt code */
+        pcode |= PGM_TXF_EVENT;
+
         switch (code)  // (interrupt code)
         {
         case PGM_OPERATION_EXCEPTION:
@@ -1020,7 +1023,8 @@ static char *pgmintname[] = {
         */
         if (realregs->txf_level)
         {
-            realregs->txf_piid = pcode;
+            realregs->txf_piid   = pcode;
+            realregs->txf_piid  |= (ilc << 16);
             realregs->txf_dxcvxc =
             (0
                 || pcode == PGM_DATA_EXCEPTION

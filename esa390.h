@@ -1132,6 +1132,7 @@ typedef struct PSA_900  PSA_900;
 #define PGM_MONITOR_EVENT                               0x0040
 #define PGM_PER_EVENT                                   0x0080
 #define PGM_CRYPTO_OPERATION_EXCEPTION                  0x0119
+#define PGM_TXF_EVENT                                   0x0200
 
 /*-------------------------------------------------------------------*/
 /* External interrupt codes */
