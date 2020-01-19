@@ -527,7 +527,7 @@ static char *pgmintname[] = {
     /*  (and 5-14 on page 5-102) of manual SA22-7832-12 "z/Arch      */
     /*  Principles of Operation"                                     */
     /*---------------------------------------------------------------*/
-    if (realregs->txf_level)
+    if (realregs->txf_tnd)
     {
         /* Indicate TXF aborted event in interrupt code */
         pcode |= PGM_TXF_EVENT;
@@ -687,14 +687,14 @@ static char *pgmintname[] = {
         {
             /* Yes, set filtered condition code and abort transaction */
             realregs->psw.cc = fcc;
-            ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_CC, ABORT_CODE_FPGM );
+            ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_CC, TAC_FPGM );
             UNREACHABLE_CODE( return );
         }
 
         /* No, set unfiltered condition code */
         realregs->psw.cc = ucc;
 
-    } /* end if (realregs->txf_level) */
+    } /* end if (realregs->txf_tnd) */
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
@@ -1021,7 +1021,7 @@ static char *pgmintname[] = {
         /* Save the program interrupt and data exception
            codes if there was any transaction active
         */
-        if (realregs->txf_level)
+        if (realregs->txf_tnd)
         {
             realregs->txf_piid   = pcode;
             realregs->txf_piid  |= (ilc << 16);
@@ -1169,8 +1169,8 @@ static char *pgmintname[] = {
     /* If transaction active, abort it with unfiltered pgm interrupt
        and then return back to here to continue with program interrupt
        processing */
-    if (realregs->txf_level)
-        ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, ABORT_CODE_UPGM );
+    if (realregs->txf_tnd)
+        ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, TAC_UPGM );
 #endif
 #if defined(_FEATURE_SIE)
     if(nointercept)
@@ -1266,9 +1266,9 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction and then return back to here
        to continue with restart interrupt processing */
-    if (regs->txf_level)
+    if (regs->txf_tnd)
     {
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, ABORT_CODE_MISC );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MISC );
         regs->psw.cc = TXF_CC_TRANSIENT;
     }
 #endif
@@ -1393,9 +1393,9 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Abort any active transaction and then return back to here
            to continue with I/O interrupt processing */
-        if (regs->txf_level)
+        if (regs->txf_tnd)
         {
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, ABORT_CODE_IO );
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_IO );
             regs->psw.cc = TXF_CC_TRANSIENT;
         }
 #endif
@@ -1471,9 +1471,9 @@ RADR    fsta;                           /* Failing storage address   */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction and then return back to here
        to continue with machine check interrupt processing */
-    if (regs->txf_level)
+    if (regs->txf_tnd)
     {
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, ABORT_CODE_MCK );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MCK );
         regs->psw.cc = TXF_CC_TRANSIENT;
     }
 #endif
@@ -1808,7 +1808,7 @@ fastloop:
         ARCH_DEP( process_interrupt )( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
-    if (regs->txf_level)
+    if (regs->txf_tnd)
         goto slowloop;
 #endif
 
@@ -1826,13 +1826,13 @@ fastloop:
     for (i=0; i < 128; i++)
     {
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
-        if (regs->txf_level)
+        if (regs->txf_tnd)
             break;
 #endif
         UNROLLED_EXECUTE( current_opcode_table, regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
-        if (regs->txf_level)
+        if (regs->txf_tnd)
             break;
 #endif
         UNROLLED_EXECUTE( current_opcode_table, regs );
@@ -1850,7 +1850,7 @@ slowloop:
     if (INTERRUPT_PENDING( regs ))
         ARCH_DEP( process_interrupt )( regs );
 
-    if (!regs->txf_level)
+    if (!regs->txf_tnd)
         goto fastloop;
 
     ip = INSTRUCTION_FETCH( regs, 0 );
@@ -1866,12 +1866,12 @@ slowloop:
     */
     for (i=0; i < 128; i++)
     {
-        if (!regs->txf_level)
+        if (!regs->txf_tnd)
             break;
 
         TXF_UNROLLED_EXECUTE( current_opcode_table, regs );
 
-        if (!regs->txf_level)
+        if (!regs->txf_tnd)
             break;
 
         TXF_UNROLLED_EXECUTE( current_opcode_table, regs );

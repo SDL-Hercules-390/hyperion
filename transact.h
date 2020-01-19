@@ -74,47 +74,47 @@ typedef struct TPAGEMAP  TPAGEMAP;   // Transaction Page Map table
 /*-------------------------------------------------------------------*/
 struct TDB
 {
-    BYTE    tdbformat;          /* format, 0 = invalid, 1 = valid    */
-    BYTE    tdbflags;           /* flags                             */
+    BYTE    tdb_format;         /* Format, 0 = invalid, 1 = valid    */
+    BYTE    tdb_flags;          /* Flags                             */
 
 #define TDB_CTV     0x80        /* Conflict-Token Validity           */
 #define TDB_CTI     0x40        /* Constrained-Transaction Indicator */
 
-    BYTE    tdbresv1[4];        /* reserved                          */
-    HWORD   tdbtnd;             /* TND (Transaction Nesting Depth)   */
+    BYTE    tdb_resv1[4];       /* Reserved                          */
+    HWORD   tdb_tnd;            /* Transaction Nesting Depth         */
 
-    DBLWRD  tdbabortcode;       /* transaction abort code; see below */
-    DBLWRD  tdbconfict;         /* conflict token                    */
-    DBLWRD  tdbinstaddr;        /* transaction abort inst addr       */
+    DBLWRD  tdb_tac;            /* Transaction Abort Code; see below */
+    DBLWRD  tdb_confict;        /* Conflict token                    */
+    DBLWRD  tdb_atia;           /* Aborted-Transaction Inst. Addr.   */
 
-    BYTE    tdbeaid;            /* exception access id               */
-    BYTE    tdbdxc;             /* data exception code               */
-    BYTE    tdbresv2[2];        /* reserved                          */
-    FWORD   tdbpgmintid;        /* program interrupt identification  */
+    BYTE    tdb_eaid;           /* Exception Access Identifier       */
+    BYTE    tdb_dxc;            /* Data Exception code               */
+    BYTE    tdb_resv2[2];       /* Reserved                          */
+    FWORD   tdb_piid;           /* Program Interruption Identifier   */
 
-    DBLWRD  tdbtranexcid;       /* transaction exception ident       */
-    DBLWRD  tdbbreakaddr;       /* breaking event address            */  
-    DBLWRD  tdbresv3[9];        /* reserved                          */
+    DBLWRD  tdb_teid;           /* Transaction Exception Identifier  */
+    DBLWRD  tdb_bea;            /* Breaking Event Address            */
+    DBLWRD  tdb_resv3[9];       /* Reserved                          */
 
-    DBLWRD  tdbgpr[16];         /* general purpose register array    */
+    DBLWRD  tdb_gpr[16];        /* General Purpose register array    */
 
-#define ABORT_CODE_EXT           2  /* External interruption         */
-#define ABORT_CODE_UPGM          4  /* PGM interruption (Unfiltered) */
-#define ABORT_CODE_MCK           5  /* Machine-check interruption    */
-#define ABORT_CODE_IO            6  /* I/O interruption              */
-#define ABORT_CODE_FETCH_OVF     7  /* Fetch overflow                */
-#define ABORT_CODE_STORE_OVF     8  /* Store overflow                */
-#define ABORT_CODE_FETCH_CNF     9  /* Fetch conflict                */
-#define ABORT_CODE_STORE_CNF    10  /* Store conflict                */
-#define ABORT_CODE_INSTR        11  /* Restricted instruction        */
-#define ABORT_CODE_FPGM         12  /* PGM interruption (Filtered)   */
-#define ABORT_CODE_NESTING      13  /* Nesting depth exceeded        */
-#define ABORT_CODE_FETCH_OTHER  14  /* Cache -- fetch related        */
-#define ABORT_CODE_STORE_OTHER  15  /* Cache -- store related        */
-#define ABORT_CODE_CACHE_OTHER  16  /* Cache -- other                */
-#define ABORT_CODE_GUARDED      19  /* Guarded-storage event related */
-#define ABORT_CODE_MISC        255  /* Miscellaneous condition       */
-#define ABORT_CODE_TABORT      256  /* TABORT instruction            */
+#define TAC_EXT            2    /* External interruption             */
+#define TAC_UPGM           4    /* PGM Interruption (Unfiltered)     */
+#define TAC_MCK            5    /* Machine-check Interruption        */
+#define TAC_IO             6    /* I/O Interruption                  */
+#define TAC_FETCH_OVF      7    /* Fetch overflow                    */
+#define TAC_STORE_OVF      8    /* Store overflow                    */
+#define TAC_FETCH_CNF      9    /* Fetch conflict                    */
+#define TAC_STORE_CNF     10    /* Store conflict                    */
+#define TAC_INSTR         11    /* Restricted instruction            */
+#define TAC_FPGM          12    /* PGM Interruption (Filtered)       */
+#define TAC_NESTING       13    /* Nesting Depth exceeded            */
+#define TAC_FETCH_OTHER   14    /* Cache -- fetch related            */
+#define TAC_STORE_OTHER   15    /* Cache -- store related            */
+#define TAC_CACHE_OTHER   16    /* Cache -- other                    */
+#define TAC_GUARDED       19    /* Guarded-Storage Event related     */
+#define TAC_MISC         255    /* Miscellaneous condition           */
+#define TAC_TABORT       256    /* TABORT instruction                */
 };
 typedef struct TDB  TDB;             // Transaction Dianostic Block
 

@@ -103,9 +103,9 @@ int     rc;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Abort any active transaction and then return back to here
            to continue with external interrupt processing */
-        if (regs->hostregs->txf_level)
+        if (regs->hostregs->txf_tnd)
         {
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, ABORT_CODE_EXT );
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_EXT );
             regs->psw.cc = TXF_CC_TRANSIENT;
         }
 #endif

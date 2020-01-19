@@ -273,9 +273,9 @@ int servc_hresume(void *file);
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 /* Functions in module transact.c */
 TRANS_DLL_IMPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int acctype, BYTE* maddr );
-TRANS_DLL_IMPORT void s370_abort_transaction( REGS* regs, int retry, int txf_abortcode );
-TRANS_DLL_IMPORT void s390_abort_transaction( REGS* regs, int retry, int txf_abortcode );
-TRANS_DLL_IMPORT void z900_abort_transaction( REGS* regs, int retry, int txf_abortcode );
+TRANS_DLL_IMPORT void s370_abort_transaction( REGS* regs, int retry, int txf_tac );
+TRANS_DLL_IMPORT void s390_abort_transaction( REGS* regs, int retry, int txf_tac );
+TRANS_DLL_IMPORT void z900_abort_transaction( REGS* regs, int retry, int txf_tac );
 void alloc_txfmap( REGS* regs );
 void free_txfmap( REGS* regs );
 #endif

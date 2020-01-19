@@ -118,7 +118,7 @@ int     r1, r2;                         /* Operand register numbers  */
 
     CONTRAN_INSTR_CHECK( regs );
 
-    regs->GR_L(r1) = (U32) regs->txf_level;
+    regs->GR_L(r1) = (U32) regs->txf_tnd;
 
 } /* end DEF_INST( extract_transaction_nesting_depth ) */
 
@@ -135,7 +135,7 @@ BYTE       *altaddr;
 BYTE       *saveaddr;
 BYTE       *mainaddr;
 TPAGEMAP   *pmap;
-int         txf_abortcode;
+int         txf_tac;
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -144,12 +144,12 @@ int         txf_abortcode;
     if (!(regs->CR(0) & CR0_TXC))
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 
-    if (regs->txf_abortnum)
+    if (regs->txf_abortctr)
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK,
-                                       regs->txf_rabortcode );
+                                       regs->txf_random_tac );
 
     /* Set condition code based on CURRENT transaction level */
-    if (!regs->txf_level)
+    if (!regs->txf_tnd)
     {
         /* Not currently in transactional-execution mode.
            Set CC 2 and treat as no-op (i.e. just return
@@ -171,30 +171,30 @@ int         txf_abortcode;
         SYNCHRONIZE_CPUS( regs );
 
         /* Decrease nesting depth */
-        regs->txf_level--;
+        regs->txf_tnd--;
 
         /* Still in transaction-execution mode? */
-        if (regs->txf_level)
+        if (regs->txf_tnd)
         {
             /* If we're now at or below the highest nesting level
                that allowed AR changes or float instructions, then
                enable (set) the corresponding control flag.
                Otherwise leave it alone (should already be off).
             */
-            if (regs->txf_level <= regs->txf_higharchange)
+            if (regs->txf_tnd <= regs->txf_higharchange)
             {
-                regs->txf_higharchange = regs->txf_level;
+                regs->txf_higharchange = regs->txf_tnd;
                 regs->txf_ctlflag |= TXF_CTL_AR;
             }
 
-            if (regs->txf_level <= regs->txf_highfloat)
+            if (regs->txf_tnd <= regs->txf_highfloat)
             {
-                regs->txf_highfloat = regs->txf_level;
+                regs->txf_highfloat = regs->txf_tnd;
                 regs->txf_ctlflag |= TXF_CTL_FLOAT;
             }
 
             /* Set PIFC for this nesting level */
-            regs->txf_pifc = regs->txf_progfilttab[ regs->txf_level - 1 ];
+            regs->txf_pifc = regs->txf_progfilttab[ regs->txf_tnd - 1 ];
 
             /* Remain in transactional-execution mode */
             return;
@@ -204,11 +204,11 @@ int         txf_abortcode;
         /* If an abort code is already set, abort the transaction  */
         /* and exit                                                */
         /*---------------------------------------------------------*/
-        if (regs->txf_abortcode)
+        if (regs->txf_tac)
         {
-            regs->txf_level++; // (prevent 'abort_transaction' crash)
+            regs->txf_tnd++; // (prevent 'abort_transaction' crash)
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC,
-                                           regs->txf_abortcode );
+                                           regs->txf_tac );
             UNREACHABLE_CODE( return );
         }
 
@@ -216,9 +216,9 @@ int         txf_abortcode;
         /* End the transaction normally if possible (no conflicts) */
         /*---------------------------------------------------------*/
 
-        regs->txf_abortcode = 0;
+        regs->txf_tac       = 0;
         regs->txf_contran   = false;
-        regs->txf_abortnum  = 0;
+        regs->txf_abortctr  = 0;
 
         /*---------------------------------------------------------*/
         /*  Scan the page map table.  There is one entry in the    */
@@ -255,12 +255,12 @@ int         txf_abortcode;
                 else
                     regs->txf_conflict = 0;
 
-                txf_abortcode = (pmap->cachemap[j] == CM_STORED) ?
-                    ABORT_CODE_STORE_CNF : ABORT_CODE_FETCH_CNF;
+                txf_tac = (pmap->cachemap[j] == CM_STORED) ?
+                    TAC_STORE_CNF : TAC_FETCH_CNF;
 
-                regs->txf_level++; // (prevent 'abort_transaction' crash)
+                regs->txf_tnd++; // (prevent 'abort_transaction' crash)
                 ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC,
-                                               txf_abortcode );
+                                               txf_tac );
                 UNREACHABLE_CODE( return );
             }
         }
@@ -321,7 +321,7 @@ VADR    effective_addr2;                /* Effective address         */
     if (!(regs->CR(0) & CR0_TXC))
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 
-    if (!regs->txf_level)
+    if (!regs->txf_tnd)
         regs->program_interrupt( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 
     CONTRAN_INSTR_CHECK( regs );
@@ -474,18 +474,18 @@ TPAGEMAP   *pmap;
     SYNCHRONIZE_CPUS( regs );
 
     /* Check for maximum nesting depth exceeded */
-    if (regs->txf_level >= MAX_TXF_LEVEL)
+    if (regs->txf_tnd >= MAX_TXF_LEVEL)
     {
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_NESTING );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
         UNREACHABLE_CODE( return );
     }
 
     CONTRAN_INSTR_CHECK( regs );    /* Disallowed in CONSTRAINED mode*/
 
-    regs->txf_level++;              /* increase the nesting level    */
+    regs->txf_tnd++;                /* increase the nesting level    */
     regs->psw.cc = TXF_CC_SUCCESS;  /* set cc=0 at transaction start */
 
-    if (regs->txf_level == 1)       /* first/outermost transaction?  */
+    if (regs->txf_tnd == 1)         /* first/outermost transaction?  */
     {
         UPDATE_SYSBLK_TRANSCPUS( +1 );  /* bump transacting CPUs ctr */
 
@@ -504,8 +504,8 @@ TPAGEMAP   *pmap;
 
         regs->txf_contran    = txf_contran;/* set transaction type   */
         regs->txf_instctr    = 0;          /* instruction counter    */
-        regs->txf_abortnum   = 0;          /* abort number           */
-        regs->txf_abortcode  = 0;          /* clear the abort code   */
+        regs->txf_abortctr   = 0;          /* abort instr count      */
+        regs->txf_tac        = 0;          /* clear the abort code   */
         regs->txf_conflict   = 0;          /* clear conflict address */
         regs->txf_piid       = 0;          /* program interrupt id   */
         regs->txf_lastacctyp = 0;          /* last access type       */
@@ -517,8 +517,8 @@ TPAGEMAP   *pmap;
         regs->txf_ctlflag      = (i2 >> 0) & (TXF_CTL_AR | TXF_CTL_FLOAT);
         regs->txf_pifc         = (i2 >> 0) & (TXF_CTL_PIFC);
         regs->txf_gprmask      = (i2 >> 8) & (0xFF);
-        regs->txf_higharchange = (regs->txf_ctlflag & TXF_CTL_AR)    ? regs->txf_level : 0;
-        regs->txf_highfloat    = (regs->txf_ctlflag & TXF_CTL_FLOAT) ? regs->txf_level : 0;
+        regs->txf_higharchange = (regs->txf_ctlflag & TXF_CTL_AR)    ? regs->txf_tnd : 0;
+        regs->txf_highfloat    = (regs->txf_ctlflag & TXF_CTL_FLOAT) ? regs->txf_tnd : 0;
         regs->txf_tdb          = tdb;
 
         /* Save the abort PSW */
@@ -558,21 +558,21 @@ TPAGEMAP   *pmap;
             {
                 BYTE racode[10] =       /* Randomly chosen abort codes */
                 {
-                    ABORT_CODE_FETCH_OVF,
-                    ABORT_CODE_STORE_OVF,
-                    ABORT_CODE_FETCH_CNF,
-                    ABORT_CODE_STORE_CNF,
-                    ABORT_CODE_INSTR,
-                    ABORT_CODE_NESTING,
-                    ABORT_CODE_FETCH_OTHER,
-                    ABORT_CODE_STORE_OTHER,
-                    ABORT_CODE_CACHE_OTHER,
-                    ABORT_CODE_MISC,
+                    TAC_FETCH_OVF,
+                    TAC_STORE_OVF,
+                    TAC_FETCH_CNF,
+                    TAC_STORE_CNF,
+                    TAC_INSTR,
+                    TAC_NESTING,
+                    TAC_FETCH_OTHER,
+                    TAC_STORE_OTHER,
+                    TAC_CACHE_OTHER,
+                    TAC_MISC,
                 };
                 int rand1 = (int) (rand() % _countof( racode ));
 
-                regs->txf_rabortcode = (U16) txf_contran ? racode[ rand1 ] : 0;
-                regs->txf_abortnum   = (U16) txf_contran ? (rand() % MAX_TXF_CONTRAN_INSTR) : rand();
+                regs->txf_random_tac = (U16) txf_contran ? racode[ rand1 ] : 0;
+                regs->txf_abortctr   = (U16) txf_contran ? (rand() % MAX_TXF_CONTRAN_INSTR) : rand();
                 break;
             }
         }
@@ -585,8 +585,8 @@ TPAGEMAP   *pmap;
 
         if (!(i2 & TXF_CTL_AR))
             regs->txf_ctlflag &= ~TXF_CTL_AR;
-        else if (regs->txf_higharchange == (regs->txf_level - 1))
-            regs->txf_higharchange = regs->txf_level;
+        else if (regs->txf_higharchange == (regs->txf_tnd - 1))
+            regs->txf_higharchange = regs->txf_tnd;
 
         /*--------------------------------------------------------------*/
         /* Update highest nesting level that allowed float instructions */
@@ -594,14 +594,14 @@ TPAGEMAP   *pmap;
 
         if (!(i2 & TXF_CTL_FLOAT))
             regs->txf_ctlflag &= ~TXF_CTL_FLOAT;
-        else if (regs->txf_highfloat == (regs->txf_level - 1))
-            regs->txf_highfloat = regs->txf_level;
+        else if (regs->txf_highfloat == (regs->txf_tnd - 1))
+            regs->txf_highfloat = regs->txf_tnd;
 
         /*-----------------------------*/
         /* Update program filter level */
         /*-----------------------------*/
 
-        regs->txf_progfilttab[ regs->txf_level - 2 ] = regs->txf_pifc;
+        regs->txf_progfilttab[ regs->txf_tnd - 2 ] = regs->txf_pifc;
         regs->txf_pifc = MAX( regs->txf_pifc, (i2 & TXF_CTL_PIFC) );
     }
 } /* end ARCH_DEP( process_tbegin ) */
@@ -619,33 +619,26 @@ TPAGEMAP   *pmap;
 /*-------------------------------------------------------------------*/
 static const int abort2cc[20] =
 {
-    TXF_CC_PERSISTENT,    // 0 (undefined)
-    TXF_CC_PERSISTENT,    // 1 (undefined)
-
-    TXF_CC_TRANSIENT,     // ABORT_CODE_EXT           2
-
-    TXF_CC_PERSISTENT,    // 3 (undefined)
-    TXF_CC_PERSISTENT,    // ABORT_CODE_UPGM          4
-
-    TXF_CC_TRANSIENT,     // ABORT_CODE_MCK           5
-    TXF_CC_TRANSIENT,     // ABORT_CODE_IO            6
-    TXF_CC_TRANSIENT,     // ABORT_CODE_FETCH_OVF     7
-    TXF_CC_TRANSIENT,     // ABORT_CODE_STORE_OVF     8
-    TXF_CC_TRANSIENT,     // ABORT_CODE_FETCH_CNF     9
-    TXF_CC_TRANSIENT,     // ABORT_CODE_STORE_CNF    10
-
-    TXF_CC_PERSISTENT,    // ABORT_CODE_INSTR        11
-    TXF_CC_PERSISTENT,    // ABORT_CODE_FPGM         12
-    TXF_CC_PERSISTENT,    // ABORT_CODE_NESTING      13
-
-    TXF_CC_TRANSIENT,     // ABORT_CODE_FETCH_OTHER  14
-    TXF_CC_TRANSIENT,     // ABORT_CODE_STORE_OTHER  15
-    TXF_CC_TRANSIENT,     // ABORT_CODE_CACHE_OTHER  16
-
-    TXF_CC_PERSISTENT,    // 17 (undefined)
-    TXF_CC_PERSISTENT,    // 18 (undefined)
-
-    TXF_CC_TRANSIENT      // ABORT_CODE_GUARDED      19
+    TXF_CC_PERSISTENT,      //   0  (undefined)
+    TXF_CC_PERSISTENT,      //   1  (undefined)
+    TXF_CC_TRANSIENT,       //   2  TAC_EXT
+    TXF_CC_PERSISTENT,      //   3  (undefined)
+    TXF_CC_PERSISTENT,      //   4  TAC_UPGM
+    TXF_CC_TRANSIENT,       //   5  TAC_MCK
+    TXF_CC_TRANSIENT,       //   6  TAC_IO
+    TXF_CC_TRANSIENT,       //   7  TAC_FETCH_OVF
+    TXF_CC_TRANSIENT,       //   8  TAC_STORE_OVF
+    TXF_CC_TRANSIENT,       //   9  TAC_FETCH_CNF
+    TXF_CC_TRANSIENT,       //  10  TAC_STORE_CNF
+    TXF_CC_PERSISTENT,      //  11  TAC_INSTR
+    TXF_CC_PERSISTENT,      //  12  TAC_FPGM
+    TXF_CC_PERSISTENT,      //  13  TAC_NESTING
+    TXF_CC_TRANSIENT,       //  14  TAC_FETCH_OTHER
+    TXF_CC_TRANSIENT,       //  15  TAC_STORE_OTHER
+    TXF_CC_TRANSIENT,       //  16  TAC_CACHE_OTHER
+    TXF_CC_PERSISTENT,      //  17  (undefined)
+    TXF_CC_PERSISTENT,      //  18  (undefined)
+    TXF_CC_TRANSIENT        //  19  TAC_GUARDED
 };
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
@@ -668,7 +661,7 @@ static const int abort2cc[20] =
 /*               Otherwise longjmp to progjmp.                       */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_abortcode )
+DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_tac )
 {
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
@@ -676,24 +669,24 @@ DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_ab
 
     UNREFERENCED( regs );
     UNREFERENCED( retry );
-    UNREFERENCED( txf_abortcode );
+    UNREFERENCED( txf_tac );
 
     CRASH();   /* Should NEVER be called for S/370 or S/390! */
 
 #else /* only Z900 supports Transactional-Execution Facility */
 
 BYTE       txf_gprmask;
-int        txf_level, i;
+int        txf_tnd, i;
 bool       txf_contran, had_INTLOCK;
 U32        txf_piid;
 U64        txf_conflict;
-U64        bear;
-TDB*       pi_tdb  = NULL;  /* Program Interrupt TDB @ fixed 0x1800  */
-TDB*       tb_tdb  = NULL;  /* TBEGIN-specified TDB @ operand-1 addr */
-VADR       pswia   = PSW_IA( regs, 0 );
+U64        txf_bea;
+TDB*       pi_tdb   = NULL; /* Program Interrupt TDB @ fixed 0x1800  */
+TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
+VADR       txf_atia = PSW_IA( regs, 0 );
 
     // LOGIC ERROR if CPU not in transactional-execution mode!
-    if (!regs->txf_level)
+    if (!regs->txf_tnd)
         CRASH();
 
     /* Obtain the interrupt lock if we don't already have it */
@@ -714,23 +707,23 @@ VADR       pswia   = PSW_IA( regs, 0 );
     /*  Clean up the transaction flags             */
     /*---------------------------------------------*/
 
-    txf_level    = regs->txf_level;      /* save orig value */
+    txf_tnd      = regs->txf_tnd;        /* save orig value */
     txf_contran  = regs->txf_contran;    /* save orig value */
     txf_gprmask  = regs->txf_gprmask;    /* save orig value */
     txf_conflict = regs->txf_conflict;   /* save orig value */
     txf_piid     = regs->txf_piid;       /* save orig value */
-    bear         = regs->bear;           /* save orig value */
+    txf_bea      = regs->bear;           /* save orig value */
 
     obtain_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
     {
-        regs->txf_level = 0;
+        regs->txf_tnd = 0;
     }
     release_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
 
     regs->txf_NTSTG     = false;
     regs->txf_contran   = false;
-    regs->txf_abortcode = 0;
-    regs->txf_abortnum  = 0;
+    regs->txf_tac       = 0;
+    regs->txf_abortctr  = 0;
     regs->txf_instctr   = 0;
     regs->txf_pgcnt     = 0;
     regs->txf_conflict  = 0;
@@ -753,13 +746,13 @@ VADR       pswia   = PSW_IA( regs, 0 );
     /* condition code is documented in Fig. 5-14   */
     /* on page 5-102 of the z/Arch POPs.           */
     /*---------------------------------------------*/
-    if (txf_abortcode != ABORT_CODE_UPGM)
+    if (txf_tac != TAC_UPGM)
     {
-        if (txf_abortcode && txf_abortcode < (int) _countof( abort2cc ))
-            regs->psw.cc = abort2cc[ txf_abortcode ];
-        else if (txf_abortcode == 255)
+        if (txf_tac && txf_tac < (int) _countof( abort2cc ))
+            regs->psw.cc = abort2cc[ txf_tac ];
+        else if (txf_tac == 255)
             regs->psw.cc = TXF_CC_TRANSIENT;
-        else if (txf_abortcode >= 256)
+        else if (txf_tac >= 256)
             regs->psw.cc = TXF_CC_INDETERMINATE;
     }
 
@@ -788,8 +781,8 @@ VADR       pswia   = PSW_IA( regs, 0 );
 
     /* Program Interrupt TDB? */
     if (0
-        || txf_abortcode == ABORT_CODE_UPGM
-        || txf_abortcode == ABORT_CODE_FPGM
+        || txf_tac == TAC_UPGM  /* Unfiltered PGM? */
+        || txf_tac == TAC_FPGM  /* Filtered   PGM? */
     )
     {
         RADR tdb = 0x1800;
@@ -809,50 +802,50 @@ VADR       pswia   = PSW_IA( regs, 0 );
            certain TDB fields are stored only for TBEGIN-
            specified TDB. Otherwise the field is reserved.
         */
-        pi_tdb->tdbformat = 1;
-//      pi_tdb->tdbeaid   = regs->excarid;
-        pi_tdb->tdbflags  = (txf_contran ? TDB_CTI : 0x00);
+        pi_tdb->tdb_format = 1;
+//      pi_tdb->tdb_eaid   = regs->excarid;
+        pi_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
-        STORE_HW( pi_tdb->tdbtnd,       (U16) txf_level     );
-        STORE_DW( pi_tdb->tdbabortcode, (U64) txf_abortcode );
-//      STORE_DW( pi_tdb->tdbtranexcid, (U64) regs->TEA     );
-//      STORE_FW( pi_tdb->tdbpgmintid,  (U32) txf_piid      );
-        STORE_DW( pi_tdb->tdbinstaddr,  (U64) pswia         );
-//      STORE_DW( pi_tdb->tdbconfict,   (U64) txf_conflict  );
-//      STORE_DW( pi_tdb->tdbbreakaddr, (U64) bear          );
+        STORE_HW( pi_tdb->tdb_tnd,     (U16) txf_tnd      );
+        STORE_DW( pi_tdb->tdb_tac,     (U64) txf_tac      );
+//      STORE_DW( pi_tdb->tdb_teid,    (U64) regs->TEA    );
+//      STORE_FW( pi_tdb->tdb_piid,    (U32) txf_piid     );
+        STORE_DW( pi_tdb->tdb_atia,    (U64) txf_atia     );
+//      STORE_DW( pi_tdb->tdb_confict, (U64) txf_conflict );
+//      STORE_DW( pi_tdb->tdb_bea,     (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
-            STORE_DW( pi_tdb->tdbgpr[i], regs->GR_G( i ));
+            STORE_DW( pi_tdb->tdb_gpr[i], regs->GR_G( i ));
     }
 
     if (tb_tdb)
     {
-        tb_tdb->tdbformat = 1;
-        tb_tdb->tdbeaid   = regs->excarid;
-        pi_tdb->tdbflags  = (txf_contran ? TDB_CTI : 0x00);
+        tb_tdb->tdb_format = 1;
+        tb_tdb->tdb_eaid   = regs->excarid;
+        pi_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
         if (0
-            || txf_abortcode == ABORT_CODE_FETCH_CNF
-            || txf_abortcode == ABORT_CODE_STORE_CNF
+            || txf_tac == TAC_FETCH_CNF
+            || txf_tac == TAC_STORE_CNF
         )
-            tb_tdb->tdbflags |= (txf_conflict ? TDB_CTV : 0x00);
+            tb_tdb->tdb_flags |= (txf_conflict ? TDB_CTV : 0x00);
 
         if (0
             || txf_piid == PGM_DATA_EXCEPTION
             || txf_piid == PGM_VECTOR_PROCESSING_EXCEPTION
         )
-            tb_tdb->tdbdxc = regs->txf_dxcvxc;
+            tb_tdb->tdb_dxc = regs->txf_dxcvxc;
 
-        STORE_HW( tb_tdb->tdbtnd,       (U16) txf_level     );
-        STORE_DW( tb_tdb->tdbabortcode, (U64) txf_abortcode );
-        STORE_DW( tb_tdb->tdbtranexcid, (U64) regs->TEA     );
-        STORE_FW( tb_tdb->tdbpgmintid,  (U32) txf_piid      );
-        STORE_DW( tb_tdb->tdbinstaddr,  (U64) pswia         );
-        STORE_DW( tb_tdb->tdbconfict,   (U64) txf_conflict  );
-        STORE_DW( tb_tdb->tdbbreakaddr, (U64) bear          );
+        STORE_HW( tb_tdb->tdb_tnd,     (U16) txf_tnd      );
+        STORE_DW( tb_tdb->tdb_tac,     (U64) txf_tac      );
+        STORE_DW( tb_tdb->tdb_teid,    (U64) regs->TEA    );
+        STORE_FW( tb_tdb->tdb_piid,    (U32) txf_piid     );
+        STORE_DW( tb_tdb->tdb_atia,    (U64) txf_atia     );
+        STORE_DW( tb_tdb->tdb_confict, (U64) txf_conflict );
+        STORE_DW( tb_tdb->tdb_bea,     (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
-            STORE_DW( tb_tdb->tdbgpr[i], regs->GR_G( i ));
+            STORE_DW( tb_tdb->tdb_gpr[i], regs->GR_G( i ));
     }
 
     /*---------------------------------------------*/
@@ -939,7 +932,7 @@ TPAGEMAP*  pmap = regs->txf_pagesmap;
 
     /* LOGIC ERROR if map still exists (memory leak; old map not freed)
        or if a transaction is still being executed on this CPU */
-    if (pmap->altpageaddr || regs->txf_level)
+    if (pmap->altpageaddr || regs->txf_tnd)
         CRASH();
 
     msize = ZPAGEFRAME_PAGESIZE * MAX_TXF_PAGES * 2;
@@ -953,8 +946,8 @@ TPAGEMAP*  pmap = regs->txf_pagesmap;
         memset( pmap->cachemap, CM_CLEAN, sizeof( pmap->cachemap ));
     }
 
-    regs->txf_level    = 0;
-    regs->txf_abortnum = 0;
+    regs->txf_tnd      = 0;
+    regs->txf_abortctr = 0;
     regs->txf_contran  = false;
     regs->txf_instctr  = 0;
     regs->txf_pgcnt    = 0;
@@ -969,7 +962,7 @@ int        i;
 TPAGEMAP*  pmap = regs->txf_pagesmap;
 
     /* LOGIC ERROR if CPU still executing a transaction */
-    if (regs->txf_level)
+    if (regs->txf_tnd)
         CRASH();
 
     /* Free TXF pages */
@@ -992,7 +985,7 @@ static inline bool txf_conflict_chk( REGS* regs, int acctype, U64 addrpage,
                                      int cacheidx, int cacheidxe )
 {
 int        i, k;
-int        txf_abortcode = 0;
+int        txf_tac = 0;
 TPAGEMAP*  pmap;
 
     /* Skip if our CPU is not in transaction mode or if our transaction
@@ -1000,8 +993,8 @@ TPAGEMAP*  pmap;
     */
     if (0
         || !regs
-        || !regs->txf_level
-        ||  regs->txf_abortcode
+        || !regs->txf_tnd
+        ||  regs->txf_tac
         ||  regs->cpustate != CPUSTATE_STARTED
     )
         return false;   // (no conflict detected)
@@ -1035,7 +1028,7 @@ TPAGEMAP*  pmap;
                    line, we must abort our CPU's transaction with
                    a fetch conflict.
                 */
-                txf_abortcode = ABORT_CODE_FETCH_CNF;
+                txf_tac = TAC_FETCH_CNF;
             }
             else // (pmap->cachemap[k] == CM_STORED)
             {
@@ -1044,13 +1037,13 @@ TPAGEMAP*  pmap;
                    cache line, we must abort our CPU's transaction
                    with a store conflict.
                 */
-                txf_abortcode = ABORT_CODE_STORE_CNF;
+                txf_tac = TAC_STORE_CNF;
             }
 
             obtain_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
             {
                 /* Abort our CPU's transaction */
-                regs->txf_abortcode = txf_abortcode;
+                regs->txf_tac = txf_tac;
 
                 /* Save the logical address where the conflict
                    occurred if we were able to determine that.
@@ -1187,7 +1180,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         return maddr;
 
     /* Save last translation access type and arn */
-    if (regs && regs->txf_level)
+    if (regs && regs->txf_tnd)
     {
         regs->txf_lastacctyp = acctype;
         regs->txf_lastarn    = arn;
@@ -1263,13 +1256,13 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
 
     /* Return now if channel conflict-check-only call
        or if our CPU is not executing any transaction */
-    if (!regs || !regs->txf_level)
+    if (!regs || !regs->txf_tnd)
         return maddr;
 
     /* Otherwise check if our own CPU's transaction was aborted */
-    if (regs->txf_abortcode)
+    if (regs->txf_tac)
     {
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_abortcode );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_tac );
         UNREACHABLE_CODE( return maddr );
     }
 
@@ -1320,9 +1313,9 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         /* Abort transaction if too many pages were touched */
         if (regs->txf_pgcnt >= MAX_TXF_PAGES)
         {
-            int txf_abortcode = (acctype == ACCTYPE_READ) ?
-                ABORT_CODE_FETCH_OVF : ABORT_CODE_STORE_OVF;
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, txf_abortcode );
+            int txf_tac = (acctype == ACCTYPE_READ) ?
+                TAC_FETCH_OVF : TAC_STORE_OVF;
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, txf_tac );
             UNREACHABLE_CODE( return maddr );
         }
 
@@ -1344,7 +1337,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         /* Abort if unable to obtain clean capture of this page */
         if (i >= MAX_CAPTURE_TRIES)
         {
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF );
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
             UNREACHABLE_CODE( return maddr );
         }
 
@@ -1385,7 +1378,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
             /* Abort if unable to cleanly refresh this cache line */
             if (i >= MAX_CAPTURE_TRIES)
             {
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, ABORT_CODE_FETCH_CNF );
+                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
                 UNREACHABLE_CODE( return maddr );
             }
 

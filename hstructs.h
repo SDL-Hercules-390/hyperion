@@ -366,7 +366,7 @@ struct REGS {                           /* Processor registers       */
 
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
-        BYTE    txf_level;              /* transaction nesting depth */
+        BYTE    txf_tnd;                /* transaction nesting depth */
 
         BYTE    txf_ctlflag;            /* flags for access mode
                                            change, float allowed     */
@@ -386,7 +386,7 @@ struct REGS {                           /* Processor registers       */
         U16     txf_instctr;            /* instruction counter for
                                            contran and auto abort*/
 
-        U16     txf_abortnum;           /* if non-zero, abort when
+        U16     txf_abortctr;           /* if non-zero, abort when
                                            txf_instctr >= this value */
 
         U16     txf_pifc;               /* Program-Interruption
@@ -420,8 +420,8 @@ struct REGS {                           /* Processor registers       */
         BYTE    txf_gprmask;            /* gpr register restore mask */
         DW      txf_savedgr[16];        /* saved gpr register values */
 
-        int     txf_abortcode;          /* transaction abort code    */
-        int     txf_rabortcode;         /* random abort code         */
+        int     txf_tac;                /* transaction abort code    */
+        int     txf_random_tac;         /* random abort code         */
         PSW     txf_abortpsw;           /* transaction abort psw     */
 
         U32     txf_piid;               /* transaction program

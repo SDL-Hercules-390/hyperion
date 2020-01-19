@@ -647,7 +647,7 @@ do { \
     #undef  CHECK_TXFCTR
     #define CHECK_TXFCTR( _ip, _regs )                                                    \
     do {                                                                                  \
-      if (!regs->txf_level)           /* Any transaction in progress? */                  \
+      if (!regs->txf_tnd)             /* Any transaction in progress? */                  \
         break;                        /* No skip past the below logic */                  \
                                                                                           \
       regs->txf_instctr++;            /* Count instructions executed  */                  \
@@ -659,17 +659,17 @@ do { \
         && memcmp( (_ip), "\xb2\xf8", 2 ) != 0          /* and not the TEND instr. */     \
       )                                                                                   \
       {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR );      \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_INSTR );             \
         UNREACHABLE_CODE(;);                                                              \
       }                                                                                   \
                                                                                           \
       /*                  Randomly abort the transaction? */                              \
       if (1                                                                               \
-        && regs->txf_abortnum                                                             \
-        && regs->txf_instctr == regs->txf_abortnum                                        \
+        && regs->txf_abortctr                                                             \
+        && regs->txf_instctr == regs->txf_abortctr                                        \
       )                                                                                   \
       {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_rabortcode );  \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );  \
         UNREACHABLE_CODE(;);                                                              \
       }                                                                                   \
     } while(0)
@@ -700,7 +700,7 @@ do { \
     #undef  CHECK_TXFCTR
     #define CHECK_TXFCTR( _ip, _regs )                                                    \
     do {                                                                                  \
-      if (!regs->txf_level)           /* Any transaction in progress? */                  \
+      if (!regs->txf_tnd)             /* Any transaction in progress? */                  \
         break;                        /* No skip past the below logic */                  \
                                                                                           \
       regs->txf_instctr++;            /* Count instructions executed  */                  \
@@ -712,17 +712,17 @@ do { \
         && memcmp( (_ip), "\xb2\xf8", 2 ) != 0          /* and not the TEND instr. */     \
       )                                                                                   \
       {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR );      \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_INSTR );             \
         UNREACHABLE_CODE(;);                                                              \
       }                                                                                   \
                                                                                           \
       /*                  Randomly abort the transaction? */                              \
       if (1                                                                               \
-        && regs->txf_abortnum                                                             \
-        && regs->txf_instctr == regs->txf_abortnum                                        \
+        && regs->txf_abortctr                                                             \
+        && regs->txf_instctr == regs->txf_abortctr                                        \
       )                                                                                   \
       {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_rabortcode );  \
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );  \
         UNREACHABLE_CODE(;);                                                              \
       }                                                                                   \
     } while(0)
@@ -1195,7 +1195,7 @@ do { \
     do {                                                                                \
       if ((_regs)->txf_contran)                                                         \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1209,7 +1209,7 @@ do { \
         || (_i4) < 0                /* backward branches not allowed */                 \
       ))                                                                                \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1224,7 +1224,7 @@ do { \
         || (inst[2] & 0x80)                                                             \
       ))                                                                                \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1232,9 +1232,9 @@ do { \
   #define TRAN_INSTR_CHECK( _regs )                                                     \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
-      if ((_regs)->txf_level)                                                           \
+      if ((_regs)->txf_tnd)                                                             \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1243,14 +1243,14 @@ do { \
     /* Restricted instruction if CONSTRAINED mode or float bit zero */                  \
     do {                                                                                \
       if (1                                                                             \
-        && (_regs)->txf_level                                                           \
+        && (_regs)->txf_tnd                                                             \
         && (0                                                                           \
           || (_regs)->txf_contran                                                       \
           || !((_regs)->txf_ctlflag & TXF_CTL_FLOAT)                                    \
         )                                                                               \
       )                                                                                 \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1259,11 +1259,11 @@ do { \
     /* Restricted instruction if access control bit zero */                             \
     do {                                                                                \
       if (1                                                                             \
-        && (_regs)->txf_level                                                           \
+        && (_regs)->txf_tnd                                                             \
         && !((_regs)->txf_ctlflag & TXF_CTL_AR)                                         \
       )                                                                                 \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1273,11 +1273,11 @@ do { \
     /* register is non-zero and BRANCH tracing is enabled */                            \
     do {                                                                                \
       if (1                                                                             \
-          && (_regs)->txf_level                                                         \
+          && (_regs)->txf_tnd                                                           \
           && ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                            \
       )                                                                                 \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1287,11 +1287,11 @@ do { \
     /* is non-zero and MODE tracing is enabled. */                                      \
     do {                                                                                \
       if (1                                                                             \
-          && (_regs)->txf_level                                                         \
+          && (_regs)->txf_tnd                                                           \
           && ((_r2) != 0 && ((_regs)->CR(12) & CR12_MTRACE))                            \
       )                                                                                 \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1300,11 +1300,11 @@ do { \
     /* SAM24/31/64 is restricted if mode tracing is enabled. */                         \
     do {                                                                                \
       if (1                                                                             \
-          &&  (_regs)->txf_level                                                        \
+          &&  (_regs)->txf_tnd                                                          \
           && ((_regs)->CR(12) & CR12_MTRACE)                                            \
       )                                                                                 \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_INSTR ); \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
@@ -1312,9 +1312,9 @@ do { \
   #define TRAN_MISC_INSTR_CHECK( _regs )                                                \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
-      if ((_regs)->txf_level)                                                           \
+      if ((_regs)->txf_tnd)                                                             \
       {                                                                                 \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, ABORT_CODE_MISC );  \
+        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_MISC );         \
         UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)

@@ -622,7 +622,7 @@ int i, rc = 0;                          /* Array subscript           */
     regs->extccpu = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* EXIT SILENTLY from transactional execution mode */
-    regs->txf_level = 0;
+    regs->txf_tnd = 0;
     regs->txf_contran = false;
 #endif
     for (i = 0; i < sysblk.maxcpu; i++)
@@ -711,7 +711,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->clkc   = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* EXIT SILENTLY from transactional execution mode */
-    regs->txf_level = 0;
+    regs->txf_tnd = 0;
     regs->txf_contran = false;
 #endif
     set_cpu_timer( regs, 0 );
