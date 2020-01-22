@@ -25,7 +25,11 @@
 #define PTT_CL_SIE   0x0000000000000080 /* Interpretive Execution    */
 #define PTT_CL_SIG   0x0000000000000100 /* SIGP signalling           */
 #define PTT_CL_IO    0x0000000000000200 /* IO                        */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#define PTT_CL_TXF   0x0000000000000400 /* Transact. Exec. Facility  */
+#else
 //efine PTT_CL_XXX   0x0000000000000400 /* System class 11           */
+#endif
 //efine PTT_CL_XXX   0x0000000000000800 /* System class 12           */
 //efine PTT_CL_XXX   0x0000000000001000 /* System class 13           */
 //efine PTT_CL_XXX   0x0000000000002000 /* System class 14           */
@@ -105,6 +109,11 @@ do {                                                                 \
 #define PTT_SIE(   m, d1, d2, rc )  PTT( PTT_CL_SIE,   m, d1, d2, rc )
 #define PTT_SIG(   m, d1, d2, rc )  PTT( PTT_CL_SIG,   m, d1, d2, rc )
 #define PTT_IO(    m, d1, d2, rc )  PTT( PTT_CL_IO,    m, d1, d2, rc )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#define PTT_TXF(   m, d1, d2, rc )  PTT( PTT_CL_TXF,   m, d1, d2, rc )
+#else
+#define PTT_TXF(   m, d1, d2, rc )  // (nothing)
+#endif
 #define PTT_LCS1(  m, d1, d2, rc )  PTT( PTT_CL_LCS1,  m, d1, d2, rc )
 #define PTT_LCS2(  m, d1, d2, rc )  PTT( PTT_CL_LCS2,  m, d1, d2, rc )
 #define PTT_QETH(  m, d1, d2, rc )  PTT( PTT_CL_QETH,  m, d1, d2, rc )

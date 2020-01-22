@@ -105,6 +105,7 @@ int     rc;
            to continue with external interrupt processing */
         if (regs->hostregs->txf_tnd)
         {
+            PTT_TXF( "*TXF EI", 0, 0, regs->hostregs->txf_tnd );
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_EXT );
             regs->psw.cc = TXF_CC_TRANSIENT;
         }

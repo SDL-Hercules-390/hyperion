@@ -1051,6 +1051,12 @@
   "identified by <devnum>, or for all PTP device groups if\n"                   \
   "<devnum> is not specified or specified as 'ALL'.\n"
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+  #define ptt_cmd_help_txf "     (no)txf          trace Transactional-Execution Facility events\n"
+#else
+  #define ptt_cmd_help_txf
+#endif
+
 #define ptt_cmd_desc            "Activate or display internal trace table"
 #define ptt_cmd_help            \
                                 \
@@ -1075,6 +1081,7 @@
   "     (no)sie          trace SIE instruction events\n"                            \
   "     (no)sig          trace SIGP instruction events\n"                           \
   "     (no)io           trace I/O instruction events\n"                            \
+  ptt_cmd_help_txf                                                                  \
   "     (no)lcs1         trace LCS timing events\n"                                 \
   "     (no)lcs2         trace LCS general debugging events\n"                      \
   "     (no)qeth         trace QETH general debugging events\n"                     \

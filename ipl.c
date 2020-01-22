@@ -621,6 +621,7 @@ int i, rc = 0;                          /* Array subscript           */
     regs->sigp_reset = 0;
     regs->extccpu = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    PTT_TXF( "TXF CPURES", 0, 0, regs->txf_tnd );
     /* EXIT SILENTLY from transactional execution mode */
     regs->txf_tnd = 0;
     regs->txf_contran = false;
@@ -710,6 +711,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->todpr  = 0;
     regs->clkc   = 0;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    PTT_TXF( "TXF ICPURES", 0, 0, regs->txf_tnd );
     /* EXIT SILENTLY from transactional execution mode */
     regs->txf_tnd = 0;
     regs->txf_contran = false;

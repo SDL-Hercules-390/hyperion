@@ -532,6 +532,8 @@ static char *pgmintname[] = {
         /* Indicate TXF aborted event in interrupt code */
         pcode |= PGM_TXF_EVENT;
 
+        PTT_TXF( "TXF PIC", pcode, realregs->txf_contran, realregs->txf_tnd );
+
         switch (code)  // (interrupt code)
         {
         case PGM_OPERATION_EXCEPTION:
@@ -686,6 +688,7 @@ static char *pgmintname[] = {
         if (filt)
         {
             /* Yes, set filtered condition code and abort transaction */
+            PTT_TXF( "*TXF FPGM", 0, 0, 0 );
             realregs->psw.cc = fcc;
             ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_CC, TAC_FPGM );
             UNREACHABLE_CODE( return );
@@ -1031,6 +1034,8 @@ static char *pgmintname[] = {
                 || pcode == PGM_VECTOR_PROCESSING_EXCEPTION
             )
             ?  realregs->dxc : 0;
+
+            PTT_TXF( "TXF PIID", realregs->txf_piid, realregs->txf_dxcvxc, 0 );
         }
 #endif
         /* Store the exception access identification at PSA+160 */
@@ -1170,7 +1175,10 @@ static char *pgmintname[] = {
        and then return back to here to continue with program interrupt
        processing */
     if (realregs->txf_tnd)
+    {
+        PTT_TXF( "*TXF UPGM", 0, 0, 0 );
         ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, TAC_UPGM );
+    }
 #endif
 #if defined(_FEATURE_SIE)
     if(nointercept)
@@ -1268,6 +1276,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
        to continue with restart interrupt processing */
     if (regs->txf_tnd)
     {
+        PTT_TXF( "*TXF MISC", 0, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MISC );
         regs->psw.cc = TXF_CC_TRANSIENT;
     }
@@ -1395,6 +1404,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
            to continue with I/O interrupt processing */
         if (regs->txf_tnd)
         {
+            PTT_TXF( "*TXF IO", 0, regs->txf_contran, regs->txf_tnd );
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_IO );
             regs->psw.cc = TXF_CC_TRANSIENT;
         }
@@ -1473,6 +1483,7 @@ RADR    fsta;                           /* Failing storage address   */
        to continue with machine check interrupt processing */
     if (regs->txf_tnd)
     {
+        PTT_TXF( "*TXF MCK", 0, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MCK );
         regs->psw.cc = TXF_CC_TRANSIENT;
     }

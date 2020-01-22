@@ -74,7 +74,10 @@ PTTCL      pttcltab[] =                 /* trace class names table   */
     { "csf"     , PTT_CL_CSF  , 0 },    /* Compare & Swap Failure    */
     { "sie"     , PTT_CL_SIE  , 0 },    /* Interpretive Execution    */
     { "sig"     , PTT_CL_SIG  , 0 },    /* SIGP signalling           */
-    { "io"      , PTT_CL_IO   , 0 },    /* IO                        */
+    { "io"      , PTT_CL_IO   , 0 },    /* I/O                       */
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    { "txf"     , PTT_CL_TXF  , 0 },    /* Transact. Exec. Facility  */
+#endif
     { "lcs1"    , PTT_CL_LCS1 , 0 },    /* LCS Timing Debug          */
     { "lcs2"    , PTT_CL_LCS2 , 0 },    /* LCS General Debugging     */
     { "qeth"    , PTT_CL_QETH , 0 },    /* QETH General Debugging    */
