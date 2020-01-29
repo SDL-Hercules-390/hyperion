@@ -11,7 +11,7 @@
 /*-------------------------------------------------------------------*/
 /*          Transactional-Execution Facility constants               */
 /*-------------------------------------------------------------------*/
-#define  MAX_TXF_LEVEL           15   /* Max nesting depth           */
+#define  MAX_TXF_TND             15   /* Max nesting depth           */
 #define  MAX_TXF_CONTRAN_INSTR   32   /* Max CONSTRAINED instr.      */
 #define  MAX_TXF_PAGES           64   /* Max num of modified pages   */
 #define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
@@ -84,7 +84,7 @@ struct TDB
     HWORD   tdb_tnd;            /* Transaction Nesting Depth         */
 
     DBLWRD  tdb_tac;            /* Transaction Abort Code; see below */
-    DBLWRD  tdb_confict;        /* Conflict token                    */
+    DBLWRD  tdb_conflict;       /* Conflict token                    */
     DBLWRD  tdb_atia;           /* Aborted-Transaction Inst. Addr.   */
 
     BYTE    tdb_eaid;           /* Exception Access Identifier       */

@@ -1,5 +1,5 @@
-/* TRANSACT.C   (C) Copyright "Fish" (David B. Trout), 2017          */
-/*              (C) Copyright Bob Wood, 2019                         */
+/* TRANSACT.C   (C) Copyright "Fish" (David B. Trout), 2017-2020     */
+/*              (C) Copyright Bob Wood, 2019-2020                    */
 /*      Defines Transactional Execution Facility instructions        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -23,8 +23,9 @@
 /*                      TXF Debugging                                */
 /*-------------------------------------------------------------------*/
 
-#define ENABLE_TXF_DEBUG   0     // 0: never, 1: always, #undef: maybe
-//#define ENABLE_TXF_PTT           // #define: enable, #undef: disable
+#define ENABLE_TXF_DEBUG   0    // 0: never, 1: always, #undef: maybe
+//#define ENABLE_TXF_PTT          // #define: enable, #undef: disable
+//#define NO_MADDR_L_OPTIMIZE     // CAREFUL! See PROGRAMMING NOTE!
 
 // If no debugging preference specified, but this is a DEBUG build ...
 #if (!defined( ENABLE_TXF_DEBUG ) && defined( DEBUG )) \
@@ -42,7 +43,7 @@
   #if defined( _MSVC_ )
     #pragma optimize( "", off )       // (for reliable breakpoints)
   #else // e.g. Linux/gcc
-    // FIXME: how do you disable optimization on Linux/gcc?
+    #pragma GCC optimize ("O0")       // (for reliable breakpoints)
   #endif
 #endif
 
@@ -225,7 +226,7 @@ int         txf_tac;
             }
 
             /* Set PIFC for this nesting level */
-            regs->txf_pifc = regs->txf_progfilttab[ regs->txf_tnd - 1 ];
+            regs->txf_pifc = regs->txf_pifctab[ regs->txf_tnd - 1 ];
 
             /* Remain in transactional-execution mode */
             PTT_TXF( "TXF TEND", 0, regs->txf_contran, regs->txf_tnd );
@@ -375,7 +376,7 @@ VADR    effective_addr2;                /* Effective address         */
     CONTRAN_INSTR_CHECK( regs );
 
     /* CC in transaction abort PSW = 2 or 3 based on operand2 bit 63 */
-    regs->txf_abortpsw.cc = (effective_addr2 & 0x1) == 0 ? 2 : 3;
+    regs->txf_tapsw.cc = (effective_addr2 & 0x1) == 0 ? 2 : 3;
 
     /* Abort the transaction */
 
@@ -543,9 +544,9 @@ TPAGEMAP   *pmap;
     SYNCHRONIZE_CPUS( regs );
 
     /* Check for maximum nesting depth exceeded */
-    if (regs->txf_tnd >= MAX_TXF_LEVEL)
+    if (regs->txf_tnd >= MAX_TXF_TND)
     {
-        PTT_TXF( "*TXF beg", MAX_TXF_LEVEL, regs->txf_contran, regs->txf_tnd );
+        PTT_TXF( "*TXF beg", MAX_TXF_TND, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
         UNREACHABLE_CODE( return );
     }
@@ -586,7 +587,7 @@ TPAGEMAP   *pmap;
         regs->txf_lastarn    = 0;          /* last access arn        */
 
         memcpy( regs->txf_savedgr, regs->gr, sizeof( regs->txf_savedgr ));
-        memset( regs->txf_progfilttab, 0, sizeof( regs->txf_progfilttab ));
+        memset( regs->txf_pifctab, 0, sizeof( regs->txf_pifctab ));
 
         regs->txf_ctlflag      = (i2 >> 0) & (TXF_CTL_AR | TXF_CTL_FLOAT);
         regs->txf_pifc         = (i2 >> 0) & (TXF_CTL_PIFC);
@@ -600,7 +601,7 @@ TPAGEMAP   *pmap;
             PSW origpsw;
             memcpy( &origpsw, &regs->psw, sizeof( PSW ));
             regs->psw.IA = PSW_IA( regs, txf_contran ? -6 : 0 );
-            memcpy( &regs->txf_abortpsw, &regs->psw, sizeof( PSW ));
+            memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
             memcpy( &regs->psw, &origpsw, sizeof( PSW ));
         }
 
@@ -680,7 +681,7 @@ TPAGEMAP   *pmap;
         /* Update program filter level */
         /*-----------------------------*/
 
-        regs->txf_progfilttab[ regs->txf_tnd - 2 ] = regs->txf_pifc;
+        regs->txf_pifctab[ regs->txf_tnd - 2 ] = regs->txf_pifc;
         regs->txf_pifc = MAX( regs->txf_pifc, (i2 & TXF_CTL_PIFC) );
 
         PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
@@ -816,7 +817,7 @@ VADR       txf_atia = PSW_IA( regs, 0 );
     /*  Set the current PSW to the abort PSW       */
     /*---------------------------------------------*/
 
-    memcpy( &regs->psw, &regs->txf_abortpsw, sizeof( PSW ));
+    memcpy( &regs->psw, &regs->txf_tapsw, sizeof( PSW ));
     regs->aie = NULL;
 
     /*---------------------------------------------*/
@@ -919,13 +920,13 @@ VADR       txf_atia = PSW_IA( regs, 0 );
         )
             tb_tdb->tdb_dxc = regs->txf_dxcvxc;
 
-        STORE_HW( tb_tdb->tdb_tnd,     (U16) txf_tnd      );
-        STORE_DW( tb_tdb->tdb_tac,     (U64) txf_tac      );
-        STORE_DW( tb_tdb->tdb_teid,    (U64) regs->TEA    );
-        STORE_FW( tb_tdb->tdb_piid,    (U32) txf_piid     );
-        STORE_DW( tb_tdb->tdb_atia,    (U64) txf_atia     );
-        STORE_DW( tb_tdb->tdb_confict, (U64) txf_conflict );
-        STORE_DW( tb_tdb->tdb_bea,     (U64) txf_bea      );
+        STORE_HW( tb_tdb->tdb_tnd,      (U16) txf_tnd      );
+        STORE_DW( tb_tdb->tdb_tac,      (U64) txf_tac      );
+        STORE_DW( tb_tdb->tdb_teid,     (U64) regs->TEA    );
+        STORE_FW( tb_tdb->tdb_piid,     (U32) txf_piid     );
+        STORE_DW( tb_tdb->tdb_atia,     (U64) txf_atia     );
+        STORE_DW( tb_tdb->tdb_conflict, (U64) txf_conflict );
+        STORE_DW( tb_tdb->tdb_bea,      (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
             STORE_DW( tb_tdb->tdb_gpr[i], regs->GR_G( i ));
@@ -1163,6 +1164,25 @@ TPAGEMAP*  pmap;
 
     return false;   // (no conflict detected)
 }
+
+//---------------------------------------------------------------------
+// PROGRAMMING NOTE: because the 'txf_maddr_l' function is an integral
+// part of address translation its performance is absolutely critical.
+// Disabling optimization even for debug builds reduces performance to
+// the point of rendering Hercules pretty much unusable. Thus we keep
+// optimization enabled for the 'txf_maddr_l' function even for DEBUG
+// builds. (Disabling optimization for all of the other functions is
+// okay since they're not called that often.)
+//---------------------------------------------------------------------
+#if defined( NO_TXF_OPTIMIZE )
+  #if !defined( NO_MADDR_L_OPTIMIZE ) // CAREFUL! See PROGRAMMING NOTE!
+    #if defined( _MSVC_ )
+      #pragma optimize( "", on )      // KEEP OPTIMIZATION ENABLED!
+    #else // e.g. Linux/gcc
+      #pragma GCC optimize ("O3")     // KEEP OPTIMIZATION ENABLED!
+    #endif
+  #endif
+#endif
 
 /*-------------------------------------------------------------------*/
 /*     Transactional Address Translation and Conflict Check          */
@@ -1505,6 +1525,14 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     return maddr;
 
 } /* end function txf_maddr_l */
+
+#if defined( NO_TXF_OPTIMIZE )
+  #if defined( _MSVC_ )
+    #pragma optimize( "", off )     // (for reliable breakpoints)
+  #else // e.g. Linux/gcc
+    #pragma GCC optimize ("O0")     // (for reliable breakpoints)
+  #endif
+#endif
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

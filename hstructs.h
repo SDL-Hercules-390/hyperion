@@ -362,31 +362,33 @@ struct REGS {                           /* Processor registers       */
         BYTE    facility_list[ STFL_HERC_BY_SIZE ];
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-     /* Transactional-Execution Facility                             */
+    /*---------------------------------------------------------------*/
+    /*      Transactional-Execution Facility control fields          */
+    /*---------------------------------------------------------------*/
 
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
         BYTE    txf_tnd;                /* transaction nesting depth */
 
-        BYTE    txf_ctlflag;            /* flags for access mode
+        BYTE    txf_ctlflag;            /* Flags for access mode
                                            change, float allowed     */
 
-#define TXF_CTL_AR      0x08            /* ar reg changes allowed
+#define TXF_CTL_AR      0x08            /* AR reg changes allowed
                                            in transaction mode       */
-#define TXF_CTL_FLOAT   0x04            /* float and vector allowed
+#define TXF_CTL_FLOAT   0x04            /* Float and vector allowed
                                            in transaction mode       */
-#define TXF_CTL_PIFC    0x03            /* pgm. 'rupt filtering ctl. */
+#define TXF_CTL_PIFC    0x03            /* PROG 'rupt filtering ctl. */
 
-        U16     txf_higharchange;       /* highest level that
-                                           ar change is active       */
+        U16     txf_higharchange;       /* Highest level that
+                                           AR change is active       */
 
-        U16     txf_highfloat;          /* highest level that
+        U16     txf_highfloat;          /* Highest level that
                                            float is active           */
 
-        U16     txf_instctr;            /* instruction counter for
+        U16     txf_instctr;            /* Instruction counter for
                                            contran and auto abort*/
 
-        U16     txf_abortctr;           /* if non-zero, abort when
+        U16     txf_abortctr;           /* If non-zero, abort when
                                            txf_instctr >= this value */
 
         U16     txf_pifc;               /* Program-Interruption
@@ -410,28 +412,28 @@ struct REGS {                           /* Processor registers       */
 
 #define TXF_PIFC_RESERVED   3           /* Reserved (invalid)        */
 
-        TDB*    txf_tdb;                /* mainstor pointer to TDB   */
-        U64     txf_conflict;           /* logical address where
+        TDB*    txf_tdb;                /* Mainstor pointer to TDB   */
+        U64     txf_conflict;           /* Logical address where
                                            conflict was detected     */
 
-        TPAGEMAP  txf_pagesmap[ MAX_TXF_PAGES ]; /* page addresses   */
-        int     txf_pgcnt;              /* entries in TPAGEMAP table */
+        TPAGEMAP  txf_pagesmap[ MAX_TXF_PAGES ]; /* Page addresses   */
+        int       txf_pgcnt;            /* Entries in TPAGEMAP table */
 
-        BYTE    txf_gprmask;            /* gpr register restore mask */
-        DW      txf_savedgr[16];        /* saved gpr register values */
+        BYTE    txf_gprmask;            /* GPR register restore mask */
+        DW      txf_savedgr[16];        /* Saved gpr register values */
 
-        int     txf_tac;                /* transaction abort code    */
-        int     txf_random_tac;         /* random abort code         */
-        PSW     txf_abortpsw;           /* transaction abort psw     */
+        int     txf_tac;                /* Transaction abort code    */
+        int     txf_random_tac;         /* Random abort code         */
+        PSW     txf_tapsw;              /* Transaction abort PSW     */
 
-        U32     txf_piid;               /* transaction program
+        U32     txf_piid;               /* Transaction program
                                            interrupt ident           */
         BYTE    txf_dxcvxc;             /* Data/Vector Exception Code*/
 
-        int     txf_lastacctyp;         /* last access type          */
-        int     txf_lastarn;            /* last access arn           */
+        int     txf_lastacctyp;         /* Last access type          */
+        int     txf_lastarn;            /* Last access arn           */
 
-        U16     txf_progfilttab[ MAX_TXF_LEVEL ];   /* PIFC table */
+        U16     txf_pifctab[ MAX_TXF_TND ];   /* PIFC control table  */
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
