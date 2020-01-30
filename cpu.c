@@ -332,21 +332,21 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 /* Refer to Figure 5-16 on page 5-104 (and 5-14 on page 5-102) of    */
 /* manual: SA22-7832-12 "z/Architecture Principles of Operation".    */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP( do_txf_program_interrupt_filtering )( REGS* realregs, int* pcode, int code )
+static void ARCH_DEP( do_txf_program_interrupt_filtering )( REGS* regs, int* pcode, int code )
 {
 bool    filt;                   /* true == filter the interrupt      */
 int     txclass;                /* Transactional Execution Class     */
 int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
-    PTT_TXF( "TXF PIFILT", realregs, *pcode, code );
+    PTT_TXF( "TXF PIFILT", regs, *pcode, code );
 
     /* Always reset the NTSTG indicator on any program interrupt */
-    realregs->txf_NTSTG = false;
+    regs->txf_NTSTG = false;
 
     /* Quick exit if no transaction is active */
-    if (!realregs->txf_tnd)
+    if (!regs->txf_tnd)
     {
-        PTT_TXF( "*TXF PIFILT", realregs, *pcode, code );
+        PTT_TXF( "*TXF PIFILT", regs, *pcode, code );
         return;
     }
 
@@ -383,8 +383,8 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
         /* Did interrupt occur during instruction fetch? */
         if (1
-            && realregs->txf_lastacctyp == ACCTYPE_INSTFETCH
-            && realregs->txf_lastarn    == USE_INST_SPACE
+            && regs->txf_lastacctyp == ACCTYPE_INSTFETCH
+            && regs->txf_lastarn    == USE_INST_SPACE
         )
         {
             txclass = 1;        /* Class 1 can't be filtered */
@@ -401,7 +401,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     case PGM_DATA_EXCEPTION:
 
         /* Check Data Exception Code (DXC) */
-        switch (realregs->dxc)
+        switch (regs->dxc)
         {
         case DXC_AFP_REGISTER:
         case DXC_BFP_INSTRUCTION:
@@ -420,7 +420,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
             ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
             break;
 
-        } /* end switch (realregs->dxc) */
+        } /* end switch (regs->dxc) */
         break;
 
     case PGM_FIXED_POINT_OVERFLOW_EXCEPTION:
@@ -470,19 +470,19 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     } /* end switch (code) */
 
     /* CONSTRAINED transactions cannot be filtered */
-    if (realregs->txf_contran)
+    if (regs->txf_contran)
         filt = false;
 
     /* Can interrupt POSSIBLY be filtered? */
     if (filt)
     {
         /* Is Program-Interruption-Filtering Overide enabled? */
-        if (realregs->CR(0) & CR0_PIFO)
+        if (regs->CR(0) & CR0_PIFO)
             filt = false; /* Then interrupt cannot be filtered */
         else
         {
             /* Check PIFC (see Fig. 5-15 on page 5-104) */
-            switch (realregs->txf_pifc)
+            switch (regs->txf_pifc)
             {
             case TXF_PIFC_NONE:
 
@@ -508,15 +508,15 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     if (filt)
     {
         /* Yes, set filtered condition code and abort transaction */
-        realregs->psw.cc = fcc;
-        PTT_TXF( "*TXF PIFILT", realregs, ABORT_RETRY_CC, fcc );
-        ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_CC, TAC_FPGM );
+        regs->psw.cc = fcc;
+        PTT_TXF( "*TXF PIFILT", regs, ABORT_RETRY_CC, fcc );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FPGM );
         UNREACHABLE_CODE( return );
     }
 
     /* No, set unfiltered condition code */
-    realregs->psw.cc = ucc;
-    PTT_TXF( "TXF PIFILT", realregs, ABORT_RETRY_CC, ucc );
+    regs->psw.cc = ucc;
+    PTT_TXF( "TXF PIFILT", regs, ABORT_RETRY_CC, ucc );
 
 } /* end do_txf_program_interrupt_filtering */
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
