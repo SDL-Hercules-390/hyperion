@@ -1035,7 +1035,8 @@ static int ARCH_DEP( run_sie )( REGS* regs )
     }
 #endif
 
-    do {
+    do
+    {
         SIE_PERFMON( SIE_PERF_RUNLOOP_1 );
 
         if (!(icode = setjmp( GUESTREGS->progjmp )))
@@ -1156,13 +1157,16 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                 if (SIE_I_WAIT( GUESTREGS ))
                     break;
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
+                if (GUESTREGS->txf_tnd)
+                    goto slowloop;
+#endif
                 ip = INSTRUCTION_FETCH( GUESTREGS, 0 );
                 current_opcode_table = GUESTREGS->ARCH_DEP( runtime_opcode_xxxx );
 
 #if defined( SIE_DEBUG )
                 ARCH_DEP( display_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : ip );
 #endif
-
                 SIE_PERFMON( SIE_PERF_EXEC );
 
                 EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
@@ -1181,7 +1185,16 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                 */
                 for (i=0; i < 128; i++)
                 {
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
+                    if (GUESTREGS->txf_tnd)
+                        break;
+#endif
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
+                    if (GUESTREGS->txf_tnd)
+                        break;
+#endif
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
                 regs->instcount += 1 + (i * 2);
@@ -1191,6 +1204,56 @@ static int ARCH_DEP( run_sie )( REGS* regs )
 
                 /* Perform automatic instruction tracing if it's enabled */
                 do_automatic_tracing();
+                goto endloop;
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
+
+slowloop:
+                ip = INSTRUCTION_FETCH( GUESTREGS, 0 );
+                current_opcode_table = GUESTREGS->ARCH_DEP( runtime_opcode_xxxx );
+
+#if defined( SIE_DEBUG )
+                ARCH_DEP( display_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : ip );
+#endif
+                SIE_PERFMON( SIE_PERF_EXEC );
+
+                TXF_EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
+                regs->instcount++;
+                UPDATE_SYSBLK_INSTCOUNT( 1 );
+
+                SIE_PERFMON( SIE_PERF_EXEC_U );
+
+                /* BHe: I have tried several settings. But 2 unrolled
+                   executes gives (core i7 at my place) the best results.
+
+                   Even a 'do { } while(0);' with several unrolled executes
+                   and without the 'i' was slower.
+
+                   That surprised me.
+                */
+                for (i=0; i < 128; i++)
+                {
+                    if (!GUESTREGS->txf_tnd)
+                        break;
+
+                    TXF_UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+
+                    if (!GUESTREGS->txf_tnd)
+                        break;
+
+                    TXF_UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
+                }
+                regs->instcount += 1 + (i * 2);
+
+                /* Update system-wide sysblk.instcount instruction counter */
+                UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+
+                /* Perform automatic instruction tracing if it's enabled */
+                do_automatic_tracing();
+
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP ) */
+
+endloop:        ; // (nop to make compiler happy)
             }
             /******************************************/
             /* Remain in SIE (above loop) until ...   */
@@ -1220,7 +1283,6 @@ static int ARCH_DEP( run_sie )( REGS* regs )
             else if (SIE_I_WAIT ( GUESTREGS )) icode = SIE_INTERCEPT_WAIT;
             else if (SIE_I_HOST (   regs    )) icode = SIE_HOST_INTERRUPT;
         }
-
     }
     while (!icode || icode == SIE_NO_INTERCEPT);
 

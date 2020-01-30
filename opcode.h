@@ -630,6 +630,40 @@ do { \
 
 /* Instruction execution */
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+  #undef  CHECK_TXFCTR
+  #define CHECK_TXFCTR( _ip, _regs )                                                         \
+  do {                                                                                       \
+    if (!(_regs)->txf_tnd)          /* Any transaction in progress? */                       \
+      break;                        /* No skip past the below logic */                       \
+                                                                                             \
+    (_regs)->txf_instctr++;         /* Count instructions executed  */                       \
+                                                                                             \
+    /*            Too many CONSTRAINED instructions executed? */                             \
+    if (1                                                                                    \
+      && (_regs)->txf_contran                          /* if in CONSTRAINED mode, */         \
+      && (_regs)->txf_instctr > MAX_TXF_CONTRAN_INSTR  /* and max instr. exceeded */         \
+      && memcmp( (_ip), "\xb2\xf8", 2 ) != 0           /* and not the TEND instr. */         \
+    )                                                                                        \
+    {                                                                                        \
+      ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );               \
+      UNREACHABLE_CODE(;);                                                                   \
+    }                                                                                        \
+                                                                                             \
+    /*                  Randomly abort the transaction? */                                   \
+    if (1                                                                                    \
+      && (_regs)->txf_abortctr                                                               \
+      && (_regs)->txf_instctr == (_regs)->txf_abortctr                                       \
+    )                                                                                        \
+    {                                                                                        \
+      ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, (_regs)->txf_random_tac ); \
+      UNREACHABLE_CODE(;);                                                                   \
+    }                                                                                        \
+  } while(0)
+
+#endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
 #if !defined( OPTION_TXF_SLOWLOOP )
 
   #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -643,36 +677,6 @@ do { \
     } while(0)
 
   #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
-    #undef  CHECK_TXFCTR
-    #define CHECK_TXFCTR( _ip, _regs )                                                    \
-    do {                                                                                  \
-      if (!regs->txf_tnd)             /* Any transaction in progress? */                  \
-        break;                        /* No skip past the below logic */                  \
-                                                                                          \
-      regs->txf_instctr++;            /* Count instructions executed  */                  \
-                                                                                          \
-      /*            Too many CONSTRAINED instructions executed? */                        \
-      if (1                                                                               \
-        && regs->txf_contran                            /* if in CONSTRAINED mode, */     \
-        && regs->txf_instctr > MAX_TXF_CONTRAN_INSTR    /* and max instr. exceeded */     \
-        && memcmp( (_ip), "\xb2\xf8", 2 ) != 0          /* and not the TEND instr. */     \
-      )                                                                                   \
-      {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_INSTR );             \
-        UNREACHABLE_CODE(;);                                                              \
-      }                                                                                   \
-                                                                                          \
-      /*                  Randomly abort the transaction? */                              \
-      if (1                                                                               \
-        && regs->txf_abortctr                                                             \
-        && regs->txf_instctr == regs->txf_abortctr                                        \
-      )                                                                                   \
-      {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );  \
-        UNREACHABLE_CODE(;);                                                              \
-      }                                                                                   \
-    } while(0)
 
     #undef  EXECUTE_INSTRUCTION
     #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
@@ -696,36 +700,6 @@ do { \
   } while(0)
 
   #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-
-    #undef  CHECK_TXFCTR
-    #define CHECK_TXFCTR( _ip, _regs )                                                    \
-    do {                                                                                  \
-      if (!regs->txf_tnd)             /* Any transaction in progress? */                  \
-        break;                        /* No skip past the below logic */                  \
-                                                                                          \
-      regs->txf_instctr++;            /* Count instructions executed  */                  \
-                                                                                          \
-      /*            Too many CONSTRAINED instructions executed? */                        \
-      if (1                                                                               \
-        && regs->txf_contran                            /* if in CONSTRAINED mode, */     \
-        && regs->txf_instctr > MAX_TXF_CONTRAN_INSTR    /* and max instr. exceeded */     \
-        && memcmp( (_ip), "\xb2\xf8", 2 ) != 0          /* and not the TEND instr. */     \
-      )                                                                                   \
-      {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_INSTR );             \
-        UNREACHABLE_CODE(;);                                                              \
-      }                                                                                   \
-                                                                                          \
-      /*                  Randomly abort the transaction? */                              \
-      if (1                                                                               \
-        && regs->txf_abortctr                                                             \
-        && regs->txf_instctr == regs->txf_abortctr                                        \
-      )                                                                                   \
-      {                                                                                   \
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );  \
-        UNREACHABLE_CODE(;);                                                              \
-      }                                                                                   \
-    } while(0)
 
     #undef  TXF_EXECUTE_INSTRUCTION
     #define TXF_EXECUTE_INSTRUCTION(_oct, _ip, _regs)         \

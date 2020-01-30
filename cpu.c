@@ -356,7 +356,6 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     /* Indicate TXF aborted event in interrupt code */
     *pcode |= PGM_TXF_EVENT;
 
-
     switch (code)  // (interrupt code)
     {
     case PGM_OPERATION_EXCEPTION:
