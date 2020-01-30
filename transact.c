@@ -528,7 +528,6 @@ VADR    effective_addr1;                /* Effective address         */
 
 #endif /* defined( FEATURE_050_CONSTR_TRANSACT_FACILITY ) */
 
-
 /*-------------------------------------------------------------------*/
 /*       process_tbegin  --  common TBEGIN/TBEGINC logic             */
 /*-------------------------------------------------------------------*/
@@ -780,7 +779,7 @@ VADR       txf_atia = PSW_IA( regs, 0 );
         had_INTLOCK = false;
     }
 
-    PTT_TXF( "TXF abort", 0, regs->txf_contran, regs->txf_tnd );
+    PTT_TXF( "TXF ABORT", 0, regs->txf_contran, regs->txf_tnd );
 
     /*---------------------------------------------*/
     /*  Decrement count of transacting CPUs        */
@@ -955,7 +954,7 @@ VADR       txf_atia = PSW_IA( regs, 0 );
            the various interrupt handlers (external,
            machine check, restart, program and I/O).
         */
-        PTT_TXF( "TXF abort", retry, txf_tac, txf_tnd );
+        PTT_TXF( "TXF ABRTRET", regs, txf_tac, retry );
         return; // (caller decides what to do next)
     }
 
@@ -967,7 +966,7 @@ VADR       txf_atia = PSW_IA( regs, 0 );
     */
     if (txf_contran && retry == ABORT_RETRY_PGMCHK)
     {
-        PTT_TXF( "*TXF abort", retry, txf_tac, txf_tnd );
+        PTT_TXF( "*TXF ABRTPI", regs, txf_tac, retry );
         ARCH_DEP( program_interrupt )( regs, PGM_TRANSACTION_CONSTRAINT_EXCEPTION );
         UNREACHABLE_CODE( return );
     }
@@ -980,7 +979,7 @@ VADR       txf_atia = PSW_IA( regs, 0 );
        the transaction or not, so we just jump back
        to the 'run_cpu' loop to redispatch this CPU.
     */
-    PTT_TXF( "TXF abort", retry, txf_tac, txf_tnd );
+    PTT_TXF( "*TXF ABRTJMP", regs, txf_tac, retry );
     longjmp( regs->progjmp, SIE_NO_INTERCEPT );
     UNREACHABLE_CODE( return );
 
@@ -1021,7 +1020,7 @@ size_t     msize;
 BYTE*      altpage;
 TPAGEMAP*  pmap = regs->txf_pagesmap;
 
-    PTT_TXF( "TXF alloc", 0, 0, 0 );
+    PTT_TXF( "TXF alloc", 0, regs, regs->cpuad );
 
     /* LOGIC ERROR if map still exists (memory leak; old map not freed)
        or if a transaction is still being executed on this CPU */
@@ -1031,6 +1030,7 @@ TPAGEMAP*  pmap = regs->txf_pagesmap;
     msize = ZPAGEFRAME_PAGESIZE * MAX_TXF_PAGES * 2;
     altpage = (BYTE*) malloc_aligned( msize, ZPAGEFRAME_PAGESIZE );
 
+    /* Initialize all page map entries */
     for (i=0; i < MAX_TXF_PAGES; i++, pmap++, altpage += (ZPAGEFRAME_PAGESIZE * 2))
     {
         pmap->virtpageaddr = 0;
@@ -1054,7 +1054,7 @@ void free_txfmap( REGS* regs )
 int        i;
 TPAGEMAP*  pmap = regs->txf_pagesmap;
 
-    PTT_TXF( "TXF free", 0, 0, 0 );
+    PTT_TXF( "TXF free", 0, regs, regs->cpuad );
 
     /* LOGIC ERROR if CPU still executing a transaction */
     if (regs->txf_tnd)

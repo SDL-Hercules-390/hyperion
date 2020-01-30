@@ -338,17 +338,21 @@ bool    filt;                   /* true == filter the interrupt      */
 int     txclass;                /* Transactional Execution Class     */
 int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
+    PTT_TXF( "TXF PIFILT", realregs, *pcode, code );
+
     /* Always reset the NTSTG indicator on any program interrupt */
     realregs->txf_NTSTG = false;
 
     /* Quick exit if no transaction is active */
     if (!realregs->txf_tnd)
+    {
+        PTT_TXF( "*TXF PIFILT", realregs, *pcode, code );
         return;
+    }
 
     /* Indicate TXF aborted event in interrupt code */
     *pcode |= PGM_TXF_EVENT;
 
-    PTT_TXF( "TXF PIC", *pcode, realregs->txf_contran, realregs->txf_tnd );
 
     switch (code)  // (interrupt code)
     {
@@ -504,15 +508,17 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     if (filt)
     {
         /* Yes, set filtered condition code and abort transaction */
-        PTT_TXF( "*TXF FPGM", 0, 0, 0 );
         realregs->psw.cc = fcc;
+        PTT_TXF( "*TXF PIFILT", realregs, ABORT_RETRY_CC, fcc );
         ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_CC, TAC_FPGM );
         UNREACHABLE_CODE( return );
     }
 
     /* No, set unfiltered condition code */
     realregs->psw.cc = ucc;
-}
+    PTT_TXF( "TXF PIFILT", realregs, ABORT_RETRY_CC, ucc );
+
+} /* end do_txf_program_interrupt_filtering */
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
@@ -856,7 +862,10 @@ static char *pgmintname[] = {
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     /* If this is a host exception in SIE state then leave SIE */
     if(realregs->sie_active)
+    {
+        PTT_PGM( "*PROG SIEXIT", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
         ARCH_DEP(sie_exit) (realregs, SIE_HOST_PGMINT);
+    }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Absolute address of prefix page */
@@ -1168,15 +1177,16 @@ static char *pgmintname[] = {
 #endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    /* If transaction active, abort it with unfiltered pgm interrupt
-       and then return back to here to continue with program interrupt
-       processing */
+    /* Abort any active transaction w/unfiltered program interrupt and
+       return to here to continue with program interrupt processing */
+    PTT_TXF( "TXF UPGM", realregs, 0, realregs->txf_tnd );
     if (realregs->txf_tnd)
     {
-        PTT_TXF( "*TXF UPGM", 0, 0, 0 );
+        PTT_TXF( "*TXF UPGM", realregs, ABORT_RETRY_RETURN, TAC_UPGM );
         ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, TAC_UPGM );
     }
 #endif
+
 #if defined(_FEATURE_SIE)
     if(nointercept)
 #endif /*defined(_FEATURE_SIE)*/
@@ -1204,6 +1214,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
             if(SIE_MODE(realregs))
             {
+                PTT_PGM( "*PROG JUMP", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
                 longjmp(realregs->progjmp, pcode);
             }
             else
@@ -1240,10 +1251,12 @@ static char *pgmintname[] = {
             RELEASE_INTLOCK(realregs);
         }
 
+        PTT_PGM( "*PROG JUMP", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
         longjmp(realregs->progjmp, SIE_NO_INTERCEPT);
     }
 
 #if defined(_FEATURE_SIE)
+    PTT_PGM( "*PROG JUMP", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
     longjmp (realregs->progjmp, pcode);
 #endif /*defined(_FEATURE_SIE)*/
 
