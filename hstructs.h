@@ -367,6 +367,7 @@ struct REGS {                           /* Processor registers       */
     /*---------------------------------------------------------------*/
 
         bool    txf_NTSTG;              /* true == NTSTG instruction */
+        bool    txf_aborted;            /* true == aborted trans.    */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
         BYTE    txf_tnd;                /* transaction nesting depth */
 

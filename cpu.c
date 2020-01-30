@@ -344,11 +344,14 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     regs->txf_NTSTG = false;
 
     /* Quick exit if no transaction is active */
-    if (!regs->txf_tnd)
+    if (!regs->txf_aborted)
     {
         PTT_TXF( "*TXF PIFILT", regs, *pcode, code );
         return;
     }
+
+    /* (reset flag) */
+    regs->txf_aborted = false;
 
     /* Indicate TXF aborted event in interrupt code */
     *pcode |= PGM_TXF_EVENT;

@@ -967,6 +967,7 @@ VADR       txf_atia = PSW_IA( regs, 0 );
     if (txf_contran && retry == ABORT_RETRY_PGMCHK)
     {
         PTT_TXF( "*TXF ABRTPI", regs, txf_tac, retry );
+        regs->txf_aborted = true;
         ARCH_DEP( program_interrupt )( regs, PGM_TRANSACTION_CONSTRAINT_EXCEPTION );
         UNREACHABLE_CODE( return );
     }
