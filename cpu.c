@@ -704,7 +704,7 @@ static char *pgmintname[] = {
     code = pcode & ~PGM_PER_EVENT;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    ARCH_DEP( do_txf_program_interrupt_filtering )( realregs, &pcode, code );
+    ARCH_DEP( do_txf_program_interrupt_filtering )( regs, &pcode, code );
 #endif
 
     /* If this is a concurrent PER event then we must add the PER
@@ -1033,18 +1033,18 @@ static char *pgmintname[] = {
         /* Save the program interrupt and data exception
            codes if there was any transaction active
         */
-        if (realregs->txf_tnd)
+        if (regs->txf_tnd)
         {
-            realregs->txf_piid   = pcode;
-            realregs->txf_piid  |= (ilc << 16);
-            realregs->txf_dxcvxc =
+            regs->txf_piid   = pcode;
+            regs->txf_piid  |= (ilc << 16);
+            regs->txf_dxcvxc =
             (0
                 || pcode == PGM_DATA_EXCEPTION
                 || pcode == PGM_VECTOR_PROCESSING_EXCEPTION
             )
-            ?  realregs->dxc : 0;
+            ?  regs->dxc : 0;
 
-            PTT_TXF( "TXF PIID", realregs->txf_piid, realregs->txf_dxcvxc, 0 );
+            PTT_TXF( "TXF PIID", regs->txf_piid, regs->txf_dxcvxc, 0 );
         }
 #endif
         /* Store the exception access identification at PSA+160 */
@@ -1182,11 +1182,11 @@ static char *pgmintname[] = {
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     /* Abort any active transaction w/unfiltered program interrupt and
        return to here to continue with program interrupt processing */
-    PTT_TXF( "TXF UPGM", realregs, 0, realregs->txf_tnd );
-    if (realregs->txf_tnd)
+    PTT_TXF( "TXF UPGM", regs, 0, regs->txf_tnd );
+    if (regs->txf_tnd)
     {
-        PTT_TXF( "*TXF UPGM", realregs, ABORT_RETRY_RETURN, TAC_UPGM );
-        ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, TAC_UPGM );
+        PTT_TXF( "*TXF UPGM", regs, ABORT_RETRY_RETURN, TAC_UPGM );
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_UPGM );
     }
 #endif
 
