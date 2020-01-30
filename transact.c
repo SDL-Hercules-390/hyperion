@@ -889,13 +889,13 @@ VADR       txf_atia = PSW_IA( regs, 0 );
 //      pi_tdb->tdb_eaid   = regs->excarid;
         pi_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
-        STORE_HW( pi_tdb->tdb_tnd,     (U16) txf_tnd      );
-        STORE_DW( pi_tdb->tdb_tac,     (U64) txf_tac      );
-//      STORE_DW( pi_tdb->tdb_teid,    (U64) regs->TEA    );
-//      STORE_FW( pi_tdb->tdb_piid,    (U32) txf_piid     );
-        STORE_DW( pi_tdb->tdb_atia,    (U64) txf_atia     );
-//      STORE_DW( pi_tdb->tdb_confict, (U64) txf_conflict );
-//      STORE_DW( pi_tdb->tdb_bea,     (U64) txf_bea      );
+        STORE_HW( pi_tdb->tdb_tnd,      (U16) txf_tnd      );
+        STORE_DW( pi_tdb->tdb_tac,      (U64) txf_tac      );
+//      STORE_DW( pi_tdb->tdb_teid,     (U64) regs->TEA    );
+//      STORE_FW( pi_tdb->tdb_piid,     (U32) txf_piid     );
+        STORE_DW( pi_tdb->tdb_atia,     (U64) txf_atia     );
+//      STORE_DW( pi_tdb->tdb_conflict, (U64) txf_conflict );
+//      STORE_DW( pi_tdb->tdb_bea,      (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
             STORE_DW( pi_tdb->tdb_gpr[i], regs->GR_G( i ));
