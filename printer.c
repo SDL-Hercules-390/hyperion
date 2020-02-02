@@ -31,6 +31,74 @@
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
+/* Ivan Warren 20040227                                              */
+/*                                                                   */
+/* This table is used by channel.c to determine if a CCW code        */
+/* is an immediate command or not.                                   */
+/*                                                                   */
+/* The table is addressed in the DEVHND structure as 'DEVIMM immed'  */
+/*                                                                   */
+/*     0:  ("false")  Command is *NOT* an immediate command          */
+/*     1:  ("true")   Command *IS* an immediate command              */
+/*                                                                   */
+/* Note: An immediate command is defined as a command which returns  */
+/* CE (channel end) during initialization (that is, no data is       */
+/* actually transfered). In this case, IL is not indicated for a     */
+/* Format 0 or Format 1 CCW when IL Suppression Mode is in effect.   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/* The following are considered IMMEDIATE commands for the 1403 and  */
+/* 3211 printers: CTL-NOOP, Space Lines Immediate, Skip to Channel   */
+/* Immediate, Block Data check, Allow Data Check, Load UCS Buffer,   */
+/* Load UCS Buffer (No Fold), Diagnostic Gate, UCS Gate Load, Raise  */
+/* Cover, Fold, Unfold.                                              */
+/*-------------------------------------------------------------------*/
+
+static BYTE  printer_immed_commands[ 256 ] =
+/*0 1 2 3 4 5 6 7 8 9 A B C D E F*/
+{ 0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0, // 0:    03,  0B,  07
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 1:    13,  1B
+  0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, // 2:    23
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 3:
+  0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, // 4:    43
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 5:
+  0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0, // 6:         6B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 7:    73,  7B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 8:    83,  8B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // 9:    93,  9B
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // A:    A3,  AB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // B:    B3,  BB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // C:    C3,  CB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // D:    D3,  DB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, // E:    E3,  EB
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};// F:    F3,  FB
+
+/*-------------------------------------------------------------------*/
+/* The 3203-5 printer however, implements ALL control commands as    */
+/* non-immediate commands, meaning you must specify the SLI bit in   */
+/* your CCW or else you will get an incorrect length error.          */
+/*-------------------------------------------------------------------*/
+
+static BYTE  prt3203_immed_commands[ 256 ] =
+/*0 1 2 3 4 5 6 7 8 9 A B C D E F*/
+{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 1:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 2:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 3:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 4:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 5:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 6:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 7:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 8:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 9:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // A:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // B:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // C:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // D:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // E:
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};// F:
+
+/*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define BUFF_SIZE       MAX(MAX(MAX_FCBSIZE,MAX_UCBSIZE),MAX_PLBSIZE)
@@ -2491,7 +2559,7 @@ static DEVHND printer_device_hndinfo =
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
         NULL,                          /* Device Attention           */
-        NULL,                          /* Immediate CCW Codes        */
+        printer_immed_commands,        /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
@@ -2518,7 +2586,7 @@ DEVHND prt3203_device_hndinfo = {
         NULL,                          /* Device Reserve             */
         NULL,                          /* Device Release             */
         NULL,                          /* Device Attention           */
-        NULL,                          /* Immediate CCW Codes        */
+        prt3203_immed_commands,        /* Immediate CCW Codes        */
         NULL,                          /* Signal Adapter Input       */
         NULL,                          /* Signal Adapter Output      */
         NULL,                          /* Signal Adapter Sync        */
