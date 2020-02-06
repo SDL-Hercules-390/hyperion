@@ -545,6 +545,7 @@ AH_TEMPLATE( [HAVE_SWAP_BUILTINS],           [Define if '__builtin_bswap32' and 
 AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' and friends are available] )
 AH_TEMPLATE( [HAVE_PTHREAD_SETNAME_NP],      [Define if 'pthread_setname_np()' is available] )
 AH_TEMPLATE( [PTHREAD_SET_NAME_ONLY],        [Define if 'pthread_setname_np()' takes only name argument] )
+AH_TEMPLATE( [PTHREAD_SET_NAME_3ARGS],       [Define if 'pthread_setname_np()' takes 3 arguments like NetBSD] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -1869,6 +1870,31 @@ if test "$hc_cv_have_pthread_setname_np" = "yes"; then
 
 fi
 
+#-------------------------------------------------#
+# Check if 'pthread_setname_np' takes 3 arguments #
+#-------------------------------------------------#
+
+if test "$hc_cv_have_pthread_setname_np" = "yes"; then
+
+  AC_CACHE_CHECK( [if 'pthread_setname_np' takes 3 arguments],
+
+      [hc_cv_pthread_set_name_3args],
+      [
+          AC_COMPILE_IFELSE(
+          [
+              #include <pthread.h>
+              void main()
+              {
+                  pthread_setname_np( pthread_self(), "%s", "main" );
+              }
+          ],
+          [hc_cv_pthread_set_name_3args=yes],
+          [hc_cv_pthread_set_name_3args=no] )
+      ]
+  )
+
+fi
+
 #------------------------------------------------------#
 #  Test for GCC strict aliasing insanity               #
 #------------------------------------------------------#
@@ -2868,6 +2894,7 @@ test "$hc_cv_swap_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SWAP_BUILT
 test "$hc_cv_sync_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SYNC_BUILTINS)
 test "$hc_cv_have_pthread_setname_np"     = "yes"  &&  AC_DEFINE(HAVE_PTHREAD_SETNAME_NP)
 test "$hc_cv_pthread_set_name_only"       = "yes"  &&  AC_DEFINE(PTHREAD_SET_NAME_ONLY)
+test "$hc_cv_pthread_set_name_3args"      = "yes"  &&  AC_DEFINE(PTHREAD_SET_NAME_3ARGS)
 test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
 test "$hc_cv_have_gcc_diag_pragma"         = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
 test "$hc_cv_have_gcc_diag_pushpop"        = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
