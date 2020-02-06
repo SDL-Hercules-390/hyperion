@@ -25,7 +25,7 @@
 //  TunTap ioctl codes and Standard and TUNSETIFF ifr interface flags
 // ====================================================================
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
   #define  HERCTUN_DEV  "/dev/tun"     // Default TUN/TAP char dev
 #else
   #define  HERCTUN_DEV  "/dev/net/tun"  // Default TUN/TAP char dev

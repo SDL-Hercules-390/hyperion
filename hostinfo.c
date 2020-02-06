@@ -67,7 +67,7 @@ DLL_EXPORT void init_hostinfo ( HOST_INFO* pHostInfo )
    #endif
 #endif
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
     /* The mibs #ifdef-ed out below are not available on FreeBSD 9.1 */
     {
         size_t  length;

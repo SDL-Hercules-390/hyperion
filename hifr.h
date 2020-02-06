@@ -110,7 +110,7 @@ struct hifr
 };
 typedef struct hifr hifr;
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
   #define  hifr_name       ifreq.ifr_name
 #else
   #define  hifr_name       ifreq.ifr_ifrn.ifrn_name
@@ -119,7 +119,7 @@ typedef struct hifr hifr;
   #define  hifr_netmask    ifreq.ifr_ifru.ifru_netmask
   #define  hifr_broadaddr  ifreq.ifr_ifru.ifru_broadaddr
   #define  hifr_hwaddr     ifreq.ifr_ifru.ifru_hwaddr
-#if defined(__FreeBSD__)
+#if defined( FREEBSD_OR_NETBSD )
   /* short   ifru_flags[2];                                          */
   #define  hifr_flags      ifreq.ifr_ifru.ifru_flags[0]
 #else

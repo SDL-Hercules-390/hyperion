@@ -22,7 +22,7 @@ typedef struct _CTLREQ
     union
     {
         struct hifr     hifr;
-#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__SOLARIS__)
+#if !defined(__APPLE__) && !defined( FREEBSD_OR_NETBSD ) && !defined(__SOLARIS__)
         struct rtentry  rtentry;
 #endif
     }

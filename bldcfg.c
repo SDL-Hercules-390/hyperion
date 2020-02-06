@@ -140,7 +140,7 @@ DLL_EXPORT const char* init_sysblk_netdev()
     {
         /* Initialize default NETDEV */
 
-#if defined( __APPLE__ ) || defined( __FreeBSD__ )
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
 
         sysblk.netdev = strdup( "/dev/tun" );
 
