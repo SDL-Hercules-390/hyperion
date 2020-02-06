@@ -1055,6 +1055,7 @@ endif
 if OPTION_CAPABILITIES
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./hercules$(EXEEXT))
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./herclin$(EXEEXT))
+	(cd $(DESTDIR)$(bindir); setcap 'cap_net_admin+ep' ./hercifc$(EXEEXT))
 endif
 
 uninstall-local:
