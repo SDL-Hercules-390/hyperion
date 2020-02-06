@@ -1507,7 +1507,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
         if (TRUE == pCTCBLK->fPreconfigured)
         {
             /* Need  to append the interface number to the character */

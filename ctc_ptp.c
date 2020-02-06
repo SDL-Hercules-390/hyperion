@@ -2955,7 +2955,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         return -1;
     }
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
 
     if (pPTPBLK->fPreconfigured == TRUE)
     {
@@ -2969,7 +2969,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
 
         STRLCAT( pPTPBLK->szTUNCharDevName, s );
     }
-#endif // defined(__APPLE__) || defined(__FreeBSD__)
+#endif // defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
 
     //
     iWantFamily = pPTPBLK->iAFamily;
