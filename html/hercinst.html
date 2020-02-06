@@ -222,6 +222,7 @@ properly set the priorities of its internal threads:
 <pre>
 sudo setcap 'cap_sys_nice=eip' ./hercules
 sudo setcap 'cap_sys_nice=eip' ./herclin
+sudo setcap 'cap_net_admin+ep' ./hercifc
 </pre>
 
 You <i>don't</i> need to do this if you do <code>sudo make install</code> however
