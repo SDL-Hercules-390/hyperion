@@ -1659,6 +1659,8 @@ DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
     if (!pthread_equal( tid, pthread_self()))
         return EINVAL;
     rc = pthread_setname_np( threadname );
+#elif defined( PTHREAD_SET_NAME_3ARGS )
+    rc = pthread_setname_np( tid, "%s", threadname );
 #else
     rc = pthread_setname_np( tid, threadname );
 #endif
