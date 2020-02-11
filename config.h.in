@@ -775,6 +775,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Define if 'pthread_setname_np()' takes 3 arguments like NetBSD */
+#undef PTHREAD_SET_NAME_3ARGS
+
 /* Define if 'pthread_setname_np()' takes only name argument */
 #undef PTHREAD_SET_NAME_ONLY
 

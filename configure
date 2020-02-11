@@ -21103,6 +21103,7 @@ hc_error=no
 
 
 
+
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
 ###############################################################################
@@ -24804,7 +24805,7 @@ _ACEOF
 
 
 
-if test "$hc_cv_have_pthread_h" == "yes"; then
+if test "$hc_cv_have_pthread_h" = "yes"; then
   # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
@@ -25149,7 +25150,7 @@ if test "$hc_cv_c11_atomics_available" = "yes"; then
 
     c11_lock_free_name="ATOMIC_BOOL_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25200,7 +25201,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_CHAR_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25251,7 +25252,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_CHAR16_T_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25302,7 +25303,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_CHAR32_T_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25353,7 +25354,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_WCHAR_T_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25404,7 +25405,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_SHORT_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25455,7 +25456,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_INT_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25506,7 +25507,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_LONG_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25557,7 +25558,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_LLONG_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -25608,7 +25609,7 @@ $as_echo "$c11_lock_free_value" >&6; }
 
     c11_lock_free_name="ATOMIC_POINTER_LOCK_FREE"
 
-    if test "x$c11_lock_free_name" == "x"; then
+    if test "x$c11_lock_free_name" = "x"; then
         # PROGRAMMING NOTE: note special m4 escape syntax used in the below
         # message. Without it, our function name is (infinitely and recursively?)
         # expanded to our actual (as-yet not yet fully defined!) macro VALUE(!),
@@ -26252,6 +26253,42 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $hc_cv_pthread_set_name_only" >&5
 $as_echo "$hc_cv_pthread_set_name_only" >&6; }
+
+fi
+
+#-------------------------------------------------#
+# Check if 'pthread_setname_np' takes 3 arguments #
+#-------------------------------------------------#
+
+if test "$hc_cv_have_pthread_setname_np" = "yes"; then
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking if 'pthread_setname_np' takes 3 arguments" >&5
+$as_echo_n "checking if 'pthread_setname_np' takes 3 arguments... " >&6; }
+if ${hc_cv_pthread_set_name_3args+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+          cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+              #include <pthread.h>
+              void main()
+              {
+                  pthread_setname_np( pthread_self(), "%s", "main" );
+              }
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  hc_cv_pthread_set_name_3args=yes
+else
+  hc_cv_pthread_set_name_3args=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $hc_cv_pthread_set_name_3args" >&5
+$as_echo "$hc_cv_pthread_set_name_3args" >&6; }
 
 fi
 
@@ -28502,6 +28539,8 @@ test "$hc_cv_sync_builtins_available"     = "yes"  &&  $as_echo "#define HAVE_SY
 test "$hc_cv_have_pthread_setname_np"     = "yes"  &&  $as_echo "#define HAVE_PTHREAD_SETNAME_NP 1" >>confdefs.h
 
 test "$hc_cv_pthread_set_name_only"       = "yes"  &&  $as_echo "#define PTHREAD_SET_NAME_ONLY 1" >>confdefs.h
+
+test "$hc_cv_pthread_set_name_3args"      = "yes"  &&  $as_echo "#define PTHREAD_SET_NAME_3ARGS 1" >>confdefs.h
 
 test "$enable_interlocked_access_facility_2" = "no" && $as_echo "#define DISABLE_IAF2 1" >>confdefs.h
 
