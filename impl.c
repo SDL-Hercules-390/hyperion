@@ -685,22 +685,28 @@ int     rc;
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
     */
-    initialize_detach_attr (DETACHED);
-    initialize_join_attr   (JOINABLE);
+    initialize_detach_attr( DETACHED );
+    initialize_join_attr( JOINABLE );
 
-    initialize_condition (&sysblk.cpucond);
+    /* Initialize CPU ENGINES locks and conditions */
+    initialize_condition( &sysblk.cpucond );
     {
-        int i;
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
+        int i; char buf[32];
+        for (i=0; i < MAX_CPU_ENGINES; i++)
         {
-            initialize_lock (&sysblk.cpulock[i]);
+            MSGBUF( buf,    "&sysblk.cpulock[%*d]", MAX_CPU_ENGINES > 99 ? 3 : 2, i );
+            initialize_lock( &sysblk.cpulock[i] );
+            set_lock_name(   &sysblk.cpulock[i], buf );
+
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-            initialize_lock (&sysblk.txf_lock[i]);
+            MSGBUF( buf,    "&sysblk.txf_lock[%*d]", MAX_CPU_ENGINES > 99 ? 3 : 2, i );
+            initialize_lock( &sysblk.txf_lock[i] );
+            set_lock_name(   &sysblk.txf_lock[i], buf );
 #endif
         }
     }
-    initialize_condition (&sysblk.sync_cond);
-    initialize_condition (&sysblk.sync_bc_cond);
+    initialize_condition( &sysblk.sync_cond );
+    initialize_condition( &sysblk.sync_bc_cond );
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end

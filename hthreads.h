@@ -282,6 +282,7 @@ typedef struct RWLOCK RWLOCK;
 /*-------------------------------------------------------------------*/
 HT_DLL_IMPORT void hthreads_internal_init();
 HT_DLL_IMPORT int  locks_cmd( int argc, char* argv[], char* cmdline );
+HT_DLL_IMPORT int  threads_cmd( int argc, char* argv[], char* cmdline );
 
 HT_DLL_IMPORT int  hthread_initialize_lock        ( LOCK* plk, const char* name, const char* location );
 HT_DLL_IMPORT int  hthread_obtain_lock            ( LOCK* plk, const char* location );
@@ -313,11 +314,15 @@ HT_DLL_IMPORT int  hthread_initialize_detach_attr ( ATTR* pat, const char* locat
 HT_DLL_IMPORT int  hthread_create_thread          ( TID* ptid, ATTR* pat, THREAD_FUNC* pfn, void* arg, const char* name, const char* location );
 HT_DLL_IMPORT int  hthread_join_thread            ( TID tid, void** prc, const char* location );
 HT_DLL_IMPORT int  hthread_detach_thread          ( TID tid, const char* location );
-HT_DLL_IMPORT TID  hthread_thread_id              ( const char* location );
 HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* location );
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
 HT_DLL_IMPORT int  hthread_set_thread_prio        ( TID tid, int prio, const char* location );
 HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* location );
+
+HT_DLL_IMPORT void        hthread_set_lock_name   ( LOCK* plk, const char* name );
+HT_DLL_IMPORT const char* hthread_get_lock_name   ( const LOCK* plk );
+HT_DLL_IMPORT void        hthread_set_thread_name ( TID tid, const char* name );
+HT_DLL_IMPORT const char* hthread_get_thread_name ( TID tid, char* buffer16 );
 
 /*-------------------------------------------------------------------*/
 /*               Hercules threading/locking macros                   */
@@ -352,13 +357,18 @@ HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* locatio
 #define create_thread( pt, pa, fn, ar, nm )     hthread_create_thread( (pt), (pa), (fn), (ar), (nm), PTT_LOC )
 #define join_thread( tid, prc )                 hthread_join_thread( (tid), (prc), PTT_LOC )
 #define detach_thread( tid )                    hthread_detach_thread( tid, PTT_LOC )
-#define thread_id()                             hthread_thread_id( PTT_LOC )
+#define thread_id()                             hthread_self()
 #define exit_thread( rc )                       hthread_exit_thread( rc, PTT_LOC )
 #define equal_threads( tid1, tid2 )             hthread_equal_threads( (tid1), (tid2), PTT_LOC )
 #define set_thread_priority( prio )             hthread_set_thread_prio( thread_id(), (prio), PTT_LOC )
 #define get_thread_priority()                   hthread_get_thread_prio( thread_id(), PTT_LOC )
 #define set_thread_priority_id( tid, prio )     hthread_set_thread_prio( (tid), (prio), PTT_LOC )
 #define get_thread_priority_id( tid )           hthread_get_thread_prio( (tid), PTT_LOC )
+
+#define set_lock_name( plk, name )              hthread_set_lock_name( (plk), (name) )
+#define get_lock_name( plk )                    hthread_get_lock_name( (plk) )
+#define set_thread_name( tid, name )            hthread_set_thread_name( (tid), (name) )
+#define get_thread_name( tid, buff16 )          hthread_get_thread_name( (tid), (buff16) )
 
 /*-------------------------------------------------------------------*/
 /*                         PTT Tracing                               */

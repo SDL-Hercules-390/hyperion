@@ -124,8 +124,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /* helper macro for device messages                                  */
 /*-------------------------------------------------------------------*/
 
-#define LCSS_DEVNUM         dev ? SSID_TO_LCSS( dev->ssid ) : 0,   \
-                            dev ? dev->devnum : 0
+#define LCSS_DEVNUM_DEV(_dev)   (_dev)?SSID_TO_LCSS((_dev)->ssid):0,(_dev)?(_dev)->devnum:0
+#define LCSS_DEVNUM             LCSS_DEVNUM_DEV(dev)
 
 /*-------------------------------------------------------------------*/
 /* ckddasd.c/fbadasd.c dasd I/O tracing helper macro                 */
@@ -680,7 +680,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00819 "Processor %s%02X: online"
 #define HHC00820 "Processor %s%02X: offline"
 #define HHC00821 "Processor %s%02X: vector facility configured %s"
-//efine HHC00822 (available)
+#define HHC00822 "PROCESSOR %s%02X APPEARS TO BE HUNG!"
 //efine HHC00823 (available)
 //efine HHC00824 (available)
 //efine HHC00825 (available)
@@ -2521,14 +2521,21 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90012 "Pttrace: %s %s %s %s to=%d %d"
 #define HHC90013 "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
 #define HHC90014 "lock %s was obtained by thread "TIDPAT" at %s"
-#define HHC90015 "Thread "TIDPAT" abandoned lock %s obtained on %s at %s"
-#define HHC90016 "Thread "TIDPAT" abandoned at %s lock %s obtained on %s at %s"
-#define HHC90017 "Lock=%s, tid="TIDPAT", tod=%s, loc=%s"
+#define HHC90015 "Thread "TIDPAT" (%s) abandoned lock %s obtained on %s at %s"
+#define HHC90016 "Thread "TIDPAT" (%s) abandoned at %s lock %s obtained on %s at %s"
+#define HHC90017 "Lock="PTR_FMTx", tid="TIDPAT", tod=%s, %s%s"
 #define HHC90018 "Total locks defined: %d"
 #define HHC90019 "No locks found for thread "TIDPAT"."
 #define HHC90020 "'%s' failed at loc=%s: rc=%d: %s"
-#define HHC90021 "%-18s %s "TIDPAT" %-18s "PTR_FMTx" "PTR_FMTx" %s"
-//efine HHC90022 - HHC90099 (available)
+#define HHC90021 "%s "TIDPAT" %-15.15s %-18.18s %-18.18s"PTR_FMTx" "PTR_FMTx" %s%s"
+#define HHC90022 "Thread %-15.15s tid="TIDPAT" created on %s at %-18.18s"
+#define HHC90023 "Thread %-15.15s tid="TIDPAT" waiting since %s for lock %s = "PTR_FMTx
+#define HHC90024 "DEADLOCK!"
+#define HHC90025 "Thread %s waiting for lock %s held by thread %s"
+#define HHC90026 "No threads found with tid "TIDPAT"."
+#define HHC90027 "Total threads running: %d"
+#define HHC90028 "PROCESSOR %s%02X IS HUNG!"
+//efine HHC90029 - HHC90099 (available)
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"
