@@ -93,6 +93,12 @@
 // Leave FBA_SHARED alone, either #defined or #undefined, as desired.
 #endif // OPTION_SHARED_DEVICES
 
+#if defined( OPTION_WATCHDOG ) && defined( OPTION_NO_WATCHDOG )
+  #error Either OPTION_WATCHDOG or OPTION_NO_WATCHDOG must be specified, not both
+#elif !defined( OPTION_WATCHDOG ) && !defined( OPTION_NO_WATCHDOG )
+  #define OPTION_WATCHDOG
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                  Hercules Mutex Locks Model                       */
 /*-------------------------------------------------------------------*/
