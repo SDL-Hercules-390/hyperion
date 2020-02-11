@@ -117,6 +117,78 @@ static void* test_locks_thread( void* parg)
     return NULL;
 }
 
+static LOCK deadlocks_a;
+static LOCK deadlocks_b;
+static LOCK deadlocks_c;
+
+/* $test command helper thread */
+static void* deadlocks_1( void* parg)
+{
+    UNREFERENCED( parg );
+
+    // 1 acq a, then b
+    // 2 acq b, then c
+    // 3 acq c, then a
+
+    obtain_lock( &deadlocks_a );
+    {
+        SLEEP(1);
+
+        obtain_lock( &deadlocks_b );
+        {
+            SLEEP(1);
+        }
+        release_lock( &deadlocks_b );
+    }
+    release_lock( &deadlocks_a );
+
+    return NULL;
+}
+static void* deadlocks_2( void* parg)
+{
+    UNREFERENCED( parg );
+
+    // 1 acq a, then b
+    // 2 acq b, then c
+    // 3 acq c, then a
+
+    obtain_lock( &deadlocks_b );
+    {
+        SLEEP(1);
+
+        obtain_lock( &deadlocks_c );
+        {
+            SLEEP(1);
+        }
+        release_lock( &deadlocks_c );
+    }
+    release_lock( &deadlocks_b );
+
+    return NULL;
+}
+static void* deadlocks_3( void* parg)
+{
+    UNREFERENCED( parg );
+
+    // 1 acq a, then b
+    // 2 acq b, then c
+    // 3 acq c, then a
+
+    obtain_lock( &deadlocks_c );
+    {
+        SLEEP(1);
+
+        obtain_lock( &deadlocks_a );
+        {
+            SLEEP(1);
+        }
+        release_lock( &deadlocks_a );
+    }
+    release_lock( &deadlocks_c );
+
+    return NULL;
+}
+
 #define  NUM_THREADS    10
 #define  MAX_WAIT_SECS  6
 
@@ -138,15 +210,32 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
 
     if (argc > 1)
     {
-        if      (CMD( argv[1], CRASH,   5 )) CRASH();
-        else if (CMD( argv[1], LOCKS,   5 ))
+        if (CMD( argv[1], CRASH, 5 ))
+            CRASH();
+        else if (CMD( argv[1], DEADLOCK, 8 ))
+        {
+            static TID tid;
+
+            initialize_lock( &deadlocks_a );
+            initialize_lock( &deadlocks_b );
+            initialize_lock( &deadlocks_c );
+
+            set_lock_name( &deadlocks_a, "a" );
+            set_lock_name( &deadlocks_b, "b" );
+            set_lock_name( &deadlocks_c, "c" );
+
+            VERIFY( create_thread( &tid, DETACHED, deadlocks_1, 0, "#1"  ) == 0);
+            VERIFY( create_thread( &tid, DETACHED, deadlocks_2, 0, "#2" ) == 0);
+            VERIFY( create_thread( &tid, DETACHED, deadlocks_3, 0, "#3"  ) == 0);
+        }
+        else if (CMD( argv[1], LOCKS, 5 ))
         {
             // test thread exit with lock still held
             static TID tid;
             VERIFY( create_thread( &tid, DETACHED,
                 test_locks_thread, 0, "test_locks_thread" ) == 0);
         }
-        else if (CMD( argv[1], NANO,    4 ))
+        else if (CMD( argv[1], NANO, 4 ))
         {
             /*-------------------------------------------*/
             /*             test 'nanosleep'              */
