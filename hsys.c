@@ -56,6 +56,7 @@ DLL_EXPORT  DBGT32TR*      debug_tt32_tracing  = NULL;
 
 DLL_EXPORT  HDLDBGCD*      debug_cd_cmd                   = NULL;
 DLL_EXPORT  HDLDBGCPU*     debug_cpu_state                = NULL;
+DLL_EXPORT  HDLDBGCPU*     debug_watchdog_signal          = NULL;
 DLL_EXPORT  HDLDBGPGMI*    debug_program_interrupt        = NULL;
 DLL_EXPORT  HDLDBGDIAG*    debug_diagnose                 = NULL;
 

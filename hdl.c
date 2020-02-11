@@ -1349,6 +1349,7 @@ static void hdl_register_symbols_ep( REGSYM* regsym )
     HDL_REGISTER( debug_sclp_unknown_event_mask, *UNRESOLVED );
     HDL_REGISTER( debug_sclp_event_data,         *UNRESOLVED );
     HDL_REGISTER( debug_chsc_unknown_request,    *UNRESOLVED );
+    HDL_REGISTER( debug_watchdog_signal,         *UNRESOLVED );
 
 #if defined( OPTION_W32_CTCI )
     HDL_REGISTER( debug_tt32_stats,              *UNRESOLVED );
@@ -1379,6 +1380,7 @@ static void hdl_resolve_symbols_ep( GETSYM* getsym )
     HDL_RESOLVE( debug_sclp_unknown_event_mask );
     HDL_RESOLVE( debug_sclp_event_data         );
     HDL_RESOLVE( debug_chsc_unknown_request    );
+    HDL_RESOLVE( debug_watchdog_signal         );
 
 #if defined( OPTION_W32_CTCI )
     HDL_RESOLVE( debug_tt32_stats              );

@@ -1556,3 +1556,110 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
 
     return rc;
 }
+
+/*-------------------------------------------------------------------*/
+/* Check if thread is deadlocked: true = deadlocked, false = not.    */
+/* Note: caller is responsible for locking both lists beforehand!    */
+/*-------------------------------------------------------------------*/
+static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
+                                          LIST_ENTRY* ht_anchor,
+                                          LIST_ENTRY* ilk_anchor )
+{
+    HTHREAD*  ht;
+    ILOCK*    ilk;
+    struct timeval  now;    // Current time of day.
+    struct timeval  dur;    // How long we've been waiting for lock.
+
+    // TECHNIQUE: starting with the requested thread, chase the lock
+    // owner chain until we eventually reach a thread we have already
+    // seen, at which point a deadlock has been detected.
+    //
+    // As each thread is chased, we set a footprint in order to know
+    // whether or not we have seen this thread before.
+    //
+    // We stop our chase and immediately return false (no deadlock)
+    // as soon as we reach a thread that is either not waiting for
+    // any lock or is not waiting long enough for a lock.
+
+    gettimeofday( &now, NULL );
+    {
+        LIST_ENTRY* le = ht_anchor->Flink;
+        while (le != ht_anchor)
+        {
+            ht = CONTAINING_RECORD( le, HTHREAD, threadlink );
+            ht->footprint = false;
+            le = le->Flink;
+        }
+    }
+
+    if (!(ht = hthread_find_HTHREAD_locked( tid, ht_anchor )))
+        return false;
+
+    /* Chase thread's lock chain until deadlock detected */
+    while (!ht->footprint)
+    {
+        ht->footprint = true;
+
+        if (!ht->lock)
+            return false;
+
+        timeval_subtract( &ht->locktod, &now, &dur );
+        if (dur.tv_sec < DEADLOCK_SECONDS)
+            return false;
+
+        if (!(ilk = hthreads_find_ILOCK_locked( ht->lock, ilk_anchor )))
+            return false;
+
+        if (!(ht = hthread_find_HTHREAD_locked( ilk->tid, ht_anchor )))
+            return false;
+    }
+
+    /* Report the deadlock if asked to do so */
+    if (sev)
+    {
+        HTHREAD* ht2;
+
+        ht  = hthread_find_HTHREAD_locked( tid, ht_anchor );
+        ilk = hthreads_find_ILOCK_locked( ht->lock, ilk_anchor );
+        ht2 = hthread_find_HTHREAD_locked( ilk->tid, ht_anchor );
+
+        // "Thread %s waiting for lock %s held by thread %s"
+        WRMSG( HHC90025, sev, ht->name, ilk->name, ht2->name );
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/* Detect and report deadlocks - return number of deadlocked threads */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int hthread_report_deadlocks( const char* sev )
+{
+    HTHREAD*    ht;                 /* Private threads array         */
+    LIST_ENTRY  ht_anchor;          /* Private threads array anchor  */
+    int         ht_count;           /* Number of entries in array    */
+    ILOCK*      ilk;                /* Private locks array           */
+    LIST_ENTRY  ilk_anchor;         /* Private locks array anchor    */
+    int         ilk_count;          /* Number of entries in array    */
+    int         i, deadlocked = 0;  /* Work variables                */
+
+    /* Retrieve a private array copy of both lists */
+    ht_count  = hthreads_copy_threads_list ( &ht,  &ht_anchor  );
+    ilk_count = hthreads_copy_locks_list   ( &ilk, &ilk_anchor );
+
+    /* Check each thread in our array */
+    for (i=0; i < ht_count; i++)
+        if (hthread_is_deadlocked_locked( sev, ht[i].tid, &ht_anchor, &ilk_anchor ))
+            deadlocked++; /* count deadlocked threads */
+
+    /* Free our private array copies of both lists */
+    for (i=0; i < ht_count; i++)
+        free( ht[i].name );
+    free( ht );
+    for (i=0; i < ilk_count; i++)
+        free( ilk[i].name );
+    free( ilk );
+
+    /* Return number of deadlocked threads detected */
+    return deadlocked;
+}

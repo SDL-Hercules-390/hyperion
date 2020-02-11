@@ -182,6 +182,7 @@ HSYS_DLL_IMPORT  DBGT32TR*      debug_tt32_tracing;
 
 HSYS_DLL_IMPORT  HDLDBGCD*      debug_cd_cmd;
 HSYS_DLL_IMPORT  HDLDBGCPU*     debug_cpu_state;
+HSYS_DLL_IMPORT  HDLDBGCPU*     debug_watchdog_signal;
 HSYS_DLL_IMPORT  HDLDBGPGMI*    debug_program_interrupt;
 HSYS_DLL_IMPORT  HDLDBGDIAG*    debug_diagnose;
 

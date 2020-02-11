@@ -215,6 +215,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #else
   #define FEAT_ROBUST_MUTEX             /* Robust mutex ARE supported*/
 #endif
+#define DEADLOCK_SECONDS        2       /* Max obtain lock wait secs */
 
 /*-------------------------------------------------------------------*/
 /*          Hercules thread scheduling/priority constants            */
@@ -261,6 +262,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define HAO_THREAD_NAME         "hao_thread"
 #define HTTP_SRVR_THREAD_NAME   "http_server"
 #define HTTP_REQ_THREAD_NAME    "http_request"
+#define WATCHDOG_THREAD_NAME    "watchdog_thread"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */
@@ -318,6 +320,7 @@ HT_DLL_IMPORT void hthread_exit_thread            ( void* rc, const char* locati
 HT_DLL_IMPORT int  hthread_equal_threads          ( TID tid1, TID tid2, const char* location );
 HT_DLL_IMPORT int  hthread_set_thread_prio        ( TID tid, int prio, const char* location );
 HT_DLL_IMPORT int  hthread_get_thread_prio        ( TID tid, const char* location );
+HT_DLL_IMPORT int  hthread_report_deadlocks       ( const char* sev );
 
 HT_DLL_IMPORT void        hthread_set_lock_name   ( LOCK* plk, const char* name );
 HT_DLL_IMPORT const char* hthread_get_lock_name   ( const LOCK* plk );

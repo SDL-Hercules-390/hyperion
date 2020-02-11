@@ -501,6 +501,9 @@ struct SYSBLK {
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     loggertid;              /* logger_thread Thread-id   */
+#if defined( OPTION_WATCHDOG )
+        TID     wdtid;                  /* Thread-id for watchdog    */
+#endif
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
         U16     lparnum;                /* LPAR identification number*/
