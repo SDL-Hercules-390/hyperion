@@ -685,17 +685,22 @@ int     rc;
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
     */
-    initialize_detach_attr (DETACHED);
-    initialize_join_attr   (JOINABLE);
+    initialize_detach_attr( DETACHED );
+    initialize_join_attr( JOINABLE );
 
-    initialize_condition (&sysblk.cpucond);
+    initialize_condition( &sysblk.cpucond );
     {
-        int i;
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
-            initialize_lock (&sysblk.cpulock[i]);
+        int i; char buf[32];
+        for (i=0; i < MAX_CPU_ENGINES; i++)
+        {
+            initialize_lock( &sysblk.cpulock[i] );
+            MSGBUF( buf, "&sysblk.cpulock[%*d]",
+                MAX_CPU_ENGINES > 99 ? 3 : 2, i );
+            set_lock_name( &sysblk.cpulock[i], buf );
+        }
     }
-    initialize_condition (&sysblk.sync_cond);
-    initialize_condition (&sysblk.sync_bc_cond);
+    initialize_condition( &sysblk.sync_cond );
+    initialize_condition( &sysblk.sync_bc_cond );
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end

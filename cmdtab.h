@@ -729,7 +729,12 @@
 #define locks_cmd_desc          "Display internal locks list"
 #define locks_cmd_help          \
                                 \
-  "Format: \"locks [HELD|tid|ALL] [SORT [TIME|TOD]|[OWNER|TID]|NAME|LOC]\"\n"
+  "Format: \"locks [ALL|HELD|tid] [SORT NAME|{TID|OWNER}|{WHEN|TIME|TOD}|{WHERE|LOC}]\"\n"
+
+#define threads_cmd_desc        "Display internal threads list"
+#define threads_cmd_help        \
+                                \
+  "Format:  \"threads [ALL|WAITING|tid] [SORT NAME|TID|{WHEN|TIME|TOD}|{WHERE|LOC}]\"\n"
 
 #define log_cmd_desc            "Direct logger output"
 #define log_cmd_help            \
@@ -1868,6 +1873,7 @@ COMMAND( "exit",                    quit_cmd,               SYSALLNDIAG8,       
 COMMAND( "sizeof",                  sizeof_cmd,             SYSCMDNOPERNPROG,   sizeof_cmd_desc,        NULL                )
 
 COMMAND( "locks",                   EXTCMD( locks_cmd ),    SYSPROGDEVEL,       locks_cmd_desc,         locks_cmd_help      )
+COMMAND( "threads",                 EXTCMD( threads_cmd ),  SYSPROGDEVEL,       threads_cmd_desc,       threads_cmd_help    )
 
 /*-------------------------------------------------------------------*/
 /*             Commands optional by build option                     */

@@ -628,6 +628,7 @@ static DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
 DEVBLK *dev;
 DEVBLK**dvpp;
+char buf[32];
 
     if(lcss >= FEATURE_LCSS_MAX)
         lcss = 0;
@@ -661,6 +662,9 @@ DEVBLK**dvpp;
         dev->stape_statrq.dev = dev;
         dev->stape_mntdrq.dev = dev;
 #endif
+        MSGBUF( buf, "dev %1d:%04X lock", LCSS_DEVNUM );
+        set_lock_name( &dev->lock, buf );
+
         /* Search for the last device block on the chain */
         for (dvpp = &(sysblk.firstdev); *dvpp != NULL;
             dvpp = &((*dvpp)->nextdev));

@@ -517,14 +517,19 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
         {
             if (pttrace[i].tid)
             {
+                char threadname[16];
+                char lockname[32];
+                const char* lname;
+
                 FormatTIMEVAL( &pttrace[i].tv, tod, sizeof( tod ));
+                get_thread_name( pttrace[i].tid, threadname );
 
                 /* If this is the thread class, an 'rc' of PTT_MAGIC
                    indicates its value is uninteresting to us, so we
                    don't show it by formatting it as an empty string.
                 */
                 if (pttrace[i].rc == PTT_MAGIC && (pttrace[i].trclass & PTT_CL_THR))
-                    retcode[0] = '\0';
+                    retcode[0] = 0;
                 else
                 {
                     /* If not thread class, format return code as just
@@ -536,16 +541,33 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                     else
                         MSGBUF(retcode, "%d", pttrace[i].rc);
                 }
-                // "%-18s %s "TIDPAT" %-18s "PTR_FMTx" "PTR_FMTx" %s"
+
+                /* If this is the thread class we know the data1 value
+                   is USUALLY the address of the lock identifying which
+                   lock was being obtained/released, so as a courtesy
+                   we display its name after the message.  This might
+                   not always work as the data1 value for SOME thread
+                   trace entries might be NULL or be some other value.
+                */
+                lname = (pttrace[i].trclass & PTT_CL_THR) ?
+                    get_lock_name( (LOCK*) pttrace[i].data1 ) : "";
+                MSGBUF( lockname, "%s%s", lname[0] ? " " : "", lname );
+                if (lockname[0] && !retcode[0])
+                    retcode[0] = ' ', retcode[1] = 0;
+
+                // "%s "TIDPAT" %-15.15s %-18.18s %-18.18s"PTR_FMTx" "PTR_FMTx" %s%s"
                 WRMSG( HHC90021, "I"
-                    , pttrace[i].loc                    // File name (string; 18 chars)
                     , &tod[11]                          // Time of day (HH:MM:SS.usecs)
                     , TID_CAST( pttrace[i].tid )        // Thread id
+                    , threadname                        // Thread name
+                    , pttrace[i].loc                    // File name (string; 18 chars)
                     , pttrace[i].msg                    // Trace message (string; 18 chars)
                     , PTR_CAST( pttrace[i].data1 )      // Data value 1
                     , PTR_CAST( pttrace[i].data2 )      // Data value 2
                     , retcode                           // Return code (or empty string)
+                    , lockname                          // Lock name   (or empty string)
                 );
+
                 count++;
             }
             if (++i >= n) i = 0;

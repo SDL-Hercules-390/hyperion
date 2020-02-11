@@ -71,19 +71,6 @@
 
 --------------------------------------------------------------------------------
 
-  DUMP command (Windows only) to create on-demand mini-dump.
-
-  modify fthread to maintain the thread's name in its FTHREAD list of
-  threads and provide a function to return a copy of that information
-  (linked list of thread ids and thread names), and then modify the
-  minidump BuildUserStreams function in bootstrap.c to save that info
-  so we can know which threads are which when we analyze a crash dump.
-
-  Add thread naming support to *Nix: autoconf: check for availability
-  of pthread_setname_np and pthread_getname_np functions.
-
---------------------------------------------------------------------------------
-
   Suspend/Resume:
 
   Add filename option to suspend/Resume command.

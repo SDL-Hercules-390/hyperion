@@ -120,6 +120,7 @@ static  CMDTAB   cmdtab[]  = {              /* (COMMAND table)       */
   CALL_EXTCMD ( shrd_cmd       )            /* (lives in shared.c)   */
   CALL_EXTCMD ( ptt_cmd        )            /* (lives in pttrace.c)  */
   CALL_EXTCMD ( locks_cmd      )            /* (lives in hthreads.c) */
+  CALL_EXTCMD ( threads_cmd    )            /* (lives in hthreads.c) */
 
 /*-------------------------------------------------------------------*/
 /* $zapcmd - internal debug - may cause havoc - use with caution     */
