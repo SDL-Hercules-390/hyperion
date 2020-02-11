@@ -1449,15 +1449,16 @@ a real System/390.  The configuration file is an ASCII text file.
 <dd><p>
     Sets the Hercules instruction and device tracing option(s).
     <p>
-    <code>TRADITIONAL</code> (the default), displays the registers following
-    the instruction about to be executed such that pressing the ENTER key (to
-    execute the displayed instruction) then shows the next instruction to be
-    executed followed by a display of the just updated registers.
+    <code>TRADITIONAL</code> (the default), displays the instruction about
+    to be executed followed by the current register values such that pressing
+    the ENTER key (to execute the displayed instruction) then shows the next
+    instruction to be executed followed by a display of the updated registers.
     <p>
-    <code>REGSFIRST</code> displays the current register contents followed by
-    the instruction <i>about</i> to be executed such that pressing the ENTER
-    key (to execute the displayed instruction) then shows the just updated
-    registers followed by the <i>next</i> instruction about to be executed.
+    <code>REGSFIRST</code> displays the current register values first, followed
+    by the instruction about to be executed, such that pressing the ENTER key
+    (to execute the displayed instruction) then shows the newly updated
+    register values (that the instruction just updated) followed by the next
+    instruction about to be executed.
     <p>
     <code>NOREGS</code> suppresses the registers display altogether and shows
     just the instruction about to be executed.
