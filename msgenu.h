@@ -2534,8 +2534,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90025 "Thread %s waiting for lock %s held by thread %s"
 #define HHC90026 "No threads found with tid "TIDPAT"."
 #define HHC90027 "Total threads running: %d"
-#define HHC90028 "PROCESSOR %s%02X IS HUNG!"
-//efine HHC90029 - HHC90099 (available)
+//efine HHC90028 - HHC90099 (available)
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"

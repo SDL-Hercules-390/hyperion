@@ -496,8 +496,8 @@ static void* watchdog_thread( void* arg )
 
             if (!hung_cpu_reported)
             {
-                // "PROCESSOR %s%02X IS HUNG!"
-                WRMSG( HHC90028, "S", PTYPSTR( regs->cpuad ), regs->cpuad );
+                // "PROCESSOR %s%02X APPEARS TO BE HUNG!"
+                WRMSG( HHC00822, "S", PTYPSTR( regs->cpuad ), regs->cpuad );
                 HDC1( debug_watchdog_signal, regs );
             }
             hung_cpu_reported = true;
