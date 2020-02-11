@@ -615,6 +615,9 @@ int restart_cmd( int argc, char* argv[], char* cmdline )
         return +1;
     }
 
+    /* Consider a restart the same as an ipl */
+    sysblk.ipled = TRUE;
+
     /* Indicate that a restart interrupt is pending */
     ON_IC_RESTART(sysblk.regs[sysblk.pcpu]);
 
