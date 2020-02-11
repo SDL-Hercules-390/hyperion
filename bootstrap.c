@@ -630,8 +630,8 @@ static BOOL CreateMiniDump( EXCEPTION_POINTERS* pExceptionPtrs )
 // Build User Stream Arrays...
 
 #define MAX_MINIDUMP_USER_STREAMS  (1024)   // (just an arbitrary value)
-#define NUM_LOGFILE_MESSAGES        (128)   // (just an arbitrary value)
-#define NUM_CCKD_TRACE_STRINGS       (64)   // (enough to debug cckd?)
+#define NUM_CCKD_TRACE_STRINGS       (64)   // (EACH STRING is one stream)
+#define NUM_LOGFILE_MESSAGES       (1024)   // (counts as ONE big stream)
 
 static  MINIDUMP_USER_STREAM  UserStreamArray [ MAX_MINIDUMP_USER_STREAMS ];
 
@@ -682,25 +682,6 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
         StreamNum++;
     }
 
-    // Save last few log messages
-
-    if (StreamNum < MAX_MINIDUMP_USER_STREAMS)
-    {
-        char* logbuf_ptr;
-        int   logbuf_idx;
-        int   logbuf_bytes;
-
-        logbuf_idx = log_line( NUM_LOGFILE_MESSAGES );
-
-        if ((logbuf_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
-        {
-            UserStreamArray[ StreamNum ].Type       = CommentStreamA;
-            UserStreamArray[ StreamNum ].Buffer     = (PVOID) logbuf_ptr;
-            UserStreamArray[ StreamNum ].BufferSize = (ULONG) logbuf_bytes;
-            StreamNum++;
-        }
-    }
-
     // Save last few entries of CCKD internal trace table
 
     if (1
@@ -735,6 +716,25 @@ static void BuildUserStreams( MINIDUMP_USER_STREAM_INFORMATION* pMDUSI )
             UserStreamArray[ StreamNum ].Type       = CommentStreamA;
             UserStreamArray[ StreamNum ].Buffer     = (PVOID)                      p;
             UserStreamArray[ StreamNum ].BufferSize = (ULONG) (strlen((const char*)p)+1);
+        }
+    }
+
+    // Save last few log messages
+
+    if (StreamNum < MAX_MINIDUMP_USER_STREAMS)
+    {
+        char* logbuf_ptr;
+        int   logbuf_idx;
+        int   logbuf_bytes;
+
+        logbuf_idx = log_line( NUM_LOGFILE_MESSAGES );
+
+        if ((logbuf_bytes = log_read( &logbuf_ptr, &logbuf_idx, LOG_NOBLOCK )) > 0)
+        {
+            UserStreamArray[ StreamNum ].Type       = CommentStreamA;
+            UserStreamArray[ StreamNum ].Buffer     = (PVOID) logbuf_ptr;
+            UserStreamArray[ StreamNum ].BufferSize = (ULONG) logbuf_bytes - 1;
+            StreamNum++;
         }
     }
 
