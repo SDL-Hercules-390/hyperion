@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#! /bin/sh
 
 #****************************************************************************
 #
@@ -8,6 +8,18 @@
 #  software needed to properly build Hercules from the source repository.
 #
 #****************************************************************************
+
+PERLPROG=perl
+
+which ${PERLPROG} > /dev/null
+
+if [ "$?" -ne 0 -a -x /usr/local/bin/perl ] ; then
+PERLPROG=/usr/local/bin/perl
+fi
+
+exec ${PERLPROG} -w -x $0 "$@"
+
+#! perl -w
 
 use strict;
 
