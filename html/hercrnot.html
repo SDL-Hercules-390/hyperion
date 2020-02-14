@@ -23,6 +23,45 @@ Hercules: Release Notes
 <dl>
 
 
+  <dt>Watchdog monitoring has been reinstated.
+  <dd>
+  <p>
+    Previously, Hercules had an internal "watchdog" monitoring thread that would
+    monitor all running CPUs to make sure they were functioning properly, and if
+    any of them were determined to be malfunctioning, a Machine Check Interruption
+    for the malfunctioning CPU would be presented to the guest in a vain attempt
+    to allow it to continue running. This functionality was removed in version
+    <a href="#4.2">4.2</a> however, due to it masking/hiding otherwise serious
+    bugs in the Hercules emulator.
+  </p><p>
+    Version 4.3 now re-introduces watchdog monitoring for malfunctioning (hung)
+    CPUs and other serious internal emulator errors (such as deadlock detection),
+    but does not otherwise notify the guest of the problem (i.e. no Machine Check
+    Interruption is presented), nor is any attempt made to allow the emulator to
+    continue. Instead, the problem is reported to the Hercules user via fatal
+    emulator error messages HHC00822S and/or HHC90024S, and the emulator is then
+    immediately terminated with a crash dump to be forwarded to the Hercules
+    development team for analysis.
+  </p><p>
+    For more information regarding crash dumps ("core files" on Linux), such as
+    how to enable their creation and how to analyze them when they occur, please
+    refer to GitHub Issue #199: <i>
+    <a href="https://github.com/SDL-Hercules-390/hyperion/issues/199">"How to
+    analyze a Linux "core" file (i.e. crash dump)"</a></i>.
+  </p>
+
+
+  <dt>Transactional Execution Facility
+  <dd>
+  <p>
+    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
+    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
+    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
+    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
+    xxxxxxx xxx xx xxx xxxxxxxx xxxxxxxx...
+  </p>
+
+
   <dt>XXXXXXXXXXXX
   <dd>
   <p>
@@ -68,12 +107,12 @@ Hercules: Release Notes
     Descriptor (NED) information returned by the RCD (Read Configuration Data)
     CCW, such as z/VM SSI (Single System Image) configurations. For most
     other guests the change is transparent.
-  <p>
+  </p><p>
     The <code>dasdinit</code> utility now assigns a randomly generated serial
     number for all CKD dasd images. For existing CKD dasds created with earlier
     (older) versions of Hercules without serial number support, the CKD dasd's
     serial number will always be zero.
-  <p>
+  </p><p>
     However, if an all zero serial number is detected during Hercules's CKD
     device initialization (indicating the dasd does not have a permanent serial
     number), a random serial number value is generated and used instead.
@@ -81,12 +120,12 @@ Hercules: Release Notes
     Hercules and thus always having an all zero serial number) will always appear
     to have a completely different (unstable ever changing) serial number
     each time Hercules is started.
-  <p>
+  </p><p>
     To assign a permanent (stable never changing) serial number to a CKD dasd
     image (including those created with older versions of Hercules) a new
     dasd utility has been created called <b><code>dasdser</code></b>. Start
     <code>dasdser</code> without any arguments for usage information.
-  <p>
+  </p><p>
     The serial number that Hercules actually uses for a given CKD dasd
     (whether internally generated or obtained from the actual dasd image file)
     can also be overridden via a new
@@ -136,7 +175,7 @@ Hercules: Release Notes
     Check or be able to gracefully shutdown) has been removed since it served no valid
     purpose other than to hide/mask otherwise very serious bugs in the Hercules emulator
     making it nearly impossible to find or fix them.
-    <p>
+  </p><p>
     Now, if Hercules crashes (due to a SIGSEGV, etc), the guest is no longer notified
     of the event (a Machine Check Interruption does not occur) and Hercules makes no
     attempt to recover or otherwise continue. Instead, it attempts to issue a message
@@ -144,7 +183,7 @@ Hercules: Release Notes
     perform default handling of the event (which is usually to create a "core" dump file
     which can then be analyzed by gdb or by some other means to determine the cause of
     the crash).
-    <p>
+  </p><p>
     For more information regarding Linux core files, such as how to enable their creation
     and how to analyze them when they occur, please refer to the following GitHub Issue:
     <i>"<a href="https://github.com/SDL-Hercules-390/hyperion/issues/199">How to analyze
@@ -160,12 +199,12 @@ Hercules: Release Notes
     command by specifying the <code>'--enable-regina-rexx'</code> option.  For
     everyone else, integrated support for Regina rexx will <i>no longer</i> be
     automatically provided by Hercules, even if it is installed in their system.
-    <p>
+  </p><p>
     In other words, you can still have Regina rexx installed on your system
     and use it as you normally would, but simply having it installed on your
     system will now <i>no longer</i> cause Hercules to also provide integrated
     support for it.
-    <p>
+  </p><p>
     For more information refer to the
     <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.REXX.md">README.REXX</a>
     document in the source code distribution.
@@ -178,7 +217,7 @@ Hercules: Release Notes
     Thanks to hard work of one of our developers, Hercules now has a <i>complete</i>
     implementation of the PFPO (Perform Floating Point Operation) instruction.
     <i>(previously we had no implementation at all!)</i>
-    <p>
+  </p><p>
     Efforts are currently under way to develop a formal runtest PFPO instruction
     verification test for the current implementation to prove that it fully complies
     with the published architecture, but the effort has not been completed yet.
@@ -205,12 +244,12 @@ Hercules: Release Notes
     set of instructions in release 4.1.  Hercules's implementation of the
     facility only implements 26 of the required 180 instructions the facility
     provides and thus is so incredibly incomplete as to be virtually unusable.
-    <p>
+  </p><p>
     Given that virtually no one has ever complained about its unavailability
     beforehand (and the interference it causes internally with the desired
     proper functioning of the Hercules S/370 Extension pseudo-facility), it has
     once again been disabled.
-    <p>
+  </p><p>
     This is very likely to be a permanent setting given the extreme unlikelihood
     of the facility ever being fully coded due to its unpopularity and the extreme
     challenges posed by trying to code all of the missing instructions for a fully
@@ -225,7 +264,7 @@ Hercules: Release Notes
     to the IP stack of the host OS. It is of particular importance to older
     operating systems that do not support their own IP stack. It provides full
     IPv4 networking capabilities to those systems.
-    <p>
+  </p><p>
     Note that the TCPIP instruction doesn't fully comply with IBM's S/3x0, ESA/390
     or z/Architecture specifications. For this reason it is not enabled by default.
     File
@@ -247,7 +286,7 @@ Hercules: Release Notes
     within the specified address range. If the optional ASID is not specified,
     breakpoints or steppings occurs normally as before (i.e. if the instruction
     being executed is within the specified range).
-    <p>
+  </p><p>
     For more information refer to the <code>help</code> command display
     for the <code>b</code> and/or <code>s</code> commands (i.e. "help b", "help s", etc).
   </p>
@@ -332,7 +371,7 @@ Hercules: Release Notes
     facilities was moved into a new separate FACILITY command such that the ARCHLVL command
     now only deals with setting/querying the architecture mode. To enable/disable/query
     facilities, use the new FACILITY command.
-    <p>
+  </p><p>
     Additionally, the facility names used in the <code>FACILITY </code> command to
     enable, disable or query a facility have also been changed. All defined facilities
     now begin with a 3-digit facility bit number in addition to their abbreviated
@@ -340,7 +379,7 @@ Hercules: Release Notes
     disabled due to the similarity of some facility names. For example, the previously
     named "ASN_LX_REUSE" facility is now named "006_ASN_LX_REUSE".  Similarly, the
     previously named "PFPO" facility is now named "044_PFPO".
-    <p>
+  </p><p>
     For a detailed list of the new abbreviated (short) facility names,
     use the "<code>FACILITY QUERY ...</code>" command.
   </p>
@@ -352,7 +391,7 @@ Hercules: Release Notes
     The "ASN and LX Reuse" facility (STFL bit 6) is now enabled by default
     for the z/Architecture mode, as it should have been all along.  It is
     still disabled by default for the ESA/390 architecture mode however.
-    <p>
+  </p><p>
     In earlier versions of Hercules it defaulted to disabled requiring those
     running z/Architecture guest operating systems to have to manually add
     an <code>FACILITY ENABLE 006_ASN_LX_REUSE</code> statement to their
@@ -368,7 +407,7 @@ Hercules: Release Notes
     CPU engines will be configured online upon startup and how many can be
     configured online later. In previous versions this was controlled via
     the NUMCPU statement and the compile-time constant 'MAX_CPU_ENGINES'.
-    <p>
+  </p><p>
     For compatibility with previous versions of Hercules, if MAXCPU is
     not specified its value defaults to NUMCPU. If neither is specified
     it defaults to 1.
@@ -404,7 +443,7 @@ Hercules: Release Notes
     the initial architectural mode of the system) should generally <i>precede</i>
     (come before) any <code>FACILITY</code> statements that enable or disable
     a given architectural feature.
-    <p>
+  </p><p>
     For example: on certain IBM operating systems the z/Architecture "PFPO
     Facility" must be enabled or the system will not IPL. While at the time
     of this writing Hercules does not currently support the Perform Floating-Point
@@ -418,13 +457,13 @@ Hercules: Release Notes
     This usually means your "<code>ARCHLVL z/Arch</code>" statement must come
     <i>before</i> your "<code>FACILITY ENABLE BIT44</code>" statement in your
     configuration file. Otherwise the PFPO Facility would not get enabled.
-    <p>
+  </p><p>
     With the introduction of limited automatic LPAR-mode/BASIC-mode switching
     (see next item below), <code><a href="hercconf.html#LPARNUM">LPARNUM</a></code>
     statements should follow <code><a href="hercconf.html#ARCHLVL">ARCHLVL</a></code>
     statements if LPAR mode is truly desired for <code>ARCHLVL S/370</code>
     (which is usually not the case).
-    <p>
+  </p><p>
     The <code>ARCHLVL</code> and <code>LPARNUM</code> statements are currently
     the only known configuration file statements whose sequence matters. The
     order of all other configuration file statements should not currently matter.
@@ -443,7 +482,7 @@ Hercules: Release Notes
     and when <code>ARCHLVL z/Arch</code> is set, it is then changed back to the
     default <code>LPARNUM 1</code> again (which also automatically changes the
     <code>CPUIDFMT</code> back to <code>0</code> as well), but only when needed.
-    <p>
+  </p><p>
     That is to say, the automatic switching to and from <code>LPARNUM BASIC</code>
     (and <code>CPUIDFMT BASIC</code>) and <code>LPARNUM 1</code>
     (and <code>CPUIDFMT 0</code>) only occurs when needed (and only when switching
@@ -451,7 +490,7 @@ Hercules: Release Notes
     <code>CPUIDFMT</code>) are already set to the expected values they will not
     be changed. When <code>ARCHLVL ESA/390</code> is set however, <code>LPARNUM</code>
     and <code>CPUIDFMT</code> are never changed from their current values.
-    <p>
+  </p><p>
     This new behavior was introduced to eliminate the "surprise" factor that would
     otherwise occur when, if the <code>LPARNUM</code> remained set to <code>1</code>
     (or some other number), not doing so causes the STIDP (Store CPU ID) instruction
@@ -459,7 +498,7 @@ Hercules: Release Notes
     a Hercules user sets <code>ARCHLVL S/370</code>, they are truly expecting the
     <code>LPARNUM</code> and <code>CPUIDFMT</code> to be set to <code>BASIC</code>
     such that the STIDP instruction then stores the CPU ID in the expected format.
-    <p>
+  </p><p>
     For the unusual case where users actually <i>do</i> want to run a System/370
     Operating System within an LPAR, you will need to manually re-set your
     <code>LPARNUM</code> and <code>CPUIDFMT</code> values back to their numeric
@@ -478,11 +517,11 @@ Hercules: Release Notes
     not precisely adhere to the complete specification but it does adhere much
     more closely than ever before (and definitely more closely than the legacy
     implementation still used in the older spinhawk 3.xx series of Hercules).
-    <p>
+  </p><p>
     If you experience any anomalies in the behavior of your guest operating
     system, verify that you are using architecurally valid/correct configuration
     settings that your guest operating system expects.
-    <p>
+  </p><p>
     Pay <i><u>particular</u></i> attention to your
     <a href="hercconf.html#ARCHLVL">ARCHLVL</a>,
     <a href="hercconf.html#LPARNUM">LPARNUM</a>,
@@ -526,17 +565,17 @@ Hercules: Release Notes
     Rexx support was first added to Hercules by Jan Jaeger in 2010
     and has been gradually enhanced over the years by both Enrico Sorichetti
     and Jan Jaeger as well as a few other people too.
-    <p>
+  </p><p>
     If you have <a href="http://www.rexxla.org">Rexx</a> installed on your
     host and Hercules is built with the Rexx build option (the default for
     the SDL version of Hyperion), then Rexx scripts
     can be run directly from within the Hercules environment (i.e. directly
     from the Hercules HMC command line via the Hercules <code>exec</code> command).
-    <p>
+  </p><p>
     Rexx scripts, when run within Hercules via the 'exec' command, can
     Address the HERCULES enviroment allowing you to issue Hercules commands
     and retrieve the results via the builtin 'AWSCMD' Rexx function call.
-    <p>
+  </p><p>
     For more information please refer to the new
     <a href="rexx.html">Hercules Integrated Rexx Support</a> web page.
   </p>
@@ -574,7 +613,7 @@ Hercules: Release Notes
     the echo/noecho option had a a direct impact on the data that was placed into
     the Diagnose 8 instruction's response buffer. This has been fixed so that now
     it does not.
-    <p>
+  </p><p>
     Previously, specifying the ECHO option caused audit trail messages HHC01950I
     and HHC01603I to also appear in the instruction's response buffer, whereas now
     only the command's actual output is placed into the response buffer. The ECHO
@@ -686,21 +725,21 @@ Hercules: Release Notes
     that allows guest operating systems to directly mount, unmount and query
     tape device filenames for themselves, without any intervention on the
     part of the Hercules operator.
-    </p><p>
+  </p><p>
     Automount support is enabled via the AUTOMOUNT configuration file statement.
-    </p><p>
+  </p><p>
     An example guest automount program for VSE called "TMOUNT" is provided in
     the util subdirectory of the Hercules source code distribution.
-    </p><p>
+  </p><p>
     Briefly, the 0x4B (Set Diagnose) CCW is used to mount (or unmount) a file
     onto a tape drive, and the 0xE4 (Sense Id) CCW opcode is used to query the
     name of the currently mounted file.
-    </p><p>
+  </p><p>
     For mounts, the 0x4B CCW specifies the filename of the file to be mounted
     onto the drive. The file MUST reside in the specified AUTOMOUNT directory
     or the automount request will be rejected. To unmount the currently mounted
     file, simply do a mount of the special filename "OFFLINE".
-    </p><p>
+  </p><p>
     To query the name of the currently mounted file, the 0xE4 CCW is used. Note
     however that the 0xE4 (Sense Id) CCW opcode cannot be used by itself since
     the drive may also already natively support the Sense Id CCW opcode. Instead,
@@ -708,7 +747,7 @@ Hercules: Release Notes
     length of one byte. The following 0xE4 command is the one that then specifies
     the i/o buffer and buffer length of where the query function is to place the
     device's currently mounted host filename.
-    </p><p>
+  </p><p>
     In summary:
     </p><pre>
         MOUNT:      X'4B', filename, X'20', length
@@ -717,7 +756,7 @@ Hercules: Release Notes
 
         QUERY:      X'4B', buffer, X'60', 1
                     X'E4', buffer, X'20', buffersize</pre>
-    <p>
+  </p><p>
     Again please refer to the provided TMOUNT program for a simple example
     of how automount support might be implmented on a guest operating system.
   </p>
@@ -735,11 +774,11 @@ Hercules: Release Notes
     The 'conspawn' utility used to process 'sh' commands now recognizes a
     specially designed keyword "startgui" to accomodate automatic starting
     of Windows GUI applications via the .RC file or panel command-line.
-    </p><p>
+  </p><p>
     If the first word following 'sh' is "startgui", then the "ShellExecute"
     API is used to start the requested program rather than the 'system()'
     API as otherwise.
-    </p><p>
+  </p><p>
     The "startgui" keyword must always be used to start any Windows program
     that is not a command-line program. Hercules, itself being a command-line
     program, monitors the 'stderr' and 'stdout' pipes so it can log messages
@@ -747,7 +786,7 @@ Hercules: Release Notes
     such as notepad however, because they are not command-line programs, do
     not use stdout/stderr thus causing Hercules to hang if "start" is used
     instead.
-    </p><p>
+  </p><p>
     This rule applies regardless of how Hercules itself is started (i.e. via
     HercGUI or directly via the command-line) and regardless of whether the
     "start" command is wrapped in a batch file or not. That is to say, using
@@ -765,12 +804,12 @@ Hercules: Release Notes
     work properly with Hercules. Furthermore, the Hercules device-type used on
     your device statement in your Hercules configuration file should match the
     the level of support/behavior that they provide.
-    </p><p>
+  </p><p>
     For example, all SCSI tape drives used with Hercules must provide the ability
     to set variable-length blocks as well as long erase-gaps (long erase-gaps
     allows new data to be appended to the end of existing data without having to
     write a tape-mark to separate the new data from the old existing data first).
-    </p><p>
+  </p><p>
     Another example would be using a model of SCSI tape drive that happens to
     report physical block-id values in a format different from the way real IBM
     mainframe tape drives report them. 3480/3490 tape drives for example report
@@ -781,11 +820,11 @@ Hercules: Release Notes
     is used to allow the tape drive to quickly position itself to the approximate
     location where the desired block acually resides on the tape and thus allows
     high-speed positioning for the Locate CCW).
-    </p><p>
+  </p><p>
     If the model of SCSI tape drive you are actually using with Hercules does not
     use this same block-id format however, then it cannot be used with Hercules
     as a 3480 or 3490 model tape drive with specially defined options.
-    </p><p>
+  </p><p>
     If the SCSI tape drive you are using reports its block-ids using a 32-bit
     block-id value (the same way a 3590 model tape drive does), then similarly,
     it should be defined to Hercules as a model 3590 device-type as well (since
@@ -793,7 +832,7 @@ Hercules: Release Notes
     values). It you wish to define it in Hercules as a model 3480 or 3490, then
     you will need to use specially defined options before it will work properly
     as the model drive you wish it to emulate.
-    </p><p>
+  </p><p>
     With all that being said, it should be noted that PARTIAL support for 3590
     device emulation is possible with judicious use the aforementioned special
     options, but full/complete 3590 support is unlikely due to lack of publicly
@@ -801,7 +840,7 @@ Hercules: Release Notes
     (confidential) IBM proprietary information, and is not normally available
     outside of IBM. Not long ago IBM was required by US law to publish such
     information, but unfortunately for Hercules, such is no longer the case.
-    </p><p>
+  </p><p>
     For further information regarding use of SCSI attached tape drives with
     Hercules and their associated specially defined options, please refer to
     the section on SCSI tape drives in the Hercules's Device Configuration
@@ -826,7 +865,7 @@ Hercules: Release Notes
               DEVPRIO     -8        Above Normal  Thread priority
               TODPRIO      0        Normal        Thread priority
               CPUPRIO      0        Normal        Thread priority</pre>
-    <p>
+  </p><p>
     which caused acceptable performance/functioning on most, but not all, guest
     operating systems. Beginning with version 3.05 however, the prioriries now
     default to:
@@ -840,7 +879,7 @@ Hercules: Release Notes
               TODPRIO    -20        Time Critical  Thread priority
               DEVPRIO      8        Below Normal   Thread priority
               CPUPRIO     15        Lowest         Thread priority</pre>
-    <p>
+  </p><p>
     which may on more modern guest operating systems (which handle the TOD clock
     differently than do older less sophticated versions) cause a slight decrease
     in overall performance. If such is the case, the original default priorities
@@ -855,11 +894,11 @@ Hercules: Release Notes
     Additional configuration file usability enhancements have been implemented
     in the form of a new 'INCLUDE' (and associated 'IGNORE') statement, allowing
     configuration files to "include" statements from a different named file.
-    </p><p>
+  </p><p>
     Additonally, a new "enhanced" symbolic substitution syntax is now also
     supported. Refer to the Hercules "Configuration File" documentation for
     further information and details.
-    </p><p>
+  </p><p>
     A rather nifty "Automatic Operator" facility has also been implemented in
     the current release as well. While not exactly a "configuration file
     usability enhancement", it is nevertheless something we hope might prove
