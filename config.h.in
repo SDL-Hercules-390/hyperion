@@ -437,6 +437,9 @@
 /* Define if libtool can extract symbol lists from object files. */
 #undef HAVE_PRELOADED_SYMBOLS
 
+/* Define to 1 if you have the `pthread_rwlockattr_setpshared' function. */
+#undef HAVE_PTHREAD_RWLOCKATTR_SETPSHARED
+
 /* Define to 1 if you have the `pthread_setname_np' function. */
 #undef HAVE_PTHREAD_SETNAME_NP
 
