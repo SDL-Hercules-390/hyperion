@@ -164,7 +164,11 @@ typedef pthread_rwlock_t        HRWLOCK;
 #define hthread_mutex_destroy( plk )            pthread_mutex_destroy( plk )
 
 #define hthread_rwlockattr_init( pla )          pthread_rwlockattr_init( pla )
+#if HAVE_PTHREAD_RWLOCKATTR_SETPSHARED
 #define hthread_rwlockattr_setpshared( pla, s ) pthread_rwlockattr_setpshared( (pla), (s) )
+#else
+#define hthread_rwlockattr_setpshared( pla, s ) 0
+#endif
 #define hthread_rwlockattr_destroy( pla )       pthread_rwlockattr_destroy( pla )
 
 #define hthread_rwlock_init( plk, pla )         pthread_rwlock_init( (plk), (pla) )
