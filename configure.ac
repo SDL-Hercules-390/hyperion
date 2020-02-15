@@ -343,6 +343,32 @@ AC_LIBTOOL_DLOPEN()                     # (we need libtool's dlopen support)
 
 AC_LIBTOOL_WIN32_DLL()                  # (we need Win32 support in libtool)
 
+# -----------------------------------------------------------------------------
+#  This is a hack:
+#
+#    On NetBSD, override how libtool decides that a library can be linked into
+#    a shared library. The libSoftFloat.a library is not permissible by the
+#    usual rule, which allows *.so and *_pic.a (because all code in a shared
+#    library must be Position Independent Code).
+#
+#    The result is that the shared libraries are not built and hercules
+#    does not work.
+#
+#    Linux commonly seems to have "pass_all" for this setting.
+#    We want to affect the line deplibs_check_method=... in the copied
+#    libtool script.
+#
+#    Since we know that External Packages static libs are always built as PIC,
+#    the following should workaround the problem.
+#
+# -----------------------------------------------------------------------------
+
+case $host_os in
+    netbsd*)
+      #lt_cv_deplibs_check_method="match_pattern /lib[^/]+(\\.so|_pic\\.a|\\.a)\$"
+      lt_cv_deplibs_check_method="pass_all"
+      ;;
+esac
 
 # -----------------------------------------------------------------------------
 #  See: 'AC_PROG_LIBTOOL' below.
@@ -546,6 +572,7 @@ AH_TEMPLATE( [HAVE_SYNC_BUILTINS],           [Define if '__sync_xor_and_fetch' a
 AH_TEMPLATE( [HAVE_PTHREAD_SETNAME_NP],      [Define if 'pthread_setname_np()' is available] )
 AH_TEMPLATE( [PTHREAD_SET_NAME_ONLY],        [Define if 'pthread_setname_np()' takes only name argument] )
 AH_TEMPLATE( [PTHREAD_SET_NAME_3ARGS],       [Define if 'pthread_setname_np()' takes 3 arguments like NetBSD] )
+AH_TEMPLATE( [HAVE_PTHREAD_RWLOCKATTR_SETPSHARED], [Define if 'pthread_rwlockattr_setpshared()' is available] )
 
 ###############################################################################
 #   Checks for REQUIRED (non-optional) header files...
@@ -690,7 +717,7 @@ AC_CHECK_HEADERS( linux/ipv6.h,   [hc_cv_have_linux_ipv6_h=yes],   [hc_cv_have_l
       #include <sys/socket.h>
     #endif
 ] )
-AC_CHECK_HEADERS( net/if_var.h,   [hc_cv_have_net_in_var_h=yes],   [hc_cv_have_net_in_var_h=no],
+AC_CHECK_HEADERS( net/if_var.h,   [hc_cv_have_net_if_var_h=yes],   [hc_cv_have_net_if_var_h=no],
 [
     #include <sys/types.h>
     #ifdef HAVE_SYS_SOCKET_H
@@ -706,8 +733,10 @@ AC_CHECK_HEADERS( netinet/in_var.h,  [hc_cv_have_netinet_in_var_h=yes],  [hc_cv_
     #ifdef HAVE_SYS_SOCKET_H
       #include <sys/socket.h>
     #endif
-    #ifdef HAVE_NET_IF_VAR_H
+    #ifdef HAVE_NET_IF_H
       #include <net/if.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
       #include <net/if_var.h>
     #endif
     #ifdef HAVE_NETINET_IN_H
@@ -720,8 +749,10 @@ AC_CHECK_HEADERS( netinet6/in6_var.h,  [hc_cv_have_netinet6_in6_var_h=yes],  [hc
     #ifdef HAVE_SYS_SOCKET_H
       #include <sys/socket.h>
     #endif
-    #ifdef HAVE_NET_IF_VAR_H
+    #ifdef HAVE_NET_IF_H
       #include <net/if.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
       #include <net/if_var.h>
     #endif
     #ifdef HAVE_NETINET_IN_VAR_H
@@ -1016,6 +1047,9 @@ AC_CACHE_SAVE()
 AC_CHECK_FUNCS( pthread_setname_np,
     [hc_cv_have_pthread_setname_np=yes],
     [hc_cv_have_pthread_setname_np=no] )
+AC_CHECK_FUNCS( pthread_rwlockattr_setpshared,
+    [hc_cv_have_pthread_rwlockattr_setpshared=yes],
+    [hc_cv_have_pthread_rwlockattr_setpshared=no] )
 AC_CHECK_FUNCS( memrchr )
 AC_CHECK_FUNCS( getopt_long )
 AC_CHECK_FUNCS( sqrtl ldexpl fabsl fmodl frexpl )
@@ -1144,10 +1178,16 @@ AC_CHECK_MEMBERS( [struct in6_ifreq.ifr_ifru.ifru_flags],
     #ifdef HAVE_LINUX_IPV6_H
       #include <linux/ipv6.h>
     #endif
-    #ifdef HAVE_NETINET6_IN6_VAR_H
+    #ifdef HAVE_NET_IF_H
       #include <net/if.h>
+    #endif
+    #ifdef HAVE_NET_IF_VAR_H
       #include <net/if_var.h>
+    #endif
+    #ifdef HAVE_NETINET_IN_H
       #include <netinet/in.h>
+    #endif
+    #ifdef HAVE_NETINET6_IN6_VAR_H
       #include <netinet/in_var.h>  // Not the ipv6 file, please
     #endif
 ] )
@@ -2895,7 +2935,8 @@ test "$hc_cv_sync_builtins_available"     = "yes"  &&  AC_DEFINE(HAVE_SYNC_BUILT
 test "$hc_cv_have_pthread_setname_np"     = "yes"  &&  AC_DEFINE(HAVE_PTHREAD_SETNAME_NP)
 test "$hc_cv_pthread_set_name_only"       = "yes"  &&  AC_DEFINE(PTHREAD_SET_NAME_ONLY)
 test "$hc_cv_pthread_set_name_3args"      = "yes"  &&  AC_DEFINE(PTHREAD_SET_NAME_3ARGS)
-test "$enable_interlocked_access_facility_2" = "no" && AC_DEFINE(DISABLE_IAF2)
+test "$hc_cv_have_pthread_rwlockattr_setpshared" = "yes" && AC_DEFINE(HAVE_PTHREAD_RWLOCKATTR_SETPSHARED)
+test "$enable_interlocked_access_facility_2"     = "no"  && AC_DEFINE(DISABLE_IAF2)
 test "$hc_cv_have_gcc_diag_pragma"         = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PRAGMA)
 test "$hc_cv_have_gcc_diag_pushpop"        = "yes" &&  AC_DEFINE(HAVE_GCC_DIAG_PUSHPOP)
 test "$hc_cv_have_gcc_unused_func_warning" = "yes" &&  AC_DEFINE(HAVE_GCC_UNUSED_FUNC_WARNING)
