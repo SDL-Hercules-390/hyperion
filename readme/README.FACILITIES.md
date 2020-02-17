@@ -426,7 +426,7 @@ the [opcode.h](../opcode.h) header (which declares its existence), the
 [opcode.c](../opcode.c) instruction dispatch table (directing the `run_cpu`
 instruction execution loop in [cpu.c](../cpu.c) to jump to the
 actual instruction function itself), and of course the actual instruction
-function iself (which does not necessarily have to be in source file `esame.c`
+function itself (which does not necessarily have to be in source file `esame.c`
 but may instead be in a completely different source file, possibly its own).
 
 
