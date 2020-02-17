@@ -2067,6 +2067,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\readme\README.FACILITIES.md"
+						>
+					</File>
+					<File
 						RelativePath=".\readme\README.HAO.md"
 						>
 					</File>

@@ -143,7 +143,7 @@ _**You basically just need to remember to:**_
 
 * Add the file to the correct autoconf `Makefile.am` file
 * Add the file to the correct MSVC makefile fragment _(`OBJ_CODE.msvc` etc)_
-* Add the file to all of the Visual Studio project files
+* Add the file to all of the Visual Studio project files (`Hercules_VS2008.vcproj`, `Hercules_VS2015.vcxproj`, `Hercules_VS2015.vcxproj.filters`, etc)
 
 And the easiest way to do that is, like I said, by doing it just like
 others have done it previously. Do a grep for a similar type file and
