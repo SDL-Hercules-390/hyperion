@@ -425,6 +425,10 @@ FT( NONE, NONE, NONE, 057_MSA_EXTENSION_5 )
 FT( NONE, NONE, NONE, 058_MISC_INSTR_EXT_2 )
 #endif
 
+#if defined(  FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+FT( NONE, NONE, NONE, 061_MISC_INSTR_EXT_3 )
+#endif
+
 #if defined(  FEATURE_066_RES_REF_BITS_MULT_FACILITY )
 FT( Z900, Z900, NONE, 066_RES_REF_BITS_MULT )
 #endif
@@ -511,6 +515,26 @@ FT( NONE, NONE, NONE, 145_INS_REF_BITS_MULT )
 
 #if defined(  FEATURE_146_MSA_EXTENSION_FACILITY_8 )
 FT( NONE, NONE, NONE, 146_MSA_EXTENSION_8 )
+#endif
+
+#if defined(  FEATURE_148_VECTOR_ENH_FACILITY_2 )
+FT( NONE, NONE, NONE, 148_VECTOR_ENH_2 )
+#endif
+
+#if defined(  FEATURE_149_MOVEPAGE_SETKEY_FACILITY )
+FT( NONE, NONE, NONE, 149_MOVEPAGE_SETKEY )
+#endif
+
+#if defined(  FEATURE_151_DEFLATE_CONV_FACILITY )
+FT( NONE, NONE, NONE, 151_DEFLATE_CONV )
+#endif
+
+#if defined(  FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
+FT( NONE, NONE, NONE, 152_VECT_PACKDEC_ENH )
+#endif
+
+#if defined(  FEATURE_155_MSA_EXTENSION_FACILITY_9 )
+FT( NONE, NONE, NONE, 155_MSA_EXTENSION_9 )
 #endif
 
 #if defined(  FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
@@ -667,11 +691,13 @@ static  bool  modvec    ( bool enable, int bitno, int archnum, const char* actio
 static  bool  modtod    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modsamp   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modmsa    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modmsa9   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modbit42  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  moddfphi  ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modfpx    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  moddfp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modtcp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modmie3   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 
 /*-------------------------------------------------------------------*/
 /*   Facility Update Opcode Table Functions forward references       */
@@ -710,6 +736,7 @@ static void instr50  ( int arch, bool enable );
 static void instr53  ( int arch, bool enable );
 static void instr57  ( int arch, bool enable );
 static void instr58  ( int arch, bool enable );
+static void instr61  ( int arch, bool enable );
 static void instr66  ( int arch, bool enable );
 static void instr67  ( int arch, bool enable );
 static void instr68  ( int arch, bool enable );
@@ -725,6 +752,8 @@ static void instr142 ( int arch, bool enable );
 static void instr144 ( int arch, bool enable );
 static void instr145 ( int arch, bool enable );
 static void instr146 ( int arch, bool enable );
+static void instr151 ( int arch, bool enable );
+static void instr155 ( int arch, bool enable );
 static void hercmvcin( int arch, bool enable );
 static void hercsvs  ( int arch, bool enable );
 static void herc37X  ( int arch, bool enable );
@@ -808,6 +837,7 @@ FT2( NULL,      instr53,   053_LOAD_ZERO_RIGHTMOST,    "Load-and-Zero-Rightmost-
 FT2( NULL,      NULL,      054_EE_CMPSC,               "Entropy-Encoding-Compression Facility" )
 FT2( NULL,      instr57,   057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" )
 FT2( NULL,      instr58,   058_MISC_INSTR_EXT_2,       "Miscellaneous-Instruction-Extensions Facility 2" )
+FT2( modmie3,   instr61,   061_MISC_INSTR_EXT_3,       "Miscellaneous-Instruction-Extensions Facility 3" )
 FT2( NULL,      instr66,   066_RES_REF_BITS_MULT,      "Reset-Reference-Bits-Multiple Facility" )
 FT2( modsamp,   instr67,   067_CPU_MEAS_COUNTER,       "CPU-Measurement Counter Facility" )
 FT2( modsamp,   instr68,   068_CPU_MEAS_SAMPLNG,       "CPU-Measurement Sampling Facility" )
@@ -830,6 +860,11 @@ FT2( modsamp,   instr142,  142_ST_CPU_COUNTER_MULT,    "Store-CPU-Counter-Multip
 FT2( NULL,      instr144,  144_TEST_PEND_EXTERNAL,     "Test-Pending-External-Interruption Facility" )
 FT2( NULL,      instr145,  145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Multiple Facility" )
 FT2( modmsa,    instr146,  146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
+//FT2( modvef2,   instr148,  148_VECTOR_ENH_2,           "Vector-Enhancements Facility 2" )
+//FT2( modmpsk,   instr149,  149_MOVEPAGE_SETKEY,        "Move-Page-and-Set-Key Facility" )
+FT2( NULL,      instr151,  151_DEFLATE_CONV,           "DEFLATE-Conversion Facility" )
+//FT2( modvpd,    instr152,  152_VECT_PACKDEC_ENH,       "Vector-Packed-Decimal-Enhancement Facility" )
+FT2( modmsa9,   instr155,  155_MSA_EXTENSION_9,        "Message-Security-Assist Extension 9" )
 FT2( NULL,      NULL,      168_ESA390_COMPAT_MODE,     "ESA/390-Compatability-Mode Facility" )
 
 FT2( NULL,      herc37X,   HERC_370_EXTENSION,         "Hercules S/370 Instruction Extension Facility" )
@@ -1723,6 +1758,39 @@ FAC_MOD_OK_FUNC            ( modmsa )
 }
 
 /*-------------------------------------------------------------------*/
+/*                           modmsa9                                 */
+/*-------------------------------------------------------------------*/
+/*            Bits 76 and 77 are one when bit 155 is one.            */
+/*-------------------------------------------------------------------*/
+FAC_MOD_OK_FUNC            ( modmsa9 )
+{
+    if (enable)
+    {
+        if (bitno == STFL_155_MSA_EXTENSION_9)
+        {
+            if (!FACILITY_ENABLED_ARCH( 076_MSA_EXTENSION_3, archnum ))
+                return HHC00890E(  STFL_076_MSA_EXTENSION_3 );
+
+            if (!FACILITY_ENABLED_ARCH( 077_MSA_EXTENSION_4, archnum ))
+                return HHC00890E(  STFL_077_MSA_EXTENSION_4 );
+        }
+    }
+    else // disabling
+    {
+        if (0
+            || bitno == STFL_076_MSA_EXTENSION_3
+            || bitno == STFL_077_MSA_EXTENSION_4
+        )
+        {
+            if (FACILITY_ENABLED_ARCH( 155_MSA_EXTENSION_9, archnum ))
+                return HHC00890E( STFL_155_MSA_EXTENSION_9 );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
 /*                           modbit42                                */
 /*-------------------------------------------------------------------*/
 /* bit 42 requires special handling as it interacts with many bits   */
@@ -1845,6 +1913,33 @@ FAC_MOD_OK_FUNC             ( modtcp )
         {
             if (FACILITY_ENABLED_ARCH( HERC_TCPIP_PROB_STATE, archnum ))
                 return HHC00890E( STFL_HERC_TCPIP_PROB_STATE );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                            modmie3                                */
+/*-------------------------------------------------------------------*/
+/*               Bit 45 is also one when bit 61 is one.              */
+/*-------------------------------------------------------------------*/
+FAC_MOD_OK_FUNC             ( modmie3 )
+{
+    if (enable)
+    {
+        if (bitno == STFL_061_MISC_INSTR_EXT_3)
+        {
+            if (!FACILITY_ENABLED_ARCH( 045_POPULATION_COUNT, archnum ))
+                return HHC00890E(  STFL_045_POPULATION_COUNT );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_045_POPULATION_COUNT)
+        {
+            if (FACILITY_ENABLED_ARCH( 061_MISC_INSTR_EXT_3, archnum ))
+                return HHC00890E( STFL_061_MISC_INSTR_EXT_3 );
         }
     }
 
@@ -2700,6 +2795,27 @@ END_DIS_FAC_INS_FUNC()
 
 /*-------------------------------------------------------------------*/
 
+BEG_DIS_FAC_INS_FUNC( instr61 )
+{
+    DIS_FAC_INS( B9F5, "NCRK    B9F5  AND WITH COMPLEMENT (32)" );
+    DIS_FAC_INS( B9E5, "NCGRK   B9E5  AND WITH COMPLEMENT (64)" );
+    DIS_FAC_INS( E50A, "MVCRL   E50A  MOVE RIGHT TO LEFT" );
+    DIS_FAC_INS( B974, "NNRK    B974  NAND (32)" );
+    DIS_FAC_INS( B964, "NNGRK   B964  NAND (64)" );
+    DIS_FAC_INS( B977, "NXRK    B977  NOT EXCLUSIVE OR (32)" );
+    DIS_FAC_INS( B967, "NXGRK   B967  NOT EXCLUSIVE OR (64)" );
+    DIS_FAC_INS( B976, "NORK    B976  NOR (32)" );
+    DIS_FAC_INS( B966, "NOGRK   B966  NOR (64)" );
+    DIS_FAC_INS( B975, "OCRK    B975  OR WITH COMPLEMENT (32)" );
+    DIS_FAC_INS( B965, "OCGRK   B965  OR WITH COMPLEMENT (64)" );
+    DIS_FAC_INS( B9F0, "SELR    B9F0  SELECT (32)" );
+    DIS_FAC_INS( B9E3, "SELGR   B9E3  SELECT (64)" );
+    DIS_FAC_INS( B9C0, "SELFHR  B9C0  SELECT HIGH" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
 BEG_DIS_FAC_INS_FUNC( instr66 )
 {
     DIS_FAC_INS( B9AE, "RRBM    B9AE  RESET REFERENCE BITS MULTIPLE" );
@@ -2995,6 +3111,22 @@ END_DIS_FAC_INS_FUNC()
 BEG_DIS_FAC_INS_FUNC( instr146 )
 {
     DIS_FAC_INS( B929, "KMA     B929  CIPHER MESSAGE WITH AUTHENTICATION" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( instr151 )
+{
+    DIS_FAC_INS( B939, "DFLTCC  B939  DEFLATE CONVERSION CALL" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( instr155 )
+{
+    DIS_FAC_INS( B93A, "KDSA    B93A  COMPUTE DIGITAL SIGNATURE AUTHENTICATION" );
 }
 END_DIS_FAC_INS_FUNC()
 

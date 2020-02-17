@@ -195,7 +195,10 @@
 
 #define STFL_060_IBM_INTERNAL         60    /* IBM internal use          */
 
-#define STFL_061_UNASSIGNED           61    /* Unassigned                */
+#define STFL_061_MISC_INSTR_EXT_3     61    /* Miscellaneous-instruction-
+                                               extensions facility 3 is
+                                               installed. Bit 45 is also
+                                               one when bit 61 is one.   */
 
 #define STFL_062_IBM_INTERNAL         62    /* IBM internal use          */
 
@@ -286,7 +289,37 @@
                                                when bit 146 is one.      */
 #define STFL_147_IBM_INTERNAL        147    /* IBM internal use          */
 
-//efine STFL_nnn_UNASSIGNED      148-167    /* Unassigned or IBM internal*/
+#define STFL_148_VECTOR_ENH_2        148    /* Vector-enhancements fac-
+                                               ility 2 installed.  Bits
+                                               129 and 135 are also one
+                                               when bit 148 is one.      */
+
+#define STFL_149_MOVEPAGE_SETKEY     149    /* Move-page-and-set-key fac-
+                                               ility installed. Bit 14 is
+                                               also on if bit 149 is on. */
+
+#define STFL_150_UNASSIGNED          150    /* Unassigned                */
+
+#define STFL_151_DEFLATE_CONV        151    /* DEFLATE-conversion facil-
+                                               ity is installed.         */
+
+#define STFL_152_VECT_PACKDEC_ENH    152    /* Vector-packed-decimal-en-
+                                               hancement installed. Bits
+                                               129 and 134 are also one
+                                               when bit 152 is one.      */
+
+#define STFL_153_UNASSIGNED          153    /* Unassigned                */
+
+#define STFL_154_UNASSIGNED          154    /* Unassigned                */
+
+#define STFL_155_MSA_EXTENSION_9     155    /* Message-security-assist-
+                                               extension-9 installed.
+                                               Bits 76 and 77 are one
+                                               when bit 155 is one.      */
+
+#define STFL_156_IBM_INTERNAL        156    /* IBM internal use          */
+
+//efine STFL_nnn_UNASSIGNED      157-167    /* Unassigned or IBM internal*/
 
 #define STFL_168_ESA390_COMPAT_MODE  168    /* ESA/390-compatibility-mode.
                                                Bit 168 can only be 1 when
