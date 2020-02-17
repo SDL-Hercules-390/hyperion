@@ -800,7 +800,7 @@ EXTRA_DIST =                  \
   msvc.makefile.includes/PCRE_RULES.msvc      \
   msvc.makefile.includes/REXX_RULES.msvc      \
   README.md                       \
-  readme/images/herclogo.jpg        \
+  readme/images/herclogo.jpg      \
   readme/images/image_header_herculeshyperionSDL.png  \
   readme/README.ADDING.md         \
   readme/README.AIX.md            \
@@ -809,9 +809,10 @@ EXTRA_DIST =                  \
   readme/README.CCKD64.md         \
   readme/README.CMPSC.md          \
   readme/README.COMMADPT.md       \
-  readme/README.DECNUMBER.md      \
   readme/README.DYNMOD.md         \
   readme/README.ECPSVM.md         \
+  readme/README.EXTPKG.md         \
+  readme/README.FACILITIES.md     \
   readme/README.HAO.md            \
   readme/README.HDL.md            \
   readme/README.HERCLOGO.md       \
@@ -829,12 +830,10 @@ EXTRA_DIST =                  \
   readme/README.RXVT4APL.md       \
   readme/README.S37X.md           \
   readme/README.SETUID.md         \
-  readme/README.SOFTFLOAT.md      \
   readme/README.SUN.md            \
   readme/README.TAPE.md           \
   readme/README.TCPIP.md          \
   readme/README.VMFPLC2.md        \
-  readme/README.TELNET.md         \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \

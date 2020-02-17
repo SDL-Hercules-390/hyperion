@@ -681,6 +681,7 @@
     <None Include="readme\README.DYNMOD.md" />
     <None Include="readme\README.ECPSVM.md" />
     <None Include="readme\README.EXTPKG.md" />
+    <None Include="readme\README.FACILITIES.md" />
     <None Include="readme\README.HAO.md" />
     <None Include="readme\README.HDL.md" />
     <None Include="readme\README.HERCLOGO.md" />

@@ -962,6 +962,9 @@
     <None Include="readme\README.ECPSVM.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.FACILITIES.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.EXTPKG.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
