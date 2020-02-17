@@ -467,7 +467,7 @@ the instruction's decoder format and its mnemonic:
 ```
 
 Note that each `x___` spot in the macro's name corresponds to a given build architecture.
-The first `x___` being replaced with `x37X` if the given instruction is defined to the
+The first `x___` being replaced with `x370` if the given instruction is defined to the
 System/370 architecture, the second being replaced with `x390` if the instruction is
 defined to the ESA/390 architecture and the third spot being replaced with `x900` if the
 instruction is defined to z/Architecture. The `/*B2E8*/` is of course just a helpful
