@@ -1966,6 +1966,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
     U16      lcss;
     U16      devnum;
     BYTE     onoff;
+    BYTE     startup;
     u_int    mask;
 
     UNREFERENCED( cmdline );
@@ -1980,6 +1981,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         || (1
             && !CMD(argv[2],on,2)
             && !CMD(argv[2],off,3)
+            && !CMD(argv[2],startup,7)
            )
         || argc > 4
         || (1
@@ -1994,6 +1996,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
     }
 
     onoff = ( CMD(argv[2],on,2) );
+    startup = ( CMD(argv[2],startup,7) );
     if( onoff )
         mask = DBGPTPPACKET;
     else
@@ -2006,7 +2009,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             if (0
                 || !dev->allocated
                 || 0x3088 != dev->devtype
-                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype && CTC_PTP != dev->ctctype)
+                || (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype && CTC_PTP != dev->ctctype && CTC_CTCE != dev->ctctype)
             )
                 continue;
 
@@ -2029,7 +2032,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-        WRMSG(HHC02204, "I", "CTC DEBUG", onoff ? "on ALL" : "off ALL");
+        WRMSG(HHC02204, "I", "CTC DEBUG", startup ? "startup ALL" : onoff ? "on ALL" : "off ALL");
     }
     else
     {
@@ -2075,18 +2078,33 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pPTPBLK->uDebugMask = mask;
             }
         }
+        else if (CTC_CTCE == dev->ctctype)
+        {
+            if (onoff)
+            {
+                dev->ctce_trace_cntr = CTCE_TRACE_ON;
+            }
+            else if (startup)
+            {
+                dev->ctce_trace_cntr = CTCE_TRACE_STARTUP;
+            }
+            else
+            {
+                dev->ctce_trace_cntr = CTCE_TRACE_OFF;
+            }
+        }
         else
         {
-            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI, LSC or PTP" );
+            WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI, LSC, PTP or CTCE" );
             return -1;
         }
 
         {
           char buf[128];
-          MSGBUF( buf, "%s for %s device %1d:%04X pair",
-                  onoff ? "ON" : "OFF",
-                  CTC_LCS == dev->ctctype ? "LCS" : CTC_PTP == dev->ctctype ? "PTP" : "CTCI",
-                  lcss, devnum );
+          MSGBUF( buf, "%s for %s device %1d:%04X%s",
+                  startup ? "STARTUP" : onoff ? "ON" : "OFF",
+                  CTC_CTCE == dev->ctctype ? "CTCE" : CTC_LCS == dev->ctctype ? "LCS" : CTC_PTP == dev->ctctype ? "PTP" : "CTCI",
+                  lcss, devnum, CTC_CTCE != dev->ctctype ? "pair" : "" );
           WRMSG(HHC02204, "I", "CTC DEBUG", buf);
         }
     }
@@ -5216,6 +5234,10 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
     int       single_devnum = FALSE;
     char      buf[1024];
 
+    DEVNUMSDESC  dnd;
+    size_t       devncount = 0;
+    int          dev_found = FALSE;
+
     UNREFERENCED( cmdline );
 
     if (1
@@ -5230,22 +5252,32 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
 
     if (argc >= 2 && !strlen( devtype ))
     {
-        single_devnum = TRUE;
 
-        if ( parse_single_devnum( argv[1], &lcss, &devnum ) < 0 )
+        // We now also support multiple CCUU addresses.
+        if (devncount = parse_devnums( argv[1], &dnd ) > 0)
         {
-            // (error message already issued)
-            return -1;
+            ssid = LCSS_TO_SSID( dnd.lcss );
         }
+        else
 
-        if (!(dev = find_device_by_devnum( lcss, devnum )))
         {
-            // HHC02200 "%1d:%04X device not found"
-            devnotfound_msg( lcss, devnum );
-            return -1;
-        }
+            single_devnum = TRUE;
 
-        ssid = LCSS_TO_SSID( lcss );
+            if ( parse_single_devnum( argv[1], &lcss, &devnum ) < 0 )
+            {
+                // (error message already issued)
+                return -1;
+            }
+
+            if (!(dev = find_device_by_devnum( lcss, devnum )))
+            {
+                // HHC02200 "%1d:%04X device not found"
+                devnotfound_msg( lcss, devnum );
+                return -1;
+            }
+
+            ssid = LCSS_TO_SSID( lcss );
+        }
     }
 
     // Since we wish to display the list of devices in ascending device
@@ -5272,6 +5304,20 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
         if (dev->allocated)  // (valid device?)
         {
             if (single_devnum && (dev->ssid != ssid || dev->devnum != devnum))
+                continue;
+
+            // Multiple devnum support is active when devncount > 0,
+            // otherwise we are in single devnum or ALL devnum mode.
+            for (i=0, dev_found=FALSE; dev_found==FALSE && i < devncount && !bTooMany; i++)
+            {
+                if (1
+                    && dev->ssid == ssid
+                    && dev->devnum >= dnd.da[i].cuu1
+                    && dev->devnum <= dnd.da[i].cuu2
+                )
+                    dev_found = TRUE;
+            }
+            if (devncount > 0 && dev_found == FALSE)
                 continue;
 
             if (nDevCount < MAX_DEVLIST_DEVICES)
@@ -5360,6 +5406,8 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
     }
 
     free( orig_pDevBlkPtrs );
+    if (devncount > 0)
+        free( dnd.da );
 
     if (bTooMany)
     {
