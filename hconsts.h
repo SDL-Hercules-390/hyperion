@@ -442,6 +442,10 @@
 #define CTC_CTCE                4       /* Enhanced CTC link via TCP */
 #define CTC_CTCT                6       /* CTC link via TCP          */
 
+#define CTCE_TRACE_ON          -1       /* CTCE permanent tracing on */
+#define CTCE_TRACE_OFF         -2       /* CTCE tracing turned off   */
+#define CTCE_TRACE_STARTUP     20       /* CTCE startup tracing max  */
+
 /*-------------------------------------------------------------------*/
 /*                Script processing constants                        */
 /*-------------------------------------------------------------------*/

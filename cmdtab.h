@@ -360,10 +360,11 @@
 #define ctc_cmd_desc            "Enable/Disable CTC debugging"
 #define ctc_cmd_help            \
                                 \
-  "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"              \
-  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP\n"      \
-  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP device\n"     \
-  "groups if <devnum> is not specified or specified as 'ALL'.\n"
+  "Format:  \"ctc  debug  { on | off | startup }  [ <devnum> | ALL ]\".\n\n"    \
+  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP/CTCE\n" \
+  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP/CTCE device\n"\
+  "groups if <devnum> is not specified or specified as 'ALL'.\n"                \
+  "Only CTCE devices support 'startup' debugging.\n"
 
 #define define_cmd_desc         "Rename device"
 #define define_cmd_help         \
