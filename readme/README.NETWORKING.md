@@ -42,7 +42,7 @@ The currently supported emulation modes are:
 
 ```
 CTCT     - CTCA Emulation via TCP connection
-CTCE     - Enhanced CTCA Emulation via CTP connection
+CTCE     - Enhanced CTCA Emulation via TCP connection
 CTCI     - Point-to-point connection to the host IP stack.
 LCS      - LAN Channel Station (3172/OSA)
 PTP      - Point-to-point connection to the host IP stack.
@@ -253,28 +253,39 @@ Up to 4 virtual (relative) adapters (ports) 00-03 are currently supported.
 
 ### CTCE - Enhanced Channel to Channel Emulation via TCP connection
 
-The CTCE device type also emulates a _**real** 3088 Channel to Channnel Adapter_ for non-IP traffic, enhancing the CTCT capabilities. CTCE connections are also based on TCP/IP between two (or more) Hercules instances, and requires an even-odd pair of port numbers per device side. Only the even port numbers are to be configured; the odd numbers are just derived by adding 1 to the (configured) even port numbers.  The socket connection pairs cross-connect, the arrows showing the send->receive direction :
+The CTCE device type also emulates a _**real** 3088 Channel to Channel Adapter_ for non-IP traffic, enhancing the CTCT capabilities.  CTCE connections are also based on TCP/IP between two (or more) Hercules instances, and require a pair of port numbers on each device side.  In the previous CTCE version these had to be an even-odd pair of port
+numbers, whereby only the even port numbers had to be specified in the CTCE configuration.  This restriction has now been removed.  Any port number > 1024 and < 65534 is allowed.  The CTCE configuration specifies the port number at the receiving end, the sender side port number is a free randomly chosen one.  The resulting socket pairs cross-connect, the arrows showing the send->receive direction :
 
 ```
-    x-lport-even --> y-rport-odd
-    x-lport-odd  <-- y-rport-even
+    x-lport-random --> y-rport-config
+    x-lport-config <-- y-rport-random
 ```
 
-The configuration statement for CTCE is as follows:
+The configuration statement for CTCE is as follows, choosing one of 2 possible formats (noting that items between [] brackets are optional, and the items between <> brackets require actual values to be given):
 ```
-     <devnum> CTCE <lport> <raddress> <rport> [[<mtu>] <sml>]
+     <ldevnum>     CTCE <lport> [<rdevnum>=]<raddress>  <rport>  [[<mtu>] <sml>] [FICON]
+     <ldevnum>[.n] CTCE <lport> [<rdevnum>]=<raddress> [<rport>] [[<mtu>] <sml>] [FICON]
 ```
 where:
 ```
-     <devnum>     is the address of the CTCT device.  
-     <lport>      is the even TCP/IP port on the local system.  
-     <raddress>   is the IP address on the remote.
-     <rport>      is the even TCP/IP port on the remote system.
-     <mtu>        optional mtu buffersize, defaults to 32778
-     <sml>        optional small minimum for mtu, defaults to 8
+     <ldevnum>    is the address of the CTCE device at the local system.  
+     <rdevnum>    is the address of the CTCE device at the remote system.  
+     <lport>      is the receiving TCP/IP port on the local system,
+                  which defaults to 3088. 
+     <rport>      is the receiving TCP/IP port on the remote system,
+                  which also defaults to 3088.  
+     <raddress>   is the host IP address on the remote system.
+     <mtu>        optional mtu buffersize, defaults to 61596.
+     <sml>        optional small minimum for mtu, defaults to 16.
+     n            the number of CTCE devices being configured, with
+                  consecutive addresses starting with <ldevnum>.
+                  (Only possible in the 2nd format, which implies the
+                  equal sign (=) in front of <raddress>.)
+     FICON        optional parameter specifying a FICON Channel-to-Channel adapter
+                  to be emulated (i.e. a FCTC instead of a CTCA)
 ```
 
-A sample CTCE device configuration is shown below:
+A sample CTCE device configuration (using the 1st format) is shown below:
 
 ```
    # Hercules PC Host A with IP address 192.168.1.100:
@@ -288,7 +299,60 @@ A sample CTCE device configuration is shown below:
       0E41  CTCE  30882  192.168.1.100  30882
 ```
 
-CTCE connected Hercules instances can be hosted on either Unix or Windows platforms. Both sides do _not_ need to be the same.
+The 2nd format CTCE device configuration is easier to specify by omitting the \<lport\> and \<rport\> numbers, but specifying the \<rdevnum\> instead.  The above sample configuration can then become :
+
+```
+   # Hercules PC Host A with IP address 192.168.1.100:
+
+      0E40  CTCE  0E40=192.168.1.200
+      0E41  CTCE  0E41=192.168.1.200
+
+   # Hercules PC Host B with IP address 192.168.1.200:
+
+      0E40  CTCE  0E40=192.168.1.100
+      0E41  CTCE  0E41=192.168.1.100
+```   
+
+This can even be further simplified by (1) omitting the \<rdevnum\> as its default is being equal to \<ldevnum\>, and by (2) specifying the ".n" qualifier as ".2", meaning that 2 CTCE devices starting at "0E40" are being defined :
+
+```
+   # Hercules PC Host A with IP address 192.168.1.100:
+
+      0E40.2  CTCE  =192.168.1.200
+
+   # Hercules PC Host B with IP address 192.168.1.200:
+
+      0E40.2  CTCE  =192.168.1.100
+```
+
+The above example omits \<rdevnum\>, and values for this below 0100 = 0x0100 = 256 are not allowed.  But single hex digit \<rdevnum\> values have a special menaing.  They will be used to construct \<rdevnum\>'s by exclusive-or-ing the \<ldevnum\> with such value.  As an example :
+
+```
+      0E40.4  CTCE       1=192.168.1.200
+```
+
+The above is the same as :
+
+```
+      0E40    CTCE    0E41=192.168.1.200
+      0E41    CTCE    0E40=192.168.1.200
+      0E42    CTCE    0E43=192.168.1.200
+      0E43    CTCE    0E42=192.168.1.200
+```
+
+The above example could be used to establish a redundant pair of read/write CTC links, where each Hercules side uses the even devnum addresses for reading, and the odd ones for writing (or the other way around).  That way, the operating system definitions on each side can be identical, e.g. for a VTAM MPC CTC link :
+
+```
+CTCATRL  VBUILD TYPE=TRL                                                                                 
+C0E40TRL TRLE  LNCTL=MPC,READ=(0E40,0E42),WRITE=(0E41,0E43)
+
+CTCALCL  VBUILD TYPE=LOCAL                                                                      
+C0E40LCL PU    TRLE=C0E40TRL,XID=YES,CONNTYPE=APPN,CPCP=YES,TGP=CHANNEL
+```  
+
+Please also note the optional trailing keyword FICON.  When specified, a fiber channel CTC adapter (FCTC) is being emulated, instead of a regular CTCA.  
+
+CTCE connected Hercules instances can be hosted on any Hercules supported platform (Windows, Linux, MacOS ...).  Both sides do _not_ need to be the same.
 
 ### PTP      - MPCPTP/PCPTP6 Channel to Channel link
 
