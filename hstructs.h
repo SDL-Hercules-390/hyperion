@@ -1432,10 +1432,20 @@ struct DEVBLK {                         /* Device configuration block*/
         LOCK    ctceEventLock;          /* CTCE Condition LOCK  @PJJ */
         COND    ctceEvent;              /* CTCE Recvd Condition @PJJ */
         int     ctce_lport;             /* CTCE Local  port #   @PJJ */
+        int     ctce_connect_lport;     /* CTCE Connect lport # @PJJ */
         int     ctce_rport;             /* CTCE Remote port #   @PJJ */
         struct in_addr ctce_ipaddr;     /* CTCE Dest IP addr    @PJJ */
+        U16     ctce_WRT_sCount_rcvd[2];/* CTCE Last WRT sCount @PJJ */
+        U16     ctce_rccuu;             /* CTCE Remote CTCA dev @PJJ */
+        int     ctce_trace_cntr;        /* CTCE trace if > 0    @PJJ */
+        TID     ctce_listen_tid;        /* CTCE_ListenThread ID @PJJ */
         u_int   ctce_contention_loser:1;/* CTCE cmd collision   @PJJ */
         u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progres  @PJJ */
+        u_int   ctce_ficon:1;           /* CTCE type FICON      @PJJ */
+        u_int   ctce_remote_xmode:1;    /* CTCE y-side Ext mode @PJJ */
+        u_int   ctce_system_reset:1;    /* CTCE initialized     @PJJ */
+        u_int   ctce_buf_next_read:1;   /* CTCE alt. buf use RD @PJJ */
+        u_int   ctce_buf_next_write:1;  /* CTCE alt. buf use WR @PJJ */
 
         /*  Device dependent fields for printer                      */
 
