@@ -1189,7 +1189,11 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
     obtain_lock( &dev->lock );
 
     /* Test device status and set condition code */
-    if (dev->busy)
+    if (dev->busy
+        /* CTCE devices need dev->hnd->halt to always be called
+           even when not busy!
+        */
+        || dev->ctctype == CTC_CTCE)            /* @PJJ */
     {
         /* Invoke the provided halt device routine @ISW */
         /* if it has been provided by the handler  @ISW */
@@ -1755,11 +1759,18 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
     obtain_lock( &dev->lock );
 
     /* If the device is busy then signal the device to clear */
-    if ((dev->busy
+    if (0
+        || (dev->busy
 #if defined( OPTION_SHARED_DEVICES )
         && dev->shioactive == DEV_SYS_LOCAL
 #endif
-    ) || dev->startpending)
+           )
+        || dev->startpending
+        /* CTCE devices need dev->hnd->halt to always be called
+           even when not busy or startpending!
+        */
+        || dev->ctctype == CTC_CTCE
+    )
     {
         /* Set clear pending condition */
         dev->scsw.flag2 |= SCSW2_FC_CLEAR | SCSW2_AC_CLEAR;
@@ -3817,6 +3828,7 @@ do {                                                                   \
 DLL_EXPORT int
 ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 {
+    OBTAIN_INTLOCK(NULL);
     obtain_lock( &dev->lock );
 
     if (dev->hnd->attention)
@@ -3830,6 +3842,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
     )
     {
         release_lock( &dev->lock );
+        RELEASE_INTLOCK(NULL);
         return 3;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
@@ -3866,6 +3879,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
             rc = 1;
 
         release_lock( &dev->lock );
+        RELEASE_INTLOCK(NULL);
         return rc;
     }
 
@@ -3873,28 +3887,8 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
         // "%1d:%04X CHAN: attention"
         WRMSG( HHC01305, "I", LCSS_DEVNUM );
 
-    /*****************************************************************/
-    /* The release and obtain locks around OBTAIN_INTOCK have been   */
-    /* removed because they cause VM system abends IQM002 when using */
-    /* channel programs relying heavily on ATTN interrupts, such as  */
-    /* used by RSCS.  This is easily reproducible doing a large RSCS */
-    /* file transfer over a TYPE NJE link.  The IQM002 is always     */
-    /* caused by VM issueing a SSCH resulting in a CC=2, and most    */
-    /* probably due to the &dev->lock being released around the      */
-    /* OBTAIN_INTLOCK.  Also, there is no requirement for the device */
-    /* lock being held whilst issueing OBTAIN_INTLOCK.  Furthermore, */
-    /* Hercules Spinhawk version 3.12 does NOT produce IQM002 and it */
-    /* does not release + re-obtain the device lock around it.  And  */
-    /* lastly, since having removed this release + obtain device     */
-    /* lock around OBTAIN_INTLOCK no further IQM002 system abends    */
-    /* were encountered anymore.                                     */
-    /*                            Peter J. Jansen, 21-Jun-2016  @PJJ */
-    /*****************************************************************/
-
-    /* Switch to INTLOCK context for remainder of attention */
-/*  release_lock(&dev->lock);                                   @PJJ */
-    OBTAIN_INTLOCK(NULL);
-/*  obtain_lock(&dev->lock);                                    @PJJ */
+    /* We already have INTLOCK and dev->lock held, so now
+       we only need to acquire the interrupt queue lock. */
     obtain_lock(&sysblk.iointqlk);
 
     /* Set SCSW for attention interrupt                              */
@@ -3928,6 +3922,8 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
     /* Update interrupt status */
     subchannel_interrupt_queue_cleanup(dev);
     UPDATE_IC_IOPENDING_QLOCKED();
+
+    /* Release locks and return to caller */
     release_lock(&sysblk.iointqlk);
     release_lock(&dev->lock);
     RELEASE_INTLOCK(NULL);
