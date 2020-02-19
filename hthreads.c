@@ -546,6 +546,7 @@ DLL_EXPORT int  hthread_destroy_lock( LOCK* plk, const char* location )
         lockcount--;
     }
     UnlockLocksList();
+    free( ilk->name );
     free_aligned( ilk );
     plk->ilk = NULL;
     return rc;
@@ -567,6 +568,7 @@ DLL_EXPORT int  hthread_destroy_rwlock( RWLOCK* plk, const char* location )
         lockcount--;
     }
     UnlockLocksList();
+    free( ilk->name );
     free_aligned( ilk );
     plk->ilk = NULL;
     return rc;
