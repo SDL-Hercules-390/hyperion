@@ -270,81 +270,71 @@ static ILOCK* hthreads_find_ILOCK( const LOCK* plk )
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Find or allocate and initialize an internal ILOCK structure.      */
-/*-------------------------------------------------------------------*/
-static ILOCK* hthreads_get_ILOCK( LOCK* plk, const char* name,
-                                             const char* create_loc )
-{
-    ILOCK* ilk;                     /* Pointer to ILOCK structure    */
-
-    /* Search list to see if lock has already been allocated  */
-    /* If needed allocate a new ILOCK structure for this lock */
-
-    LockLocksList();
-    {
-        if (!(ilk = hthreads_find_ILOCK_locked( plk, NULL )))
-        {
-            if (!(ilk = calloc_aligned( sizeof( ILOCK ), 64 )))
-            {
-                perror( "Fatal error in hthreads_get_ILOCK function" );
-                exit(1);
-            }
-            InsertListHead( &locklist, &ilk->il_link );
-            lockcount++;
-            ilk->il_name = NULL;
-
-            gettimeofday( &ilk->il_cr_time, NULL );
-            ilk->il_cr_locat = create_loc;
-            ilk->il_cr_tid = hthread_self();
-        }
-
-        free( ilk->il_name );
-        ilk->il_name = strdup( name );
-        ilk->il_addr = plk;
-        ilk->il_ob_locat = "null:0";
-        ilk->il_ob_tid = 0;
-        ilk->il_ob_time.tv_sec = 0;
-        ilk->il_ob_time.tv_usec = 0;
-    }
-    UnlockLocksList();
-
-    return ilk;
-}
-
-/*-------------------------------------------------------------------*/
 /* Initialize a lock                                                 */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_initialize_lock( LOCK* plk, const char* name,
                                                     const char* create_loc )
 {
     int     rc;
-    MATTR   attr;
-    ILOCK*  ilk = hthreads_get_ILOCK( plk, name, create_loc );
+    MATTR   attr;     /* for internal lock structure lock */
+    ILOCK*  ilk;
 
-    /* Initialize the requested lock */
+    LockLocksList();
+    {
+        ilk = hthreads_find_ILOCK_locked( plk, NULL );
 
-    rc = hthread_mutexattr_init( &attr );
-    if (rc)
-        goto fatal;
+        if (ilk)
+        {
+            loglock( ilk, EEXIST, "initialize lock", create_loc );
+            UnlockLocksList();
+            return EEXIST;
+        }
 
-    rc = hthread_mutexattr_settype( &attr, HTHREAD_MUTEX_DEFAULT );
-    if (rc)
-        goto fatal;
+        if (!(ilk = calloc_aligned( sizeof( ILOCK ), 64 )))
+            goto fatal;
 
-    rc = hthread_mutex_init( &ilk->il_locklock, &attr );
-    if (rc)
-        goto fatal;
+        gettimeofday( &ilk->il_cr_time, NULL );
 
-    rc = hthread_mutex_init( &ilk->il_lock, &attr );
-    if (rc)
-        goto fatal;
+        ilk->il_addr             =  plk;
+        ilk->il_name             =  strdup( name );
+        ilk->il_cr_locat         =  create_loc;
+        ilk->il_cr_tid           =  hthread_self();
+        ilk->il_ob_locat         =  "null:0";
+        ilk->il_ob_time.tv_sec   =  0;
+        ilk->il_ob_time.tv_usec  =  0;
+        ilk->il_ob_tid           =  0;
 
-    rc = hthread_mutexattr_destroy( &attr );
-    if (rc)
-        goto fatal;
+        /* Initialize the requested lock */
 
-    plk->ilk = ilk; /* (LOCK is now initialized) */
-    PTTRACE( "lock init", plk, 0, create_loc, PTT_MAGIC );
+        rc = hthread_mutexattr_init( &attr );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_mutexattr_settype( &attr, HTHREAD_MUTEX_DEFAULT );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_mutex_init( &ilk->il_locklock, &attr );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_mutex_init( &ilk->il_lock, &attr );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_mutexattr_destroy( &attr );
+        if (rc)
+            goto fatal;
+
+        plk->ilk = ilk; /* (LOCK is now initialized) */
+
+        InsertListHead( &locklist, &ilk->il_link );
+        lockcount++;
+
+        PTTRACE( "lock init", plk, 0, create_loc, PTT_MAGIC );
+    }
+    UnlockLocksList();
+
     return 0;
 
 fatal:
@@ -360,46 +350,77 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* name,
                                                         const char* create_loc )
 {
     int     rc;
-    RWATTR  attr1;    /* for primary lock */
-    MATTR   attr2;    /* for internal locklock */
-    ILOCK*  ilk = hthreads_get_ILOCK( (LOCK*) plk, name, create_loc );
+    MATTR   attr1;    /* for internal lock structure lock */
+    RWATTR  attr2;    /* for primary rwlock */
+    ILOCK*  ilk;
 
-    /* Initialize the requested lock */
+    LockLocksList();
+    {
+        ilk = hthreads_find_ILOCK_locked( (LOCK*) plk, NULL );
 
-    rc = hthread_rwlockattr_init( &attr1 );
-    if (rc)
-        goto fatal;
+        if (ilk)
+        {
+            loglock( ilk, EEXIST, "initialize rwlock", create_loc );
+            UnlockLocksList();
+            return EEXIST;
+        }
 
-    rc = hthread_mutexattr_init( &attr2 );
-    if (rc)
-        goto fatal;
+        if (!(ilk = calloc_aligned( sizeof( ILOCK ), 64 )))
+            goto fatal;
 
-    rc = hthread_rwlockattr_setpshared( &attr1, HTHREAD_RWLOCK_DEFAULT );
-    if (rc)
-        goto fatal;
+        gettimeofday( &ilk->il_cr_time, NULL );
 
-    rc = hthread_mutexattr_settype( &attr2, HTHREAD_MUTEX_DEFAULT );
-    if (rc)
-        goto fatal;
+        ilk->il_addr             =  plk;
+        ilk->il_name             =  strdup( name );
+        ilk->il_cr_locat         =  create_loc;
+        ilk->il_cr_tid           =  hthread_self();
+        ilk->il_ob_locat         =  "null:0";
+        ilk->il_ob_time.tv_sec   =  0;
+        ilk->il_ob_time.tv_usec  =  0;
+        ilk->il_ob_tid           =  0;
 
-    rc = hthread_rwlock_init( &ilk->il_rwlock, &attr1 );
-    if (rc)
-        goto fatal;
+        /* Initialize the requested lock */
 
-    rc = hthread_mutex_init( &ilk->il_locklock, &attr2 );
-    if (rc)
-        goto fatal;
+        rc = hthread_mutexattr_init( &attr1 );
+        if (rc)
+            goto fatal;
 
-    plk->ilk = ilk;     /* (RWLOCK is now initialized) */
-    PTTRACE( "rwlock init", plk, &attr1, create_loc, PTT_MAGIC );
+        rc = hthread_rwlockattr_init( &attr2 );
+        if (rc)
+            goto fatal;
 
-    rc = hthread_mutexattr_destroy( &attr2 );
-    if (rc)
-        goto fatal;
+        rc = hthread_mutexattr_settype( &attr1, HTHREAD_MUTEX_DEFAULT );
+        if (rc)
+            goto fatal;
 
-    rc = hthread_rwlockattr_destroy( &attr1 );
-    if (rc)
-        goto fatal;
+        rc = hthread_rwlockattr_setpshared( &attr2, HTHREAD_RWLOCK_DEFAULT );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_mutex_init( &ilk->il_locklock, &attr1 );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_rwlock_init( &ilk->il_rwlock, &attr2 );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_mutexattr_destroy( &attr1 );
+        if (rc)
+            goto fatal;
+
+        rc = hthread_rwlockattr_destroy( &attr2 );
+        if (rc)
+            goto fatal;
+
+        plk->ilk = ilk;     /* (RWLOCK is now initialized) */
+
+        InsertListHead( &locklist, &ilk->il_link );
+        lockcount++;
+
+        PTTRACE( "rwlock init", plk, &attr2, create_loc, PTT_MAGIC );
+    }
+    UnlockLocksList();
 
     return 0;
 
@@ -556,45 +577,77 @@ DLL_EXPORT int  hthread_release_rwlock( RWLOCK* plk, const char* release_loc )
 /*-------------------------------------------------------------------*/
 /* Destroy a lock                                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_destroy_lock( LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_destroy_lock( LOCK* plk, const char* destroy_loc )
 {
-    int rc;
-    ILOCK* ilk;
-    UNREFERENCED( location );
-    ilk = (ILOCK*) plk->ilk;
-    rc = hthread_mutex_destroy( &ilk->il_lock );
-    LockLocksList();
+    int rc1, rc2 = 0;
+    ILOCK* ilk = (ILOCK*) plk->ilk;
+
+    if (!ilk)
+        return EINVAL;
+
+    /* Destroy the Internal ILOCK structure lock */
+    if ((rc1 = hthread_mutex_destroy( &ilk->il_locklock )) == 0)
     {
-        RemoveListEntry( &ilk->il_link );
-        lockcount--;
+        /* Now destroy the actual locking model HLOCK lock */
+        if ((rc2 = hthread_mutex_destroy( &ilk->il_lock )) != 0)
+            loglock( ilk, rc2, "destroy_lock", destroy_loc );
     }
-    UnlockLocksList();
-    free( ilk->il_name );
-    free_aligned( ilk );
-    plk->ilk = NULL;
-    return rc;
+    else
+        loglock( ilk, rc1, "destroy_lock", destroy_loc );
+
+    if (rc1 == 0 && rc2 == 0)
+    {
+        LockLocksList();
+        {
+            RemoveListEntry( &ilk->il_link );
+            lockcount--;
+        }
+        UnlockLocksList();
+
+        free( ilk->il_name );
+        free_aligned( ilk );
+        plk->ilk = NULL;
+    }
+
+    return (rc1 ? rc1 : (rc2 ? rc2 : 0));
 }
 
 /*-------------------------------------------------------------------*/
 /* Destroy a R/W lock                                                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_destroy_rwlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_destroy_rwlock( RWLOCK* plk, const char* destroy_loc )
 {
-    int rc;
-    ILOCK* ilk;
-    UNREFERENCED( location );
-    ilk = (ILOCK*) plk->ilk;
-    rc = hthread_rwlock_destroy( &ilk->il_rwlock );
-    LockLocksList();
+    int rc1, rc2 = 0;
+    ILOCK* ilk = (ILOCK*) plk->ilk;
+
+    if (!ilk)
+        return EINVAL;
+
+    /* Destroy the Internal ILOCK structure HLOCK */
+    if ((rc1 = hthread_mutex_destroy( &ilk->il_locklock )) == 0)
     {
-        RemoveListEntry( &ilk->il_link );
-        lockcount--;
+        /* Now destroy the actual locking model HRWLOCK rwlock */
+        if ((rc2 = hthread_rwlock_destroy( &ilk->il_rwlock )) != 0)
+            loglock( ilk, rc2, "destroy_rwlock", destroy_loc );
     }
-    UnlockLocksList();
-    free( ilk->il_name );
-    free_aligned( ilk );
-    plk->ilk = NULL;
-    return rc;
+    else
+        loglock( ilk, rc1, "destroy_rwlock", destroy_loc );
+
+    if (rc1 == 0 && rc2 == 0)
+    {
+        LockLocksList();
+        {
+            RemoveListEntry( &ilk->il_link );
+            lockcount--;
+        }
+        UnlockLocksList();
+
+        free( ilk->il_name );
+        free_aligned( ilk );
+        plk->ilk = NULL;
+    }
+
+    return (rc1 ? rc1 : (rc2 ? rc2 : 0));
 }
 
 /*-------------------------------------------------------------------*/
