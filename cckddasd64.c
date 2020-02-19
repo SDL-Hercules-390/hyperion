@@ -31,27 +31,35 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 /*-------------------------------------------------------------------*/
 int cckd64_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
-CCKD64_EXT     *cckd;                   /* -> cckd extension         */
-DEVBLK         *dev2;                   /* -> device in cckd queue   */
-int             i;                      /* Counter                   */
-int             fdflags;                /* File flags                */
+CCKD64_EXT  *cckd;                      /* -> cckd extension         */
+DEVBLK      *dev2;                      /* -> device in cckd queue   */
+int          i;                         /* Counter                   */
+int          fdflags;                   /* File flags                */
+char         buf[32];                   /* Work buffer                      */
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
     /* Initialize the global cckd block if necessary */
-    if (memcmp (&cckdblk.id, CCKDBLK_ID, sizeof(cckdblk.id)))
-        cckd_dasd_init (0, NULL);
+    if (memcmp( &cckdblk.id, CCKDBLK_ID, sizeof( cckdblk.id )))
+        cckd_dasd_init( 0, NULL );
 
     /* Obtain area for cckd extension */
-    dev->cckd_ext = cckd = cckd_calloc (dev, "ext", 1, sizeof(CCKD64_EXT));
+    dev->cckd_ext = cckd = cckd_calloc( dev, "ext", 1, sizeof( CCKD64_EXT ));
     if (cckd == NULL)
         return -1;
 
     /* Initialize locks and conditions */
-    initialize_lock (&cckd->cckdiolock);
-    initialize_lock (&cckd->filelock);
-    initialize_condition (&cckd->cckdiocond);
+
+    initialize_lock( &cckd->cckdiolock );
+    MSGBUF( buf,    "&cckd->cckdiolock %1d:%04X", LCSS_DEVNUM );
+    set_lock_name(   &cckd->cckdiolock, buf );
+
+    initialize_lock( &cckd->filelock );
+    MSGBUF( buf,    "&cckd->filelock %1d:%04X", LCSS_DEVNUM );
+    set_lock_name(   &cckd->filelock, buf );
+
+    initialize_condition( &cckd->cckdiocond );
 
     /* Initialize some variables */
     obtain_lock (&cckd->filelock);

@@ -3883,46 +3883,64 @@ U32 mask4;
     if (!dev->group)
     {
         /* This code is executed for each device in the group. */
-        dev->rcd = &qeth_read_configuration_data;
-        dev->numsense = 32;
-        memset (dev->sense, 0, sizeof(dev->sense));
-        dev->numdevid = sizeof(sense_id_bytes);
-        memcpy(dev->devid, sense_id_bytes, sizeof(sense_id_bytes));
-        dev->devtype = dev->devid[1] << 8 | dev->devid[2];
-        dev->chptype[0] = CHP_TYPE_OSD;
-        dev->pmcw.flag4 |= PMCW4_Q;
-        dev->fd = -1;
+
+        dev->rcd         =  &qeth_read_configuration_data;
+        dev->numsense    =  32;
+        dev->numdevid    =  sizeof( sense_id_bytes );
+        dev->devtype     =  dev->devid[1] << 8 | dev->devid[2];
+        dev->chptype[0]  =  CHP_TYPE_OSD;
+        dev->pmcw.flag4 |=  PMCW4_Q;
+        dev->fd          =  -1;
+
+        memset( dev->sense,        0,       sizeof( dev->sense     ));
+        memcpy( dev->devid, sense_id_bytes, sizeof( sense_id_bytes ));
+
         /* Setting dev->bufsize = 0xFFFF causes, on return to attach_device */
         /* in config.c, storage of size 0xFFFF bytes to be obtained, and    */
         /* the storage address to be placed in dev->buf. The storage is     */
         /* used to receive data from the TUNTAP interface, so 0xFFFF is     */
         /* effectively the largest MTU that could ever be used by QETH.     */
-        dev->bufsize = 0xFFFF;      /* maximum packet/frame size */
 
-        if(!(grouped = group_device(dev,groupsize)) && !dev->member)
+        dev->bufsize = 0xFFFF;    /* maximum packet/frame size */
+
+        if (!(grouped = group_device( dev, groupsize )) && !dev->member)
         {
-            /* This code is executed for the first device in the group. */
-            dev->group->grp_data = grp = malloc(sizeof(OSA_GRP));
-            memset (grp, 0, sizeof(OSA_GRP));
+            char buf[32];
 
+            /* This code is executed for the first device in the group. */
+
+            dev->group->grp_data = grp = malloc( sizeof( OSA_GRP ));
+            memset( grp, 0, sizeof( OSA_GRP ));
 
             initialize_condition( &grp->qrcond );
             initialize_condition( &grp->qdcond );
+
             initialize_lock( &grp->qlock );
+            MSGBUF( buf,    "&grp->qlock %1d:%04X",       LCSS_DEVNUM );
+            set_lock_name(   &grp->qlock, buf );
+
             initialize_lock( &grp->idx.lockbhr );
+            MSGBUF( buf,    "&grp->idx.lockbhr %1d:%04X", LCSS_DEVNUM );
+            set_lock_name(   &grp->idx.lockbhr, buf );
+
             initialize_lock( &grp->l3r.lockbhr );
+            MSGBUF( buf,    "&grp->l3r.lockbhr %1d:%04X", LCSS_DEVNUM );
+            set_lock_name(   &grp->l3r.lockbhr, buf );
 
-            /* Creat ACTIVATE QUEUES signalling pipe */
-            /* Check your return codes, Jan.                         */
-            VERIFY(!create_pipe(grp->ppfd));
+            /* Create ACTIVATE QUEUES signalling pipe */
+            /* Check your return codes, Jan. */
 
-            /* Set Non-Blocking mode */
-            VERIFY( socket_set_blocking_mode(grp->ppfd[0],0) == 0);
-            VERIFY( socket_set_blocking_mode(grp->ppfd[1],0) == 0);
+            VERIFY( !create_pipe( grp->ppfd ));
+
+            /* Set NON-Blocking mode (i.e. disable blocking mode) */
+
+            VERIFY( socket_set_blocking_mode( grp->ppfd[0], 0 ) == 0);
+            VERIFY( socket_set_blocking_mode( grp->ppfd[1], 0 ) == 0);
 
             /* Set defaults */
+
             grp->ttdev = strdup( DEF_NETDEV );
-            grp->ttfd = -1;
+            grp->ttfd  = -1;
         }
         else
             /* This code is executed for the second and subsequent devices in the group. */
