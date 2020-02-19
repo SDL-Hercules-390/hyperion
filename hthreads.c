@@ -191,17 +191,18 @@ DLL_EXPORT void hthreads_internal_init()
         /* Add an entry for the current thread to our threads list
            since it was created by the operating system and not us */
         {
-            HTHREAD* ht;
-            TIMEVAL tv;
-            const char* loc = PTT_LOC; // (where thread was created)
-            gettimeofday( &tv, NULL );
-            ht = calloc_aligned( sizeof( HTHREAD ), 64 );
+            const char* ht_cr_locat = PTT_LOC; // (where created)
+            HTHREAD* ht = calloc_aligned( sizeof( HTHREAD ), 64 );
+
             InitializeListLink( &ht->ht_link );
-            ht->ht_cr_locat = loc;
-            memcpy( &ht->ht_cr_time, &tv, sizeof( TIMEVAL ));
-            ht->ht_name = strdup( "main" );
-            ht->ht_tid = hthread_self();
-            ht->ht_ob_lock = NULL;
+            gettimeofday( &ht->ht_cr_time, NULL );
+
+            ht->ht_tid        =  hthread_self();
+            ht->ht_name       =  strdup( "main" );
+            ht->ht_cr_locat   =  ht_cr_locat;
+            ht->ht_ob_lock    =  NULL;
+            ht->ht_footprint  =  false;
+
             InsertListHead( &threadlist, &ht->ht_link );
             threadcount++;
         }
@@ -455,7 +456,7 @@ static void hthread_lock_obtained()
 /*-------------------------------------------------------------------*/
 /* Obtain a lock                                                     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* obtain_loc )
 {
     int rc;
     U64 waitdur;
@@ -463,7 +464,7 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
     hthread_obtaining_lock( plk );
-    PTTRACE( "lock before", plk, NULL, location, PTT_MAGIC );
+    PTTRACE( "lock before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_mutex_trylock( &ilk->il_lock );
     if (EBUSY == rc)
     {
@@ -477,16 +478,18 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
         gettimeofday( &tv, NULL );
         waitdur = 0;
     }
-    PTTRACE2( "lock after", plk, (void*) waitdur, location, rc, &tv );
+    PTTRACE2( "lock after", plk, (void*) waitdur, obtain_loc, rc, &tv );
     hthread_lock_obtained();
     if (rc)
-        loglock( ilk, rc, "obtain_lock", location );
+        loglock( ilk, rc, "obtain_lock", obtain_loc );
     if (!rc || EOWNERDEAD == rc)
     {
         hthread_mutex_lock( &ilk->il_locklock );
-        ilk->il_ob_locat = location;
-        ilk->il_ob_tid = hthread_self();
-        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        {
+            ilk->il_ob_locat = obtain_loc;
+            ilk->il_ob_tid = hthread_self();
+            memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        }
         hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
@@ -495,18 +498,20 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Release a lock                                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_release_lock( LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_release_lock( LOCK* plk, const char* release_loc )
 {
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_mutex_unlock( &ilk->il_lock );
-    PTTRACE( "unlock", plk, NULL, location, rc );
+    PTTRACE( "unlock", plk, NULL, release_loc, rc );
     if (rc)
-        loglock( ilk, rc, "release_lock", location );
+        loglock( ilk, rc, "release_lock", release_loc );
     hthread_mutex_lock( &ilk->il_locklock );
-    ilk->il_ob_locat = "null:0";
-    ilk->il_ob_tid = 0;
+    {
+        ilk->il_ob_locat = "null:0";
+        ilk->il_ob_tid = 0;
+    }
     hthread_mutex_unlock( &ilk->il_locklock );
     return rc;
 }
@@ -514,18 +519,20 @@ DLL_EXPORT int  hthread_release_lock( LOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Release a R/W lock                                                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_release_rwlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_release_rwlock( RWLOCK* plk, const char* release_loc )
 {
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_rwlock_unlock( &ilk->il_rwlock );
-    PTTRACE( "rwunlock", plk, NULL, location, rc );
+    PTTRACE( "rwunlock", plk, NULL, release_loc, rc );
     if (rc)
-        loglock( ilk, rc, "release_rwlock", location );
+        loglock( ilk, rc, "release_rwlock", release_loc );
     hthread_mutex_lock( &ilk->il_locklock );
-    ilk->il_ob_locat = "null:0";
-    ilk->il_ob_tid = 0;
+    {
+        ilk->il_ob_locat = "null:0";
+        ilk->il_ob_tid = 0;
+    }
     hthread_mutex_unlock( &ilk->il_locklock );
     return rc;
 }
@@ -577,24 +584,26 @@ DLL_EXPORT int  hthread_destroy_rwlock( RWLOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Try to obtain a lock                                              */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_try_obtain_lock( LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_try_obtain_lock( LOCK* plk, const char* obtain_loc )
 {
     int rc;
     ILOCK* ilk;
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
-    PTTRACE( "try before", plk, NULL, location, PTT_MAGIC );
+    PTTRACE( "try before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_mutex_trylock( &ilk->il_lock );
     gettimeofday( &tv, NULL );
-    PTTRACE2( "try after", plk, NULL, location, rc, &tv );
+    PTTRACE2( "try after", plk, NULL, obtain_loc, rc, &tv );
     if (rc && EBUSY != rc)
-        loglock( ilk, rc, "try_obtain_lock", location );
+        loglock( ilk, rc, "try_obtain_lock", obtain_loc );
     if (!rc || EOWNERDEAD == rc)
     {
         hthread_mutex_lock( &ilk->il_locklock );
-        ilk->il_ob_locat = location;
-        ilk->il_ob_tid = hthread_self();
-        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        {
+            ilk->il_ob_locat = obtain_loc;
+            ilk->il_ob_tid = hthread_self();
+            memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        }
         hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
@@ -640,14 +649,14 @@ DLL_EXPORT int  hthread_have_lock( LOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Obtain read-only access to R/W lock                               */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_obtain_rdlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_obtain_rdlock( RWLOCK* plk, const char* obtain_loc )
 {
     int rc;
     U64 waitdur;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
     hthread_obtaining_lock( (LOCK*) plk );
-    PTTRACE( "rdlock before", plk, NULL, location, PTT_MAGIC );
+    PTTRACE( "rdlock before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
     if (EBUSY == rc)
     {
@@ -657,17 +666,17 @@ DLL_EXPORT int  hthread_obtain_rdlock( RWLOCK* plk, const char* location )
     }
     else
         waitdur = 0;
-    PTTRACE( "rdlock after", plk, (void*) waitdur, location, rc );
+    PTTRACE( "rdlock after", plk, (void*) waitdur, obtain_loc, rc );
     hthread_lock_obtained();
     if (rc)
-        loglock( ilk, rc, "obtain_rdloc", location );
+        loglock( ilk, rc, "obtain_rdloc", obtain_loc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Obtain exclusive write access to a R/W lock                       */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* obtain_loc )
 {
     int rc;
     U64 waitdur;
@@ -675,7 +684,7 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
     hthread_obtaining_lock( (LOCK*) plk );
-    PTTRACE( "wrlock before", plk, NULL, location, PTT_MAGIC );
+    PTTRACE( "wrlock before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     if (EBUSY == rc)
     {
@@ -689,16 +698,18 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
         gettimeofday( &tv, NULL );
         waitdur = 0;
     }
-    PTTRACE2( "wrlock after", plk, (void*) waitdur, location, rc, &tv );
+    PTTRACE2( "wrlock after", plk, (void*) waitdur, obtain_loc, rc, &tv );
     hthread_lock_obtained();
     if (rc)
-        loglock( ilk, rc, "obtain_wrlock", location );
+        loglock( ilk, rc, "obtain_wrlock", obtain_loc );
     if (!rc || EOWNERDEAD == rc)
     {
         hthread_mutex_lock( &ilk->il_locklock );
-        ilk->il_ob_locat = location;
-        ilk->il_ob_tid = hthread_self();
-        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        {
+            ilk->il_ob_locat = obtain_loc;
+            ilk->il_ob_tid = hthread_self();
+            memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        }
         hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
@@ -707,40 +718,42 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Try to obtain read-only access to a R/W lock                      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_try_obtain_rdlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_try_obtain_rdlock( RWLOCK* plk, const char* obtain_loc )
 {
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    PTTRACE( "tryrd before", plk, NULL, location, PTT_MAGIC );
+    PTTRACE( "tryrd before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
-    PTTRACE( "tryrd after", plk, NULL, location, rc );
+    PTTRACE( "tryrd after", plk, NULL, obtain_loc, rc );
     if (rc && EBUSY != rc)
-        loglock( ilk, rc, "try_obtain_rdlock", location );
+        loglock( ilk, rc, "try_obtain_rdlock", obtain_loc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Try to obtain exclusive write access to a R/W lock                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_try_obtain_wrlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_try_obtain_wrlock( RWLOCK* plk, const char* obtain_loc )
 {
     int rc;
     ILOCK* ilk;
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
-    PTTRACE( "trywr before", plk, NULL, location, PTT_MAGIC );
+    PTTRACE( "trywr before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     gettimeofday( &tv, NULL );
-    PTTRACE2( "trywr after", plk, NULL, location, rc, &tv );
+    PTTRACE2( "trywr after", plk, NULL, obtain_loc, rc, &tv );
     if (rc && EBUSY != rc)
-        loglock( ilk, rc, "try_obtain_wrlock", location );
+        loglock( ilk, rc, "try_obtain_wrlock", obtain_loc );
     if (!rc)
     {
         hthread_mutex_lock( &ilk->il_locklock );
-        ilk->il_ob_locat = location;
-        ilk->il_ob_tid = hthread_self();
-        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        {
+            ilk->il_ob_locat = obtain_loc;
+            ilk->il_ob_tid = hthread_self();
+            memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        }
         hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
@@ -781,10 +794,10 @@ DLL_EXPORT int  hthread_test_wrlock( RWLOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Initialize a condition variable                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_initialize_condition( COND* plc, const char* location )
+DLL_EXPORT int  hthread_initialize_condition( COND* plc, const char* init_loc )
 {
     int rc;
-    PTTRACE( "cond init", NULL, plc, location, PTT_MAGIC );
+    PTTRACE( "cond init", NULL, plc, init_loc, PTT_MAGIC );
     rc = hthread_cond_init( plc );
     return rc;
 }
@@ -803,39 +816,39 @@ DLL_EXPORT int  hthread_destroy_condition( COND* plc, const char* location )
 /*-------------------------------------------------------------------*/
 /* Signal a condition variable (releases only one thread)            */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_signal_condition( COND* plc, const char* location )
+DLL_EXPORT int  hthread_signal_condition( COND* plc, const char* sig_loc )
 {
     int rc;
     rc = hthread_cond_signal( plc );
-    PTTRACE( "signal", NULL, plc, location, rc );
+    PTTRACE( "signal", NULL, plc, sig_loc, rc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Broadcast a condition variable (releases all waiting threads)     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_broadcast_condition( COND* plc, const char* location )
+DLL_EXPORT int  hthread_broadcast_condition( COND* plc, const char* bcast_loc )
 {
     int rc;
     rc = hthread_cond_broadcast( plc );
-    PTTRACE( "broadcast", NULL, plc, location, rc );
+    PTTRACE( "broadcast", NULL, plc, bcast_loc, rc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Wait for condition variable to be signaled                        */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_wait_condition( COND* plc, LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_wait_condition( COND* plc, LOCK* plk, const char* wait_loc )
 {
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    PTTRACE( "wait before", plk, plc, location, PTT_MAGIC );
+    PTTRACE( "wait before", plk, plc, wait_loc, PTT_MAGIC );
     rc = hthread_cond_wait( plc, &ilk->il_lock );
-    PTTRACE( "wait after", plk, plc, location, rc );
+    PTTRACE( "wait after", plk, plc, wait_loc, rc );
     ilk->il_ob_tid = hthread_self();
     if (rc)
-        loglock( ilk, rc, "wait_condition", location );
+        loglock( ilk, rc, "wait_condition", wait_loc );
     return rc;
 }
 
@@ -844,17 +857,17 @@ DLL_EXPORT int  hthread_wait_condition( COND* plc, LOCK* plk, const char* locati
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_timed_wait_condition( COND* plc, LOCK* plk,
                                               const struct timespec* tm,
-                                              const char* location )
+                                              const char* wait_loc )
 {
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    PTTRACE( "tw before", plk, plc, location, PTT_MAGIC );
+    PTTRACE( "tw before", plk, plc, wait_loc, PTT_MAGIC );
     rc = hthread_cond_timedwait( plc, &ilk->il_lock, tm );
-    PTTRACE( "tw after", plk, plc, location, rc );
+    PTTRACE( "tw after", plk, plc, wait_loc, rc );
     ilk->il_ob_tid = hthread_self();
     if (rc && ETIMEDOUT != rc)
-        loglock( ilk, rc, "timed_wait_condition", location );
+        loglock( ilk, rc, "timed_wait_condition", wait_loc );
     return rc;
 }
 
@@ -940,9 +953,9 @@ static void hthread_list_abandoned_locks( TID tid, const char* exit_loc )
 /*-------------------------------------------------------------------*/
 /* Internal thread function to remove a thread from our list         */
 /*-------------------------------------------------------------------*/
-static void hthread_has_exited( TID tid, const char* location )
+static void hthread_has_exited( TID tid, const char* exit_loc )
 {
-    hthread_list_abandoned_locks( tid, location );
+    hthread_list_abandoned_locks( tid, exit_loc );
 
     LockThreadsList();
     {
@@ -981,7 +994,8 @@ static void* hthread_func( void* arg2 )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_create_thread( TID* ptid, ATTR* pat,
                                        THREAD_FUNC* pfn, void* arg,
-                                       const char* name, const char* location )
+                                       const char* name,
+                                       const char* create_loc )
 {
     int rc;
     void** arg2;
@@ -991,59 +1005,59 @@ DLL_EXPORT int  hthread_create_thread( TID* ptid, ATTR* pat,
     *(arg2+2) = (void*) strdup( name );
     LockThreadsList();
     {
-        TIMEVAL tv;
-        gettimeofday( &tv, NULL );
-
         if (0 == (rc = hthread_create( ptid, pat, hthread_func, arg2 )))
         {
             HTHREAD* ht = calloc_aligned( sizeof( HTHREAD ), 64 );
+
             InitializeListLink( &ht->ht_link );
-            ht->ht_cr_locat = location;
-            memcpy( &ht->ht_cr_time, &tv, sizeof( TIMEVAL ));
-            ht->ht_name = strdup( name );
-            ht->ht_tid = *ptid;
-            ht->ht_ob_lock = NULL;
+            gettimeofday( &ht->ht_cr_time, NULL );
+
+            ht->ht_cr_locat =  create_loc;
+            ht->ht_name     =  strdup( name );
+            ht->ht_tid      =  *ptid;
+            ht->ht_ob_lock  =  NULL;
+
             InsertListHead( &threadlist, &ht->ht_link );
             threadcount++;
         }
     }
     UnlockThreadsList();
-    PTTRACE( "create", (void*)*ptid, NULL, location, rc );
+    PTTRACE( "create", (void*)*ptid, NULL, create_loc, rc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Wait for a thread to terminate                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_join_thread( TID tid, void** prc, const char* location )
+DLL_EXPORT int  hthread_join_thread( TID tid, void** prc, const char* join_loc )
 {
     int rc;
-    PTTRACE( "join before", (void*) tid, prc ? *prc : NULL, location, PTT_MAGIC );
+    PTTRACE( "join before", (void*) tid, prc ? *prc : NULL, join_loc, PTT_MAGIC );
     rc = hthread_join( tid, prc );
-    PTTRACE( "join after",  (void*) tid, prc ? *prc : NULL, location, rc );
+    PTTRACE( "join after",  (void*) tid, prc ? *prc : NULL, join_loc, rc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Detach from a thread (release resources or change to "detached")  */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_detach_thread( TID tid, const char* location )
+DLL_EXPORT int  hthread_detach_thread( TID tid, const char* det_loc )
 {
     int rc;
-    PTTRACE( "dtch before", (void*) tid, NULL, location, PTT_MAGIC );
+    PTTRACE( "dtch before", (void*) tid, NULL, det_loc, PTT_MAGIC );
     rc = hthread_detach( tid );
-    PTTRACE( "dtch after", (void*) tid, NULL, location, rc );
+    PTTRACE( "dtch after", (void*) tid, NULL, det_loc, rc );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Exit immediately from a thread                                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void hthread_exit_thread( void* rc, const char* location )
+DLL_EXPORT void hthread_exit_thread( void* rc, const char* exit_loc )
 {
     TID tid;
     tid = hthread_self();
-    hthread_has_exited( tid, location );
+    hthread_has_exited( tid, exit_loc );
     hthread_exit( rc );
 }
 
@@ -1061,7 +1075,7 @@ DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* location 
 /*-------------------------------------------------------------------*/
 /* Change a thread's dispatching priority    (HTHREADS function)     */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location )
+DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* prio_loc )
 {
     int rc;
     struct sched_param param = {0};
@@ -1084,7 +1098,7 @@ DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location 
         {
             // "'%s' failed at loc=%s: rc=%d: %s"
             WRMSG( HHC90020, "W", "hthread_setschedparam()",
-                TRIMLOC( location ), rc, strerror( rc ));
+                TRIMLOC( prio_loc ), rc, strerror( rc ));
         }
     }
     return rc;
@@ -1093,7 +1107,7 @@ DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location 
 /*-------------------------------------------------------------------*/
 /* Retrieve a thread's dispatching priority   (HTHREADS function)    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* location )
+DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* prio_loc )
 {
     int rc, policy, prio;
     struct sched_param  param = {0};
@@ -1118,7 +1132,7 @@ DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* location )
         {
             // "'%s' failed at loc=%s: rc=%d: %s"
             WRMSG( HHC90020, "W", "hthread_getschedparam()",
-                TRIMLOC( location ), rc, strerror( rc ));
+                TRIMLOC( prio_loc ), rc, strerror( rc ));
         }
     }
     return prio;
@@ -1170,20 +1184,20 @@ static int lsortby_nam( const ILOCK* p1, const ILOCK* p2 )
     int rc = strcasecmp( p1->il_name, p2->il_name );
     return rc == 0 ? ((int)((S64)p1->il_addr - (S64)p2->il_addr)) : rc;
 }
-static int lsortby_tim( const ILOCK* p1, const ILOCK* p2 )
+static int lsortby_ob_tim( const ILOCK* p1, const ILOCK* p2 )
 {
     int rc  =  (p1->il_ob_time.tv_sec    !=     p2->il_ob_time.tv_sec)  ?
         ((long) p1->il_ob_time.tv_sec  - (long) p2->il_ob_time.tv_sec)  :
         ((long) p1->il_ob_time.tv_usec - (long) p2->il_ob_time.tv_usec) ;
     return rc == 0 ? lsortby_nam( p1, p2 ) : rc;
 }
-static int lsortby_tid( const ILOCK* p1, const ILOCK* p2 )
+static int lsortby_ob_tid( const ILOCK* p1, const ILOCK* p2 )
 {
     int rc = equal_threads( p1->il_ob_tid,             p2->il_ob_tid ) ? 0 :
                 ((intptr_t) p1->il_ob_tid - (intptr_t) p2->il_ob_tid);
     return rc == 0 ? lsortby_nam( p1, p2 ) : rc;
 }
-static int lsortby_loc( const ILOCK* p1, const ILOCK* p2 )
+static int lsortby_ob_loc( const ILOCK* p1, const ILOCK* p2 )
 {
     int rc = strcasecmp( p1->il_ob_locat, p2->il_ob_locat );
     return rc == 0 ? lsortby_nam( p1, p2 ) : rc;
@@ -1196,7 +1210,6 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
 {
     LIST_ENTRY  anchor;             /* Private locks list anchor     */
     ILOCK*      ilk;                /* Pointer to ILOCK array        */
-    char        tod[27];            /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
     TID         tid = 0;            /* Requested thread id           */
     int         i, k, rc = 0;       /* Work vars and return code     */
     char        c;                  /* sscanf work; work flag        */
@@ -1222,13 +1235,13 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
             else
             {
                      if (CMD( argv[3], NAME,  4 )) sortby = (CMPFUNC*) lsortby_nam;
-                else if (CMD( argv[3], TID,   3 )) sortby = (CMPFUNC*) lsortby_tid;
-                else if (CMD( argv[3], OWNER, 5 )) sortby = (CMPFUNC*) lsortby_tid;
-                else if (CMD( argv[3], WHEN,  4 )) sortby = (CMPFUNC*) lsortby_tim;
-                else if (CMD( argv[3], TIME,  4 )) sortby = (CMPFUNC*) lsortby_tim;
-                else if (CMD( argv[3], TOD,   3 )) sortby = (CMPFUNC*) lsortby_tim;
-                else if (CMD( argv[3], WHERE, 5 )) sortby = (CMPFUNC*) lsortby_loc;
-                else if (CMD( argv[3], LOC,   3 )) sortby = (CMPFUNC*) lsortby_loc;
+                else if (CMD( argv[3], TID,   3 )) sortby = (CMPFUNC*) lsortby_ob_tid;
+                else if (CMD( argv[3], OWNER, 5 )) sortby = (CMPFUNC*) lsortby_ob_tid;
+                else if (CMD( argv[3], WHEN,  4 )) sortby = (CMPFUNC*) lsortby_ob_tim;
+                else if (CMD( argv[3], TIME,  4 )) sortby = (CMPFUNC*) lsortby_ob_tim;
+                else if (CMD( argv[3], TOD,   3 )) sortby = (CMPFUNC*) lsortby_ob_tim;
+                else if (CMD( argv[3], WHERE, 5 )) sortby = (CMPFUNC*) lsortby_ob_loc;
+                else if (CMD( argv[3], LOC,   3 )) sortby = (CMPFUNC*) lsortby_ob_loc;
                 else
                     rc = -1;
             }
@@ -1245,6 +1258,7 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
             /* Sort them into the requested sequence */
             if (k)
             {
+                char tod[32];           // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                 char threadname[16];
                 char extra[64];
 
