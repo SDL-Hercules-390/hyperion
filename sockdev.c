@@ -36,7 +36,6 @@
 static int init_done = FALSE;
 
 static LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
-static LOCK        bind_lock;      /* (lock for accessing list) */
 
 /*-------------------------------------------------------------------*/
 /* Initialization / termination functions...                         */
@@ -47,11 +46,16 @@ static void term_sockdev( void* );
 
 static void init_sockdev( void )
 {
-    if (init_done) return;
-    InitializeListHead( &bind_head );
-    initialize_lock( &bind_lock );
-    hdl_addshut( "term_sockdev", term_sockdev, NULL );
-    init_done = TRUE;
+    obtain_lock( &sysblk.bindlock );
+    {
+        if (!init_done)
+        {
+            InitializeListHead( &bind_head );
+            hdl_addshut( "term_sockdev", term_sockdev, NULL );
+            init_done = TRUE;
+        }
+    }
+    release_lock( &sysblk.bindlock );
 }
 
 static void term_sockdev( void* arg )
@@ -218,7 +222,7 @@ int add_socket_devices_to_fd_set( int maxfd, fd_set* readset )
     bind_struct*  bs;
     LIST_ENTRY*   pListEntry;
 
-    obtain_lock( &bind_lock );
+    obtain_lock( &sysblk.bindlock );
     {
         pListEntry = bind_head.Flink;
 
@@ -237,7 +241,7 @@ int add_socket_devices_to_fd_set( int maxfd, fd_set* readset )
             pListEntry = pListEntry->Flink;
         }
     }
-    release_lock( &bind_lock );
+    release_lock( &sysblk.bindlock );
 
     return maxfd;
 }
@@ -362,7 +366,7 @@ void check_socket_devices_for_connections( fd_set* readset )
     bind_struct*  bs;
     LIST_ENTRY*   pListEntry;
 
-    obtain_lock( &bind_lock );
+    obtain_lock( &sysblk.bindlock );
     {
         pListEntry = bind_head.Flink;
 
@@ -376,7 +380,7 @@ void check_socket_devices_for_connections( fd_set* readset )
                  * waiting to be serviced, but we'll catch them
                  * the next time the panel thread calls us. */
 
-                release_lock( &bind_lock );
+                release_lock( &sysblk.bindlock );
                 socket_device_connection_handler( bs );
                 return;
             }
@@ -384,7 +388,7 @@ void check_socket_devices_for_connections( fd_set* readset )
             pListEntry = pListEntry->Flink;
         }
     }
-    release_lock( &bind_lock );
+    release_lock( &sysblk.bindlock );
 }
 
 /*-------------------------------------------------------------------*/
@@ -420,11 +424,11 @@ void* socket_thread( void* arg )
         RECV_SOCKDEV_THREAD_PIPE_SIGNAL();
 
         /* Check if it's time to exit yet */
-        obtain_lock( &bind_lock );
+        obtain_lock( &sysblk.bindlock );
         {
             exit_now = (sysblk.shutdown || IsListEmpty( &bind_head ));
         }
-        release_lock( &bind_lock );
+        release_lock( &sysblk.bindlock );
 
         if (exit_now)
             break;
@@ -518,7 +522,7 @@ int bind_device_ex( DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
        and create the socket thread that will listen
        for connections (if it doesn't already exist) */
 
-    obtain_lock( &bind_lock );
+    obtain_lock( &sysblk.bindlock );
     {
         was_list_empty = IsListEmpty( &bind_head );
 
@@ -536,14 +540,14 @@ int bind_device_ex( DEVBLK* dev, char* spec, ONCONNECT fn, void* arg )
                 close_socket( bs->sd );
                 free( bs->spec );
                 free( bs );
-                release_lock( &bind_lock );
+                release_lock( &sysblk.bindlock );
                 return 0; /* (failure) */
             }
         }
 
         SIGNAL_SOCKDEV_THREAD();
     }
-    release_lock( &bind_lock );
+    release_lock( &sysblk.bindlock );
 
     // "%1d:%04X COMM: device bound to socket %s"
     WRMSG( HHC01042, "I", LCSS_DEVNUM, dev->bs->spec );
@@ -594,12 +598,12 @@ int unbind_device_ex( DEVBLK* dev, int forced )
     }
 
     /* Remove the entry from our list */
-    obtain_lock( &bind_lock );
+    obtain_lock( &sysblk.bindlock );
     {
         RemoveListEntry( &bs->bind_link );
         SIGNAL_SOCKDEV_THREAD();
     }
-    release_lock( &bind_lock );
+    release_lock( &sysblk.bindlock );
 
     // "%1d:%04X COMM: device unbound from socket %s"
     WRMSG( HHC01046, "I",LCSS_DEVNUM, bs->spec );
