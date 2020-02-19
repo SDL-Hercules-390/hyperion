@@ -50,6 +50,9 @@ struct ILOCK                    /* Hercules internal ILOCK structure */
     HLOCK        il_lock;       /* The actual locking model mutex    */
     HRWLOCK      il_rwlock;     /* The actual locking model rwlock   */
                };
+    const char*  il_cr_locat;   /* Location where lock was created   */
+    TIMEVAL      il_cr_time;    /* Time of day when it was created   */
+    TID          il_cr_tid;     /* Thread-Id of who created it       */
 };
 typedef struct ILOCK ILOCK;     /* Shorter name for the same thing   */
 
@@ -84,14 +87,15 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
 
     switch (rc)
     {
+        case EEXIST:          err_desc = "already init'ed";  break;
         case EAGAIN:          err_desc = "max recursion";    break;
         case EPERM:           err_desc = "not owned";        break;
         case EINVAL:          err_desc = "invalid argument"; break;
         case EDEADLK:         err_desc = "deadlock";         break;
         case ENOTRECOVERABLE: err_desc = "not recoverable";  break;
         case EOWNERDEAD:      err_desc = "owner dead";       break;
-        case EBUSY:           err_desc = "busy";             break; /* (should not occur) */
-        case ETIMEDOUT:       err_desc = "timeout";          break; /* (should not occur) */
+        case EBUSY:           err_desc = "busy";             break;
+        case ETIMEDOUT:       err_desc = "timeout";          break;
         default:              err_desc = "(unknown)";        break;
     }
 
@@ -99,10 +103,17 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
     WRMSG( HHC90013, "E", calltype, ilk->il_name, rc, err_desc,
         TID_CAST( hthread_self() ), TRIMLOC( err_loc ));
 
+    if (EEXIST == rc)
+    {
+        // "lock %s was already initialized at %s"
+        WRMSG( HHC90028, "I", ilk->il_name, TRIMLOC( ilk->il_cr_locat ));
+    }
     if (ilk->il_ob_tid)
     {
-        // "lock %s was obtained by thread "TIDPAT" at %s"
-        WRMSG( HHC90014, "I", ilk->il_name, TID_CAST( ilk->il_ob_tid ),
+        // "lock %s was %s by thread "TIDPAT" at %s"
+        WRMSG( HHC90014, "I", ilk->il_name,
+            EEXIST == rc ? "still held" : "obtained",
+            TID_CAST( ilk->il_ob_tid ),
             TRIMLOC( ilk->il_ob_locat ));
     }
 }
@@ -261,7 +272,8 @@ static ILOCK* hthreads_find_ILOCK( const LOCK* plk )
 /*-------------------------------------------------------------------*/
 /* Find or allocate and initialize an internal ILOCK structure.      */
 /*-------------------------------------------------------------------*/
-static ILOCK* hthreads_get_ILOCK( LOCK* plk, const char* name )
+static ILOCK* hthreads_get_ILOCK( LOCK* plk, const char* name,
+                                             const char* create_loc )
 {
     ILOCK* ilk;                     /* Pointer to ILOCK structure    */
 
@@ -280,6 +292,10 @@ static ILOCK* hthreads_get_ILOCK( LOCK* plk, const char* name )
             InsertListHead( &locklist, &ilk->il_link );
             lockcount++;
             ilk->il_name = NULL;
+
+            gettimeofday( &ilk->il_cr_time, NULL );
+            ilk->il_cr_locat = create_loc;
+            ilk->il_cr_tid = hthread_self();
         }
 
         free( ilk->il_name );
@@ -299,11 +315,11 @@ static ILOCK* hthreads_get_ILOCK( LOCK* plk, const char* name )
 /* Initialize a lock                                                 */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_initialize_lock( LOCK* plk, const char* name,
-                                         const char* location )
+                                                    const char* create_loc )
 {
     int     rc;
     MATTR   attr;
-    ILOCK*  ilk = hthreads_get_ILOCK( plk, name );
+    ILOCK*  ilk = hthreads_get_ILOCK( plk, name, create_loc );
 
     /* Initialize the requested lock */
 
@@ -328,7 +344,7 @@ DLL_EXPORT int  hthread_initialize_lock( LOCK* plk, const char* name,
         goto fatal;
 
     plk->ilk = ilk; /* (LOCK is now initialized) */
-    PTTRACE( "lock init", plk, 0, location, PTT_MAGIC );
+    PTTRACE( "lock init", plk, 0, create_loc, PTT_MAGIC );
     return 0;
 
 fatal:
@@ -341,12 +357,12 @@ fatal:
 /* Initialize a R/W lock                                             */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* name,
-                                           const char* location )
+                                                        const char* create_loc )
 {
     int     rc;
     RWATTR  attr1;    /* for primary lock */
     MATTR   attr2;    /* for internal locklock */
-    ILOCK*  ilk = hthreads_get_ILOCK( (LOCK*) plk, name );
+    ILOCK*  ilk = hthreads_get_ILOCK( (LOCK*) plk, name, create_loc );
 
     /* Initialize the requested lock */
 
@@ -375,7 +391,7 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* name,
         goto fatal;
 
     plk->ilk = ilk;     /* (RWLOCK is now initialized) */
-    PTTRACE( "rwlock init", plk, &attr1, location, PTT_MAGIC );
+    PTTRACE( "rwlock init", plk, &attr1, create_loc, PTT_MAGIC );
 
     rc = hthread_mutexattr_destroy( &attr2 );
     if (rc)
@@ -1253,7 +1269,6 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
             {
                 char tod[32];           // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                 char threadname[16];
-                char extra[64];
 
                 qsort( ilk, k, sizeof( ILOCK ), sortby );
 
@@ -1269,18 +1284,38 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
                     {
                         c = 1;  /* (at least one lock found) */
 
-                        get_thread_name( ilk[i].il_ob_tid, threadname );
-                        FormatTIMEVAL(  &ilk[i].il_ob_time, tod, sizeof( tod ));
+                        get_thread_name( ilk[i].il_cr_tid, threadname );
+                        FormatTIMEVAL(  &ilk[i].il_cr_time, tod, sizeof( tod ));
 
-                        // " obtained by %s at %s"
-                        if (threadname[0] || strcasecmp( TRIMLOC( ilk[i].il_ob_locat ), "null:0" ))
-                            MSGBUF( extra, " obtained by %s at %s",
-                                threadname, TRIMLOC( ilk[i].il_ob_locat ));
-                        else extra[0] = 0;
+                        // "Lock "PTR_FMTx" (%s) created by "TIDPAT" (%s) on %s at %s"
+                        WRMSG( HHC90017, "I"
 
-                        // "Lock="PTR_FMTx", tid="TIDPAT", tod=%s, %s%s"
-                        WRMSG( HHC90017, "I", PTR_CAST( ilk[i].il_addr ), TID_CAST( ilk[i].il_ob_tid ),
-                            &tod[11], ilk[i].il_name, extra );
+                            , PTR_CAST( ilk[i].il_addr )
+                            , ilk[i].il_name
+
+                            , TID_CAST( ilk[i].il_cr_tid )
+                            , threadname
+                            , &tod[11]
+                            , TRIMLOC( ilk[i].il_cr_locat )
+                        );
+
+                        if (ilk[i].il_ob_tid)
+                        {
+                            get_thread_name( ilk[i].il_ob_tid, threadname );
+                            FormatTIMEVAL(  &ilk[i].il_ob_time, tod, sizeof( tod ));
+
+                            // "Lock "PTR_FMTx" (%s) obtained by "TIDPAT" (%s) on %s at %s"
+                            WRMSG( HHC90029, "I"
+
+                                , PTR_CAST( ilk[i].il_addr )
+                                , ilk[i].il_name
+
+                                , TID_CAST( ilk[i].il_ob_tid )
+                                , threadname
+                                , &tod[11]
+                                , TRIMLOC( ilk[i].il_ob_locat )
+                            );
+                        }
                     }
                 }
 
