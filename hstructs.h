@@ -557,6 +557,7 @@ struct SYSBLK {
 
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
+        LOCK    bindlock;               /* Sockdev bind lock         */
         LOCK    config;                 /* (Re)Configuration Lock    */
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370   (ARCH_370_IDX)   */
