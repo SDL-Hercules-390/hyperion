@@ -7,8 +7,8 @@
 
 /*-------------------------------------------------------------------*/
 /* Based on original pttrace.c (C) Copyright Greg Smith, 2003-2013   */
-/* Collaboratively enhanced and extended in May-June 2013            */
-/* by Mark L. Gaubatz and "Fish" (David B. Trout)                    */
+/* Collaboratively enhanced and extended  by Mark L. Gaubatz         */
+/* and "Fish" (David B. Trout), May-June 2013                        */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -23,14 +23,14 @@
 /*-------------------------------------------------------------------*/
 struct HTHREAD                  /* Hercules internal thread structure*/
 {
-    LIST_ENTRY   threadlink;    /* links threads together in a chain */
-    const char*  location;      /* Location where thread was created */
-    TIMEVAL      time;          /* Time of day when it was created   */
-    TID          tid;           /* Thread-Id of the thread           */
-    LOCK*        lock;          /* Lock attempting to obtain or NULL */
-    TIMEVAL      locktod;       /* Time of day when obtain attempted */
-    const char*  name;          /* strdup of Thread name             */
-    bool         footprint;     /* Footprint for deadlock detection  */
+    LIST_ENTRY   ht_link;       /* links threads together in a chain */
+    const char*  ht_cr_locat;   /* Location where thread was created */
+    TIMEVAL      ht_cr_time;    /* Time of day when it was created   */
+    TID          ht_tid;        /* Thread-Id of the thread           */
+    LOCK*        ht_ob_lock;    /* Lock attempting to obtain or NULL */
+    TIMEVAL      ht_ob_time;    /* Time of day when obtain attempted */
+    const char*  ht_name;       /* strdup of Thread name             */
+    bool         ht_footprint;  /* Footprint for deadlock detection  */
 };
 typedef struct HTHREAD HTHREAD; /* Shorter name for the same thing   */
 
@@ -39,16 +39,16 @@ typedef struct HTHREAD HTHREAD; /* Shorter name for the same thing   */
 /*-------------------------------------------------------------------*/
 struct ILOCK                    /* Hercules internal ILOCK structure */
 {
-    LIST_ENTRY   locklink;      /* links locks together in a chain   */
-    void*        addr;          /* Lock address                      */
-    const char*  name;          /* strdup of Lock name               */
-    const char*  location;      /* Location where it was obtained    */
-    TIMEVAL      time;          /* Time of day when it was obtained  */
-    TID          tid;           /* Thread-Id of who obtained it      */
-    HLOCK        locklock;      /* Internal ILOCK structure lock     */
+    LIST_ENTRY   il_link;       /* links locks together in a chain   */
+    void*        il_addr;       /* Lock address                      */
+    const char*  il_name;       /* strdup of Lock name               */
+    const char*  il_ob_locat;   /* Location where lock was obtained  */
+    TIMEVAL      il_ob_time;    /* Time of day when it was obtained  */
+    TID          il_ob_tid;     /* Thread-Id of who obtained it      */
+    HLOCK        il_locklock;   /* Internal ILOCK structure lock     */
     union      {
-    HLOCK        lock;          /* The actual locking model mutex    */
-    HRWLOCK      rwlock;        /* The actual locking model rwlock   */
+    HLOCK        il_lock;       /* The actual locking model mutex    */
+    HRWLOCK      il_rwlock;     /* The actual locking model rwlock   */
                };
 };
 typedef struct ILOCK ILOCK;     /* Shorter name for the same thing   */
@@ -96,14 +96,14 @@ static void loglock( ILOCK* ilk, const int rc, const char* calltype,
     }
 
     // "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
-    WRMSG( HHC90013, "E", calltype, ilk->name, rc, err_desc,
+    WRMSG( HHC90013, "E", calltype, ilk->il_name, rc, err_desc,
         TID_CAST( hthread_self() ), TRIMLOC( err_loc ));
 
-    if (ilk->tid)
+    if (ilk->il_ob_tid)
     {
         // "lock %s was obtained by thread "TIDPAT" at %s"
-        WRMSG( HHC90014, "I", ilk->name, TID_CAST( ilk->tid ),
-            TRIMLOC( ilk->location ));
+        WRMSG( HHC90014, "I", ilk->il_name, TID_CAST( ilk->il_ob_tid ),
+            TRIMLOC( ilk->il_ob_locat ));
     }
 }
 
@@ -121,10 +121,10 @@ static bool        inited = false;  /* true = internally initialized */
 /*-------------------------------------------------------------------*/
 /* Internal macros to control access to our internal lists           */
 /*-------------------------------------------------------------------*/
-#define LockLocksList()         hthread_mutex_lock( &listlock )
-#define UnlockLocksList()       hthread_mutex_unlock( &listlock )
-#define LockThreadsList()       hthread_mutex_lock( &threadlock )
-#define UnlockThreadsList()     hthread_mutex_unlock( &threadlock )
+#define LockLocksList()         hthread_mutex_lock   ( &listlock   )
+#define UnlockLocksList()       hthread_mutex_unlock ( &listlock   )
+#define LockThreadsList()       hthread_mutex_lock   ( &threadlock )
+#define UnlockThreadsList()     hthread_mutex_unlock ( &threadlock )
 
 /*-------------------------------------------------------------------*/
 /* Initialize HTHTREADS package                                      */
@@ -196,13 +196,13 @@ DLL_EXPORT void hthreads_internal_init()
             const char* loc = PTT_LOC; // (where thread was created)
             gettimeofday( &tv, NULL );
             ht = calloc_aligned( sizeof( HTHREAD ), 64 );
-            InitializeListLink( &ht->threadlink );
-            ht->location = loc;
-            memcpy( &ht->time, &tv, sizeof( TIMEVAL ));
-            ht->name = strdup( "main" );
-            ht->tid = thread_id();
-            ht->lock = NULL;
-            InsertListHead( &threadlist, &ht->threadlink );
+            InitializeListLink( &ht->ht_link );
+            ht->ht_cr_locat = loc;
+            memcpy( &ht->ht_cr_time, &tv, sizeof( TIMEVAL ));
+            ht->ht_name = strdup( "main" );
+            ht->ht_tid = hthread_self();
+            ht->ht_ob_lock = NULL;
+            InsertListHead( &threadlist, &ht->ht_link );
             threadcount++;
         }
 
@@ -230,11 +230,11 @@ static ILOCK* hthreads_find_ILOCK_locked( const LOCK* plk, LIST_ENTRY* anchor  )
 
     for (ple = anchor->Flink; ple != anchor; ple = ple->Flink)
     {
-        ilk = CONTAINING_RECORD( ple, ILOCK, locklink );
-        if (ilk->addr == plk)
+        ilk = CONTAINING_RECORD( ple, ILOCK, il_link );
+        if (ilk->il_addr == plk)
         {
-            RemoveListEntry( &ilk->locklink );
-            InsertListHead( anchor, &ilk->locklink );
+            RemoveListEntry( &ilk->il_link );
+            InsertListHead( anchor, &ilk->il_link );
             return ilk;
         }
     }
@@ -276,18 +276,18 @@ static ILOCK* hthreads_get_ILOCK( LOCK* plk, const char* name )
                 perror( "Fatal error in hthreads_get_ILOCK function" );
                 exit(1);
             }
-            InsertListHead( &locklist, &ilk->locklink );
+            InsertListHead( &locklist, &ilk->il_link );
             lockcount++;
-            ilk->name = NULL;
+            ilk->il_name = NULL;
         }
 
-        free( ilk->name );
-        ilk->name = strdup( name );
-        ilk->addr = plk;
-        ilk->location = "null:0";
-        ilk->tid = 0;
-        ilk->time.tv_sec = 0;
-        ilk->time.tv_usec = 0;
+        free( ilk->il_name );
+        ilk->il_name = strdup( name );
+        ilk->il_addr = plk;
+        ilk->il_ob_locat = "null:0";
+        ilk->il_ob_tid = 0;
+        ilk->il_ob_time.tv_sec = 0;
+        ilk->il_ob_time.tv_usec = 0;
     }
     UnlockLocksList();
 
@@ -314,11 +314,11 @@ DLL_EXPORT int  hthread_initialize_lock( LOCK* plk, const char* name,
     if (rc)
         goto fatal;
 
-    rc = hthread_mutex_init( &ilk->locklock, &attr );
+    rc = hthread_mutex_init( &ilk->il_locklock, &attr );
     if (rc)
         goto fatal;
 
-    rc = hthread_mutex_init( &ilk->lock, &attr );
+    rc = hthread_mutex_init( &ilk->il_lock, &attr );
     if (rc)
         goto fatal;
 
@@ -365,11 +365,11 @@ DLL_EXPORT int  hthread_initialize_rwlock( RWLOCK* plk, const char* name,
     if (rc)
         goto fatal;
 
-    rc = hthread_rwlock_init( &ilk->rwlock, &attr1 );
+    rc = hthread_rwlock_init( &ilk->il_rwlock, &attr1 );
     if (rc)
         goto fatal;
 
-    rc = hthread_mutex_init( &ilk->locklock, &attr2 );
+    rc = hthread_mutex_init( &ilk->il_locklock, &attr2 );
     if (rc)
         goto fatal;
 
@@ -405,12 +405,12 @@ static HTHREAD* hthread_find_HTHREAD_locked( TID tid, LIST_ENTRY* anchor )
 
     for (ple = anchor->Flink; ple != anchor; ple = ple->Flink)
     {
-        ht = CONTAINING_RECORD( ple, HTHREAD, threadlink );
+        ht = CONTAINING_RECORD( ple, HTHREAD, ht_link );
 
-        if (equal_threads( ht->tid, tid ))
+        if (equal_threads( ht->ht_tid, tid ))
         {
-            RemoveListEntry( &ht->threadlink );
-            InsertListHead( anchor, &ht->threadlink );
+            RemoveListEntry( &ht->ht_link );
+            InsertListHead( anchor, &ht->ht_link );
             return ht;
         }
     }
@@ -437,9 +437,9 @@ static HTHREAD* hthread_find_HTHREAD( TID tid )
 static void hthread_obtaining_lock( LOCK* plk )
 {
     HTHREAD* ht;
-    ht = hthread_find_HTHREAD( thread_id() );
-    ht->lock = plk;
-    gettimeofday( &ht->locktod, NULL );
+    ht = hthread_find_HTHREAD( hthread_self() );
+    ht->ht_ob_lock = plk;
+    gettimeofday( &ht->ht_ob_time, NULL );
 }
 
 /*-------------------------------------------------------------------*/
@@ -448,8 +448,8 @@ static void hthread_obtaining_lock( LOCK* plk )
 static void hthread_lock_obtained()
 {
     HTHREAD* ht;
-    ht = hthread_find_HTHREAD( thread_id() );
-    ht->lock = NULL;
+    ht = hthread_find_HTHREAD( hthread_self() );
+    ht->ht_ob_lock = NULL;
 }
 
 /*-------------------------------------------------------------------*/
@@ -464,11 +464,11 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
     ilk = (ILOCK*) plk->ilk;
     hthread_obtaining_lock( plk );
     PTTRACE( "lock before", plk, NULL, location, PTT_MAGIC );
-    rc = hthread_mutex_trylock( &ilk->lock );
+    rc = hthread_mutex_trylock( &ilk->il_lock );
     if (EBUSY == rc)
     {
         waitdur = host_tod();
-        rc = hthread_mutex_lock( &ilk->lock );
+        rc = hthread_mutex_lock( &ilk->il_lock );
         gettimeofday( &tv, NULL );
         waitdur = host_tod() - waitdur;
     }
@@ -483,11 +483,11 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* location )
         loglock( ilk, rc, "obtain_lock", location );
     if (!rc || EOWNERDEAD == rc)
     {
-        hthread_mutex_lock( &ilk->locklock );
-        ilk->location = location;
-        ilk->tid = hthread_self();
-        memcpy( &ilk->time, &tv, sizeof( TIMEVAL ));
-        hthread_mutex_unlock( &ilk->locklock );
+        hthread_mutex_lock( &ilk->il_locklock );
+        ilk->il_ob_locat = location;
+        ilk->il_ob_tid = hthread_self();
+        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
 }
@@ -500,14 +500,14 @@ DLL_EXPORT int  hthread_release_lock( LOCK* plk, const char* location )
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_mutex_unlock( &ilk->lock );
+    rc = hthread_mutex_unlock( &ilk->il_lock );
     PTTRACE( "unlock", plk, NULL, location, rc );
     if (rc)
         loglock( ilk, rc, "release_lock", location );
-    hthread_mutex_lock( &ilk->locklock );
-    ilk->location = "null:0";
-    ilk->tid = 0;
-    hthread_mutex_unlock( &ilk->locklock );
+    hthread_mutex_lock( &ilk->il_locklock );
+    ilk->il_ob_locat = "null:0";
+    ilk->il_ob_tid = 0;
+    hthread_mutex_unlock( &ilk->il_locklock );
     return rc;
 }
 
@@ -519,14 +519,14 @@ DLL_EXPORT int  hthread_release_rwlock( RWLOCK* plk, const char* location )
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_rwlock_unlock( &ilk->rwlock );
+    rc = hthread_rwlock_unlock( &ilk->il_rwlock );
     PTTRACE( "rwunlock", plk, NULL, location, rc );
     if (rc)
         loglock( ilk, rc, "release_rwlock", location );
-    hthread_mutex_lock( &ilk->locklock );
-    ilk->location = "null:0";
-    ilk->tid = 0;
-    hthread_mutex_unlock( &ilk->locklock );
+    hthread_mutex_lock( &ilk->il_locklock );
+    ilk->il_ob_locat = "null:0";
+    ilk->il_ob_tid = 0;
+    hthread_mutex_unlock( &ilk->il_locklock );
     return rc;
 }
 
@@ -539,14 +539,14 @@ DLL_EXPORT int  hthread_destroy_lock( LOCK* plk, const char* location )
     ILOCK* ilk;
     UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_mutex_destroy( &ilk->lock );
+    rc = hthread_mutex_destroy( &ilk->il_lock );
     LockLocksList();
     {
-        RemoveListEntry( &ilk->locklink );
+        RemoveListEntry( &ilk->il_link );
         lockcount--;
     }
     UnlockLocksList();
-    free( ilk->name );
+    free( ilk->il_name );
     free_aligned( ilk );
     plk->ilk = NULL;
     return rc;
@@ -561,14 +561,14 @@ DLL_EXPORT int  hthread_destroy_rwlock( RWLOCK* plk, const char* location )
     ILOCK* ilk;
     UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_rwlock_destroy( &ilk->rwlock );
+    rc = hthread_rwlock_destroy( &ilk->il_rwlock );
     LockLocksList();
     {
-        RemoveListEntry( &ilk->locklink );
+        RemoveListEntry( &ilk->il_link );
         lockcount--;
     }
     UnlockLocksList();
-    free( ilk->name );
+    free( ilk->il_name );
     free_aligned( ilk );
     plk->ilk = NULL;
     return rc;
@@ -584,18 +584,18 @@ DLL_EXPORT int  hthread_try_obtain_lock( LOCK* plk, const char* location )
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
     PTTRACE( "try before", plk, NULL, location, PTT_MAGIC );
-    rc = hthread_mutex_trylock( &ilk->lock );
+    rc = hthread_mutex_trylock( &ilk->il_lock );
     gettimeofday( &tv, NULL );
     PTTRACE2( "try after", plk, NULL, location, rc, &tv );
     if (rc && EBUSY != rc)
         loglock( ilk, rc, "try_obtain_lock", location );
     if (!rc || EOWNERDEAD == rc)
     {
-        hthread_mutex_lock( &ilk->locklock );
-        ilk->location = location;
-        ilk->tid = hthread_self();
-        memcpy( &ilk->time, &tv, sizeof( TIMEVAL ));
-        hthread_mutex_unlock( &ilk->locklock );
+        hthread_mutex_lock( &ilk->il_locklock );
+        ilk->il_ob_locat = location;
+        ilk->il_ob_tid = hthread_self();
+        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
 }
@@ -618,10 +618,10 @@ DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
     ILOCK* ilk;
     UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_mutex_trylock( &ilk->lock );
+    rc = hthread_mutex_trylock( &ilk->il_lock );
     if (rc)
         return rc;
-    hthread_mutex_unlock( &ilk->lock );
+    hthread_mutex_unlock( &ilk->il_lock );
     return 0;
 }
 
@@ -633,7 +633,7 @@ DLL_EXPORT int  hthread_have_lock( LOCK* plk, const char* location )
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_equal_threads( hthread_self(), ilk->tid, location );
+    rc = hthread_equal_threads( hthread_self(), ilk->il_ob_tid, location );
     return rc;
 }
 
@@ -648,11 +648,11 @@ DLL_EXPORT int  hthread_obtain_rdlock( RWLOCK* plk, const char* location )
     ilk = (ILOCK*) plk->ilk;
     hthread_obtaining_lock( (LOCK*) plk );
     PTTRACE( "rdlock before", plk, NULL, location, PTT_MAGIC );
-    rc = hthread_rwlock_tryrdlock( &ilk->rwlock );
+    rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
     if (EBUSY == rc)
     {
         waitdur = host_tod();
-        rc = hthread_rwlock_rdlock( &ilk->rwlock );
+        rc = hthread_rwlock_rdlock( &ilk->il_rwlock );
         waitdur = host_tod() - waitdur;
     }
     else
@@ -676,11 +676,11 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
     ilk = (ILOCK*) plk->ilk;
     hthread_obtaining_lock( (LOCK*) plk );
     PTTRACE( "wrlock before", plk, NULL, location, PTT_MAGIC );
-    rc = hthread_rwlock_trywrlock( &ilk->rwlock );
+    rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     if (EBUSY == rc)
     {
         waitdur = host_tod();
-        rc = hthread_rwlock_wrlock( &ilk->rwlock );
+        rc = hthread_rwlock_wrlock( &ilk->il_rwlock );
         gettimeofday( &tv, NULL );
         waitdur = host_tod() - waitdur;
     }
@@ -695,11 +695,11 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* location )
         loglock( ilk, rc, "obtain_wrlock", location );
     if (!rc || EOWNERDEAD == rc)
     {
-        hthread_mutex_lock( &ilk->locklock );
-        ilk->location = location;
-        ilk->tid = hthread_self();
-        memcpy( &ilk->time, &tv, sizeof( TIMEVAL ));
-        hthread_mutex_unlock( &ilk->locklock );
+        hthread_mutex_lock( &ilk->il_locklock );
+        ilk->il_ob_locat = location;
+        ilk->il_ob_tid = hthread_self();
+        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
 }
@@ -713,7 +713,7 @@ DLL_EXPORT int  hthread_try_obtain_rdlock( RWLOCK* plk, const char* location )
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
     PTTRACE( "tryrd before", plk, NULL, location, PTT_MAGIC );
-    rc = hthread_rwlock_tryrdlock( &ilk->rwlock );
+    rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
     PTTRACE( "tryrd after", plk, NULL, location, rc );
     if (rc && EBUSY != rc)
         loglock( ilk, rc, "try_obtain_rdlock", location );
@@ -730,18 +730,18 @@ DLL_EXPORT int  hthread_try_obtain_wrlock( RWLOCK* plk, const char* location )
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
     PTTRACE( "trywr before", plk, NULL, location, PTT_MAGIC );
-    rc = hthread_rwlock_trywrlock( &ilk->rwlock );
+    rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     gettimeofday( &tv, NULL );
     PTTRACE2( "trywr after", plk, NULL, location, rc, &tv );
     if (rc && EBUSY != rc)
         loglock( ilk, rc, "try_obtain_wrlock", location );
     if (!rc)
     {
-        hthread_mutex_lock( &ilk->locklock );
-        ilk->location = location;
-        ilk->tid = hthread_self();
-        memcpy( &ilk->time, &tv, sizeof( TIMEVAL ));
-        hthread_mutex_unlock( &ilk->locklock );
+        hthread_mutex_lock( &ilk->il_locklock );
+        ilk->il_ob_locat = location;
+        ilk->il_ob_tid = hthread_self();
+        memcpy( &ilk->il_ob_time, &tv, sizeof( TIMEVAL ));
+        hthread_mutex_unlock( &ilk->il_locklock );
     }
     return rc;
 }
@@ -755,10 +755,10 @@ DLL_EXPORT int  hthread_test_rdlock( RWLOCK* plk, const char* location )
     ILOCK* ilk;
     UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_rwlock_tryrdlock( &ilk->rwlock );
+    rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
     if (rc)
         return rc;
-    hthread_rwlock_unlock( &ilk->rwlock );
+    hthread_rwlock_unlock( &ilk->il_rwlock );
     return 0;
 }
 
@@ -771,10 +771,10 @@ DLL_EXPORT int  hthread_test_wrlock( RWLOCK* plk, const char* location )
     ILOCK* ilk;
     UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_rwlock_trywrlock( &ilk->rwlock );
+    rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     if (rc)
         return rc;
-    hthread_rwlock_unlock( &ilk->rwlock );
+    hthread_rwlock_unlock( &ilk->il_rwlock );
     return 0;
 }
 
@@ -831,9 +831,9 @@ DLL_EXPORT int  hthread_wait_condition( COND* plc, LOCK* plk, const char* locati
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
     PTTRACE( "wait before", plk, plc, location, PTT_MAGIC );
-    rc = hthread_cond_wait( plc, &ilk->lock );
+    rc = hthread_cond_wait( plc, &ilk->il_lock );
     PTTRACE( "wait after", plk, plc, location, rc );
-    ilk->tid = hthread_self();
+    ilk->il_ob_tid = hthread_self();
     if (rc)
         loglock( ilk, rc, "wait_condition", location );
     return rc;
@@ -850,9 +850,9 @@ DLL_EXPORT int  hthread_timed_wait_condition( COND* plc, LOCK* plk,
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
     PTTRACE( "tw before", plk, plc, location, PTT_MAGIC );
-    rc = hthread_cond_timedwait( plc, &ilk->lock, tm );
+    rc = hthread_cond_timedwait( plc, &ilk->il_lock, tm );
     PTTRACE( "tw after", plk, plc, location, rc );
-    ilk->tid = hthread_self();
+    ilk->il_ob_tid = hthread_self();
     if (rc && ETIMEDOUT != rc)
         loglock( ilk, rc, "timed_wait_condition", location );
     return rc;
@@ -912,24 +912,24 @@ static void hthread_list_abandoned_locks( TID tid, const char* exit_loc )
     {
         for (ple = locklist.Flink; ple != &locklist; ple = ple->Flink)
         {
-            ilk = CONTAINING_RECORD( ple, ILOCK, locklink );
-            if (hthread_equal(ilk->tid,tid))
+            ilk = CONTAINING_RECORD( ple, ILOCK, il_link );
+            if (hthread_equal( ilk->il_ob_tid, tid ))
             {
                 char tod[27];           /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
      
-                FormatTIMEVAL( &ilk->time, tod, sizeof( tod ));
+                FormatTIMEVAL( &ilk->il_ob_time, tod, sizeof( tod ));
 
                 if (exit_loc)
                 {
                     // "Thread "TIDPAT" (%s) has abandoned at %s lock %s obtained on %s at %s"
                     WRMSG( HHC90016, "E", TID_CAST( tid ), threadname, TRIMLOC( exit_loc ),
-                        ilk->name, &tod[11], TRIMLOC( ilk->location ));
+                        ilk->il_name, &tod[11], TRIMLOC( ilk->il_ob_locat ));
                 }
                 else
                 {
                     // "Thread "TIDPAT" (%s) has abandoned lock %s obtained on %s at %s"
                     WRMSG( HHC90015, "E", TID_CAST( tid ), threadname,
-                        ilk->name, &tod[11], TRIMLOC( ilk->location ));
+                        ilk->il_name, &tod[11], TRIMLOC( ilk->il_ob_locat ));
                 }
             }
         }
@@ -947,9 +947,9 @@ static void hthread_has_exited( TID tid, const char* location )
     LockThreadsList();
     {
         HTHREAD* ht = hthread_find_HTHREAD_locked( tid, NULL );
-        RemoveListEntry( &ht->threadlink );
+        RemoveListEntry( &ht->ht_link );
         threadcount--;
-        free( ht->name );
+        free( ht->ht_name );
         free_aligned( ht );
     }
     UnlockThreadsList();
@@ -969,7 +969,7 @@ static void* hthread_func( void* arg2 )
     if (name)
     {
         SET_THREAD_NAME_ID( tid, name );
-        free(name);
+        free( name );
     }
     rc = pfn( arg );
     hthread_has_exited( tid, NULL );
@@ -988,7 +988,7 @@ DLL_EXPORT int  hthread_create_thread( TID* ptid, ATTR* pat,
     arg2 = malloc( 3 * sizeof( void* ));
     *(arg2+0) = (void*) pfn;
     *(arg2+1) = (void*) arg;
-    *(arg2+2) = (void*) strdup(name);
+    *(arg2+2) = (void*) strdup( name );
     LockThreadsList();
     {
         TIMEVAL tv;
@@ -997,13 +997,13 @@ DLL_EXPORT int  hthread_create_thread( TID* ptid, ATTR* pat,
         if (0 == (rc = hthread_create( ptid, pat, hthread_func, arg2 )))
         {
             HTHREAD* ht = calloc_aligned( sizeof( HTHREAD ), 64 );
-            InitializeListLink( &ht->threadlink );
-            ht->location = location;
-            memcpy( &ht->time, &tv, sizeof( TIMEVAL ));
-            ht->name = strdup( name );
-            ht->tid = *ptid;
-            ht->lock = NULL;
-            InsertListHead( &threadlist, &ht->threadlink );
+            InitializeListLink( &ht->ht_link );
+            ht->ht_cr_locat = location;
+            memcpy( &ht->ht_cr_time, &tv, sizeof( TIMEVAL ));
+            ht->ht_name = strdup( name );
+            ht->ht_tid = *ptid;
+            ht->ht_ob_lock = NULL;
+            InsertListHead( &threadlist, &ht->ht_link );
             threadcount++;
         }
     }
@@ -1070,7 +1070,7 @@ DLL_EXPORT int hthread_set_thread_prio( TID tid, int prio, const char* location 
     param.sched_priority = sysblk.minprio + prio;
 
     if (equal_threads( tid, 0 ))
-        tid = thread_id();
+        tid = hthread_self();
 
     SETMODE( ROOT );
     {
@@ -1099,7 +1099,7 @@ DLL_EXPORT int hthread_get_thread_prio( TID tid, const char* location )
     struct sched_param  param = {0};
 
     if (equal_threads( tid, 0 ))
-        tid = thread_id();
+        tid = hthread_self();
 
     SETMODE( ROOT );
     {
@@ -1146,9 +1146,9 @@ static int hthreads_copy_locks_list( ILOCK** ppILOCK, LIST_ENTRY* anchor )
         /* Copy each live entry to the private array entry */
         for (i=0, ple = locklist.Flink; ple != &locklist; ple = ple->Flink, i++)
         {
-            ilk = CONTAINING_RECORD( ple, ILOCK, locklink );
+            ilk = CONTAINING_RECORD( ple, ILOCK, il_link );
             memcpy( &ilka[i], ilk, sizeof( ILOCK ));
-            ilka[i].name = strdup( ilk->name );
+            ilka[i].il_name = strdup( ilk->il_name );
         }
 
         k = lockcount;  /* Save how entries there are */
@@ -1158,7 +1158,7 @@ static int hthreads_copy_locks_list( ILOCK** ppILOCK, LIST_ENTRY* anchor )
     /* Chain their private array copy */
     InitializeListHead( anchor );
     for (i=0; i < k; i++)
-        InsertListTail( anchor, &ilka[i].locklink );
+        InsertListTail( anchor, &ilka[i].il_link );
     return k;
 }
 
@@ -1167,25 +1167,25 @@ static int hthreads_copy_locks_list( ILOCK** ppILOCK, LIST_ENTRY* anchor )
 /*-------------------------------------------------------------------*/
 static int lsortby_nam( const ILOCK* p1, const ILOCK* p2 )
 {
-    int rc = strcasecmp( p1->name, p2->name );
-    return rc == 0 ? ((int)((S64)p1->addr - (S64)p2->addr)) : rc;
+    int rc = strcasecmp( p1->il_name, p2->il_name );
+    return rc == 0 ? ((int)((S64)p1->il_addr - (S64)p2->il_addr)) : rc;
 }
 static int lsortby_tim( const ILOCK* p1, const ILOCK* p2 )
 {
-    int rc  =  (p1->time.tv_sec    !=     p2->time.tv_sec)  ?
-        ((long) p1->time.tv_sec  - (long) p2->time.tv_sec)  :
-        ((long) p1->time.tv_usec - (long) p2->time.tv_usec) ;
+    int rc  =  (p1->il_ob_time.tv_sec    !=     p2->il_ob_time.tv_sec)  ?
+        ((long) p1->il_ob_time.tv_sec  - (long) p2->il_ob_time.tv_sec)  :
+        ((long) p1->il_ob_time.tv_usec - (long) p2->il_ob_time.tv_usec) ;
     return rc == 0 ? lsortby_nam( p1, p2 ) : rc;
 }
 static int lsortby_tid( const ILOCK* p1, const ILOCK* p2 )
 {
-    int rc = equal_threads( p1->tid,             p2->tid ) ? 0 :
-                ((intptr_t) p1->tid - (intptr_t) p2->tid);
+    int rc = equal_threads( p1->il_ob_tid,             p2->il_ob_tid ) ? 0 :
+                ((intptr_t) p1->il_ob_tid - (intptr_t) p2->il_ob_tid);
     return rc == 0 ? lsortby_nam( p1, p2 ) : rc;
 }
 static int lsortby_loc( const ILOCK* p1, const ILOCK* p2 )
 {
-    int rc = strcasecmp( p1->location, p2->location );
+    int rc = strcasecmp( p1->il_ob_locat, p2->il_ob_locat );
     return rc == 0 ? lsortby_nam( p1, p2 ) : rc;
 }
 
@@ -1256,30 +1256,30 @@ DLL_EXPORT int locks_cmd( int argc, char* argv[], char* cmdline )
                     /* ALL, HELD or specific TID? */
                     if (0
                         || !tid
-                        || (equal_threads( tid, (TID) -1 ) && !equal_threads( ilk[i].tid, 0 ))
-                        || equal_threads( tid, ilk[i].tid )
+                        || (equal_threads( tid, (TID) -1 ) && !equal_threads( ilk[i].il_ob_tid, 0 ))
+                        || equal_threads( tid, ilk[i].il_ob_tid )
                     )
                     {
                         c = 1;  /* (at least one lock found) */
 
-                        get_thread_name( ilk[i].tid, threadname );
-                        FormatTIMEVAL( &ilk[i].time, tod, sizeof( tod ));
+                        get_thread_name( ilk[i].il_ob_tid, threadname );
+                        FormatTIMEVAL(  &ilk[i].il_ob_time, tod, sizeof( tod ));
 
                         // " obtained by %s at %s"
-                        if (threadname[0] || strcasecmp( TRIMLOC( ilk[i].location ), "null:0" ))
+                        if (threadname[0] || strcasecmp( TRIMLOC( ilk[i].il_ob_locat ), "null:0" ))
                             MSGBUF( extra, " obtained by %s at %s",
-                                threadname, TRIMLOC( ilk[i].location ));
+                                threadname, TRIMLOC( ilk[i].il_ob_locat ));
                         else extra[0] = 0;
 
                         // "Lock="PTR_FMTx", tid="TIDPAT", tod=%s, %s%s"
-                        WRMSG( HHC90017, "I", PTR_CAST( ilk[i].addr ), TID_CAST( ilk[i].tid ),
-                            &tod[11], ilk[i].name, extra );
+                        WRMSG( HHC90017, "I", PTR_CAST( ilk[i].il_addr ), TID_CAST( ilk[i].il_ob_tid ),
+                            &tod[11], ilk[i].il_name, extra );
                     }
                 }
 
                 /* Free our copy of the locks list */
                 for (i=0; i < k; i++)
-                    free( ilk[i].name );
+                    free( ilk[i].il_name );
                 free( ilk );
             }
             else
@@ -1318,8 +1318,8 @@ DLL_EXPORT void hthread_set_lock_name( LOCK* plk, const char* name )
         ILOCK* ilk = hthreads_find_ILOCK_locked( plk, NULL );
         if (ilk)
         {
-            free( ilk->name );
-            ilk->name = strdup( name );
+            free( ilk->il_name );
+            ilk->il_name = strdup( name );
         }
     }
     UnlockLocksList();
@@ -1338,8 +1338,8 @@ DLL_EXPORT void hthread_set_thread_name( TID tid, const char* name )
         HTHREAD* ht = hthread_find_HTHREAD_locked( tid, NULL );
         if (ht)
         {
-            free( ht->name );
-            ht->name = strdup( name );
+            free( ht->ht_name );
+            ht->ht_name = strdup( name );
         }
     }
     UnlockThreadsList();
@@ -1354,7 +1354,7 @@ DLL_EXPORT const char* hthread_get_lock_name( const LOCK* plk )
     LockLocksList();
     {
         ILOCK* ilk = hthreads_find_ILOCK_locked( plk, NULL );
-        name = ilk ? ilk->name : "";
+        name = ilk ? ilk->il_name : "";
     }
     UnlockLocksList();
     return name;
@@ -1368,7 +1368,7 @@ DLL_EXPORT const char* hthread_get_thread_name( TID tid, char* buffer16 )
     LockThreadsList();
     {
         HTHREAD* ht = hthread_find_HTHREAD_locked( tid, NULL );
-        strlcpy( buffer16, ht ? ht->name : "", 16 );
+        strlcpy( buffer16, ht ? ht->ht_name : "", 16 );
     }
     UnlockThreadsList();
     return buffer16;
@@ -1396,10 +1396,10 @@ static int hthreads_copy_threads_list( HTHREAD** ppHTHREAD, LIST_ENTRY* anchor )
         /* Copy each live entry to the private array entry */
         for (i=0, ple = threadlist.Flink; ple != &threadlist; ple = ple->Flink, i++)
         {
-            ht = CONTAINING_RECORD( ple, HTHREAD, threadlink );
+            ht = CONTAINING_RECORD( ple, HTHREAD, ht_link );
             memcpy( &hta[i], ht, sizeof( HTHREAD ));
-            hta[i].name = strdup( ht->name );
-            hta[i].footprint = false;
+            hta[i].ht_name = strdup( ht->ht_name );
+            hta[i].ht_footprint = false;
         }
 
         k = threadcount;  /* Save how entries there are */
@@ -1409,7 +1409,7 @@ static int hthreads_copy_threads_list( HTHREAD** ppHTHREAD, LIST_ENTRY* anchor )
     /* Chain their private array copy */
     InitializeListHead( anchor );
     for (i=0; i < k; i++)
-        InsertListTail( anchor, &hta[i].threadlink );
+        InsertListTail( anchor, &hta[i].ht_link );
     return k;
 }
 
@@ -1418,22 +1418,22 @@ static int hthreads_copy_threads_list( HTHREAD** ppHTHREAD, LIST_ENTRY* anchor )
 /*-------------------------------------------------------------------*/
 static int tsortby_nam( const HTHREAD* p1, const HTHREAD* p2 )
 {
-    return strcasecmp( p1->name, p2->name );
+    return strcasecmp( p1->ht_name, p2->ht_name );
 }
 static int tsortby_tim( const HTHREAD* p1, const HTHREAD* p2 )
 {
-    return     (p1->time.tv_sec    !=     p2->time.tv_sec)  ?
-        ((long) p1->time.tv_sec  - (long) p2->time.tv_sec)  :
-        ((long) p1->time.tv_usec - (long) p2->time.tv_usec) ;
+    return     (p1->ht_cr_time.tv_sec    !=     p2->ht_cr_time.tv_sec)  ?
+        ((long) p1->ht_cr_time.tv_sec  - (long) p2->ht_cr_time.tv_sec)  :
+        ((long) p1->ht_cr_time.tv_usec - (long) p2->ht_cr_time.tv_usec) ;
 }
 static int tsortby_tid( const HTHREAD* p1, const HTHREAD* p2 )
 {
-    return equal_threads( p1->tid,             p2->tid ) ? 0 :
-              ((intptr_t) p1->tid - (intptr_t) p2->tid);
+    return equal_threads( p1->ht_tid,             p2->ht_tid ) ? 0 :
+              ((intptr_t) p1->ht_tid - (intptr_t) p2->ht_tid);
 }
 static int tsortby_loc( const HTHREAD* p1, const HTHREAD* p2 )
 {
-    return strcasecmp( p1->location, p2->location );
+    return strcasecmp( p1->ht_cr_locat, p2->ht_cr_locat );
 }
 
 /*-------------------------------------------------------------------*/
@@ -1444,7 +1444,7 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
     LIST_ENTRY  anchor;             /* Private threads list anchor   */
     HTHREAD*     ht;                /* Pointer to HTHREAD array      */
     char         tod[27];           /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
-    char         locktod[27];       /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
+    char         ht_ob_time[27];    /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
     TID          tid = 0;           /* Requested thread id           */
     int          i, k, rc = 0;      /* Work vars and return code     */
     char         c;                 /* sscanf work; work flag        */
@@ -1500,37 +1500,37 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
                     /* ALL, WAITING or specific TID? */
                     if (0
                         || !tid
-                        || (equal_threads( tid, (TID) -1 ) && ht[i].lock)
-                        || equal_threads( tid, ht[i].tid )
+                        || (equal_threads( tid, (TID) -1 ) && ht[i].ht_ob_lock)
+                        || equal_threads( tid, ht[i].ht_tid )
                     )
                     {
                         c = 1;  /* (at least one lock found) */
 
-                        FormatTIMEVAL( &ht[i].time, tod, sizeof( tod ));
+                        FormatTIMEVAL( &ht[i].ht_cr_time, tod, sizeof( tod ));
 
-                        if (equal_threads( tid, (TID) -1 ) && ht[i].lock)
+                        if (equal_threads( tid, (TID) -1 ) && ht[i].ht_ob_lock)
                         {
-                            FormatTIMEVAL( &ht[i].locktod, locktod, sizeof( locktod ));
+                            FormatTIMEVAL( &ht[i].ht_ob_time, ht_ob_time, sizeof( ht_ob_time ));
 
                             // "Thread %-15.15s tid="TIDPAT" waiting since %s for lock %s = "PTR_FMTx
 
-                            WRMSG( HHC90023, "W", ht[i].name, TID_CAST( ht[i].tid ),
-                                &locktod[11], get_lock_name( ht[i].lock ),
-                                PTR_CAST( ht[i].lock ));
+                            WRMSG( HHC90023, "W", ht[i].ht_name, TID_CAST( ht[i].ht_tid ),
+                                &ht_ob_time[11], get_lock_name( ht[i].ht_ob_lock ),
+                                PTR_CAST( ht[i].ht_ob_lock ));
                         }
                         else
                         {
                             // "Thread %-15.15s tid="TIDPAT" created on %s at %-18.18s"
 
-                            WRMSG( HHC90022, "I", ht[i].name, TID_CAST( ht[i].tid ),
-                                &tod[11], TRIMLOC( ht[i].location ));
+                            WRMSG( HHC90022, "I", ht[i].ht_name, TID_CAST( ht[i].ht_tid ),
+                                &tod[11], TRIMLOC( ht[i].ht_cr_locat ));
                         }
                     }
                 }
 
                 /* Free our copy of the threads list */
                 for (i=0; i < k; i++)
-                    free( ht[i].name );
+                    free( ht[i].ht_name );
                 free( ht );
             }
             else
@@ -1588,8 +1588,8 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
         LIST_ENTRY* le = ht_anchor->Flink;
         while (le != ht_anchor)
         {
-            ht = CONTAINING_RECORD( le, HTHREAD, threadlink );
-            ht->footprint = false;
+            ht = CONTAINING_RECORD( le, HTHREAD, ht_link );
+            ht->ht_footprint = false;
             le = le->Flink;
         }
     }
@@ -1598,21 +1598,21 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
         return false;
 
     /* Chase thread's lock chain until deadlock detected */
-    while (!ht->footprint)
+    while (!ht->ht_footprint)
     {
-        ht->footprint = true;
+        ht->ht_footprint = true;
 
-        if (!ht->lock)
+        if (!ht->ht_ob_lock)
             return false;
 
-        timeval_subtract( &ht->locktod, &now, &dur );
+        timeval_subtract( &ht->ht_ob_time, &now, &dur );
         if (dur.tv_sec < DEADLOCK_SECONDS)
             return false;
 
-        if (!(ilk = hthreads_find_ILOCK_locked( ht->lock, ilk_anchor )))
+        if (!(ilk = hthreads_find_ILOCK_locked( ht->ht_ob_lock, ilk_anchor )))
             return false;
 
-        if (!(ht = hthread_find_HTHREAD_locked( ilk->tid, ht_anchor )))
+        if (!(ht = hthread_find_HTHREAD_locked( ilk->il_ob_tid, ht_anchor )))
             return false;
     }
 
@@ -1622,11 +1622,11 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
         HTHREAD* ht2;
 
         ht  = hthread_find_HTHREAD_locked( tid, ht_anchor );
-        ilk = hthreads_find_ILOCK_locked( ht->lock, ilk_anchor );
-        ht2 = hthread_find_HTHREAD_locked( ilk->tid, ht_anchor );
+        ilk = hthreads_find_ILOCK_locked( ht->ht_ob_lock, ilk_anchor );
+        ht2 = hthread_find_HTHREAD_locked( ilk->il_ob_tid, ht_anchor );
 
         // "Thread %s waiting for lock %s held by thread %s"
-        WRMSG( HHC90025, sev, ht->name, ilk->name, ht2->name );
+        WRMSG( HHC90025, sev, ht->ht_name, ilk->il_name, ht2->ht_name );
     }
 
     return true;
@@ -1651,15 +1651,15 @@ DLL_EXPORT int hthread_report_deadlocks( const char* sev )
 
     /* Check each thread in our array */
     for (i=0; i < ht_count; i++)
-        if (hthread_is_deadlocked_locked( sev, ht[i].tid, &ht_anchor, &ilk_anchor ))
+        if (hthread_is_deadlocked_locked( sev, ht[i].ht_tid, &ht_anchor, &ilk_anchor ))
             deadlocked++; /* count deadlocked threads */
 
     /* Free our private array copies of both lists */
     for (i=0; i < ht_count; i++)
-        free( ht[i].name );
+        free( ht[i].ht_name );
     free( ht );
     for (i=0; i < ilk_count; i++)
-        free( ilk[i].name );
+        free( ilk[i].il_name );
     free( ilk );
 
     /* Return number of deadlocked threads detected */
