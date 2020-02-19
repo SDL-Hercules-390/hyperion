@@ -235,6 +235,32 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
             VERIFY( create_thread( &tid, DETACHED,
                 test_locks_thread, 0, "test_locks_thread" ) == 0);
         }
+        else if (CMD( argv[1], LOCKS2, 6 ))
+        {
+            // test lock init ALREADY INIT
+            static LOCK testlock;
+            initialize_lock( &testlock );
+            initialize_lock( &testlock );   // (error here)
+            destroy_lock( &testlock );
+        }
+        else if (CMD( argv[1], LOCKS3, 6 ))
+        {
+            // test lock init ALREADY INIT STILL HELD
+            static LOCK testlock;
+            initialize_lock( &testlock );
+            obtain_lock( &testlock );
+            initialize_lock( &testlock );   // (error here)
+            release_lock( &testlock );
+            destroy_lock( &testlock );
+        }
+        else if (CMD( argv[1], LOCKS4, 6 ))
+        {
+            // test destroy lock STILL HELD
+            static LOCK testlock;
+            initialize_lock( &testlock );
+            obtain_lock( &testlock );
+            destroy_lock( &testlock );      // (error here)
+        }
         else if (CMD( argv[1], NANO, 4 ))
         {
             /*-------------------------------------------*/
