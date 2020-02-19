@@ -2527,10 +2527,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90011 "Pttrace: invalid argument %s"
 #define HHC90012 "Pttrace: %s %s %s %s to=%d %d"
 #define HHC90013 "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
-#define HHC90014 "lock %s was obtained by thread "TIDPAT" at %s"
+#define HHC90014 "lock %s was %s by thread "TIDPAT" at %s"
 #define HHC90015 "Thread "TIDPAT" (%s) abandoned lock %s obtained on %s at %s"
 #define HHC90016 "Thread "TIDPAT" (%s) abandoned at %s lock %s obtained on %s at %s"
-#define HHC90017 "Lock="PTR_FMTx", tid="TIDPAT", tod=%s, %s%s"
+#define HHC90017 "Lock "PTR_FMTx" (%s) created by "TIDPAT" (%s) on %s at %s"
 #define HHC90018 "Total locks defined: %d"
 #define HHC90019 "No locks found for thread "TIDPAT"."
 #define HHC90020 "'%s' failed at loc=%s: rc=%d: %s"
@@ -2541,7 +2541,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90025 "Thread %s waiting for lock %s held by thread %s"
 #define HHC90026 "No threads found with tid "TIDPAT"."
 #define HHC90027 "Total threads running: %d"
-//efine HHC90028 - HHC90099 (available)
+#define HHC90028 "lock %s was already initialized at %s"
+#define HHC90029 "Lock "PTR_FMTx" (%s) obtained by "TIDPAT" (%s) on %s at %s"
+//efine HHC90030 - HHC90099 (available)
 
 /* from crypto/dyncrypt.c when compiled with debug on */
 #define HHC90100 "%s"
