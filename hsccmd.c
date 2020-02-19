@@ -5254,7 +5254,7 @@ int devlist_cmd( int argc, char* argv[], char* cmdline )
     {
 
         // We now also support multiple CCUU addresses.
-        if (devncount = parse_devnums( argv[1], &dnd ) > 0)
+        if ((devncount = parse_devnums( argv[1], &dnd )) > 0)
         {
             ssid = LCSS_TO_SSID( dnd.lcss );
         }
