@@ -2453,7 +2453,6 @@ static void     CTCE_Send(        DEVBLK*             pDEVBLK,
     CTCE_SOKPFX   *pSokBuf;                 // overlay for buf in the device block
     CTCE_SOKPFX   *pSokBuf_written;         // ... and the alternate buf in the same
     int            rc;                      // Return code
-    char           ctce_devnum[8];          // for ccwstep packet trace information
 
     if( ! IS_CTCE_SEND( pCTCE_Info->actions ) )
     {
@@ -2657,7 +2656,6 @@ static void*  CTCE_RecvThread( void* argp )
     U64            ctceBytCnt = 0;               // Recvd Byte Count
     BYTE           ctce_recv_mods_UnitStat;      // UnitStat modifications
     int            i = 0;                        // temporary variable
-    char           ctce_devnum[8];               // for ccwstep packet trace information
 
     // When the receiver thread is (re-)started, the CTCE devblk is (re-)initialized
     obtain_lock( &pDEVBLK->lock );
