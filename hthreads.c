@@ -621,11 +621,10 @@ DLL_EXPORT int  hthread_try_obtain_lock( LOCK* plk, const char* obtain_loc )
 /* held -- by SOMEONE -- but that someone may NOT be you!  It might  */
 /* be held by someone OTHER than you!                                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_test_lock( LOCK* plk )
 {
     int rc;
     ILOCK* ilk;
-    UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_mutex_trylock( &ilk->il_lock );
     if (rc)
@@ -637,12 +636,12 @@ DLL_EXPORT int  hthread_test_lock( LOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Check if *YOU* are holding a given lock        (boolean function) */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_have_lock( LOCK* plk, const char* location )
+DLL_EXPORT int  hthread_have_lock( LOCK* plk )
 {
     int rc;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    rc = hthread_equal_threads( hthread_self(), ilk->il_ob_tid, location );
+    rc = hthread_equal_threads( hthread_self(), ilk->il_ob_tid );
     return rc;
 }
 
@@ -762,11 +761,10 @@ DLL_EXPORT int  hthread_try_obtain_wrlock( RWLOCK* plk, const char* obtain_loc )
 /*-------------------------------------------------------------------*/
 /* Test if read-only access to a R/W lock is held                    */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_test_rdlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_test_rdlock( RWLOCK* plk )
 {
     int rc;
     ILOCK* ilk;
-    UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
     if (rc)
@@ -778,11 +776,10 @@ DLL_EXPORT int  hthread_test_rdlock( RWLOCK* plk, const char* location )
 /*-------------------------------------------------------------------*/
 /* Test if exclusive write access to a R/W lock is held              */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_test_wrlock( RWLOCK* plk, const char* location )
+DLL_EXPORT int  hthread_test_wrlock( RWLOCK* plk )
 {
     int rc;
     ILOCK* ilk;
-    UNREFERENCED( location );
     ilk = (ILOCK*) plk->ilk;
     rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     if (rc)
@@ -805,10 +802,9 @@ DLL_EXPORT int  hthread_initialize_condition( COND* plc, const char* init_loc )
 /*-------------------------------------------------------------------*/
 /* Destroy a condition variable                                      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_destroy_condition( COND* plc, const char* location )
+DLL_EXPORT int  hthread_destroy_condition( COND* plc )
 {
     int rc;
-    UNREFERENCED( location );
     rc = hthread_cond_destroy( plc );
     return rc;
 }
@@ -874,11 +870,9 @@ DLL_EXPORT int  hthread_timed_wait_condition( COND* plc, LOCK* plk,
 /*-------------------------------------------------------------------*/
 /* Internal helper function to initialize a thread attribute         */
 /*-------------------------------------------------------------------*/
-static INLINE int hthread_init_thread_attr( ATTR* pat, int state,
-                                            const char* location )
+static INLINE int hthread_init_thread_attr( ATTR* pat, int state )
 {
     int rc;
-    UNREFERENCED( location );
     rc = hthread_attr_init( pat );
     if (!rc)
         rc = hthread_attr_setstacksize( pat, HTHREAD_STACK_SIZE );
@@ -890,20 +884,20 @@ static INLINE int hthread_init_thread_attr( ATTR* pat, int state,
 /*-------------------------------------------------------------------*/
 /* Initialize a thread attribute to "joinable"                       */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_initialize_join_attr( ATTR* pat, const char* location )
+DLL_EXPORT int  hthread_initialize_join_attr( ATTR* pat )
 {
     int rc;
-    rc = hthread_init_thread_attr( pat, HTHREAD_CREATE_JOINABLE, location );
+    rc = hthread_init_thread_attr( pat, HTHREAD_CREATE_JOINABLE );
     return rc;
 }
 
 /*-------------------------------------------------------------------*/
 /* Initialize a thread attribute to "detached" (non-joinable)        */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_initialize_detach_attr( ATTR* pat, const char* location )
+DLL_EXPORT int  hthread_initialize_detach_attr( ATTR* pat )
 {
     int rc;
-    rc = hthread_init_thread_attr( pat, HTHREAD_CREATE_DETACHED, location );
+    rc = hthread_init_thread_attr( pat, HTHREAD_CREATE_DETACHED );
     return rc;
 }
 
@@ -1064,10 +1058,9 @@ DLL_EXPORT void hthread_exit_thread( void* rc, const char* exit_loc )
 /*-------------------------------------------------------------------*/
 /* Compare two thread IDs                         (boolean function) */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2, const char* location )
+DLL_EXPORT int  hthread_equal_threads( TID tid1, TID tid2 )
 {
     int rc;
-    UNREFERENCED( location );
     rc = hthread_equal( tid1, tid2 );
     return rc;
 }
