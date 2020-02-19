@@ -154,6 +154,7 @@ a real System/390.  The configuration file is an ASCII text file.
     0430.2    <a href="#CTCI">CTCI</a>    tun0
     0E40      <a href="#CTCE">CTCE</a>    31880  192.168.1.202  32880
     0E41      <a href="#CTCE">CTCE</a>    31882  192.168.1.202  32882
+    0E42.2    <a href="#CTCE">CTCE</a>         1=192.168.1.202            
     0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
     0470.2    <a href="#PTP">PTP</a>     tun0
 
@@ -3954,31 +3955,44 @@ ROUTE  00  172.21.3.32  255.255.255.224
         networking devices will fail and your guest's networking will not work.
         </i>
 
-        <p>
+        <p>       
         A Hercules CTCE device requires two even-odd pairs of devices, one for
-        reading and the other for writing.  Each individual device of the even-odd
-        device pair requires and even-odd pair of port numbers.  Only the even
-        numbered port number needs to be specified however.  The odd port number
-        is automatically derived from the even port number by simply adding 1
-        to the even port number.
+        reading and the other for writing.  In the previous CTCE version these had 
+        to be an even-odd pair of port numbers, whereby only the even port numbers
+        had to be specified in the CTCE configuration.  This restriction has now
+        been removed.  Any port number > 1024 and < 65534 is allowed.  The CTCE
+        configuration specifies the listening port number at the receiving end, 
+        the sender side port number is a free randomly chosen one. 
         <p>
         The socket connection pairs cross-connect,
         the arrows showing the send->receive direction :
         <pre>
-        x-lport-even  -->  y-rport-odd
-        x-lport-odd   <--  y-rport-even</pre>
+        x-lport-random  -->  y-rport-config
+        x-lport-config  <--  y-rport-random</pre>
         <p>
-        CTCE connected Hercules instances can be hosted on either Unix
-        or Windows platforms.  Neither side needs to be the same as the other.
+        CTCE connected Hercules instances can be hosted on either Unix or Windows
+        or MacOS platforms.  Neither side needs to be the same as the other.
         Each side can be different from the other if needed. One side
-        can be Windows and the other side can be Linux if so desired.
+        can be Windows and the other side can be Linux if so desired.     
+        <p>
+        The configuration statement for CTCE devices is in one of these 2 possible 
+        formats (noting that items between [] brackets are optional):
+        <p>
+        <dl> <!-- begin CTCE parms -->     
+        <dt><code><em>ldevnum</em> &nbsp;&nbsp;&nbsp; CTCE [<em>lport</em>] [<em>rdevnum</em>=]<em>raddress</em> &nbsp; <em>rport</em>  [[<em>mtu</em>]<em>sml</em>] [FICON]</code>
+        <dt><code><em>ldevnum</em>[.n]                CTCE [<em>lport</em>] [<em>rdevnum</em>]=<em>raddress</em>       [<em>rport</em>] [[<em>mtu</em>]<em>sml</em>] [FICON]</code>
+        </dl> <!-- end CTCE parms -->
+            
         <p>
         <dl> <!-- begin required CTCE parameters -->
-        <dt>There are three <i>required</i> positional arguments:
+        <dt>There is only one or two <i>required</i> positional arguments in addition to the <em>ldevnum</em>:
         <dd><p>
             <dl>
-                <dt><code><em>lport</em></code>
-                <dd>The even numbered TCP/IP port number on the <i>local</i> system.
+                <dt><code><em>ldevnum</em></code>
+                <dd>The device number (CCUU) on the <i>local</i> system.
+                    Please note that this can optionally be followed by <em>.n</em> in
+                    which case multiple CTCE devices can be configured with one config
+                    statement.   
 
                 <p>
 
@@ -3988,42 +4002,126 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <p>
 
                 <dt><code><em>rport</em></code>
-                <dd>The even numbered TCP/IP port number on the <i>remote</i> system.
+                <dd>The listening TCP/IP port number on the <i>remote</i> system.
+                    Please note that this parameter is only required when the 
+                    <em>rdevnum</em> parameter and the following equal sign are
+                    not specified.  When not required, the default is 3088.
             </dl>
         </dl> <!-- end required CTCE parameters -->
 
         <p>
 
         <dl> <!-- begin optional CTCE parameters -->
-        <dt>The remaining positional arguments are optional:
+        <dt>The remaining arguments are optional as per the shown [] brackets for the format chosen:
         <dd><p>
             <dl>
+                <dt><code><em>lport</em></code>
+                <dd>The listening TCP/IP port number on the <i>local</i> system.
+                    The default value is 3088.
+                
+                <p>
+                
+                <dt><code><em>rdevnum</em></code>
+                <dd>The device number (CCUU) on the <i>remote</i> system.
+                    The default is equal to the <em>ldevnum</em> on the  <i>local</i> system. 
+                    Please note that in case only one or two hexadecimal digits are given (i.e. a		
+                    value up to 255 and thus not a complete device number CCUU), the effective
+                    <em>rdevnum</em> will be computed by exclusive-or of this value with the
+                    <em>ldevnum</em> specified.  In case <em>.n</em> is given and > 1, this
+                    will apply to all <em>ldevnum</em> - <em>rdevnum</em> pairs.  Please see an
+                    example of this down below.
+
+                <p>                
+                            
                 <dt><code><em>mtu</em></code>
                 <dd>Maximum Transmission Unit buffer size.
-                    The default value is 32768 bytes.
+                    The default value is 61596 bytes.
 
                 <p>
 
                 <dt><code><em>sml</em></code>
-                <dd>Small minimum for MTU. The default value is 8 bytes.
+                <dd>Small minimum for MTU. The default value is 16 bytes.
+                
+                <p>              
+
+                <dt><code><em>FICON</em></code>
+                <dd>The keyword FICON will cause a Fibre channel CTC (i.e. a FCTC device) to be emulated.
             </dl>
         </dl> <!-- end optional CTCE parameters -->
 
         <p>
-        A sample CTCE device configuration is shown below:
+        A sample CTCE device configuration is shown below, using the previous CTCE version 1 format which is still fully supported:
         <blockquote>
             <p>
             First Hercules PC Host with IP address 192.168.1.100:
             <pre>
-    0E40  CTCE  30880  192.168.1.200  30880
-    0E41  CTCE  30882  192.168.1.200  30882 </pre>
+    0E40   CTCE  30880  192.168.1.200  30880
+    0E41   CTCE  30882  192.168.1.200  30882 </pre>
             <p>
             Second Hercules PC Host with IP address 192.168.1.200:
             <pre>
-    0E40  CTCE  30880  192.168.1.100  30880
-    0E41  CTCE  30882  192.168.1.100  30882 </pre>
+    0E40   CTCE  30880  192.168.1.100  30880
+    0E41   CTCE  30882  192.168.1.100  30882 </pre>
         </blockquote>
         <p>
+        
+                <p>
+        Exploiting the new features of the newer CTCE version 2 format, this can be simplified omitting all port numbers
+        <blockquote>
+            <p>
+            First Hercules PC Host with IP address 192.168.1.100:
+            <pre>
+    0E40   CTCE    0E40=192.168.1.200       
+    0E41   CTCE    0E41=192.168.1.200        </pre>
+            <p>
+            Second Hercules PC Host with IP address 192.168.1.200:
+            <pre>
+    0E40   CTCE    0E40=192.168.1.100       
+    0E41   CTCE    0E41=192.168.1.100        </pre>
+        </blockquote>
+        <p>
+        
+        <p>
+        As there are <em>2</em> equal <em>ldevnum</em> - <em>rdevnum</em> pairs, this can be simplified further:
+        <blockquote>
+            <p>
+            First Hercules PC Host with IP address 192.168.1.100:
+            <pre>
+    0E40.2 CTCE        =192.168.1.200  30882 </pre>
+            <p>
+            Second Hercules PC Host with IP address 192.168.1.200:
+            <pre>
+    0E40.2 CTCE        =192.168.1.100  30882 </pre>
+        </blockquote>
+        <p>        
+
+        <p>
+        Showing an example of specifying a <em>rdevnum</em> using the exclusive-or operation with a small value:
+        <blockquote>
+            <p>
+            <pre>
+    0E40.4 CTCE       1=192.168.1.200  30882 </pre>
+            <p>
+            The above is axactly the same as this specification:
+            <pre>
+    0E40   CTCE    0E41=192.168.1.200  30882
+    0E41   CTCE    0E40=192.168.1.200  30882
+    0E42   CTCE    0E43=192.168.1.200  30882        
+    0E43   CTCE    0E42=192.168.1.200  30882 </pre>
+                <p>
+            The above example could be used to establish a redundant pair
+            of read/write CTC links, where each Hercules side uses the even
+            devnum addresses for reading, and the odd ones for writing 
+            (or the other way around).  That way, the operating system 
+            definitions on each side can be identical, e.g. for a VTAM MPC CTC link :
+            <pre>
+    CTCATRL  VBUILD TYPE=TRL                                                                                 
+    C0E40TRL TRLE  LNCTL=MPC,READ=(0E40,0E42),WRITE=(0E41,0E43)
+
+    CTCALCL  VBUILD TYPE=LOCAL                                                                      
+    C0E40LCL PU    TRLE=C0E40TRL,XID=YES,CONNTYPE=APPN,CPCP=YES,TGP=CHANNEL</pre>
+        </blockquote>
+        <p>    
 
 <p><br>
 
