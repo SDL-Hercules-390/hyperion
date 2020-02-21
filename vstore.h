@@ -744,6 +744,14 @@ int     len;                            /* Length for page crossing  */
         }
     }
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (1
+        && regs->txf_contran
+        && regs->aip != regs->txf_tbeginc_aip
+    )
+        regs->txf_aie = regs->aip + regs->txf_aie_off2;
+#endif
+
     return dest;
 
 } /* end function ARCH_DEP(instfetch) */

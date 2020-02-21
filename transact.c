@@ -251,9 +251,12 @@ int         txf_tac;
         /* End the transaction normally if possible (no conflicts) */
         /*---------------------------------------------------------*/
 
-        regs->txf_tac       = 0;
-        regs->txf_contran   = false;
-        regs->txf_abortctr  = 0;
+        regs->txf_tac         = 0;
+        regs->txf_contran     = false;
+        regs->txf_abortctr    = 0;
+        regs->txf_tbeginc_aip = NULL;
+        regs->txf_aie         = NULL;
+        regs->txf_aie_off2    = 0;
 
         /*---------------------------------------------------------*/
         /*  Scan the page map table.  There is one entry in the    */
@@ -594,6 +597,23 @@ TPAGEMAP   *pmap;
         regs->txf_higharchange = (regs->txf_ctlflag & TXF_CTL_AR)    ? regs->txf_tnd : 0;
         regs->txf_highfloat    = (regs->txf_ctlflag & TXF_CTL_FLOAT) ? regs->txf_tnd : 0;
         regs->txf_tdb          = tdb;
+
+        /* Set CONSTRAINED transaction instruction fetch constraint */
+        if (txf_contran)
+        {
+            BYTE* aip2 = regs->aip + ZPAGEFRAME_PAGESIZE;
+
+            regs->txf_tbeginc_aip = regs->aip;
+            regs->txf_aie         = regs->ip + 256;
+            regs->txf_aie_off2    = (regs->txf_aie < aip2) ? 0 :
+                                    (regs->txf_aie - aip2);
+        }
+        else
+        {
+            regs->txf_tbeginc_aip = NULL;
+            regs->txf_aie         = NULL;
+            regs->txf_aie_off2    = 0;
+        }
 
         /* Save the abort PSW */
         {

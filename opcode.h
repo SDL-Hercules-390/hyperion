@@ -651,6 +651,9 @@ do { \
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
+  #undef  TXF_INSTRADDR_CONSTRAINT                  /* (nothing) */
+  #define TXF_INSTRADDR_CONSTRAINT( _ip, _regs )    /* (nothing) */
+
   #undef  TXF_INSTRCOUNT_CONSTRAINT                 /* (nothing) */
   #define TXF_INSTRCOUNT_CONSTRAINT( _ip, _regs )   /* (nothing) */
 
@@ -661,7 +664,21 @@ do { \
   #define CHECK_TXF_CONSTRAINTS( _ip, _regs )       /* (nothing) */
 
 #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-  
+
+  #undef  TXF_INSTRADDR_CONSTRAINT
+  #define TXF_INSTRADDR_CONSTRAINT( _ip, _regs )                      \
+  do {                                                                \
+    if (1                                                             \
+      && (_regs)->txf_contran                                         \
+      && (_ip) >= (_regs)->txf_aie                                    \
+    )                                                                 \
+    {                                                                 \
+      ARCH_DEP( abort_transaction )( (_regs),                         \
+        ABORT_RETRY_PGMCHK, TAC_INSTR );                              \
+      UNREACHABLE_CODE(;);                                            \
+    }                                                                 \
+  } while (0)
+
   #undef  TXF_INSTRCOUNT_CONSTRAINT
   #define TXF_INSTRCOUNT_CONSTRAINT( _ip, _regs )                     \
   do {                                                                \
@@ -696,6 +713,7 @@ do { \
   do {                                                                \
     if ((_regs)->txf_tnd)                                             \
     {                                                                 \
+      TXF_INSTRADDR_CONSTRAINT( (_ip), (_regs) );                     \
       (_regs)->txf_instctr++;                                         \
       TXF_INSTRCOUNT_CONSTRAINT( (_ip), (_regs) );                    \
       TXF_RAND_ABORT_CONSTRAINT( (_regs) );                           \

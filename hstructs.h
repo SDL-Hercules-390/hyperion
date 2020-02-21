@@ -426,6 +426,10 @@ struct REGS {                           /* Processor registers       */
         int     txf_tac;                /* Transaction abort code    */
         int     txf_random_tac;         /* Random abort code         */
         PSW     txf_tapsw;              /* Transaction abort PSW     */
+        BYTE*   txf_tbeginc_aip;        /* aip of TBEGINC instruction*/
+        BYTE*   txf_aie;                /* Mainstor end address for
+                                           CONSTRAINED transactions  */
+        int     txf_aie_off2;           /* txf_aie page cross offset */
 
         U32     txf_piid;               /* Transaction program
                                            interrupt ident           */
