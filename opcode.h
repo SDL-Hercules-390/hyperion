@@ -610,30 +610,49 @@ do { \
 #define _PSW_IA_MAIN(_regs, _addr) \
  ((BYTE *)((uintptr_t)(_regs)->aip | (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)))
 
+/*-------------------------------------------------------------------*/
+/*                     Instruction fetching                          */
+/*-------------------------------------------------------------------*/
+
 #undef  _VALID_IP
-#define _VALID_IP(_regs, _exec) \
-( \
-    ( !(_exec) && (_regs)->ip <  (_regs)->aie ) \
- || \
-    ( (_exec) && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV \
-   && _PSW_IA_MAIN((_regs), (_regs)->ET) < (_regs)->aie \
-    ) \
+#define _VALID_IP( _regs, _exec )                                     \
+(                                                                     \
+      /* Instr NOT being EXecuted and instr ptr < aie */              \
+      (1                                                              \
+        && !(_exec)                                                   \
+        &&  (_regs)->ip < (_regs)->aie                                \
+      )                                                               \
+  ||                                                                  \
+      /* Instr IS being EXecuted but target instr ptr < aie */        \
+      (1                                                              \
+        && (_exec)                                                    \
+        && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV  \
+        && _PSW_IA_MAIN( (_regs), (_regs)->ET ) < (_regs)->aie        \
+      )                                                               \
 )
 
-/* Instruction fetching */
-
 #undef  INSTRUCTION_FETCH
-#define INSTRUCTION_FETCH(_regs, _exec) \
-  likely(_VALID_IP((_regs),(_exec))) \
-  ? ((_exec) ? _PSW_IA_MAIN((_regs), (_regs)->ET) : (_regs)->ip) \
-  : ARCH_DEP( instfetch ) ((_regs), (_exec))
+#define INSTRUCTION_FETCH( _regs, _exec )                             \
+  likely( _VALID_IP( (_regs), (_exec) )) ?                            \
+  (                                                                   \
+    /* If AIA valid use target of EXecuted instr or current ip */     \
+    (_exec) ?                                                         \
+      _PSW_IA_MAIN( (_regs), (_regs)->ET )                            \
+      :                                                               \
+      (_regs)->ip                                                     \
+  )                                                                   \
+  :                                                                   \
+  /* Else do a full instruction fetch which updates the AIA too */    \
+  ARCH_DEP( instfetch )( (_regs), (_exec) )
 
-/* Instruction execution */
+/*-------------------------------------------------------------------*/
+/*                   Instruction execution                           */
+/*-------------------------------------------------------------------*/
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
-  #undef  CHECK_TXFCTR
-  #define CHECK_TXFCTR( _ip, _regs )                                                         \
+  #undef  CHECK_TXF_CONSTRAINTS
+  #define CHECK_TXF_CONSTRAINTS( _ip, _regs )                                                \
   do {                                                                                       \
     if (!(_regs)->txf_tnd)          /* Any transaction in progress? */                       \
       break;                        /* No skip past the below logic */                       \
@@ -669,129 +688,156 @@ do { \
   #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
     #undef  EXECUTE_INSTRUCTION
-    #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
-    do {                                                      \
-        FOOTPRINT ((_ip), (_regs));                           \
-        ICOUNT_INST ((_ip), (_regs));                         \
-        (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
-    } while(0)
+    #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                   \
+    do {                                                              \
+        FOOTPRINT( (_ip), (_regs) );                                  \
+        ICOUNT_INST( (_ip), (_regs) );                                \
+        (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                 \
+    } while (0)
 
   #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     #undef  EXECUTE_INSTRUCTION
-    #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
-    do {                                                      \
-        CHECK_TXFCTR((_ip), (_regs));  /* (do TXF stuff) */   \
-        FOOTPRINT ((_ip), (_regs));                           \
-        ICOUNT_INST ((_ip), (_regs));                         \
-        (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
-    } while(0)
+    #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                   \
+    do {                                                              \
+        CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                      \
+        FOOTPRINT( (_ip), (_regs) );                                  \
+        ICOUNT_INST( (_ip), (_regs) );                                \
+        (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                 \
+    } while (0)
 
   #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 #else /* defined( OPTION_TXF_SLOWLOOP ) */
 
   #undef  EXECUTE_INSTRUCTION
-  #define EXECUTE_INSTRUCTION(_oct, _ip, _regs)             \
-  do {                                                      \
-      FOOTPRINT ((_ip), (_regs));                           \
-      ICOUNT_INST ((_ip), (_regs));                         \
-      (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
-  } while(0)
+  #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                     \
+  do {                                                                \
+      FOOTPRINT( (_ip), (_regs) );                                    \
+      ICOUNT_INST( (_ip), (_regs) );                                  \
+      (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                   \
+  } while (0)
 
   #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
     #undef  TXF_EXECUTE_INSTRUCTION
-    #define TXF_EXECUTE_INSTRUCTION(_oct, _ip, _regs)         \
-    do {                                                      \
-        CHECK_TXFCTR((_ip), (_regs));  /* (do TXF stuff) */   \
-        FOOTPRINT ((_ip), (_regs));                           \
-        ICOUNT_INST ((_ip), (_regs));                         \
-        (_oct)[fetch_hw((_ip))]((_ip), (_regs));              \
-    } while(0)
+    #define TXF_EXECUTE_INSTRUCTION( _oct, _ip, _regs )               \
+    do {                                                              \
+        CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                      \
+        FOOTPRINT( (_ip), (_regs) );                                  \
+        ICOUNT_INST( (_ip), (_regs) );                                \
+        (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                 \
+    } while (0)
 
     #undef  TXF_UNROLLED_EXECUTE
-    #define TXF_UNROLLED_EXECUTE(_oct, _regs)                 \
-      if ((_regs)->ip >= (_regs)->aie) break;                 \
-      TXF_EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
+    #define TXF_UNROLLED_EXECUTE( _oct, _regs )                       \
+      if ((_regs)->ip >= (_regs)->aie) break;                         \
+      TXF_EXECUTE_INSTRUCTION( (_oct), (_regs)->ip, (_regs) )
 
   #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 #endif /* defined( OPTION_TXF_SLOWLOOP ) */
 
 #undef  UNROLLED_EXECUTE
-#define UNROLLED_EXECUTE(_oct, _regs)                     \
-  if ((_regs)->ip >= (_regs)->aie) break;                 \
-  EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
+#define UNROLLED_EXECUTE( _oct, _regs )                               \
+  if ((_regs)->ip >= (_regs)->aie) break;                             \
+  EXECUTE_INSTRUCTION( (_oct), (_regs)->ip, (_regs) )
 
-/* Branching */
+/*-------------------------------------------------------------------*/
+/*                        Branching                                  */
+/*-------------------------------------------------------------------*/
 
 #undef  SUCCESSFUL_BRANCH
-#define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
-do { \
-  VADR _newia; \
-  UPDATE_BEAR((_regs), 0); \
-  _newia = (_addr) & ADDRESS_MAXWRAP((_regs)); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV)) { \
-    (_regs)->ip = (BYTE *)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
-    return; \
-  } else { \
-    if (unlikely((_regs)->execflag)) \
-      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
-    (_regs)->psw.IA = _newia; \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
+#define SUCCESSFUL_BRANCH( _regs, _addr, _len )                       \
+do {                                                                  \
+  VADR _newia;                                                        \
+                                                                      \
+  UPDATE_BEAR( (_regs), 0 );                                          \
+  _newia = (_addr) & ADDRESS_MAXWRAP( (_regs) );                      \
+                                                                      \
+  if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
+   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV))   \
+  {                                                                   \
+    (_regs)->ip = (BYTE*)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
+    return;                                                           \
+  }                                                                   \
+  else                                                                \
+  {                                                                   \
+    if (unlikely( (_regs)->execflag ))                                \
+      UPDATE_BEAR( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );       \
+                                                                      \
+    (_regs)->psw.IA = _newia;                                         \
+    (_regs)->aie    = NULL;                                           \
+    PER_SB( (_regs), (_regs)->psw.IA );                               \
+  }                                                                   \
 } while (0)
 
 #undef  SUCCESSFUL_RELATIVE_BRANCH
-#define SUCCESSFUL_RELATIVE_BRANCH(_regs, _offset, _len) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), (_len) - ((_regs)->exrl ? 6 : 4)); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
+#define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset, _len )            \
+do {                                                                  \
+  UPDATE_BEAR( (_regs), 0 );                                          \
+                                                                      \
+  /* Branch target still within same page as instruction? */          \
+  if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
+   && likely( (_regs)->ip + (_offset) >= (_regs)->aip)                \
+   && likely( (_regs)->ip + (_offset) <  (_regs)->aie) )              \
+  {                                                                   \
+    (_regs)->ip += (_offset);                                         \
+    return;                                                           \
+  }                                                                   \
+                                                                      \
+  /* Branch target in another page: calculate new ip */               \
+  if (likely(!(_regs)->execflag))                                     \
+    (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
+  else                                                                \
+  {                                                                   \
+    UPDATE_BEAR( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
+    (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
+    (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
+  }                                                                   \
+                                                                      \
+  /* Force full instruction fetch from the new page */                \
+  (_regs)->aie = NULL;                                                \
+  PER_SB( (_regs), (_regs)->psw.IA );                                 \
 } while (0)
 
-/* BRCL, BRASL can branch +/- 4G.  This is problematic on a 32 bit host */
-
+/*          BRCL, BRASL can branch +/- 4G.
+            This is problematic on a 32 bit host
+*/
 #undef  SUCCESSFUL_RELATIVE_BRANCH_LONG
-#define SUCCESSFUL_RELATIVE_BRANCH_LONG(_regs, _offset) \
-do { \
-  UPDATE_BEAR((_regs), 0); \
-  if (likely(!(_regs)->permode && !(_regs)->execflag) \
-   && likely((_offset) > -4096) \
-   && likely((_offset) <  4096) \
-   && likely((_regs)->ip + (_offset) >= (_regs)->aip) \
-   && likely((_regs)->ip + (_offset) <  (_regs)->aie)) { \
-    (_regs)->ip += (_offset); \
-    return; \
-  } else { \
-    if (likely(!(_regs)->execflag)) \
-      (_regs)->psw.IA = PSW_IA((_regs), (_offset)); \
-    else { \
-      UPDATE_BEAR((_regs), 6 - ((_regs)->exrl ? 6 : 4)); \
-      (_regs)->psw.IA = (_regs)->ET + (_offset); \
-      (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-    } \
-    (_regs)->aie = NULL; \
-    PER_SB((_regs), (_regs)->psw.IA); \
-  } \
+#define SUCCESSFUL_RELATIVE_BRANCH_LONG( _regs, _offset )             \
+do {                                                                  \
+  UPDATE_BEAR( (_regs), 0 );                                          \
+                                                                      \
+  /* Branch target still within same page as instruction? */          \
+  if (likely(!(_regs)->permode && !(_regs)->execflag  )               \
+   && likely(               (_offset) >      -4096    )               \
+   && likely(               (_offset) <       4096    )               \
+   && likely( (_regs)->ip + (_offset) >= (_regs)->aip )               \
+   && likely( (_regs)->ip + (_offset) <  (_regs)->aie ))              \
+  {                                                                   \
+    (_regs)->ip += (_offset);                                         \
+    return;                                                           \
+  }                                                                   \
+                                                                      \
+  /* Branch target in another page: calculate new ip */               \
+  if (likely(!(_regs)->execflag))                                     \
+    (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
+  else                                                                \
+  {                                                                   \
+    UPDATE_BEAR( (_regs), 6 - ((_regs)->exrl ? 6 : 4) );              \
+    (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
+    (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
+  }                                                                   \
+                                                                      \
+  /* Force full instruction fetch from the new page */                \
+  (_regs)->aie = NULL;                                                \
+  PER_SB( (_regs), (_regs)->psw.IA );                                 \
 } while (0)
+
+/*-------------------------------------------------------------------*/
+/*                         (other)                                   */
+/*-------------------------------------------------------------------*/
 
 /* Program check if fpc is not valid contents for FPC register */
 
@@ -802,23 +848,23 @@ do { \
 
   #define FPC_BRM     FPC_BRM_3BIT
 
-  #define FPC_CHECK( _fpc, _regs )                  \
-                                                    \
-    if (0                                           \
-        || ((_fpc) & FPC_RESV_FPX)                  \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4     \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5     \
-        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6     \
-    )                                               \
+  #define FPC_CHECK( _fpc, _regs )                                    \
+                                                                      \
+    if (0                                                             \
+        || ((_fpc) & FPC_RESV_FPX)                                    \
+        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV4                       \
+        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV5                       \
+        || ((_fpc) & FPC_BRM_3BIT) == BRM_RESV6                       \
+    )                                                                 \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
 #else /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
   #define FPC_BRM     FPC_BRM_2BIT
 
-  #define FPC_CHECK( _fpc, _regs )                  \
-                                                    \
-    if ((_fpc) & FPC_RESERVED)                      \
+  #define FPC_CHECK( _fpc, _regs )                                    \
+                                                                      \
+    if ((_fpc) & FPC_RESERVED)                                        \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
 #endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */

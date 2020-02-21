@@ -535,7 +535,7 @@ VADR    effective_addr1;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, TDB* tdb )
 {
-int         i, tdc;
+int         n, tdc;
 TPAGEMAP   *pmap;
 
     /* Temporarily pause other CPUs while TBEGIN/TBEGINC is processed.
@@ -568,7 +568,7 @@ TPAGEMAP   *pmap;
         pmap = regs->txf_pagesmap;
         regs->txf_pgcnt = 0;
 
-        for (i=0; i < MAX_TXF_PAGES; i++, pmap++)
+        for (n=0; n < MAX_TXF_PAGES; n++, pmap++)
         {
             pmap->mainpageaddr = NULL;
             memset( pmap->cachemap, CM_CLEAN, sizeof( pmap->cachemap ));
@@ -599,8 +599,11 @@ TPAGEMAP   *pmap;
         {
             PSW origpsw;
             memcpy( &origpsw, &regs->psw, sizeof( PSW ));
-            regs->psw.IA = PSW_IA( regs, txf_contran ? -6 : 0 );
-            memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
+            {
+                n = txf_contran ? -6 : 0;
+                regs->psw.IA = PSW_IA( regs, n );
+                memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
+            }
             memcpy( &regs->psw, &origpsw, sizeof( PSW ));
         }
 
@@ -617,37 +620,45 @@ TPAGEMAP   *pmap;
         switch (tdc)
         {
             default:
-            case TDC_NORMAL:            /* NEVER randomly abort */
+            case TDC_NORMAL:                /* NEVER randomly abort */
             case TDC_RESERVED:
 
                 break;
 
-            case TDC_MAYBE_RANDOM:      /* MAYBE abort randomly */
+            case TDC_MAYBE_RANDOM:          /* MAYBE randomly abort */
 
                 if (rand() >= rand())
                     break;
 
-                /* (else fall through to generate random abort) */
+                /* Fall through to choose when to randomly abort */
 
-            case TDC_ALWAYS_RANDOM:     /* Always abort randomly */
+            case TDC_ALWAYS_RANDOM:         /* ALWAYS randomly abort */
             {
-                BYTE racode[10] =       /* Randomly chosen abort codes */
-                {
-                    TAC_FETCH_OVF,
-                    TAC_STORE_OVF,
-                    TAC_FETCH_CNF,
-                    TAC_STORE_CNF,
-                    TAC_INSTR,
-                    TAC_NESTING,
-                    TAC_FETCH_OTHER,
-                    TAC_STORE_OTHER,
-                    TAC_CACHE_OTHER,
-                    TAC_MISC,
-                };
-                int rand1 = (int) (rand() % _countof( racode ));
+                /* Choose a random instruction to abort at */
+                regs->txf_abortctr = (U16) (rand() % MAX_TXF_CONTRAN_INSTR);
 
-                regs->txf_random_tac = (U16) txf_contran ? racode[ rand1 ] : 0;
-                regs->txf_abortctr   = (U16) txf_contran ? (rand() % MAX_TXF_CONTRAN_INSTR) : rand();
+                if (!txf_contran)
+                    regs->txf_random_tac = (U16) 0;
+                else
+                {
+                    /* Randomly chosen abort codes */
+                    static const BYTE racode[10] =
+                    {
+                        TAC_FETCH_OVF,
+                        TAC_STORE_OVF,
+                        TAC_FETCH_CNF,
+                        TAC_STORE_CNF,
+                        TAC_INSTR,
+                        TAC_NESTING,
+                        TAC_FETCH_OTHER,
+                        TAC_STORE_OTHER,
+                        TAC_CACHE_OTHER,
+                        TAC_MISC,
+                    };
+
+                    /* Choose a random abort code */
+                    regs->txf_random_tac = (U16) racode[ rand() % _countof( racode ) ];
+                }
                 break;
             }
         }

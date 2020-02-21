@@ -609,7 +609,7 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
 /*      program_interrupt that the exception occurred during         */
 /*      instruction fetch.                                           */
 /*                                                                   */
-/*      Because this function is inlined and `exec' is a constant    */
+/*      Because this function is inlined and 'exec' is a constant    */
 /*      (either 0 or 1) the references to exec are optimized out by  */
 /*      the compiler.                                                */
 /*-------------------------------------------------------------------*/
@@ -622,103 +622,125 @@ int     pagesz;                         /* Effective page size       */
 int     offset;                         /* Address offset into page  */
 int     len;                            /* Length for page crossing  */
 
-    SET_BEAR_REG(regs, regs->bear_ip);
+    SET_BEAR_REG( regs, regs->bear_ip );
 
     addr = exec ? regs->ET
-         : likely(regs->aie == NULL) ? regs->psw.IA : PSW_IA(regs,0);
+         : likely( !regs->aie ) ? regs->psw.IA : PSW_IA( regs, 0 );
 
     offset = (int)(addr & PAGEFRAME_BYTEMASK);
 
+    pagesz = unlikely( addr < 0x800 ) ? 0x800 : PAGEFRAME_PAGESIZE;
+
     /* Program check if instruction address is odd */
-    if ( unlikely(offset & 0x01) )
+    if (unlikely( offset & 0x01 ))
     {
-        if (!exec) regs->instinvalid = 1;
-        regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+        if (!exec)
+            regs->instinvalid = 1;
+
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
     }
-    pagesz = unlikely(addr < 0x800) ? 0x800 : PAGEFRAME_PAGESIZE;
 
-#if defined(FEATURE_PER)
-    /* Save the address address used to fetch the instruction */
-    if( EN_IC_PER(regs) )
+#if defined( FEATURE_PER )
+
+    /* Save the address used to fetch the instruction */
+    if (EN_IC_PER( regs ))
     {
-#if defined(FEATURE_PER2)
+#if defined( FEATURE_PER2 )
         regs->perc = 0x40    /* ATMID-validity */
-                   | (regs->psw.amode64 << 7)
-                   | (regs->psw.amode << 5)
-                   | (!REAL_MODE(&regs->psw) ? 0x10 : 0)
-                   | (SPACE_BIT(&regs->psw) << 3)
-                   | (AR_BIT(&regs->psw) << 2);
-#else /*!defined(FEATURE_PER2)*/
+                   | (regs->psw.amode64        << 7 )
+                   | (regs->psw.amode          << 5 )
+                   | (!REAL_MODE( &regs->psw ) ? 0x10 : 0 )
+                   | (SPACE_BIT(  &regs->psw ) << 3 )
+                   | (AR_BIT   (  &regs->psw ) << 2 );
+#else
         regs->perc = 0;
-#endif /*!defined(FEATURE_PER2)*/
-
-        if(!exec)
+#endif
+        if (!exec)
             regs->peradr = addr;
 
         /* Test for PER instruction-fetching event */
-        if( EN_IC_PER_IF(regs)
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+        if (1
+            && EN_IC_PER_IF( regs )
+            && PER_RANGE_CHECK( addr, regs->CR(10), regs->CR(11) )
+        )
         {
-            ON_IC_PER_IF(regs);
-      #if defined(FEATURE_PER3)
+            ON_IC_PER_IF( regs );
+
+#if defined( FEATURE_PER3 )
             /* If CR9_IFNUL (PER instruction-fetching nullification) is
                set, take a program check immediately, without executing
                the instruction or updating the PSW instruction address */
-            if ( EN_IC_PER_IFNUL(regs) )
+            if (EN_IC_PER_IFNUL( regs ))
             {
-                ON_IC_PER_IFNUL(regs);
+                ON_IC_PER_IFNUL( regs );
                 regs->psw.IA = addr;
                 regs->psw.zeroilc = 1;
-                regs->program_interrupt(regs, PGM_PER_EVENT);
+                regs->program_interrupt( regs, PGM_PER_EVENT );
             }
-      #endif /*defined(FEATURE_PER3)*/
+#endif
         }
-        /* Quick exit if aia valid */
-        if (!exec && !regs->tracing
-         && regs->aie && regs->ip < regs->aip + pagesz - 5)
-            return regs->ip;
-    }
-#endif /*defined(FEATURE_PER)*/
 
-    if (!exec) regs->instinvalid = 1;
+        /* Quick exit if AIA is still valid */
+        if (1
+            && !exec
+            && !regs->tracing
+            &&  regs->aie
+            &&  regs->ip < regs->aip + pagesz - 5
+        )
+        {
+            return regs->ip;
+        }
+    }
+#endif /* defined( FEATURE_PER ) */
+
+    /* Set instinvalid in case of addressing or translation exception */
+    if (!exec)
+        regs->instinvalid = 1;
 
     /* Get instruction address */
-    ia = MADDR (addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    ia = MADDR( addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
 
     /* If boundary is crossed then copy instruction to destination */
-    if ( offset + ILC(ia[0]) > pagesz )
+    if (offset + ILC( ia[0] ) > pagesz)
     {
-        /* Note - dest is 8 bytes */
+        /* Copy first part of instruction (note: dest is 8 bytes) */
         dest = exec ? regs->exinst : regs->inst;
-        memcpy (dest, ia, 4);
+        memcpy( dest, ia, 4 );
+
+        /* Copy second part of instruction */
         len = pagesz - offset;
-        offset = 0;
-        addr = (addr + len) & ADDRESS_MAXWRAP(regs);
-        ia = MADDR(addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-        if (!exec) regs->ip = ia - len;
-        memcpy(dest + len, ia, 4);
+        addr = (addr + len) & ADDRESS_MAXWRAP( regs );
+        ia = MADDR( addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
+        if (!exec)
+            regs->ip = ia - len;
+        memcpy( dest + len, ia, 4 );
     }
     else
     {
         dest = ia;
-        if (!exec) regs->ip = ia;
+
+        if (!exec)
+            regs->ip = ia;
     }
 
     if (!exec)
     {
+        /* Instr addr now known to be valid so reset instinvalid flag */
         regs->instinvalid = 0;
 
         /* Update the AIA */
         regs->AIV = addr & PAGEFRAME_PAGEMASK;
         regs->aip = (BYTE *)((uintptr_t)ia & ~PAGEFRAME_BYTEMASK);
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
-        if (likely(!regs->tracing && !regs->permode))
+
+        if (likely( !regs->tracing && !regs->permode ))
             regs->aie = regs->aip + pagesz - 5;
         else
         {
-            regs->aie = (BYTE *)1;
+            regs->aie = (BYTE*) 1;
+
             if (regs->tracing)
-                ARCH_DEP(process_trace)(regs);
+                ARCH_DEP( process_trace )( regs );
         }
     }
 
