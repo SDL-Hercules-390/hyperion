@@ -118,7 +118,7 @@ static char *herclogo[]={
 "",
 "                   My PC thinks it's a MAINFRAME!",
 "",
-"       Copyright (C) 1999-2019 Roger Bowler, Jan Jaeger, and others"
+"       Copyright (C) 1999-2020 Roger Bowler, Jan Jaeger, and others"
 };
 
 #endif /* #ifndef _CNSLLOGO_H_ */
