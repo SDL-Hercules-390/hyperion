@@ -26,7 +26,7 @@
 #define HERCULES_COPYRIGHT        "(C) Copyright 1999-2020"
 #define HERCULES_COMPANY          "by Roger Bowler, Jan Jaeger, and others"
 #define HERCULES_PRODUCT_URL      "http://sdl-hercules-390.github.io/html"
-#define HERCULES_PRODUCT_EMAIL    "hercules-390@yahoogroups.com"
+#define HERCULES_PRODUCT_EMAIL    "group@hercules-390.groups.io"
 
 #if defined(PRERELEASE)
 #define ISPRERELEASE    VS_FF_PRERELEASE

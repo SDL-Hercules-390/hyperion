@@ -202,9 +202,14 @@ The following example reads a VMFPLC2 formatted tape named "vmfplc2.het" and res
 
 ## Bug Reports
 
-Bug reports (together with your diagnosis of the fault please) should be reported to either the main hercules-390 discussion group
-on Yahoo or preferably, entered into the [**SDL Hyperion Github Issues**](https://github.com/SDL-Hercules-390/hyperion/issues/) tracker
-at: https://github.com/SDL-Hercules-390/hyperion/issues/
+[Bug reports](https://github.com/sdl-hercules-390/hyperion/issues)
+_(together with your diagnosis of the fault, please!)_
+should be either entered into our 
+[**Github issue tracker**](https://github.com/sdl-hercules-390/hyperion/issues)
+_(preferred)_ at https://github.com/SDL-Hercules-390/hyperion/issues/,
+or else reported via message to the
+[main hercules-390 discussion group](https://hercules-390.groups.io/g/group)
+at https://hercules-390.groups.io/g/group.
 
 ## See Also
 
