@@ -104,6 +104,7 @@ dyndev_SRC =  \
   cardrdr.c   \
   comm3705.c  \
   commadpt.c  \
+  tcpnje.c    \
   con1052c.c  \
   console.c   \
   ctc_ctci.c  \
@@ -190,6 +191,7 @@ HERCMODS =      \
   hdt1052c.la   \
   hdt1403.la    \
   hdt2703.la    \
+  hdttcpnje.la  \
   hdt3705.la    \
   hdt3088.la    \
   hdt3270.la    \
@@ -280,6 +282,10 @@ hdt2880_la_LIBADD   = $(DYNMOD_LD_ADD)
 hdt2703_la_SOURCES  = commadpt.c
 hdt2703_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt2703_la_LIBADD   = $(DYNMOD_LD_ADD)
+
+hdttcpnje_la_SOURCES = tcpnje.c
+hdttcpnje_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+hdttcpnje_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
@@ -879,6 +885,7 @@ noinst_HEADERS =          \
   codepage.h              \
   comm3705.h              \
   commadpt.h              \
+  tcpnje.h                \
   cpuint.h                \
   ctc_ptp.h               \
   ctcadpt.h               \
