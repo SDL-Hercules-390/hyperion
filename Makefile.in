@@ -258,6 +258,12 @@ hdtqeth_la_OBJECTS = $(am_hdtqeth_la_OBJECTS)
 hdtqeth_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdtqeth_la_LDFLAGS) $(LDFLAGS) -o $@
+hdttcpnje_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am_hdttcpnje_la_OBJECTS = tcpnje.lo
+hdttcpnje_la_OBJECTS = $(am_hdttcpnje_la_OBJECTS)
+hdttcpnje_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(hdttcpnje_la_LDFLAGS) $(LDFLAGS) -o $@
 hdtzfcp_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_hdtzfcp_la_OBJECTS = zfcp.lo
 hdtzfcp_la_OBJECTS = $(am_hdtzfcp_la_OBJECTS)
@@ -653,13 +659,13 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/tapeccws.Plo ./$(DEPDIR)/tapecopy-scsiutil.Po \
 	./$(DEPDIR)/tapecopy-tapecopy.Po ./$(DEPDIR)/tapedev.Plo \
 	./$(DEPDIR)/tapemap.Po ./$(DEPDIR)/tapesplt.Po \
-	./$(DEPDIR)/tcpip.Plo ./$(DEPDIR)/timer.Plo \
-	./$(DEPDIR)/trace.Plo ./$(DEPDIR)/transact.Plo \
-	./$(DEPDIR)/tuntap.Plo ./$(DEPDIR)/vector.Plo \
-	./$(DEPDIR)/version.Plo ./$(DEPDIR)/vm.Plo \
-	./$(DEPDIR)/vmd250.Plo ./$(DEPDIR)/vmfplc2.Po \
-	./$(DEPDIR)/x75.Plo ./$(DEPDIR)/xstore.Plo \
-	./$(DEPDIR)/zfcp.Plo
+	./$(DEPDIR)/tcpip.Plo ./$(DEPDIR)/tcpnje.Plo \
+	./$(DEPDIR)/timer.Plo ./$(DEPDIR)/trace.Plo \
+	./$(DEPDIR)/transact.Plo ./$(DEPDIR)/tuntap.Plo \
+	./$(DEPDIR)/vector.Plo ./$(DEPDIR)/version.Plo \
+	./$(DEPDIR)/vm.Plo ./$(DEPDIR)/vmd250.Plo \
+	./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/x75.Plo \
+	./$(DEPDIR)/xstore.Plo ./$(DEPDIR)/zfcp.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -686,11 +692,12 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
 	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
-	$(hdtzfcp_la_SOURCES) $(libhdt3420_not_mod_la_SOURCES) \
-	$(libherc_la_SOURCES) $(EXTRA_libherc_la_SOURCES) \
-	$(libhercd_la_SOURCES) $(libhercs_la_SOURCES) \
-	$(libherct_la_SOURCES) $(libhercu_la_SOURCES) \
-	$(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
+	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
+	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
+	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
+	$(libhercs_la_SOURCES) $(libherct_la_SOURCES) \
+	$(libhercu_la_SOURCES) $(cckdcdsk_SOURCES) \
+	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
 	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
@@ -710,11 +717,12 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
 	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
-	$(hdtzfcp_la_SOURCES) $(libhdt3420_not_mod_la_SOURCES) \
-	$(libherc_la_SOURCES) $(EXTRA_libherc_la_SOURCES) \
-	$(libhercd_la_SOURCES) $(libhercs_la_SOURCES) \
-	$(libherct_la_SOURCES) $(am__libhercu_la_SOURCES_DIST) \
-	$(cckdcdsk_SOURCES) $(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
+	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
+	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
+	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
+	$(libhercs_la_SOURCES) $(libherct_la_SOURCES) \
+	$(am__libhercu_la_SOURCES_DIST) $(cckdcdsk_SOURCES) \
+	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
 	$(cckdcomp64_SOURCES) $(cckddiag_SOURCES) \
 	$(cckddiag64_SOURCES) $(cckdmap_SOURCES) $(cckdswap_SOURCES) \
 	$(cckdswap64_SOURCES) $(convto64_SOURCES) $(dasdcat_SOURCES) \
@@ -939,6 +947,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -1027,6 +1036,7 @@ dyndev_SRC = \
   cardrdr.c   \
   comm3705.c  \
   commadpt.c  \
+  tcpnje.c    \
   con1052c.c  \
   console.c   \
   ctc_ctci.c  \
@@ -1111,6 +1121,7 @@ HERCMODS = \
   hdt1052c.la   \
   hdt1403.la    \
   hdt2703.la    \
+  hdttcpnje.la  \
   hdt3705.la    \
   hdt3088.la    \
   hdt3270.la    \
@@ -1149,6 +1160,9 @@ hdt2880_la_LIBADD = $(DYNMOD_LD_ADD)
 hdt2703_la_SOURCES = commadpt.c
 hdt2703_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt2703_la_LIBADD = $(DYNMOD_LD_ADD)
+hdttcpnje_la_SOURCES = tcpnje.c
+hdttcpnje_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+hdttcpnje_la_LIBADD = $(DYNMOD_LD_ADD)
 hdt3705_la_SOURCES = comm3705.c
 hdt3705_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD = $(DYNMOD_LD_ADD)
@@ -1614,7 +1628,7 @@ EXTRA_DIST = \
   msvc.makefile.includes/PCRE_RULES.msvc      \
   msvc.makefile.includes/REXX_RULES.msvc      \
   README.md                       \
-  readme/images/herclogo.jpg        \
+  readme/images/herclogo.jpg      \
   readme/images/image_header_herculeshyperionSDL.png  \
   readme/README.ADDING.md         \
   readme/README.AIX.md            \
@@ -1623,9 +1637,10 @@ EXTRA_DIST = \
   readme/README.CCKD64.md         \
   readme/README.CMPSC.md          \
   readme/README.COMMADPT.md       \
-  readme/README.DECNUMBER.md      \
   readme/README.DYNMOD.md         \
   readme/README.ECPSVM.md         \
+  readme/README.EXTPKG.md         \
+  readme/README.FACILITIES.md     \
   readme/README.HAO.md            \
   readme/README.HDL.md            \
   readme/README.HERCLOGO.md       \
@@ -1643,12 +1658,10 @@ EXTRA_DIST = \
   readme/README.RXVT4APL.md       \
   readme/README.S37X.md           \
   readme/README.SETUID.md         \
-  readme/README.SOFTFLOAT.md      \
   readme/README.SUN.md            \
   readme/README.TAPE.md           \
   readme/README.TCPIP.md          \
   readme/README.VMFPLC2.md        \
-  readme/README.TELNET.md         \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
@@ -1694,6 +1707,7 @@ noinst_HEADERS = \
   codepage.h              \
   comm3705.h              \
   commadpt.h              \
+  tcpnje.h                \
   cpuint.h                \
   ctc_ptp.h               \
   ctcadpt.h               \
@@ -2023,6 +2037,9 @@ hdtptp.la: $(hdtptp_la_OBJECTS) $(hdtptp_la_DEPENDENCIES) $(EXTRA_hdtptp_la_DEPE
 
 hdtqeth.la: $(hdtqeth_la_OBJECTS) $(hdtqeth_la_DEPENDENCIES) $(EXTRA_hdtqeth_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdtqeth_la_LINK) -rpath $(modexecdir) $(hdtqeth_la_OBJECTS) $(hdtqeth_la_LIBADD) $(LIBS)
+
+hdttcpnje.la: $(hdttcpnje_la_OBJECTS) $(hdttcpnje_la_DEPENDENCIES) $(EXTRA_hdttcpnje_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(hdttcpnje_la_LINK) -rpath $(modexecdir) $(hdttcpnje_la_OBJECTS) $(hdttcpnje_la_LIBADD) $(LIBS)
 
 hdtzfcp.la: $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_DEPENDENCIES) $(EXTRA_hdtzfcp_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdtzfcp_la_LINK) -rpath $(modexecdir) $(hdtzfcp_la_OBJECTS) $(hdtzfcp_la_LIBADD) $(LIBS)
@@ -2364,6 +2381,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tapemap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tapesplt.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpip.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpnje.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timer.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trace.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transact.Plo@am__quote@ # am--include-marker
@@ -2951,6 +2969,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/tapemap.Po
 	-rm -f ./$(DEPDIR)/tapesplt.Po
 	-rm -f ./$(DEPDIR)/tcpip.Plo
+	-rm -f ./$(DEPDIR)/tcpnje.Plo
 	-rm -f ./$(DEPDIR)/timer.Plo
 	-rm -f ./$(DEPDIR)/trace.Plo
 	-rm -f ./$(DEPDIR)/transact.Plo
@@ -3177,6 +3196,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/tapemap.Po
 	-rm -f ./$(DEPDIR)/tapesplt.Po
 	-rm -f ./$(DEPDIR)/tcpip.Plo
+	-rm -f ./$(DEPDIR)/tcpnje.Plo
 	-rm -f ./$(DEPDIR)/timer.Plo
 	-rm -f ./$(DEPDIR)/trace.Plo
 	-rm -f ./$(DEPDIR)/transact.Plo
