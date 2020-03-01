@@ -425,14 +425,27 @@ struct REGS {                           /* Processor registers       */
 
         int     txf_tac;                /* Transaction abort code    */
         int     txf_random_tac;         /* Random abort code         */
-        PSW     txf_tapsw;              /* Transaction abort PSW     */
+
+        /*-----------------------------------------------------------*/
+        /* Transaction Abort PSW fields                              */
+
+        PSW        txf_tapsw;           /* Transaction abort PSW     */
+        BYTE*      txf_ip;              /* AIA Mainstor inst address */
+        BYTE*      txf_aip;             /* AIA Mainstor page address */
+        uintptr_t  txf_aim;             /* AIA Mainstor xor address  */
+        DW         txf_aiv;             /* AIA Virtual page address  */
+
+        /*-----------------------------------------------------------*/
+        /* CONSTRAINED transaction instruction fetching constraint   */
+
         BYTE*   txf_tbeginc_aip;        /* aip of TBEGINC instruction*/
         BYTE*   txf_aie;                /* Mainstor end address for
                                            CONSTRAINED transactions  */
         int     txf_aie_off2;           /* txf_aie page cross offset */
+        /*-----------------------------------------------------------*/
 
-        U32     txf_piid;               /* Transaction program
-                                           interrupt ident           */
+        U32     txf_piid;               /* Transaction Program
+                                           Interrupt Identifier      */
         BYTE    txf_dxcvxc;             /* Data/Vector Exception Code*/
 
         int     txf_lastacctyp;         /* Last access type          */
@@ -979,7 +992,7 @@ struct SYSBLK {
         // by the UPDATE_SYSBLK_TRANSCPUS macro, which should be
         // the only way this field is ever updated.
 
-        int     txf_transcpus;          /* counts transacting CPUs   */
+        S32     txf_transcpus;          /* counts transacting CPUs   */
 #endif
 
         int     regs_copy_len;          /* Length to copy for REGS   */

@@ -1,9 +1,17 @@
-/* TRANSACT.H   (C) Copyright Bob Wood, 2019                         */
+/* TRANSACT.H   (C) Copyright Bob Wood, 2019-2020                    */
 /*                  Transactional-Execution consts and structs       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
+
+/*-------------------------------------------------------------------*/
+/* This module implements the z/Architecture Transactional-Execution */
+/* Facility as documented in IBM reference manual SA22-7832-12 "The  */
+/* z/Architecture Principles of Operation". Specifically chapter 5   */
+/* "Program Execution" pages 5-89 to page 5-109 contain a detailed   */
+/* description of the "Transactional-Execution Facility".            */
+/*-------------------------------------------------------------------*/
 
 #ifndef _TRANSACT_H_
 #define _TRANSACT_H_
@@ -92,7 +100,7 @@ struct TDB
     BYTE    tdb_resv2[2];       /* Reserved                          */
     FWORD   tdb_piid;           /* Program Interruption Identifier   */
 
-    DBLWRD  tdb_teid;           /* Transaction Exception Identifier  */
+    DBLWRD  tdb_teid;           /* Translation Exception Identifier  */
     DBLWRD  tdb_bea;            /* Breaking Event Address            */
     DBLWRD  tdb_resv3[9];       /* Reserved                          */
 

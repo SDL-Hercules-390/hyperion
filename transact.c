@@ -6,6 +6,14 @@
 /*   (http://www.hercules-390.org/herclic.html)                      */
 /*   as modifications to Hercules.                                   */
 
+/*-------------------------------------------------------------------*/
+/* This module implements the z/Architecture Transactional-Execution */
+/* Facility as documented in IBM reference manual SA22-7832-12 "The  */
+/* z/Architecture Principles of Operation". Specifically chapter 5   */
+/* "Program Execution" pages 5-89 to page 5-109 contain a detailed   */
+/* description of the "Transactional-Execution Facility".            */
+/*-------------------------------------------------------------------*/
+
 #include "hstdinc.h"
 
 #define _TRANSACT_C_
@@ -196,6 +204,12 @@ int         txf_tac;
     /*-----------------------------------------------------*/
     OBTAIN_INTLOCK( regs );
     {
+        bool   txf_contran;      /* (saved original value) */
+        U16    txf_abortctr;     /* (saved original value) */
+        BYTE*  txf_tbeginc_aip;  /* (saved original value) */
+        BYTE*  txf_aie;          /* (saved original value) */
+        int    txf_aie_off2;     /* (saved original value) */
+
         SYNCHRONIZE_CPUS( regs );
 
         /* Decrease nesting depth */
@@ -230,6 +244,7 @@ int         txf_tac;
 
             /* Remain in transactional-execution mode */
             PTT_TXF( "TXF TEND", 0, regs->txf_contran, regs->txf_tnd );
+            RELEASE_INTLOCK( regs );
             return;
         }
 
@@ -248,15 +263,20 @@ int         txf_tac;
         }
 
         /*---------------------------------------------------------*/
-        /* End the transaction normally if possible (no conflicts) */
+        /* End transaction normally -- IF POSSIBLE (no conflicts)  */
         /*---------------------------------------------------------*/
 
-        regs->txf_tac         = 0;
-        regs->txf_contran     = false;
-        regs->txf_abortctr    = 0;
-        regs->txf_tbeginc_aip = NULL;
-        regs->txf_aie         = NULL;
-        regs->txf_aie_off2    = 0;
+        txf_contran     = regs->txf_contran;        /* save */
+        txf_abortctr    = regs->txf_abortctr;       /* save */
+        txf_tbeginc_aip = regs->txf_tbeginc_aip;    /* save */
+        txf_aie         = regs->txf_aie;            /* save */
+        txf_aie_off2    = regs->txf_aie_off2;       /* save */
+
+        regs->txf_contran     = false;              /* reset */
+        regs->txf_abortctr    = 0;                  /* reset */
+        regs->txf_tbeginc_aip = NULL;               /* reset */
+        regs->txf_aie         = NULL;               /* reset */
+        regs->txf_aie_off2    = 0;                  /* reset */
 
         /*---------------------------------------------------------*/
         /*  Scan the page map table.  There is one entry in the    */
@@ -266,7 +286,7 @@ int         txf_tac;
         /*  page have been referenced and whether the reference    */
         /*  was a store or a fetch.  The current data in the       */
         /*  cache line is saved when the alternate entry is        */
-        /*  created.   This saved data must match what is in main  */
+        /*  created. This saved data MUST match what is in main    */
         /*  storage now, or the transation will be aborted with    */
         /*  a conflict, since that means that some other CPU or    */
         /*  the channel subsystem has stored into the cache line,  */
@@ -301,6 +321,12 @@ int         txf_tac;
                     TAC_STORE_CNF : TAC_FETCH_CNF;
 
                 PTT_TXF( "*TXF TEND", txf_tac, regs->txf_contran, regs->txf_tnd );
+
+                regs->txf_contran     = txf_contran;      /* restore */
+                regs->txf_abortctr    = txf_abortctr;     /* restore */
+                regs->txf_tbeginc_aip = txf_tbeginc_aip;  /* restore */
+                regs->txf_aie         = txf_aie;          /* restore */
+                regs->txf_aie_off2    = txf_aie_off2;     /* restore */
 
                 regs->txf_tnd++; // (prevent 'abort_transaction' crash)
                 ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
@@ -615,7 +641,9 @@ TPAGEMAP   *pmap;
             regs->txf_aie_off2    = 0;
         }
 
-        /* Save the abort PSW */
+        /*----------------------------------*/
+        /*  Save the Transaction Abort PSW  */
+        /*----------------------------------*/
         {
             PSW origpsw;
             memcpy( &origpsw, &regs->psw, sizeof( PSW ));
@@ -623,6 +651,10 @@ TPAGEMAP   *pmap;
                 n = txf_contran ? -6 : 0;
                 regs->psw.IA = PSW_IA( regs, n );
                 memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
+                regs->txf_ip  = regs->ip;
+                regs->txf_aip = regs->aip;
+                regs->txf_aim = regs->aim;
+                regs->txf_aiv = regs->aiv;
             }
             memcpy( &regs->psw, &origpsw, sizeof( PSW ));
         }
@@ -682,8 +714,6 @@ TPAGEMAP   *pmap;
                 break;
             }
         }
-
-        PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
     }
     else /* (nested transaction) */
     {
@@ -714,8 +744,10 @@ TPAGEMAP   *pmap;
         regs->txf_pifctab[ regs->txf_tnd - 2 ] = regs->txf_pifc;
         regs->txf_pifc = MAX( regs->txf_pifc, (i2 & TXF_CTL_PIFC) );
 
-        PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
     }
+
+    PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
+
 } /* end ARCH_DEP( process_tbegin ) */
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -843,12 +875,16 @@ VADR       txf_atia = PSW_IA( regs, 0 );
     regs->txf_conflict  = 0;
     regs->txf_piid      = 0;
 
-    /*---------------------------------------------*/
-    /*  Set the current PSW to the abort PSW       */
-    /*---------------------------------------------*/
+    /*----------------------------------------------------*/
+    /*  Set the current PSW to the Transaction Abort PSW  */
+    /*----------------------------------------------------*/
 
     memcpy( &regs->psw, &regs->txf_tapsw, sizeof( PSW ));
-    regs->aie = NULL;
+    regs->ip  = regs->txf_ip;
+    regs->aip = regs->txf_aip;
+    regs->aim = regs->txf_aim;
+    regs->aiv = regs->txf_aiv;
+    INVALIDATE_AIA( regs );
 
     /*---------------------------------------------*/
     /*     Set the condition code in the PSW       */
@@ -1003,13 +1039,19 @@ VADR       txf_atia = PSW_IA( regs, 0 );
         UNREACHABLE_CODE( return );
     }
 
-    /* Unconstrained transaction failures have their
-       PSW set to the Transaction Abort PSW pointing
-       to the instruction immediately following the
-       TBEGIN instruction so the condition code can
-       be used to decide whether to bother retrying
-       the transaction or not, so we just jump back
-       to the 'run_cpu' loop to redispatch this CPU.
+    /* Transaction failures have their PSW set to the
+       Transaction Abort PSW, which for unconstrained
+       transactions points to the instruction immediately
+       following the TBEGIN instruction (so that the
+       condition code can then be used to decide whether
+       to bother retrying the transaction or not), and
+       for constrained transactions points to the TBEGINC
+       instruction itself (so that the transaction can
+       then be unconditionally retried). Either way, we
+       simply jump directly back to the 'run_cpu' loop
+       to redispatch this CPU, thereby causing it to
+       continue executing instructions at wherever the
+       the Transaction Abort PSW said it should.
     */
     PTT_TXF( "*TXF ABRTJMP", regs, txf_tac, retry );
     longjmp( regs->progjmp, SIE_NO_INTERCEPT );
@@ -1322,7 +1364,9 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     /* Not interested in instruction fetches either */
     if (0
         || arn == USE_INST_SPACE
-        || arn == USE_REAL_ADDR     // FIXME? (Fish questions this!)
+#if 0 // fishfix?
+        || arn == USE_REAL_ADDR   // ** FISH HIGHLY QUESTIONS THIS!! **
+#endif // fishfix?
     )
         return maddr;
 

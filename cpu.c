@@ -518,7 +518,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
     /* No, set unfiltered condition code */
     regs->psw.cc = ucc;
-    PTT_TXF( "TXF PIFILT", regs, ABORT_RETRY_CC, ucc );
+    PTT_TXF( "TXF PIFILT", regs, ABORT_RETRY_RETURN, ucc );
 
 } /* end do_txf_program_interrupt_filtering */
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -703,7 +703,16 @@ static char *pgmintname[] = {
     code = pcode & ~PGM_PER_EVENT;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    ARCH_DEP( do_txf_program_interrupt_filtering )( regs, &pcode, code );
+    ARCH_DEP( do_txf_program_interrupt_filtering )( realregs, &pcode, code );
+    /* Abort any active transaction w/unfiltered program interrupt and
+       return to here to continue with program interrupt processing */
+    PTT_TXF( "TXF UPGM", realregs, 0, realregs->txf_tnd );
+    if (realregs->txf_tnd)
+    {
+        PTT_TXF( "*TXF UPGM", realregs, ABORT_RETRY_RETURN, TAC_UPGM );
+        ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, TAC_UPGM );
+        ilc = REAL_ILC( realregs );
+    }
 #endif
 
     /* If this is a concurrent PER event then we must add the PER
@@ -1177,17 +1186,6 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
     realregs->hostint = 0;
 #endif /*defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    /* Abort any active transaction w/unfiltered program interrupt and
-       return to here to continue with program interrupt processing */
-    PTT_TXF( "TXF UPGM", regs, 0, regs->txf_tnd );
-    if (regs->txf_tnd)
-    {
-        PTT_TXF( "*TXF UPGM", regs, ABORT_RETRY_RETURN, TAC_UPGM );
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_UPGM );
-    }
-#endif
 
 #if defined(_FEATURE_SIE)
     if(nointercept)
