@@ -467,6 +467,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tcpnje.h"
+								>
+							</File>
+							<File
 								RelativePath=".\tt32api.h"
 								>
 							</File>
@@ -520,6 +524,10 @@
 							</File>
 							<File
 								RelativePath=".\qeth.c"
+								>
+							</File>
+							<File
+								RelativePath=".\tcpnje.c"
 								>
 							</File>
 							<File
@@ -2152,6 +2160,10 @@
 					</File>
 					<File
 						RelativePath=".\readme\README.TCPIP.md"
+						>
+					</File>
+					<File
+						RelativePath=".\readme\README.TCPNJE.md"
 						>
 					</File>
 					<File
