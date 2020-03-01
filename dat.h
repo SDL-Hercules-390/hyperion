@@ -118,8 +118,13 @@ static inline  BYTE* ARCH_DEP( maddr_l )
     if (!maddr)
         maddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
 
-    /* Translate to alternate TXF address if appropriate */
-    maddr = TXF_MADDRL( addr, len, arn, regs, acctype, maddr );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
+    {
+        /* Translate to alternate TXF address if appropriate */
+        maddr = TXF_MADDRL( addr, len, arn, regs, acctype, maddr );
+    }
+#endif
 
     return maddr;
 }
