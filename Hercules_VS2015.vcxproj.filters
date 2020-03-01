@@ -375,6 +375,9 @@
     <ClCompile Include="qeth.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tcpnje.c">
+      <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="tuntap.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
@@ -1023,6 +1026,9 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.TCPIP.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
+    <None Include="readme\README.TCPNJE.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.VMFPLC2.md">
@@ -2489,6 +2495,9 @@
       <Filter>Source Files\Hercules\Devices\CTC\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="qeth.h">
+      <Filter>Source Files\Hercules\Devices\CTC\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tcpnje.h">
       <Filter>Source Files\Hercules\Devices\CTC\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tt32api.h">

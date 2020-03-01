@@ -22,16 +22,27 @@
 /* for TCP/IP capability on VM/370.                                  */
 /*                                                                   */
 /* Original Author of commadpt: Ivan Warren                          */
-/* TCPNJE hacked from commadpt by: Peter Coghlan                     */
-/* For further information send mail to software at beyondthepale.ie */
+/* TCPNJE hacked from commadpt by Peter Coghlan and integrated into  */
+/* SDL Hercules Hyperion by Ivan Warren.                             */
+/*                                                                   */
+/* PLEASE DO NOT CONTACT PETER COGHLAN FOR SUPPORT! This is a SDL    */
+/* Hercules Hyperion implementation that is NOT supported by Peter!  */
+/* If you need support or wish to report a bug, please do so via     */
+/* the official SDL Hercules Hyperions GitHub Issues web page at:    */
+/*                                                                   */
+/*    https://github.com/SDL-Hercules-390/hyperion/issues            */
+/*                                                                   */
+/* For more information regarding this implementation please refer   */
+/* to our README.TCPNJE.md document.                                 */
 /*-------------------------------------------------------------------*/
-/* tcpnje version 1.00                                               */
+/* TCPNJE version 1.00                                               */
 /*-------------------------------------------------------------------*/
+
+#include "hstdinc.h"
 
 #define HYPERION_DEVHND_FORMAT
 #define OPTION_DYNAMIC_LOAD
 
-#include "hstdinc.h"
 #include "hercules.h"
 #include "devtype.h"
 #include "parser.h"
@@ -772,7 +783,7 @@ static int tcpnje_read(int fd, struct TNBUFFER *buffer, size_t wanted, struct TC
             HSO_EWOULDBLOCK == HSO_errno))
         {
             /* Do as close to nothing as possible */
-            done = done;
+            ;
         }
         else
         {
@@ -3803,7 +3814,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     if ((count >= 7) && (tpb->rcb == 0xa0) && (tn->fastopen == tpb->srcb))
                     {
                         DBGMSG(2048, "HHCTN087I %4.4X:TCPNJE WRITE - Permission to open stream %2.2X suppressed due to preceeding FASTOPEN\n",
-                                dev->devnum, tn->fastopen, tpb->srcb);
+                                dev->devnum, tn->fastopen);
                         tn->fastopen = 0;
                         tn->resetoutbcb = 1;
                         *residual = 0;
@@ -4086,7 +4097,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 else
                 {
                     DBGMSG(16, "HHCTN096W %4.4X:TCPNJE WRITE - outgoing record cannot be buffered as buffer is busy\n",
-                            dev->devnum, count);
+                            dev->devnum);
                     *residual = count;
                     *unitstat = CSW_CE | CSW_DE | CSW_UC;
                     dev->sense[0] = SENSE_IR;

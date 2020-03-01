@@ -445,6 +445,7 @@
     <ClCompile Include="tapemap.c" />
     <ClCompile Include="tapesplt.c" />
     <ClCompile Include="tcpip.c" />
+    <ClCompile Include="tcpnje.c" />
     <ClCompile Include="timer.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="transact.c" />
@@ -702,6 +703,7 @@
     <None Include="readme\README.SUN.md" />
     <None Include="readme\README.TAPE.md" />
     <None Include="readme\README.TCPIP.md" />
+    <None Include="readme\README.TCPNJE.md" />
     <None Include="readme\README.VMFPLC2.md" />
     <None Include="readme\README.WIN64.md" />
     <None Include="RELEASE.NOTES" />
@@ -1145,6 +1147,7 @@
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tcpip.h" />
+    <ClInclude Include="tcpnje.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tt32if.h" />
     <ClInclude Include="tuntap.h" />

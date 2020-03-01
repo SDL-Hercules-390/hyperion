@@ -65,6 +65,7 @@ to our **bug report tracking system** by adding/creating a new
 [Hercules Automatic Operator](readme/README.HAO.md)  
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules Networking](readme/README.NETWORKING.md)  
+[TCPNJE Support](readme/README.TCPNJE.md)  
 [Hercules REXX Support](readme/README.REXX.md)  
 [Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
