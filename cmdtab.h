@@ -1618,6 +1618,45 @@
   "tracing.  Enter the 't+-' command by itself (without any arguments) to\n"    \
   "display the current settings.\n"
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+#define txf_cmd_desc            "Transactional-Execution Facility tracing"
+#define txf_cmd_help            \
+                                \
+  "Format:\n"                                                                   \
+  "\n"                                                                          \
+  "   txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]\n"           \
+  "\n"                                                                          \
+  "Where:\n"                                                                    \
+  "\n"                                                                          \
+  "   0       Disables all txf tracing.\n"                                      \
+  "\n"                                                                          \
+  "   INSTR   Enables instruction tracing of ONLY transactions.\n"              \
+  "           Either 'U' or 'C' or both must also be specified.\n"              \
+  "           Default is both. Use 't+' to activate the tracing.\n"             \
+  "\n"                                                                          \
+  "   U       Enables tracing of unconstrained transactions.\n"                 \
+  "   C       Enables tracing of constrained transactions.\n"                   \
+  "\n"                                                                          \
+  "   GOOD    Enables tracing of successful transactions.\n"                    \
+  "           The keyword 'SUCCESS' is also accepted.\n"                        \
+  "\n"                                                                          \
+  "   BAD     Enables tracing of unsuccessful transactions.\n"                  \
+  "           The keyword 'FAIL'or 'FAILURE' is also accepted.\n"               \
+  "\n"                                                                          \
+  "   TDB     Displays an unsuccessful transaction's TDB.\n"                    \
+  "   PAGES   Displays a transaction's page map information.\n"                 \
+  "   LINES   Displays a page map's cache line information.\n"                  \
+  "\n"                                                                          \
+  "Enter 'txf' by itself to display the current options. Use 'txf 0'\n"         \
+  "to disable all txf tracing. If 'INSTR' is not specified then only\n"         \
+  "the results of transactions are traced. If any option other than\n"          \
+  "'U' or 'C' is also specified with 'INSTR' then both instructions\n"          \
+  "and transaction results are traced. Note: 'txf INSTR' does not by\n"         \
+  "itself enable instruction tracing. Use the 't+' command to do that.\n"
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
 #define timerint_cmd_desc       "Display or set timers update interval"
 #define timerint_cmd_help       \
                                 \
@@ -1827,7 +1866,9 @@ COMMAND( "t-",                      trace_cmd,              SYSCMDNOPER,        
 COMMAND( "t",                       trace_cmd,              SYSCMDNOPER,        t_cmd_desc,             t_cmd_help          )
 COMMAND( "t?",                      trace_cmd,              SYSCMDNOPER,        tquest_cmd_desc,        tquest_cmd_help     )
 COMMAND( "t+",                      trace_cmd,              SYSCMDNOPER,        tplus_cmd_desc,         tplus_cmd_help      )
-
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+COMMAND( "txf",                     txf_cmd,                SYSCMDNOPER,        txf_cmd_desc,           txf_cmd_help        )
+#endif
 COMMAND( "t+-",                     auto_trace_cmd,         SYSCMDNOPER,        auto_trace_desc,        auto_trace_help     )
 COMMAND( "timerint",                timerint_cmd,           SYSCMDNOPER,        timerint_cmd_desc,      timerint_cmd_help   )
 COMMAND( "tlb",                     tlb_cmd,                SYSCMDNOPER,        tlb_cmd_desc,           NULL                )

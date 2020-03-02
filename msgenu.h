@@ -2495,7 +2495,24 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 // range 17550 - 17599 available
 // range 17600 - 17699 available
-// range 17700 - 17799 available
+
+// Reserve 17700-17749 for TXF related messages
+#define HHC17700 "TXF: Successful %s Nested TEND for TND %d => %d"
+#define HHC17701 "TXF: Successful Outermost %s TEND"
+#define HHC17702 "TXF: Successful %s TBEGIN%s; TND now %d"
+#define HHC17703 "TXF: Failed %s %s Transaction for TND %d: %s (%s)"
+#define HHC17704 "TXF: virt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
+#define HHC17705 "TXF: There now:  +"
+#define HHC17706 "TXF: We fetched: +"
+#define HHC17707 "TXF: We stored:  +"
+#define HHC17708 "TXF: Error in function %s: %s"
+#define HHC17709 "TXF: TDB at 0x%16.16"PRIX64":"
+#define HHC17710 "TXF: TDB: +"
+#define HHC17711 "TXF: Unable to obtain clean capture of page"
+#define HHC17712 "TXF: Unable to cleanly refresh cache line"
+//efine HHC17713 - HHC17749 (available)
+
+// range 17750 - 17799 available
 // range 17800 - 17899 available
 // range 17900 - 17999 available
 

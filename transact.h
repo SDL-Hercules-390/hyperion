@@ -128,4 +128,55 @@ typedef struct TDB  TDB;             // Transaction Dianostic Block
 
 CASSERT( sizeof( TDB ) == 256, transact_h );
 
+/*-------------------------------------------------------------------*/
+/*               TXF tracing macros and functions                    */
+/*-------------------------------------------------------------------*/
+
+#define TXF_TRACE_UC( _contran )     /* (helper macro) */           \
+    (0                                                              \
+     || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))            \
+     || ((sysblk.txf_tracing & TXF_TR_U) && !(_contran))            \
+    )
+
+#define TXF_TRACE( _successfailure, _contran )                      \
+    (1                                                              \
+     && (sysblk.txf_tracing & TXF_TR_ ## _successfailure)           \
+     && (TXF_TRACE_UC( _contran ))                                  \
+    )
+
+#define TXF_TRACE_TDB( _contran )                                   \
+    (1                                                              \
+     && (sysblk.txf_tracing & (TXF_TR_FAILURE | TXF_TR_TDB))        \
+     && (TXF_TRACE_UC( _contran ))                                  \
+    )
+
+#define TXF_TRACE_MAP( _contran )                                   \
+    (1                                                              \
+     && (sysblk.txf_tracing & TXF_TR_MAP)                           \
+     && (TXF_TRACE_UC( _contran ))                                  \
+    )
+
+#define TXF_TRACE_PAGES( _contran )                                 \
+    (1                                                              \
+     && (sysblk.txf_tracing & TXF_TR_PAGES)                         \
+     && (TXF_TRACE_UC( _contran ))                                  \
+    )
+
+#define TXF_TRACE_LINES( _contran )                                 \
+    (1                                                              \
+     && (sysblk.txf_tracing & TXF_TR_LINES)                         \
+     && (TXF_TRACE_UC( _contran ))                                  \
+    )
+
+// Functions to convert a TAC abort code into a printable string
+const char*  tac2short ( U64 tac );   // "TAC_INSTR"
+const char*  tac2long  ( U64 tac );   // "Restricted instruction"
+
+// Function to hexdump a cache line (HHC17705, HHC17706, HHC17707)
+#define DUMP_PFX( _msg )    #_msg "D " ## _msg
+void dump_cache( const char* pfx, int linenum , const BYTE* line);
+
+// Function to hexdump TDB (Transaction Diagnostic Block)
+void dump_tdb( TDB* tdb, U64 logical_addr );
+
 #endif // _TRANSACT_H_

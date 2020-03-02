@@ -414,6 +414,7 @@ struct REGS {                           /* Processor registers       */
 #define TXF_PIFC_RESERVED   3           /* Reserved (invalid)        */
 
         TDB*    txf_tdb;                /* Mainstor pointer to TDB   */
+        U64     txf_tdb_addr;           /* Logical address of TDB    */
         U64     txf_conflict;           /* Logical address where
                                            conflict was detected     */
 
@@ -994,6 +995,19 @@ struct SYSBLK {
 
         S32     txf_transcpus;          /* counts transacting CPUs   */
 #endif
+        U32     txf_tracing;            /* TXF tracing control       */
+
+#define TXF_TR_INSTR    0x80000000      // instructions
+#define TXF_TR_TYPE     0x0C000000      // type
+#define TXF_TR_C        0x08000000      //   constrained
+#define TXF_TR_U        0x04000000      //   unconstrained
+#define TXF_TR_TRANS    0x00FFFFFF      // transactions
+#define TXF_TR_SUCCESS  0x00800000      //   success
+#define TXF_TR_FAILURE  0x00400000      //   failure
+#define TXF_TR_TDB      0x00000800      // tdb
+#define TXF_TR_MAP      0x000000C0      // page map
+#define TXF_TR_PAGES    0x00000080      //   page information
+#define TXF_TR_LINES    0x00000040      //   cache lines too
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 

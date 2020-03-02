@@ -23,6 +23,7 @@
 #include "opcode.h"
 #include "inline.h"
 #include "transact.h"
+#include "hexdumpe.h"
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) \
 && !defined( DID_TXF_DEBUGGING )
@@ -222,6 +223,13 @@ int         txf_tac;
             /*           NESTED TRANSACTION END           */
             /*--------------------------------------------*/
 
+            if (TXF_TRACE( SUCCESS, regs->txf_contran ))
+            {
+                // "TXF: Successful %s Nested TEND for TND %d => %d"
+                WRMSG( HHC17700, "D", regs->txf_contran ? "Cons"
+                    : "Uncons", regs->txf_tnd + 1, regs->txf_tnd );
+            }
+
             /* If we're now at or below the highest nesting level
                that allowed AR changes or float instructions, then
                enable (set) the corresponding control flag.
@@ -342,10 +350,24 @@ int         txf_tac;
         /*  the real cache lines from the shadow cache lines.      */
         /*---------------------------------------------------------*/
 
+        if (TXF_TRACE( SUCCESS, txf_contran ))
+        {
+            // "TXF: Successful Outermost %s TEND"
+            WRMSG( HHC17701, "D", txf_contran ? "Cons" : "Uncons" );
+        }
+
         pmap = regs->txf_pagesmap;
 
         for (i=0; i < regs->txf_pgcnt; i++, pmap++)
         {
+            if (TXF_TRACE_PAGES( txf_contran ))
+            {
+                // "TXF: virt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
+                WRMSG( HHC17704, "D", (U64) pmap->virtpageaddr,
+                    (U64)(pmap->mainpageaddr - regs->mainstor),
+                    (U64) pmap->altpageaddr );
+            }
+
             for (j=0; j < ZCACHE_LINE_PAGE; j++)
             {
                 if (pmap->cachemap[j] != CM_STORED)
@@ -355,6 +377,12 @@ int         txf_tac;
                 altaddr  = pmap->altpageaddr  + (j << ZCACHE_LINE_SHIFT);
 
                 memcpy( mainaddr, altaddr, ZCACHE_LINE_SIZE );
+
+                if (TXF_TRACE_LINES( txf_contran ))
+                {
+                    // "TXF: We stored:  +"
+                    dump_cache( DUMP_PFX( HHC17707 ), j, altaddr );
+                }
             }
         }
 
@@ -498,6 +526,7 @@ TDB*    tdb = NULL;                     /* Pointer to TDB            */
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
+        regs->txf_tdb_addr = effective_addr1;
         PTT_TXF( "TXF TBEGIN", 0, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( process_tbegin )( false, regs, i2, tdb );
     }
@@ -548,6 +577,7 @@ VADR    effective_addr1;                /* Effective address         */
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
+        regs->txf_tdb_addr = 0x1800;
         PTT_TXF( "TXF TBEGINC", 0, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( process_tbegin )( true, regs, i2, NULL );
     }
@@ -748,6 +778,13 @@ TPAGEMAP   *pmap;
 
     PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
 
+    if (TXF_TRACE( SUCCESS, regs->txf_contran ))
+    {
+        // "TXF: Successful %s TBEGIN%s; TND now %d"
+        WRMSG( HHC17702, "D", regs->txf_tnd > 1 ? "nested" : "outermost",
+            regs->txf_contran ? "C" : "", regs->txf_tnd );
+    }
+
 } /* end ARCH_DEP( process_tbegin ) */
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -860,6 +897,57 @@ VADR       txf_atia = PSW_IA( regs, 0 );
     txf_piid     = regs->txf_piid;       /* save orig value */
     txf_bea      = regs->bear;           /* save orig value */
 
+    if (TXF_TRACE( FAILURE, txf_contran ))
+    {
+        // "TXF: Failed %s %s Transaction for TND %d: %s (%s)"
+        WRMSG( HHC17703, "D", txf_tnd > 1 ? "Nested" : "Outermost",
+            txf_contran ? "Cons" : "Uncons", txf_tnd,
+            tac2short( txf_tac ), tac2long( txf_tac ));
+
+        if (TXF_TRACE_MAP( txf_contran ))
+        {
+            TPAGEMAP*  pmap;
+            BYTE*      mainaddr;
+            BYTE*      altaddr;
+            int        i, j;
+
+            pmap = regs->txf_pagesmap;
+
+            for (i=0; i < regs->txf_pgcnt; i++, pmap++)
+            {
+                if (TXF_TRACE_PAGES( txf_contran ))
+                {
+                    // "TXF: virt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
+                    WRMSG( HHC17704, "D", (U64) pmap->virtpageaddr,
+                        (U64)(pmap->mainpageaddr - regs->mainstor),
+                        (U64) pmap->altpageaddr );
+                }
+
+                for (j=0; j < ZCACHE_LINE_PAGE; j++)
+                {
+                    if (pmap->cachemap[j] == CM_CLEAN)
+                        continue;
+
+                    mainaddr = pmap->mainpageaddr + (j << ZCACHE_LINE_SHIFT);
+                    altaddr  = pmap->altpageaddr  + (j << ZCACHE_LINE_SHIFT);
+
+                    if (TXF_TRACE_LINES( txf_contran ))
+                    {
+                        // "TXF: There now:  +"
+                        dump_cache( DUMP_PFX( HHC17705 ), j, mainaddr );
+
+                        if (pmap->cachemap[j] == CM_FETCHED)
+                            // "TXF: We fetched: +"
+                            dump_cache( DUMP_PFX( HHC17706 ), j, altaddr );
+                        else
+                            // "TXF: We stored:  +"
+                            dump_cache( DUMP_PFX( HHC17707 ), j, altaddr );
+                    }
+                }
+            }
+        }
+    }
+
     obtain_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
     {
         regs->txf_tnd = 0;
@@ -966,6 +1054,9 @@ VADR       txf_atia = PSW_IA( regs, 0 );
 
         for (i=0; i < 16; i++)
             STORE_DW( pi_tdb->tdb_gpr[i], regs->GR_G( i ));
+
+        if (TXF_TRACE_TDB( txf_contran ))
+            dump_tdb( pi_tdb, regs->txf_tdb_addr );
     }
 
     if (tb_tdb)
@@ -996,6 +1087,9 @@ VADR       txf_atia = PSW_IA( regs, 0 );
 
         for (i=0; i < 16; i++)
             STORE_DW( tb_tdb->tdb_gpr[i], regs->GR_G( i ));
+
+        if (TXF_TRACE_TDB( txf_contran ))
+            dump_tdb( tb_tdb, regs->txf_tdb_addr );
     }
 
     /*---------------------------------------------*/
@@ -1530,6 +1624,8 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         /* Abort if unable to obtain clean capture of this page */
         if (i >= MAX_CAPTURE_TRIES)
         {
+            // "TXF: Unable to obtain clean capture of page"
+            WRMSG( HHC17711, "E" );
             PTT_TXF( "*TXF maddr_l", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
             UNREACHABLE_CODE( return maddr );
@@ -1574,6 +1670,8 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
             /* Abort if unable to cleanly refresh this cache line */
             if (i >= MAX_CAPTURE_TRIES)
             {
+                // "TXF: Unable to cleanly refresh cache line"
+                WRMSG( HHC17712, "E" );
                 PTT_TXF( "*TXF maddr_l", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
                 ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
                 UNREACHABLE_CODE( return maddr );
@@ -1609,6 +1707,108 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     #pragma GCC optimize ("O0")     // (for reliable breakpoints)
   #endif
 #endif
+
+/*-------------------------------------------------------------------*/
+/*            DEBUG:  Transaction Abort Code names                   */
+/*-------------------------------------------------------------------*/
+static const char* tac_names[] =
+{
+    /*   0 */   "0",                "0",
+    /*   1 */   "1",                "1",
+    /*   2 */   "TAC_EXT",          "External interruption",
+    /*   3 */   "3",                "3",
+    /*   4 */   "TAC_UPGM",         "PGM Interruption (Unfiltered)",
+    /*   5 */   "TAC_MCK",          "Machine-check Interruption",
+    /*   6 */   "TAC_IO",           "I/O Interruption",
+    /*   7 */   "TAC_FETCH_OVF",    "Fetch overflow",
+    /*   8 */   "TAC_STORE_OVF",    "Store overflow",
+    /*   9 */   "TAC_FETCH_CNF",    "Fetch conflict",
+    /*  10 */   "TAC_STORE_CNF",    "Store conflict",
+    /*  11 */   "TAC_INSTR",        "Restricted instruction",
+    /*  12 */   "TAC_FPGM",         "PGM Interruption (Filtered)",
+    /*  13 */   "TAC_NESTING",      "Nesting Depth exceeded",
+    /*  14 */   "TAC_FETCH_OTH",    "Cache (fetch related)",
+    /*  15 */   "TAC_STORE_OTH",    "Cache (store related)",
+    /*  16 */   "TAC_CACHE_OTH",    "Cache (other)",
+    /*  17 */   "17",               "17",
+    /*  18 */   "18",               "18",
+    /*  19 */   "TAC_GUARDED",      "Guarded-Storage Event related",
+
+//  /*  20 */   "TAC_?????",        "Some future TAC code...",
+//  /*  21 */   "TAC_?????",        "Some future TAC code...",
+//  /* etc */   "TAC_?????",        "Some future TAC code...",
+
+//  /* 255 */   "TAC_MISC",         "Miscellaneous condition",
+//  /* 256 */   "TAC_TABORT",       "TABORT instruction",
+};
+static const char* tac2name( U64 tac, bool bLong )
+{
+    if (tac < (_countof( tac_names )/2))
+        return tac_names[ (tac * 2) + (bLong ? 1 : 0) ];
+    if (tac < 255) return (bLong ? "(undefined Abort Code)"  : "TAC_?????"  );
+    return (tac == 255) ? (bLong ? "Miscellaneous condition" : "TAC_MISC"   )
+                        : (bLong ? "TABORT instruction"      : "TAC_TABORT" );
+}
+const char* tac2long ( U64 tac ) { return tac2name( tac, true  ); }
+const char* tac2short( U64 tac ) { return tac2name( tac, false ); }
+
+/*-------------------------------------------------------------------*/
+/*               DEBUG:  Hex dump a cache line                       */
+/*-------------------------------------------------------------------*/
+void dump_cache( const char* pfx, int linenum , const BYTE* line)
+{
+    char*  /* (work) */  buf  = NULL;
+    const char*          dat  = (const char*) line;
+    static const size_t  skp  = 0;
+    static const size_t  amt  = ZCACHE_LINE_SIZE;
+    U64 /* (cosmetic) */ adr  = linenum << ZCACHE_LINE_SHIFT;
+    static const size_t  bpg  = 4; // bytes per formatted group
+    static const size_t  gpl  = 4; // formatted groups per line
+
+    hexdumpe16( pfx, &buf, dat, skp, amt, adr, bpg, gpl );
+
+    if (buf)
+    {
+        LOGMSG( "%s", buf );
+        free( buf );
+    }
+    else
+    {
+        // "TXF: error in function %s: %s"
+        WRMSG( HHC17708, "E", "dump_cache()", strerror( errno ));
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   DEBUG:  Hex dump TDB                            */
+/*-------------------------------------------------------------------*/
+void dump_tdb( TDB* tdb, U64 logical_addr )
+{
+    char*  /* (work) */  buf  = NULL;
+    const char*          dat  = (const char*) tdb;
+    static const size_t  skp  = 0;
+    static const size_t  amt  = sizeof( TDB );
+    static const U64     adr  = 0; // (cosmetic)
+    static const size_t  bpg  = 8; // bytes per formatted group
+    static const size_t  gpl  = 2; // formatted groups per line
+
+    // "TXF: TDB at 0x%16.16"PRIX64":"
+    WRMSG( HHC17709, "D", logical_addr );
+
+    // "TXF: TDB: +"
+    hexdumpe16( DUMP_PFX( HHC17710 ), &buf, dat, skp, amt, adr, bpg, gpl );
+
+    if (buf)
+    {
+        LOGMSG( "%s", buf );
+        free( buf );
+    }
+    else
+    {
+        // "TXF: error in function %s: %s"
+        WRMSG( HHC17708, "E", "dump_tdb()", strerror( errno ));
+    }
+}
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

@@ -312,36 +312,61 @@ do { \
 /*                  CPU Stepping or Tracing                          */
 /*-------------------------------------------------------------------*/
 
-#define CPU_STEPPING(_regs, _ilc) \
-  ( \
-      sysblk.inststep \
-   && ( \
-        (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0) \
-     || (sysblk.stepaddr[0] <= sysblk.stepaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[1] \
-        ) \
-     || (sysblk.stepaddr[0] > sysblk.stepaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0] \
-        ) \
-      ) \
+#define TXF_INSTR_TRACING( _regs )                                    \
+  (sysblk.txf_tracing & TXF_TR_INSTR)
+
+#define TXF_CONSTRAINED_TRANS_INSTR( _regs )                          \
+  ((sysblk.txf_tracing & TXF_TR_C)                                    \
+    && (_regs)->txf_tnd && (_regs)->txf_contran)
+
+#define TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                        \
+  ((sysblk.txf_tracing & TXF_TR_U)                                    \
+    && (_regs)->txf_tnd && !(_regs)->txf_contran)
+
+#define TXF_TRACE_THIS_INSTR( _regs )                                 \
+  (0                                                                  \
+   || TXF_CONSTRAINED_TRANS_INSTR( _regs )                            \
+   || TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                          \
   )
 
-#define CPU_TRACING(_regs, _ilc) \
-  ( \
-      sysblk.insttrace \
-   && ( \
-        (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0) \
-     || (sysblk.traceaddr[0] <= sysblk.traceaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[0] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[1] \
-        ) \
-     || (sysblk.traceaddr[0] > sysblk.traceaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1] \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[0] \
-        ) \
-      ) \
+#define CPU_STEPPING(_regs, _ilc)                                     \
+  (                                                                   \
+      sysblk.inststep                                                 \
+   && (0                                                              \
+       || !TXF_INSTR_TRACING( _regs )                                 \
+       ||  TXF_TRACE_THIS_INSTR( _regs )                              \
+      )                                                               \
+   && (                                                               \
+        (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)          \
+     || (sysblk.stepaddr[0] <= sysblk.stepaddr[1]                     \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0]            \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[1]            \
+        )                                                             \
+     || (sysblk.stepaddr[0] > sysblk.stepaddr[1]                      \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1]            \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0]            \
+        )                                                             \
+      )                                                               \
+  )
+
+#define CPU_TRACING(_regs, _ilc)                                      \
+  (                                                                   \
+      sysblk.insttrace                                                \
+   && (0                                                              \
+       || !TXF_INSTR_TRACING( _regs )                                 \
+       ||  TXF_TRACE_THIS_INSTR( _regs )                              \
+      )                                                               \
+   && (                                                               \
+        (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)        \
+     || (sysblk.traceaddr[0] <= sysblk.traceaddr[1]                   \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[0]           \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[1]           \
+        )                                                             \
+     || (sysblk.traceaddr[0] > sysblk.traceaddr[1]                    \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1]           \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[0]           \
+        )                                                             \
+      )                                                               \
   )
 
 #define CPU_STEPPING_OR_TRACING(_regs, _ilc) \

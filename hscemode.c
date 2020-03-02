@@ -1158,8 +1158,141 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     if (sysblk.auto_trace_beg || sysblk.auto_trace_amt)
         panel_command( "-t+-" );
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* Also show txf tracing settings if enabled */
+    if (sysblk.txf_tracing & TXF_TR_INSTR)
+        panel_command( "-txf" );
+#endif
+
     return 0;
 }
+
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+/*-------------------------------------------------------------------*/
+/* txf_cmd - control TXF tracing                                     */
+/*-------------------------------------------------------------------*/
+int txf_cmd( int argc, char* argv[], char* cmdline )
+{
+    U32  txf_tracing  = sysblk.txf_tracing;
+    int  rc           = 0;
+
+    // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]
+
+    if (argc > 1)
+    {
+        // Disable all TXF tracing?
+        if (str_caseless_eq( argv[1], "0"))
+        {
+            if (argc > 2)
+                rc = -1;
+            else
+                txf_tracing = 0;
+        }
+        else // Define new options...
+        {
+            int i;
+
+            txf_tracing = 0;
+
+            for (i=1; i < argc; ++i)
+            {
+                     if (str_caseless_eq( argv[i], "INSTR"   )) txf_tracing |= TXF_TR_INSTR;
+                else if (str_caseless_eq( argv[i], "U"       )) txf_tracing |= TXF_TR_U;
+                else if (str_caseless_eq( argv[i], "C"       )) txf_tracing |= TXF_TR_C;
+                else if (str_caseless_eq( argv[i], "GOOD"    )) txf_tracing |= TXF_TR_SUCCESS;
+                else if (str_caseless_eq( argv[i], "SUCCESS" )) txf_tracing |= TXF_TR_SUCCESS;
+                else if (str_caseless_eq( argv[i], "BAD"     )) txf_tracing |= TXF_TR_FAILURE;
+                else if (str_caseless_eq( argv[i], "FAILURE" )) txf_tracing |= TXF_TR_FAILURE;
+                else if (str_caseless_eq( argv[i], "FAIL"    )) txf_tracing |= TXF_TR_FAILURE;
+                else if (str_caseless_eq( argv[i], "TDB"     )) txf_tracing |= TXF_TR_TDB;
+                else if (str_caseless_eq( argv[i], "PAGES"   )) txf_tracing |= TXF_TR_PAGES;
+                else if (str_caseless_eq( argv[i], "LINES"   )) txf_tracing |= TXF_TR_LINES;
+                else
+                {
+                    rc = -1;
+                    break;
+                }
+            }
+
+            if (rc == 0)
+            {
+                //------------------------------------------------
+                //   If neither U nor C specified, set both.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_TYPE))
+                    txf_tracing |= TXF_TR_TYPE;
+
+                //------------------------------------------------
+                //  If neither GOOD nor BAD specified, set both.
+                //------------------------------------------------
+                if ((txf_tracing & TXF_TR_TRANS) &&
+                   !(txf_tracing & (TXF_TR_SUCCESS | TXF_TR_FAILURE)))
+                    txf_tracing |= (TXF_TR_SUCCESS | TXF_TR_FAILURE);
+
+                //------------------------------------------------
+                //     Ignore TDB unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                    txf_tracing &= ~TXF_TR_TDB;
+
+                //------------------------------------------------
+                //      If LINES specified, set PAGES too.
+                //------------------------------------------------
+                if (1
+                    && (txf_tracing & TXF_TR_TRANS)
+                    && (txf_tracing & TXF_TR_LINES)
+                )
+                    txf_tracing |= TXF_TR_PAGES;
+            }
+        }
+
+        if (rc == 0)
+            sysblk.txf_tracing = txf_tracing;
+    }
+
+    if (rc != 0)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+    }
+    else
+    {
+        char buf[64];
+
+        // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]
+
+        if (!txf_tracing) STRLCPY( buf, "0" );
+
+        else MSGBUF( buf, "%s%s%s%s%s%s%s%s"
+
+            , txf_tracing & TXF_TR_INSTR   ? "INSTR " : ""
+            , txf_tracing & TXF_TR_U       ? "U "     : ""
+            , txf_tracing & TXF_TR_C       ? "C "     : ""
+            , txf_tracing & TXF_TR_SUCCESS ? "GOOD "  : ""
+            , txf_tracing & TXF_TR_FAILURE ? "BAD "   : ""
+            , txf_tracing & TXF_TR_TDB     ? "TDB "   : ""
+            , txf_tracing & TXF_TR_PAGES   ? "PAGES " : ""
+            , txf_tracing & TXF_TR_LINES   ? "LINES " : ""
+        );
+
+        UPPER_ARGV_0( argv );
+
+        if (argc > 1)
+        {
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], buf );
+        }
+        else
+        {
+            // "%-14s: %s"
+            WRMSG( HHC02203, "I", argv[0], buf );
+        }
+    }
+
+    return rc;
+}
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
