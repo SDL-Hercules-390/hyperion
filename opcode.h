@@ -157,6 +157,10 @@ typedef int (*func) ();
 
 extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
+/*-------------------------------------------------------------------*/
+/*               Individual instruction counting                     */
+/*-------------------------------------------------------------------*/
+
 #if defined( OPTION_INSTRUCTION_COUNTING )
 
 #define ICOUNT_INST( _inst, _regs )                                 \
@@ -242,6 +246,10 @@ extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
 #endif // defined( OPTION_INSTRUCTION_COUNTING )
 
+/*-------------------------------------------------------------------*/
+/*                    SIE related macros                             */
+/*-------------------------------------------------------------------*/
+
 #if defined( _FEATURE_SIE )
 
   #define SIE_MODE( _register_context ) unlikely((_register_context)->sie_mode)
@@ -262,10 +270,30 @@ extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
   #define SIE_STATB( _register_context, _feat_byte, _feat_name )  (0)
 #endif
 
+#if defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
+  #undef              MULTIPLE_CONTROLLED_DATA_SPACE
+  #define             MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   \
+      (SIE_FEATB( (_regs), MX, XC ) && AR_BIT( &(_regs)->psw ))
+#else
+  #undef  MULTIPLE_CONTROLLED_DATA_SPACE
+  #define MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   (0)
+#endif
 
-/* The footprint_buffer option saves a copy of the register context
-   every time an instruction is executed.  This is for problem
-   determination only, as it severely impacts performance.       *JJ */
+#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+  #undef  SIE_ACTIVE
+  #define SIE_ACTIVE( _regs )     ((_regs)->sie_active)
+#else
+  #undef  SIE_ACTIVE
+  #define SIE_ACTIVE( _regs )     (0)
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                   Instruction "FOOTPRINT"                         */
+/*-------------------------------------------------------------------*/
+/* The footprint_buffer option saves a copy of the register context  */
+/* every time an instruction is executed.  This is for problem       */
+/* determination only, as it SEVERELY impacts performance.      *JJ  */
+/*-------------------------------------------------------------------*/
 
 #if defined( OPTION_FOOTPRINT_BUFFER )
 #define FOOTPRINT(_ip, _regs) \
@@ -280,7 +308,9 @@ do { \
 #define FOOTPRINT(_ip, _regs)
 #endif
 
-/* CPU Stepping or Tracing */
+/*-------------------------------------------------------------------*/
+/*                  CPU Stepping or Tracing                          */
+/*-------------------------------------------------------------------*/
 
 #define CPU_STEPPING(_regs, _ilc) \
   ( \
@@ -331,6 +361,10 @@ do { \
 
 #define RETURN_INTCHECK(_regs) \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
+
+/*-------------------------------------------------------------------*/
+/*                Instruction validity checking                      */
+/*-------------------------------------------------------------------*/
 
 #define ODD_CHECK(_r, _regs) \
     if( (_r) & 1 ) \
@@ -400,19 +434,19 @@ do { \
     || (_regs)->GR_LHH(1) > (0x0001|(FEATURE_LCSS_MAX-1))) \
         (_regs)->program_interrupt( (_regs), PGM_OPERAND_EXCEPTION)
 
-#define IOID_TO_SSID(_ioid) \
-    ((_ioid) >> 16)
+/*-------------------------------------------------------------------*/
+/*              Device  IOID / SSID / LCSS  macros                   */
+/*-------------------------------------------------------------------*/
 
-#define IOID_TO_LCSS(_ioid) \
-    ((_ioid) >> 17)
+#define IOID_TO_SSID( _ioid )       ((_ioid) >> 16)
+#define IOID_TO_LCSS( _ioid )       ((_ioid) >> 17)
+#define SSID_TO_LCSS( _ssid )       ((_ssid) >> 1 )
+#define LCSS_TO_SSID( _lcss )       (((_lcss) << 1 ) | 1)
 
-#define SSID_TO_LCSS(_ssid) \
-    ((_ssid) >> 1)
+/*-------------------------------------------------------------------*/
+/*            Virtual Architecture Level Set Facility                */
+/*-------------------------------------------------------------------*/
 
-#define LCSS_TO_SSID(_lcss) \
-    (((_lcss) << 1) | 1)
-
-/* Virtual Architecture Level Set Facility */
 #define FACILITY_ENABLED(_faci, _regs) \
         (((_regs)->facility_list                  [ ((STFL_ ## _faci)/8) ]) & (0x80 >> ((STFL_ ## _faci) % 8)))
 
@@ -427,6 +461,10 @@ do { \
         if(!FACILITY_ENABLED( _faci, _regs ) ) \
           (_regs)->program_interrupt( (_regs), PGM_OPERATION_EXCEPTION); \
     } while (0)
+
+/*-------------------------------------------------------------------*/
+/*                     PER range checking                            */
+/*-------------------------------------------------------------------*/
 
 #define PER_RANGE_CHECK(_addr, _low, _high) \
   ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
@@ -536,7 +574,9 @@ do { \
 /* for each subsequent new build architecture.                       */
 /*-------------------------------------------------------------------*/
 
-/* PSW Instruction Address manipulation */
+/*-------------------------------------------------------------------*/
+/*             PSW Instruction Address manipulation                  */
+/*-------------------------------------------------------------------*/
 
 #undef  _PSW_IA
 #define _PSW_IA(_regs, _n) \
@@ -586,7 +626,9 @@ do { \
  (((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
    - (uintptr_t)(_regs)->aip) & AMASK24)
 
-/* Accelerator for instruction addresses */
+/*-------------------------------------------------------------------*/
+/*             Accelerator for instruction addresses                 */
+/*-------------------------------------------------------------------*/
 
 #undef  INVALIDATE_AIA
 #define INVALIDATE_AIA(_regs) \
@@ -907,21 +949,6 @@ do {                                                                  \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
 #endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
-
-#undef   SIE_ACTIVE
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
- #define SIE_ACTIVE(_regs)  ((_regs)->sie_active)
-#else
- #define SIE_ACTIVE(_regs)  (0)
-#endif
-
-#undef   MULTIPLE_CONTROLLED_DATA_SPACE
-#if defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
- #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) \
-      ( SIE_FEATB((_regs), MX, XC) && AR_BIT(&(_regs)->psw) )
-#else
- #define MULTIPLE_CONTROLLED_DATA_SPACE(_regs) (0)
-#endif
 
 /* PER3 Breaking Event Address Recording (BEAR) */
 
@@ -3402,6 +3429,10 @@ do { \
 
 #define PERFORM_SERIALIZATION(_regs)    do{}while(0)
 #define PERFORM_CHKPT_SYNC(_regs)       do{}while(0)
+
+/*-------------------------------------------------------------------*/
+/*               external function declarations                      */
+/*-------------------------------------------------------------------*/
 
 /* Functions in module channel.c */
 int  ARCH_DEP( startio ) (REGS *regs, DEVBLK *dev, ORB *orb);
