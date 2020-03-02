@@ -702,9 +702,9 @@ TPAGEMAP   *pmap;
                         TAC_STORE_CNF,
                         TAC_INSTR,
                         TAC_NESTING,
-                        TAC_FETCH_OTHER,
-                        TAC_STORE_OTHER,
-                        TAC_CACHE_OTHER,
+                        TAC_FETCH_OTH,
+                        TAC_STORE_OTH,
+                        TAC_CACHE_OTH,
                         TAC_MISC,
                     };
 
@@ -761,7 +761,7 @@ TPAGEMAP   *pmap;
 /*-------------------------------------------------------------------*/
 /*     (see Fig. 514 on page 5-102 of SA22-7832-12 z/Arch POPs)      */
 /*-------------------------------------------------------------------*/
-static const int abort2cc[20] =
+static const int tac2cc[20] =
 {
     TXF_CC_PERSISTENT,      //   0  (undefined)
     TXF_CC_PERSISTENT,      //   1  (undefined)
@@ -777,9 +777,9 @@ static const int abort2cc[20] =
     TXF_CC_PERSISTENT,      //  11  TAC_INSTR
     TXF_CC_PERSISTENT,      //  12  TAC_FPGM
     TXF_CC_PERSISTENT,      //  13  TAC_NESTING
-    TXF_CC_TRANSIENT,       //  14  TAC_FETCH_OTHER
-    TXF_CC_TRANSIENT,       //  15  TAC_STORE_OTHER
-    TXF_CC_TRANSIENT,       //  16  TAC_CACHE_OTHER
+    TXF_CC_TRANSIENT,       //  14  TAC_FETCH_OTH
+    TXF_CC_TRANSIENT,       //  15  TAC_STORE_OTH
+    TXF_CC_TRANSIENT,       //  16  TAC_CACHE_OTH
     TXF_CC_PERSISTENT,      //  17  (undefined)
     TXF_CC_PERSISTENT,      //  18  (undefined)
     TXF_CC_TRANSIENT        //  19  TAC_GUARDED
@@ -898,8 +898,8 @@ VADR       txf_atia = PSW_IA( regs, 0 );
     /*---------------------------------------------*/
     if (txf_tac != TAC_UPGM)
     {
-        if (txf_tac && txf_tac < (int) _countof( abort2cc ))
-            regs->psw.cc = abort2cc[ txf_tac ];
+        if (txf_tac && txf_tac < (int) _countof( tac2cc ))
+            regs->psw.cc = tac2cc[ txf_tac ];
         else if (txf_tac == 255)
             regs->psw.cc = TXF_CC_TRANSIENT;
         else if (txf_tac >= 256)

@@ -117,9 +117,9 @@ struct TDB
 #define TAC_INSTR         11    /* Restricted instruction            */
 #define TAC_FPGM          12    /* PGM Interruption (Filtered)       */
 #define TAC_NESTING       13    /* Nesting Depth exceeded            */
-#define TAC_FETCH_OTHER   14    /* Cache -- fetch related            */
-#define TAC_STORE_OTHER   15    /* Cache -- store related            */
-#define TAC_CACHE_OTHER   16    /* Cache -- other                    */
+#define TAC_FETCH_OTH     14    /* Cache (fetch related)             */
+#define TAC_STORE_OTH     15    /* Cache (store related)             */
+#define TAC_CACHE_OTH     16    /* Cache (other)                     */
 #define TAC_GUARDED       19    /* Guarded-Storage Event related     */
 #define TAC_MISC         255    /* Miscellaneous condition           */
 #define TAC_TABORT       256    /* TABORT instruction                */
