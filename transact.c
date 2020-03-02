@@ -348,7 +348,7 @@ int         txf_tac;
         {
             for (j=0; j < ZCACHE_LINE_PAGE; j++)
             {
-                if (pmap->cachemap[j] == CM_CLEAN)
+                if (pmap->cachemap[j] != CM_STORED)
                     continue;
 
                 mainaddr = pmap->mainpageaddr + (j << ZCACHE_LINE_SHIFT);
