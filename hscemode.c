@@ -1177,6 +1177,8 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
     U32  txf_tracing  = sysblk.txf_tracing;
     int  rc           = 0;
 
+    UNREFERENCED( cmdline );
+
     // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]
 
     if (argc > 1)

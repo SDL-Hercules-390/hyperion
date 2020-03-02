@@ -173,7 +173,7 @@ const char*  tac2short ( U64 tac );   // "TAC_INSTR"
 const char*  tac2long  ( U64 tac );   // "Restricted instruction"
 
 // Function to hexdump a cache line (HHC17705, HHC17706, HHC17707)
-#define DUMP_PFX( _msg )    #_msg "D " ## _msg
+#define DUMP_PFX( _msg )    #_msg "D " _msg
 void dump_cache( const char* pfx, int linenum , const BYTE* line);
 
 // Function to hexdump TDB (Transaction Diagnostic Block)
