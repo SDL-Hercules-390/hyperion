@@ -864,7 +864,7 @@ U64        txf_conflict;
 U64        txf_bea;
 TDB*       pi_tdb   = NULL; /* Program Interrupt TDB @ fixed 0x1800  */
 TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
-VADR       txf_atia = PSW_IA( regs, 0 );
+VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 
     // LOGIC ERROR if CPU not in transactional-execution mode!
     if (!regs->txf_tnd)
