@@ -14,9 +14,6 @@
 /* manual SA22-7832-12 "The z/Architecture Principles of Operation"  */
 /*-------------------------------------------------------------------*/
 
-#ifndef _INSTFMTS_H
-#define _INSTFMTS_H
-
 /*-------------------------------------------------------------------*/
 /*                     Instruction decoders                          */
 /*-------------------------------------------------------------------*/
@@ -1882,5 +1879,3 @@
 }
 
 #endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
-
-#endif /* _INSTFMTS_H */
