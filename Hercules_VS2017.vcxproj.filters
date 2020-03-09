@@ -2764,6 +2764,9 @@
     <ClInclude Include="inline.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="instfmts.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="linklist.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>

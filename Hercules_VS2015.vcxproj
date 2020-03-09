@@ -1118,6 +1118,7 @@
     <ClInclude Include="htypes.h" />
     <ClInclude Include="impexp.h" />
     <ClInclude Include="inline.h" />
+    <ClInclude Include="instfmts.h" />
     <ClInclude Include="linklist.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="ltdl.h" />

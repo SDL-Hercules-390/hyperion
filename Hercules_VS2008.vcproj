@@ -1464,6 +1464,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\instfmts.h"
+							>
+						</File>
+						<File
 							RelativePath=".\linklist.h"
 							>
 						</File>

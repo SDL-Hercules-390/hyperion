@@ -736,15 +736,15 @@
 // Finally also notice the definition of the "GENx370x390x900" macro
 // in opcode.h, which defines opcode table entries for each opcode:
 // it defines not only a pointer to the intruction function for each
-// architecture, but also defines those 2 extra pointers:
+// architecture, but also defines those 2 extra pointers as the last
+// two entries for each opcode table entry:
 //
 //      (void*) &disasm_ ## _format,
 //      (void*) & _mnemonic "\0" #_name
 //
-// as the last 2 entries for each opcode table entry. Thus the need
-// for the "+2" in the below #define for "NUM_INSTR_TAB_PTRS": so
-// the opcode tables in opcode.c defined by "GENx370x390x900" macro
-// has room for the 2 needed extra pointers used by the DISASM_TYPE
+// Thus we need "+2" in the below #define for "NUM_INSTR_TAB_PTRS"
+// so the opcode tables in opcode.c defined by the "GENx370x390x900"
+// macro, has room for the 2 extra pointers used by the DISASM_TYPE
 // instruction disassembly functions called if tracing instructions.
 //--------------------------------------------------------------------
 

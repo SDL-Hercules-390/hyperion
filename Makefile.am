@@ -947,6 +947,7 @@ noinst_HEADERS =          \
   htypes.h                \
   impexp.h                \
   inline.h                \
+  instfmts.h              \
   linklist.h              \
   logger.h                \
   ltdl.h                  \
