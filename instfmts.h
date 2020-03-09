@@ -689,7 +689,7 @@
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
-    (_effective_addr2)  = (temp >>  0);                             \
+    (_effective_addr2)  = (temp >>  0) & 0xfff;                     \
     (_b2)               = (temp >> 16) & 0xf;  /* (actually x2) */  \
     (_effective_addr2) += (_regs)->GR(( _b2 ));/* (actually x2) */  \
     (_b2)              =  (temp >> 12) & 0xf;  /* (the REAL b2) */  \
