@@ -1447,6 +1447,8 @@ static INSTR_FUNC runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
 /*    DISASM_xxx functions must come BEFORE the GENx370x390x900 tables.       */
 /*----------------------------------------------------------------------------*/
 
+typedef int (*func) ();
+
 #define DISASM_ROUTE( _table, _route )                                                \
                                                                                       \
 int disasm_ ## _table( BYTE inst[], char unused[], char* p )                          \
