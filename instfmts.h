@@ -313,7 +313,7 @@
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*       RRF - register to register with additional R3 field         */
+/*      RRF_R - register to register with additional R3 field        */
 /*-------------------------------------------------------------------*/
 // This is actually z/Arch RRD format! ((See PROGRAMMING NOTE above!))
 
@@ -1839,8 +1839,6 @@
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
         (_effective_addr2) &= ADDRESS_MAXWRAP(( _regs ));           \
     }                                                               \
-                                                                    \
-    (_b1) = ( (_inst)[1] ) & 0xf;                                   \
                                                                     \
     INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
 }
