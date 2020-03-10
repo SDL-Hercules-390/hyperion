@@ -1347,8 +1347,8 @@ DEF_INST( dummy_instruction )
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*             Static instruction disassembly functions              */
-/*              and instruction routing jump tables                  */
+/*          Primary instruction execution/dispatching                */
+/*          and instruction tracing/printing jump tables             */
 /*-------------------------------------------------------------------*/
 
 static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS];
@@ -1447,412 +1447,453 @@ static INSTR_FUNC runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
 /*    DISASM_xxx functions must come BEFORE the GENx370x390x900 tables.       */
 /*----------------------------------------------------------------------------*/
 
-typedef int (*func) ();
+typedef int IPRTFUNC();         /* instruction printing function type */
 
-#define DISASM_ROUTE( _table, _route )                                                \
-                                                                                      \
-int disasm_ ## _table( BYTE inst[], char unused[], char* p )                          \
-{                                                                                     \
-    func   disasm_fn;                                                                 \
-    char*  mnemonic;                                                                  \
-    UNREFERENCED( unused );                                                           \
-    mnemonic  = (void*) opcode_ ## _table [ inst _route ][ NUM_INSTR_TAB_PTRS - 1 ];  \
-    disasm_fn = (void*) opcode_ ## _table [ inst _route ][ NUM_INSTR_TAB_PTRS - 2 ];  \
-    return disasm_fn( inst, mnemonic, p );                                            \
+/*----------------------------------------------------------------------------*/
+/*      ROUTE_IPRINT  -  common instruction print routing logic               */
+/*----------------------------------------------------------------------------*/
+#define ROUTE_IPRINT( _opcode_tabname, _opcode_idx )                           \
+                                                                               \
+    IPRTFUNC*  iprt_func;       /* Ptr to instruction printing function */     \
+    char*      mnemonic;        /* The instruction's assembler mnemonic */     \
+                                                                               \
+    UNREFERENCED( unused );                                                    \
+                                                                               \
+    /* Extract our parameters directly from the instruction opcode table */    \
+                                                                               \
+    iprt_func = (void*) opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 2 ];  \
+    mnemonic  = (void*) opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 1 ];  \
+                                                                               \
+    return iprt_func( inst, mnemonic, prtbuf );   /* (trace this instruction) */
+
+/*----------------------------------------------------------------------------*/
+/*                           iprint_router_func                               */
+/*----------------------------------------------------------------------------*/
+/* This is the primary instruction printing function called by instruction    */
+/* tracing. It either calls the actual print function directly for the case   */
+/* of single opcode instructions or jumps to one of the below IPRINT_ROUT2    */
+/* functions to route the called based on the instruction's extended opcode.  */
+/*----------------------------------------------------------------------------*/
+int iprint_router_func( BYTE inst[], char unused[], char* prtbuf )
+{
+    ROUTE_IPRINT( table, [0] );   /* Route directly or jump thru IPRINT_ROUT2 */
 }
-
+/*----------------------------------------------------------------------------*/
+/*   IPRINT_ROUT2 - do second level jump to reach actual printing function    */
 /*----------------------------------------------------------------------------*/
 
-DISASM_ROUTE(table,[0])
-DISASM_ROUTE(01xx,[1])
-DISASM_ROUTE(a5_x,[1] & 0x0F)
-DISASM_ROUTE(a7_x,[1] & 0x0F)
-DISASM_ROUTE(b2xx,[1])
-DISASM_ROUTE(b3xx,[1])
-DISASM_ROUTE(b9xx,[1])
-DISASM_ROUTE(c0_x,[1] & 0x0F)
-DISASM_ROUTE(c2_x,[1] & 0x0F)                                   /*@Z9*/
-DISASM_ROUTE(c4_x,[1] & 0x0F)                                   /*208*/
-DISASM_ROUTE(c6_x,[1] & 0x0F)                                   /*208*/
-DISASM_ROUTE(c8_x,[1] & 0x0F)
-DISASM_ROUTE(cc_x,[1] & 0x0F)                                   /*810*/
-DISASM_ROUTE(e3xx,[5])
-DISASM_ROUTE(e5xx,[1])
-DISASM_ROUTE(e6xx,[1])
-DISASM_ROUTE(ebxx,[5])
-DISASM_ROUTE(ecxx,[5])
-DISASM_ROUTE(edxx,[5])
+#define IPRINT_ROUT2( _opcode_tabname, _opcode_idx )                           \
+                                                                               \
+    int iprint_ ## _opcode_tabname( BYTE inst[], char unused[], char* prtbuf ) \
+    { ROUTE_IPRINT( _opcode_tabname, _opcode_idx ); }
 
 /*----------------------------------------------------------------------------*/
+/*         The second level instruction printing routing functions            */
+/*----------------------------------------------------------------------------*/
+
+IPRINT_ROUT2( 01xx, [1] )
+IPRINT_ROUT2( a5_x, [1] & 0x0F )
+IPRINT_ROUT2( a7_x, [1] & 0x0F )
+IPRINT_ROUT2( b2xx, [1] )
+IPRINT_ROUT2( b3xx, [1] )
+IPRINT_ROUT2( b9xx, [1] )
+IPRINT_ROUT2( c0_x, [1] & 0x0F )
+IPRINT_ROUT2( c2_x, [1] & 0x0F )
+IPRINT_ROUT2( c4_x, [1] & 0x0F )
+IPRINT_ROUT2( c6_x, [1] & 0x0F )
+IPRINT_ROUT2( c8_x, [1] & 0x0F )
+IPRINT_ROUT2( cc_x, [1] & 0x0F )
+IPRINT_ROUT2( e3xx, [5] )
+IPRINT_ROUT2( e5xx, [1] )
+IPRINT_ROUT2( e6xx, [1] )
+IPRINT_ROUT2( ebxx, [5] )
+IPRINT_ROUT2( ecxx, [5] )
+IPRINT_ROUT2( edxx, [5] )
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 
  #define opcode_a4xx        v_opcode_a4xx
- DISASM_ROUTE(  a4xx,[1])
+ IPRINT_ROUT2(  a4xx,[1] )
  #undef  opcode_a4xx
 
  #define opcode_a6xx        v_opcode_a6xx
- DISASM_ROUTE(  a6xx,[1])
+ IPRINT_ROUT2(  a6xx,[1] )
  #undef  opcode_a6xx
 
  #define opcode_e4xx        v_opcode_e4xx
- DISASM_ROUTE(  e4xx,[1])
+ IPRINT_ROUT2(  e4xx,[1] )
  #undef  opcode_e4xx
 
 #else /* !defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
- #define disasm_a4xx    disasm_none
- #define disasm_a6xx    disasm_none
- #define disasm_e4xx    disasm_none
+ #define iprint_a4xx    iprint_none
+ #define iprint_a6xx    iprint_none
+ #define iprint_e4xx    iprint_none
 
 #endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
 /*----------------------------------------------------------------------------*/
-
-#define DISASM_TYPE(_type)                                              \
-                                                                        \
-static int disasm_ ## _type( BYTE inst[], char mnemonic[], char* p )    \
-{                                                                       \
-    char* name;                                                         \
-    char operands[64]
-
+/*   IPRINT_FUNC - instruction printing logic part 1:  function entry         */
 /*----------------------------------------------------------------------------*/
 
-#define DISASM_PRINT(...)                                               \
-                                                                        \
-    name = mnemonic+1;  /* Start at 2nd character of mnemonic  */       \
-    while (*name++);    /* Get past mnemonic to reach the name */       \
-    snprintf( operands, sizeof( operands ), ## __VA_ARGS__ );           \
-    return sprintf( p, "%-5s %-19s    %s", mnemonic, operands, name );  \
+#define IPRINT_FUNC( _asmfmt ) /* FIRST PART OF INSTRUCTION PRINT FUNCTION */ \
+                                                                              \
+static int iprint_ ## _asmfmt( BYTE inst[], char mnemonic[], char* prtbuf )   \
+{                                                                             \
+    char* iname;               /* Pointer to instruction's function name  */  \
+    char  opers[64]            /* Buffer to format its assembler operands */
+
+/*----------------------------------------------------------------------------*/
+/*   IPRINT_PRINT - instruction printing logic part 2:  print and return      */
+/*----------------------------------------------------------------------------*/
+
+#define IPRINT_PRINT(...)   /* LAST PART OF INSTRUCTION PRINT FUNCTION */     \
+                                                                              \
+    iname = mnemonic+1;     /* Start at 2nd character of mnemonic */          \
+    while (*iname++);       /* Find start of instruction's name   */          \
+                                                                              \
+    /* Format the instruction's assembler operands */                         \
+    snprintf( opers, sizeof( opers ), ## __VA_ARGS__ );                       \
+                                                                              \
+    /* Print assembler mnemonic + operands and full name of instruction */    \
+    return sprintf( prtbuf, "%-5s %-19s    %s", mnemonic, opers, iname );     \
 }
 
 /*----------------------------------------------------------------------------*/
+/*                           iprint_asmfmt                                    */
+/*----------------------------------------------------------------------------*/
+/*  The individual instruction printing functions themselves. These are the   */
+/*  functions that are ultimately called during instruction tracing and are   */
+/*  responsible for formatting the instruction trace statement according to   */
+/*  the instruction's defined ASSEMBLER STATEMENT FORMAT (syntax), which is   */
+/*  completely different from the instruction's actual machine format.        */
+/*----------------------------------------------------------------------------*/
 
-DISASM_TYPE(none);
+IPRINT_FUNC( none );
   UNREFERENCED(inst);
-  DISASM_PRINT("%c",',')
+  IPRINT_PRINT("%c",',')
 
-DISASM_TYPE(E);
+IPRINT_FUNC( E );
     UNREFERENCED(inst);
-    DISASM_PRINT("%c",',')
+    IPRINT_PRINT("%c",',')
 
-DISASM_TYPE(IE);
+IPRINT_FUNC( IE );
 int i1, i2;
     i1 = inst[3] >> 4;
     i2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d",i1,i2)
+    IPRINT_PRINT("%d,%d",i1,i2)
 
-DISASM_TYPE(MII_A);
+IPRINT_FUNC( MII_A );
 int m1,i2,i3;
     const S64 Two_S64=2;
     m1 = inst[1] >> 4;
     i2 = (S32)(((U32)inst[1] << 8) | (U32)inst[2]);
     i3 = (S32)(((U32)inst[3] << 16) | ((U32)inst[4] << 8)
                | (U32)inst[5]);
-    DISASM_PRINT("%d,*%+"I64_FMT"d,*%+"I64_FMT"d",m1,i2*Two_S64,i3*Two_S64)
+    IPRINT_PRINT("%d,*%+"I64_FMT"d,*%+"I64_FMT"d",m1,i2*Two_S64,i3*Two_S64)
 
-DISASM_TYPE(RR);
+IPRINT_FUNC( RR );
 int r1, r2;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
-    DISASM_PRINT("%d,%d",r1,r2)
+    IPRINT_PRINT("%d,%d",r1,r2)
 
 
 // "Mnemonic   R1"
-DISASM_TYPE(RR_R1);
+IPRINT_FUNC( RR_R1 );
 int r1;
     r1 = inst[1] >> 4;
-    DISASM_PRINT("%d",r1)
+    IPRINT_PRINT("%d",r1)
 
-DISASM_TYPE(RR_SVC);
-    DISASM_PRINT("%d",inst[1])
+IPRINT_FUNC( RR_SVC );
+    IPRINT_PRINT("%d",inst[1])
 
-DISASM_TYPE(RRE);
+IPRINT_FUNC( RRE );
 int r1, r2;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d",r1,r2)
+    IPRINT_PRINT("%d,%d",r1,r2)
 
 // "Mnemonic   R1"
-DISASM_TYPE(RRE_R1);
+IPRINT_FUNC( RRE_R1 );
 int r1;
     r1 = inst[3] >> 4;
-    DISASM_PRINT("%d",r1)
+    IPRINT_PRINT("%d",r1)
 
-DISASM_TYPE(RRF_R);
+IPRINT_FUNC( RRF_R );
 int r1,r3,r2;
     r1 = inst[2] >> 4;
     r3 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r3,r2)
+    IPRINT_PRINT("%d,%d,%d",r1,r3,r2)
 
-DISASM_TYPE(RRF_M);
+IPRINT_FUNC( RRF_M );
 int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,m3,r2)
+    IPRINT_PRINT("%d,%d,%d",r1,m3,r2)
 
-DISASM_TYPE(RRF_M3);
+IPRINT_FUNC( RRF_M3 );
 int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r2,m3)
+    IPRINT_PRINT("%d,%d,%d",r1,r2,m3)
 
-DISASM_TYPE(RRF_M4);
+IPRINT_FUNC( RRF_M4 );
 int m4,r1,r2;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r2,m4)
+    IPRINT_PRINT("%d,%d,%d",r1,r2,m4)
 
-DISASM_TYPE(RRF_MM);
+IPRINT_FUNC( RRF_MM );
 int m3,m4,r1,r2;
     m3 = inst[2] >> 4;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d,%d",r1,m3,r2,m4)
+    IPRINT_PRINT("%d,%d,%d,%d",r1,m3,r2,m4)
 
-DISASM_TYPE(RRF_RM);
+IPRINT_FUNC( RRF_RM );
 int r3,m4,r1,r2;
     r3 = inst[2] >> 4;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d,%d",r1,r3,r2,m4)
+    IPRINT_PRINT("%d,%d,%d,%d",r1,r3,r2,m4)
 
-DISASM_TYPE(RRR);
+IPRINT_FUNC( RRR );
 int r1,r2,r3;
     r3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",r1,r2,r3)
+    IPRINT_PRINT("%d,%d,%d",r1,r2,r3)
 
-DISASM_TYPE(RX);
+IPRINT_FUNC( RX );
 int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
+    IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
-DISASM_TYPE(RXE);
+IPRINT_FUNC( RXE );
 int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
+    IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
-DISASM_TYPE(RXY);
+IPRINT_FUNC( RXY );
 int r1,x2,b2,d2;
     r1 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
+    IPRINT_PRINT("%d,%d(%d,%d)",r1,d2,x2,b2)
 
-DISASM_TYPE(RXF);
+IPRINT_FUNC( RXF );
 int r1,r3,x2,b2,d2;
     r1 = inst[4] >> 4;
     r3 = inst[1] >> 4;
     x2 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2)
+    IPRINT_PRINT("%d,%d,%d(%d,%d)",r1,r3,d2,x2,b2)
 
-DISASM_TYPE(RS);
+IPRINT_FUNC( RS );
 int r1,r3,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
+    IPRINT_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
 
 // "Mnemonic   R1,D2(B2)"
-DISASM_TYPE(RS_R1D2B2);
+IPRINT_FUNC( RS_R1D2B2 );
 int r1,b2,d2;
     r1 = inst[1] >> 4;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d)",r1,d2,b2)
+    IPRINT_PRINT("%d,%d(%d)",r1,d2,b2)
 
-DISASM_TYPE(RSY);
+IPRINT_FUNC( RSY );
 int r1,r3,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
+    IPRINT_PRINT("%d,%d,%d(%d)",r1,r3,d2,b2)
 
-DISASM_TYPE(RSY_M3);
+IPRINT_FUNC( RSY_M3 );
 int r1,b2,d2,m3;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     b2 = inst[2] >> 4;
     d2 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d,%d(%d),%d",r1,d2,b2,m3)
+    IPRINT_PRINT("%d,%d(%d),%d",r1,d2,b2,m3)
 
-DISASM_TYPE(RSL);
+IPRINT_FUNC( RSL );
 int l1,b1,d1;
     l1 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d,%d)",d1,l1+1,b1)
+    IPRINT_PRINT("%d(%d,%d)",d1,l1+1,b1)
 
-DISASM_TYPE(RSL_RM);
+IPRINT_FUNC( RSL_RM );
 int r1,l2,b2,d2,m3;
     l2 = inst[1];
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     r1 = inst[4] >> 4;
     m3 = inst[4] & 0x0F;
-    DISASM_PRINT("%d,%d(%d,%d),%d",r1,d2,l2+1,b2,m3)
+    IPRINT_PRINT("%d,%d(%d,%d),%d",r1,d2,l2+1,b2,m3)
 
-DISASM_TYPE(RSI);
+IPRINT_FUNC( RSI );
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2)
+    IPRINT_PRINT("%d,%d,*%+d",r1,r3,i2*2)
 
-DISASM_TYPE(RI);
+IPRINT_FUNC( RI );
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d",r1,i2)
+    IPRINT_PRINT("%d,%d",r1,i2)
 
-DISASM_TYPE(RI_B);
+IPRINT_FUNC( RI_B );
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,*%+d",r1,i2*2)
+    IPRINT_PRINT("%d,*%+d",r1,i2*2)
 
-DISASM_TYPE(RIE);
+IPRINT_FUNC( RIE );
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,*%+d",r1,r3,i2*2)
+    IPRINT_PRINT("%d,%d,*%+d",r1,r3,i2*2)
 
-DISASM_TYPE(RIE_G);
+IPRINT_FUNC( RIE_G );
 int r1,i2, m3;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,%d",r1,i2,m3)
+    IPRINT_PRINT("%d,%d,%d",r1,i2,m3)
 
-DISASM_TYPE(RIE_RRI);
+IPRINT_FUNC( RIE_RRI );
 int r1,r3,i2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
-    DISASM_PRINT("%d,%d,%d",r1,r3,i2)
+    IPRINT_PRINT("%d,%d,%d",r1,r3,i2)
 
-DISASM_TYPE(RIE_RIM);
+IPRINT_FUNC( RIE_RIM );
 int r1,i2,m3;
     r1 = inst[1] >> 4;
     i2 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
-    DISASM_PRINT("%d,%d,%d",r1,i2,m3)
+    IPRINT_PRINT("%d,%d,%d",r1,i2,m3)
 
-DISASM_TYPE(RIE_RRIM);
+IPRINT_FUNC( RIE_RRIM );
 int r1,r2,i4,m3;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     m3 = inst[4] >> 4;
-    DISASM_PRINT("%d,%d,%d,*%+d",r1,r2,m3,i4*2)
+    IPRINT_PRINT("%d,%d,%d,*%+d",r1,r2,m3,i4*2)
 
-DISASM_TYPE(RIE_RMII);
+IPRINT_FUNC( RIE_RMII );
 int r1,m3,i4,i2;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     i4 = (S16)(((U16)inst[2] << 8) | inst[3]);
     i2 = inst[4];
-    DISASM_PRINT("%d,%d,%d,*%+d",r1,i2,m3,i4*2)
+    IPRINT_PRINT("%d,%d,%d,*%+d",r1,i2,m3,i4*2)
 
-DISASM_TYPE(RIE_RRIII);
+IPRINT_FUNC( RIE_RRIII );
 int r1,r2,i3,i4,i5;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     i3 = inst[2];
     i4 = inst[3];
     i5 = inst[4];
-    DISASM_PRINT("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5)
+    IPRINT_PRINT("%d,%d,%d,%d,%d",r1,r2,i3,i4,i5)
 
-DISASM_TYPE(RIL);
+IPRINT_FUNC( RIL );
 int r1,i2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_PRINT("%d,%"PRId32,r1,i2)
+    IPRINT_PRINT("%d,%"PRId32,r1,i2)
 
-DISASM_TYPE(RIL_A);
+IPRINT_FUNC( RIL_A );
 int r1,i2;
     const S64 Two_S64=2;
     r1 = inst[1] >> 4;
     i2 = (S32)((((U32)inst[2] << 24) | ((U32)inst[3] << 16)
        | ((U32)inst[4] << 8)) | inst[5]);
-    DISASM_PRINT("%d,*%+"PRId64,r1,i2*Two_S64)
+    IPRINT_PRINT("%d,*%+"PRId64,r1,i2*Two_S64)
 
-DISASM_TYPE(RIS);
+IPRINT_FUNC( RIS );
 int r1,i2,m3,b4,d4;
     r1 = inst[1] >> 4;
     m3 = inst[1] & 0x0F;
     b4 = inst[2] >> 4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = inst[4];
-    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4)
+    IPRINT_PRINT("%d,%d,%d,%d(%d)",r1,i2,m3,d4,b4)
 
-DISASM_TYPE(RRS);
+IPRINT_FUNC( RRS );
 int r1,r2,m3,b4,d4;
     r1 = inst[1] >> 4;
     r2 = inst[1] & 0x0F;
     b4 = inst[2] >> 4;
     d4 = (inst[2] & 0x0F) << 8 | inst[3];
     m3 = inst[4] >> 4;
-    DISASM_PRINT("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4)
+    IPRINT_PRINT("%d,%d,%d,%d(%d)",r1,r2,m3,d4,b4)
 
-DISASM_TYPE(SI);
+IPRINT_FUNC( SI );
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d),%d",d1,b1,i2)
+    IPRINT_PRINT("%d(%d),%d",d1,b1,i2)
 
-DISASM_TYPE(SIY);
+IPRINT_FUNC( SIY );
 int i2,b1,d1;
     i2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (((S8)inst[4]) << 12) | (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d),%d",d1,b1,i2)
+    IPRINT_PRINT("%d(%d),%d",d1,b1,i2)
 
-DISASM_TYPE(SIL);
+IPRINT_FUNC( SIL );
 int b1,d1,i2;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = (S16)(((U16)inst[4] << 8) | inst[5]);
-    DISASM_PRINT("%d(%d),%d",d1,b1,i2)
+    IPRINT_PRINT("%d(%d),%d",d1,b1,i2)
 
-DISASM_TYPE(SMI_A);
+IPRINT_FUNC( SMI_A );
 int m1,i2,b3,d3;
     const S64 Two_S64=2;
     m1 = inst[1] >> 4;
     b3 = inst[2] >> 4;
     d3 = (inst[2] & 0x0F) << 8 | inst[3];
     i2 = (S32)(((U32)inst[4] << 8) | (U32)inst[5]);
-    DISASM_PRINT("%d,*%+"I64_FMT"d,%d(%d)",m1,i2*Two_S64,d3,b3)
+    IPRINT_PRINT("%d,*%+"I64_FMT"d,%d(%d)",m1,i2*Two_S64,d3,b3)
 
-DISASM_TYPE(S);
+IPRINT_FUNC( S );
 int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d)",d2,b2)
+    IPRINT_PRINT("%d(%d)",d2,b2)
 
-DISASM_TYPE(SS);
+IPRINT_FUNC( SS );
 int l1,l2,b1,d1,b2,d2;
     l1 = inst[1] >> 4;
     l2 = inst[1] & 0x0F;
@@ -1860,28 +1901,28 @@ int l1,l2,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2)
+    IPRINT_PRINT("%d(%d,%d),%d(%d,%d)",d1,l1+1,b1,d2,l2+1,b2)
 
-DISASM_TYPE(SS_L);
+IPRINT_FUNC( SS_L );
 int l1,b1,d1,b2,d2;
     l1 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2)
+    IPRINT_PRINT("%d(%d,%d),%d(%d)",d1,l1+1,b1,d2,b2)
 
 // "Mnemonic   D1(B1),D2(L2,B2)"
-DISASM_TYPE(SS_L2);
+IPRINT_FUNC( SS_L2 );
 int l2,b1,d1,b2,d2;
     l2 = inst[1];
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2)
+    IPRINT_PRINT("%d(%d),%d(%d,%d)",d1,b1,d2,l2+1,b2)
 
-DISASM_TYPE(SS_R);
+IPRINT_FUNC( SS_R );
 int r1,r3,b2,d2,b4,d4;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
@@ -1889,10 +1930,10 @@ int r1,r3,b2,d2,b4,d4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4)
+    IPRINT_PRINT("%d,%d,%d(%d),%d(%d)",r1,r3,d2,b2,d4,b4)
 
 // "Mnemonic   D1(R1,B1),D2(B2),R3"
-DISASM_TYPE(SS_R3);
+IPRINT_FUNC( SS_R3 );
 int r1,r3,b1,d1,b2,d2;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
@@ -1900,10 +1941,10 @@ int r1,r3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3)
+    IPRINT_PRINT("%d(%d,%d),%d(%d),%d",d1,r1,b1,d2,b2,r3)
 
 // "Mnemonic   R1,D2(B2),R3,D4(B4)"
-DISASM_TYPE(SS_RSRS);
+IPRINT_FUNC( SS_RSRS );
 int r1,r3,b2,d2,b4,d4;
     r1 = inst[1] >> 4;
     r3 = inst[1] & 0x0F;
@@ -1911,10 +1952,10 @@ int r1,r3,b2,d2,b4,d4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     b4 = inst[4] >> 4;
     d4 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4)
+    IPRINT_PRINT("%d,%d(%d),%d,%d(%d)",r1,d2,b2,r3,d4,b4)
 
 // "Mnemonic   D1(L1,B1),D2(B2),I3"
-DISASM_TYPE(SS_I);
+IPRINT_FUNC( SS_I );
 int l1,i3,b1,d1,b2,d2;
     l1 = inst[1] >> 4;
     i3 = inst[1] & 0x0F;
@@ -1922,67 +1963,67 @@ int l1,i3,b1,d1,b2,d2;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3)
+    IPRINT_PRINT("%d(%d,%d),%d(%d),%d",d1,l1,b1,d2,b2,i3)
 
-DISASM_TYPE(SSE);
+IPRINT_FUNC( SSE );
 int b1,d1,b2,d2;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d),%d(%d)",d1,b1,d2,b2)
+    IPRINT_PRINT("%d(%d),%d(%d)",d1,b1,d2,b2)
 
-DISASM_TYPE(SSF);
+IPRINT_FUNC( SSF );
 int r3,b1,d1,b2,d2;
     r3 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3)
+    IPRINT_PRINT("%d(%d),%d(%d),%d",d1,b1,d2,b2,r3)
 
-DISASM_TYPE(SSF_RSS);
+IPRINT_FUNC( SSF_RSS );
 int r3,b1,d1,b2,d2;
     r3 = inst[1] >> 4;
     b1 = inst[2] >> 4;
     d1 = (inst[2] & 0x0F) << 8 | inst[3];
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2)
+    IPRINT_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2)
 
-DISASM_TYPE(VST);
+IPRINT_FUNC( VST );
 int vr3,rt2,vr1,rs2;
     vr3 = inst[2] >> 4;
     rt2 = inst[2] & 0x0F;
     vr1 = inst[3] >> 4;
     rs2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,rs2,rt2)
+    IPRINT_PRINT("%d,%d,%d(%d)",vr1,vr3,rs2,rt2)
 
-DISASM_TYPE(VR);
+IPRINT_FUNC( VR );
 int vr1,fr3,gr2;
     fr3 = inst[2] >> 4;
     vr1 = inst[3] >> 4;
     gr2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d,%d,%d",vr1,fr3,gr2)
+    IPRINT_PRINT("%d,%d,%d",vr1,fr3,gr2)
 
-DISASM_TYPE(VS);
+IPRINT_FUNC( VS );
 int rs2;
     rs2 = inst[3] & 0x0F;
-    DISASM_PRINT("%d",rs2)
+    IPRINT_PRINT("%d",rs2)
 
-DISASM_TYPE(VRSE);
+IPRINT_FUNC( VRSE );
 int vr1,vr3,d2,b2;
     vr3 = inst[2] >> 4;
     vr1 = inst[3] >> 4;
     b2 = inst[4] >> 4;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    DISASM_PRINT("%d,%d,%d(%d)",vr1,vr3,d2,b2)
+    IPRINT_PRINT("%d,%d,%d(%d)",vr1,vr3,d2,b2)
 
-DISASM_TYPE(S_NW);
+IPRINT_FUNC( S_NW );
 int d2,b2;
     b2 = inst[2] >> 4;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    DISASM_PRINT("%d(%d)",d2,b2)
+    IPRINT_PRINT("%d(%d)",d2,b2)
 
 /*----------------------------------------------------------------------------*/
 /*       'GENx___x___x900' instruction opcode jump tables                     */

@@ -2045,7 +2045,7 @@ char    buf[512];                       /* MSGBUF work buffer        */
             len += snprintf(buf + len, sizeof(buf)-len, "         ");
 
         /* Disassemble the instruction and display the results */
-        DISASM_INSTRUCTION(inst, buf + len);
+        PRINT_INST(inst, buf + len);
         WRMSG(HHC02289, "I", buf);
 
         /* Go on to the next instruction */
@@ -2482,7 +2482,7 @@ char    regs_msg_buf[4*512] = {0};
     if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[2], inst[3]);
     if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[4], inst[5]);
     n += snprintf (buf + n, sizeof(buf)-n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
-    n += DISASM_INSTRUCTION(inst, buf + n);
+    n += PRINT_INST(inst, buf + n);
     MSGBUF( psw_inst_msg, MSG( HHC02324, "I", buf ));
 
     n = 0;

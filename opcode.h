@@ -25,97 +25,97 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _370 )
- #define  _GEN370( _name )      &s370_ ## _name,
+ #define  _GEN370( _ifunc_name )      &s370_ ## _ifunc_name,
 #else
- #define  _GEN370( _name )
+ #define  _GEN370( _ifunc_name )
 #endif
 
 #if defined( _390 )
- #define  _GEN390( _name )      &s390_ ## _name,
+ #define  _GEN390( _ifunc_name )      &s390_ ## _ifunc_name,
 #else
- #define  _GEN390( _name )
+ #define  _GEN390( _ifunc_name )
 #endif
 
 #if defined( _900 )
- #define  _GEN900( _name )      &z900_ ## _name,
+ #define  _GEN900( _ifunc_name )      &z900_ ## _ifunc_name,
 #else
- #define  _GEN900( _name )
+ #define  _GEN900( _ifunc_name )
 #endif
 
 /*-------------------------------------------------------------------*/
 /*              Macros for defining opcode table entries             */
 /*-------------------------------------------------------------------*/
 
-#define GENx___x___x___                                 \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( operation_exception )                  \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_none,                           \
-        (void*) &"?????" "\0" "?"                       \
+#define GENx___x___x___                                     \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( operation_exception )                      \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_none,                               \
+        (void*) &"?????" "\0" "?"                           \
     }
 
-#define GENx370x___x___( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( operation_exception )                  \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x___x___( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( operation_exception )                      \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx___x390x___( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( _name )                                \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx___x390x___( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx370x390x___( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( _name )                                \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x390x___( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx___x___x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( operation_exception )                  \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx___x___x900( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( operation_exception )                      \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx370x___x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( operation_exception )                  \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x___x900( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( operation_exception )                      \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx___x390x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( _name )                                \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx___x390x900( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx370x390x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( _name )                                \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x390x900( _ifunc_name, _asmfmt, _mnemonic )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
 /*-------------------------------------------------------------------*/
@@ -150,10 +150,15 @@
 #define REAL_ILC(_regs) \
  (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
-#define DISASM_INSTRUCTION(_inst, p) \
-    disasm_table((_inst), 0, p)
+/*-------------------------------------------------------------------*/
+/*  Instruction tracing helper function to print the instruction     */
+/*-------------------------------------------------------------------*/
 
-extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
+#define PRINT_INST( _inst, _prtbuf )            \
+                                                \
+           iprint_router_func( (_inst), 0, (_prtbuf) )
+
+extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
 
 /*-------------------------------------------------------------------*/
 /*               Individual instruction counting                     */
