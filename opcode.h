@@ -25,97 +25,119 @@
 /*-------------------------------------------------------------------*/
 
 #if defined( _370 )
- #define  _GEN370( _name )      &s370_ ## _name,
+ #define  _GEN370( _ifunc_name )      &s370_ ## _ifunc_name,
 #else
- #define  _GEN370( _name )
+ #define  _GEN370( _ifunc_name )
 #endif
 
 #if defined( _390 )
- #define  _GEN390( _name )      &s390_ ## _name,
+ #define  _GEN390( _ifunc_name )      &s390_ ## _ifunc_name,
 #else
- #define  _GEN390( _name )
+ #define  _GEN390( _ifunc_name )
 #endif
 
 #if defined( _900 )
- #define  _GEN900( _name )      &z900_ ## _name,
+ #define  _GEN900( _ifunc_name )      &z900_ ## _ifunc_name,
 #else
- #define  _GEN900( _name )
+ #define  _GEN900( _ifunc_name )
 #endif
 
 /*-------------------------------------------------------------------*/
 /*              Macros for defining opcode table entries             */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* PROGRAMMING NOTE: the '_ifmt' argument in the below "GENx" macros */
+/* is currently ignored since it is not being used for anything at   */
+/* the moment. At some point in the near future however, if things   */
+/* work out, it will actually be used as a function call to decode   */
+/* the instruction before being dispatched to the actual function    */
+/* that executes the instruction, relieving each instruction from    */
+/* having to decode the instruction itself each time (as well as     */
+/* relieving the instruction 'iprint' (tracing) functions from also  */
+/* having to decode the instruction too!) After all, if there are    */
+/* 57 instructions defined that use the 'RR' format and 220 defined  */
+/* that use the 'RRE' format, etc, why should they each have to do   */
+/* the same thing themselves each time? There needs to be a common   */
+/* instruction format decoding function that is called before each   */
+/* instruction function is ever reached so that all the instruction  */
+/* itself has to do is whatever its purpose is. After all, decoding  */
+/* an instruction is LOGICALLY part of the instruction decoding and  */
+/* dispatching logic, NOT something that each instruction (or each   */
+/* 'iprint' tracing function!) should be doing themselves. This is   */
+/* what I intend to (hope to) fix at some point in the near future.  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 
-#define GENx___x___x___                                 \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( operation_exception )                  \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_none,                           \
-        (void*) &"?????" "\0" "?"                       \
+#define GENx___x___x___                                     \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( operation_exception )                      \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
     }
 
-#define GENx370x___x___( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( operation_exception )                  \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( operation_exception )                      \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx___x390x___( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( _name )                                \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx370x390x___( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( _name )                                \
-        _GEN900( operation_exception )                  \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( operation_exception )                      \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx___x___x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( operation_exception )                  \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( operation_exception )                      \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx370x___x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( operation_exception )                  \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( operation_exception )                      \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx___x390x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( operation_exception )                  \
-        _GEN390( _name )                                \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( operation_exception )                      \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
-#define GENx370x390x900( _name, _format, _mnemonic )    \
-    {                                                   \
-        _GEN370( _name )                                \
-        _GEN390( _name )                                \
-        _GEN900( _name )                                \
-        (void*) &disasm_ ## _format,                    \
-        (void*) & _mnemonic "\0" #_name                 \
+#define GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+        _GEN390( _ifunc_name )                              \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
 /*-------------------------------------------------------------------*/
@@ -150,10 +172,19 @@
 #define REAL_ILC(_regs) \
  (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
-#define DISASM_INSTRUCTION(_inst, p) \
-    disasm_table((_inst), 0, p)
+/*-------------------------------------------------------------------*/
+/*  Instruction tracing helper function to print the instruction     */
+/*-------------------------------------------------------------------*/
 
-extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
+#define PRINT_INST( _inst, _prtbuf )            \
+                                                \
+           iprint_router_func( (_inst), 0, (_prtbuf) )
+
+extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
+
+/*-------------------------------------------------------------------*/
+/*               Individual instruction counting                     */
+/*-------------------------------------------------------------------*/
 
 #if defined( OPTION_INSTRUCTION_COUNTING )
 
@@ -268,10 +299,13 @@ extern int disasm_table (BYTE inst[], char mnemonic[], char *p);
 
 #endif // defined( _FEATURE_SIE )
 
-
-/* The footprint_buffer option saves a copy of the register context
-   every time an instruction is executed.  This is for problem
-   determination only, as it severely impacts performance.       *JJ */
+/*-------------------------------------------------------------------*/
+/*                   Instruction "FOOTPRINT"                         */
+/*-------------------------------------------------------------------*/
+/* The footprint_buffer option saves a copy of the register context  */
+/* every time an instruction is executed.  This is for problem       */
+/* determination only, as it SEVERELY impacts performance.      *JJ  */
+/*-------------------------------------------------------------------*/
 
 #if defined( OPTION_FOOTPRINT_BUFFER )
 #define FOOTPRINT(_ip, _regs) \
@@ -286,7 +320,9 @@ do { \
 #define FOOTPRINT(_ip, _regs)
 #endif
 
-/* PSW Instruction Address manipulation */
+/*-------------------------------------------------------------------*/
+/*             PSW Instruction Address manipulation                  */
+/*-------------------------------------------------------------------*/
 
 #define _PSW_IA(_regs, _n) \
  (VADR)((_regs)->AIV + ((intptr_t)(_regs)->ip - (intptr_t)(_regs)->aip) + (_n))
@@ -359,14 +395,18 @@ do { \
     ) \
 )
 
-/* Instruction fetching */
+/*-------------------------------------------------------------------*/
+/*                     Instruction fetching                          */
+/*-------------------------------------------------------------------*/
 
 #define INSTRUCTION_FETCH(_regs, _exec) \
   likely(_VALID_IP((_regs),(_exec))) \
   ? ((_exec) ? _PSW_IA_MAIN((_regs), (_regs)->ET) : (_regs)->ip) \
   : ARCH_DEP( instfetch ) ((_regs), (_exec))
 
-/* Instruction execution */
+/*-------------------------------------------------------------------*/
+/*                   Instruction execution                           */
+/*-------------------------------------------------------------------*/
 
 #define EXECUTE_INSTRUCTION(_oct, _ip, _regs) \
 do { \
@@ -379,7 +419,9 @@ do { \
  if ((_regs)->ip >= (_regs)->aie) break; \
  EXECUTE_INSTRUCTION((_oct), (_regs)->ip, (_regs))
 
-/* Branching */
+/*-------------------------------------------------------------------*/
+/*                        Branching                                  */
+/*-------------------------------------------------------------------*/
 
 #define SUCCESSFUL_BRANCH(_regs, _addr, _len) \
 do { \
@@ -444,7 +486,9 @@ do { \
   } \
 } while (0)
 
-/* CPU Stepping or Tracing */
+/*-------------------------------------------------------------------*/
+/*                  CPU Stepping or Tracing                          */
+/*-------------------------------------------------------------------*/
 
 #define CPU_STEPPING(_regs, _ilc) \
   ( \
@@ -495,6 +539,10 @@ do { \
 
 #define RETURN_INTCHECK(_regs) \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
+
+/*-------------------------------------------------------------------*/
+/*                Instruction validity checking                      */
+/*-------------------------------------------------------------------*/
 
 #define ODD_CHECK(_r, _regs) \
     if( (_r) & 1 ) \
@@ -564,19 +612,19 @@ do { \
     || (_regs)->GR_LHH(1) > (0x0001|(FEATURE_LCSS_MAX-1))) \
         (_regs)->program_interrupt( (_regs), PGM_OPERAND_EXCEPTION)
 
-#define IOID_TO_SSID(_ioid) \
-    ((_ioid) >> 16)
+/*-------------------------------------------------------------------*/
+/*              Device  IOID / SSID / LCSS  macros                   */
+/*-------------------------------------------------------------------*/
 
-#define IOID_TO_LCSS(_ioid) \
-    ((_ioid) >> 17)
+#define IOID_TO_SSID( _ioid )       ((_ioid) >> 16)
+#define IOID_TO_LCSS( _ioid )       ((_ioid) >> 17)
+#define SSID_TO_LCSS( _ssid )       ((_ssid) >> 1 )
+#define LCSS_TO_SSID( _lcss )       (((_lcss) << 1 ) | 1)
 
-#define SSID_TO_LCSS(_ssid) \
-    ((_ssid) >> 1)
+/*-------------------------------------------------------------------*/
+/*            Virtual Architecture Level Set Facility                */
+/*-------------------------------------------------------------------*/
 
-#define LCSS_TO_SSID(_lcss) \
-    (((_lcss) << 1) | 1)
-
-/* Virtual Architecture Level Set Facility */
 #define FACILITY_ENABLED(_faci, _regs) \
         (((_regs)->facility_list                  [ ((STFL_ ## _faci)/8) ]) & (0x80 >> ((STFL_ ## _faci) % 8)))
 
@@ -591,6 +639,10 @@ do { \
         if(!FACILITY_ENABLED( _faci, _regs ) ) \
           (_regs)->program_interrupt( (_regs), PGM_OPERATION_EXCEPTION); \
     } while (0)
+
+/*-------------------------------------------------------------------*/
+/*                     PER range checking                            */
+/*-------------------------------------------------------------------*/
 
 #define PER_RANGE_CHECK(_addr, _low, _high) \
   ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
@@ -698,6 +750,11 @@ do { \
 /*-------------------------------------------------------------------*/
 /* The following macros are undef'ed and then re-defined differently */
 /* for each subsequent new build architecture.                       */
+/*-------------------------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------*/
+/*                         (other)                                   */
 /*-------------------------------------------------------------------*/
 
 /* Program check if fpc is not valid contents for FPC register */
@@ -1179,6 +1236,10 @@ do { \
 
 #define PERFORM_SERIALIZATION(_regs)    do{}while(0)
 #define PERFORM_CHKPT_SYNC(_regs)       do{}while(0)
+
+/*-------------------------------------------------------------------*/
+/*               external function declarations                      */
+/*-------------------------------------------------------------------*/
 
 /* Functions in module channel.c */
 int  ARCH_DEP( startio ) (REGS *regs, DEVBLK *dev, ORB *orb);
@@ -2983,8 +3044,10 @@ DEF_INST(4720);
 DEF_INST(4730);
 DEF_INST(4740);
 DEF_INST(4750);
+//F_INST(47_0);     // (why?!)
 DEF_INST(4770);
 DEF_INST(4780);
+//F_INST(47_0);     // (why?!)
 DEF_INST(47A0);
 DEF_INST(47B0);
 DEF_INST(47C0);
