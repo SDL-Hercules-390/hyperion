@@ -15,6 +15,13 @@
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
+/* PROGRAMMING NOTE: this header purposely does not prevent itself   */
+/* from being #included multiple times. This is because it needs to  */
+/* be #included by the opcode.h header multiple times, once for each */
+/* build architecture.                                               */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
 /*                     Instruction decoders                          */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
