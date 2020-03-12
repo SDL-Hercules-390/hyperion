@@ -3886,7 +3886,7 @@ DEF_INST(multiply_bfp_short)
 }
 
 /*-------------------------------------------------------------------*/
-/* B31E MADBR - MULTIPLY AND ADD (long BFP)                    [RRF] */
+/* B31E MADBR - MULTIPLY AND ADD (long BFP)                    [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_bfp_long_reg)
 {
@@ -3894,7 +3894,7 @@ DEF_INST(multiply_add_bfp_long_reg)
     float64_t op1, op2, op3, ans;
     U32 ieee_trap_conds =0;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT64_OP( op2, r2, regs );
@@ -3950,7 +3950,7 @@ DEF_INST(multiply_add_bfp_long)
 }
 
 /*-------------------------------------------------------------------*/
-/* B30E MAEBR - MULTIPLY AND ADD (short BFP)                   [RRF] */
+/* B30E MAEBR - MULTIPLY AND ADD (short BFP)                   [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_bfp_short_reg)
 {
@@ -3958,7 +3958,7 @@ DEF_INST(multiply_add_bfp_short_reg)
     float32_t op1, op2, op3, ans;
     U32 ieee_trap_conds =0;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT32_OP( op2, r2, regs );
@@ -4014,7 +4014,7 @@ DEF_INST(multiply_add_bfp_short)
 }
 
 /*-------------------------------------------------------------------*/
-/* B31F MSDBR - MULTIPLY AND SUBTRACT (long BFP)               [RRF] */
+/* B31F MSDBR - MULTIPLY AND SUBTRACT (long BFP)               [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_subtract_bfp_long_reg)
 {
@@ -4022,7 +4022,7 @@ DEF_INST(multiply_subtract_bfp_long_reg)
     float64_t op1, op2, op3, ans;
     U32 ieee_trap_conds =0;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT64_OP( op2, r2, regs );
@@ -4086,7 +4086,7 @@ DEF_INST(multiply_subtract_bfp_long)
 }
 
 /*-------------------------------------------------------------------*/
-/* B30F MSEBR - MULTIPLY AND SUBTRACT (short BFP)              [RRF] */
+/* B30F MSEBR - MULTIPLY AND SUBTRACT (short BFP)              [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_subtract_bfp_short_reg)
 {
@@ -4094,7 +4094,7 @@ DEF_INST(multiply_subtract_bfp_short_reg)
     float32_t op1, op2, op3, ans;
     U32 ieee_trap_conds =0;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
     GET_FLOAT32_OP( op2, r2, regs );

@@ -7067,7 +7067,7 @@ int     i1;                             /* Index of R1 in fpr array  */
 
 #if defined(FEATURE_020_HFP_MULT_ADD_SUB_FACILITY)
 /*-------------------------------------------------------------------*/
-/* B32E MAER  - Multiply and Add Floating Point Short Register [RRF] */
+/* B32E MAER  - Multiply and Add Floating Point Short Register [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_float_short_reg)
 {
@@ -7076,7 +7076,7 @@ int     i1;                             /* Index of R1 in fpr array  */
 SHORT_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
     i1 = FPR2I(r1);
@@ -7104,7 +7104,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* B32F MSER  - Multiply and Subtract Floating Point Short Reg [RRF] */
+/* B32F MSER  - Multiply and Subtract Floating Point Short Reg [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_subtract_float_short_reg)
 {
@@ -7113,7 +7113,7 @@ int     i1;                             /* Index of R1 in fpr array  */
 SHORT_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
     i1 = FPR2I(r1);
@@ -7144,7 +7144,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* B33E MADR  - Multiply and Add Floating Point Long Register  [RRF] */
+/* B33E MADR  - Multiply and Add Floating Point Long Register  [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_float_long_reg)
 {
@@ -7153,7 +7153,7 @@ int     i1;                             /* Index of R1 in fpr array  */
 LONG_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
     i1 = FPR2I(r1);
@@ -7181,7 +7181,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* B33F MSDR  - Multiply and Subtract Floating Point Long Reg  [RRF] */
+/* B33F MSDR  - Multiply and Subtract Floating Point Long Reg  [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_subtract_float_long_reg)
 {
@@ -7190,7 +7190,7 @@ int     i1;                             /* Index of R1 in fpr array  */
 LONG_FLOAT fl1, fl2, fl3;
 int     pgm_check;
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
     i1 = FPR2I(r1);
@@ -7382,7 +7382,7 @@ int     pgm_check;
 
 #if defined(FEATURE_023_HFP_UNNORM_EXT_FACILITY)
 /*-------------------------------------------------------------------*/
-/* B338 MAYLR - Multiply and Add Unnorm. Long to Ext. Low Reg. [RRF] */
+/* B338 MAYLR - Multiply and Add Unnorm. Long to Ext. Low Reg. [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_unnormal_float_long_to_ext_low_reg)
 {
@@ -7394,7 +7394,7 @@ EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
 
-    RRF_R(inst, regs, r1, r2, r3)
+    RRD(inst, regs, r1, r2, r3)
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7421,7 +7421,7 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
 
 
 /*-------------------------------------------------------------------*/
-/* B339 MYLR  - Multiply Unnormalized Long to Ext. Low FP Reg. [RRF] */
+/* B339 MYLR  - Multiply Unnormalized Long to Ext. Low FP Reg. [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_unnormal_float_long_to_ext_low_reg)
 {
@@ -7429,7 +7429,7 @@ int          r1, r2, r3;                /* Values of R fields        */
 LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
 
@@ -7447,7 +7447,7 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
 
 /*-------------------------------------------------------------------*/
-/* B33A MAYR  - Multiply and Add Unnorm. Long to Ext. Reg.     [RRF] */
+/* B33A MAYR  - Multiply and Add Unnorm. Long to Ext. Reg.     [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_unnormal_float_long_to_ext_reg)
 {
@@ -7458,7 +7458,7 @@ EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
     /* Either the low- or high-numbered register of a pair is valid */
@@ -7485,7 +7485,7 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
 
 
 /*-------------------------------------------------------------------*/
-/* B33B MYR   - Multiply Unnormalized Long to Extended Reg     [RRF] */
+/* B33B MYR   - Multiply Unnormalized Long to Extended Reg     [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_unnormal_float_long_to_ext_reg)
 {
@@ -7493,7 +7493,7 @@ int            r1, r2, r3;              /* Values of R fields        */
 LONG_FLOAT     fl2, fl3;                /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPODD_CHECK(r1, regs);
     HFPREG2_CHECK(r2, r3, regs);
 
@@ -7511,7 +7511,7 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
 
 /*-------------------------------------------------------------------*/
-/* B33C MAYHR - Multiply and Add Unnorm. Long to Ext. High Reg [RRF] */
+/* B33C MAYHR - Multiply and Add Unnorm. Long to Ext. High Reg [RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_add_unnormal_float_long_to_ext_high_reg)
 {
@@ -7523,7 +7523,7 @@ EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7549,7 +7549,7 @@ EXTENDED_FLOAT fxres;                   /* Extended result           */
 
 
 /*-------------------------------------------------------------------*/
-/* B33D MYHR   - Multiply Unnormalized Long to Ext. High FP Reg[RRF] */
+/* B33D MYHR   - Multiply Unnormalized Long to Ext. High FP Reg[RRD] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_unnormal_float_long_to_ext_high_reg)
 {
@@ -7557,7 +7557,7 @@ int          r1, r2, r3;                /* Values of R fields        */
 LONG_FLOAT   fl2, fl3;                  /* Multiplier/Multiplicand   */
 EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
-    RRF_R(inst, regs, r1, r2, r3);
+    RRD(inst, regs, r1, r2, r3);
     HFPODD_CHECK(r1, regs);
     HFPREG2_CHECK(r2, r3, regs);
 

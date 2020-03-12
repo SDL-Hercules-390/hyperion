@@ -66,7 +66,6 @@
 #undef RRE
 #undef RRE0
 #undef RRE_B
-#undef RRF_R
 #undef RRF_M
 #undef RRF_M4
 #undef RRF_RM
@@ -292,39 +291,32 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*                                                                   */
-/*                 IMPORTANT PROGRAMMING NOTE!                       */
-/*                                                                   */
+/*                HISTORICAL PROGRAMMING NOTE                        */
 /*-------------------------------------------------------------------*/
 //
 // The RRD instruction format doesn't exist in the S/390 architecture.
-// Instead it calls that particular instruction format the RRF format
-// (which is a COMPLETELY DIFFERENT instruction format in z/Arch).
+// Instead it calls that particular instruction format the RRF format,
+// which in z/Arch is a completely different instruction format.
 //
 // That is to say, z/Architecture has both of the RRD and RRF formats
 // defined and both are different from each other: in the z/Arch RRD
-// format, "r1" starts at bit position 16 and "r3" is at bit position
-// 24, whereas the RRF-a and -b formats it is the complete opposite:
-// "r1" starts at bit position 24 and "r3" at bit 16 (i.e. r1 and r3
-// are in the oppsoite position in the RRD and RRF formats).
+// format, "r1" is in bit positions 16-19 and "r3" in bit positions
+// 24-27, but for the RRF-a and -b formats they are in the complete
+// opposite position: in RRF-a and -b "r1" is in bit position 24-27
+// and "r3" is in bit positions 16-19 (i.e. r1 and r3 operands are
+// in the oppsoite position in the RRD and RRF formats).
 //
-// This is confusing since our "RRF_R" format decoder was originally
-// written to decode the S/390 "RRF" format, which is now called the
-// "RRD" format in z/Architecture.
+// This is confusing since Hercules's ORIGINAL "RRF_R" format decoder
+// was originally written to decode the S/390 "RRF" format which is
+// now called the "RRD" format in z/Architecture.
 //
-// So the below "RRF_R" instruction decoder is actually the z/Arch
-// "RRD" format decoder, even though some of our instructions which
-// SHOULD be using the "RRD" decoder are still written to decode
-// their instructions using the improperly named "RRF_R" decoder.
+// Therefore to eliminate the confusion our original "RRF_R" format
+// decoder was removed and all instructions that were using it were
+// fixed to correctly use the z/Architecture "RRD" decoder instead
+// (which accomplishes the same thing as our original S/390 "RRF_R"
+// decoder originally did).
 //
 /*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/*      RRF_R - register to register with additional R3 field        */
-/*-------------------------------------------------------------------*/
-// This is actually z/Arch RRD format! ((See PROGRAMMING NOTE above!))
-
-#define RRF_R( _inst, _regs, _r1, _r2, _r3 )  RRD_DECODER( _inst, _regs, _r1, _r2, _r3, 4, 4 )
 
 /*-------------------------------------------------------------------*/
 /*       RRD - register to register with additional R3 field         */
