@@ -1415,8 +1415,8 @@ U32  get_next_channel_report_word( REGS * );
 
 
 /* Functions in module opcode.c */
-void init_opcode_tables();
-void init_opcode_pointers(REGS *regs);
+void init_runtime_opcode_tables();
+void init_regs_runtime_opcode_pointers( REGS* regs );
 
 
 /* Functions in module panel.c */

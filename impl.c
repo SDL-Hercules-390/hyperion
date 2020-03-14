@@ -1080,7 +1080,7 @@ int     rc;
 #endif // (KEEPALIVE)
 
     /* Initialize runtime opcode tables */
-    init_opcode_tables();
+    init_runtime_opcode_tables();
 
     /* Initialize the Hercules Dynamic Loader (HDL) */
     rc = hdl_main

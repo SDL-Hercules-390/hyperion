@@ -718,34 +718,43 @@
 #endif
 
 //--------------------------------------------------------------------
-// PROGRAMMING NOTE: we need an extra 2 slots in each opcode table
-// entry to allow for the 2 extra pointers needed by the instruction
-// DISASM_TYPE disassembly functions called by the DISASM_ROUTE maro.
+//                      PROGRAMMING NOTE
+//--------------------------------------------------------------------
 //
-// Notice the DISASM_ROUTE macro in opcode.c accessing the two extra
-// pointers in the opcode table entry:
+//  We need an extra 2 slots in each opcode table entry to allow for
+//  the 2 extra pointers needed by the instruction printing functions.
 //
-//      mnemonic   =  opcode__table [...] [ NUM_INSTR_TAB_PTRS - 1 ];
-//      disasm_fn  =  opcode__table [...] [ NUM_INSTR_TAB_PTRS - 2 ];
-//      return disasm_fn( inst, mnemonic, p );
+//  Notice the ROUTE_IPRINT macro in opcode.c accessing these 2 extra
+//  pointers in the opcode table entry:
 //
-// and how the DISASM_TYPE macro defines those functions:
+//      iprt_func = gen_opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 2 ];
+//      mnemonic  = gen_opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 1 ];
+//      return iprt_func( inst, mnemonic, prtbuf );
 //
-//      int disasm_type( BYTE inst[], char mnemonic[], char *p );
+//  and how the IPRINT_ROUT2 macro defines its routing function:
 //
-// Finally also notice the definition of the "GENx370x390x900" macro
-// in opcode.h, which defines opcode table entries for each opcode:
-// it defines not only a pointer to the intruction function for each
-// architecture, but also defines those 2 extra pointers as the last
-// two entries for each opcode table entry:
+//      int iprint_{asmfmt}( BYTE inst[], char mnemonic[], char* prtbuf );
 //
-//      (void*) &disasm_ ## _format,
-//      (void*) & _mnemonic "\0" #_name
+//  Finally also notice the definition of the "GENx370x390x900" macro
+//  in opcode.h, which defines opcode table entries for each opcode:
+//  it defines not only a pointer to the intruction function for each
+//  architecture, but also defines those 2 extra pointers as the last
+//  two entries for each opcode table entry:
 //
-// Thus we need "+2" in the below #define for "NUM_INSTR_TAB_PTRS"
-// so the opcode tables in opcode.c defined by the "GENx370x390x900"
-// macro, has room for the 2 extra pointers used by the DISASM_TYPE
-// instruction disassembly functions called if tracing instructions.
+//    #define GENx370x___x900( ... )
+//
+//        _GEN370( _ifunc_name )
+//        _GEN390( _ifunc_name )
+//        _GEN900( _ifunc_name )
+//
+//        (void*) &iprint_ ## _asmfmt,
+//        (void*) & _mnemonic "\0" #_ifunc_name
+//
+//  Thus we need "+2" in the below #define for "NUM_INSTR_TAB_PTRS"
+//  so the opcode tables in opcode.c defined by the "GENx370x390x900"
+//  macro have room for the 2 extra pointers used by the IPRINT_ROUT2
+//  instruction printing functions called during instruction tracing.
+//
 //--------------------------------------------------------------------
 
 #define NUM_INSTR_TAB_PTRS   NUM_GEN_ARCHS + 2   // (see NOTE above)

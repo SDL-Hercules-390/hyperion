@@ -1899,7 +1899,7 @@ int i;
     regs->AEA_AR( USE_HOME_SPACE      ) = 13;
 
     /* Initialize opcode table pointers */
-    init_opcode_pointers (regs);
+    init_regs_runtime_opcode_pointers( regs );
 
     regs->configured = 1;
 
