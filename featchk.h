@@ -727,8 +727,8 @@
 //  Notice the ROUTE_IPRINT macro in opcode.c accessing these 2 extra
 //  pointers in the opcode table entry:
 //
-//      iprt_func = opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 2 ];
-//      mnemonic  = opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 1 ];
+//      iprt_func = gen_opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 2 ];
+//      mnemonic  = gen_opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 1 ];
 //      return iprt_func( inst, mnemonic, prtbuf );
 //
 //  and how the IPRINT_ROUT2 macro defines its routing function:

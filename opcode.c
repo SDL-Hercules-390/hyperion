@@ -1267,9 +1267,45 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #endif
 
 /*----------------------------------------------------------------------------*/
-/* The following execute_xxxx routines can be optimized by the compiler to    */
-/* an indexed jump, leaving the stack frame untouched as the called routine   */
-/* has the same arguments, and the routine exits immediately after the call.  */
+/*      Non-standard Extended Opcode intermediate jump "instructions"         */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* The following are actually "instruction functions" (note the "DEF_INST")   */
+/* that the instruction dispatcher calls for "non-standard" extended opcode   */
+/* instructions where the extended opcode is not in the first two bytes of    */
+/* the instruction. Instead, the extended opcode is in the very last byte,    */
+/* making it impossible for the dispatcher to directly jump to the actual     */
+/* instruction.                                                               */
+/*                                                                            */
+/* It jumps instead to one of the below "instructions" which then jumps to    */
+/* the ACTUAL instruction based on the extended opcode (which it must first   */
+/* extract from the last byte of the instruction).                            */
+/*                                                                            */
+/* For example, if you look at the main "gen_opcode_table" for opcodes EB,    */
+/* EC and ED, you will see the following:                                     */
+/*                                                                            */
+/*                                                                            */
+/*     / EB /  GENx370x390x900 ( ..., execute_opcode_eb________xx ),          */
+/*     / EC /  GENx370x390x900 ( ..., execute_opcode_ec________xx ),          */
+/*     / ED /  GENx370x390x900 ( ..., execute_opcode_ed________xx ),          */
+/*                                                                            */
+/*                                                                            */
+/* indicating that the 'execute_opcode_eb________xx' "instruction" should     */
+/* be called for opcode EB.                                                   */
+/*                                                                            */
+/* Then if you look at the below 'execute_opcode_eb________xx' "instruction"  */
+/* you can see that it simply indexes into our secondary jump table called    */
+/* "runtime_opcode_eb________xx" (defined for the EB instructions) based on   */
+/* the 6th byte of the instruction (inst[5]), to then perform a second jump   */
+/* directly to the ACTUAL (true) instruction for that given extended opcode.  */
+/*                                                                            */
+/* Thankfully these routines can be optimized by the compiler to become an    */
+/* indexed jump, leaving the stack frame untouched since the called routine   */
+/* has the same arguments and the routine exits immediately after the call.   */
+/* That is to say the below functions only add a SINGLE HOST INSTRUCTION to   */
+/* to the actual instruction path in order to reach the actual instruction,   */
+/* with that ONE extra host instruction being a simple indexed jump.          */
+/*                                                                            */
 /*----------------------------------------------------------------------------*/
 
 DEF_INST( execute_opcode_e3________xx )
@@ -1347,78 +1383,71 @@ DEF_INST( dummy_instruction )
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*          Primary instruction execution/dispatching                */
-/*          and instruction tracing/printing jump tables             */
+/*          "generated" opcode table forward references.             */
+/*-------------------------------------------------------------------*/
+/* The below tables are forward references to the tables that get    */
+/* built by the compiler from our GENx370x390x900 et al. macros      */
+/* further below. They need to be declared here so that the various  */
+/* IPRINT_ROUT2 instruction tracing/printing routing functions       */
+/* defined below can use them to jump to the proper print function.  */
+/* (The IPRINT functions need to come BEFORE the GENx370x390x900     */
+/* macros since the GENx370x390x900 tables contains a pointer to     */
+/* the various iprint instruction tracing/printing functions.)       */
 /*-------------------------------------------------------------------*/
 
-static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_a5_x[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_a7_x[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_b3xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_b9xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_c0_x[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_c2_x[16][NUM_INSTR_TAB_PTRS];                      /*@Z9*/
-static INSTR_FUNC opcode_c4_x[16][NUM_INSTR_TAB_PTRS];                      /*208*/
-static INSTR_FUNC opcode_c6_x[16][NUM_INSTR_TAB_PTRS];                      /*208*/
-static INSTR_FUNC opcode_c8_x[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_cc_x[16][NUM_INSTR_TAB_PTRS];                      /*810*/
-static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_e5xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_e6xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_01xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_a5_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_a7_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_b3xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_c0_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_c2_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_c4_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_c6_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_c8_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_cc_x[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_e6xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_edxx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS];
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
-static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS];
 #endif
-static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS];
 
 #ifdef OPTION_OPTINST
 
-static INSTR_FUNC opcode_15__[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_18__[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_1E__[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_1F__[256][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_41_0[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_47_0[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_50_0[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_15__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_18__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_1E__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_1F__[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_41_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_47_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_50_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_55_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_58_0[16][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_91xx[8][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_BF_x[3][NUM_INSTR_TAB_PTRS];
 
 #if !defined( OPTION_NO_E3_OPTINST )
 
-static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS];
-static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_E3_0[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
 
 #endif
 
 #endif /* OPTION_OPTINST */
 
-/*----------------------------------------------------------------------------*/
-/* Two byte runtime opcode table + 4 6 byte opcode tables                     */
-/*----------------------------------------------------------------------------*/
-
-static INSTR_FUNC runtime_opcode_xxxx[NUM_GEN_ARCHS][256 * 256];
-
-static INSTR_FUNC runtime_opcode_e3________xx[NUM_GEN_ARCHS][256];
-static INSTR_FUNC runtime_opcode_eb________xx[NUM_GEN_ARCHS][256];
-static INSTR_FUNC runtime_opcode_ec________xx[NUM_GEN_ARCHS][256];
-static INSTR_FUNC runtime_opcode_ed________xx[NUM_GEN_ARCHS][256];
-
-#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
-static INSTR_FUNC runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
-#endif
-
 /*---------------------------------------------------------------------------*/
 /* Following function will be resolved within the runtime opcode tables      */
-/* and set with function init_opcode_tables.                                 */
+/* and set with function init_runtime_opcode_tables.                         */
 /*---------------------------------------------------------------------------*/
 #define execute_opcode_01xx     operation_exception
 #define execute_opcode_a4xx     operation_exception
@@ -1461,8 +1490,8 @@ typedef int IPRTFUNC();         /* instruction printing function type */
                                                                                \
     /* Extract our parameters directly from the instruction opcode table */    \
                                                                                \
-    iprt_func = (void*) opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 2 ];  \
-    mnemonic  = (void*) opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 1 ];  \
+    iprt_func = (void*) gen_opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 2 ];  \
+    mnemonic  = (void*) gen_opcode_ ## _opcode_tabname [ inst _opcode_idx ][ NUM_INSTR_TAB_PTRS - 1 ];  \
                                                                                \
     return iprt_func( inst, mnemonic, prtbuf );   /* (trace this instruction) */
 
@@ -1512,17 +1541,17 @@ IPRINT_ROUT2( edxx, [5] )
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
 
- #define opcode_a4xx            v_opcode_a4xx
+ #define gen_opcode_a4xx            gen_v_opcode_a4xx
  IPRINT_ROUT2(  a4xx,[1] )
- #undef  opcode_a4xx
+ #undef  gen_opcode_a4xx
 
- #define opcode_a6xx            v_opcode_a6xx
+ #define gen_opcode_a6xx            gen_v_opcode_a6xx
  IPRINT_ROUT2(  a6xx,[1] )
- #undef  opcode_a6xx
+ #undef  gen_opcode_a6xx
 
- #define opcode_e4xx            v_opcode_e4xx
+ #define gen_opcode_e4xx            gen_v_opcode_e4xx
  IPRINT_ROUT2(  e4xx,[1] )
- #undef  opcode_e4xx
+ #undef  gen_opcode_e4xx
 
 #else /* !defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
@@ -2033,7 +2062,7 @@ int d2,b2;
 /* future however, it will be used to define a pointer to the instruction de- */
 /* coding function called to decode the instruction before it is dispatched.  */
 /*----------------------------------------------------------------------------*/
-static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS] =
 {
  /*00*/   GENx___x___x___ ,
  /*01*/   GENx370x390x900 ( ""          , XXX_a, ASMFMT_01xx     , execute_opcode_01xx                                 ),
@@ -2293,7 +2322,7 @@ static INSTR_FUNC opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*FF*/   GENx___x___x___
 };
 
-static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*0100*/ GENx___x___x___ ,
  /*0101*/ GENx___x390x900 ( "PR"        , XXX_a, ASMFMT_E        , program_return                                      ),
@@ -2553,7 +2582,7 @@ static INSTR_FUNC opcode_01xx[256][NUM_INSTR_TAB_PTRS] =
  /*01FF*/ GENx___x390x900 ( "TRAP2"     , XXX_a, ASMFMT_E        , trap2                                               )
 };
 
-static INSTR_FUNC opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A5x0*/ GENx___x___x900 ( "IIHH"      , XXX_a, ASMFMT_RI       , insert_immediate_high_high                          ),
  /*A5x1*/ GENx___x___x900 ( "IIHL"      , XXX_a, ASMFMT_RI       , insert_immediate_high_low                           ),
@@ -2573,7 +2602,7 @@ static INSTR_FUNC opcode_a5_x[16][NUM_INSTR_TAB_PTRS] =
  /*A5xF*/ GENx37Xx___x900 ( "LLILL"     , XXX_a, ASMFMT_RI       , load_logical_immediate_low_low                      )
 };
 
-static INSTR_FUNC opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*A7x0*/ GENx37Xx390x900 ( "TMLH"      , XXX_a, ASMFMT_RI       , test_under_mask_high                                ),
  /*A7x1*/ GENx37Xx390x900 ( "TMLL"      , XXX_a, ASMFMT_RI       , test_under_mask_low                                 ),
@@ -2593,7 +2622,7 @@ static INSTR_FUNC opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
  /*A7xF*/ GENx___x___x900 ( "CGHI"      , XXX_a, ASMFMT_RI       , compare_long_halfword_immediate                     )
 };
 
-static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B200*/ GENx370x390x900 ( "CONCS"     , XXX_a, ASMFMT_S        , connect_channel_set                                 ),
  /*B201*/ GENx370x390x900 ( "DISCS"     , XXX_a, ASMFMT_S        , disconnect_channel_set                              ),
@@ -2853,7 +2882,7 @@ static INSTR_FUNC opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B2FF*/ GENx___x390x900 ( "TRAP4"     , XXX_a, ASMFMT_S        , trap4                                               )
 };
 
-static INSTR_FUNC opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B300*/ GENx37Xx390x900 ( "LPEBR"     , XXX_a, ASMFMT_RRE      , load_positive_bfp_short_reg                         ),
  /*B301*/ GENx37Xx390x900 ( "LNEBR"     , XXX_a, ASMFMT_RRE      , load_negative_bfp_short_reg                         ),
@@ -3113,7 +3142,7 @@ static INSTR_FUNC opcode_b3xx[256][NUM_INSTR_TAB_PTRS] =
  /*B3FF*/ GENx___x390x900 ( "RRXTR"     , XXX_a, ASMFMT_RRF_RM   , reround_dfp_ext_reg                                 )
 };
 
-static INSTR_FUNC opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*B900*/ GENx___x___x900 ( "LPGR"      , XXX_a, ASMFMT_RRE      , load_positive_long_register                         ),
  /*B901*/ GENx___x___x900 ( "LNGR"      , XXX_a, ASMFMT_RRE      , load_negative_long_register                         ),
@@ -3373,7 +3402,7 @@ static INSTR_FUNC opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9FF*/ GENx___x___x___
 };
 
-static INSTR_FUNC opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C0x0*/ GENx37Xx390x900 ( "LARL"      , XXX_a, ASMFMT_RIL_A    , load_address_relative_long                          ),
  /*C0x1*/ GENx___x___x900 ( "LGFI"      , XXX_a, ASMFMT_RIL      , load_long_fullword_immediate                        ),
@@ -3393,7 +3422,7 @@ static INSTR_FUNC opcode_c0_x[16][NUM_INSTR_TAB_PTRS] =
  /*C0xF*/ GENx37Xx___x900 ( "LLILF"     , XXX_a, ASMFMT_RIL      , load_logical_immediate_low_fullword                 )
 };
 
-static INSTR_FUNC opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C2x0*/ GENx___x___x900 ( "MSGFI"     , XXX_a, ASMFMT_RIL      , multiply_single_immediate_long_fullword             ),
  /*C2x1*/ GENx37Xx390x900 ( "MSFI"      , XXX_a, ASMFMT_RIL      , multiply_single_immediate_fullword                  ),
@@ -3413,7 +3442,7 @@ static INSTR_FUNC opcode_c2_x[16][NUM_INSTR_TAB_PTRS] =
  /*C2xF*/ GENx37Xx390x900 ( "CLFI"      , XXX_a, ASMFMT_RIL      , compare_logical_fullword_immediate                  )
 };
 
-static INSTR_FUNC opcode_c4_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_c4_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C4x0*/ GENx___x___x___ ,                                                        /*208*/
  /*C4x1*/ GENx___x___x___ ,                                                        /*208*/
@@ -3433,7 +3462,7 @@ static INSTR_FUNC opcode_c4_x[16][NUM_INSTR_TAB_PTRS] =
  /*C4xF*/ GENx37Xx390x900 ( "STRL"      , XXX_a, ASMFMT_RIL_A    , store_relative_long                                 )
 };
 
-static INSTR_FUNC opcode_c6_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_c6_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C6x0*/ GENx37Xx390x900 ( "EXRL"      , XXX_a, ASMFMT_RIL_A    , execute_relative_long                               ),
  /*C6x1*/ GENx___x___x___ ,                                                        /*208*/
@@ -3453,7 +3482,7 @@ static INSTR_FUNC opcode_c6_x[16][NUM_INSTR_TAB_PTRS] =
  /*C6xF*/ GENx37Xx390x900 ( "CLRL"      , XXX_a, ASMFMT_RIL_A    , compare_logical_relative_long                       )
 };
 
-static INSTR_FUNC opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*C8x0*/ GENx___x___x900 ( "MVCOS"     , XXX_a, ASMFMT_SSF      , move_with_optional_specifications                   ),
  /*C8x1*/ GENx___x___x900 ( "ECTG"      , XXX_a, ASMFMT_SSF      , extract_cpu_time                                    ),
@@ -3473,7 +3502,7 @@ static INSTR_FUNC opcode_c8_x[16][NUM_INSTR_TAB_PTRS] =
  /*C8xF*/ GENx___x___x___
 };
 
-static INSTR_FUNC opcode_cc_x[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_cc_x[16][NUM_INSTR_TAB_PTRS] =
 {
  /*CCx0*/ GENx___x___x___ ,
  /*CCx1*/ GENx___x___x___ ,
@@ -3493,7 +3522,7 @@ static INSTR_FUNC opcode_cc_x[16][NUM_INSTR_TAB_PTRS] =
  /*CCxF*/ GENx___x___x900 ( "CLIH"      , XXX_a, ASMFMT_RIL      , compare_logical_high_immediate                      )
 };
 
-static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E300*/ GENx___x___x___ ,
  /*E301*/ GENx___x___x___ ,
@@ -3753,7 +3782,7 @@ static INSTR_FUNC opcode_e3xx[256][NUM_INSTR_TAB_PTRS] =
  /*E3FF*/ GENx___x___x___
 };
 
-static INSTR_FUNC opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E500*/ GENx370x390x900 ( "LASP"      , XXX_a, ASMFMT_SSE      , load_address_space_parameters                       ),
  /*E501*/ GENx370x390x900 ( "TPROT"     , XXX_a, ASMFMT_SSE      , test_protection                                     ),
@@ -4023,7 +4052,7 @@ static INSTR_FUNC opcode_e5xx[256][NUM_INSTR_TAB_PTRS] =
  /*E5FF*/ GENx___x___x___
 };
 
-static INSTR_FUNC opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E600*/ GENx370x___x___ ( "FREE"      , XXX_a, ASMFMT_SSE      , ecpsvm_basic_freex                                  ),
  /*E601*/ GENx370x___x___ ( "FRET"      , XXX_a, ASMFMT_SSE      , ecpsvm_basic_fretx                                  ),
@@ -4283,7 +4312,7 @@ static INSTR_FUNC opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
  /*E6FF*/ GENx___x___x___
 };
 
-static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*EB00*/ GENx___x___x___ ,
  /*EB01*/ GENx___x___x___ ,
@@ -4543,7 +4572,7 @@ static INSTR_FUNC opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
  /*EBFF*/ GENx___x___x___
 };
 
-static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*EC00*/ GENx___x___x___ ,
  /*EC01*/ GENx___x___x___ ,
@@ -4803,7 +4832,7 @@ static INSTR_FUNC opcode_ecxx[256][NUM_INSTR_TAB_PTRS] =
  /*ECFF*/ GENx37Xx390x900 ( "CLIB"      , XXX_a, ASMFMT_RIS      , compare_logical_immediate_and_branch                )
 };
 
-static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*ED00*/ GENx___x___x___ ,
  /*ED01*/ GENx___x___x___ ,
@@ -5063,7 +5092,7 @@ static INSTR_FUNC opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
  /*EDFF*/ GENx___x___x___
 };
 
-static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A400*/ GENx___x___x___ , /* VAE */
  /*A401*/ GENx___x___x___ , /* VSE */
@@ -5324,7 +5353,7 @@ static INSTR_FUNC v_opcode_a4xx[256][NUM_INSTR_TAB_PTRS] =
 };
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
-static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A500*/ GENx___x___x___ , /* VAER */
  /*A501*/ GENx___x___x___ , /* VSER */
@@ -5585,7 +5614,7 @@ static INSTR_FUNC v_opcode_a5xx[256][NUM_INSTR_TAB_PTRS] =
 };
 #endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
 
-static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*A600*/ GENx___x___x___ , /* VMXSE */
  /*A601*/ GENx___x___x___ , /* VMNSE */
@@ -5845,7 +5874,7 @@ static INSTR_FUNC v_opcode_a6xx[256][NUM_INSTR_TAB_PTRS] =
  /*A6FF*/ GENx___x___x___
 };
 
-static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*E400*/ GENx___x___x___ , /* VLI, VLIE */
  /*E401*/ GENx___x___x___ , /* VSTI, VSTIE */
@@ -6133,7 +6162,7 @@ static INSTR_FUNC v_opcode_e4xx[256][NUM_INSTR_TAB_PTRS] =
   CLRgen(r1, E), \
   CLRgen(r1, F)
 
-static INSTR_FUNC opcode_15__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_15__[256][NUM_INSTR_TAB_PTRS] =
 {
   CLRgenr2(0),
   CLRgenr2(1),
@@ -6175,7 +6204,7 @@ static INSTR_FUNC opcode_15__[256][NUM_INSTR_TAB_PTRS] =
   LRgen(r1, E), \
   LRgen(r1, F)
 
-static INSTR_FUNC opcode_18__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_18__[256][NUM_INSTR_TAB_PTRS] =
 {
   LRgenr2(0),
   LRgenr2(1),
@@ -6217,7 +6246,7 @@ static INSTR_FUNC opcode_18__[256][NUM_INSTR_TAB_PTRS] =
    ALRgen(r1, E), \
    ALRgen(r1, F)
 
-static INSTR_FUNC opcode_1E__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_1E__[256][NUM_INSTR_TAB_PTRS] =
 {
   ALRgenr2(0),
   ALRgenr2(1),
@@ -6259,7 +6288,7 @@ static INSTR_FUNC opcode_1E__[256][NUM_INSTR_TAB_PTRS] =
    SLRgen(r1, E), \
    SLRgen(r1, F)
 
-static INSTR_FUNC opcode_1F__[256][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_1F__[256][NUM_INSTR_TAB_PTRS] =
 {
   SLRgenr2(0),
   SLRgenr2(1),
@@ -6281,7 +6310,7 @@ static INSTR_FUNC opcode_1F__[256][NUM_INSTR_TAB_PTRS] =
 
 // Load Address
 
-static INSTR_FUNC opcode_41_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_41_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*4100*/ GENx370x390x900 ( "LA"        , XXX_a, ASMFMT_RX       , 4100                                                ),
  /*4110*/ GENx370x390x900 ( "LA"        , XXX_a, ASMFMT_RX       , 4110                                                ),
@@ -6303,7 +6332,7 @@ static INSTR_FUNC opcode_41_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Branch on Condition
 
-static INSTR_FUNC opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*4700*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , nop4                                                ),
  /*4710*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4710                                                ),
@@ -6325,7 +6354,7 @@ static INSTR_FUNC opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Store
 
-static INSTR_FUNC opcode_50_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_50_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*5000*/ GENx370x390x900 ( "ST"        , XXX_a, ASMFMT_RX       , 5000                                                ),
  /*5010*/ GENx370x390x900 ( "ST"        , XXX_a, ASMFMT_RX       , 5010                                                ),
@@ -6347,7 +6376,7 @@ static INSTR_FUNC opcode_50_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Compare Logical
 
-static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_55_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*5500*/ GENx370x390x900 ( "CL"        , XXX_a, ASMFMT_RX       , 5500                                                ),
  /*5510*/ GENx370x390x900 ( "CL"        , XXX_a, ASMFMT_RX       , 5510                                                ),
@@ -6369,7 +6398,7 @@ static INSTR_FUNC opcode_55_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Load
 
-static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_58_0[16][NUM_INSTR_TAB_PTRS] =
 {
  /*5800*/ GENx370x390x900 ( "L"         , XXX_a, ASMFMT_RX       , 5800                                                ),
  /*5810*/ GENx370x390x900 ( "L"         , XXX_a, ASMFMT_RX       , 5810                                                ),
@@ -6391,7 +6420,7 @@ static INSTR_FUNC opcode_58_0[16][NUM_INSTR_TAB_PTRS] =
 
 // Test Under Mask
 
-static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
 {
  /*9180*/ GENx370x390x900 ( "TM"        , XXX_a, ASMFMT_SI       , 9180                                                ),
  /*9140*/ GENx370x390x900 ( "TM"        , XXX_a, ASMFMT_SI       , 9140                                                ),
@@ -6405,7 +6434,7 @@ static INSTR_FUNC opcode_91xx[8][NUM_INSTR_TAB_PTRS] =
 
 // Insert Characters Under Mask
 
-static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
 {
  /*BF_x*/ GENx370x390x900 ( "ICM"       , XXX_a, ASMFMT_RS       , BF_x                                                ),
  /*BF_7*/ GENx370x390x900 ( "ICM"       , XXX_a, ASMFMT_RS       , BF_7                                                ),
@@ -6414,21 +6443,21 @@ static INSTR_FUNC opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
 
 #if !defined( OPTION_NO_E3_OPTINST )
 
-static INSTR_FUNC opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E3*/   GENx370x390x900 ( ""          , XXX_a, ASMFMT_e3xx     , E3_0                                                )
 };
 
 // Load 64-bit
 
-static INSTR_FUNC opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_E3_0______04[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E304*/ GENx___x___x900 ( "LG"        , XXX_a, ASMFMT_RXY      , E3_0______04                                        )
 };
 
 // Store 64-bit
 
-static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
+static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 {
  /*E324*/ GENx___x___x900 ( "STG"       , XXX_a, ASMFMT_RXY      , E3_0______24                                        )
 };
@@ -6438,12 +6467,48 @@ static INSTR_FUNC opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 #endif /* OPTION_OPTINST */
 
 /*-------------------------------------------------------------------*/
+/*                     runtime opcode tables                         */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The below tables are the opcode tables actually used at runtime.  */
+/*                                                                   */
+/* They are built during startup by the "init_runtime_opcode_tables" */
+/* function further below (called by impl.c during initialization)   */
+/* based on the above GENx... "generated" opcode tables.             */
+/*                                                                   */
+/* Note that while each entry in the ABOVE "gen" opcode tables built */
+/* at compile time are indexed by instruction opcode (and contain 5  */
+/* pointers, the first 3 of which are pointers to the instruction    */
+/* function for the 3 build architectures that Hercules supports),   */
+/* the BELOW runtime tables are indexed by BUILD ARCHITECTURE and    */
+/* contain only ONE pointer (with that pointer being the pointer to  */
+/* the instruction function for that build architecture.             */
+/*                                                                   */
+/* It is the below runtime tables which are copied to REGS for each  */
+/* CPU by the "init_regs_runtime_opcode_pointers" function below,    */
+/* which is then used by instruction dispatcher EXECUTE_INSTRUCTION  */
+/* macro to jump to the actual instruction function.                 */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+static INSTR_FUNC runtime_opcode_xxxx[NUM_GEN_ARCHS][256 * 256];
+
+static INSTR_FUNC runtime_opcode_e3________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_eb________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_ec________xx[NUM_GEN_ARCHS][256];
+static INSTR_FUNC runtime_opcode_ed________xx[NUM_GEN_ARCHS][256];
+
+#if defined( OPTION_OPTINST ) && !defined( OPTION_NO_E3_OPTINST )
+static INSTR_FUNC runtime_opcode_e3_0______xx[NUM_GEN_ARCHS][256];
+#endif
+
+/*-------------------------------------------------------------------*/
 /*                Opcode Table Replacement Functions                 */
 /*-------------------------------------------------------------------*/
 /* The below series of functions are used to replace entries in the  */
-/* above opcode tables for a given instruction or all instructions.  */
+/* above RUNTIME opcode tables for a given instruction/instructions. */
 /* The first few functions are helper functions used by the primary  */
-/* functions which follow them.                                      */
+/* functions which follow them further below.                        */
 /*-------------------------------------------------------------------*/
 
 static INSTR_FUNC replace_opcode_xx(int arch, INSTR_FUNC inst, int opcode)
@@ -6634,12 +6699,35 @@ DLL_EXPORT void* the_real_replace_opcode( int arch, INSTR_FUNC inst, int opcode1
 }
 
 /*-------------------------------------------------------------------*/
-/*                     init_opcode_tables                            */
+/*  init_runtime_opcode_tables  --  called by impl.c function impl   */
 /*-------------------------------------------------------------------*/
-/*               (called by impl.c function impl)                    */
+/*                                                                   */
+/* The below function constructs our RUNTIME opcode table (defined   */
+/* further above) for each build architecture, based on our master   */
+/* "generated" opcode table that was built by the compiler from all  */
+/* of the "GENx370x390x900" et al. macros seen much further above.   */
+/*                                                                   */
+/* It accomplishes this by leveraging our existing "replace_opcode"  */
+/* functions that allows us to "patch" (modify) the actual runtime   */
+/* opcode tables when needed (whenever a given facility is enabled   */
+/* or disabled for example).                                         */
+/*                                                                   */
+/* Instead of "patching" only specific instructions however (such    */
+/* as what occurs when a given facility is enabled or disabled) it   */
+/* instead "patches" (modifies/updates) *ALL* of the instructions.   */
+/* It iterates through each and every entry in ALL of "generated"    */
+/* opcode tables, calling the appropriate "replace_opcode" function  */
+/* for each table entry (i.e. for each and every instruction).       */
+/*                                                                   */
+/* The end result of this is a RUNTIME opcode table for each build   */
+/* architectue whose entries point DIRECTLY to that instruction for  */
+/* that particular architecture. This resulting runtime opcode table */
+/* can then later be further modified/patched (if needed) for only   */
+/* specific instructions whenever a facility is enabled/disabled.    */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
-void init_opcode_tables()
+void init_runtime_opcode_tables()
 {
   int arch;
   int i;
@@ -6650,56 +6738,56 @@ void init_opcode_tables()
   for(arch = 0; arch < NUM_GEN_ARCHS; arch++)
   {
     for(i = 0; i < 256; i++)
-      replace_opcode_xx(arch, opcode_table[i][arch], i);
+      replace_opcode_xx(arch, gen_opcode_table[i][arch], i);
 
     for(i = 0; i < 256; i++)
     {
-      replace_opcode_xxxx(arch, opcode_01xx[i][arch], 0x01, i);
+      replace_opcode_xxxx(arch, gen_opcode_01xx[i][arch], 0x01, i);
 
       if(arch != ARCH_900_IDX)
       {
-        replace_opcode_xxxx(arch, v_opcode_a4xx[i][arch], 0xa4, i);
+        replace_opcode_xxxx(arch, gen_v_opcode_a4xx[i][arch], 0xa4, i);
         #if defined( _VEC_FAC_DEFINED_FOR_370 )
         if(arch == ARCH_370_IDX)
-          replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+          replace_opcode_xxxx(arch, gen_v_opcode_a5xx[i][arch], 0xa5, i);
         #endif
         #if defined( _VEC_FAC_DEFINED_FOR_390 )
         if(arch == ARCH_390_IDX)
-          replace_opcode_xxxx(arch, v_opcode_a5xx[i][arch], 0xa5, i);
+          replace_opcode_xxxx(arch, gen_v_opcode_a5xx[i][arch], 0xa5, i);
         #endif
-        replace_opcode_xxxx(arch, v_opcode_a6xx[i][arch], 0xa6, i);
+        replace_opcode_xxxx(arch, gen_v_opcode_a6xx[i][arch], 0xa6, i);
       }
 
-      replace_opcode_xxxx(arch, opcode_b2xx[i][arch], 0xb2, i);
-      replace_opcode_xxxx(arch, opcode_b3xx[i][arch], 0xb3, i);
-      replace_opcode_xxxx(arch, opcode_b9xx[i][arch], 0xb9, i);
-      replace_opcode_xx________xx(arch, opcode_e3xx[i][arch], 0xe3, i);
+      replace_opcode_xxxx(arch, gen_opcode_b2xx[i][arch], 0xb2, i);
+      replace_opcode_xxxx(arch, gen_opcode_b3xx[i][arch], 0xb3, i);
+      replace_opcode_xxxx(arch, gen_opcode_b9xx[i][arch], 0xb9, i);
+      replace_opcode_xx________xx(arch, gen_opcode_e3xx[i][arch], 0xe3, i);
 
       if(arch != ARCH_900_IDX)
-        replace_opcode_xxxx(arch, v_opcode_e4xx[i][arch], 0xe4, i);
+        replace_opcode_xxxx(arch, gen_v_opcode_e4xx[i][arch], 0xe4, i);
 
-      replace_opcode_xxxx(arch, opcode_e5xx[i][arch], 0xe5, i);
-      replace_opcode_xxxx(arch, opcode_e6xx[i][arch], 0xe6, i);
-      replace_opcode_xx________xx(arch, opcode_ebxx[i][arch], 0xeb, i);
-      replace_opcode_xx________xx(arch, opcode_ecxx[i][arch], 0xec, i);
-      replace_opcode_xx________xx(arch, opcode_edxx[i][arch], 0xed, i);
+      replace_opcode_xxxx(arch, gen_opcode_e5xx[i][arch], 0xe5, i);
+      replace_opcode_xxxx(arch, gen_opcode_e6xx[i][arch], 0xe6, i);
+      replace_opcode_xx________xx(arch, gen_opcode_ebxx[i][arch], 0xeb, i);
+      replace_opcode_xx________xx(arch, gen_opcode_ecxx[i][arch], 0xec, i);
+      replace_opcode_xx________xx(arch, gen_opcode_edxx[i][arch], 0xed, i);
     }
 
     for(i = 0; i < 16; i++)
     {
       if(arch == ARCH_900_IDX)
-        replace_opcode_xx_x(arch, opcode_a5_x[i][arch], 0xa5, i);
+        replace_opcode_xx_x(arch, gen_opcode_a5_x[i][arch], 0xa5, i);
       #if (!defined( _VEC_FAC_DEFINED_FOR_370 )) && defined( _FEATURE_370_EXTENSION )
       if(arch == ARCH_370_IDX)
-        replace_opcode_xx_x(arch, opcode_a5_x[i][arch], 0xa5, i);
+        replace_opcode_xx_x(arch, gen_opcode_a5_x[i][arch], 0xa5, i);
       #endif
-      replace_opcode_xx_x(arch, opcode_a7_x[i][arch], 0xa7, i);
-      replace_opcode_xx_x(arch, opcode_c0_x[i][arch], 0xc0, i);
-      replace_opcode_xx_x(arch, opcode_c2_x[i][arch], 0xc2, i);
-      replace_opcode_xx_x(arch, opcode_c4_x[i][arch], 0xc4, i);
-      replace_opcode_xx_x(arch, opcode_c6_x[i][arch], 0xc6, i);
-      replace_opcode_xx_x(arch, opcode_c8_x[i][arch], 0xc8, i);
-      replace_opcode_xx_x(arch, opcode_cc_x[i][arch], 0xcc, i);
+      replace_opcode_xx_x(arch, gen_opcode_a7_x[i][arch], 0xa7, i);
+      replace_opcode_xx_x(arch, gen_opcode_c0_x[i][arch], 0xc0, i);
+      replace_opcode_xx_x(arch, gen_opcode_c2_x[i][arch], 0xc2, i);
+      replace_opcode_xx_x(arch, gen_opcode_c4_x[i][arch], 0xc4, i);
+      replace_opcode_xx_x(arch, gen_opcode_c6_x[i][arch], 0xc6, i);
+      replace_opcode_xx_x(arch, gen_opcode_c8_x[i][arch], 0xc8, i);
+      replace_opcode_xx_x(arch, gen_opcode_cc_x[i][arch], 0xcc, i);
     }
 
     // "Optimized" Instructions
@@ -6708,24 +6796,24 @@ void init_opcode_tables()
 
     for(i = 0; i < 256; i++)
     {
-      replace_opcode_xxxx(arch, opcode_15__[i][arch], 0x15, i); /* Optimized CLR */
-      replace_opcode_xxxx(arch, opcode_18__[i][arch], 0x18, i); /* Optimized LR */
-      replace_opcode_xxxx(arch, opcode_1E__[i][arch], 0x1e, i); /* Optimized ALR */
-      replace_opcode_xxxx(arch, opcode_1F__[i][arch], 0x1f, i); /* Optimized SLR */
-      replace_opcode_xxxx(arch, opcode_BF_x[0][arch], 0xbf, i); /* Optimized ICM */
+      replace_opcode_xxxx(arch, gen_opcode_15__[i][arch], 0x15, i); /* Optimized CLR */
+      replace_opcode_xxxx(arch, gen_opcode_18__[i][arch], 0x18, i); /* Optimized LR */
+      replace_opcode_xxxx(arch, gen_opcode_1E__[i][arch], 0x1e, i); /* Optimized ALR */
+      replace_opcode_xxxx(arch, gen_opcode_1F__[i][arch], 0x1f, i); /* Optimized SLR */
+      replace_opcode_xxxx(arch, gen_opcode_BF_x[0][arch], 0xbf, i); /* Optimized ICM */
     }
 
     for(i = 0; i < 16; i++)
     {
-      replace_opcode_xxxx(arch, opcode_41_0[i][arch], 0x41, i << 4); /* Optimized LA */
-      replace_opcode_xxxx(arch, opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
-      replace_opcode_xxxx(arch, opcode_50_0[i][arch], 0x50, i << 4); /* Optimized ST */
-      replace_opcode_xxxx(arch, opcode_55_0[i][arch], 0x55, i << 4); /* Optimized CL */
-      replace_opcode_xxxx(arch, opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
-      replace_opcode_xxxx(arch, opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
-      replace_opcode_xxxx(arch, opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
+      replace_opcode_xxxx(arch, gen_opcode_41_0[i][arch], 0x41, i << 4); /* Optimized LA */
+      replace_opcode_xxxx(arch, gen_opcode_47_0[i][arch], 0x47, i << 4); /* Optimized BC */
+      replace_opcode_xxxx(arch, gen_opcode_50_0[i][arch], 0x50, i << 4); /* Optimized ST */
+      replace_opcode_xxxx(arch, gen_opcode_55_0[i][arch], 0x55, i << 4); /* Optimized CL */
+      replace_opcode_xxxx(arch, gen_opcode_58_0[i][arch], 0x58, i << 4); /* Optimized L */
+      replace_opcode_xxxx(arch, gen_opcode_BF_x[1][arch], 0xbf, (i << 4) + 0x7); /* Optimized ICM */
+      replace_opcode_xxxx(arch, gen_opcode_BF_x[2][arch], 0xbf, (i << 4) + 0xf); /* Optimized ICM */
 #if !defined( OPTION_NO_E3_OPTINST )
-      replace_opcode_xxxx(arch, opcode_E3_0[0][arch], 0xe3, i << 4);
+      replace_opcode_xxxx(arch, gen_opcode_E3_0[0][arch], 0xe3, i << 4);
 #endif
     }
 
@@ -6733,7 +6821,7 @@ void init_opcode_tables()
 
     for(i = 0; i < 8; i++)
     {
-      replace_opcode_xxxx(arch, opcode_91xx[i][arch], 0x91, bit); /* Single bit TM */
+      replace_opcode_xxxx(arch, gen_opcode_91xx[i][arch], 0x91, bit); /* Single bit TM */
       bit >>= 1;
     }
 
@@ -6745,17 +6833,17 @@ void init_opcode_tables()
       {
         case 0x04:
 
-          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______04[0][arch]; /* Optimized LG */
+          runtime_opcode_e3_0______xx[arch][i] = gen_opcode_E3_0______04[0][arch]; /* Optimized LG */
           break;
 
         case 0x24:
 
-          runtime_opcode_e3_0______xx[arch][i] = opcode_E3_0______24[0][arch]; /* Optimized STG */
+          runtime_opcode_e3_0______xx[arch][i] = gen_opcode_E3_0______24[0][arch]; /* Optimized STG */
           break;
 
         default:
 
-          runtime_opcode_e3_0______xx[arch][i] = opcode_e3xx[i][arch];
+          runtime_opcode_e3_0______xx[arch][i] = gen_opcode_e3xx[i][arch];
           break;
       }
     }
@@ -6767,12 +6855,24 @@ void init_opcode_tables()
 }
 
 /*-------------------------------------------------------------------*/
-/*                      init_opcode_pointers                         */
-/*-------------------------------------------------------------------*/
+/*                init_regs_runtime_opcode_pointers                  */
 /*               (called by cpu.c function cpu_init)                 */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The below function simply copies the pointers to our previously   */
+/* built "runtime" opcode table (of which there is one for each of   */
+/* our build architectures, each one of which which were previously  */
+/* initialzed by "init_runtime_opcode_tables" called during impl),   */
+/* to the appropriately named variable defined in REGS.              */
+/*                                                                   */
+/* The "run_cpu" function then simply uses the appropriate runtime   */
+/* opcode table from REGS based (on the CPU's current architecture)  */
+/* to dispatch that CPU's instructions to the right function based   */
+/* on the instruction's opcode.                                      */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 
-void init_opcode_pointers( REGS* regs )
+void init_regs_runtime_opcode_pointers( REGS* regs )
 {
   if (!regs)
     return;
