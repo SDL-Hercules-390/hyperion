@@ -367,9 +367,9 @@ U64     slsba;                /* Storage list state block address    */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_vector_summary)
 {
-int     r1, unused;            /* Register numbers                   */
+int     r1, r2;                /* Register numbers                   */
 
-    RRE0(inst, regs, r1, unused);
+    RRE0(inst, regs, r1, r2);
     PRIV_CHECK(regs);
     SIE_INTERCEPT(regs);
     ODD_CHECK(r1, regs);

@@ -49,6 +49,7 @@ int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
+
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
 
@@ -69,6 +70,7 @@ int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
+
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
 
@@ -91,6 +93,7 @@ U32     sign;                           /* Work area for sign bit    */
     RRF_M(inst, regs, r1, r2, r3);
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
+
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
     i3 = FPR2I(r3);
@@ -119,6 +122,7 @@ int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
+
     i1 = FPR2I(r1);
     i2 = FPR2I(r2);
 
@@ -141,6 +145,7 @@ int     i1;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
     HFPREG_CHECK(r1, regs);
+
     i1 = FPR2I(r1);
 
     /* Load FP register contents from general register */
@@ -160,6 +165,7 @@ int     i2;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
     HFPREG_CHECK(r2, regs);
+
     i2 = FPR2I(r2);
 
     /* Load general register contents from FP register */
@@ -304,11 +310,11 @@ BYTE            dxc;                    /* Data exception code       */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_fpc_and_signal)
 {
-int             r1, unused;             /* Values of R fields        */
+int             r1, r2;                 /* Values of R fields        */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, regs, r1, r2);
 
     DFPINST_CHECK(regs);
 
