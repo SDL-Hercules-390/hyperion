@@ -6482,7 +6482,7 @@ static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS] =
 /* function for the 3 build architectures that Hercules supports),   */
 /* the BELOW runtime tables are indexed by BUILD ARCHITECTURE and    */
 /* contain only ONE pointer (with that pointer being the pointer to  */
-/* the instruction function for that build architecture.             */
+/* the instruction function for that build architecture).            */
 /*                                                                   */
 /* It is the below runtime tables which are copied to REGS for each  */
 /* CPU by the "init_regs_runtime_opcode_pointers" function below,    */

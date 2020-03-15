@@ -91,9 +91,9 @@ U32     tmp_fpc;
 /*-------------------------------------------------------------------*/
 DEF_INST(set_fpc)
 {
-int     r1, unused;                     /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, regs, r1, r2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
@@ -114,9 +114,9 @@ int     r1, unused;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_fpc)
 {
-int     r1, unused;                     /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, regs, r1, r2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
@@ -1709,9 +1709,9 @@ QWORD   currpsw;                        /* Work area for PSW         */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_and_set_extended_authority)
 {
-int     r1, unused;                     /* Value of R field          */
+int     r1, r2;                         /* Value of R field          */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, regs, r1, r2);
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -5066,10 +5066,10 @@ DEF_INST(perform_timing_facility_function)
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_topology_function)
 {
-int     r1, unused;                     /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 int     fc, rc = 0;                     /* Function / Reason Code    */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, regs, r1, r2);
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -5921,12 +5921,13 @@ DEF_INST(pack_ascii)
 {
 int     len;                            /* Second operand length     */
 int     b1, b2;                         /* Base registers            */
-VADR    addr1, addr2;                   /* Effective addresses       */
+VADR    effective_addr1;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 BYTE    source[33];                     /* 32 digits + implied sign  */
 BYTE    result[16];                     /* 31-digit packed result    */
 int     i, j;                           /* Array subscripts          */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -5936,7 +5937,7 @@ int     i, j;                           /* Array subscripts          */
 
     /* Fetch the second operand and right justify */
     memset (source, 0, sizeof(source));
-    ARCH_DEP(vfetchc) ( source+31-len, len, addr2, b2, regs );
+    ARCH_DEP(vfetchc) ( source+31-len, len, effective_addr2, b2, regs );
 
     /* Append an implied plus sign */
     source[32] = 0x0C;
@@ -5948,7 +5949,7 @@ int     i, j;                           /* Array subscripts          */
     }
 
     /* Store 16-byte packed decimal result at operand address */
-    ARCH_DEP(vstorec) ( result, 16-1, addr1, b1, regs );
+    ARCH_DEP(vstorec) ( result, 16-1, effective_addr1, b1, regs );
 
 } /* end DEF_INST(pack_ascii) */
 #endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
@@ -5962,12 +5963,13 @@ DEF_INST(pack_unicode)
 {
 int     len;                            /* Second operand length     */
 int     b1, b2;                         /* Base registers            */
-VADR    addr1, addr2;                   /* Effective addresses       */
+VADR    effective_addr1;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 BYTE    source[66];                     /* 32 digits + implied sign  */
 BYTE    result[16];                     /* 31-digit packed result    */
 int     i, j;                           /* Array subscripts          */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -5977,7 +5979,7 @@ int     i, j;                           /* Array subscripts          */
 
     /* Fetch the second operand and right justify */
     memset (source, 0, sizeof(source));
-    ARCH_DEP(vfetchc) ( source+63-len, len, addr2, b2, regs );
+    ARCH_DEP(vfetchc) ( source+63-len, len, effective_addr2, b2, regs );
 
     /* Append an implied plus sign */
     source[64] = 0x00;
@@ -5990,7 +5992,7 @@ int     i, j;                           /* Array subscripts          */
     }
 
     /* Store 16-byte packed decimal result at operand address */
-    ARCH_DEP(vstorec) ( result, 16-1, addr1, b1, regs );
+    ARCH_DEP(vstorec) ( result, 16-1, effective_addr1, b1, regs );
 
 } /* end DEF_INST(pack_unicode) */
 #endif /* defined( FEATURE_016_EXT_TRANSL_FACILITY_2 ) */
@@ -6004,13 +6006,14 @@ DEF_INST(unpack_ascii)
 {
 int     len;                            /* First operand length      */
 int     b1, b2;                         /* Base registers            */
-VADR    addr1, addr2;                   /* Effective addresses       */
+VADR    effective_addr1;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 BYTE    result[32];                     /* 32-digit result           */
 BYTE    source[16];                     /* 31-digit packed operand   */
 int     i, j;                           /* Array subscripts          */
 int     cc;                             /* Condition code            */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -6019,7 +6022,7 @@ int     cc;                             /* Condition code            */
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the 16-byte second operand */
-    ARCH_DEP(vfetchc) ( source, 15, addr2, b2, regs );
+    ARCH_DEP(vfetchc) ( source, 15, effective_addr2, b2, regs );
 
     /* Set high-order result byte to ASCII zero */
     result[0] = 0x30;
@@ -6033,7 +6036,7 @@ int     cc;                             /* Condition code            */
     }
 
     /* Store rightmost digits of result at first operand address */
-    ARCH_DEP(vstorec) ( result+31-len, len, addr1, b1, regs );
+    ARCH_DEP(vstorec) ( result+31-len, len, effective_addr1, b1, regs );
 
     /* Set the condition code according to the sign */
     switch (source[15] & 0x0F) {
@@ -6058,13 +6061,14 @@ DEF_INST(unpack_unicode)
 {
 int     len;                            /* First operand length      */
 int     b1, b2;                         /* Base registers            */
-VADR    addr1, addr2;                   /* Effective addresses       */
+VADR    effective_addr1;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 BYTE    result[64];                     /* 32-digit result           */
 BYTE    source[16];                     /* 31-digit packed operand   */
 int     i, j;                           /* Array subscripts          */
 int     cc;                             /* Condition code            */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -6073,7 +6077,7 @@ int     cc;                             /* Condition code            */
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the 16-byte second operand */
-    ARCH_DEP(vfetchc) ( source, 15, addr2, b2, regs );
+    ARCH_DEP(vfetchc) ( source, 15, effective_addr2, b2, regs );
 
     /* Set high-order result pair to Unicode zero */
     result[0] = 0x00;
@@ -6090,7 +6094,7 @@ int     cc;                             /* Condition code            */
     }
 
     /* Store rightmost digits of result at first operand address */
-    ARCH_DEP(vstorec) ( result+63-len, len, addr1, b1, regs );
+    ARCH_DEP(vstorec) ( result+63-len, len, effective_addr1, b1, regs );
 
     /* Set the condition code according to the sign */
     switch (source[15] & 0x0F) {
@@ -6114,28 +6118,25 @@ int     cc;                             /* Condition code            */
 DEF_INST(translate_one_to_one)
 {
 int     r1, r2;                         /* Values of R fields        */
+int     m3;                             /* Mask                      */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue, dvalue, tvalue;
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
-int     tccc;                   /* Test-Character-Comparison Control */
+bool    tccc;                   /* Test-Character-Comparison Control */
 #endif
 
-// NOTE: it's faster to decode with RRE format
-// and then to handle the 'tccc' flag separately...
-
-//  RRF_M(inst, regs, r1, r2, tccc);
-    RRE(inst, regs, r1, r2);
+    RRF_M(inst, regs, r1, r2, m3);
 
     CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
-    if(inst[2] & 0x10)
-      tccc = 1;
+    if (m3 & 0x01)
+      tccc = true;
     else
-      tccc = 0;
+      tccc = false;
 #endif
 
     /* Determine length */
@@ -6209,29 +6210,26 @@ int     tccc;                   /* Test-Character-Comparison Control */
 DEF_INST(translate_one_to_two)
 {
 int     r1, r2;                         /* Values of R fields        */
+int     m3;                             /* Mask                      */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue;
 U16     dvalue, tvalue;
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
-int     tccc;                   /* Test-Character-Comparison Control */
+bool    tccc;                   /* Test-Character-Comparison Control */
 #endif
 
-// NOTE: it's faster to decode with RRE format
-// and then to handle the 'tccc' flag separately...
-
-//  RRF_M(inst, regs, r1, r2, tccc);
-    RRE(inst, regs, r1, r2);
+    RRF_M(inst, regs, r1, r2, m3);
 
     CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
-    if(inst[2] & 0x10)
-      tccc = 1;
+    if (m3 & 0x01)
+      tccc = true;
     else
-      tccc = 0;
+      tccc = false;
 #endif
 
     /* Determine length */
@@ -6305,29 +6303,26 @@ int     tccc;                   /* Test-Character-Comparison Control */
 DEF_INST(translate_two_to_one)
 {
 int     r1, r2;                         /* Values of R fields        */
+int     m3;                             /* Mask                      */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
-int     tccc;                   /* Test-Character-Comparison Control */
+bool    tccc;                   /* Test-Character-Comparison Control */
 #endif
 
-// NOTE: it's faster to decode with RRE format
-// and then to handle the 'tccc' flag separately...
-
-//  RRF_M(inst, regs, r1, r2, tccc);
-    RRE(inst, regs, r1, r2);
+    RRF_M(inst, regs, r1, r2, m3);
 
     CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
-    if(inst[2] & 0x10)
-      tccc = 1;
+    if (m3 & 0x01)
+      tccc = true;
     else
-      tccc = 0;
+      tccc = false;
 #endif
 
     /* Determine length */
@@ -6407,28 +6402,25 @@ int     tccc;                   /* Test-Character-Comparison Control */
 DEF_INST(translate_two_to_two)
 {
 int     r1, r2;                         /* Values of R fields        */
+int     m3;                             /* Mask                      */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue, dvalue, tvalue;
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
-int     tccc;                   /* Test-Character-Comparison Control */
+bool    tccc;                   /* Test-Character-Comparison Control */
 #endif
 
-// NOTE: it's faster to decode with RRE format
-// and then to handle the 'tccc' flag separately...
-
-//  RRF_M(inst, regs, r1, r2, tccc);
-    RRE(inst, regs, r1, r2);
+    RRF_M(inst, regs, r1, r2, m3);
 
     CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
     /* Set Test-Character-Comparison Control */
-    if(inst[2] & 0x10)
-      tccc = 1;
+    if (m3 & 0x01)
+      tccc = true;
     else
-      tccc = 0;
+      tccc = false;
 #endif
 
     /* Determine length */

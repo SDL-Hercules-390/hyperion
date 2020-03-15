@@ -42,10 +42,10 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 /*-------------------------------------------------------------------*/
 DEF_INST(v_test_vmr)
 {
-int     unused1, unused2;
+int     r1, r2;
 U32     n, n1;
 
-    RRE(inst, regs, unused1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
@@ -70,19 +70,17 @@ U32     n, n1;
             regs->psw.cc = 1;
             return;
         }
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A641 VCVM  - Complement VMR                                 [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_complement_vmr)
 {
-int     unused1, unused2;
+int     r1, r2;
 U32     n, n1, n2;
 
-    RRE(inst, regs, unused1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
@@ -100,19 +98,17 @@ U32     n, n1, n2;
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
         regs->vf->vmr[n1] = 0;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A642 VCZVM - Count Left Zeros in VMR                        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_count_left_zeros_in_vmr)
 {
-int     gr1, unused2;
+int     r1, r2;
 U32     n, n1;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
@@ -130,36 +126,34 @@ U32     n, n1;
     regs->psw.cc = VMR_SET(0, regs) ? 3 : 0;
 
     /* If the VCT is 1 and the first bit is one
-       then exit wirh gr1 set to zero */
-    regs->GR_L(gr1) = 0;
+       then exit wirh r1 set to zero */
+    regs->GR_L(r1) = 0;
     if(n == 1 && VMR_SET(0, regs))
         return;
 
     /* Count left zeros, set cc1 and exit if a one is found */
-    regs->GR_L(gr1) = 1;
+    regs->GR_L(r1) = 1;
     for(n1 = 1; n1 < n; n1++)
     {
         if(!VMR_SET(n1, regs))
-            regs->GR_L(gr1)++;
+            regs->GR_L(r1)++;
         else
         {
             regs->psw.cc = 1;
             return;
         }
     }
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A643 VCOVM - Count Ones In VMR                              [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_count_ones_in_vmr)
 {
-int     gr1, unused2;
+int     r1, r2;
 U32     n, n1;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
@@ -178,12 +172,12 @@ U32     n, n1;
 
     /* Check VMR bit to be equal to the first,
        Count all ones, set cc1 if a bit is unequal */
-    regs->GR_L(gr1) = 0;
+    regs->GR_L(r1) = 0;
     for(n1 = 0; n1 < n; n1++)
     {
         if(VMR_SET(n1, regs))
         {
-            regs->GR_L(gr1)++;
+            regs->GR_L(r1)++;
             if(!VMR_SET(0, regs))
                 regs->psw.cc = 1;
         }
@@ -191,62 +185,56 @@ U32     n, n1;
             if(VMR_SET(0, regs))
                 regs->psw.cc = 1;
     }
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A644 VXVC  - Exctract VCT                                   [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_extract_vct)
 {
-int     gr1, unused2;
+int     r1, r2;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
-    regs->GR_L(gr1) = VECTOR_COUNT(regs);
-
+    regs->GR_L(r1) = VECTOR_COUNT(regs);
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A646 VXVMM - Extract Vector Modes                           [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_extract_vector_modes)
 {
-int     gr1, unused2;
+int     r1, r2;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
-    regs->GR_L(gr1) = (regs->vf->vsr >> 48);
-
+    regs->GR_L(r1) = (regs->vf->vsr >> 48);
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A648 VRRS  - Restore VR                                     [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_restore_vr)
 {
-int     gr1, unused2;
+int     r1, r2;
 U32     n, n1, n2;
 U64     d;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
-    ODD_CHECK(gr1, regs);
+    ODD_CHECK(r1, regs);
 
     /* n contrains the current save area address */
-    n = regs->GR_L(gr1) & ADDRESS_MAXWRAP(regs);
+    n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
-    if((n1 = regs->GR_L(gr1 + 1) >> 16) >= VECTOR_SECTION_SIZE)
+    if((n1 = regs->GR_L(r1 + 1) >> 16) >= VECTOR_SECTION_SIZE)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Starting address must be eight times the section size aligned */
@@ -254,7 +242,7 @@ U64     d;
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* n2 contains VR pair, which must be an even reg */
-    if((n2 = regs->GR_L(gr1 + 1) & 0x0000FFFF) & 0x0000FFF1)
+    if((n2 = regs->GR_L(r1 + 1) & 0x0000FFFF) & 0x0000FFF1)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     if( VR_INUSE(n2, regs) )
@@ -266,16 +254,16 @@ U64     d;
         for(; n1 < VECTOR_SECTION_SIZE; n1++)
         {
             /* Fetch vr pair from central storage */
-            d = ARCH_DEP(vfetch8)(n, gr1, regs);
+            d = ARCH_DEP(vfetch8)(n, r1, regs);
             regs->vf->vr[n2][n1] = d >> 32;
             regs->vf->vr[n2+1][n1] = d;
 
             /* Increment element number */
             n1++;
-            regs->GR_L(gr1 + 1) &= 0x0000FFFF;
-            regs->GR_L(gr1 + 1) |= n1 << 16;
+            regs->GR_L(r1 + 1) &= 0x0000FFFF;
+            regs->GR_L(r1 + 1) |= n1 << 16;
             /* Update savearea address */
-            regs->GR_L(gr1) += 8;
+            regs->GR_L(r1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
             UPD_PSW_IA(regs, PSW_IA(regs, -4));
@@ -288,7 +276,7 @@ U64     d;
     }
     else
     {
-        regs->GR_L(gr1) += 8 * (VECTOR_SECTION_SIZE - n1);
+        regs->GR_L(r1) += 8 * (VECTOR_SECTION_SIZE - n1);
         /* indicate v2 pair not restored */
         regs->psw.cc = 0;
     }
@@ -299,33 +287,31 @@ U64     d;
 
     /* Update the vector pair number, and zero element number */
     n2 += 2;
-    regs->GR_L(gr1 + 1) = n2;
-
+    regs->GR_L(r1 + 1) = n2;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A649 VRSVC - Save Changed VR                                [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_save_changed_vr)
 {
-int     gr1, unused2;
+int     r1, r2;
 U32     n, n1, n2;
 U64     d;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
     PRIV_CHECK(regs);
 
-    ODD_CHECK(gr1, regs);
+    ODD_CHECK(r1, regs);
 
     /* n contrains the current save area address */
-    n = regs->GR_L(gr1) & ADDRESS_MAXWRAP(regs);
+    n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
-    if((n1 = regs->GR_L(gr1 + 1) >> 16) >= VECTOR_SECTION_SIZE)
+    if((n1 = regs->GR_L(r1 + 1) >> 16) >= VECTOR_SECTION_SIZE)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Starting address must be eight times the section size aligned */
@@ -333,7 +319,7 @@ U64     d;
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* n2 contains VR pair, which must be an even reg */
-    if((n2 = regs->GR_L(gr1 + 1) & 0x0000FFFF) & 0x0000FFF1)
+    if((n2 = regs->GR_L(r1 + 1) & 0x0000FFFF) & 0x0000FFF1)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     if( VR_CHANGED(n2, regs) )
@@ -343,13 +329,13 @@ U64     d;
             /* Store vr pair in savearea */
             d = ((U64)regs->vf->vr[n2][n1] << 32)
               | regs->vf->vr[n2+1][n1];
-            ARCH_DEP(vstore8)(d, n, gr1, regs);
+            ARCH_DEP(vstore8)(d, n, r1, regs);
 
             /* Update element number */
             n1++;
-            regs->GR_L(gr1 + 1) &= 0x0000FFFF;
-            regs->GR_L(gr1 + 1) |= n1 << 16;
-            regs->GR_L(gr1) += 8;
+            regs->GR_L(r1 + 1) &= 0x0000FFFF;
+            regs->GR_L(r1 + 1) |= n1 << 16;
+            regs->GR_L(r1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
             UPD_PSW_IA(regs, PSW_IA(regs, -4));
@@ -365,7 +351,7 @@ U64     d;
     }
     else
     {
-        regs->GR_L(gr1) += 8 * (VECTOR_SECTION_SIZE - n1);
+        regs->GR_L(r1) += 8 * (VECTOR_SECTION_SIZE - n1);
         /* vr pair not saved */
         regs->psw.cc = 0;
     }
@@ -376,31 +362,29 @@ U64     d;
 
     /* Update the vector pair number, and zero element number */
     n2 += 2;
-    regs->GR_L(gr1 + 1) = n2;
-
+    regs->GR_L(r1 + 1) = n2;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A64A VRSV  - Save VR                                        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_save_vr)
 {
-int     gr1, unused2;
+int     r1, r2;
 U32     n, n1, n2;
 U64     d;
 
-    RRE(inst, regs, gr1, unused2);
+    RRE(inst, regs, r1, r2);
 
     VOP_CHECK(regs);
 
-    ODD_CHECK(gr1, regs);
+    ODD_CHECK(r1, regs);
 
     /* n contrains the current save area address */
-    n = regs->GR_L(gr1) & ADDRESS_MAXWRAP(regs);
+    n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
-    if((n1 = regs->GR_L(gr1 + 1) >> 16) >= VECTOR_SECTION_SIZE)
+    if((n1 = regs->GR_L(r1 + 1) >> 16) >= VECTOR_SECTION_SIZE)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Starting address must be eight times the section size aligned */
@@ -408,7 +392,7 @@ U64     d;
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* n2 contains VR pair, which must be an even reg */
-    if((n2 = regs->GR_L(gr1 + 1) & 0x0000FFFF) & 0x0000FFF1)
+    if((n2 = regs->GR_L(r1 + 1) & 0x0000FFFF) & 0x0000FFF1)
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
     if( VR_INUSE(n2, regs) )
@@ -418,13 +402,13 @@ U64     d;
             /* Store vr pair in savearea */
             d = ((U64)regs->vf->vr[n2][n1] << 32)
               | regs->vf->vr[n2+1][n1];
-            ARCH_DEP(vstore8)(d, n, gr1, regs);
+            ARCH_DEP(vstore8)(d, n, r1, regs);
 
             /* Update element number */
             n1++;
-            regs->GR_L(gr1 + 1) &= 0x0000FFFF;
-            regs->GR_L(gr1 + 1) |= n1 << 16;
-            regs->GR_L(gr1) += 8;
+            regs->GR_L(r1 + 1) &= 0x0000FFFF;
+            regs->GR_L(r1 + 1) |= n1 << 16;
+            regs->GR_L(r1) += 8;
 #if 0
             /* This is where the instruction may be interrupted */
             UPD_PSW_IA(regs, PSW_IA(regs, -4));
@@ -437,7 +421,7 @@ U64     d;
     }
     else
     {
-        regs->GR_L(gr1) += 8 * (VECTOR_SECTION_SIZE - n1);
+        regs->GR_L(r1) += 8 * (VECTOR_SECTION_SIZE - n1);
         /* Indicate vr pair not restored */
         regs->psw.cc = 0;
     }
@@ -448,20 +432,18 @@ U64     d;
 
     /* Update the vector pair number, and zero element number */
     n2 += 2;
-    regs->GR_L(gr1 + 1) = n2;
-
+    regs->GR_L(r1 + 1) = n2;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A680 VLVM  - Load VMR                                        [VS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_load_vmr)
 {
-int     rs2;
+int     r2;
 U32     n, n1;
 
-    VS(inst, regs, rs2);
+    VS(inst, regs, r2);
 
     VOP_CHECK(regs);
 
@@ -470,25 +452,23 @@ U32     n, n1;
     n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(regs->vf->vmr, n1,
-        regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
+        regs->GR_L(r2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
     /* Set the inactive bits to zero */
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
         regs->vf->vmr[n1] = 0;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A681 VLCVM - Load VMR Complement                             [VS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_load_vmr_complement)
 {
-int     rs2;
+int     r2;
 U32     n, n1, n2;
 
-    VS(inst, regs, rs2);
+    VS(inst, regs, r2);
 
     VOP_CHECK(regs);
 
@@ -499,7 +479,7 @@ U32     n, n1, n2;
     n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(regs->vf->vmr, n1,
-        regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
+        regs->GR_L(r2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
     /* Complement all bits loaded */
     for(n2 = 0; n2 <= n1; n2++)
@@ -509,19 +489,17 @@ U32     n, n1, n2;
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
         regs->vf->vmr[n1] = 0;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A682 VSTVM - Store VMR                                       [VS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_store_vmr)
 {
-int     rs2;
+int     r2;
 U32     n;
 
-    VS(inst, regs, rs2);
+    VS(inst, regs, r2);
 
     VOP_CHECK(regs);
 
@@ -529,21 +507,19 @@ U32     n;
     n = VECTOR_COUNT(regs);
 
     ARCH_DEP(vstorec)(regs->vf->vmr, n >> 3,
-            regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
-
+            regs->GR_L(r2) & ADDRESS_MAXWRAP(regs), r2, regs);
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A684 VNVM  - AND To VMR                                      [VS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_and_to_vmr)
 {
-int     rs2;
+int     r2;
 U32     n, n1, n2;
 BYTE    workvmr[VECTOR_SECTION_SIZE/8];
 
-    VS(inst, regs, rs2);
+    VS(inst, regs, r2);
 
     VOP_CHECK(regs);
 
@@ -554,7 +530,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(workvmr, n1,
-        regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
+        regs->GR_L(r2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
     /* And VMR with workvmr */
     for(n2 = 0; n2 <= n1; n2++)
@@ -564,20 +540,18 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
         regs->vf->vmr[n1] = 0;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A685 VOVM  - OR To VMR                                       [VS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_or_to_vmr)
 {
-int     rs2;
+int     r2;
 U32     n, n1, n2;
 BYTE    workvmr[VECTOR_SECTION_SIZE/8];
 
-    VS(inst, regs, rs2);
+    VS(inst, regs, r2);
 
     VOP_CHECK(regs);
 
@@ -588,7 +562,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(workvmr, n1,
-        regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
+        regs->GR_L(r2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
     /* OR VMR with workvmr */
     for(n2 = 0; n2 <= n1; n2++)
@@ -598,20 +572,18 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
         regs->vf->vmr[n1] = 0;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A686 VXVM  - Exclusive OR To VMR                             [VS] */
 /*-------------------------------------------------------------------*/
 DEF_INST(v_exclusive_or_to_vmr)
 {
-int     rs2;
+int     r2;
 U32     n, n1, n2;
 BYTE    workvmr[VECTOR_SECTION_SIZE/8];
 
-    VS(inst, regs, rs2);
+    VS(inst, regs, r2);
 
     VOP_CHECK(regs);
 
@@ -622,7 +594,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     n1 = n >> 3;
 
     ARCH_DEP(vfetchc)(workvmr, n1,
-        regs->GR_L(rs2) & ADDRESS_MAXWRAP(regs), rs2, regs);
+        regs->GR_L(r2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
     /* OR VMR with workvmr */
     for(n2 = 0; n2 <= n1; n2++)
@@ -632,9 +604,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
     regs->vf->vmr[n1] &= 0x7F00 >> (n & 7);
     for(n1++; n1 < sizeof(regs->vf->vmr); n1++)
         regs->vf->vmr[n1] = 0;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C0 VSRSV - Save VSR                                         [S] */
@@ -651,9 +621,7 @@ VADR    effective_addr2;                /* Effective address         */
     DW_CHECK(effective_addr2, regs);
 
     ARCH_DEP(vstore8)(regs->vf->vsr, effective_addr2, b2, regs);
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C1 VMRSV - Save VMR                                         [S] */
@@ -669,9 +637,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     ARCH_DEP(vstorec)(regs->vf->vmr, sizeof(regs->vf->vmr) - 1,
         effective_addr2, b2, regs);
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C2 VSRRS - Restore VSR                                      [S] */
@@ -722,9 +688,7 @@ U64     d;
 
     /* Update the vector status register */
     regs->vf->vsr = d;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C3 VMRRS - Restore VMR                                      [S] */
@@ -740,9 +704,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     ARCH_DEP(vfetchc)(regs->vf->vmr, sizeof(regs->vf->vmr) - 1,
         effective_addr2, b2, regs);
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C4 VLVCA - Load VCT from Address                            [S] */
@@ -767,9 +729,7 @@ U32     n;
 
     regs->vf->vsr &= ~VSR_VCT;
     regs->vf->vsr |= (U64)n << 32;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C5 VRCL  - Clear VR                                         [S] */
@@ -801,9 +761,7 @@ U32     n, n1, n2;
             }
             RESET_VR_INUSE(n1, regs);
         }
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C6 VSVMM - Set Vector Mask Mode                             [S] */
@@ -821,9 +779,7 @@ VADR    effective_addr2;                /* Effective address         */
         regs->vf->vsr |= VSR_M;
     else
         regs->vf->vsr &= ~VSR_M;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C7 VLVXA - Load VIX from Address                            [S] */
@@ -850,9 +806,7 @@ U32     n;
 
     regs->vf->vsr &= ~VSR_VIX;
     regs->vf->vsr |= (U64)n << 16;
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6C8 VSTVP - Store Vector Parameters                          [S] */
@@ -871,9 +825,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Store the section size and partial sum number */
     ARCH_DEP(vstore4)(VECTOR_SECTION_SIZE << 16 | VECTOR_PARTIAL_SUM_NUMBER,
                                   effective_addr2, b2, regs);
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6CA VACSV - Save VAC                                         [S] */
@@ -897,9 +849,7 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(_FEATURE_SIE)*/
 
     ARCH_DEP(vstore8)(regs->vf->vac, effective_addr2, b2, regs);
-
 }
-
 
 /*-------------------------------------------------------------------*/
 /* A6CB VACRS - Restore VAC                                      [S] */
@@ -923,12 +873,9 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(_FEATURE_SIE)*/
 
     regs->vf->vac = ARCH_DEP(vfetch8)(effective_addr2, b2, regs) & VAC_MASK;
-
 }
 
-
 #endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
-
 
 #if !defined(_GEN_ARCH)
 

@@ -2449,12 +2449,12 @@ CREG    pte;                            /* Page Table Entry          */
 /*-------------------------------------------------------------------*/
 DEF_INST( modify_stacked_state )
 {
-int     r1, unused;                     /* Values of R fields        */
+int     r1, r2;                         /* Values of R fields        */
 U32     m1, m2;                         /* Modify values             */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 
-    RRE( inst, regs, r1, unused );
+    RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );

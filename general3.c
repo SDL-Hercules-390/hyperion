@@ -37,7 +37,7 @@ DEF_INST(perform_interlocked_storage_immediate)                 /*810*/
 BYTE    opcode;                         /* 2nd byte of opcode        */
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
-VADR    addr1;                          /* Effective address         */
+VADR    effective_addr1;                /* Effective address         */
 BYTE    *m1;                            /* Mainstor address          */
 U32     n;                              /* 32-bit operand value      */
 U32     result;                         /* Result value              */
@@ -45,17 +45,17 @@ U32     old, new;                       /* Values for cmpxchg4       */
 int     cc;                             /* Condition code            */
 int     rc;                             /* Return code               */
 
-    SIY(inst, regs, i2, b1, addr1);
+    SIY(inst, regs, i2, b1, effective_addr1);
 
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
 
     /* Get mainstor address of storage operand */
-    m1 = MADDRL (addr1, 4, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    m1 = MADDRL (effective_addr1, 4, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     do {
         /* Load 32-bit operand from operand address */
-        n = ARCH_DEP(vfetch4) (addr1, b1, regs);
+        n = ARCH_DEP(vfetch4) (effective_addr1, b1, regs);
 
         switch (opcode) {
         case 0x6A: /* Add Storage Immediate */
@@ -74,8 +74,8 @@ int     rc;                             /* Return code               */
         } /* end switch(opcode) */
 
         /* Regular store if operand is not on a fullword boundary */
-        if ((addr1 & 0x03) != 0) {
-            ARCH_DEP(vstore4) (result, addr1, b1, regs);
+        if ((effective_addr1 & 0x03) != 0) {
+            ARCH_DEP(vstore4) (result, effective_addr1, b1, regs);
             break;
         }
 
@@ -106,7 +106,7 @@ DEF_INST(perform_interlocked_long_storage_immediate)            /*810*/
 BYTE    opcode;                         /* 2nd byte of opcode        */
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
-VADR    addr1;                          /* Effective address         */
+VADR    effective_addr1;                /* Effective address         */
 BYTE    *m1;                            /* Mainstor address          */
 U64     n;                              /* 64-bit operand value      */
 U64     result;                         /* Result value              */
@@ -114,17 +114,17 @@ U64     old, new;                       /* Values for cmpxchg4       */
 int     cc;                             /* Condition code            */
 int     rc;                             /* Return code               */
 
-    SIY(inst, regs, i2, b1, addr1);
+    SIY(inst, regs, i2, b1, effective_addr1);
 
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
 
     /* Get mainstor address of storage operand */
-    m1 = MADDRL (addr1, 8, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    m1 = MADDRL (effective_addr1, 8, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     do {
         /* Load 64-bit operand from operand address */
-        n = ARCH_DEP(vfetch8) (addr1, b1, regs);
+        n = ARCH_DEP(vfetch8) (effective_addr1, b1, regs);
 
         switch (opcode) {
         case 0x7A: /* Add Long Storage Immediate */
@@ -143,8 +143,8 @@ int     rc;                             /* Return code               */
         } /* end switch(opcode) */
 
         /* Regular store if operand is not on a doubleword boundary */
-        if ((addr1 & 0x07) != 0) {
-            ARCH_DEP(vstore8) (result, addr1, b1, regs);
+        if ((effective_addr1 & 0x07) != 0) {
+            ARCH_DEP(vstore8) (result, effective_addr1, b1, regs);
             break;
         }
 
@@ -571,13 +571,13 @@ S64     n;                              /* 64-bit operand value      */
 DEF_INST(compare_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -594,13 +594,13 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(compare_halfword_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1190,16 +1190,16 @@ U64     n;                              /* 64-bit storage value      */
 DEF_INST(compare_logical_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1216,16 +1216,16 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on doubleword boundary */
-    DW_CHECK(addr2, regs);
+    DW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch8) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch8) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1243,16 +1243,16 @@ U64     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1269,13 +1269,13 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_halfword)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1292,13 +1292,13 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(compare_logical_relative_long_long_halfword)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1315,16 +1315,16 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(compare_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1341,16 +1341,16 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(compare_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on doubleword boundary */
-    DW_CHECK(addr2, regs);
+    DW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch8) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch8) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1368,16 +1368,16 @@ U64     n;                              /* Relative operand value    */
 DEF_INST(compare_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1524,13 +1524,13 @@ U32     n;                              /* Second operand value      */
 DEF_INST(load_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Sign-extend operand value and load into R1 register */
     regs->GR_L(r1) = (S32)(S16)n;
@@ -1545,13 +1545,13 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_halfword_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Sign-extend operand value and load into R1 register */
     regs->GR_G(r1) = (S64)(S16)n;
@@ -1566,13 +1566,13 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_logical_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Zero-extend operand value and load into R1 register */
     regs->GR_L(r1) = n;
@@ -1587,13 +1587,13 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_logical_halfword_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U16     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch2) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch2) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Zero-extend operand value and load into R1 register */
     regs->GR_G(r1) = n;
@@ -1609,16 +1609,16 @@ U16     n;                              /* Relative operand value    */
 DEF_INST(load_logical_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Zero-extend operand value and load into R1 register */
     regs->GR_G(r1) = n;
@@ -1633,16 +1633,16 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(load_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Load operand value into R1 register */
     regs->GR_L(r1) = n;
@@ -1657,16 +1657,16 @@ U32     n;                              /* Relative operand value    */
 DEF_INST(load_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U64     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on doubleword boundary */
-    DW_CHECK(addr2, regs);
+    DW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch8) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch8) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Load operand value into R1 register */
     regs->GR_G(r1) = n;
@@ -1682,16 +1682,16 @@ U64     n;                              /* Relative operand value    */
 DEF_INST(load_relative_long_long_fullword)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 U32     n;                              /* Relative operand value    */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Load relative operand from instruction address space */
-    n = ARCH_DEP(vfetch4) ( addr2, USE_INST_SPACE, regs );
+    n = ARCH_DEP(vfetch4) ( effective_addr2, USE_INST_SPACE, regs );
 
     /* Sign-extend operand value and load into R1 register */
     regs->GR_G(r1) = (S64)(S32)n;
@@ -1864,9 +1864,9 @@ VADR    effective_addr2;                /* Effective address         */
 DEF_INST(prefetch_data_relative_long)
 {
 int     m1;                             /* Mask value                */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Effective address         */
 
-    RIL_A(inst, regs, m1, addr2);
+    RIL_A(inst, regs, m1, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -2084,12 +2084,12 @@ DEF_INST( rotate_then_exclusive_or_selected_bits_long_reg )
 DEF_INST(store_halfword_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Store low 2 bytes of R1 register in instruction address space */
-    ARCH_DEP(vstore2) ( regs->GR_LHL(r1), addr2, USE_INST_SPACE, regs );
+    ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, USE_INST_SPACE, regs );
 
 } /* end DEF_INST(store_halfword_relative_long) */
 
@@ -2100,15 +2100,15 @@ VADR    addr2;                          /* Relative operand address  */
 DEF_INST(store_relative_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on fullword boundary */
-    FW_CHECK(addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
     /* Store low 4 bytes of R1 register in instruction address space */
-    ARCH_DEP(vstore4) ( regs->GR_L(r1), addr2, USE_INST_SPACE, regs );
+    ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, USE_INST_SPACE, regs );
 
 } /* end DEF_INST(store_relative_long) */
 
@@ -2119,15 +2119,15 @@ VADR    addr2;                          /* Relative operand address  */
 DEF_INST(store_relative_long_long)
 {
 int     r1;                             /* Register number           */
-VADR    addr2;                          /* Relative operand address  */
+VADR    effective_addr2;                /* Relative operand address  */
 
-    RIL_A(inst, regs, r1, addr2);
+    RIL_A(inst, regs, r1, effective_addr2);
 
     /* Program check if operand not on doubleword boundary */
-    DW_CHECK(addr2, regs);
+    DW_CHECK(effective_addr2, regs);
 
     /* Store R1 register in instruction address space */
-    ARCH_DEP(vstore8) ( regs->GR_G(r1), addr2, USE_INST_SPACE, regs );
+    ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, USE_INST_SPACE, regs );
 
 } /* end DEF_INST(store_relative_long_long) */
 
@@ -2687,7 +2687,7 @@ DEF_INST(load_and_perform_interlocked_access)                   /*810*/
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
-VADR    addr2;                          /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 BYTE    *m2;                            /* Mainstor address          */
 U32     v2, v3;                         /* Operand values            */
 U32     result;                         /* Result value              */
@@ -2696,7 +2696,7 @@ int     cc;                             /* Condition code            */
 int     rc;                             /* Return code               */
 BYTE    opcode;                         /* 2nd byte of opcode        */
 
-    RSY(inst, regs, r1, r3, b2, addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
@@ -2705,11 +2705,11 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     v3 = regs->GR_L(r3);
 
     /* Get mainstor address of storage operand */
-    m2 = MADDRL (addr2, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    m2 = MADDRL (effective_addr2, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     do {
         /* Load storage operand value from operand address */
-        v2 = ARCH_DEP(vfetch4) ( addr2, b2, regs );
+        v2 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
         switch (opcode) {
         case 0xF4: /* Load and And */
@@ -2769,7 +2769,7 @@ DEF_INST(load_and_perform_interlocked_access_long)              /*810*/
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
-VADR    addr2;                          /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 BYTE    *m2;                            /* Mainstor address          */
 U64     v2, v3;                         /* Operand values            */
 U64     result;                         /* Result value              */
@@ -2778,7 +2778,7 @@ int     cc;                             /* Condition code            */
 int     rc;                             /* Return code               */
 BYTE    opcode;                         /* 2nd byte of opcode        */
 
-    RSY(inst, regs, r1, r3, b2, addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
@@ -2787,11 +2787,11 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
     v3 = regs->GR_G(r3);
 
     /* Get mainstor address of storage operand */
-    m2 = MADDRL (addr2, 8, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    m2 = MADDRL (effective_addr2, 8, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     do {
         /* Load storage operand value from operand address */
-        v2 = ARCH_DEP(vfetch8) ( addr2, b2, regs );
+        v2 = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
         switch (opcode) {
         case 0xE4: /* Load and And Long */
@@ -3920,11 +3920,12 @@ DEF_INST(rotate_then_insert_selected_bits_long_reg_n)
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_prediction_preload)                             /*912*/
 {
-VADR    addr2, addr3;                   /* Effective addresses       */
+VADR    effective_addr2;                /* Effective address         */
+VADR    effective_addr3;                /* Effective address         */
 int     b3;                             /* Base of effective address */
 int     m1;                             /* Mask value                */
 
-    SMI_A0(inst, regs, m1, addr2, b3, addr3);
+    SMI_A0(inst, regs, m1, effective_addr2, b3, effective_addr3);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -3941,10 +3942,11 @@ int     m1;                             /* Mask value                */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_prediction_relative_preload)                    /*912*/
 {
-VADR    addr2, addr3;                   /* Effective addresses       */
+VADR    effective_addr2;                /* Effective address         */
+VADR    effective_addr3;                /* Effective address         */
 int     m1;                             /* Mask value                */
 
-    MII_A0(inst, regs, m1, addr2, addr3);
+    MII_A0(inst, regs, m1, effective_addr2, effective_addr3);
 
     CONTRAN_INSTR_CHECK( regs );
 

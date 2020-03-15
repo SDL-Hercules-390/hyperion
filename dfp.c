@@ -324,11 +324,11 @@ BYTE            dxc;                    /* Data exception code       */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_fpc_and_signal)
 {
-int             r1, unused;             /* Values of R fields        */
+int             r1, r2;                 /* Values of R fields        */
 U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, regs, r1, r2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
