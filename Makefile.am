@@ -502,7 +502,7 @@ libherc_la_SOURCES = \
   vm.c               \
   vmd250.c           \
   x75.c              \
-  xstore.c           \
+  dummydev.c           \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -712,6 +712,10 @@ dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
 vmfplc2_SOURCES    = vmfplc2.c
 vmfplc2_LDADD      = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
+
+dummydev_SOURCES    = dummydev.c
+dummydev_LDADD      = $(tools_ADDLIBS)
+dummydev_LDFLAGS    = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se
