@@ -612,6 +612,25 @@ do { \
     || (_regs)->GR_LHH(1) > (0x0001|(FEATURE_LCSS_MAX-1))) \
         (_regs)->program_interrupt( (_regs), PGM_OPERAND_EXCEPTION)
 
+#if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
+
+#ifndef _VFDEFS
+#define _VFDEFS
+#define VOP_CHECK( _regs )              if (!((_regs)->CR(0) & CR0_VOP) || !(_regs)->vf->online) \
+                                            (_regs)->program_interrupt( (_regs), PGM_VECTOR_OPERATION_EXCEPTION )
+#define VR_INUSE( _vr, _regs )          ((_regs)->vf->vsr &   (VSR_VIU0 >> ((_vr) >> 1)))
+#define VR_CHANGED( _vr, _regs )        ((_regs)->vf->vsr &   (VSR_VCH0 >> ((_vr) >> 1)))
+#define SET_VR_INUSE( _vr, _regs )       (_regs)->vf->vsr |=  (VSR_VIU0 >> ((_vr) >> 1))
+#define SET_VR_CHANGED( _vr, _regs )     (_regs)->vf->vsr |=  (VSR_VCH0 >> ((_vr) >> 1))
+#define RESET_VR_INUSE( _vr, _regs )     (_regs)->vf->vsr &= ~(VSR_VIU0 >> ((_vr) >> 1))
+#define RESET_VR_CHANGED( _vr, _regs )   (_regs)->vf->vsr &= ~(VSR_VCH0 >> ((_vr) >> 1))
+#define VMR_SET( _section, _regs )      ((_regs)->vf->vmr[(_section) >> 3] & (0x80 >> ((_section) & 7)))
+#define MASK_MODE( _regs )              ((_regs)->vf->vsr & VSR_M)
+#define VECTOR_COUNT( _regs )           (((_regs)->vf->vsr & VSR_VCT) >> 32)
+#define VECTOR_IX( _regs )              (((_regs)->vf->vsr & VSR_VIX) >> 16)
+#endif /* _VFDEFS */
+#endif /* defined( _FEATURE_S370_S390_VECTOR_FACILITY ) */
+
 /*-------------------------------------------------------------------*/
 /*              Device  IOID / SSID / LCSS  macros                   */
 /*-------------------------------------------------------------------*/
