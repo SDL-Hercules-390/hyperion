@@ -718,7 +718,7 @@ DEF_INST(branch_on_condition_register)
 {
 //int   r1, r2;                         /* Values of R fields        */
 
-//  RR(inst, regs, r1, r2);
+//  RR( inst, regs, r1, r2 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -5945,7 +5945,7 @@ int     i;                              /* Loop counter              */
         /* First operand crosses a boundary */
         len2 = PAGEFRAME_PAGESIZE - (effective_addr1 & PAGEFRAME_BYTEMASK);
         dest2 = MADDRL((effective_addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-         len + 1 - len2,r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+         len + 1 - len2, r1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( effective_addr2, len ))
