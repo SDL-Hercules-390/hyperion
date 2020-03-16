@@ -699,7 +699,7 @@ DEF_INST(branch_on_condition_register)
 {
 //int   r1, r2;                         /* Values of R fields        */
 
-//  RR(inst, regs, r1, r2);
+//  RR( inst, regs, r1, r2 );
 
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (inst[1] & (0x80 >> regs->psw.cc)))
