@@ -2020,39 +2020,10 @@ int r3,b1,d1,b2,d2;
     d2 = (inst[4] & 0x0F) << 8 | inst[5];
     IPRINT_PRINT("%d,%d(%d),%d(%d)",r3,d1,b1,d2,b2)
 
-IPRINT_FUNC( ASMFMT_VST );
-int vr3,rt2,vr1,rs2;
-    vr3 = inst[2] >> 4;
-    rt2 = inst[2] & 0x0F;
-    vr1 = inst[3] >> 4;
-    rs2 = inst[3] & 0x0F;
-    IPRINT_PRINT("%d,%d,%d(%d)",vr1,vr3,rs2,rt2)
-
-IPRINT_FUNC( ASMFMT_VR );
-int vr1,fr3,gr2;
-    fr3 = inst[2] >> 4;
-    vr1 = inst[3] >> 4;
-    gr2 = inst[3] & 0x0F;
-    IPRINT_PRINT("%d,%d,%d",vr1,fr3,gr2)
-
 IPRINT_FUNC( ASMFMT_VS );
 int rs2;
     rs2 = inst[3] & 0x0F;
     IPRINT_PRINT("%d",rs2)
-
-IPRINT_FUNC( ASMFMT_VRSE );
-int vr1,vr3,d2,b2;
-    vr3 = inst[2] >> 4;
-    vr1 = inst[3] >> 4;
-    b2 = inst[4] >> 4;
-    d2 = (inst[4] & 0x0F) << 8 | inst[5];
-    IPRINT_PRINT("%d,%d,%d(%d)",vr1,vr3,d2,b2)
-
-IPRINT_FUNC( ASMFMT_S_NW );
-int d2,b2;
-    b2 = inst[2] >> 4;
-    d2 = (inst[2] & 0x0F) << 8 | inst[3];
-    IPRINT_PRINT("%d(%d)",d2,b2)
 
 /*----------------------------------------------------------------------------*/
 /*          'GENx___x___x900' instruction opcode jump tables                  */
