@@ -159,7 +159,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* B2B8 SRNMB - Set BFP Rounding Mode (3-bit)                    [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(set_bfp_rounding_mode_3bit)                            /*810*/
+DEF_INST(set_bfp_rounding_mode_3bit)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -7966,7 +7966,7 @@ BYTE    tbyte;                          /* Work byte                 */
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
 
-#if defined( FEATURE_021_EXTENDED_IMMED_FACILITY )              /*@Z9*/
+#if defined( FEATURE_021_EXTENDED_IMMED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C2x9 AFI   - Add Fullword Immediate                         [RIL] */
 /*-------------------------------------------------------------------*/
@@ -8605,9 +8605,9 @@ int     n;                              /* Position of leftmost one  */
     }
 
 } /* end DEF_INST(find_leftmost_one_long_register) */
-#endif /* defined( FEATURE_021_EXTENDED_IMMED_FACILITY ) */     /*@Z9*/
+#endif /* defined( FEATURE_021_EXTENDED_IMMED_FACILITY ) */
 
-#if defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )             /*810*/
+#if defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B280 LPP - LOAD PROGRAM PARAMETER                             [S] */
 /*-------------------------------------------------------------------*/
@@ -8628,7 +8628,7 @@ U64     effective_addr2;                /* Effective address         */
         sysblk.program_parameter = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
 
 } /* end DEF_INST(load_program_parameter) */
-#endif /* defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY ) */   /*810*/
+#endif /* defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY ) */
 
 #if !defined( _GEN_ARCH )
 

@@ -735,7 +735,7 @@ DEF_INST(branch_on_condition_register)
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
         }
-#if defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY )             /*810*/
+#if defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY )
         /* Perform serialization without checkpoint synchronization
            the mask is B'1110' and R2 is register 0 */
         else if (inst[1] == 0xE0)

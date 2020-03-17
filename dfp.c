@@ -1259,7 +1259,7 @@ decContext      setmax;                 /* Working context           */
 #endif /*!defined(_DFP_FPE_ARCH_INDEPENDENT_)*/
 #endif /* defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
-#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)                 /*912*/
+#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)
 #if !defined(_DFP_ZONED_ARCH_INDEPENDENT_)
 #define CDZT_MAXLEN 16                  /* CDZT maximum operand len  */
 #define CXZT_MAXLEN 34                  /* CXZT maximum operand len  */
@@ -1422,7 +1422,7 @@ int             zwind;                  /* Index into zwork string   */
 
 #define _DFP_ZONED_ARCH_INDEPENDENT_
 #endif /*!defined(_DFP_ZONED_ARCH_INDEPENDENT_)*/
-#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/          /*912*/
+#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/
 
 /*-------------------------------------------------------------------*/
 /* Set rounding mode in decimal context structure                    */
@@ -2593,11 +2593,11 @@ int32_t         scale = 0;              /* Scaling factor            */
 } /* end DEF_INST(convert_ubcd64_to_dfp_long_reg) */
 
 
-#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)                 /*912*/
+#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EDAB CXZT  - Convert from zoned to DFP Extended             [RSL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_zoned_to_dfp_ext)                              /*912*/
+DEF_INST(convert_zoned_to_dfp_ext)
 {
 int             rc;                     /* Return code               */
 int             r1, m3;                 /* Values of R and M fields  */
@@ -2649,7 +2649,7 @@ char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
 /*-------------------------------------------------------------------*/
 /* EDAA CDZT  - Convert from zoned to DFP Long                 [RSL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_zoned_to_dfp_long)                             /*912*/
+DEF_INST(convert_zoned_to_dfp_long)
 {
 int             rc;                     /* Return code               */
 int             r1, m3;                 /* Values of R and M fields  */
@@ -2695,7 +2695,7 @@ char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
     ARCH_DEP(dfp_reg_from_decimal64)(r1, &x1, regs);
 
 } /* end DEF_INST(convert_zoned_to_dfp_long) */
-#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/          /*912*/
+#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/
 
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -3296,11 +3296,11 @@ BYTE            pwork[9];               /* 17-digit packed work area */
 } /* end DEF_INST(convert_dfp_long_to_ubcd64_reg) */
 
 
-#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)                 /*912*/
+#if defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EDA9 CZXT  - Convert to zoned from DFP Extended             [RSL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_dfp_ext_to_zoned)                              /*912*/
+DEF_INST(convert_dfp_ext_to_zoned)
 {
 int             r1, m3;                 /* Values of R and M fields  */
 int             l2;                     /* Operand length minus 1    */
@@ -3353,7 +3353,7 @@ char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
 /*-------------------------------------------------------------------*/
 /* EDA8 CZDT  - Convert to zoned from DFP Long                 [RSL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_dfp_long_to_zoned)                             /*912*/
+DEF_INST(convert_dfp_long_to_zoned)
 {
 int             r1, m3;                 /* Values of R and M fields  */
 int             l2;                     /* Operand length minus 1    */
@@ -3400,7 +3400,7 @@ char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(convert_dfp_long_to_zoned) */
-#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/          /*912*/
+#endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/
 
 
 /*-------------------------------------------------------------------*/

@@ -3702,7 +3702,7 @@ U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
 #endif /* defined( FEATURE_045_POPULATION_COUNT_FACILITY ) */
 
 
-#if defined( FEATURE_049_LOAD_AND_TRAP_FACILITY )               /*912*/
+#if defined( FEATURE_049_LOAD_AND_TRAP_FACILITY )
 
 /*-------------------------------------------------------------------*/
 /* E39F LAT   - Load and Trap                                  [RXY] */
@@ -3732,7 +3732,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E385 LGAT  - Load Long and Trap                             [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_long_and_trap)                                    /*912*/
+DEF_INST(load_long_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3758,7 +3758,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3C8 LFHAT - Load Fullword High and Trap                    [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_fullword_high_and_trap)                           /*912*/
+DEF_INST(load_fullword_high_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3784,7 +3784,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E39D LLGFAT - Load Logical Long Fullword and Trap           [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_long_fullword_and_trap)                   /*912*/
+DEF_INST(load_logical_long_fullword_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3810,7 +3810,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E39C LLGTAT - Load Logical Long Thirtyone and Trap          [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_long_thirtyone_and_trap)                  /*912*/
+DEF_INST(load_logical_long_thirtyone_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3832,15 +3832,15 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(load_logical_long_thirtyone_and_trap) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#endif /* defined( FEATURE_049_LOAD_AND_TRAP_FACILITY ) */      /*912*/
+#endif /* defined( FEATURE_049_LOAD_AND_TRAP_FACILITY ) */
 
 
-#if defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )            /*912*/
+#if defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
 
 /*-------------------------------------------------------------------*/
 /* EB23 CLT   - Compare Logical and Trap                       [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_and_trap)                              /*912*/
+DEF_INST(compare_logical_and_trap)
 {
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
@@ -3872,7 +3872,7 @@ int     cc;                             /* Comparison result         */
 /*-------------------------------------------------------------------*/
 /* EB2B CLGT  - Compare Logical and Trap Long                  [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_and_trap_long)                         /*912*/
+DEF_INST(compare_logical_and_trap_long)
 {
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
@@ -3914,11 +3914,11 @@ DEF_INST(rotate_then_insert_selected_bits_long_reg_n)
 
 #endif /* defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 ) */
 
-#if defined( FEATURE_049_EXECUTION_HINT_FACILITY )              /*912*/
+#if defined( FEATURE_049_EXECUTION_HINT_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C7   BPP   - Branch Prediction Preload                      [SMI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_prediction_preload)                             /*912*/
+DEF_INST(branch_prediction_preload)
 {
 VADR    effective_addr2;                /* Effective address         */
 VADR    effective_addr3;                /* Effective address         */
@@ -3940,7 +3940,7 @@ int     m1;                             /* Mask value                */
 /*-------------------------------------------------------------------*/
 /* C5   BPRP  - Branch Prediction Relative Preload             [MII] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_prediction_relative_preload)                    /*912*/
+DEF_INST(branch_prediction_relative_preload)
 {
 VADR    effective_addr2;                /* Effective address         */
 VADR    effective_addr3;                /* Effective address         */
@@ -3961,7 +3961,7 @@ int     m1;                             /* Mask value                */
 /*-------------------------------------------------------------------*/
 /* B2FA NIAI  - Next Instruction Access Intent                  [IE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(next_instruction_access_intent)                        /*912*/
+DEF_INST(next_instruction_access_intent)
 {
 BYTE    i1, i2;                         /* Immediate fields          */
 
@@ -3973,7 +3973,7 @@ BYTE    i1, i2;                         /* Immediate fields          */
 
 } /* end DEF_INST(next_instruction_access_intent) */
 
-#endif /* defined( FEATURE_049_EXECUTION_HINT_FACILITY ) */     /*912*/
+#endif /* defined( FEATURE_049_EXECUTION_HINT_FACILITY ) */
 
 
 #if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )

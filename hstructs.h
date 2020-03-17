@@ -938,9 +938,9 @@ struct SYSBLK {
         U64 imapb3[256];
         U64 imapb9[256];
         U64 imapc0[ 16];
-        U64 imapc2[ 16];                                         /*@Z9*/
-        U64 imapc4[ 16];                                         /*208*/
-        U64 imapc6[ 16];                                         /*208*/
+        U64 imapc2[ 16];
+        U64 imapc4[ 16];
+        U64 imapc6[ 16];
         U64 imapc8[ 16];
         U64 imape3[256];
         U64 imape4[256];
