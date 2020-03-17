@@ -55,9 +55,7 @@
 /*-------------------------------------------------------------------*/
 
 #undef E
-#undef IE
 #undef IE0
-#undef MII_A
 #undef MII_A0
 #undef RR
 #undef RR0
@@ -75,7 +73,6 @@
 #undef RX
 #undef RX0
 #undef RX_B
-#undef RXX0
 #undef RXX0_BC
 #undef RXX0RX
 #undef RX0X0RX
@@ -97,8 +94,6 @@
 #undef RSY_B
 #undef RSL
 #undef RSL_RM
-#undef RSI
-#undef RSI0
 #undef RI
 #undef RI0
 #undef RI_B
@@ -106,28 +101,19 @@
 #undef RIE0
 #undef RIE_B
 #undef RIE_RIM
-#undef RIE_RRIM
-#undef RIE_RRIM0
 #undef RIE_RRIM_B
-#undef RIE_RMII
-#undef RIE_RMII0
 #undef RIE_RMII_B
 #undef RIE_RRIII
 #undef RIL
 #undef RIL0
 #undef RIL_B
 #undef RIL_A
-#undef RIS
-#undef RIS0
 #undef RIS_B
-#undef RRS
-#undef RRS0
 #undef RRS_B
 #undef SI
 #undef SIIX
 #undef SIY
 #undef SIL
-#undef SMI_A
 #undef SMI_A0
 #undef S
 #undef SS
@@ -157,11 +143,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*        IE - extended op code with two 4-bit immediate fields      */
+/*      IE0 - extended op code with two 4-bit immediate fields       */
 /*-------------------------------------------------------------------*/
 // This is z/Arch IE format.
 
-#define IE(  _inst, _regs, _i1, _i2 )   IE_DECODER( _inst, _regs, _i1, _i2, 4, 4 )
 #define IE0( _inst, _regs, _i1, _i2 )   IE_DECODER( _inst, _regs, _i1, _i2, 4, 0 )
 
 //  0           1           2           3           4
@@ -181,11 +166,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*    MII_A - mask with 12-bit and 24-bit relative address fields    */
+/*    MII_A0 - mask with 12-bit and 24-bit relative address fields   */
 /*-------------------------------------------------------------------*/
 // This is z/Arch MII format.
 
-#define MII_A(  _inst, _regs, _m1, _addr2, _addr3 )   MII_A_DECODER( _inst, _regs, _m1, _addr2, _addr3, 6, 6 )
 #define MII_A0( _inst, _regs, _m1, _addr2, _addr3 )   MII_A_DECODER( _inst, _regs, _m1, _addr2, _addr3, 6, 0 )
 
 //  0           1           2           3           4           5           6
@@ -556,36 +540,6 @@
 
 #if defined( OPTION_OPTINST )
 /*-------------------------------------------------------------------*/
-/*         Optimized RX decoder when X2 known to be ZERO             */
-/*-------------------------------------------------------------------*/
-// This is z/Arch RX-a or -b format when x2 is known to be ZERO.
-
-#define RXX0( _inst, _regs, _r1, _b2, _effective_addr2 )  RXX0_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 4 )
-
-//  0           1           2           3           4
-//  +-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    | r1  | '0' | b2  |       d2        |     RX-a  (presumed x2=0)
-//  +-----+-----+-----+-----+-----+-----+-----+-----+
-//  0     4     8     12    16    20    24    28   31
-
-#define RXX0_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
-{                                                                   \
-    U32 temp = fetch_fw( _inst );                                   \
-                                                                    \
-    (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 12) & 0xf;                        \
-    (_r1)              = (temp >> 20) & 0xf;                        \
-                                                                    \
-    if (likely( _b2 ))                                              \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
-                                                                    \
-    if (( _len ))                                                   \
-        (_effective_addr2) &= ADDRESS_MAXWRAP(( _regs ));           \
-                                                                    \
-    INST_UPDATE_PSW( (_regs), (_len), (_ilc) );                     \
-}
-
-/*-------------------------------------------------------------------*/
 /*    Optimized RX decoder for BRANCHES when X2 known to be ZERO     */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-b format for BRANCHES when x2 known to be ZERO.
@@ -706,7 +660,7 @@
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    | r1  | x2  | b2  |       d2        | m3  | /// |    XOP    |    RXE (no m3)
+//  |     OP    | r1  | x2  | b2  |       d2        | /// | /// |    XOP    |    RXE (no m3)
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
@@ -1123,7 +1077,7 @@
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    |  l1 | /// | b1  |       d1        | /// | /// |    XOP    |    RSL-a
+//  |     OP    | l1  | /// | b1  |       d1        | /// | /// |    XOP    |    RSL-a
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
@@ -1177,16 +1131,15 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*       RSI - register and immediate with additional R3 field       */
+/*      RSI_B - register and immediate with additional R3 field      */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RSI format.
 
-#define RSI(  _inst, _regs, _r1, _r3, _i2 )  RSI_DECODER( _inst, _regs, _r1, _r3, _i2, 4, 4 )
-#define RSI0( _inst, _regs, _r1, _r3, _i2 )  RSI_DECODER( _inst, _regs, _r1, _r3, _i2, 4, 0 )
+#define RSI_B( _inst, _regs, _r1, _r3, _ri2 )  RSI_DECODER( _inst, _regs, _r1, _r3, _ri2, 0, 0 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    | r1  | r3  |          ri2          |
+//  |     OP    | r1  | r3  |          ri2          |       RSI
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
@@ -1234,7 +1187,7 @@
 /*-------------------------------------------------------------------*/
 /*  RIE - register and immediate with ext.opcode and additional R3   */
 /*-------------------------------------------------------------------*/
-// This is z/Arch RIE-d to -g formats.
+// This is z/Arch RIE-d, -e, -g formats
 
 #define RIE(   _inst, _regs, _r1, _r3, _i2 )  RIE_DECODER( _inst, _regs, _r1, _r3, _i2, 6, 6 )
 #define RIE0(  _inst, _regs, _r1, _r3, _i2 )  RIE_DECODER( _inst, _regs, _r1, _r3, _i2, 6, 0 )
@@ -1286,12 +1239,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*     RIE_RRIM - register to register with immediate and mask       */
+/*     RIE_RRIM_B - register to register with immediate and mask     */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RIE-b format.
 
-#define RIE_RRIM(   _inst, _regs, _r1, _r2, _ri4, _m3 )  RIE_RRIM_DECODER( _inst, _regs, _r1, _r2, _ri4, _m3, 6, 6 )
-#define RIE_RRIM0(  _inst, _regs, _r1, _r2, _ri4, _m3 )  RIE_RRIM_DECODER( _inst, _regs, _r1, _r2, _ri4, _m3, 6, 0 )
 #define RIE_RRIM_B( _inst, _regs, _r1, _r2, _ri4, _m3 )  RIE_RRIM_DECODER( _inst, _regs, _r1, _r2, _ri4, _m3, 0, 0 )
 
 //  0           1           2           3           4           5           6
@@ -1313,12 +1264,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*  RIE_RMII - register and mask with longer immediate and immediate */
+/* RIE_RMII_B - register and mask with longer immediate and immediate*/
 /*-------------------------------------------------------------------*/
 // This is z/Arch RIE-c format.
 
-#define RIE_RMII(   _inst, _regs, _r1, _i2, _m3, _ri4 )  RIE_RMII_DECODER( _inst, _regs, _r1, _i2, _m3, _ri4, 6, 6 )
-#define RIE_RMII0(  _inst, _regs, _r1, _i2, _m3, _ri4 )  RIE_RMII_DECODER( _inst, _regs, _r1, _i2, _m3, _ri4, 6, 0 )
 #define RIE_RMII_B( _inst, _regs, _r1, _i2, _m3, _ri4 )  RIE_RMII_DECODER( _inst, _regs, _r1, _i2, _m3, _ri4, 0, 0 )
 
 //  0           1           2           3           4           5           6
@@ -1418,12 +1367,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*         RIS - register, immediate, mask, and storage              */
+/*         RIS_B - register, immediate, mask, and storage            */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RIS format.
 
-#define RIS(   _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4 )  RIS_DECODER( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 6 )
-#define RIS0(  _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4 )  RIS_DECODER( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 6, 0 )
 #define RIS_B( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4 )  RIS_DECODER( _inst, _regs, _r1, _i2, _m3, _b4, _effective_addr4, 0, 0 )
 
 //  0           1           2           3           4           5           6
@@ -1452,12 +1399,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*          RRS - register, register, mask, and storage              */
+/*          RRS_B - register, register, mask, and storage            */
 /*-------------------------------------------------------------------*/
 // This is z/Arch RRS format.
 
-#define RRS(   _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4 )  RRS_DECODER( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 6, 6 )
-#define RRS0(  _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4 )  RRS_DECODER( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 6, 0 )
 #define RRS_B( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4 )  RRS_DECODER( _inst, _regs, _r1, _r2, _m3, _b4, _effective_addr4, 0, 0 )
 
 //  0           1           2           3           4           5           6
@@ -1525,7 +1470,7 @@
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
-//  |     OP    |     i2    | b1  |        d1       |     SI  (no i2)
+//  |     OP    | ///////// | b1  |        d1       |     SI  (no i2)
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
@@ -1622,11 +1567,10 @@
 }
 
 /*-------------------------------------------------------------------*/
-/*    SMI_A - storage with mask and 16-bit relative address          */
+/*    SMI_A0 - storage with mask and 16-bit relative address         */
 /*-------------------------------------------------------------------*/
 // This is z/Arch SMI format.
 
-#define SMI_A(  _inst, _regs, _m1, _addr2, _b3, _addr3 )  SMI_A_DECODER( _inst, _regs, _m1, _addr2, _b3, _addr3, 6, 6 )
 #define SMI_A0( _inst, _regs, _m1, _addr2, _b3, _addr3 )  SMI_A_DECODER( _inst, _regs, _m1, _addr2, _b3, _addr3, 6, 0 )
 
 //  0           1           2           3           4           5           6
