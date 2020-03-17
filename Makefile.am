@@ -502,7 +502,8 @@ libherc_la_SOURCES = \
   vm.c               \
   vmd250.c           \
   x75.c              \
-  dummydev.c           \
+  vstroe.c           \
+  dummydev.c         \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \

@@ -295,8 +295,8 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	loadparm.lo losc.lo machchk.lo opcode.lo panel.lo pfpo.lo \
 	plo.lo qdio.lo scedasd.lo scescsi.lo script.lo service.lo \
 	sie.lo sr.lo stack.lo strsignal.lo tcpip.lo timer.lo trace.lo \
-	transact.lo vector.lo vm.lo vmd250.lo x75.lo dummydev.lo \
-	$(am__objects_1)
+	transact.lo vector.lo vm.lo vmd250.lo x75.lo vstroe.lo \
+	dummydev.lo $(am__objects_1)
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -665,8 +665,8 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/transact.Plo ./$(DEPDIR)/tuntap.Plo \
 	./$(DEPDIR)/vector.Plo ./$(DEPDIR)/version.Plo \
 	./$(DEPDIR)/vm.Plo ./$(DEPDIR)/vmd250.Plo \
-	./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/x75.Plo \
-	./$(DEPDIR)/zfcp.Plo
+	./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/vstroe.Plo \
+	./$(DEPDIR)/x75.Plo ./$(DEPDIR)/zfcp.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -1368,7 +1368,8 @@ libherc_la_SOURCES = \
   vm.c               \
   vmd250.c           \
   x75.c              \
-  dummydev.c           \
+  vstroe.c           \
+  dummydev.c         \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -2397,6 +2398,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vm.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmd250.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmfplc2.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vstroe.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x75.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zfcp.Plo@am__quote@ # am--include-marker
 
@@ -2985,6 +2987,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/vm.Plo
 	-rm -f ./$(DEPDIR)/vmd250.Plo
 	-rm -f ./$(DEPDIR)/vmfplc2.Po
+	-rm -f ./$(DEPDIR)/vstroe.Plo
 	-rm -f ./$(DEPDIR)/x75.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
 	-rm -f Makefile
@@ -3212,6 +3215,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/vm.Plo
 	-rm -f ./$(DEPDIR)/vmd250.Plo
 	-rm -f ./$(DEPDIR)/vmfplc2.Po
+	-rm -f ./$(DEPDIR)/vstroe.Plo
 	-rm -f ./$(DEPDIR)/x75.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
 	-rm -f Makefile
