@@ -56,7 +56,7 @@
 /* write commands.                                                   */
 /*-------------------------------------------------------------------*/
 
-static BYTE commadpt_immed_command[256]=
+static BYTE dummydev_immed_command[256]=
 { 0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -124,7 +124,8 @@ static void dummydev_halt_or_clear( DEVBLK* dev )
 /*-------------------------------------------------------------------*/
 static int dummydev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
-    int     i,j;
+    int     i,pc;
+    int     errcnt=0;
     union   { int num; char text[MAX_PARSER_STRLEN+1];  /* (+1 for null terminator) */ } res;
 
     /*
@@ -187,20 +188,13 @@ static void dummydev_query_device (DEVBLK *dev, char **devclass,
 /*-------------------------------------------------------------------*/
 static int dummydev_close_device( DEVBLK* dev )
 {
-    if (dev->ccwtrace)
-    {
-        // "%1d:%04X COMM: closing down"
-        /* Display some debug msg here if you want */
-    }
-
     /* Terminate current I/O thread if necessary */
     if (dev->busy)
-        commadpt_halt_or_clear( dev );
+        dummydev_halt_or_clear( dev );
 
     /* Perform more termination if needed - signal thread(s) to close 
        and whatnot
     */
-
     return 0;
 }
 
@@ -233,20 +227,45 @@ static int dummydev_close_device( DEVBLK* dev )
 /* Residual indicates that the read or write operation was short     */
 /*     and there are "residual" bytes left                           */
 /*-------------------------------------------------------------------*/
-static void dummy_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
+static void dummydev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
     switch(code)
     {
-        case 0x03:
-            *unistat=CSW_CE|CSW_DE;
+        case 0x01:
+            /* That's a basic write */
+            /* Here let's say we gobble everything */
+            *residual=0;
+            *unitstat=CSW_CE|CSW_DE;
             break;
+        case 0x02:
+            /* That's a basic read.. also works for IPLs */
+            /* Let's just send back something stupid here */
+            memset(iobuf,0,count);
+            *residual=0;
+            *unitstat=CSW_CE|CSW_DE;
+            break;
+        case 0x03:
+            /* 0x03 is NO-OP and is by definition an immediate */
+            /* command so iobuf, count are void */
+            *residual=count;
+            *unitstat=CSW_CE|CSW_DE;
+            break;
+            /* PS : If you wish that the device NOT be 
+               ready for any reason you see fit, only indicate
+               CSW_UC (NO CE/DE here) and put SENSE_IR in the
+               sense field
+                something like :
+                *unitstat=CSW_UC;
+                dev->sense[0]=SENSE_IR;
+            */
         default:
+            /* We didn't understand.. so Command Reject */
             *unitstat=CSW_UC;
             dev->sense[0]=SENSE_CR;
     }
-]
+}
 
 
 /*---------------------------------------------------------------*/

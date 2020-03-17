@@ -128,6 +128,7 @@ dyndev_SRC =  \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
+  dummydev.c  \
   zfcp.c
 
 #-----------------------------------------------------------------
@@ -198,6 +199,7 @@ HERCMODS =      \
   hdt3420.la    \
   hdt3505.la    \
   hdt2880.la    \
+  hdtdummy.la   \
   hdt3525.la
 
 modexec_LTLIBRARIES = $(HERCMODS)
@@ -326,6 +328,10 @@ hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
+
+hdtdummy_la_SOURCES = dummydev.c
+hdtdummy_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+hdtdummy_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 #--------------------------------------------
 # Common data areas (shared) library
@@ -502,8 +508,7 @@ libherc_la_SOURCES = \
   vm.c               \
   vmd250.c           \
   x75.c              \
-  vstroe.c           \
-  dummydev.c         \
+  xstore.c           \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -713,10 +718,6 @@ dmap2hrc_LDFLAGS   = $(tools_LD_FLAGS)
 vmfplc2_SOURCES    = vmfplc2.c
 vmfplc2_LDADD      = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
-
-dummydev_SOURCES    = dummydev.c
-dummydev_LDADD      = $(tools_ADDLIBS)
-dummydev_LDFLAGS    = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se

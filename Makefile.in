@@ -240,6 +240,12 @@ hdt3705_la_OBJECTS = $(am_hdt3705_la_OBJECTS)
 hdt3705_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdt3705_la_LDFLAGS) $(LDFLAGS) -o $@
+hdtdummy_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am_hdtdummy_la_OBJECTS = dummydev.lo
+hdtdummy_la_OBJECTS = $(am_hdtdummy_la_OBJECTS)
+hdtdummy_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(hdtdummy_la_LDFLAGS) $(LDFLAGS) -o $@
 hdteq_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_hdteq_la_OBJECTS = hdteq.lo
 hdteq_la_OBJECTS = $(am_hdteq_la_OBJECTS)
@@ -295,8 +301,8 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	loadparm.lo losc.lo machchk.lo opcode.lo panel.lo pfpo.lo \
 	plo.lo qdio.lo scedasd.lo scescsi.lo script.lo service.lo \
 	sie.lo sr.lo stack.lo strsignal.lo tcpip.lo timer.lo trace.lo \
-	transact.lo vector.lo vm.lo vmd250.lo x75.lo vstroe.lo \
-	dummydev.lo $(am__objects_1)
+	transact.lo vector.lo vm.lo vmd250.lo x75.lo xstore.lo \
+	$(am__objects_1)
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -665,8 +671,8 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/transact.Plo ./$(DEPDIR)/tuntap.Plo \
 	./$(DEPDIR)/vector.Plo ./$(DEPDIR)/version.Plo \
 	./$(DEPDIR)/vm.Plo ./$(DEPDIR)/vmd250.Plo \
-	./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/vstroe.Plo \
-	./$(DEPDIR)/x75.Plo ./$(DEPDIR)/zfcp.Plo
+	./$(DEPDIR)/vmfplc2.Po ./$(DEPDIR)/x75.Plo \
+	./$(DEPDIR)/xstore.Plo ./$(DEPDIR)/zfcp.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -692,7 +698,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3088_la_SOURCES) $(hdt3270_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
-	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
+	$(hdtdummy_la_SOURCES) $(hdteq_la_SOURCES) \
+	$(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
 	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
 	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
 	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
@@ -717,7 +724,8 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3088_la_SOURCES) $(hdt3270_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
-	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
+	$(hdtdummy_la_SOURCES) $(hdteq_la_SOURCES) \
+	$(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
 	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
 	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
 	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
@@ -1061,6 +1069,7 @@ dyndev_SRC = \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
+  dummydev.c  \
   zfcp.c
 
 
@@ -1129,6 +1138,7 @@ HERCMODS = \
   hdt3420.la    \
   hdt3505.la    \
   hdt2880.la    \
+  hdtdummy.la   \
   hdt3525.la
 
 modexec_LTLIBRARIES = $(HERCMODS)
@@ -1194,6 +1204,9 @@ hdt1052c_la_LIBADD = $(DYNMOD_LD_ADD)
 hdtptp_la_SOURCES = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD = $(DYNMOD_LD_ADD)
+hdtdummy_la_SOURCES = dummydev.c
+hdtdummy_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+hdtdummy_la_LIBADD = $(DYNMOD_LD_ADD)
 
 #--------------------------------------------
 # Common data areas (shared) library
@@ -1368,8 +1381,7 @@ libherc_la_SOURCES = \
   vm.c               \
   vmd250.c           \
   x75.c              \
-  vstroe.c           \
-  dummydev.c         \
+  xstore.c           \
   $(DYNSRC)
 
 EXTRA_libherc_la_SOURCES = \
@@ -1537,9 +1549,6 @@ dmap2hrc_LDFLAGS = $(tools_LD_FLAGS)
 vmfplc2_SOURCES = vmfplc2.c
 vmfplc2_LDADD = $(tools_ADDLIBS) libhdt3420_not_mod.la
 vmfplc2_LDFLAGS = $(tools_LD_FLAGS)
-dummydev_SOURCES = dummydev.c
-dummydev_LDADD = $(tools_ADDLIBS)
-dummydev_LDFLAGS = $(tools_LD_FLAGS)
 
 #------------------------------------------------------------------------------
 # Files that are not 'built' per-se
@@ -2035,6 +2044,9 @@ hdt3525.la: $(hdt3525_la_OBJECTS) $(hdt3525_la_DEPENDENCIES) $(EXTRA_hdt3525_la_
 hdt3705.la: $(hdt3705_la_OBJECTS) $(hdt3705_la_DEPENDENCIES) $(EXTRA_hdt3705_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdt3705_la_LINK) -rpath $(modexecdir) $(hdt3705_la_OBJECTS) $(hdt3705_la_LIBADD) $(LIBS)
 
+hdtdummy.la: $(hdtdummy_la_OBJECTS) $(hdtdummy_la_DEPENDENCIES) $(EXTRA_hdtdummy_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(hdtdummy_la_LINK) -rpath $(modexecdir) $(hdtdummy_la_OBJECTS) $(hdtdummy_la_LIBADD) $(LIBS)
+
 hdteq.la: $(hdteq_la_OBJECTS) $(hdteq_la_DEPENDENCIES) $(EXTRA_hdteq_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdteq_la_LINK) -rpath $(modexecdir) $(hdteq_la_OBJECTS) $(hdteq_la_LIBADD) $(LIBS)
 
@@ -2398,8 +2410,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vm.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmd250.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmfplc2.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vstroe.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x75.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xstore.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zfcp.Plo@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -2987,8 +2999,8 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/vm.Plo
 	-rm -f ./$(DEPDIR)/vmd250.Plo
 	-rm -f ./$(DEPDIR)/vmfplc2.Po
-	-rm -f ./$(DEPDIR)/vstroe.Plo
 	-rm -f ./$(DEPDIR)/x75.Plo
+	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -3215,8 +3227,8 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/vm.Plo
 	-rm -f ./$(DEPDIR)/vmd250.Plo
 	-rm -f ./$(DEPDIR)/vmfplc2.Po
-	-rm -f ./$(DEPDIR)/vstroe.Plo
 	-rm -f ./$(DEPDIR)/x75.Plo
+	-rm -f ./$(DEPDIR)/xstore.Plo
 	-rm -f ./$(DEPDIR)/zfcp.Plo
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
