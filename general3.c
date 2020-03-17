@@ -27,12 +27,12 @@ DISABLE_GCC_UNUSED_SET_WARNING
 
 #if defined( FEATURE_034_GEN_INST_EXTN_FACILITY )
 
-#if defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )        /*810*/
+#if defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
 /*-------------------------------------------------------------------*/
 /* Perform Interlocked Storage Immediate Operation                   */
 /* Subroutine called by ASI and ALSI instructions                    */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_interlocked_storage_immediate)                 /*810*/
+DEF_INST(perform_interlocked_storage_immediate)
 {
 BYTE    opcode;                         /* 2nd byte of opcode        */
 BYTE    i2;                             /* Immediate byte            */
@@ -101,7 +101,7 @@ int     rc;                             /* Return code               */
 /* Perform Interlocked Long Storage Immediate Operation              */
 /* Subroutine called by AGSI and ALGSI instructions                  */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_interlocked_long_storage_immediate)            /*810*/
+DEF_INST(perform_interlocked_long_storage_immediate)
 {
 BYTE    opcode;                         /* 2nd byte of opcode        */
 BYTE    i2;                             /* Immediate byte            */
@@ -165,14 +165,14 @@ int     rc;                             /* Return code               */
     regs->psw.cc = cc;
 
 } /* end DEF_INST(perform_interlocked_long_storage_immediate) */
-#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
 
 /*-------------------------------------------------------------------*/
 /* EB6A ASI   - Add Immediate Storage                          [SIY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_immediate_storage)
 {
-#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )       /*810*/
+#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -193,9 +193,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) *//*810*/
+#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) */
     ARCH_DEP(perform_interlocked_storage_immediate) (inst, regs);
-#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -209,7 +209,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_immediate_long_storage)
 {
-#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )       /*810*/
+#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -230,9 +230,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) *//*810*/
+#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) */
     ARCH_DEP(perform_interlocked_long_storage_immediate) (inst, regs);
-#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -246,7 +246,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_with_signed_immediate)
 {
-#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )       /*810*/
+#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -269,9 +269,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) *//*810*/
+#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) */
     ARCH_DEP(perform_interlocked_storage_immediate) (inst, regs);
-#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
 
 } /* end DEF_INST(add_logical_with_signed_immediate) */
 
@@ -281,7 +281,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_with_signed_immediate_long)
 {
-#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )       /*810*/
+#if !defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
 BYTE    i2;                             /* Immediate byte            */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
@@ -304,9 +304,9 @@ int     cc;                             /* Condition Code            */
     /* Update Condition Code */
     regs->psw.cc = cc;
 
-#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) *//*810*/
+#else /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 ) */
     ARCH_DEP(perform_interlocked_long_storage_immediate) (inst, regs);
-#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
 
 } /* end DEF_INST(add_logical_with_signed_immediate_long) */
 
@@ -2091,12 +2091,12 @@ VADR    effective_addr2;                /* Relative operand address  */
 #endif /* defined( FEATURE_034_GEN_INST_EXTN_FACILITY ) */
 
 
-#if defined( FEATURE_045_HIGH_WORD_FACILITY )                   /*810*/
+#if defined( FEATURE_045_HIGH_WORD_FACILITY )
 
 /*-------------------------------------------------------------------*/
 /* B9C8 AHHHR - Add High High High Register                    [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_high_high_high_register)                           /*810*/
+DEF_INST(add_high_high_high_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2118,7 +2118,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9D8 AHHLR - Add High High Low Register                     [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_high_high_low_register)                            /*810*/
+DEF_INST(add_high_high_low_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2139,7 +2139,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* CCx8 AIH   - Add High Immediate                             [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_high_immediate)                                    /*810*/
+DEF_INST(add_high_immediate)
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2162,7 +2162,7 @@ U32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* B9CA ALHHHR - Add Logical High High High Register           [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_high_high_high_register)                   /*810*/
+DEF_INST(add_logical_high_high_high_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2179,7 +2179,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9DA ALHHLR - Add Logical High High Low Register            [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_high_high_low_register)                    /*810*/
+DEF_INST(add_logical_high_high_low_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2196,7 +2196,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* CCxA ALSIH - Add Logical with Signed Immediate High         [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_with_signed_immediate_high)                /*810*/
+DEF_INST(add_logical_with_signed_immediate_high)
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2215,7 +2215,7 @@ U32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* CCxB ALSIHN - Add Logical with Signed Immediate High No CC  [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_with_signed_immediate_high_n)              /*810*/
+DEF_INST(add_logical_with_signed_immediate_high_n)
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2236,7 +2236,7 @@ U32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* CCx6 BRCTH - Branch Relative on Count High                  [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_count_high)                         /*810*/
+DEF_INST(branch_relative_on_count_high)
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2256,7 +2256,7 @@ S32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* B9CD CHHR  - Compare High High Register                     [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_high_high_register)                            /*810*/
+DEF_INST(compare_high_high_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
@@ -2273,7 +2273,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9DD CHLR  - Compare High Low Register                      [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_high_low_register)                             /*810*/
+DEF_INST(compare_high_low_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
@@ -2290,7 +2290,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* E3CD CHF   - Compare High Fullword                          [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_high_fullword)                                 /*810*/
+DEF_INST(compare_high_fullword)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2313,7 +2313,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* CCxD CIH   - Compare High Immediate                         [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_high_immediate)                                /*810*/
+DEF_INST(compare_high_immediate)
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2331,7 +2331,7 @@ U32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* B9CF CLHHR - Compare Logical High High Register             [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_high_high_register)                    /*810*/
+DEF_INST(compare_logical_high_high_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
@@ -2347,7 +2347,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9DF CLHLR - Compare Logical High Low Register              [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_high_low_register)                     /*810*/
+DEF_INST(compare_logical_high_low_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
@@ -2363,7 +2363,7 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* E3CF CLHF  - Compare Logical High Fullword                  [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_high_fullword)                         /*810*/
+DEF_INST(compare_logical_high_fullword)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2385,7 +2385,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* CCxF CLIH  - Compare Logical High Immediate                 [RIL] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_high_immediate)                        /*810*/
+DEF_INST(compare_logical_high_immediate)
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2403,7 +2403,7 @@ U32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* E3C0 LBH   - Load Byte High                                 [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_byte_high)                                        /*810*/
+DEF_INST(load_byte_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2420,7 +2420,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3CA LFH   - Load Fullword High                             [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_fullword_high)                                    /*810*/
+DEF_INST(load_fullword_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2437,7 +2437,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3C4 LHH   - Load Halfword High                             [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_halfword_high)                                    /*810*/
+DEF_INST(load_halfword_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2454,7 +2454,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3C2 LLCH  - Load Logical Character High                    [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_character_high)                           /*810*/
+DEF_INST(load_logical_character_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2471,7 +2471,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3C6 LLHH  - Load Logical Halfword High                     [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_halfword_high)                            /*810*/
+DEF_INST(load_logical_halfword_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2488,7 +2488,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* EC5D RISBHG - Rotate Then Insert Selected Bits High         [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
+DEF_INST(rotate_then_insert_selected_bits_high_long_reg)
 {
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_high_long_reg) */
@@ -2497,7 +2497,7 @@ DEF_INST(rotate_then_insert_selected_bits_high_long_reg)        /*810*/
 /*-------------------------------------------------------------------*/
 /* EC51 RISBLG - Rotate Then Insert Selected Bits Low          [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
+DEF_INST(rotate_then_insert_selected_bits_low_long_reg)
 {
     ARCH_DEP(rotate_then_xxx_selected_bits_long_reg) (inst, regs);
 } /* end DEF_INST(rotate_then_insert_selected_bits_low_long_reg) */
@@ -2506,7 +2506,7 @@ DEF_INST(rotate_then_insert_selected_bits_low_long_reg)         /*810*/
 /*-------------------------------------------------------------------*/
 /* E3C3 STCH  - Store Character High                           [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_character_high)                                  /*810*/
+DEF_INST(store_character_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2523,7 +2523,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3CB STFH  - Store Fullword High                            [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_fullword_high)                                   /*810*/
+DEF_INST(store_fullword_high)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -2540,7 +2540,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3C7 STHH  - Store Halfword High                            [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_halfword_high)                                   /*810*/
+DEF_INST(store_halfword_high)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -2557,7 +2557,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* B9C9 SHHHR - Subtract High High High Register               [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_high_high_high_register)                      /*810*/
+DEF_INST(subtract_high_high_high_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2578,7 +2578,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9D9 SHHLR - Subtract High High Low Register                [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_high_high_low_register)                       /*810*/
+DEF_INST(subtract_high_high_low_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2599,7 +2599,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9CB SLHHHR - Subtract Logical High High High Register      [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical_high_high_high_register)              /*810*/
+DEF_INST(subtract_logical_high_high_high_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2616,7 +2616,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9DB SLHHLR - Subtract Logical High High Low Register       [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical_high_high_low_register)               /*810*/
+DEF_INST(subtract_logical_high_high_low_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -2629,16 +2629,16 @@ int     r1, r2, r3;                     /* Values of R fields        */
 
 } /* end DEF_INST(subtract_logical_high_high_low_register) */
 
-#endif /* defined( FEATURE_045_HIGH_WORD_FACILITY ) */          /*810*/
+#endif /* defined( FEATURE_045_HIGH_WORD_FACILITY ) */
 
 
-#if defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )        /*810*/
+#if defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )
 
 /*-------------------------------------------------------------------*/
 /* Load and Perform Interlocked Access Operation                     */
 /* Subroutine called by LAA,LAAL,LAN,LAX,LAO instructions            */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_perform_interlocked_access)                   /*810*/
+DEF_INST(load_and_perform_interlocked_access)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -2720,7 +2720,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /* Load and Perform Interlocked Access Operation Long                */
 /* Subroutine called by LAAG,LAALG,LANG,LAXG,LAOG instructions       */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_perform_interlocked_access_long)              /*810*/
+DEF_INST(load_and_perform_interlocked_access_long)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -2802,7 +2802,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /*-------------------------------------------------------------------*/
 /* EBF8 LAA   - Load and Add                                   [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_add)                                          /*810*/
+DEF_INST(load_and_add)
 {
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 
@@ -2816,7 +2816,7 @@ DEF_INST(load_and_add)                                          /*810*/
 /*-------------------------------------------------------------------*/
 /* EBE8 LAAG  - Load and Add Long                              [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_add_long)                                     /*810*/
+DEF_INST(load_and_add_long)
 {
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 
@@ -2830,7 +2830,7 @@ DEF_INST(load_and_add_long)                                     /*810*/
 /*-------------------------------------------------------------------*/
 /* EBFA LAAL  - Load and Add Logical                           [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_add_logical)                                  /*810*/
+DEF_INST(load_and_add_logical)
 {
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_add_logical) */
@@ -2839,7 +2839,7 @@ DEF_INST(load_and_add_logical)                                  /*810*/
 /*-------------------------------------------------------------------*/
 /* EBEA LAALG - Load and Add Logical Long                      [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_add_logical_long)                             /*810*/
+DEF_INST(load_and_add_logical_long)
 {
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_add_logical_long) */
@@ -2848,7 +2848,7 @@ DEF_INST(load_and_add_logical_long)                             /*810*/
 /*-------------------------------------------------------------------*/
 /* EBF4 LAN   - Load and And                                   [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_and)                                          /*810*/
+DEF_INST(load_and_and)
 {
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_and) */
@@ -2857,7 +2857,7 @@ DEF_INST(load_and_and)                                          /*810*/
 /*-------------------------------------------------------------------*/
 /* EBE4 LANG  - Load and And Long                              [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_and_long)                                     /*810*/
+DEF_INST(load_and_and_long)
 {
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_and_long) */
@@ -2866,7 +2866,7 @@ DEF_INST(load_and_and_long)                                     /*810*/
 /*-------------------------------------------------------------------*/
 /* EBF7 LAX   - Load and Exclusive Or                          [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_exclusive_or)                                 /*810*/
+DEF_INST(load_and_exclusive_or)
 {
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or) */
@@ -2875,7 +2875,7 @@ DEF_INST(load_and_exclusive_or)                                 /*810*/
 /*-------------------------------------------------------------------*/
 /* EBE7 LAXG  - Load and Exclusive Or Long                     [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_exclusive_or_long)                            /*810*/
+DEF_INST(load_and_exclusive_or_long)
 {
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or_long) */
@@ -2884,7 +2884,7 @@ DEF_INST(load_and_exclusive_or_long)                            /*810*/
 /*-------------------------------------------------------------------*/
 /* EBF6 LAO   - Load and Or                                    [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_or)                                           /*810*/
+DEF_INST(load_and_or)
 {
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_or) */
@@ -2893,7 +2893,7 @@ DEF_INST(load_and_or)                                           /*810*/
 /*-------------------------------------------------------------------*/
 /* EBE6 LAOG  - Load and Or Long                               [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_and_or_long)                                      /*810*/
+DEF_INST(load_and_or_long)
 {
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_or_long) */
@@ -2902,7 +2902,7 @@ DEF_INST(load_and_or_long)                                      /*810*/
 /*-------------------------------------------------------------------*/
 /* C8x4 LPD   - Load Pair Disjoint                             [SSF] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_pair_disjoint)                                    /*810*/
+DEF_INST(load_pair_disjoint)
 {
 int     r3;                             /* Register number           */
 int     b1, b2;                         /* Base register numbers     */
@@ -2938,7 +2938,7 @@ U32     w1, w2;                         /* Refetched values          */
 /*-------------------------------------------------------------------*/
 /* C8x5 LPDG  - Load Pair Disjoint Long                        [SSF] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_pair_disjoint_long)                               /*810*/
+DEF_INST(load_pair_disjoint_long)
 {
 int     r3;                             /* Register number           */
 int     b1, b2;                         /* Base register numbers     */
@@ -2970,15 +2970,15 @@ U64     w1, w2;                         /* Refetched values          */
 
 } /* end DEF_INST(load_pair_disjoint_long) */
 
-#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_INTERLOCKED_ACCESS_FACILITY_1 )*/
 
 
-#if defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )        /*810*/
+#if defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )
 
 /*-------------------------------------------------------------------*/
 /* B9F2 LOCR  - Load on Condition Register                     [RRF] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_on_condition_register)                            /*810*/
+DEF_INST(load_on_condition_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     m3;                             /* Value of M field          */
@@ -2999,7 +2999,7 @@ int     m3;                             /* Value of M field          */
 /*-------------------------------------------------------------------*/
 /* B9E2 LOCGR - Load on Condition Long Register                [RRF] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_on_condition_long_register)                       /*810*/
+DEF_INST(load_on_condition_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     m3;                             /* Value of M field          */
@@ -3020,7 +3020,7 @@ int     m3;                             /* Value of M field          */
 /*-------------------------------------------------------------------*/
 /* EBF2 LOC   - Load on Condition                              [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_on_condition)                                     /*810*/
+DEF_INST(load_on_condition)
 {
 int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
@@ -3043,7 +3043,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* EBE2 LOCG  - Load on Condition Long                         [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_on_condition_long)                                /*810*/
+DEF_INST(load_on_condition_long)
 {
 int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
@@ -3066,7 +3066,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* EBF3 STOC  - Store on Condition                             [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_on_condition)                                    /*810*/
+DEF_INST(store_on_condition)
 {
 int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
@@ -3089,7 +3089,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* EBE3 STOCG - Store on Condition Long                        [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(store_on_condition_long)                               /*810*/
+DEF_INST(store_on_condition_long)
 {
 int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
@@ -3108,15 +3108,15 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(store_on_condition_long) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#endif /* defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )*//*810*/
+#endif /* defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )*/
 
 
-#if defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY )           /*810*/
+#if defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY )
 
 /*-------------------------------------------------------------------*/
 /* B9F8 ARK   - Add Distinct Register                          [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_distinct_register)                                 /*810*/
+DEF_INST(add_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3139,7 +3139,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9E8 AGRK  - Add Distinct Long Register                     [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_distinct_long_register)                            /*810*/
+DEF_INST(add_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3161,7 +3161,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* ECD8 AHIK  - Add Distinct Halfword Immediate                [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_distinct_halfword_immediate)                       /*810*/
+DEF_INST(add_distinct_halfword_immediate)
 {
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
@@ -3184,7 +3184,7 @@ U16     i2;                             /* 16-bit immediate operand  */
 /*-------------------------------------------------------------------*/
 /* ECD9 AGHIK - Add Distinct Long Halfword Immediate           [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_distinct_long_halfword_immediate)                  /*810*/
+DEF_INST(add_distinct_long_halfword_immediate)
 {
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
@@ -3207,7 +3207,7 @@ U16     i2;                             /* 16-bit immediate operand  */
 /*-------------------------------------------------------------------*/
 /* B9FA ALRK  - Add Logical Distinct Register                  [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_distinct_register)                         /*810*/
+DEF_INST(add_logical_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3225,7 +3225,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9EA ALGRK - Add Logical Distinct Long Register             [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_distinct_long_register)                    /*810*/
+DEF_INST(add_logical_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3243,7 +3243,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* ECDA ALHSIK - Add Logical Distinct with Signed Halfword Imm [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_distinct_signed_halfword_immediate)        /*810*/
+DEF_INST(add_logical_distinct_signed_halfword_immediate)
 {
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
@@ -3262,7 +3262,7 @@ U16     i2;                             /* 16-bit immediate operand  */
 /*-------------------------------------------------------------------*/
 /* ECDB ALGHSIK - Add Logical Distinct Long with Signed Hw Imm [RIE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(add_logical_distinct_long_signed_halfword_immediate)   /*810*/
+DEF_INST(add_logical_distinct_long_signed_halfword_immediate)
 {
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
@@ -3281,7 +3281,7 @@ U16     i2;                             /* 16-bit immediate operand  */
 /*-------------------------------------------------------------------*/
 /* B9F4 NRK   - And Distinct Register                          [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(and_distinct_register)                                 /*810*/
+DEF_INST(and_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3300,7 +3300,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9E4 NGRK  - And Distinct Long Register                     [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(and_distinct_long_register)                            /*810*/
+DEF_INST(and_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3319,7 +3319,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9F7 XRK   - Exclusive Or Distinct Register                 [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(exclusive_or_distinct_register)                        /*810*/
+DEF_INST(exclusive_or_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3338,7 +3338,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9E7 XGRK  - Exclusive Or Distinct Long Register            [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(exclusive_or_distinct_long_register)                   /*810*/
+DEF_INST(exclusive_or_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3357,7 +3357,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9F6 ORK   - Or Distinct Register                           [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(or_distinct_register)                                  /*810*/
+DEF_INST(or_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3376,7 +3376,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9E6 OGRK  - Or Distinct Long Register                      [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(or_distinct_long_register)                             /*810*/
+DEF_INST(or_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3395,7 +3395,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* EBDC SRAK  - Shift Right Single Distinct                    [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(shift_right_single_distinct)                           /*810*/
+DEF_INST(shift_right_single_distinct)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -3422,7 +3422,7 @@ U32     n;                              /* Integer work area         */
 /*-------------------------------------------------------------------*/
 /* EBDD SLAK  - Shift Left Single Distinct                     [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(shift_left_single_distinct)                            /*810*/
+DEF_INST(shift_left_single_distinct)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -3480,7 +3480,7 @@ U32     i, j;                           /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 /* EBDE SRLK  - Shift Right Single Logical Distinct            [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(shift_right_single_logical_distinct)                   /*810*/
+DEF_INST(shift_right_single_logical_distinct)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -3501,7 +3501,7 @@ U32     n;                              /* Integer work area         */
 /*-------------------------------------------------------------------*/
 /* EBDF SLLK  - Shift Left Single Logical Distinct             [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(shift_left_single_logical_distinct)                    /*810*/
+DEF_INST(shift_left_single_logical_distinct)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
@@ -3522,7 +3522,7 @@ U32     n;                              /* Integer work area         */
 /*-------------------------------------------------------------------*/
 /* B9F9 SRK   - Subtract Distinct Register                     [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_distinct_register)                            /*810*/
+DEF_INST(subtract_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3545,7 +3545,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9E9 SGRK  - Subtract Distinct Long Register                [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_distinct_long_register)                       /*810*/
+DEF_INST(subtract_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3567,7 +3567,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9FB SLRK  - Subtract Logical Distinct Register             [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical_distinct_register)                    /*810*/
+DEF_INST(subtract_logical_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3585,7 +3585,7 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 /* B9EB SLGRK - Subtract Logical Distinct Long Register        [RRR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical_distinct_long_register)               /*810*/
+DEF_INST(subtract_logical_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
@@ -3599,14 +3599,14 @@ int     r1, r2, r3;                     /* Values of R fields        */
 } /* end DEF_INST(subtract_logical_distinct_long_register) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#endif /* defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY ) */  /*810*/
+#endif /* defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY ) */
 
 
-#if defined( FEATURE_045_POPULATION_COUNT_FACILITY )            /*810*/
+#if defined( FEATURE_045_POPULATION_COUNT_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B9E1 POPCNT - Population Count                              [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(population_count)                                      /*810*/
+DEF_INST(population_count)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
@@ -3632,10 +3632,10 @@ U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
     regs->psw.cc = (result == 0) ? 0 : 1;
 
 } /* end DEF_INST(population_count) */
-#endif /* defined( FEATURE_045_POPULATION_COUNT_FACILITY ) */   /*810*/
+#endif /* defined( FEATURE_045_POPULATION_COUNT_FACILITY ) */
 
 
-#if defined( FEATURE_049_LOAD_AND_TRAP_FACILITY )               /*912*/
+#if defined( FEATURE_049_LOAD_AND_TRAP_FACILITY )
 
 /*-------------------------------------------------------------------*/
 /* E39F LAT   - Load and Trap                                  [RXY] */
@@ -3665,7 +3665,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E385 LGAT  - Load Long and Trap                             [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_long_and_trap)                                    /*912*/
+DEF_INST(load_long_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3691,7 +3691,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E3C8 LFHAT - Load Fullword High and Trap                    [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_fullword_high_and_trap)                           /*912*/
+DEF_INST(load_fullword_high_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3717,7 +3717,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E39D LLGFAT - Load Logical Long Fullword and Trap           [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_long_fullword_and_trap)                   /*912*/
+DEF_INST(load_logical_long_fullword_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3743,7 +3743,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* E39C LLGTAT - Load Logical Long Thirtyone and Trap          [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(load_logical_long_thirtyone_and_trap)                  /*912*/
+DEF_INST(load_logical_long_thirtyone_and_trap)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
@@ -3765,15 +3765,15 @@ VADR    effective_addr2;                /* Effective address         */
 } /* end DEF_INST(load_logical_long_thirtyone_and_trap) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-#endif /* defined( FEATURE_049_LOAD_AND_TRAP_FACILITY ) */      /*912*/
+#endif /* defined( FEATURE_049_LOAD_AND_TRAP_FACILITY ) */
 
 
-#if defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )            /*912*/
+#if defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 )
 
 /*-------------------------------------------------------------------*/
 /* EB23 CLT   - Compare Logical and Trap                       [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_and_trap)                              /*912*/
+DEF_INST(compare_logical_and_trap)
 {
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
@@ -3805,7 +3805,7 @@ int     cc;                             /* Comparison result         */
 /*-------------------------------------------------------------------*/
 /* EB2B CLGT  - Compare Logical and Trap Long                  [RSY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_and_trap_long)                         /*912*/
+DEF_INST(compare_logical_and_trap_long)
 {
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
@@ -3847,11 +3847,11 @@ DEF_INST(rotate_then_insert_selected_bits_long_reg_n)
 
 #endif /* defined( FEATURE_049_MISC_INSTR_EXT_FACILITY_1 ) */
 
-#if defined( FEATURE_049_EXECUTION_HINT_FACILITY )              /*912*/
+#if defined( FEATURE_049_EXECUTION_HINT_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C7   BPP   - Branch Prediction Preload                      [SMI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_prediction_preload)                             /*912*/
+DEF_INST(branch_prediction_preload)
 {
 VADR    effective_addr2;                /* Effective address         */
 VADR    effective_addr3;                /* Effective address         */
@@ -3871,7 +3871,7 @@ int     m1;                             /* Mask value                */
 /*-------------------------------------------------------------------*/
 /* C5   BPRP  - Branch Prediction Relative Preload             [MII] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_prediction_relative_preload)                    /*912*/
+DEF_INST(branch_prediction_relative_preload)
 {
 VADR    effective_addr2;                /* Effective address         */
 VADR    effective_addr3;                /* Effective address         */
@@ -3890,7 +3890,7 @@ int     m1;                             /* Mask value                */
 /*-------------------------------------------------------------------*/
 /* B2FA NIAI  - Next Instruction Access Intent                  [IE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(next_instruction_access_intent)                        /*912*/
+DEF_INST(next_instruction_access_intent)
 {
 BYTE    i1, i2;                         /* Immediate fields          */
 
@@ -3902,7 +3902,7 @@ BYTE    i1, i2;                         /* Immediate fields          */
 
 } /* end DEF_INST(next_instruction_access_intent) */
 
-#endif /* defined( FEATURE_049_EXECUTION_HINT_FACILITY ) */     /*912*/
+#endif /* defined( FEATURE_049_EXECUTION_HINT_FACILITY ) */
 
 
 #if defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 )

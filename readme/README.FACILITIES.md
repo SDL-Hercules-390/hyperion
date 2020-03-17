@@ -118,7 +118,7 @@ just like the `STFL_xxx...` #defines in header [stfl.h](../stfl.h) do:
 
       #define FEATURE_037_FP_EXTENSION_FACILITY                       /*@SRO*/
       //efine FEATURE_038_OP_CMPSC_FACILITY
-      #define FEATURE_040_LOAD_PROG_PARAM_FACILITY                    /*810*/
+      #define FEATURE_040_LOAD_PROG_PARAM_FACILITY
       #define FEATURE_041_DFP_ROUNDING_FACILITY
       #define FEATURE_041_FPR_GR_TRANSFER_FACILITY
       #define FEATURE_041_FPS_ENHANCEMENT_FACILITY
@@ -488,7 +488,7 @@ architecture:
 
 
 ```C
-      #if defined( FEATURE_021_EXTENDED_IMMED_FACILITY )              /*@Z9*/
+      #if defined( FEATURE_021_EXTENDED_IMMED_FACILITY )
 
       /*-------------------------------------------------------------------*/
       /* B907 LGHR  - Load Long Halfword Register                    [RRE] */
@@ -504,7 +504,7 @@ architecture:
 
       } /* end DEF_INST( load_long_halfword_register ) */
 
-      #endif /* defined( FEATURE_021_EXTENDED_IMMED_FACILITY ) */     /*@Z9*/
+      #endif /* defined( FEATURE_021_EXTENDED_IMMED_FACILITY ) */
 ```
 
 
