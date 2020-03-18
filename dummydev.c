@@ -158,6 +158,16 @@ static int dummydev_init_handler (DEVBLK *dev, int argc, char *argv[])
      * Check parameters consistency
     */
     /*
+     Set the sense ID */
+    dev->numdevid=7;
+    dev->devid[0]=0xff;
+    dev->devid[1]=0x30;
+    dev->devid[2]=0x88;
+    dev->devid[3]=0x01;
+    dev->devid[4]=0x30;
+    dev->devid[5]=0x88;
+    dev->devid[6]=0x01;
+    /*
      Init device private information
      here base on parameters given 
      return -1 if this is not consistent */
@@ -231,6 +241,7 @@ static void dummydev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U32 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U32 *residual)
 {
+    int num;
     switch(code)
     {
         case 0x01:
@@ -260,10 +271,43 @@ static void dummydev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
                 *unitstat=CSW_UC;
                 dev->sense[0]=SENSE_IR;
             */
+        case 0x04:
+            /* Basic sense... we can do this */
+            /* this is filled by any previous */
+            /* command */
+            if(dev->numsense>count)
+            {
+                *more=1;
+                memcpy(iobuf,dev->sense,count);
+                *residual=0;
+                /* Not sure how a sense works on a short read */
+            }
+            else
+            {
+                /* sense fits in the IO buffer */
+                *more=0;
+                memcpy(iobuf,dev->sense,dev->numsense);
+                *residual=count-dev->numsense;
+            }
+            *unitstat=CSW_CE|CSW_DE;
+            break;
+        case 0xe4:
+            /* Sense ID (device type) */
+            num=dev->numdevid;
+            if(count<num)
+            {
+                num=count;
+            }
+            memcpy(iobuf,dev->devid,num);
+            *residual=count-num;
+            *unitstat=CSW_CE|CSW_DE;
+            break;
         default:
             /* We didn't understand.. so Command Reject */
             *unitstat=CSW_UC;
             dev->sense[0]=SENSE_CR;
+            dev->numsense=1;
+            break;
     }
 }
 
