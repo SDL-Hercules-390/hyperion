@@ -1639,6 +1639,9 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     ckdssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */
 
+        /* Handler private data - all data that is private to a      */
+        /* should now go there.                                      */
+        void    *hpd;
         /*  Device dependent fields for QDIO devices                 */
         QDIO_DEV qdio;
         BYTE     qtype;                 /* QDIO device type          */

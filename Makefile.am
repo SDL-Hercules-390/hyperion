@@ -128,6 +128,7 @@ dyndev_SRC =  \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
+  dummydev.c  \
   zfcp.c
 
 #-----------------------------------------------------------------
@@ -198,6 +199,7 @@ HERCMODS =      \
   hdt3420.la    \
   hdt3505.la    \
   hdt2880.la    \
+  hdtdummy.la   \
   hdt3525.la
 
 modexec_LTLIBRARIES = $(HERCMODS)
@@ -326,6 +328,10 @@ hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
+
+hdtdummy_la_SOURCES = dummydev.c
+hdtdummy_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+hdtdummy_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 #--------------------------------------------
 # Common data areas (shared) library
