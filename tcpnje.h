@@ -76,7 +76,7 @@ struct BLOCK                    /* TCPNJE (aka VMNET) buffer                */
     struct TTB ttb;
     struct RECORD record;
 };
-    
+
 struct TNBUFFER                 /* TCP/IP input or output transfer buffer   */
 {
     union

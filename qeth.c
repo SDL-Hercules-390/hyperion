@@ -355,7 +355,7 @@ static const char* qsig2str( BYTE sig ) {
 /* Storage key ref & change bits are only updated if successful.     */
 /*-------------------------------------------------------------------*/
 
-/* Make the macro unto an inline function - same perf, less arcane @ISW */
+/* Make the macro unto an inline function - same perf, less arcane.  */
 /* NOTE : This should probably go into qdio.h */
 static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc, DEVBLK *dev)
 {

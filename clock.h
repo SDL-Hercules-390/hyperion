@@ -333,7 +333,7 @@ us2timeval (const U64 us, struct timeval* tv)
 static INLINE TOD
 ns2etod (const S64 ns)
 {
-    return ((ns << 1) / 125);           /* (ns << 4) / 1000      @PJJ */
+    return ((ns << 1) / 125);           /* (ns << 4) / 1000           */
 }
 
 static INLINE TOD

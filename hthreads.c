@@ -992,7 +992,7 @@ static void hthread_list_abandoned_locks( TID tid, const char* exit_loc )
             if (hthread_equal( ilk->il_ob_tid, tid ))
             {
                 char tod[27];           /* "YYYY-MM-DD HH:MM:SS.uuuuuu"  */
-     
+
                 FormatTIMEVAL( &ilk->il_ob_time, tod, sizeof( tod ));
 
                 if (exit_loc)

@@ -863,12 +863,12 @@ BYTE            chanstat = 0;           /* Subchannel status         */
     /* Release the device lock */
     release_lock (&dev->lock);
 
-    /* Build the operation request block */                    /*@IWZ*/
-    memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
-    STORE_FW(dev->orb.ccwaddr, ccwaddr);                       /*@IWZ*/
-    dev->orb.flag4 = ioparm.akey & ORB4_KEY;                   /*@IWZ*/
-    if (ioparm.flag & HCPSGIOP_FORMAT1_CCW)                    /*@IWZ*/
-        dev->orb.flag5 |= ORB5_F;                              /*@IWZ*/
+    /* Build the operation request block */
+    memset (&dev->orb, 0, sizeof(ORB));
+    STORE_FW(dev->orb.ccwaddr, ccwaddr);
+    dev->orb.flag4 = ioparm.akey & ORB4_KEY;
+    if (ioparm.flag & HCPSGIOP_FORMAT1_CCW)
+        dev->orb.flag5 |= ORB5_F;
 
     /* Execute the channel program synchronously */
     ARCH_DEP(execute_ccw_chain) (dev);

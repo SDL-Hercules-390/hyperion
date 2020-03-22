@@ -479,8 +479,8 @@ int rc;
     /* Enable the subchannel for the IPL device */
     dev->pmcw.flag5 |= PMCW5_E;
 
-    /* Build the operation request block */                    /*@IWZ*/
-    memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
+    /* Build the operation request block */
+    memset (&dev->orb, 0, sizeof(ORB));
     dev->busy = 1;
 
     RELEASE_INTLOCK(NULL);

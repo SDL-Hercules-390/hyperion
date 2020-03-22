@@ -6,14 +6,14 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/* (c) 2020 Ivan Warren. Licensed as stated above 
+/* (c) 2020 Ivan Warren. Licensed as stated above
 
    This device emulator does NOT emulate any existing or known device.
    It has essentially 2 purposes :
    - Provide a skeleton for future device handlers/emulators
    - Provide an exercising tool for the hercules I/O subsystems
 
-   As such it is encouraged to use this "emulator" as a template 
+   As such it is encouraged to use this "emulator" as a template
    for other developpers who wish to implement devices for their own
    use or for the benefit of others should they see fit.
 */
@@ -102,7 +102,7 @@ enum {
 static void dummydev_halt_or_clear( DEVBLK* dev )
 {
     /* The lock on the DEVBLK is held... don't touch it..
-       do NOT reset the dev->busy flag if it is set 
+       do NOT reset the dev->busy flag if it is set
        if dev->busy is not set then there is nothing else to do */
     if (dev->busy)
     {
@@ -169,7 +169,7 @@ static int dummydev_init_handler (DEVBLK *dev, int argc, char *argv[])
     dev->devid[6]=0x01;
     /*
      Init device private information
-     here base on parameters given 
+     here base on parameters given
      return -1 if this is not consistent */
     return 0;
 }
@@ -202,7 +202,7 @@ static int dummydev_close_device( DEVBLK* dev )
     if (dev->busy)
         dummydev_halt_or_clear( dev );
 
-    /* Perform more termination if needed - signal thread(s) to close 
+    /* Perform more termination if needed - signal thread(s) to close
        and whatnot
     */
     return 0;
@@ -263,7 +263,7 @@ static void dummydev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
             *residual=count;
             *unitstat=CSW_CE|CSW_DE;
             break;
-            /* PS : If you wish that the device NOT be 
+            /* PS : If you wish that the device NOT be
                ready for any reason you see fit, only indicate
                CSW_UC (NO CE/DE here) and put SENSE_IR in the
                sense field

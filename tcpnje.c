@@ -744,7 +744,7 @@ static void tcpnje_close(int fd, struct TCPNJE *tn)
 /*                                                                   */
 /* Returns: <0 if not as much as requested is returned on this call  */
 /*          =0 if exactly the amount of data is returned on this call*/
-/*          >0 if the amount required this time was already returned */   
+/*          >0 if the amount required this time was already returned */
 /*                                                                   */
 /* This routine is designed to be used on a non-blocking socket. If  */
 /* the required data is not returned on the first call, go and call  */
@@ -811,13 +811,13 @@ static int tcpnje_read(int fd, struct TNBUFFER *buffer, size_t wanted, struct TC
 /*                                                                   */
 /* Returns: <0 Permanent error.                                      */
 /*          =0 Write successful.                                     */
-/*          >0 Temporary error. Some data may have been written.     */   
+/*          >0 Temporary error. Some data may have been written.     */
 /*             Later retry may write more data.                      */
 /*                                                                   */
 /* Ideally, this routine would use write_socket().  However, since   */
 /* v3.06, write_socket() loses count of how many bytes have been     */
 /* written to a non-blocking socket which has run out of buffers so  */
-/* using it would make it impossible to retry failed writes later.   */ 
+/* using it would make it impossible to retry failed writes later.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static int tcpnje_write(int fd, struct TNBUFFER *buffer, struct TCPNJE *tn)
@@ -934,7 +934,7 @@ static void tcpnje_ttc(int fd, const BYTE *type, int reason, struct TCPNJE *tn)
             DBGMSG(4, "HHCTN050W %4.4X:TCPNJE - Error obtaining local ip address for TCPNJE OPEN: %s. Using %s\n",
                     tn->dev->devnum, strerror(HSO_errno), inet_ntoa(intmp));
         }
-    
+
         /* Get ip address of remote end of the connection */
         socknamelen = sizeof(sockname);
         rc = getpeername(fd, (struct sockaddr *) &sockname, &socknamelen);
@@ -1072,7 +1072,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tn->pfd = -1;
         return;
     }
-    
+
     /* Do the names of both ends specified in the OPEN request correspond with what we have? */
     if ((memcmp(tn->rnode, buffer->base.ttc->rhost, sizeof(buffer->base.ttc->rhost))) ||
         (memcmp(tn->lnode, buffer->base.ttc->ohost, sizeof(buffer->base.ttc->ohost))))
@@ -1080,7 +1080,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         /* One or both doesn't match. Maybe some other TCPNJE device has the specified link? */
         DEVBLK *otherdev;
         int found = 0;
-        
+
         DBGMSG(256, "HHCTN110D %4.4X:TCPNJE - link %s - %s is not handled by this device. Checking other TCPNJE devices.\n",
                       tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                   guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
@@ -1098,7 +1098,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
             {
                 /* Have we found ourselves, which we've already checked? */
                 if (othertn == tn) continue;
-        
+
                 /* Is the other device listening for incoming connections? */
                 if (othertn->state >= TCPLISTEN)
                 {
@@ -1109,14 +1109,14 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         /* No. Skip on to next device. */
                         continue;
                     }
-        
+
                     DBGMSG(256, "HHCTN111D %4.4X:TCPNJE - processing TCPNJE OPEN received for link %s - %s on device %4.4X\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
 
                     obtain_lock(&othertn->lock);
-        
+
                     /* Is the other device's link already connected? */
                     if (othertn->state >= NJECONPRI)
                     {
@@ -1128,7 +1128,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 2, tn);
                         close_socket(tn->pfd);
                         tn->pfd = -1;
-    
+
                         /* Also kill the link which is assumed to be already failed but unnoticed */
                         DBGMSG(256, "HHCTN113D %4.4X:TCPNJE - closing link %s - %s on device %4.4X due to unexpected TCPNJE OPEN received for same\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
@@ -1136,13 +1136,13 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                               otherdev->devnum);
 
                         tcpnje_close(othertn->sfd, othertn);
-    
+
                         release_lock(&othertn->lock);
-    
+
                         if (tn->state == TCPCONPAS) tn->state = tn->listening ? TCPLISTEN : CLOSED;
                         return;
                     }
-    
+
                     /* Is the other device already doing an active open? */
                     if ((othertn->state == TCPCONSNT) || (othertn->state == TCPCONACT) ||
                         (othertn->state == NJEOPNSNT) || (othertn->state == NJEACKRCD))
@@ -1159,7 +1159,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         if (tn->state == TCPCONPAS) tn->state = tn->listening ? TCPLISTEN : CLOSED;
                         return;
                     }
-        
+
                     /* Is the other device already processing an incoming connection? */
                     if (othertn->pfd >= 0)
                     {
@@ -1169,38 +1169,38 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         close_socket(othertn->pfd);
                         othertn->pfd = -1;
                     }
-        
+
                     /* Send TCPNJE ACK on behalf of other device */
                     tcpnje_ttc(tn->pfd, TCPNJE_ACK, 0, tn);
                     othertn->state = NJEACKSNT;
-    
+
                     /* TCPNJE OPEN sequence complete. Transfer connection to main I/O code. */
                     othertn->sfd = tn->pfd;
                     tn->pfd = -1;
-    
+
                     /* Prepare to receive the first TTB */
                     othertn->tcpinbuf.inptr.address = othertn->tcpinbuf.base.address;
-    
+
                     DBGMSG(256, "HHCTN053I %4.4X:TCPNJE - passing TCPNJE OPEN for link %s - %s to device %4.4X\n",
                               tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                           guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost),
                               otherdev->devnum);
-        
+
                     /* Poke the other device to pick up the connection */
                     tcpnje_wakeup(othertn, 2);
-        
+
                     release_lock(&othertn->lock);
-        
-                    /* Meanwhile, we go back to whatever we were doing */ 
+
+                    /* Meanwhile, we go back to whatever we were doing */
                     if (tn->state == TCPCONPAS) tn->state = tn->listening ? TCPLISTEN : CLOSED;
-    
+
                     found = 1;
-    
+
                     break;
                 }
             }
         }
-        
+
         if (!found)
         {
             DBGMSG(256, "HHCTN116D %4.4X:TCPNJE - rejecting TCPNJE OPEN for unrecognised or inactive link %s - %s\n",
@@ -1209,15 +1209,15 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
 
             /* No luck finding link anywhere. Reply with NAK.  Reason code 1. */
             tcpnje_ttc(tn->pfd, TCPNJE_NAK, 1, tn);
-    
+
             close_socket(tn->pfd);
             tn->pfd = -1;
             if (tn->state == TCPCONPAS) tn->state = tn->listening ? TCPLISTEN : CLOSED;
         }
-    
+
         return;
     }
-    
+
     /* Is the link already connected? */
     if (tn->state >= NJECONPRI)
     {
@@ -1229,16 +1229,16 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 2, tn);
         close_socket(tn->pfd);
         tn->pfd = -1;
-    
+
         /* Also kill the link which is assumed to be already failed but unnoticed */
         DBGMSG(256, "HHCTN118D %4.4X:TCPNJE - closing link %s - %s due to unexpected TCPNJE OPEN received for same\n",
                        tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), buffer->base.ttc->ohost),
                                    guest_to_host_string(rnodestring, sizeof(rnodestring), buffer->base.ttc->rhost));
         tcpnje_close(tn->sfd, tn);
-    
+
         return;
     }
-    
+
     /* Are we already doing an active open? */
     if ((tn->state == TCPCONSNT) || (tn->state == TCPCONACT) || (tn->state == NJEOPNSNT) || (tn->state == NJEACKRCD))
     {
@@ -1252,7 +1252,7 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tn->pfd = -1;
         return;
     }
-    
+
     /* Are we expecting a TCPNJE OPEN for this link? */
     if (tn->state != TCPCONPAS)
     {
@@ -1265,16 +1265,16 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tn->pfd = -1;
         return;
     }
-        
+
     /* Send TCPNJE ACK */
     tcpnje_ttc(tn->pfd, TCPNJE_ACK, 0, tn);
-    
+
     tn->state = NJEACKSNT;
-    
+
     /* TCPNJE OPEN sequence complete. Transfer connection to main I/O code. */
     tn->sfd = tn->pfd;
     tn->pfd = -1;
-    
+
     /* Prepare to receive the first TTB */
     tn->tcpinbuf.inptr.address = tn->tcpinbuf.base.address;
 
@@ -1329,7 +1329,7 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tn->state = tn->listening ? TCPLISTEN : CLOSED;
         return;
     }
- 
+
     if (!memcmp(buffer->base.ttc->type, TCPNJE_ACK, sizeof(buffer->base.ttc->type)))
     {
         tn->state = NJEACKRCD;
@@ -1339,7 +1339,7 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
 
         /* Prepare to receive the first TTB */
         tn->tcpinbuf.inptr.address = tn->tcpinbuf.base.address;
-    } 
+    }
     else if (!memcmp(buffer->base.ttc->type, TCPNJE_NAK, sizeof(buffer->base.ttc->type)))
     {
         /* Was NAK because of unrecognised link or other end was also trying an active open? */
@@ -1542,7 +1542,7 @@ static void *tcpnje_thread(void *vtn)
                     tn->holdincoming = 0;
                     /* Reset output suspended due to write contention */
                     tn->holdoutgoing = 0;
-                    /* Reset FASTOPEN issued for stream n */ 
+                    /* Reset FASTOPEN issued for stream n */
                     tn->fastopen = 0;
                     /* Reset wait-a-bit bit set flag */
                     tn->waitabit = 0;
@@ -2719,7 +2719,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                     dev->devnum);
             return -1;
         }
-    
+
         tn->ttcactbuf.size = SIZEOF_TTC;
         tn->ttcactbuf.base.address = malloc(tn->ttcactbuf.size);
         if (tn->ttcactbuf.base.address == NULL)
@@ -2728,7 +2728,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                     dev->devnum);
             return -1;
         }
-    
+
         tn->tcpinbuf.size = dev->bufsize;
         tn->tcpinbuf.base.address = malloc(tn->tcpinbuf.size);
         if (tn->tcpinbuf.base.address == NULL)
@@ -3303,7 +3303,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     /* Reply to RSCS with a null buffer instead of real data.*/
                     /* Use a null buffer instead of DLE ACK0 in order that   */
                     /* we do not inadvertently tell RSCS to send more data   */
-                    /* out when outgoing data is held due to lack of buffers.*/ 
+                    /* out when outgoing data is held due to lack of buffers.*/
                     num = count < sizeof(nullbuffer) ? count : sizeof(nullbuffer);
                     memcpy(iobuf, nullbuffer, num);
                     if (tn->holdoutgoing)
@@ -3326,7 +3326,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     break;
                 }
 
-                /* Check for any remaining data in the input buffer from */  
+                /* Check for any remaining data in the input buffer from */
                 /* a previous read operation.  There likely will be some */
                 /* because each TTB can contain multiple TTRs.  We need  */
                 /* to get these sent on to RSCS before we accept more    */
@@ -3671,7 +3671,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 break;
 
         /*---------------------------------------------------------------*/
-        /* WRITE                                                         */ 
+        /* WRITE                                                         */
         /*---------------------------------------------------------------*/
         case 0x01:
                 DBGMSG(1024, "HHCTN156D %4.4X:TCPNJE CCW WRITE count %d\n",
@@ -3935,7 +3935,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                     DBGMSG(4096, "HHCTN157D %4.4X:TCPNJE WRITE - dropping outgoing SYN SYN SYN SYN. Connection state: %s\n",
                             dev->devnum, tcpnje_state_text[tn->state]);
 
-                    /* Yes. Drop it on the floor.  It would get eaten at the far end anyway. */ 
+                    /* Yes. Drop it on the floor.  It would get eaten at the far end anyway. */
                     *residual = 0;
                     *unitstat = CSW_CE | CSW_DE;
                     break;

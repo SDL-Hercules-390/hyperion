@@ -1815,22 +1815,22 @@ RADR ptemask;
     {
         INVALIDATE_AIA(regs->guestregs);
         for (i = 0; i < TLBN; i++)
-/************************************************************************** @PJJ */
-/* The guest registers in the SIE copy TLB PTE entries for DAT-OFF guests * @PJJ */
-/* like CMS do NOT actually contain the PTE (but rather the host primary  * @PJJ */
-/* virtual address, both masked with TBLID_PAGEMASK).  In order to check  * @PJJ */
-/* if such guest TLB entry needs to be cleared, one needs to check the    * @PJJ */
-/* parallel host registers TLB PTE entry.  Hence that the if-test that    * @PJJ */
-/* follows needed to be expanded.  Originally it was just :               * @PJJ */
-/*                                                                        * @PJJ */
-/*          if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte)       * @PJJ */
-/*                                                                        * @PJJ */
-/* and it is now expanded with the additional test as follows :           * @PJJ */
-/*                                                                        * @PJJ */
-/*                                        (Peter J. Jansen, 29-Jul-2016)  * @PJJ */
-/************************************************************************** @PJJ */
-            if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte ||    /* @PJJ */
-                 (regs->hostregs->tlb.TLB_PTE(i) & ptemask) == pte)      /* @PJJ */
+/**************************************************************************/
+/* The guest registers in the SIE copy TLB PTE entries for DAT-OFF guests */
+/* like CMS do NOT actually contain the PTE (but rather the host primary  */
+/* virtual address, both masked with TBLID_PAGEMASK).  In order to check  */
+/* if such guest TLB entry needs to be cleared, one needs to check the    */
+/* parallel host registers TLB PTE entry.  Hence that the if-test that    */
+/* follows needed to be expanded.  Originally it was just :               */
+/*                                                                        */
+/*          if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte)       */
+/*                                                                        */
+/* and it is now expanded with the additional test as follows :           */
+/*                                                                        */
+/*                                        (Peter J. Jansen, 29-Jul-2016)  */
+/**************************************************************************/
+            if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte ||
+                 (regs->hostregs->tlb.TLB_PTE(i) & ptemask) == pte)
                 regs->guestregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
     }
     else
@@ -2445,5 +2445,5 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
 /*-------------------------------------------------------------------*/
 
 // (we have no non-ARCH_DEP code to place here -- yet!)
- 
+
 #endif /* !defined( _GEN_ARCH )*/
