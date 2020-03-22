@@ -366,6 +366,9 @@
     <ClCompile Include="ctcadpt.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dummydev.c">
+      <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hercifc.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>

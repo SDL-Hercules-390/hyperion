@@ -293,10 +293,10 @@ static void dummydev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
             break;
         case 0xe4:
             /* Sense ID (device type) */
-            num=dev->numdevid;
-            if(count<num)
+            num=(int)dev->numdevid;
+            if((int)count<num)
             {
-                num=count;
+                num=(int)count;
             }
             memcpy(iobuf,dev->devid,num);
             *residual=count-num;
