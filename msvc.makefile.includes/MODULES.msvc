@@ -21,6 +21,7 @@ MODULES = \
     $(X)hdt3505.dll     \
     $(X)hdt3525.dll     \
     $(X)hdt3705.dll     \
+    $(X)hdtdummy.dll    \
     $(X)hdteq.dll       \
     $(X)hdtptp.dll      \
     $(X)hdtqeth.dll     \

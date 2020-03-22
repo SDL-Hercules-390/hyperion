@@ -515,6 +515,10 @@
 								>
 							</File>
 							<File
+								RelativePath=".\dummydev.c"
+								>
+							</File>
+							<File
 								RelativePath=".\hercifc.c"
 								>
 							</File>

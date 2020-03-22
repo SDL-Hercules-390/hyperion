@@ -352,6 +352,7 @@
     <ClCompile Include="diagmssf.c" />
     <ClCompile Include="diagnose.c" />
     <ClCompile Include="dmap2hrc.c" />
+    <ClCompile Include="dummydev.c" />
     <ClCompile Include="dyn76.c" />
     <ClCompile Include="dyngui.c" />
     <ClCompile Include="ecpsvm.c" />

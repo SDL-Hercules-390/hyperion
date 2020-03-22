@@ -108,6 +108,11 @@ $(X)hdt3705.dll:  $(O)comm3705.obj \
     $(linkdll)
     $(MT_DLL_CMD)
 
+$(X)hdtdummy.dll: $(O)dummydev.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
 $(X)hdteq.dll:    $(O)hdteq.obj \
                   $(O)hengine.lib $(O)hutil.lib              $(O)hercprod.res
     $(linkdll)
