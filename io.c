@@ -32,7 +32,7 @@
 /*      TPI fix - Jay Maynard, found by Greg Smith                   */
 /*      STCRW instruction nullification correction - Jan Jaeger      */
 /*      I/O rate counter - Valery Pogonchenko                        */
-/*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
+/*      64-bit IDAW support - Roger Bowler v209                      */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -1062,7 +1062,7 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
 PSA    *psa;                            /* -> prefixed storage area  */
-ORB     orb;                            /* Operation request blk @IZW*/
+ORB     orb;                            /* Operation request blk     */
 VADR    ccwaddr;                        /* CCW address for start I/O */
 BYTE    ccwkey;                         /* Bits 0-3=key, 4=suspend   */
                                         /*      5-7=zero             */

@@ -376,7 +376,7 @@ typedef struct DAT  DAT;
 #define CR9_SA          0x20000000      /* Storage Alteration        */
 #define CR9_GRA         0x10000000      /* General Register Alt.     */
 #define CR9_STURA       0x08000000      /* Store using real addr     */
-#define CR9_IFNUL       0x01000000      /* IF nullification     @PER3*/
+#define CR9_IFNUL       0x01000000      /* IF nullification          */
 #define CR9_GRMASK      0x0000FFFF      /* GR mask bits              */
 #define CR9_BAC         0x00800000      /* Br addr control PER2 only */
 #define CR9_SAC         0x00200000      /* Stor. alter. c. PER2 only */

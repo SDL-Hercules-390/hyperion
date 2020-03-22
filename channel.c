@@ -23,11 +23,11 @@
 /*      Fix program check on NOP due to addressing - Jan Jaeger      */
 /*      Fix program check on TIC as first ccw on RSCH - Jan Jaeger   */
 /*      Fix PCI intermediate status flags             - Jan Jaeger   */
-/*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
+/*      64-bit IDAW support - Roger Bowler v209                      */
 /*      Incorrect-length-indication-suppression - Jan Jaeger         */
 /*      Read backward support contributed by Hackules   13jun2002    */
 /*      Read backward fixes contributed by Jay Jaeger   16sep2003    */
-/*      MIDAW support - Roger Bowler                    03aug2005 @MW*/
+/*      MIDAW support - Roger Bowler                    03aug2005    */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -1194,19 +1194,19 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
         /* CTCE devices need dev->hnd->halt to always be called
            even when not busy!
         */
-        || dev->ctctype == CTC_CTCE)            /* @PJJ */
+        || dev->ctctype == CTC_CTCE)
     {
-        /* Invoke the provided halt device routine @ISW */
-        /* if it has been provided by the handler  @ISW */
-        /* code at init                            @ISW */
-        if (dev->hnd->halt != NULL)             /* @ISW */
-        {                                       /* @ISW */
-            dev->hnd->halt( dev );              /* @ISW */
+        /* Invoke the provided halt device routine */
+        /* if it has been provided by the handler  */
+        /* code at init                            */
+        if (dev->hnd->halt != NULL)
+        {
+            dev->hnd->halt( dev );
             psa = (PSA_3XX*)( regs->mainstor + regs->PX );
             psa->csw[4] = 0;    /*  Store partial CSW   */
             psa->csw[5] = 0;
             cc = 1;             /*  CC1 == CSW stored   */
-        }                                       /* @ISW */
+        }
         else
         {
             /* Set condition code 2 if device is busy */
@@ -2844,7 +2844,7 @@ ARCH_DEP(raise_pci) (DEVBLK *dev,       /* -> Device block           */
 static INLINE void
 ARCH_DEP(fetch_ccw) (DEVBLK *dev,       /* -> Device block           */
                      BYTE ccwkey,       /* Bits 0-3=key, 4-7=zeroes  */
-                     BYTE ccwfmt,       /* CCW format (0 or 1)   @IWZ*/
+                     BYTE ccwfmt,       /* CCW format (0 or 1)       */
                      U32 ccwaddr,       /* Main storage addr of CCW  */
                      BYTE *code,        /* Returned operation code   */
                      U32 *addr,         /* Returned data address     */
@@ -2912,18 +2912,18 @@ static INLINE void
 ARCH_DEP(fetch_idaw) (DEVBLK *dev,      /* -> Device block           */
                       BYTE code,        /* CCW operation code        */
                       BYTE ccwkey,      /* Bits 0-3=key, 4-7=zeroes  */
-                      BYTE idawfmt,     /* IDAW format (1 or 2)  @IWZ*/
-                      U16 idapmask,     /* IDA page size - 1     @IWZ*/
+                      BYTE idawfmt,     /* IDAW format (1 or 2)      */
+                      U16 idapmask,     /* IDA page size - 1         */
                       int idaseq,       /* 0=1st IDAW                */
                       U32 idawaddr,     /* Main storage addr of IDAW */
-                      RADR *addr,       /* Returned IDAW content @IWZ*/
+                      RADR *addr,       /* Returned IDAW content     */
                       U16 *len,         /* Returned IDA data length  */
                       BYTE *chanstat)   /* Returned channel status   */
 {
-RADR    idaw;                           /* Contents of IDAW      @IWZ*/
-U32     idaw1;                          /* Format-1 IDAW         @IWZ*/
-U64     idaw2;                          /* Format-2 IDAW         @IWZ*/
-RADR    idapage;                        /* Addr of next IDA page @IWZ*/
+RADR    idaw;                           /* Contents of IDAW          */
+U32     idaw1;                          /* Format-1 IDAW             */
+U64     idaw2;                          /* Format-2 IDAW             */
+RADR    idapage;                        /* Addr of next IDA page     */
 U16     idalen;                         /* #of bytes until next page */
 BYTE    storkey;                        /* Storage key               */
 
@@ -2931,9 +2931,9 @@ BYTE    storkey;                        /* Storage key               */
     *addr = 0;
     *len = 0;
 
-    /* Channel program check if IDAW is not on correct           @IWZ
+    /* Channel program check if IDAW is not on correct
        boundary or is outside limit of main storage */
-    if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))            /*@IWZ*/
+    if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))
         || CHADDRCHK(idawaddr, dev)
         /* Program check if Format-0 CCW and IDAW address > 16M      */
         /* SA22-7201-05:                                             */
@@ -2957,41 +2957,41 @@ BYTE    storkey;                        /* Storage key               */
     STORAGE_KEY(idawaddr, dev) |= STORKEY_REF;
 
     /* Fetch IDAW from main storage */
-    if (idawfmt == 2)                                          /*@IWZ*/
-    {                                                          /*@IWZ*/
-        /* Fetch format-2 IDAW */                              /*@IWZ*/
+    if (idawfmt == 2)
+    {
+        /* Fetch format-2 IDAW */
         TXF_FETCHREF( dev->mainstor + idawaddr, 8 );
-        FETCH_DW(idaw2, dev->mainstor + idawaddr);             /*@IWZ*/
+        FETCH_DW(idaw2, dev->mainstor + idawaddr);
 
-#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )           /*@IWZ*/
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* Channel program check in ESA/390 mode
-           if the format-2 IDAW exceeds 2GB-1 */               /*@IWZ*/
-        if (idaw2 > 0x7FFFFFFF)                                /*@IWZ*/
-        {                                                      /*@IWZ*/
-            *chanstat = CSW_PROGC;                             /*@IWZ*/
-            return;                                            /*@IWZ*/
-        }                                                      /*@IWZ*/
-#endif                                                         /*@IWZ*/
-        /* Save contents of format-2 IDAW */                   /*@IWZ*/
-        idaw = idaw2;                                          /*@IWZ*/
-    }                                                          /*@IWZ*/
-    else                                                       /*@IWZ*/
-    {                                                          /*@IWZ*/
-        /* Fetch format-1 IDAW */                              /*@IWZ*/
+           if the format-2 IDAW exceeds 2GB-1 */
+        if (idaw2 > 0x7FFFFFFF)
+        {
+            *chanstat = CSW_PROGC;
+            return;
+        }
+#endif
+        /* Save contents of format-2 IDAW */
+        idaw = idaw2;
+    }
+    else
+    {
+        /* Fetch format-1 IDAW */
         TXF_FETCHREF( dev->mainstor + idawaddr, 4 );
-        FETCH_FW(idaw1, dev->mainstor + idawaddr);             /*@IWZ*/
+        FETCH_FW(idaw1, dev->mainstor + idawaddr);
 
         /* Channel program check if bit 0 of
-           the format-1 IDAW is not zero */                    /*@IWZ*/
-        if (idaw1 & 0x80000000)                                /*@IWZ*/
-        {                                                      /*@IWZ*/
-            *chanstat = CSW_PROGC;                             /*@IWZ*/
-            return;                                            /*@IWZ*/
-        }                                                      /*@IWZ*/
+           the format-1 IDAW is not zero */
+        if (idaw1 & 0x80000000)
+        {
+            *chanstat = CSW_PROGC;
+            return;
+        }
 
-        /* Save contents of format-1 IDAW */                   /*@IWZ*/
-        idaw = idaw1;                                          /*@IWZ*/
-    }                                                          /*@IWZ*/
+        /* Save contents of format-1 IDAW */
+        idaw = idaw1;
+    }
 
     /* Channel program check if IDAW data
        location is outside main storage */
@@ -3002,7 +3002,7 @@ BYTE    storkey;                        /* Storage key               */
     }
 
     /* Channel program check if IDAW data location is not
-       on a page boundary, except for the first IDAW */        /*@IWZ*/
+       on a page boundary, except for the first IDAW */
     if (IS_CCW_RDBACK (code))
     {
         if (idaseq > 0 && ((idaw+1) & idapmask) != 0)
@@ -3021,14 +3021,14 @@ BYTE    storkey;                        /* Storage key               */
     }
     else
     {
-        if (idaseq > 0 && (idaw & idapmask) != 0)              /*@IWZ*/
+        if (idaseq > 0 && (idaw & idapmask) != 0)
         {
             *chanstat = CSW_PROGC;
             return;
         }
 
-        /* Calculate address of next page boundary */          /*@IWZ*/
-        idapage = (idaw + idapmask + 1) & ~idapmask;           /*@IWZ*/
+        /* Calculate address of next page boundary */
+        idapage = (idaw + idapmask + 1) & ~idapmask;
         idalen = idapage - idaw;
 
         /* Return the address and length for this IDAW */
@@ -3041,7 +3041,7 @@ BYTE    storkey;                        /* Storage key               */
 
 #if defined(FEATURE_MIDAW_FACILITY)
 /*-------------------------------------------------------------------*/
-/* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE  @MW*/
+/* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE     */
 /*-------------------------------------------------------------------*/
 static INLINE void
 ARCH_DEP(fetch_midaw) (DEVBLK *dev,     /* -> Device block           */
@@ -3162,8 +3162,8 @@ ARCH_DEP(copy_iobuf) (DEVBLK *dev,      /* -> Device block           */
                       U32 addr,         /* Data address              */
                       U32 count,        /* Data count                */
                       BYTE ccwkey,      /* Protection key            */
-                      BYTE idawfmt,     /* IDAW format (1 or 2)  @IWZ*/
-                      U16 idapmask,     /* IDA page size - 1     @IWZ*/
+                      BYTE idawfmt,     /* IDAW format (1 or 2)      */
+                      U16 idapmask,     /* IDA page size - 1         */
                       BYTE *iobuf,      /* -> Channel I/O buffer     */
                       BYTE *iobufstart, /* -> First byte of buffer   */
                       BYTE *iobufend,   /* -> Last byte of buffer    */
@@ -3176,7 +3176,7 @@ u_int   ps = 0;                         /* Prefetch entry            */
 U32     idawaddr;                       /* Main storage addr of IDAW */
 U16     idacount;                       /* IDA bytes remaining       */
 int     idaseq;                         /* IDA sequence number       */
-RADR    idadata;                        /* IDA data address      @IWZ*/
+RADR    idadata;                        /* IDA data address          */
 U16     idalen;                         /* IDA data length           */
 int     idasize;                        /* IDAW Size                 */
 BYTE    storkey;                        /* Storage key               */
@@ -3185,12 +3185,12 @@ BYTE    to_iobuf;                       /* 1=READ, SENSE, or RDBACK  */
 BYTE    to_memory;                      /* 1=READ, SENSE, or RDBACK  */
 BYTE    readbackwards;                  /* 1=RDBACK                  */
 #if defined(FEATURE_MIDAW_FACILITY)
-int     midawseq;                       /* MIDAW counter (0=1st)  @MW*/
-U32     midawptr;                       /* Real addr of MIDAW     @MW*/
-U16     midawrem;                       /* CCW bytes remaining    @MW*/
-U16     midawlen=0;                     /* MIDAW data length      @MW*/
-RADR    midawdat=0;                     /* MIDAW data area addr   @MW*/
-BYTE    midawflg;                       /* MIDAW flags            @MW*/
+int     midawseq;                       /* MIDAW counter (0=1st)     */
+U32     midawptr;                       /* Real addr of MIDAW        */
+U16     midawrem;                       /* CCW bytes remaining       */
+U16     midawlen=0;                     /* MIDAW data length         */
+RADR    midawdat=0;                     /* MIDAW data area addr      */
+BYTE    midawflg;                       /* MIDAW flags               */
 #endif /*defined(FEATURE_MIDAW_FACILITY)*/
 
 #if !defined(set_chanstat)
@@ -3469,8 +3469,8 @@ do {                                                                   \
                 break;
 
             /* Fetch the IDAW and set IDA pointer and length */
-            ARCH_DEP( fetch_idaw )( dev, code, ccwkey, idawfmt, /*@IWZ*/
-                        idapmask, idaseq, idawaddr,             /*@IWZ*/
+            ARCH_DEP( fetch_idaw )( dev, code, ccwkey, idawfmt,
+                        idapmask, idaseq, idawaddr,
                         &idadata, &idalen, chanstat );
 
             /* Exit if fetch_idaw detected channel program check */
@@ -3960,7 +3960,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 /*-------------------------------------------------------------------*/
 /* Input                                                             */
 /*      dev     -> Device control block                              */
-/*      orb     -> Operation request block                       @IWZ*/
+/*      orb     -> Operation request block                           */
 /* Output                                                            */
 /*      The I/O parameters are stored in the device block, and a     */
 /*      thread is created to execute the CCW chain asynchronously.   */
@@ -3971,7 +3971,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 /*      valid, all other ORB parameters are set to zero.             */
 /*-------------------------------------------------------------------*/
 int
-ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)          /*@IWZ*/
+ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)
 {
 int     rc;                             /* Return code               */
 
@@ -4011,14 +4011,14 @@ int     rc;                             /* Return code               */
         /*************************************************************/
         /* VM system abends IQM00 were found to be caused by startio */
         /* SSCH resulting in cc=2 thanks to this additional log msg. */
-        /*                        Peter J. Jansen, 21-Jun-2016  @PJJ */
+        /*                        Peter J. Jansen, 21-Jun-2016       */
         /*************************************************************/
-        if (CCW_TRACE_OR_STEP( dev ))                        /* @PJJ */
-        {                                                    /* @PJJ */
+        if (CCW_TRACE_OR_STEP( dev ))
+        {
             // "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
-            WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),   /* @PJJ */
-            dev->devnum, dev->busy, dev->startpending );     /* @PJJ */
-        }                                                    /* @PJJ */
+            WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),
+            dev->devnum, dev->busy, dev->startpending );
+        }
 
         return 2;
     }
@@ -4054,8 +4054,8 @@ int     rc;                             /* Return code               */
     dev->startpending = 1;
 
     /* Copy the I/O parameter to the path management control word */
-    memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
-                        sizeof(dev->pmcw.intparm));            /*@IWZ*/
+    memcpy (dev->pmcw.intparm, orb->intparm,
+                        sizeof(dev->pmcw.intparm));
 
     /* Store the start I/O parameters in the device block */
     if (orb->flag7 & ORB7_X)
@@ -4148,13 +4148,13 @@ ARCH_DEP(execute_ccw_chain) (void *arg)
 {
 DEVBLK *dev = (DEVBLK*) arg;            /* Device Block pointer      */
 IOBUF  *iobuf;                          /* Pointer to I/O buffer     */
-U32     ccwaddr = 0;                    /* Address of CCW        @IWZ*/
+U32     ccwaddr = 0;                    /* Address of CCW            */
 U32     ticaddr = 0;                    /* Previous CCW was a TIC    */
 U16     ticback = 0;                    /* Backwards TIC counter     */
-U16     idapmask = 0;                   /* IDA page size - 1     @IWZ*/
-BYTE    idawfmt = 0;                    /* IDAW format (1 or 2)  @IWZ*/
-BYTE    ccwfmt = 0;                     /* CCW format (0 or 1)   @IWZ*/
-BYTE    ccwkey = 0;                     /* Bits 0-3=key, 4-7=zero@IWZ*/
+U16     idapmask = 0;                   /* IDA page size - 1         */
+BYTE    idawfmt = 0;                    /* IDAW format (1 or 2)      */
+BYTE    ccwfmt = 0;                     /* CCW format (0 or 1)       */
+BYTE    ccwkey = 0;                     /* Bits 0-3=key, 4-7=zero    */
 BYTE    opcode;                         /* CCW operation code        */
 BYTE    flags;                          /* CCW flags                 */
 U32     addr;                           /* CCW data address          */
@@ -4304,23 +4304,23 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
         obtain_lock (&dev->lock);
     }
 
-    /* Extract the I/O parameters from the ORB */              /*@IWZ*/
-    FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
+    /* Extract the I/O parameters from the ORB */
+    FETCH_FW(ccwaddr, dev->orb.ccwaddr);
     dev->ccwaddr = ccwaddr;
     dev->ccwfmt = ccwfmt = (dev->orb.flag5 & ORB5_F) ? 1 : 0;
     dev->ccwkey = ccwkey = dev->orb.flag4 & ORB4_KEY;
     dev->idawfmt = idawfmt = (dev->orb.flag5 & ORB5_H) ? 2 : 1;
 
-    /* Determine IDA page size */                              /*@IWZ*/
-    if (idawfmt == 2)                                          /*@IWZ*/
-    {                                                          /*@IWZ*/
-        /* Page size is 2K or 4K depending on flag bit */      /*@IWZ*/
-        idapmask =                                             /*@IWZ*/
-            (dev->orb.flag5 & ORB5_T) ? 0x7FF : 0xFFF;         /*@IWZ*/
-    } else {                                                   /*@IWZ*/
-        /* Page size is always 2K for format-1 IDAW */         /*@IWZ*/
-        idapmask = 0x7FF;                                      /*@IWZ*/
-    }                                                          /*@IWZ*/
+    /* Determine IDA page size */
+    if (idawfmt == 2)
+    {
+        /* Page size is 2K or 4K depending on flag bit */
+        idapmask =
+            (dev->orb.flag5 & ORB5_T) ? 0x7FF : 0xFFF;
+    } else {
+        /* Page size is always 2K for format-1 IDAW */
+        idapmask = 0x7FF;
+    }
 
 
 resume_suspend:

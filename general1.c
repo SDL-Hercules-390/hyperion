@@ -4685,6 +4685,10 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 }
 
 #ifdef OPTION_OPTINST
+
+/*-------------------------------------------------------------------*/
+/* BF_7   ICM   - Insert Characters under Mask                  [RS] */
+/*-------------------------------------------------------------------*/
 DEF_INST(BF_7)
 {
 int    r1;                              /* Register numbers          */
@@ -4703,6 +4707,9 @@ U32    n;                               /* Fetched value             */
     regs->psw.cc = n ? n & 0x00800000 ? 1 : 2 : 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* BF_F   ICM   - Insert Characters under Mask                  [RS] */
+/*-------------------------------------------------------------------*/
 DEF_INST(BF_F)
 {
 int    r1;                              /* Register numbers          */
@@ -4716,6 +4723,9 @@ VADR   effective_addr2;                 /* effective address         */
     regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 1 : 2 : 0;
 }
 
+/*-------------------------------------------------------------------*/
+/* BF_x   ICM   - Insert Characters under Mask                  [RS] */
+/*-------------------------------------------------------------------*/
 DEF_INST(BF_x)
 {
 int    r1, r3;                          /* Register numbers          */

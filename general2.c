@@ -1543,22 +1543,22 @@ BYTE    old;                            /* Old value                 */
             old = *main2;
 
             /* Attempt to exchange the values */
-            /*  The WHILE statement that follows could lead to a        @PJJ */
-            /*  TS-style lock release never being noticed, because      @PJJ */
-            /*  because such release statements are implemented using   @PJJ */
-            /*  regular instructions such as MVI or even ST which set   @PJJ */
-            /*  [the most significant bit of] the mem_lockbyte to zero; @PJJ */
-            /*  these are NOT being protected using _MAINLOCK.  In the  @PJJ */
-            /*  absence of a machine assist for "cmpxchg1" it is then   @PJJ */
-            /*  possible that this reset occurs in between the test     @PJJ */
-            /*  IF (old == mem_lockbyte), and the updating of           @PJJ */
-            /*  mem_lockbyte = 255;  As this update in the case         @PJJ */
-            /*  old == 255 is not needed to start with, we have         @PJJ */
-            /*  inserted the test IF (old != 255) in front of the       @PJJ */
-            /*  original WHILE statement.                               @PJJ */
-            /*  (The above bug WAS experienced running VM on an ARM     @PJJ */
-            /*  Raspberry PI; this correction fixed it.)                @PJJ */
-            /*                              (Peter J. Jansen, May 2015) @PJJ */
+            /*  The WHILE statement that follows could lead to a        */
+            /*  TS-style lock release never being noticed, because      */
+            /*  because such release statements are implemented using   */
+            /*  regular instructions such as MVI or even ST which set   */
+            /*  [the most significant bit of] the mem_lockbyte to zero; */
+            /*  these are NOT being protected using _MAINLOCK.  In the  */
+            /*  absence of a machine assist for "cmpxchg1" it is then   */
+            /*  possible that this reset occurs in between the test     */
+            /*  IF (old == mem_lockbyte), and the updating of           */
+            /*  mem_lockbyte = 255;  As this update in the case         */
+            /*  old == 255 is not needed to start with, we have         */
+            /*  inserted the test IF (old != 255) in front of the       */
+            /*  original WHILE statement.                               */
+            /*  (The above bug WAS experienced running VM on an ARM     */
+            /*  Raspberry PI; this correction fixed it.)                */
+            /*                              (Peter J. Jansen, May 2015) */
             if (old != 255)
                 while (cmpxchg1( &old, 255, main2 ));
             regs->psw.cc = old >> 7;

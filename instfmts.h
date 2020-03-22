@@ -340,12 +340,12 @@
 // and RRF-c to RRF-e) because of the different assembler-language
 // syntaxes that are used for the many different RRF instructions:
 //
-//      Format       Assembler Syntax       Decoder  (?)  
+//      Format       Assembler Syntax       Decoder  (?)
 //     --------     ------------------     ---------------
 //
 //      RRF-a        r1,r2[,r3[,m4]]        RRF_RM   RRR?
 //      RRF-b        r1,r3,r2[,m4]          RRR      RRF_RM?
-//      RRF-c        r1,r2[,m3]             RRF_M    RRF_MM?, RRR? 
+//      RRF-c        r1,r2[,m3]             RRF_M    RRF_MM?, RRR?
 //      RRF-d        r1,r2,m4               RRF_M4   RRF_MM?
 //      RRF-e        r1,m3,r2[,m4]          RRF_MM   RRR?, RRF_M?
 //

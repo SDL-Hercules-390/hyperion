@@ -79,12 +79,10 @@ static const char *het_errstr[] =
             Currently, "HETOPEN_CREATE" is the only flag available and has
             the same function as the O_CREAT flag of the open(3) function.
 
-            @ISW@ Added flag HETOPEN_READONLY
-
-            HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
-
             When HETOPEN_READONLY is set, the het file must exist.
             It is opened read only. Any attempt to write will fail.
+
+            HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
 
     RETURN VALUE
             If no errors are detected then the return value will be >= 0

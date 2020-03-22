@@ -1081,7 +1081,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         // The child process executes the configuration command
         if( ifc_pid == 0 )
         {
-            /* @ISW@ Close all file descriptors
+            /* Close all file descriptors
              * (except ifc_fd[1] and STDOUT FILENO)
              * (otherwise some devices are never closed)
              * (ex: SCSI tape devices can never be re-opened)
@@ -1106,7 +1106,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
                     close(i);
                 }
             }
-            /* @ISW@ Close spurious FDs END */
+            /* end close spurious FDs */
             dup2( ifc_fd[1], STDIN_FILENO  );
             dup2( STDOUT_FILENO, STDERR_FILENO );
 

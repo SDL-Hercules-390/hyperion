@@ -4185,7 +4185,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
                 release_lock (&dev->lock);
                 break;
             }
- 
+
             /* Set AID in buffer flag */
             aid = 1;
 

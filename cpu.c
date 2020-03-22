@@ -28,8 +28,8 @@
 /*          Jan Jaeger, after a suggestion by Willem Konynenberg     */
 /*      Instruction decode rework - Jan Jaeger                       */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
-/*      Basic FP extensions support - Peter Kuschnerus           v209*/
-/*      ASN-and-LX-reuse facility - Roger Bowler, June 2004      @ALR*/
+/*      Basic FP extensions support - Peter Kuschnerus               */
+/*      ASN-and-LX-reuse facility - Roger Bowler, June 2004          */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -590,16 +590,16 @@ static char *pgmintname[] = {
         /* 23 */        "EX-translation exception",
         /* 24 */        "Primary-authority exception",
         /* 25 */        "Secondary-authority exception",
-        /* 26 */        "LFX-translation exception",            /*@ALR*/
-        /* 27 */        "LSX-translation exception",            /*@ALR*/
+        /* 26 */        "LFX-translation exception",
+        /* 27 */        "LSX-translation exception",
         /* 28 */        "ALET-specification exception",
         /* 29 */        "ALEN-translation exception",
         /* 2A */        "ALE-sequence exception",
         /* 2B */        "ASTE-validity exception",
         /* 2C */        "ASTE-sequence exception",
         /* 2D */        "Extended-authority exception",
-        /* 2E */        "LSTE-sequence exception",              /*@ALR*/
-        /* 2F */        "ASTE-instance exception",              /*@ALR*/
+        /* 2E */        "LSTE-sequence exception",
+        /* 2F */        "ASTE-instance exception",
         /* 30 */        "Stack-full exception",
         /* 31 */        "Stack-empty exception",
         /* 32 */        "Stack-specification exception",
@@ -765,9 +765,9 @@ static char *pgmintname[] = {
       || code == PGM_AFX_TRANSLATION_EXCEPTION
       || code == PGM_ASX_TRANSLATION_EXCEPTION
       || code == PGM_LX_TRANSLATION_EXCEPTION
-      || code == PGM_LFX_TRANSLATION_EXCEPTION                 /*@ALR*/
-      || code == PGM_LSX_TRANSLATION_EXCEPTION                 /*@ALR*/
-      || code == PGM_LSTE_SEQUENCE_EXCEPTION                   /*@ALR*/
+      || code == PGM_LFX_TRANSLATION_EXCEPTION
+      || code == PGM_LSX_TRANSLATION_EXCEPTION
+      || code == PGM_LSTE_SEQUENCE_EXCEPTION
       || code == PGM_EX_TRANSLATION_EXCEPTION
       || code == PGM_PRIMARY_AUTHORITY_EXCEPTION
       || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
@@ -775,7 +775,7 @@ static char *pgmintname[] = {
       || code == PGM_ALE_SEQUENCE_EXCEPTION
       || code == PGM_ASTE_VALIDITY_EXCEPTION
       || code == PGM_ASTE_SEQUENCE_EXCEPTION
-      || code == PGM_ASTE_INSTANCE_EXCEPTION                   /*@ALR*/
+      || code == PGM_ASTE_INSTANCE_EXCEPTION
       || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
       || code == PGM_STACK_FULL_EXCEPTION
       || code == PGM_STACK_EMPTY_EXCEPTION
@@ -1068,7 +1068,7 @@ static char *pgmintname[] = {
           || code == PGM_ALE_SEQUENCE_EXCEPTION
           || code == PGM_ASTE_VALIDITY_EXCEPTION
           || code == PGM_ASTE_SEQUENCE_EXCEPTION
-          || code == PGM_ASTE_INSTANCE_EXCEPTION               /*@ALR*/
+          || code == PGM_ASTE_INSTANCE_EXCEPTION
           || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
           || code == PGM_PROTECTION_EXCEPTION
@@ -1104,9 +1104,9 @@ static char *pgmintname[] = {
           || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
           || code == PGM_SPACE_SWITCH_EVENT
           || code == PGM_LX_TRANSLATION_EXCEPTION
-          || code == PGM_LFX_TRANSLATION_EXCEPTION             /*@ALR*/
-          || code == PGM_LSX_TRANSLATION_EXCEPTION             /*@ALR*/
-          || code == PGM_LSTE_SEQUENCE_EXCEPTION               /*@ALR*/
+          || code == PGM_LFX_TRANSLATION_EXCEPTION
+          || code == PGM_LSX_TRANSLATION_EXCEPTION
+          || code == PGM_LSTE_SEQUENCE_EXCEPTION
           || code == PGM_EX_TRANSLATION_EXCEPTION)
         {
             STORE_FW(psa->TEA_L, regs->TEA);

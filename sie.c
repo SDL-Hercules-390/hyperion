@@ -646,8 +646,9 @@ U64     dreg;
 
     }
     /* Purge guest TLB entries */
-    /* @ISW20160730 : FIXME - Force TLB/ALB purge of guest context since there seem to be
-       some areas in hercules where the guest TLB/ALB is not properly maintained */
+    /* FIXME - Force TLB/ALB purge of guest context since there
+       seem to be some areas in hercules where the guest TLB/ALB
+       is not properly maintained */
     ARCH_DEP(purge_tlb) (GUESTREGS);
     ARCH_DEP(purge_alb) (GUESTREGS);
 

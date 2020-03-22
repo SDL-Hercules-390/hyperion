@@ -3149,7 +3149,6 @@ DEF_INST( diagnose );
 DEF_INST( divide );
 DEF_INST( divide_decimal );
 DEF_INST( divide_register );
-DEF_INST( dummy_instruction    );
 DEF_INST( edit_x_edit_and_mark );
 DEF_INST( exclusive_or );
 DEF_INST( exclusive_or_character );
