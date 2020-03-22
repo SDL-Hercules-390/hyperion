@@ -51,17 +51,23 @@ The following variables are defined in that environment:
 
 Variable | Description...
 --------------------- | -------------------------------------------------
-$(VERSION)            | The Hercules version  
-$(HOSTNAME)           | The host name on which Hercules is running  
-$(HOSTOS)             | The host operating system  
-$(HOSTOSREL)          | The Host operating system release  
-$(HOSTOSVER)          | The host operating system version  
-$(HOSTARCH)           | The host architecture  
-$(HOSTNUMCPUS)        | UP (for 1) or MP=X (for more than 1)  
-$(LPARNAME)           | The LPAR name specified in the configuration file  
+$(BDATE)              | The build date of the emulator (e.g. "Mar 16 2020")  
+$(BTIME)              | The build time of the emulator (e.g. "19:44:32")  
 $(CCUU,ccuu,CUU,cuu)  | Various forms of the device number of the terminal  
+$(CPUSERIAL)          | The CPUSERIAL value specified in the configuration file  
+$(CPUMODEL)           | The CPUMODEL value specified in the configuration file  
 $(CSS)                | The Logical Channel Subsystem Set or Channel Set for the terminal  
+$(DATE)               | The current date in YYYYMMDD format  
+$(HOSTARCH)           | The host architecture  (e.g. "Intel(R) x64")  
+$(HOSTNAME)           | The host name on which Hercules is running  
+$(HOSTNUMCPUS)        | E.g. "LP=8, Cores=8, CPUs=2"  
+$(HOSTOS)             | The host operating system (e.g. "Windows")  
+$(HOSTOSREL)          | The Host operating system release (e.g. "6.1.7601")  
+$(HOSTOSVER)          | The host operating system version (e.g. "7 Ultimate Edition 64-")   
+$(LPARNAME)           | The LPAR name specified in the configuration file  
 $(SUBCHAN)            | The Subchannel number for the terminal  
+$(TIME)               | The current time in HHMMSS format  
+$(VERSION)            | The Hercules version  
 
 Additionally, it is also possible to specify environment variable names.
 
