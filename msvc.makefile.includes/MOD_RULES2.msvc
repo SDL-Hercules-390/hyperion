@@ -53,12 +53,17 @@ $(X)hengine.dll:  $(hengine_OBJ) $(O)hdasd.lib $(O)htape.lib $(O)w32ctca.obj \
 # ---------------------------------------------------------------------
 # Device modules
 
-$(X)hdteq.dll:    $(O)hdteq.obj \
-                  $(O)hengine.lib $(O)hutil.lib              $(O)hercprod.res
+$(X)dyngui.dll:   $(O)dyngui.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt2880.dll:  $(O)hchan.obj \
+$(X)hdt1052c.dll: $(O)con1052c.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
+$(X)hdt1403.dll:  $(O)printer.obj $(O)sockdev.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
@@ -68,7 +73,17 @@ $(X)hdt2703.dll:  $(O)commadpt.obj \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt3705.dll:  $(O)comm3705.obj \
+$(X)hdt2880.dll:  $(O)hchan.obj \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
+$(X)hdt3088.dll:  $(ctc_OBJ) $(tuntap_OBJ) \
+                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+    $(linkdll)
+    $(MT_DLL_CMD)
+
+$(X)hdt3270.dll:  $(O)console.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
@@ -83,27 +98,22 @@ $(X)hdt3505.dll:  $(O)cardrdr.obj $(O)sockdev.obj \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt1403.dll:  $(O)printer.obj $(O)sockdev.obj \
-                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
-    $(linkdll)
-    $(MT_DLL_CMD)
-
 $(X)hdt3525.dll:  $(O)cardpch.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt3270.dll:  $(O)console.obj \
+$(X)hdt3705.dll:  $(O)comm3705.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt1052c.dll: $(O)con1052c.obj \
-                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
+$(X)hdteq.dll:    $(O)hdteq.obj \
+                  $(O)hengine.lib $(O)hutil.lib              $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdt3088.dll:  $(ctc_OBJ) $(tuntap_OBJ) \
+$(X)hdtptp.dll:   $(O)ctc_ptp.obj $(tuntap_OBJ) \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
@@ -118,17 +128,7 @@ $(X)hdttcpnje.dll:  $(O)tcpnje.obj $(tuntap_OBJ) \
     $(linkdll)
     $(MT_DLL_CMD)
 
-$(X)hdtptp.dll:   $(O)ctc_ptp.obj $(tuntap_OBJ) \
-                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
-    $(linkdll)
-    $(MT_DLL_CMD)
-
 $(X)hdtzfcp.dll:  $(O)zfcp.obj \
-                  $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
-    $(linkdll)
-    $(MT_DLL_CMD)
-
-$(X)dyngui.dll:   $(O)dyngui.obj \
                   $(O)hengine.lib $(O)hutil.lib $(O)hsys.lib $(O)hercprod.res
     $(linkdll)
     $(MT_DLL_CMD)
