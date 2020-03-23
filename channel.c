@@ -5713,36 +5713,48 @@ int     i;                              /* Interruption subclass     */
 
 
 /*-------------------------------------------------------------------*/
-/* PRESENT PENDING I/O INTERRUPT                                     */
+/*                 PRESENT PENDING I/O INTERRUPT                     */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
 /* Finds a device with a pending condition for which an interrupt    */
-/* is allowed by the CPU whose regs structure is passed as a         */
-/* parameter.  Clears the interrupt condition and returns the        */
-/* I/O address and I/O interruption parameter (for channel subsystem)*/
-/* or the I/O address and CSW (for S/370 channels).                  */
-/* This routine does not perform a PSW switch.                       */
-/* The CSW pointer is NULL in the case of TPI.                       */
+/* is allowed by the CPU whose regs struct is passed as a parameter. */
+/*                                                                   */
+/* Clears the interrupt condition and returns the I/O address and    */
+/* I/O interruption parameter (for channel subsystem) or the I/O     */
+/* address and CSW (for S/370 channels).                             */
+/*                                                                   */
 /* The return value is the condition code for the TPI instruction:   */
 /* 0 if no allowable pending interrupt exists, otherwise 1.          */
-/* Note: The caller MUST hold the interrupt lock (sysblk.intlock).   */
-/*-------------------------------------------------------------------*/
-/* I/O Assist:                                                       */
-/* This routine must return:                                         */
 /*                                                                   */
-/* 0                   - In the case of no pending interrupt         */
-/* SIE_NO_INTERCEPT    - For a non-intercepted I/O interrupt         */
-/* SIE_INTERCEPT_IOINT - For an I/O interrupt which must intercept   */
-/* SIE_INTERCEPT_IOINTP- For a pending I/O interception              */
-/*                                                                   */
-/* SIE_INTERCEPT_IOINT may only be returned to a guest               */
 /*-------------------------------------------------------------------*/
-int
-ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
-                                U32 *ioparm, U32 *iointid, BYTE *csw)
+/*                                                                   */
+/*   NOTE: Caller MUST hold the interrupt lock (sysblk.intlock).     */
+/*   NOTE: This routine does NOT perform a PSW switch.               */
+/*   NOTE: The CSW pointer is NULL in the case of TPI.               */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                         I/O ASSIST                                */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This routine MUST return:                                         */
+/*                                                                   */
+/*  0                   - In the case of no pending interrupt        */
+/*                                                                   */
+/*  SIE_NO_INTERCEPT    - For a non-intercepted I/O interrupt        */
+/*                                                                   */
+/*  SIE_INTERCEPT_IOINT - For an I/O interrupt which must intercept  */
+/*                        (may ONLY be returned to a guest)          */
+/*                                                                   */
+/*  SIE_INTERCEPT_IOINTP- For a pending I/O interception             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( present_io_interrupt )( REGS* regs, U32* ioid, U32* ioparm,
+                                      U32* iointid, BYTE* csw )
 {
 IOINT  *io, *io2;                       /* -> I/O interrupt entry    */
 DEVBLK *dev;                            /* -> Device control block   */
 int     icode = 0;                      /* Intercept code            */
-int     dotsch = 1;                     /* perform TSCH after int    */
+bool    dotsch = true;                  /* perform TSCH after int    */
                                         /* except for THININT        */
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
@@ -5761,261 +5773,275 @@ bool    PCI_dequeued  = false;
     UNREFERENCED_390(csw);
     UNREFERENCED_900(csw);
 
-    /* Find a device with pending interrupt */
-
-    /* (N.B. devlock cannot be acquired while iointqlk held;
-       iointqlk must be acquired after devlock) */
 retry:
+
+    /* Find a device with pending interrupt...
+
+       Please remember that the device lock CANNOT be acquired
+       while iointqlk is held. The iointqlk MUST be acquired AFTER
+       the device lock is first acquired. Thus the retry logic.
+    */
     dev = NULL;
-    obtain_lock(&sysblk.iointqlk);
-    for (io = sysblk.iointq; io != NULL; io = io->next)
+
+    obtain_lock( &sysblk.iointqlk );
     {
-        /* Can't present interrupt while TEST SUBCHANNEL required
-         * (interrupt already presented for this device)
-         */
-        if (io->dev->tschpending)
-            continue;
-
-        /* Exit loop if enabled for interrupts from this device */
-        if ((icode = ARCH_DEP(interrupt_enabled)(regs, io->dev))
-#if defined(_FEATURE_IO_ASSIST)
-          && icode != SIE_INTERCEPT_IOINTP
-#endif
-                                          )
-        {
-            dev = io->dev;
-            break;
-        }
-
-        /* See if another CPU can take this interrupt */
-        {
-            REGS *regs;
-            CPU_BITMAP mask = sysblk.waiting_mask;
-            CPU_BITMAP wake;
-            int i;
-
-            /* If any CPUs are waiting, isolate to subgroup enabled for
-             * I/O interrupts.
-             */
-            if (mask)
-            {
-                wake = mask;
-
-                /* Turn off wake mask bits for waiting CPUs that aren't
-                 * enabled for I/O interrupts for the device.
-                 */
-                for (i = 0; mask; mask >>= 1, ++i)
-                {
-                    if (mask & 1)
-                    {
-                        regs = sysblk.regs[i];
-                        if (!ARCH_DEP(interrupt_enabled)(regs, io->dev))
-                            wake ^= regs->cpubit;
-                    }
-                }
-
-                /* Wakeup the LRU waiting CPU enabled for I/O
-                 * interrupts.
-                 */
-                WAKEUP_CPU_MASK(wake);
-            }
-        }
-
-    } /* end for(io) */
-
-#if defined(_FEATURE_IO_ASSIST)
-    /* In the case of I/O assist, do a rescan, to see if there are
-       any devices with pending subclasses for which we are not
-       enabled, if so cause a interception */
-    if (io == NULL && SIE_MODE(regs))
-    {
-        /* Find a device with a pending interrupt, regardless
-           of the interrupt subclass mask */
-        ASSERT(dev == NULL);
         for (io = sysblk.iointq; io != NULL; io = io->next)
         {
-            /* Exit loop if pending interrupts from this device */
-            if (ARCH_DEP(interrupt_enabled)(regs, io->dev))
+            /* Can't present interrupt while TEST SUBCHANNEL required
+             * (interrupt already presented for this device)
+             */
+            if (io->dev->tschpending)
+                continue;
+
+            /* Exit loop if enabled for interrupts from this device */
+            if ((icode = ARCH_DEP( interrupt_enabled )( regs, io->dev ))
+
+#if defined( _FEATURE_IO_ASSIST )
+              && icode != SIE_INTERCEPT_IOINTP
+#endif
+            )
             {
                 dev = io->dev;
                 break;
             }
+
+            /* See if another CPU can take this interrupt */
+            {
+                REGS *regs;
+                CPU_BITMAP mask = sysblk.waiting_mask;
+                CPU_BITMAP wake;
+                int i;
+
+                /* If any CPUs are waiting, isolate to subgroup enabled for
+                 * I/O interrupts.
+                 */
+                if (mask)
+                {
+                    wake = mask;
+
+                    /* Turn off wake mask bits for waiting CPUs that aren't
+                     * enabled for I/O interrupts for the device.
+                     */
+                    for (i=0; mask; mask >>= 1, ++i)
+                    {
+                        if (mask & 1)
+                        {
+                            regs = sysblk.regs[i];
+
+                            if (!ARCH_DEP( interrupt_enabled )( regs, io->dev ))
+                                wake ^= regs->cpubit;
+                        }
+                    }
+
+                    /* Wakeup the LRU waiting CPU enabled for I/O
+                     * interrupts.
+                     */
+                    WAKEUP_CPU_MASK( wake );
+                }
+            }
+
         } /* end for(io) */
-    }
+
+#if defined( _FEATURE_IO_ASSIST )
+        /* In the case of I/O assist, do a rescan, to see
+           if there are any devices with pending subclasses
+           for which we are not enabled, if so cause an
+           interception.
+        */
+        if (io == NULL && SIE_MODE( regs ))
+        {
+            /* Find a device with a pending interrupt, regardless
+               of the interrupt subclass mask
+            */
+            ASSERT( dev == NULL );
+
+            for (io = sysblk.iointq; io != NULL; io = io->next)
+            {
+                /* Exit loop if pending interrupts from this device */
+                if (ARCH_DEP( interrupt_enabled )( regs, io->dev ))
+                {
+                    dev = io->dev;
+                    break;
+                }
+            } /* end for(io) */
+        }
 #endif
+        /* If no interrupt pending, or no device, exit with
+         * condition code 0
+         */
+        if (io == NULL || dev == NULL)
+        {
+            if (dev != NULL)
+                subchannel_interrupt_queue_cleanup( dev );
 
-    /* If no interrupt pending, or no device, exit with
-     * condition code 0
-     */
-    if (io == NULL || dev == NULL)
-    {
-        if (dev != NULL)
-            subchannel_interrupt_queue_cleanup(dev);
-        UPDATE_IC_IOPENDING_QLOCKED();
-        release_lock(&sysblk.iointqlk);
-        return 0;
+            UPDATE_IC_IOPENDING_QLOCKED();
+
+            release_lock( &sysblk.iointqlk );
+            return 0;
+        }
     }
-
-    release_lock(&sysblk.iointqlk);
+    release_lock( &sysblk.iointqlk );
 
     /* Obtain device lock for device with interrupt */
-    obtain_lock(&dev->lock);
-
-    /* Verify interrupt for this device still exists and TEST SUBCHANNEL
-     * has to be issued to clear an existing interrupt
-     */
-    obtain_lock(&sysblk.iointqlk);
-    for (io2 = sysblk.iointq; io2 != NULL && io2 != io; io2 = io2->next);
-
-    if (io2 == NULL ||
-        dev->tschpending)
+    obtain_lock( &dev->lock );
     {
-        /* Our interrupt was dequeued; retry */
-        release_lock(&sysblk.iointqlk);
-        release_lock(&dev->lock);
-        goto retry;
-    }
-
-
-    /* Extract the I/O address and interrupt parameter */
-    *ioid = (dev->ssid << 16) | dev->subchan;
-    FETCH_FW(*ioparm,dev->pmcw.intparm);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
-#if defined(FEATURE_QDIO_THININT)
-    if (unlikely( FACILITY_ENABLED( HERC_QDIO_THININT, regs )
-        && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint) )
-    {
-        saved_dotsch = dotsch;
-        PCI_dequeued = false;
-
-        dotsch = 0;     /* Do not require TSCH after INT */
-
-        *iointid = 0x80000000
-             | (
-#if defined(_FEATURE_IO_ASSIST)
-                /* For I/O Assisted devices use (V)ISC */
-                (SIE_MODE(regs)) ?
-                  (icode == SIE_NO_INTERCEPT) ?
-                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
-                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
-                      | (dev->pmcw.zone << 16)
-                      | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
-#endif
-                ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
-                  | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
-#if defined(_FEATURE_IO_ASSIST)
-                  | (dev->pmcw.zone << 16)
-                  | ((dev->pmcw.flag27 & PMCW27_I) << 8)
-#endif
-                                                                  ) ;
-
-        if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
+        /* Verify that the interrupt for this device still exists and that
+           TEST SUBCHANNEL has to be issued to clear an existing interrupt.
+         */
+        obtain_lock( &sysblk.iointqlk );
         {
-            /* Dequeue the interrupt */
-            PCI_dequeued = DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint ) == 0 ? true : false;
+            for (io2 = sysblk.iointq; io2 != NULL && io2 != io; io2 = io2->next);
 
-            if (!PCI_dequeued)
-                dotsch = saved_dotsch; // (restore)
-            else
+            if (io2 == NULL || dev->tschpending)
             {
-                /* Clear the pending PCI status */
-                dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
-                dev->pciscsw.flag3 &= ~(SCSW3_SC);
+                /* Our interrupt was dequeued; retry */
+                release_lock( &sysblk.iointqlk );
+                release_lock( &dev->lock );
+                goto retry;
             }
-        }
-        else
-            PCI_dequeued = true; // (keep same logic as before!)
-    }
-    /* If no PCI interrupt dequeued, then dequeue a normal interrupt */
-    if (!PCI_dequeued)
-#endif /*defined(FEATURE_QDIO_THININT)*/
-        *iointid = (
-#if defined(_FEATURE_IO_ASSIST)
-                    /* For I/O Assisted devices use (V)ISC */
-                    (SIE_MODE(regs)) ?
-                      (icode == SIE_NO_INTERCEPT) ?
-                        ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
-                        ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
+
+            /* Extract the I/O address and interrupt parameter */
+            *ioid = (dev->ssid << 16) | dev->subchan;
+            FETCH_FW( *ioparm,dev->pmcw.intparm );
+
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( _FEATURE_IO_ASSIST )
+#if defined( FEATURE_QDIO_THININT )
+            if (unlikely( FACILITY_ENABLED( HERC_QDIO_THININT, regs )
+                && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint ))
+            {
+                saved_dotsch = dotsch;
+                PCI_dequeued = false;
+
+                dotsch = false;  /* Do not require TSCH after INT */
+
+                *iointid = 0x80000000
+                     | (
+#if defined( _FEATURE_IO_ASSIST )
+                        /* For I/O Assisted devices use (V)ISC */
+                        (SIE_MODE(regs)) ?
+                          (icode == SIE_NO_INTERCEPT) ?
+                            ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
+                            ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
+                              | (dev->pmcw.zone << 16)
+                              | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
+#endif
+                        ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
+                          | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
+#if defined( _FEATURE_IO_ASSIST )
                           | (dev->pmcw.zone << 16)
-                          | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
+                          | ((dev->pmcw.flag27 & PMCW27_I) << 8)
 #endif
-                     ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
-                       | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
+                ); // *iointid =
+
+                if (!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
+                {
+                    /* Dequeue the interrupt */
+                    PCI_dequeued = DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint ) == 0 ? true : false;
+
+                    if (!PCI_dequeued)
+                        dotsch = saved_dotsch; // (restore)
+                    else
+                    {
+                        /* Clear the pending PCI status */
+                        dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
+                        dev->pciscsw.flag3 &= ~(SCSW3_SC);
+                    }
+                }
+                else
+                    PCI_dequeued = true; // (keep same logic as before!)
+            }
+
+            /* If no PCI interrupt dequeued, then dequeue a normal interrupt */
+            if (!PCI_dequeued)
+#endif /*defined( FEATURE_QDIO_THININT )*/
+
+                *iointid = (
 #if defined(_FEATURE_IO_ASSIST)
-                       | (dev->pmcw.zone << 16)
-                       | ((dev->pmcw.flag27 & PMCW27_I) << 8)
+                            /* For I/O Assisted devices use (V)ISC */
+                            (SIE_MODE(regs)) ?
+                              (icode == SIE_NO_INTERCEPT) ?
+                                ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
+                                ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
+                                  | (dev->pmcw.zone << 16)
+                                  | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
 #endif
-                                                                  );
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)*/
-
+                             ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
+                               | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
 #if defined(_FEATURE_IO_ASSIST)
-    /* Do not drain pending interrupts on intercept due to zero ISC
-     * mask
-     */
-    if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
-#endif /*_FEATURE_IO_ASSIST)*/
-    {
-        if (!SIE_MODE(regs) || icode != SIE_NO_INTERCEPT)
-            dev->pmcw.flag27 &= ~PMCW27_I;
+                               | (dev->pmcw.zone << 16)
+                               | ((dev->pmcw.flag27 & PMCW27_I) << 8)
+#endif
+                ); // *iointid =
+#endif /*defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( _FEATURE_IO_ASSIST ) */
 
-        /* Dequeue the interrupt */
-        DEQUEUE_IO_INTERRUPT_QLOCKED(io);
-    }
+#if defined( _FEATURE_IO_ASSIST )
+            /* Do not drain pending interrupts
+               on intercept due to zero ISC mask
+             */
+            if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
+#endif
+            {
+                if (!SIE_MODE(regs) || icode != SIE_NO_INTERCEPT)
+                    dev->pmcw.flag27 &= ~PMCW27_I;
 
-    /* TEST SUBCHANNEL is now required to clear the interrupt */
-    dev->tschpending = dotsch;
+                /* Dequeue the interrupt */
+                DEQUEUE_IO_INTERRUPT_QLOCKED( io );
+            }
 
-    /* Perform additional architecture post processing and cleanup */
-    switch (sysblk.arch_mode)
-    {
-        case ARCH_370_IDX:
-        {
-            IOINT*  ioint;              /* -> I/O interrupt          */
-            IRB     irb;                /* -> IRB                    */
-            SCSW*   scsw;               /* -> SCSW                   */
-            int     cc;                 /* Condition code ignored    */
+            /* TEST SUBCHANNEL is now required to clear the interrupt */
+            dev->tschpending = dotsch;
 
-            /* Extract the I/O address and CSW */
-            *ioid = dev->devnum;
+            /* Perform additional architecture post processing and cleanup */
+            switch (sysblk.arch_mode)
+            {
+                case ARCH_370_IDX:
+                {
+                    IOINT*  ioint;              /* -> I/O interrupt          */
+                    IRB     irb;                /* -> IRB                    */
+                    SCSW*   scsw;               /* -> SCSW                   */
+                    int     cc;                 /* Condition code ignored    */
 
-            /* Perform core of TEST SUBCHANNEL work and store CSW */
-            cc = test_subchan_locked(regs, dev, &irb, &ioint, &scsw);
-            store_scsw_as_csw(regs, scsw);
-            break;
+                    /* Extract the I/O address and CSW */
+                    *ioid = dev->devnum;
+
+                    /* Perform core of TEST SUBCHANNEL work and store CSW */
+                    cc = test_subchan_locked( regs, dev, &irb, &ioint, &scsw );
+                    store_scsw_as_csw( regs, scsw );
+                    break;
+                }
+            }
+
+            subchannel_interrupt_queue_cleanup( dev );
+            UPDATE_IC_IOPENDING_QLOCKED();
         }
-    }
-
-    subchannel_interrupt_queue_cleanup(dev);
-    UPDATE_IC_IOPENDING_QLOCKED();
-    release_lock(&sysblk.iointqlk);
+        release_lock( &sysblk.iointqlk );
 
 #if DEBUG_SCSW
-    if (unlikely(dev->ccwtrace))
-    {
-        SCSW*   scsw;                   /* SCSW to validate          */
-
-        /* Select SCSW */
-        if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
-            scsw = &dev->pciscsw;
-        else if (dev->scsw.flag3 & SCSW3_SC_PEND)
-            scsw = &dev->scsw;
-     /* else if (dev->attnscsw.flag3 & SCSW3_SC_PEND)   */
-     /*     scsw = &dev->attnscsw;                      */
-        else
-            scsw = NULL;
-
-        /* Check interrupt validity */
-        if (scsw != NULL                            &&
-            !(scsw->flag2 & (SCSW2_FC | SCSW2_AC))  &&
-            !(scsw->flag3 & SCSW3_AC))
+        if (unlikely(dev->ccwtrace))
         {
-            WRMSG(HHC90000, "E", "  CHAN: Invalid SCSW presentation");
-            display_scsw(dev, *scsw);
+            SCSW* scsw;   /* (selected SCSW) */
+
+                 if (dev->pciscsw.flag3  & SCSW3_SC_PEND) scsw = &dev->pciscsw;
+            else if (dev->scsw.flag3     & SCSW3_SC_PEND) scsw = &dev->scsw;
+         /* else if (dev->attnscsw.flag3 & SCSW3_SC_PEND) scsw = &dev->attnscsw; */
+            else scsw = NULL;
+
+            /* Check interrupt validity */
+
+            if (1
+                && scsw != NULL
+                && !(scsw->flag2 & (SCSW2_FC | SCSW2_AC))
+                && !(scsw->flag3 & SCSW3_AC)
+            )
+            {
+                WRMSG( HHC90000, "E", "  CHAN: Invalid SCSW presentation" );
+                display_scsw( dev, *scsw );
+            }
         }
-    }
 #endif /*DEBUG_SCSW*/
 
-    release_lock(&dev->lock);
+    }
+    release_lock( &dev->lock );
 
     /* Exit with condition code indicating queued interrupt cleared */
     return icode;

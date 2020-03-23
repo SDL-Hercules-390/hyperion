@@ -804,7 +804,7 @@ SCHIB   schib;                          /* Subchannel information blk*/
 /*-------------------------------------------------------------------*/
 /* B236 TPI   - Test Pending Interruption                        [S] */
 /*-------------------------------------------------------------------*/
-DEF_INST(test_pending_interruption)
+DEF_INST( test_pending_interruption )
 {
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
@@ -816,93 +816,96 @@ U32     iointid;                        /* I/O interruption ident    */
 int     icode;                          /* Intercept code            */
 RADR    pfx;                            /* Prefix                    */
 
-    S(inst, regs, b2, effective_addr2);
+    S( inst, regs, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+#if defined( _FEATURE_IO_ASSIST )
+    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
-       SIE_INTERCEPT(regs);
+       SIE_INTERCEPT( regs );
 
-    PTIO(IO,"TPI");
+    PTIO( IO,"TPI" );
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK( effective_addr2, regs );
 
     /* validate operand before taking any action */
-    if ( effective_addr2 != 0 )
-        ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
-                                                  ACCTYPE_WRITE, regs);
+    if (effective_addr2 != 0)
+        ARCH_DEP( validate_operand )( effective_addr2, b2, 8-1,
+                                      ACCTYPE_WRITE, regs );
 
     /* Perform serialization and checkpoint-synchronization */
-    PERFORM_SERIALIZATION (regs);
-    PERFORM_CHKPT_SYNC (regs);
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
 
-    if( IS_IC_IOPENDING )
+    if (IS_IC_IOPENDING)
     {
-        /* Obtain the interrupt lock */
-        OBTAIN_INTLOCK(regs);
+        OBTAIN_INTLOCK( regs );
+        {
+            /* Test and clear pending interrupt
+               and set the condition code
+            */
+            icode = ARCH_DEP( present_io_interrupt )( regs, &ioid, &ioparm,
+                                                      &iointid, NULL );
+        }
+        RELEASE_INTLOCK( regs );
 
-        /* Test and clear pending interrupt, set condition code */
-        icode = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm,
-                                                       &iointid, NULL);
-
-        /* Release the interrupt lock */
-        RELEASE_INTLOCK(regs);
-
-        /* Store the SSID word and I/O parameter if an interrupt was pending */
+        /* Store the SSID word and I/O parameter
+           if an interrupt was pending
+        */
         if (icode)
         {
-            if ( effective_addr2 == 0
-#if defined(_FEATURE_IO_ASSIST)
-                                      || icode != SIE_NO_INTERCEPT
+            if (0
+                || effective_addr2 == 0
+#if defined( _FEATURE_IO_ASSIST )
+                || icode != SIE_NO_INTERCEPT
 #endif
-                                                                  )
+            )
             {
-#if defined(_FEATURE_IO_ASSIST)
-                if(icode != SIE_NO_INTERCEPT)
+#if defined( _FEATURE_IO_ASSIST )
+                if (icode != SIE_NO_INTERCEPT)
                 {
                     /* Point to SIE copy of PSA in state descriptor */
                     psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
-                    STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+                    STORAGE_KEY( SIE_STATE( regs ), regs->hostregs ) |= (STORKEY_REF | STORKEY_CHANGE);
                 }
                 else
 #endif
                 {
                     /* Point to PSA in main storage */
                     pfx = regs->PX;
-                    SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
+                    SIE_TRANSLATE( &pfx, ACCTYPE_SIE, regs );
                     psa = (void*)(regs->mainstor + pfx);
-                    STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                    STORAGE_KEY( pfx, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
                 }
 
                 /* If operand address is zero, store in PSA */
-                STORE_FW(psa->ioid,ioid);
-                STORE_FW(psa->ioparm,ioparm);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
-                STORE_FW(psa->iointid,iointid);
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-
-#if defined(_FEATURE_IO_ASSIST)
-                if(icode != SIE_NO_INTERCEPT)
-                    longjmp(regs->progjmp,SIE_INTERCEPT_IOINST);
+                STORE_FW( psa->ioid,ioid );
+                STORE_FW( psa->ioparm,ioparm );
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( _FEATURE_IO_ASSIST )
+                STORE_FW( psa->iointid,iointid );
+#endif
+                /* Do SIE intercept if needed */
+#if defined( _FEATURE_IO_ASSIST )
+                if (icode != SIE_NO_INTERCEPT)
+                    longjmp( regs->progjmp, SIE_INTERCEPT_IOINST );
 #endif
             }
             else
             {
                 /* Otherwise store at operand location */
                 dreg = ((U64)ioid << 32) | ioparm;
-                ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+                ARCH_DEP( vstore8 )( dreg, effective_addr2, b2, regs );
             }
         }
     }
     else
     {
-#if defined(_FEATURE_IO_ASSIST)
+#if defined( _FEATURE_IO_ASSIST )
         /* If no I/O assisted devices have pending interrupts
            then we must intercept */
-        SIE_INTERCEPT(regs);
+        SIE_INTERCEPT( regs );
 #endif
         icode = 0;
     }
