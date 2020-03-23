@@ -1623,7 +1623,7 @@ int  halt_subchan (REGS *regs, DEVBLK *dev);
 int  haltio (REGS *regs, DEVBLK *dev, BYTE ibyte);
 int  resume_subchan (REGS *regs, DEVBLK *dev);
 
-int  ARCH_DEP( present_io_interrupt ) (REGS *regs, U32 *ioid, U32 *ioparm, U32 *iointid, BYTE *csw);
+int  ARCH_DEP( present_io_interrupt ) (REGS *regs, U32 *ioid, U32 *ioparm, U32 *iointid, BYTE *csw, DEVBLK** pdev );
 int  ARCH_DEP( present_zone_io_interrupt ) (U32 *ioid, U32 *ioparm, U32 *iointid, BYTE zone);
 
 void io_reset (void);

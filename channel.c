@@ -5749,7 +5749,8 @@ int     i;                              /* Interruption subclass     */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( present_io_interrupt )( REGS* regs, U32* ioid, U32* ioparm,
-                                      U32* iointid, BYTE* csw )
+                                      U32* iointid, BYTE* csw,
+                                      DEVBLK** pdev )
 {
 IOINT  *io, *io2;                       /* -> I/O interrupt entry    */
 DEVBLK *dev;                            /* -> Device control block   */
@@ -5871,6 +5872,9 @@ retry:
          */
         if (io == NULL || dev == NULL)
         {
+            /* Pass back pointer to device block for device with interrupt */
+            *pdev = dev;
+
             if (dev != NULL)
                 subchannel_interrupt_queue_cleanup( dev );
 
@@ -5885,6 +5889,9 @@ retry:
     /* Obtain device lock for device with interrupt */
     obtain_lock( &dev->lock );
     {
+        /* Pass back pointer to device block for device with interrupt */
+        *pdev = dev;
+
         /* Verify that the interrupt for this device still exists and that
            TEST SUBCHANNEL has to be issued to clear an existing interrupt.
          */

@@ -815,6 +815,7 @@ U32     ioparm;                         /* I/O interruption parameter*/
 U32     iointid;                        /* I/O interruption ident    */
 int     icode;                          /* Intercept code            */
 RADR    pfx;                            /* Prefix                    */
+DEVBLK *dev;                            /* dev presenting interrupt  */
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -847,7 +848,7 @@ RADR    pfx;                            /* Prefix                    */
                and set the condition code
             */
             icode = ARCH_DEP( present_io_interrupt )( regs, &ioid, &ioparm,
-                                                      &iointid, NULL );
+                                                      &iointid, NULL, &dev );
         }
         RELEASE_INTLOCK( regs );
 

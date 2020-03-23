@@ -1325,9 +1325,10 @@ U32     ioid;                           /* I/O interruption address  */
 U32     iointid;                        /* I/O interruption ident    */
 RADR    pfx;                            /* Prefix                    */
 DBLWRD  csw;                            /* CSW for S/370 channels    */
+DEVBLK *dev;                            /* dev presenting interrupt  */
 
     /* Test and clear pending I/O interrupt */
-    icode = ARCH_DEP( present_io_interrupt )( regs, &ioid, &ioparm, &iointid, csw );
+    icode = ARCH_DEP( present_io_interrupt )( regs, &ioid, &ioparm, &iointid, csw, &dev );
 
     /* Exit if no interrupt was presented */
     if (icode == 0) return;
@@ -1373,7 +1374,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
     }
 
     /* Trace the I/O interrupt */
-    if (CPU_STEPPING_OR_TRACING(regs, 0))
+    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace || dev->ccwstep)
     {
         BYTE*   csw = psa->csw;
 
@@ -1398,7 +1399,7 @@ DBLWRD  csw;                            /* CSW for S/370 channels    */
 #endif
 
     /* Trace the I/O interrupt */
-    if (CPU_STEPPING_OR_TRACING(regs, 0))
+    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace || dev->ccwstep)
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( _FEATURE_IO_ASSIST )
         // "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
         WRMSG (HHC00805, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm);
