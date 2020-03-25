@@ -6320,7 +6320,7 @@ static INSTR_FUNC gen_opcode_47_0[16][NUM_INSTR_TAB_PTRS] =
  /*4700*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , nop4                                                ),
  /*4710*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4710                                                ),
  /*4720*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4720                                                ),
- /*4734*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4730                                                ),
+ /*4730*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4730                                                ),
  /*4740*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4740                                                ),
  /*4750*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 4750                                                ),
  /*4760*/ GENx370x390x900 ( "BC"        , XXX_a, ASMFMT_RX       , 47_0                                                ),

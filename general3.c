@@ -32,6 +32,9 @@ DISABLE_GCC_UNUSED_SET_WARNING
 /* Perform Interlocked Storage Immediate Operation                   */
 /* Subroutine called by ASI and ALSI instructions                    */
 /*-------------------------------------------------------------------*/
+/* EB6A ASI   - Add Immediate Storage                          [SIY] */
+/* EB6E ALSI  - Add Logical with Signed Immediate              [SIY] */
+/*-------------------------------------------------------------------*/
 DEF_INST(perform_interlocked_storage_immediate)
 {
 BYTE    opcode;                         /* 2nd byte of opcode        */
@@ -100,6 +103,9 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Perform Interlocked Long Storage Immediate Operation              */
 /* Subroutine called by AGSI and ALGSI instructions                  */
+/*-------------------------------------------------------------------*/
+/* EB7A AGSI  - Add Immediate Long Storage                     [SIY] */
+/* EB7E ALGSI - Add Logical with Signed Immediate Long         [SIY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_interlocked_long_storage_immediate)
 {
@@ -1892,6 +1898,14 @@ VADR    effective_addr2;                /* Effective address         */
 /* Subroutine is called by RNSBG, RISBG, ROSBG, RXSBG instructions   */
 /* as well as by the RISBHG, RISBLG and RISBGN instructions.         */
 /*-------------------------------------------------------------------*/
+/* EC54 RNSBG - Rotate Then And Selected Bits                  [RIE] */
+/* EC55 RISBG - Rotate Then Insert Selected Bits               [RIE] */
+/* EC56 ROSBG - Rotate Then Or Selected Bits                   [RIE] */
+/* EC57 RXSBG - Rotate Then Exclusive Or Selected Bits         [RIE] */
+/* EC5D RISBHG - Rotate Then Insert Selected Bits High         [RIE] */
+/* EC51 RISBLG - Rotate Then Insert Selected Bits Low          [RIE] */
+/* EC59 RISBGN - Rotate Then Insert Selected Bits No CC        [RIE] */
+/*-------------------------------------------------------------------*/
 DEF_INST( rotate_then_xxx_selected_bits_long_reg )
 {
 int     r1, r2;                         /* Register numbers          */
@@ -2683,6 +2697,12 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /* Load and Perform Interlocked Access Operation                     */
 /* Subroutine called by LAA,LAAL,LAN,LAX,LAO instructions            */
 /*-------------------------------------------------------------------*/
+/* EBF8 LAA   - Load and Add                                   [RSY] */
+/* EBFA LAAL  - Load and Add Logical                           [RSY] */
+/* EBF4 LAN   - Load and And                                   [RSY] */
+/* EBF7 LAX   - Load and Exclusive Or                          [RSY] */
+/* EBF6 LAO   - Load and Or                                    [RSY] */
+/*-------------------------------------------------------------------*/
 DEF_INST(load_and_perform_interlocked_access)
 {
 int     r1, r3;                         /* Register numbers          */
@@ -2764,6 +2784,12 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /*-------------------------------------------------------------------*/
 /* Load and Perform Interlocked Access Operation Long                */
 /* Subroutine called by LAAG,LAALG,LANG,LAXG,LAOG instructions       */
+/*-------------------------------------------------------------------*/
+/* EBE8 LAAG  - Load and Add Long                              [RSY] */
+/* EBEA LAALG - Load and Add Logical Long                      [RSY] */
+/* EBE4 LANG  - Load and And Long                              [RSY] */
+/* EBE7 LAXG  - Load and Exclusive Or Long                     [RSY] */
+/* EBE6 LAOG  - Load and Or Long                               [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_perform_interlocked_access_long)
 {
