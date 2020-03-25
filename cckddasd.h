@@ -15,7 +15,7 @@
 #ifndef _CCKDDASD_H_
 #define _CCKDDASD_H_
 
-#define DEBUG_FREESPACE                 /* (freespace debugging opt) */
+//#define DEBUG_FREESPACE                 /* (freespace debugging opt) */
 
 /*-------------------------------------------------------------------*/
 
