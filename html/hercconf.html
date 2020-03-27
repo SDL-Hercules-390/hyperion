@@ -3461,10 +3461,15 @@ a real System/390.  The configuration file is an ASCII text file.
 
                 <dt><code>iface &nbsp;<em>device</em></code>
                 <dd><p>
-                    Specifies the name of the host tunnel device to use.
-                    The default for this option is the value specified
-                    by the <a href="#netdev">NETDEV</a> configuration file
-                    statement.
+                    Specifies, on Linux, the name of the host tunnel device to use. On
+                    Windows, this required option identifies your Windows system's actual
+                    network adapter.
+                    On Linux, the value should be specified by name (e.g. /dev/net/tun). On
+                    Windows, the value should be specified by either IP or MAC address.
+                    <p>
+                    The default value for this option is the same value specified in your
+                    <a href="#netdev">NETDEV</a> configuration file statement (or the default
+                    value if not specified).
                     <p>
 
                 <dt><code>ipaddr6 &nbsp;<em>address</em></code>
