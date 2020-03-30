@@ -1796,6 +1796,10 @@ U32     n;                              /* 32-bit operand values     */
 /*              (C) Copyright Peter Kuschnerus, 1999-2009            */
 /*              (C) Copyright "Fish" (David B. Trout), 2005-2009     */
 /*-------------------------------------------------------------------*/
+#if defined( _MSVC_ ) && (_MSC_VER >= VS2019)
+PUSH_MSVC_WARNINGS()
+DISABLE_MSVC_WARNING( 4789 ) // "buffer 'xxx' of size NN bytes will be overrun"
+#endif
 DEF_INST(compare_and_form_codeword)
 {
 int     b2;                             /* Base of effective addr    */
@@ -1947,7 +1951,9 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
 
     SET_GR_A( 2, regs, ( GR_A(2,regs) << gr2_shift ) | work_reg );
 }
-
+#if defined( _MSVC_ ) && (_MSC_VER >= VS2019)
+POP_MSVC_WARNINGS()
+#endif
 
 /*-------------------------------------------------------------------*/
 /* BA   CS    - Compare and Swap                                [RS] */
