@@ -2134,6 +2134,17 @@ device_reset (DEVBLK *dev)
 {
     obtain_lock (&dev->lock);
 
+    if (dev->group)
+    {
+        DEVGRP* group = dev->group;
+        if (group->members != group->acount)
+        {
+            /* Group is incomplete; ignore */
+            release_lock (&dev->lock);
+            return;
+        }
+    }
+
     obtain_lock(&sysblk.iointqlk);
     DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
     DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->pciioint);
