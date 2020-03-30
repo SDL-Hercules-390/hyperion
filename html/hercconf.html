@@ -3377,8 +3377,18 @@ a real System/390.  The configuration file is an ASCII text file.
         </p>
 
         <p>
-        The device/emulation type may optionally be specified as <code>OSA</code>
-        or <code>OSD</code> instead of <code>QETH</code>.
+
+        The QETH device is a "grouped" device that requires 3 (three) device
+        addresses (device numbers) to be defined per QETH group, with the
+        first device of the group being an even numbered device:
+
+            <blockquote>
+            <code>0600<b>.3</b> &nbsp; QETH &nbsp;<i>[arguments]</i></code>
+            </blockquote>
+
+        The device/emulation type may optionally be specified as <code><b>OSA</b></code>
+        or <code><b>OSD</b></code> instead of <code>QETH</code>.
+
         </p>
 
         <p>
@@ -3555,6 +3565,16 @@ a real System/390.  The configuration file is an ASCII text file.
         the Hercules machine as either an IBM 8232 LCS device, the LCS3172
         driver of a P/390, a 3172 running ICP (Interconnect Communications
         Program), or as a simple IBM 2216 router.
+
+        <p>
+
+        The LCS device is a "grouped" device that requires 2 (two) device
+        addresses (device numbers) to be defined per LCS group, with the
+        first device of the group being an even numbered device:
+
+            <blockquote>
+            <code>0E20<b>.2</b> &nbsp; LCS &nbsp;<i>[arguments]</i></code>
+            </blockquote>
 
         <p>
 
@@ -3800,6 +3820,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
         driving system on which Hercules is running.  See the
         <a href="herctcp.html">Hercules TCP/IP</a> page for unix details,
         in particular the use of preconfigured interfaces.
+        <p>
+
+        The CTCI device is a "grouped" device that requires 2 (two) device
+        addresses (device numbers) to be defined per CTCI group, with the
+        first device of the group being an even numbered device:
+
+            <blockquote>
+            <code>0E20<b>.2</b> &nbsp; CTCI &nbsp;<i>[arguments]</i></code>
+            </blockquote>
+
         <p>
 
         <i>
@@ -4138,6 +4168,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
         From the point of view of the guest image running in the Hercules
         machine it appears to be an MPCPTP and/or MPCPTP6 ESCON CTC link to
         another image.
+        <p>
+
+        The PTP device is a "grouped" device that requires 2 (two) device
+        addresses (device numbers) to be defined per PTP group, with the
+        first device of the group being an even numbered device:
+
+            <blockquote>
+            <code>0460<b>.2</b> &nbsp; PTP &nbsp;<i>[arguments]</i></code>
+            </blockquote>
+
         <p>
 
         <i>
