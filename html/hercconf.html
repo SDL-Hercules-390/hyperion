@@ -4014,8 +4014,8 @@ ROUTE  00  172.21.3.32  255.255.255.224
         formats (noting that items between [] brackets are optional):
         <p>
         <dl> <!-- begin CTCE parms -->     
-        <dt><code><em>ldevnum</em> &nbsp;&nbsp;&nbsp; CTCE [<em>lport</em>] [<em>rdevnum</em>=]<em>raddress</em> &nbsp; <em>rport</em>  [[<em>mtu</em>]<em>sml</em>] [FICON]</code>
-        <dt><code><em>ldevnum</em>[.n]                CTCE [<em>lport</em>] [<em>rdevnum</em>]=<em>raddress</em>       [<em>rport</em>] [[<em>mtu</em>]<em>sml</em>] [FICON]</code>
+        <dt><code><em>ldevnum</em> &nbsp;&nbsp;&nbsp; CTCE [<em>lport</em>] [<em>rdevnum</em>=]<em>raddress</em> &nbsp; <em>rport</em>  [[<em>mtu</em>]<em>sml</em>] [ATTNDELAY <em>delay</em>] [FICON]</code>
+        <dt><code><em>ldevnum</em>[.n]                CTCE [<em>lport</em>] [<em>rdevnum</em>]=<em>raddress</em>       [<em>rport</em>] [[<em>mtu</em>]<em>sml</em>] [ATTNDELAY <em>delay</em>] [FICON]</code>
         </dl> <!-- end CTCE parms -->
             
         <p>
@@ -4040,7 +4040,8 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd>The listening TCP/IP port number on the <i>remote</i> system.
                     Please note that this parameter is only required when the 
                     <em>rdevnum</em> parameter and the following equal sign are
-                    not specified.  When not required, the default is 3088.
+                    not specified, or when the <em>mtu</em> parameter needs to be
+                    specified.  When not required, the default is 3088.
             </dl>
         </dl> <!-- end required CTCE parameters -->
 
@@ -4070,7 +4071,9 @@ ROUTE  00  172.21.3.32  255.255.255.224
                             
                 <dt><code><em>mtu</em></code>
                 <dd>Maximum Transmission Unit buffer size.
-                    The default value is 61596 bytes.
+                    The default value is 62552 bytes.
+                    Please note that when this <em>mtu</em> parameter needs to be specified, also
+                    the <em>rport</em> parameter needs to be given (e.g. its default value of 3088).
 
                 <p>
 
@@ -4078,6 +4081,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd>Small minimum for MTU. The default value is 16 bytes.
                 
                 <p>              
+
+                <dt><code><em>delay</em></code>
+                <dd>The number of msec ATTN signals will be delayed for in order
+                    to circumvent a VM/SP bug causing SIO timeout errors.
+                    Override the default of 0, e.g. with 200 or or some smaller value
+                    for faster Hercules hosts, but only when needed.
+
+                <p>
 
                 <dt><code><em>FICON</em></code>
                 <dd>The keyword FICON will cause a Fibre channel CTC (i.e. a FCTC device) to be emulated.

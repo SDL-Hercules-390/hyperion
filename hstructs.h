@@ -1470,6 +1470,7 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     ctce_WRT_sCount_rcvd[2];/* CTCE Last WRT sCount      */
         U16     ctce_rccuu;             /* CTCE Remote CTCA dev      */
         int     ctce_trace_cntr;        /* CTCE trace if > 0         */
+        int     ctce_attn_delay;        /* CTCE pre-ATTN delay       */
         TID     ctce_listen_tid;        /* CTCE_ListenThread ID      */
         u_int   ctce_contention_loser:1;/* CTCE cmd collision        */
         u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progres       */

@@ -263,17 +263,17 @@ numbers, whereby only the even port numbers had to be specified in the CTCE conf
 
 The configuration statement for CTCE is as follows, choosing one of 2 possible formats (noting that items between [] brackets are optional, and the items between <> brackets require actual values to be given):
 ```
-     <ldevnum>     CTCE <lport> [<rdevnum>=]<raddress>  <rport>  [[<mtu>] <sml>] [FICON]
-     <ldevnum>[.n] CTCE <lport> [<rdevnum>]=<raddress> [<rport>] [[<mtu>] <sml>] [FICON]
+     <ldevnum>     CTCE <lport> [<rdevnum>=]<raddress>  <rport>  [[<mtu>] <sml>] [ATTNDELAY <delay>] [FICON]
+     <ldevnum>[.n] CTCE <lport> [<rdevnum>]=<raddress> [<rport>] [[<mtu>] <sml>] [ATTNDELAY <delay>] [FICON]
 ```
 where:
 ```
-     <ldevnum>    is the address of the CTCE device at the local system.  
-     <rdevnum>    is the address of the CTCE device at the remote system.  
+     <ldevnum>    is the address of the CTCE device at the local system.
+     <rdevnum>    is the address of the CTCE device at the remote system.
      <lport>      is the receiving TCP/IP port on the local system,
-                  which defaults to 3088. 
+                  which defaults to 3088.
      <rport>      is the receiving TCP/IP port on the remote system,
-                  which also defaults to 3088.  
+                  which also defaults to 3088.
      <raddress>   is the host IP address on the remote system.
      <mtu>        optional mtu buffersize, defaults to 61596.
      <sml>        optional small minimum for mtu, defaults to 16.
@@ -281,6 +281,10 @@ where:
                   consecutive addresses starting with <ldevnum>.
                   (Only possible in the 2nd format, which implies the
                   equal sign (=) in front of <raddress>.)
+     delay        the number of msec ATTN signals are to be delayed in order to
+                  circumvent a VM/SP bug causing SIO timeout errors.  Override
+                  the default of 0, e.g. with 200 or some smaller value for
+                  faster Hercules hosts, but only when needed.
      FICON        optional parameter specifying a FICON Channel-to-Channel adapter
                   to be emulated (i.e. a FCTC instead of a CTCA)
 ```
@@ -311,7 +315,7 @@ The 2nd format CTCE device configuration is easier to specify by omitting the \<
 
       0E40  CTCE  0E40=192.168.1.100
       0E41  CTCE  0E41=192.168.1.100
-```   
+```
 
 This can even be further simplified by (1) omitting the \<rdevnum\> as its default is being equal to \<ldevnum\>, and by (2) specifying the ".n" qualifier as ".2", meaning that 2 CTCE devices starting at "0E40" are being defined :
 
@@ -343,14 +347,14 @@ The above is the same as :
 The above example could be used to establish a redundant pair of read/write CTC links, where each Hercules side uses the even devnum addresses for reading, and the odd ones for writing (or the other way around).  That way, the operating system definitions on each side can be identical, e.g. for a VTAM MPC CTC link :
 
 ```
-CTCATRL  VBUILD TYPE=TRL                                                                                 
+CTCATRL  VBUILD TYPE=TRL
 C0E40TRL TRLE  LNCTL=MPC,READ=(0E40,0E42),WRITE=(0E41,0E43)
 
-CTCALCL  VBUILD TYPE=LOCAL                                                                      
+CTCALCL  VBUILD TYPE=LOCAL
 C0E40LCL PU    TRLE=C0E40TRL,XID=YES,CONNTYPE=APPN,CPCP=YES,TGP=CHANNEL
-```  
+```
 
-Please also note the optional trailing keyword FICON.  When specified, a fiber channel CTC adapter (FCTC) is being emulated, instead of a regular CTCA.  
+Please also note the optional trailing keyword FICON.  When specified, a fiber channel CTC adapter (FCTC) is being emulated, instead of a regular CTCA.
 
 CTCE connected Hercules instances can be hosted on any Hercules supported platform (Windows, Linux, MacOS ...).  Both sides do _not_ need to be the same.
 

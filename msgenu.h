@@ -2399,8 +2399,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC05082 "%1d:%04X CTCE: TCP set_socket_keepalive RC=%d"
 #define HHC05083 "%1d:%04X CTCE: Error on accept() for listening socket %d (port %d): %s"
 #define HHC05084 "%1d:%04X CTCE: Recovery aborted due to device busy or interrupt pending"
-#define HHC05085 "%1d:%04X CTCE: Recovery re-initialization failed"
-#define HHC05086 "%1d:%04X CTCE: Recovery re-initialization completed"
+#define HHC05085 "%1d:%04X CTCE: Invalid ATTNDELAY value %s ignored"
+#define HHC05086 "%1d:%04X CTCE: Recovery is about to issue Hercules command: %s %s"
 
 //efine HHC05087 - HHC05099 (available)
 
