@@ -6713,7 +6713,7 @@ BYTE     unitstat, code = 0;
 /*-------------------------------------------------------------------*/
 /* devinit command - assign/open a file for a configured device      */
 /*-------------------------------------------------------------------*/
-int devinit_cmd(int argc, char *argv[], char *cmdline)
+DLL_EXPORT int devinit_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
 U16      devnum;
