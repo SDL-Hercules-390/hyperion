@@ -62,7 +62,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 
 /*-------------------------------------------------------------------*/
-/* 56   O     - Or                                              [RX] */
+/* 56   O     - Or                                            [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(or)
 {
@@ -110,7 +110,7 @@ BYTE   *dest;                         /* Pointer to target byte      */
 
 
 /*-------------------------------------------------------------------*/
-/* D6   OC    - Or Characters                                   [SS] */
+/* D6   OC    - Or Characters                                 [SS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(or_character)
 {
@@ -274,7 +274,7 @@ int     cc = 0;                         /* Condition code            */
 
 
 /*-------------------------------------------------------------------*/
-/* F2   PACK  - Pack                                            [SS] */
+/* F2   PACK  - Pack                                          [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(pack)
 {
@@ -342,7 +342,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
 #if defined( FEATURE_PERFORM_LOCKED_OPERATION )
 /*-------------------------------------------------------------------*/
-/* EE   PLO   - Perform Locked Operation                        [SS] */
+/* EE   PLO   - Perform Locked Operation                      [SS-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(perform_locked_operation)
 {
@@ -705,7 +705,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 
 /*-------------------------------------------------------------------*/
-/* 8F   SLDA  - Shift Left Double                               [RS] */
+/* 8F   SLDA  - Shift Left Double                             [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_double)
 {
@@ -761,7 +761,7 @@ U32     h, i, j, m;                     /* Integer work areas        */
 
 
 /*-------------------------------------------------------------------*/
-/* 8D   SLDL  - Shift Left Double Logical                       [RS] */
+/* 8D   SLDL  - Shift Left Double Logical                     [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_double_logical)
 {
@@ -788,7 +788,7 @@ U64     dreg;                           /* Double register work area */
 
 
 /*-------------------------------------------------------------------*/
-/* 8B   SLA   - Shift Left Single                               [RS] */
+/* 8B   SLA   - Shift Left Single                             [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_single)
 {
@@ -846,7 +846,7 @@ U32     i, j;                           /* Integer work areas        */
 
 
 /*-------------------------------------------------------------------*/
-/* 89   SLL   - Shift Left Single Logical                       [RS] */
+/* 89   SLL   - Shift Left Single Logical                     [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_single_logical)
 {
@@ -866,7 +866,7 @@ U32     n;                              /* Integer work areas        */
 
 
 /*-------------------------------------------------------------------*/
-/* 8E   SRDA  - Shift Right Double                              [RS] */
+/* 8E   SRDA  - Shift Right Double                            [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_double)
 {
@@ -896,7 +896,7 @@ U64     dreg;                           /* Double register work area */
 
 
 /*-------------------------------------------------------------------*/
-/* 8C   SRDL  - Shift Right Double Logical                      [RS] */
+/* 8C   SRDL  - Shift Right Double Logical                    [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_double_logical)
 {
@@ -923,7 +923,7 @@ U64     dreg;                           /* Double register work area */
 
 
 /*-------------------------------------------------------------------*/
-/* 8A   SRA   - Shift Right Single                              [RS] */
+/* 8A   SRA   - Shift Right Single                            [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single)
 {
@@ -949,7 +949,7 @@ U32     n;                              /* Integer work areas        */
 
 
 /*-------------------------------------------------------------------*/
-/* 88   SRL   - Shift Right Single Logical                      [RS] */
+/* 88   SRL   - Shift Right Single Logical                    [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single_logical)
 {
@@ -970,7 +970,7 @@ U32     n;                              /* Integer work areas        */
 
 #if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
-/* 9B   STAM  - Store Access Multiple                           [RS] */
+/* 9B   STAM  - Store Access Multiple                         [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( store_access_multiple )
 {
@@ -1012,7 +1012,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
 
 /*-------------------------------------------------------------------*/
-/* BE   STCM  - Store Characters under Mask                     [RS] */
+/* BE   STCM  - Store Characters under Mask                   [RS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_characters_under_mask)
 {
@@ -1176,7 +1176,7 @@ ETOD    ETOD;                           /* Extended clock work area  */
 
 
 /*-------------------------------------------------------------------*/
-/* 40   STH   - Store Halfword                                  [RX] */
+/* 40   STH   - Store Halfword                                [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_halfword)
 {
@@ -1192,7 +1192,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* 90   STM   - Store Multiple                                  [RS] */
+/* 90   STM   - Store Multiple                                [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( store_multiple )
 {
@@ -1298,7 +1298,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 
 /*-------------------------------------------------------------------*/
-/* 5B   S     - Subtract                                        [RX] */
+/* 5B   S     - Subtract                                      [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract)
 {
@@ -1325,7 +1325,7 @@ U32     n;                              /* 32-bit operand values     */
 
 
 /*-------------------------------------------------------------------*/
-/* 4B   SH    - Subtract Halfword                               [RX] */
+/* 4B   SH    - Subtract Halfword                             [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_halfword)
 {
@@ -1350,28 +1350,6 @@ U32     n;                              /* 32-bit operand values     */
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
-
-/*-------------------------------------------------------------------*/
-/* 1F   SLR   - Subtract Logical Register                       [RR] */
-/*-------------------------------------------------------------------*/
-DEF_INST(subtract_logical_register)
-{
-int     r1, r2;                         /* Values of R fields        */
-
-    RR0(inst, regs, r1, r2);
-
-    /* Subtract unsigned operands and set condition code */
-    if (likely(r1 == r2))
-    {
-        regs->psw.cc = 2;
-        regs->GR_L(r1) = 0;
-    }
-    else
-        regs->psw.cc =
-            sub_logical (&(regs->GR_L(r1)),
-                           regs->GR_L(r1),
-                           regs->GR_L(r2));
-}
 
 #ifdef OPTION_OPTINST
 /* Optimized case (r1 equal r2) is optimized by compiler */
@@ -1420,7 +1398,30 @@ SLRgenr2(F)
 
 
 /*-------------------------------------------------------------------*/
-/* 5F   SL    - Subtract Logical                                [RX] */
+/* 1F   SLR   - Subtract Logical Register                       [RR] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_register)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+    RR0(inst, regs, r1, r2);
+
+    /* Subtract unsigned operands and set condition code */
+    if (likely(r1 == r2))
+    {
+        regs->psw.cc = 2;
+        regs->GR_L(r1) = 0;
+    }
+    else
+        regs->psw.cc =
+            sub_logical (&(regs->GR_L(r1)),
+                           regs->GR_L(r1),
+                           regs->GR_L(r2));
+}
+
+
+/*-------------------------------------------------------------------*/
+/* 5F   SL    - Subtract Logical                              [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_logical)
 {
@@ -1443,7 +1444,7 @@ U32     n;                              /* 32-bit operand values     */
 
 
 /*-------------------------------------------------------------------*/
-/* 0A   SVC   - Supervisor Call                                 [RR] */
+/* 0A   SVC   - Supervisor Call                                  [I] */
 /*-------------------------------------------------------------------*/
 DEF_INST(supervisor_call)
 {
@@ -1515,7 +1516,7 @@ int     rc;                             /* Return code               */
 
 
 /*-------------------------------------------------------------------*/
-/* 93   TS    - Test and Set                                     [S] */
+/* 93   TS    - Test and Set                                    [SI] */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_and_set)
 {
@@ -1589,6 +1590,30 @@ BYTE    old;                            /* Old value                 */
 }
 
 
+#ifdef OPTION_OPTINST
+#define TMgen(i2) \
+  DEF_INST(91 ## i2) \
+  { \
+    int b1; \
+    VADR effective_addr1; \
+    SIIX(inst, regs, b1, effective_addr1); \
+    if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & 0x ## i2) \
+      regs->psw.cc = 3; \
+    else \
+      regs->psw.cc = 0; \
+  }
+
+TMgen(80)
+TMgen(40)
+TMgen(20)
+TMgen(10)
+TMgen(08)
+TMgen(04)
+TMgen(02)
+TMgen(01)
+#endif /* OPTION_OPTINST */
+
+
 /*-------------------------------------------------------------------*/
 /* 91   TM    - Test under Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
@@ -1614,33 +1639,10 @@ BYTE    tbyte;                          /* Work byte                 */
             1 ;                             /* result mixed      */
 }
 
-#ifdef OPTION_OPTINST
-#define TMgen(i2) \
-  DEF_INST(91 ## i2) \
-  { \
-    int b1; \
-    VADR effective_addr1; \
-    SIIX(inst, regs, b1, effective_addr1); \
-    if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & 0x ## i2) \
-      regs->psw.cc = 3; \
-    else \
-      regs->psw.cc = 0; \
-  }
-
-TMgen(80)
-TMgen(40)
-TMgen(20)
-TMgen(10)
-TMgen(08)
-TMgen(04)
-TMgen(02)
-TMgen(01)
-#endif /* OPTION_OPTINST */
-
 
 #if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
-/* A7x0 TMH   - Test under Mask High                            [RI] */
+/* A7x0 TMH   - Test under Mask High                          [RI-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_under_mask_high)
 {
@@ -1670,7 +1672,7 @@ U16     h2;                             /* 16-bit operand values     */
 
 #if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
 /*-------------------------------------------------------------------*/
-/* A7x1 TML   - Test under Mask Low                             [RI] */
+/* A7x1 TML   - Test under Mask Low                           [RI-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_under_mask_low)
 {
@@ -1700,7 +1702,7 @@ U16     h2;                             /* 16-bit operand values     */
 
 
 /*-------------------------------------------------------------------*/
-/* DC   TR    - Translate                                       [SS] */
+/* DC   TR    - Translate                                     [SS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( translate )
 {
@@ -1772,7 +1774,7 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
 
 
 /*-------------------------------------------------------------------*/
-/* DD   TRT   - Translate and Test                              [SS] */
+/* DD   TRT   - Translate and Test                            [SS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test)
 {
@@ -1945,7 +1947,7 @@ BYTE    trtab[256];                     /* Translate table           */
 
 
 /*-------------------------------------------------------------------*/
-/* F3   UNPK  - Unpack                                          [SS] */
+/* F3   UNPK  - Unpack                                        [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(unpack)
 {
@@ -2163,7 +2165,7 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 
 #if defined( FEATURE_022_EXT_TRANSL_FACILITY_3 )
 /*-------------------------------------------------------------------*/
-/* B9B0 CU14  - Convert UTF-8 to UTF-32                        [RRF] */
+/* B9B0 CU14  - Convert UTF-8 to UTF-32                      [RRF-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf8_to_utf32)
 {
@@ -2405,7 +2407,7 @@ DEF_INST(convert_utf8_to_utf32)
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B1 CU24  - Convert UTF-16 to UTF-32                       [RRF] */
+/* B9B1 CU24  - Convert UTF-16 to UTF-32                     [RRF-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf16_to_utf32)
 {
@@ -2819,7 +2821,7 @@ DEF_INST(search_string_unicode)
 }
 
 /*-------------------------------------------------------------------*/
-/* D0   TRTR  - Translate and Test Reverse                      [SS] */
+/* D0   TRTR  - Translate and Test Reverse                    [SS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reverse)
 {
@@ -2889,7 +2891,7 @@ DEF_INST(translate_and_test_reverse)
 
 #ifdef FEATURE_026_PARSING_ENHANCE_FACILITY
 /*-------------------------------------------------------------------*/
-/* B9BF TRTE - Translate and Test Extended                     [RRF] */
+/* B9BF TRTE - Translate and Test Extended                   [RRF-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_extended)
 {
@@ -2985,7 +2987,7 @@ DEF_INST(translate_and_test_extended)
 }
 
 /*-------------------------------------------------------------------*/
-/* B9BD TRTRE - Translate and Test Reverse Extended            [RRF] */
+/* B9BD TRTRE - Translate and Test Reverse Extended          [RRF-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reverse_extended)
 {
