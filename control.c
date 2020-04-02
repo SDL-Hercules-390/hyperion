@@ -1627,7 +1627,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
 
 
 /*-------------------------------------------------------------------*/
-/* B221 IPTE  - Invalidate Page Table Entry                    [RRE] */
+/* B221 IPTE  - Invalidate Page Table Entry                  [RRF-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( invalidate_page_table_entry )
 {
@@ -1984,7 +1984,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 
 
 /*-------------------------------------------------------------------*/
-/* B7   LCTL  - Load Control                                    [RS] */
+/* B7   LCTL  - Load Control                                  [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( load_control )
 {
@@ -2079,7 +2079,7 @@ U16     updated = 0;                    /* Updated control regs      */
 
 
 /*-------------------------------------------------------------------*/
-/* 82   LPSW  - Load Program Status Word                         [S] */
+/* 82   LPSW  - Load Program Status Word                        [SI] */
 /*-------------------------------------------------------------------*/
 DEF_INST( load_program_status_word )
 {
@@ -2187,7 +2187,7 @@ int     amode64;
 
 
 /*-------------------------------------------------------------------*/
-/* B1   LRA   - Load Real Address                               [RX] */
+/* B1   LRA   - Load Real Address                             [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( load_real_address )
 {
@@ -2426,7 +2426,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
-/* DA   MVCP  - Move to Primary                                 [SS] */
+/* DA   MVCP  - Move to Primary                               [SS-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( move_to_primary )
 {
@@ -2487,7 +2487,7 @@ GREG    l;                              /* Unsigned workarea         */
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
-/* DB   MVCS  - Move to Secondary                               [SS] */
+/* DB   MVCS  - Move to Secondary                             [SS-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( move_to_secondary )
 {
@@ -2578,7 +2578,7 @@ int     k, l;                           /* Integer workarea          */
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
-/* D9   MVCK  - Move with Key                                   [SS] */
+/* D9   MVCK  - Move with Key                                 [SS-d] */
 /*-------------------------------------------------------------------*/
 DEF_INST( move_with_key )
 {
@@ -5273,7 +5273,7 @@ static inline int ARCH_DEP( conditional_sske_procedure )
 
 #if defined( FEATURE_EXTENDED_STORAGE_KEYS )
 /*-------------------------------------------------------------------*/
-/* B22B SSKE  - Set Storage Key extended                       [RRF] */
+/* B22B SSKE  - Set Storage Key extended                     [RRF-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST( set_storage_key_extended )
 {
@@ -5549,7 +5549,7 @@ BYTE    r1key;
 
 
 /*-------------------------------------------------------------------*/
-/* 80   SSM   - Set System Mask                                  [S] */
+/* 80   SSM   - Set System Mask                                 [SI] */
 /*-------------------------------------------------------------------*/
 DEF_INST( set_system_mask )
 {
@@ -5613,7 +5613,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* AE   SIGP  - Signal Processor                                [RS] */
+/* AE   SIGP  - Signal Processor                              [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( signal_processor )
 {
@@ -6410,7 +6410,7 @@ U64     dreg;                           /* Clock value               */
 
 
 /*-------------------------------------------------------------------*/
-/* B6   STCTL - Store Control                                   [RS] */
+/* B6   STCTL - Store Control                                 [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( store_control )
 {
@@ -7534,7 +7534,7 @@ BYTE    akey;                           /* Access key                */
 
 #if defined( FEATURE_TRACING )
 /*-------------------------------------------------------------------*/
-/* 99   TRACE - Trace                                           [RS] */
+/* 99   TRACE - Trace                                         [RS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( trace )
 {

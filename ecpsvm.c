@@ -525,6 +525,9 @@ int ecpsvm_do_fretx(REGS *regs,VADR block,U16 numdw,VADR maxsztbl,VADR fretl);
 /* CPASSIST FREE (Basic) Not supported */
 /* This is part of ECPS:VM Level 18 and 19 */
 /* (ECPS:VM Level 20 use FREEX, later below) */
+/*-------------------------------------------------------------------*/
+/* E600 FREE - Allocate CP Storage                             [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_basic_freex)
 {
     ECPSVM_PROLOG(FREE);
@@ -534,6 +537,9 @@ DEF_INST(ecpsvm_basic_freex)
 /* CPASSIST FRET (Basic) Not supported */
 /* This is part of ECPS:VM Level 18 and 19 */
 /* (ECPS:VM Level 20 use FRETX, later below) */
+/*-------------------------------------------------------------------*/
+/* E601 FRET - Return CP storage                               [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_basic_fretx)
 {
     ECPSVM_PROLOG(FRET);
@@ -576,6 +582,9 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
 /* LCKPG D1(R1,B1),D2(R2,B2) */
 /* 1st operand : PTR_PL -> Address of coretable */
 /* 2nd Operand : Page address to be locked */
+/*-------------------------------------------------------------------*/
+/* E602 LCKPG - Lock Page                                      [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_lock_page)
 {
     char buf[256];
@@ -656,6 +665,9 @@ static int ecpsvm_unlockpage1(REGS *regs,VADR effective_addr1,VADR effective_add
 /* ULKPG D1(R1,B1),D2(R2,B2) */
 /* 1st operand : PTR_PL -> +0 - Maxsize, +4 Coretable */
 /* 2nd Operand : Page address to be unlocked */
+/*-------------------------------------------------------------------*/
+/* E603 ULKPG - Unlock Page                                    [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_unlock_page)
 {
     ECPSVM_PROLOG(ULKPG);
@@ -821,6 +833,9 @@ BYTE prevccwop;
                       +20= A(NGCCW)
 */
 
+/*-------------------------------------------------------------------*/
+/* E604 DNCCW - Decode Next CCW                                [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_decode_next_ccw)
 {
 VADR dl;
@@ -895,6 +910,9 @@ VADR vaddr;
   exit points.
 */
 
+/*-------------------------------------------------------------------*/
+/* E605 FCCWS - Free CCW Storage                               [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_free_ccwstor)
 {
 VADR dl;
@@ -1101,6 +1119,9 @@ int  ecpsvm_do_scnvu(REGS *regs,VADR effective_addr1,VADR effective_addr2, U32 v
 /* E606 SCNVU Instruction */
 /* SCNVU : Scan for Virtual Device blocks */
 /* On entry: GR1 contains the virtual device address */
+/*-------------------------------------------------------------------*/
+/* E606 SCNVU - Scan for Virtual Device Blocks                 [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_locate_vblock)
 {
 
@@ -1713,6 +1734,9 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
 /* DISP1 : Early tests part 2 */
 /*   DISP1 Checks if the user is OK to run */
 /*         early tests part 1 already done by DISP0 */
+/*-------------------------------------------------------------------*/
+/* E607 DISP1 - Dispatch 1                                     [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_disp1)
 {
 
@@ -1813,6 +1837,9 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
 /* the change bit                                       */
 /* If no unusual condition is detected, control is returned */
 /* to the address in GPR 14. Otherwise, TRBRG is a no-op */
+/*-------------------------------------------------------------------*/
+/* E608 TRBRG - Translate Page Address                         [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_tpage)
 {
     int rc;
@@ -1837,6 +1864,9 @@ DEF_INST(ecpsvm_tpage)
 /* TRLOK D1(R1,B1),D2(R2,B2) */
 /* See TRBRG. */
 /* If sucessfull, the page is also locked in the core table */
+/*-------------------------------------------------------------------*/
+/* E609 TRLOK - Translate Page Address and Lock                [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_tpage_lock)
 {
     int rc;
@@ -1899,6 +1929,9 @@ void ecpsvm_zappage(REGS *regs, VADR archtect, VADR pindex)
 /* 2nd Operand : Address of EXTSHCR1 in ECBLOK  */
 /* On entry:  General register 9 contains the index into the ARCHTECT structure */
 /*            General register 8 contains the return address of the caller upon successful completion */
+/*-------------------------------------------------------------------*/
+/* E60A VIST - Invalidate Shadow Segment Table                 [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_inval_segtab)
 {
     char buf[256];
@@ -1940,6 +1973,9 @@ DEF_INST(ecpsvm_inval_segtab)
 /* 1st operand : Address of ARCHTECT structure in DMKVAT containing segment and page table format information */
 /* 2nd Operand : Index value to be added to ARCHTECT address for the segment/page format in use  */
 /* On entry:  R6 -> segment table entry for the page table */
+/*-------------------------------------------------------------------*/
+/* E60B VIPT - Invalidate Shadow Page Table                    [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_inval_ptable)
 {
     ECPSVM_PROLOG(VIPT);
@@ -1952,6 +1988,9 @@ DEF_INST(ecpsvm_inval_ptable)
 /* E60C DFCCW Instruction */
 /* DFCCW : Decode First CCW */
 /* Entry and exit lists are detailed in function "ecpsvm_do_deccw1"  */
+/*-------------------------------------------------------------------*/
+/* E60C DFCCW - Decode First CCW                               [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_decode_first_ccw)
 {
 
@@ -2135,6 +2174,9 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
 /* E60D DISP0 Instruction */
 /* DISP0 : Operand 1 : DISP0 Data list, Operand 2 : DISP0 Exit list */
 /*         R11 : User to dispatch                                   */
+/*-------------------------------------------------------------------*/
+/* E60D DISP0 - Dispatch 0                                     [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_dispatch_main)
 {
     char buf[256];
@@ -2458,6 +2500,9 @@ DEF_INST(ecpsvm_dispatch_main)
 /*        finding all 3 control blocks, SCNRU acts    */
 /*        as a NO-OP                                  */
 /******************************************************/
+/*-------------------------------------------------------------------*/
+/* E60E SCNRU - Scan Real Unit                                 [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_locate_rblock)
 {
     char buf[256];
@@ -2599,6 +2644,9 @@ DEF_INST(ecpsvm_locate_rblock)
                       +44= A(CCWNXT12)
                       +48= A(ITSAREL)
 */
+/*-------------------------------------------------------------------*/
+/* E60F CCWGN - General CCW Processing                         [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_comm_ccwproc)
 {
 VADR dl;
@@ -2836,6 +2884,9 @@ BYTE B_VDEVTYPC;
 /* UXCCW D1(R1,B1),D2(R2,B2)    */
 /* 1st operand : Address of VDEVCSW in the VDEVBLOK  */
 /* 2nd Operand : not used or provided */
+/*-------------------------------------------------------------------*/
+/* E610 UXCCW - Untranslate CCW                                [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_unxlate_ccw)
 {
 VADR vcsw;
@@ -2877,6 +2928,9 @@ int  realct;
 
 /* E611 DISP2 Instruction */
 /* DISP2 */
+/*-------------------------------------------------------------------*/
+/* E611 DISP2 - Dispatch 2                                     [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_disp2)
 {
     ECPSVM_PROLOG(DISP2);
@@ -2899,6 +2953,9 @@ DEF_INST(ecpsvm_disp2)
 /* STEVL D1(R1,B1),D2(R2,B2) */
 /* 1st operand : Fullword address in which to store ECPS:VM Support level */
 /* 2nd operand : ignored */
+/*-------------------------------------------------------------------*/
+/* E612 STEVL - Store ECPS:VM Version/Level                    [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_store_level)
 {
     char buf[256];
@@ -3010,6 +3067,9 @@ DEF_INST(ecpsvm_store_level)
 /* loaded by the current user does not have the change bit set in the key.       */
 /* Assists the CP code in DMKVMASH.                                              */
 
+/*-------------------------------------------------------------------*/
+/* E613 LCSPG - Locate Changed Shared Page                     [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_loc_chgshrpg)
 {
 
@@ -3099,6 +3159,9 @@ U16   pte;
 /* if allocation succeeded                                   */
 /* if allocate fails, return at next sequential instruction  */
 /*************************************************************/
+/*-------------------------------------------------------------------*/
+/* E614 FREEX - Allocate CP Storage Extended                   [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_extended_freex)
 {
     char buf[256];
@@ -3289,6 +3352,9 @@ int ecpsvm_do_fretx(REGS *regs,VADR block,U16 numdw,VADR maxsztbl,VADR fretl)
     return(0);
 }
 
+/*-------------------------------------------------------------------*/
+/* E615 FRETX - Return CP Storage Extended                     [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_extended_fretx)
 {
     U32 fretl;
@@ -3312,6 +3378,9 @@ DEF_INST(ecpsvm_extended_fretx)
 
 /* E616 PRFMA Instruction */
 /* PRFMA  Preferred Machine Assist:  Not supported */
+/*-------------------------------------------------------------------*/
+/* E616 PRFMA - Preferred Machine Assist                       [SSE] */
+/*-------------------------------------------------------------------*/
 DEF_INST(ecpsvm_prefmach_assist)
 {
     ECPSVM_PROLOG(PMASS);

@@ -1813,7 +1813,7 @@ DEF_INST( compare_logical_relative_long_long_halfword );
 DEF_INST( compare_relative_long );
 DEF_INST( compare_relative_long_long );
 DEF_INST( compare_relative_long_long_fullword );
-DEF_INST( extract_cache_attribute );
+DEF_INST( extract_cpu_attribute );
 DEF_INST( load_address_extended_y );
 DEF_INST( load_and_test_long_fullword );
 DEF_INST( load_halfword_relative_long );

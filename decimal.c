@@ -691,7 +691,7 @@ BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
 
 /*-------------------------------------------------------------------*/
-/* FA   AP    - Add Decimal                                     [SS] */
+/* FA   AP    - Add Decimal                                   [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_decimal)
 {
@@ -766,7 +766,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
 
 
 /*-------------------------------------------------------------------*/
-/* F9   CP    - Compare Decimal                                 [SS] */
+/* F9   CP    - Compare Decimal                               [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_decimal)
 {
@@ -824,7 +824,7 @@ int     rc;                             /* Return code               */
 
 
 /*-------------------------------------------------------------------*/
-/* FD   DP    - Divide Decimal                                  [SS] */
+/* FD   DP    - Divide Decimal                                [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_decimal)
 {
@@ -891,8 +891,8 @@ int     signq, signr;                   /* Sign of quotient/remainder*/
 
 
 /*-------------------------------------------------------------------*/
-/* DE   ED    - Edit                                            [SS] */
-/* DF   EDMK  - Edit and Mark                                   [SS] */
+/* DE   ED    - Edit                                          [SS-a] */
+/* DF   EDMK  - Edit and Mark                                 [SS-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(edit_x_edit_and_mark)
 {
@@ -1078,7 +1078,7 @@ BYTE    rbyte;                          /* Result byte               */
 
 
 /*-------------------------------------------------------------------*/
-/* FC   MP    - Multiply Decimal                                [SS] */
+/* FC   MP    - Multiply Decimal                              [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_decimal)
 {
@@ -1149,7 +1149,7 @@ int     carry;                          /* Carry indicator           */
 #endif
 
 /*-------------------------------------------------------------------*/
-/* F0   SRP   - Shift and Round Decimal                         [SS] */
+/* F0   SRP   - Shift and Round Decimal                       [SS-c] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_and_round_decimal)
 {
@@ -1245,7 +1245,7 @@ int     carry;                          /* Carry indicator           */
 
 
 /*-------------------------------------------------------------------*/
-/* FB   SP    - Subtract Decimal                                [SS] */
+/* FB   SP    - Subtract Decimal                              [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_decimal)
 {
@@ -1320,7 +1320,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
 
 
 /*-------------------------------------------------------------------*/
-/* F8   ZAP   - Zero and Add                                    [SS] */
+/* F8   ZAP   - Zero and Add                                  [SS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(zero_and_add)
 {
@@ -1365,7 +1365,7 @@ int     sign;                           /* Sign                      */
 
 #if defined(FEATURE_016_EXT_TRANSL_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* EBC0 TP    - Test Decimal                                   [RSL] */
+/* EBC0 TP    - Test Decimal                                 [RSL-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_decimal)
 {

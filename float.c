@@ -4234,7 +4234,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 60   STD   - Store Floating Point Long                       [RX] */
+/* 60   STD   - Store Floating Point Long                     [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_float_long)
 {
@@ -4256,7 +4256,7 @@ U64     dreg;                           /* Double word workarea      */
 
 
 /*-------------------------------------------------------------------*/
-/* 67   MXD   - Multiply Floating Point Long to Extended        [RX] */
+/* 67   MXD   - Multiply Floating Point Long to Extended      [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_float_long_to_ext)
 {
@@ -4291,7 +4291,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 68   LD    - Load Floating Point Long                        [RX] */
+/* 68   LD    - Load Floating Point Long                      [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_float_long)
 {
@@ -4315,7 +4315,7 @@ U64     dreg;                           /* Double word workarea      */
 
 
 /*-------------------------------------------------------------------*/
-/* 69   CD    - Compare Floating Point Long                     [RX] */
+/* 69   CD    - Compare Floating Point Long                   [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_float_long)
 {
@@ -4338,7 +4338,7 @@ LONG_FLOAT cmp_fl;
 
 
 /*-------------------------------------------------------------------*/
-/* 6A   AD    - Add Floating Point Long                         [RX] */
+/* 6A   AD    - Add Floating Point Long                       [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_float_long)
 {
@@ -4380,7 +4380,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 6B   SD    - Subtract Floating Point Long                    [RX] */
+/* 6B   SD    - Subtract Floating Point Long                  [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_float_long)
 {
@@ -4425,7 +4425,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 6C   MD    - Multiply Floating Point Long                    [RX] */
+/* 6C   MD    - Multiply Floating Point Long                  [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_float_long)
 {
@@ -4460,7 +4460,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 6D   DD    - Divide Floating Point Long                      [RX] */
+/* 6D   DD    - Divide Floating Point Long                    [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_float_long)
 {
@@ -4494,7 +4494,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 6E   AW    - Add Unnormalized Floating Point Long            [RX] */
+/* 6E   AW    - Add Unnormalized Floating Point Long          [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_unnormal_float_long)
 {
@@ -4536,7 +4536,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 6F   SW    - Subtract Unnormalized Floating Point Long       [RX] */
+/* 6F   SW    - Subtract Unnormalized Floating Point Long     [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_unnormal_float_long)
 {
@@ -4581,7 +4581,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 70   STE   - Store Floating Point Short                      [RX] */
+/* 70   STE   - Store Floating Point Short                    [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_float_short)
 {
@@ -4598,7 +4598,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* 78   LE    - Load Floating Point Short                       [RX] */
+/* 78   LE    - Load Floating Point Short                     [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_float_short)
 {
@@ -4615,7 +4615,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* 79   CE    - Compare Floating Point Short                    [RX] */
+/* 79   CE    - Compare Floating Point Short                  [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_float_short)
 {
@@ -4638,7 +4638,7 @@ SHORT_FLOAT cmp_fl;
 
 
 /*-------------------------------------------------------------------*/
-/* 7A   AE    - Add Floating Point Short                        [RX] */
+/* 7A   AE    - Add Floating Point Short                      [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_float_short)
 {
@@ -4680,7 +4680,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 7B   SE    - Subtract Floating Point Short                   [RX] */
+/* 7B   SE    - Subtract Floating Point Short                 [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_float_short)
 {
@@ -4725,7 +4725,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 7C   MDE   - Multiply Floating Point Short to Long           [RX] */
+/* 7C   MDE   - Multiply Floating Point Short to Long         [RX-a] */
 /*              Older mnemonic of this instruction is ME             */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_float_short_to_long)
@@ -4761,7 +4761,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 7D   DE    - Divide Floating Point Short                     [RX] */
+/* 7D   DE    - Divide Floating Point Short                   [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_float_short)
 {
@@ -4795,7 +4795,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 7E   AU    - Add Unnormalized Floating Point Short           [RX] */
+/* 7E   AU    - Add Unnormalized Floating Point Short         [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_unnormal_float_short)
 {
@@ -4837,7 +4837,7 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 7F   SU    - Subtract Unnormalized Floating Point Short      [RX] */
+/* 7F   SU    - Subtract Unnormalized Floating Point Short    [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_unnormal_float_short)
 {
@@ -5970,7 +5970,7 @@ U64     fix;
 
 
 /*-------------------------------------------------------------------*/
-/* B3B8 CFER  - Convert from Float. Short to Fixed Register    [RRF] */
+/* B3B8 CFER  - Convert from Float. Short to Fixed Register  [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_short_to_fixed_reg)
 {
@@ -6104,7 +6104,7 @@ U32     lsfract;
 
 
 /*-------------------------------------------------------------------*/
-/* B3B9 CFDR  - Convert from Float. Long to Fixed Register     [RRF] */
+/* B3B9 CFDR  - Convert from Float. Long to Fixed Register   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_long_to_fixed_reg)
 {
@@ -6237,7 +6237,7 @@ U64     lsfract;
 
 
 /*-------------------------------------------------------------------*/
-/* B3BA CFXR  - Convert from Float. Extended to Fixed Register [RRF] */
+/* B3BA CFXR  - Convert from Float. Extended to Fixed Reg.   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_ext_to_fixed_reg)
 {
@@ -6374,7 +6374,7 @@ U64     lsfract;
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
-/* B3C8 CGER  - Convert from Float. Short to Fix64 Register    [RRF] */
+/* B3C8 CGER  - Convert from Float. Short to Fix64 Register  [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_short_to_fix64_reg)
 {
@@ -6517,7 +6517,7 @@ U32     lsfract;
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
-/* B3C9 CGDR  - Convert from Float. Long to Fix64 Register     [RRF] */
+/* B3C9 CGDR  - Convert from Float. Long to Fix64 Register   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_long_to_fix64_reg)
 {
@@ -6656,7 +6656,7 @@ U64     lsfract;
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
-/* B3CA CGXR  - Convert from Float. Extended to Fix64 Register [RRF] */
+/* B3CA CGXR  - Convert from Float. Extended to Fix64 Reg.   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_ext_to_fix64_reg)
 {
@@ -7394,7 +7394,8 @@ EXTENDED_FLOAT fxp1;                    /* Intermediate product      */
 EXTENDED_FLOAT fxadd;                   /* Addend in extended format */
 EXTENDED_FLOAT fxres;                   /* Extended result           */
 
-    RRD(inst, regs, r1, r2, r3)
+    RRD(inst, regs, r1, r2, r3);
+
     HFPREG2_CHECK(r2, r3, regs);
     HFPREG_CHECK(r1, regs);
     i1 = FPR2I(r1);
@@ -7778,7 +7779,7 @@ EXTENDED_FLOAT fx1;                     /* Intermediate result       */
 
 #if defined(FEATURE_018_LONG_DISPL_INST_FACILITY)
 /*-------------------------------------------------------------------*/
-/* ED64 LEY   - Load Floating Point Short (Long Displacement)  [RXY] */
+/* ED64 LEY   - Load Floating Point Short (Long Disp.)       [RXY-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_float_short_y)
 {
@@ -7795,7 +7796,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* ED65 LDY   - Load Floating Point Long (Long Displacement)   [RXY] */
+/* ED65 LDY   - Load Floating Point Long (Long Displacement) [RXY-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_float_long_y)
 {
@@ -7819,7 +7820,7 @@ U64     dreg;                           /* Double word workarea      */
 
 
 /*-------------------------------------------------------------------*/
-/* ED66 STEY  - Store Floating Point Short (Long Displacement) [RXY] */
+/* ED66 STEY  - Store Floating Point Short (Long Disp.)      [RXY-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_float_short_y)
 {
@@ -7836,7 +7837,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /*-------------------------------------------------------------------*/
-/* ED67 STDY  - Store Floating Point Long (Long Displacement)  [RXY] */
+/* ED67 STDY  - Store Floating Point Long (Long Disp.)       [RXY-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_float_long_y)
 {

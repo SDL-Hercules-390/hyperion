@@ -1027,7 +1027,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
 } /* end DEF_INST(convert_bfp_short_to_float_long_reg) */
 
 /*-------------------------------------------------------------------*/
-/* B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF] */
+/* B351 TBDR  - CONVERT HFP TO BFP (long)                    [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_long_to_bfp_long_reg)
 {
@@ -1049,7 +1049,7 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
 } /* end DEF_INST(convert_float_long_to_bfp_long_reg) */
 
 /*-------------------------------------------------------------------*/
-/* B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF] */
+/* B350 TBEDR - CONVERT HFP TO BFP (long to short)           [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_float_long_to_bfp_short_reg)
 {
@@ -1479,8 +1479,8 @@ DEF_INST(compare_and_signal_bfp_short)
 /*--------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
-/* B396 CXFBR  - CONVERT FROM FIXED (32 to extended BFP)       [RRE]    */
-/* B396 CXFBRA - CONVERT FROM FIXED (32 to extended BFP)       [RRF-e]  */
+/* B396 CXFBR  - CONVERT FROM FIXED (32 to extended BFP)        [RRF-e] */
+/* B396 CXFBRA - CONVERT FROM FIXED (32 to extended BFP)        [RRF-e] */
 /*                                                                      */
 /* Fixed 32-bit always fits in Extended BFP; no exceptions possible     */
 /*                                                                      */
@@ -1516,8 +1516,8 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
 }
 
 /*----------------------------------------------------------------------*/
-/* B395 CDFBR  - CONVERT FROM FIXED (32 to long BFP)           [RRE]    */
-/* B395 CDFBRA - CONVERT FROM FIXED (32 to long BFP)           [RRF-e]  */
+/* B395 CDFBR  - CONVERT FROM FIXED (32 to long BFP)            [RRF-e] */
+/* B395 CDFBRA - CONVERT FROM FIXED (32 to long BFP)            [RRF-e] */
 /*                                                                      */
 /* Fixed 32-bit always fits in long BFP; no exceptions possible         */
 /*----------------------------------------------------------------------*/
@@ -1549,8 +1549,8 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
 }
 
 /*--------------------------------------------------------------------------*/
-/* B394 CEFBR  - CONVERT FROM FIXED (32 to short BFP)           [RRE]       */
-/* B394 CEFBRA - CONVERT FROM FIXED (32 to short BFP)           [RRF-e]     */
+/* B394 CEFBR  - CONVERT FROM FIXED (32 to short BFP)               [RRF-e] */
+/* B394 CEFBRA - CONVERT FROM FIXED (32 to short BFP)               [RRF-e] */
 /*                                                                          */
 /* Fixed 32-bit may need to be rounded to fit in the 23+1 bits available    */
 /* in a short BFP, IEEE Inexact may be raised.  If m4 Inexact suppression   */
@@ -1592,7 +1592,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*----------------------------------------------------------------------*/
-/* B3A6 CXGBR  - CONVERT FROM FIXED (64 to extended BFP)        [RRE]   */
+/* B3A6 CXGBR  - CONVERT FROM FIXED (64 to extended BFP)        [RRF-e] */
 /* B3A6 CXGBRA - CONVERT FROM FIXED (64 to extended BFP)        [RRF-e] */
 /*                                                                      */
 /* Fixed 64-bit always fits in extended BFP; no exceptions possible     */
@@ -1628,8 +1628,8 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*--------------------------------------------------------------------------*/
-/* B3A5 CDGBR  - CONVERT FROM FIXED (64 to long BFP)            [RRE]       */
-/* B3A5 CDGBRA - CONVERT FROM FIXED (64 to long BFP)            [RRF-e]     */
+/* B3A5 CDGBR  - CONVERT FROM FIXED (64 to long BFP)                [RRF-e] */
+/* B3A5 CDGBRA - CONVERT FROM FIXED (64 to long BFP)                [RRF-e] */
 /*                                                                          */
 /* Fixed 64-bit may not fit in the 52+1 bits available in a long BFP, IEEE  */
 /* Inexact exceptions are possible.  If m4 Inexact suppression control      */
@@ -1671,8 +1671,8 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*--------------------------------------------------------------------------*/
-/* B3A4 CEGBR  - CONVERT FROM FIXED (64 to short BFP)           [RRE]       */
-/* B3A4 CEGBRA - CONVERT FROM FIXED (64 to short BFP)           [RRF-e]     */
+/* B3A4 CEGBR  - CONVERT FROM FIXED (64 to short BFP)               [RRF-e] */
+/* B3A4 CEGBRA - CONVERT FROM FIXED (64 to short BFP)               [RRF-e] */
 /*                                                                          */
 /* Fixed 64-bit may need to be rounded to fit in the 23+1 bits available    */
 /* in a short BFP, IEEE Inexact may be raised.  If m4 Inexact suppression   */
@@ -1742,8 +1742,8 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
 /*--------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------*/
-/* B39A CFXBR  - CONVERT TO FIXED (extended BFP to 32)          [RRF]    */
-/* B39A CFXBRA - CONVERT TO FIXED (extended BFP to 32)          [RRF-e]  */
+/* B39A CFXBR  - CONVERT TO FIXED (extended BFP to 32)           [RRF-e] */
+/* B39A CFXBRA - CONVERT TO FIXED (extended BFP to 32)           [RRF-e] */
 /*-----------------------------------------------------------------------*/
 DEF_INST(convert_bfp_ext_to_fix32_reg)
 {
@@ -1810,7 +1810,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
 }
 
 /*-------------------------------------------------------------------*/
-/* B399 CFDBR - CONVERT TO FIXED (long BFP to 32)              [RRF] */
+/* B399 CFDBR - CONVERT TO FIXED (long BFP to 32)            [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_bfp_long_to_fix32_reg)
 {
@@ -1876,7 +1876,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
 }
 
 /*-------------------------------------------------------------------*/
-/* B398 CFEBR - CONVERT TO FIXED (short BFP to 32)             [RRF] */
+/* B398 CFEBR - CONVERT TO FIXED (short BFP to 32)           [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_bfp_short_to_fix32_reg)
 {
@@ -1943,7 +1943,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
-/* B3AA CGXBR - CONVERT TO FIXED (extended BFP to 64)          [RRF] */
+/* B3AA CGXBR - CONVERT TO FIXED (extended BFP to 64)        [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_bfp_ext_to_fix64_reg)
 {
@@ -2012,7 +2012,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
-/* B3A9 CGDBR - CONVERT TO FIXED (long BFP to 64)              [RRF] */
+/* B3A9 CGDBR - CONVERT TO FIXED (long BFP to 64)            [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_bfp_long_to_fix64_reg)
 {
@@ -2080,7 +2080,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 /*-------------------------------------------------------------------*/
-/* B3A8 CGEBR - CONVERT TO FIXED (short BFP to 64)             [RRF] */
+/* B3A8 CGEBR - CONVERT TO FIXED (short BFP to 64)           [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_bfp_short_to_fix64_reg)
 {
@@ -2929,7 +2929,7 @@ DEF_INST(load_and_test_bfp_short_reg)
 }
 
 /*-------------------------------------------------------------------*/
-/* B357 FIEBR - LOAD FP INTEGER (short BFP)                    [RRF] */
+/* B357 FIEBR - LOAD FP INTEGER (short BFP)                  [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fp_int_bfp_short_reg)
 {
@@ -2965,7 +2965,7 @@ DEF_INST(load_fp_int_bfp_short_reg)
 }
 
 /*-------------------------------------------------------------------*/
-/* B35F FIDBR - LOAD FP INTEGER (long BFP)                     [RRF] */
+/* B35F FIDBR - LOAD FP INTEGER (long BFP)                   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fp_int_bfp_long_reg)
 {
@@ -3001,7 +3001,7 @@ DEF_INST(load_fp_int_bfp_long_reg)
 }
 
 /*-------------------------------------------------------------------*/
-/* B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF] */
+/* B347 FIXBR - LOAD FP INTEGER (extended BFP)               [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_fp_int_bfp_ext_reg)
 {
@@ -3377,7 +3377,7 @@ DEF_INST(load_positive_bfp_short_reg)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
-/* B344 LEDBR  - LOAD ROUNDED (long to short BFP)               [RRE]   */
+/* B344 LEDBR  - LOAD ROUNDED (long to short BFP)               [RRF-e] */
 /* B344 LEDBRA - LOAD ROUNDED (long to short BFP)               [RRF-e] */
 /*----------------------------------------------------------------------*/
 DEF_INST(load_rounded_bfp_long_to_short_reg)
@@ -3427,7 +3427,7 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
 }
 
 /*----------------------------------------------------------------------*/
-/* B345 LDXBR  - LOAD ROUNDED (extended to long BFP)            [RRE]   */
+/* B345 LDXBR  - LOAD ROUNDED (extended to long BFP)            [RRF-e] */
 /* B345 LDXBRA - LOAD ROUNDED (extended to long BFP)            [RRF-e] */
 /*----------------------------------------------------------------------*/
 DEF_INST(load_rounded_bfp_ext_to_long_reg)
@@ -3478,10 +3478,10 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
 
 }
 
-/*----------------------------------------------------------------------*/
-/* B346 LEXBR  - LOAD ROUNDED (extended to short BFP)           [RRE]   */
-/* B346 LEXBRA - LOAD ROUNDED (extended to short BFP)           [RRF-e] */
-/*-----------------------------------------------------------------------*/
+/*-------------------------------------------------------------------*/
+/* B346 LEXBR  - LOAD ROUNDED (extended to short BFP)        [RRF-e] */
+/* B346 LEXBRA - LOAD ROUNDED (extended to short BFP)        [RRF-e] */
+/*-------------------------------------------------------------------*/
 DEF_INST(load_rounded_bfp_ext_to_short_reg)
 {
     int r1, r2;
@@ -4540,7 +4540,7 @@ DEF_INST(test_data_class_bfp_ext)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
-/* B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]    */
+/* B35B DIDBR - DIVIDE TO INTEGER (long BFP)                    [RRF-b] */
 /*                                                                      */
 /* Softfloat 3a does not have a Divide to Integer equivalent.           */
 /*                                                                      */
@@ -4742,7 +4742,7 @@ DEF_INST(divide_integer_bfp_long_reg)
 }
 
 /*-------------------------------------------------------------------*/
-/* B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RRF] */
+/* B353 DIEBR - DIVIDE TO INTEGER (short BFP)                [RRF-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_integer_bfp_short_reg)
 {
