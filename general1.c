@@ -4632,7 +4632,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 #ifdef OPTION_OPTINST
 /*-------------------------------------------------------------------*/
-/* BF_7   ICM   - Insert Characters under Mask                  [RS] */
+/* BF_7   ICM   - Insert Characters under Mask                [RS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(BF_7)
 {
@@ -4653,7 +4653,7 @@ U32    n;                               /* Fetched value             */
 }
 
 /*-------------------------------------------------------------------*/
-/* BF_F   ICM   - Insert Characters under Mask                  [RS] */
+/* BF_F   ICM   - Insert Characters under Mask                [RS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(BF_F)
 {
@@ -4669,7 +4669,7 @@ VADR   effective_addr2;                 /* effective address         */
 }
 
 /*-------------------------------------------------------------------*/
-/* BF_x   ICM   - Insert Characters under Mask                  [RS] */
+/* BF_x   ICM   - Insert Characters under Mask                [RS-b] */
 /*-------------------------------------------------------------------*/
 DEF_INST(BF_x)
 {
