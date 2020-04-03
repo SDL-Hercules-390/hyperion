@@ -68,7 +68,7 @@
 
 #if defined( FEATURE_TCPIP_EXTENSION )
 /*-------------------------------------------------------------------*/
-/* 75xx TCPIP  Ra,yyy(Rb,Rc)  Ra=anything, Rc>4<14, Rb=0/ditto  [RX] */
+/* 75xx TCPIP Ra,yyy(Rb,Rc) Ra=anything, Rc>4<14, Rb=0/ditto  [RX-a] */
 /*-------------------------------------------------------------------*/
 DEF_INST( tcpip )
 {

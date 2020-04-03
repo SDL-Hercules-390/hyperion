@@ -11,7 +11,7 @@
 ## Introduction
 Around 2002 Jason Winter developed a Hercules extension allowing the guest OS to access the IP stack of the host OS by means of a special instruction that does not exist on real S/3x0, ESA/390 or z/Architecture hardware.  The instruction is in RX format, and its operation code is X'75':
 ```
-                   75rxbddd [RX]    TCPIP  r1,ddd(x2,b2)
+                   75rxbddd [RX-a]    TCPIP  r1,ddd(x2,b2)
 
                                 r1:  0-15
                                 x2:  0,5-13
