@@ -6428,7 +6428,7 @@ static INSTR_FUNC gen_opcode_BF_x[3][NUM_INSTR_TAB_PTRS] =
 
 static INSTR_FUNC gen_opcode_E3_0[1][NUM_INSTR_TAB_PTRS] =
 {
- /*E3*/   GENx370x390x900 ( ""          , XXX_a, ASMFMT_e3xx     , E3_0                                                )
+ /*E3*/   GENx370x390x900 ( ""          , e3xx , ASMFMT_e3xx     , E3_0                                                )
 };
 
 // Load 64-bit
