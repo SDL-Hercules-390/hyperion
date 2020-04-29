@@ -56,22 +56,22 @@
                                                3 and 4 one when bit 5 is */
 #define STFL_006_ASN_LX_REUSE          6    /* ASN-and-LX-reuse facility
                                                is installed              */
-#define STFL_007_STFL_EXTENDED         7    /* Store facility list    @Z9
-                                               extended is installed  @Z9*/
-#define STFL_008_EDAT_1                8    /* Enhanced-DAT facility  208
-                                               is installed           208*/
-#define STFL_009_SENSE_RUN_STATUS      9    /* Sense running status   @Z9
-                                               facility is installed  @Z9*/
+#define STFL_007_STFL_EXTENDED         7    /* Store facility list
+                                               extended is installed     */
+#define STFL_008_EDAT_1                8    /* Enhanced-DAT facility
+                                               is installed              */
+#define STFL_009_SENSE_RUN_STATUS      9    /* Sense running status
+                                               facility is installed     */
 #define STFL_010_CONDITIONAL_SSKE     10    /* Conditional SSKE facility
-                                               is installed           407*/
+                                               is installed              */
 #define STFL_011_CONFIG_TOPOLOGY      11    /* STSI-enhancement for
                                                configuration topology    */
 #define STFL_012_IBM_INTERNAL         12    /* IBM internal use          */
 
-#define STFL_013_IPTE_RANGE           13    /* IPTE-Range facility      810
-                                               installed              810*/
-#define STFL_014_NONQ_KEY_SET         14    /* Nonquiescing Key-Setting 810
-                                               Facility installed     810*/
+#define STFL_013_IPTE_RANGE           13    /* IPTE-Range facility
+                                               installed                 */
+#define STFL_014_NONQ_KEY_SET         14    /* Nonquiescing Key-Setting
+                                               Facility installed        */
 #define STFL_015_IBM_INTERNAL         15    /* IBM internal use          */
 
 #define STFL_016_EXT_TRANSL_2         16    /* Extended translation
@@ -85,38 +85,38 @@
                                                is one if bit 19 is one.  */
 #define STFL_020_HFP_MULT_ADD_SUB     20    /* HFP multiply-add/subtract
                                                facility is installed     */
-#define STFL_021_EXTENDED_IMMED       21    /* Extended immediate     @Z9
-                                               facility is installed  @Z9*/
+#define STFL_021_EXTENDED_IMMED       21    /* Extended immediate     
+                                               facility is installed     */
 #define STFL_022_EXT_TRANSL_3         22    /* Extended translation
                                                facility 3 is installed   */
 #define STFL_023_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
-                                               facility is installed  @Z9*/
-#define STFL_024_ETF2_ENHANCEMENT     24    /* Extended translation   @Z9
-                                               facility 2 enhancement @Z9*/
-#define STFL_025_STORE_CLOCK_FAST     25    /* Store clock fast       @Z9
-                                               enhancement installed  @Z9*/
-#define STFL_026_PARSING_ENHANCE      26    /* Parsing-Enhancement    208
-                                               facility is installed  208*/
+                                               facility is installed     */
+#define STFL_024_ETF2_ENHANCEMENT     24    /* Extended translation   
+                                               facility 2 enhancement    */
+#define STFL_025_STORE_CLOCK_FAST     25    /* Store clock fast       
+                                               enhancement installed     */
+#define STFL_026_PARSING_ENHANCE      26    /* Parsing-Enhancement    
+                                               facility is installed     */
 #define STFL_027_MVCOS                27    /* MVCOS instruction
-                                               is installed           407*/
-#define STFL_028_TOD_CLOCK_STEER      28    /* TOD clock steering     @Z9
-                                               facility is installed  @Z9*/
+                                               is installed              */
+#define STFL_028_TOD_CLOCK_STEER      28    /* TOD clock steering     
+                                               facility is installed  
 #define STFL_029_UNASSIGNED           29    /* Unassigned                */
 
-#define STFL_030_ETF3_ENHANCEMENT     30    /* Extended translation   @Z9
-                                               facility 3 enhancement @Z9*/
+#define STFL_030_ETF3_ENHANCEMENT     30    /* Extended translation   
+                                               facility 3 enhancement    */
 #define STFL_031_EXTRACT_CPU_TIME     31    /* Extract CPU time facility
-                                               is installed           407*/
+                                               is installed              */
 #define STFL_032_CSSF                 32    /* Compare-and-Swap-and-Store
                                                facility is installed     */
 #define STFL_033_CSSF2                33    /* Compare-and-Swap-and-Store
                                                facility 2 is installed   */
-#define STFL_034_GEN_INST_EXTN        34    /* General-Instr-Extn     208
-                                               facility is installed  208*/
-#define STFL_035_EXECUTE_EXTN         35    /* Execute-Extensions     208
-                                               facility is installed  208*/
-#define STFL_036_ENH_MONITOR          36    /* Enhanced-Monitor         810
-                                               facility installed     810*/
+#define STFL_034_GEN_INST_EXTN        34    /* General-Instr-Extn     
+                                               facility is installed     */
+#define STFL_035_EXECUTE_EXTN         35    /* Execute-Extensions     
+                                               facility is installed     */
+#define STFL_036_ENH_MONITOR          36    /* Enhanced-Monitor       
+                                               facility installed        */
 #define STFL_037_FP_EXTENSION         37    /* Floating-point extension
                                                facility installed. When bit
                                                37 is one, so is bit 42.  */
@@ -156,8 +156,8 @@
 
 #define STFL_046_IBM_INTERNAL         46    /* IBM internal use          */
 
-#define STFL_047_CMPSC_ENH            47    /* CMPSC-enhancement        810
-                                               Facility installed     810*/
+#define STFL_047_CMPSC_ENH            47    /* CMPSC-enhancement
+                                               Facility installed        */
 #define STFL_048_DFP_ZONE_CONV        48    /* Decimal-floating-point-
                                                zoned-conversion facility
                                                installed. Bit 42 is also
@@ -208,8 +208,8 @@
 
 #define STFL_065_IBM_INTERNAL         65    /* IBM internal use          */
 
-#define STFL_066_RES_REF_BITS_MULT    66    /* Reset-Reference-Bits-    810
-                                               Multiple Fac installed 810*/
+#define STFL_066_RES_REF_BITS_MULT    66    /* Reset-Reference-Bits-
+                                               Multiple Fac installed    */
 #define STFL_067_CPU_MEAS_COUNTER     67    /* CPU-measurement counter
                                                facility installed z/Arch */
 #define STFL_068_CPU_MEAS_SAMPLNG     68    /* CPU-measurement sampling
@@ -229,11 +229,11 @@
 #define STFL_074_STORE_HYPER_INFO     74    /* Store-hypervisor-info     */
 
 #define STFL_075_ACC_EX_FS_INDIC      75    /* Access-exception fetch/store
-                                               indication facility    810*/
-#define STFL_076_MSA_EXTENSION_3      76    /* Message Security Assist  810
-                                               Extension 3 installed  810*/
-#define STFL_077_MSA_EXTENSION_4      77    /* Message Security Assist  810
-                                               Extension 4 installed  810*/
+                                               indication facility       */
+#define STFL_076_MSA_EXTENSION_3      76    /* Message Security Assist
+                                               Extension 3 installed     */
+#define STFL_077_MSA_EXTENSION_4      77    /* Message Security Assist
+                                               Extension 4 installed     */
 #define STFL_078_EDAT_2               78    /* Enhanced-DAT-2            */
 
 #define STFL_079_UNASSIGNED           79    /* Unassigned                */
