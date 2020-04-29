@@ -2178,7 +2178,7 @@ static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*80*/   GENx370x390x900 ( "SSM"       , SI   , ASMFMT_S        , set_system_mask                                     ),
  /*81*/   GENx___x___x___ ,
  /*82*/   GENx370x390x900 ( "LPSW"      , SI   , ASMFMT_S        , load_program_status_word                            ),
- /*83*/   GENx370x390x900 ( "DIAG"      , ___  , ASMFMT_RS       , diagnose                                            ),
+ /*83*/   GENx370x390x900 ( "DIAG"      , RS_a , ASMFMT_RS       , diagnose                                            ),
  /*84*/   GENx37Xx390x900 ( "BRXH"      , RSI  , ASMFMT_RSI      , branch_relative_on_index_high                       ),
  /*85*/   GENx37Xx390x900 ( "BRXLE"     , RSI  , ASMFMT_RSI      , branch_relative_on_index_low_or_equal               ),
  /*86*/   GENx370x390x900 ( "BXH"       , RS_a , ASMFMT_RS       , branch_on_index_high                                ),
