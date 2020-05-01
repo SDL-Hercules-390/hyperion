@@ -5186,27 +5186,29 @@ int cpuidfmt_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 /* loadparm - set or display IPL parameter                           */
 /*-------------------------------------------------------------------*/
-int loadparm_cmd(int argc, char *argv[], char *cmdline)
+int loadparm_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(cmdline);
-
+    UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
 
-    /* Update IPL parameter if operand is specified */
-    if ( argc > 2 )
+    /* Update the default loadparm value if operand is specified */
+    if (argc > 2)
     {
+        // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
         return -1;
     }
 
-    if ( argc == 2 )
+    if (argc == 2)
     {
-        set_loadparm(argv[1]);
-        if ( MLVL(VERBOSE) )
-            WRMSG(HHC02204, "I", argv[0], str_loadparm());
+        STRLCPY( sysblk.loadparm, argv[1] );
+        if (MLVL( VERBOSE ))
+            // "%-14s set to %s"
+            WRMSG( HHC02204, "I", argv[0], sysblk.loadparm );
     }
     else
-        WRMSG(HHC02203, "I", argv[0], str_loadparm());
+        // "%-14s: %s"
+        WRMSG( HHC02203, "I", argv[0], sysblk.loadparm );
 
     return 0;
 }
