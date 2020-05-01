@@ -677,7 +677,7 @@
   "function prior to starting an IPL.\n"                                         \
   "\n"                                                                           \
   "The optional 'LOADPARM' keyword followed by a 1-8 character string can be\n"  \
-  "used to set the LOADPARM prior to the IPL.\n"                                 \
+  "used to override the default value defined by the 'LOADPARM' command.\n"      \
   "\n"                                                                           \
   "An optional 'PARM' keyword followed by string data can also be used to\n"     \
   "pass data to the IPL command processor. If specified the string data is\n"    \
@@ -714,11 +714,14 @@
   "'savecore' command. The default for 'address' is 0 (beginning of\n"          \
   "storage).\n"
 
-#define loadparm_cmd_desc       "Set the IPL 'LOADPARM' parameter"
+#define loadparm_cmd_desc       "Set the default IPL 'LOADPARM' parameter"
 #define loadparm_cmd_help       \
                                 \
-  "Specifies the eight-character IPL 'LOADPARM' parameter which is used\n"      \
-  "by some operating systems to select certain initialization options.\n"
+  "Specifies the default eight-character IPL 'LOADPARM' parameter used by\n"    \
+  "some operating systems to select certain initialization options. The\n"      \
+  "value specified here can be overridden by specifying a different value\n"   \
+  "on the the IPL command itself. The LOADPARM command simply defines the\n"    \
+  "default value that is used if not overridden on the IPL command itself.\n"
 
 #define loadtext_cmd_desc       "Load a text deck file"
 #define loadtext_cmd_help       \

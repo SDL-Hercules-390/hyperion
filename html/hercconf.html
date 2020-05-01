@@ -973,8 +973,17 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="LOADPARM"></a>
 <dt><code>LOADPARM &nbsp; <em>xxxxxxxx</em></code>
 <dd><p>
-    Specifies the eight-character IPL parameter which is used
-    by some operating systems to select system parameters.
+    Specifies the <i>default</i> eight-character IPL parameter used by
+    some operating systems to select system parameters.
+    <p>
+    The specified value is used as the <code>IPL</code> command's default
+    <code>LOADPARM</code> option parameter when the <code>IPL</code>
+    command is issued without the <code>LOADPARM</code> option. Regardless
+    of the value specified for this setting, the value can alway be
+    overridden by specifying a different value for the <code>LOADPARM</code>
+    option on the <code>IPL</code> command itself. The LOADPARM configuration
+    file option simply specifies a <i>default</i> value that will be used
+    unless overridden with a different value on the IPL command itself.
     <p>
 
 <a name="LOGOPT"></a>
