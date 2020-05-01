@@ -872,6 +872,7 @@ struct SYSBLK {
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
+        char    loadparm[8+1];          /* Default LOADPARM          */
 #ifdef _FEATURE_ECPSVM
 //
         /* ECPS:VM */

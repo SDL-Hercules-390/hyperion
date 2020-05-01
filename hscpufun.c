@@ -486,6 +486,9 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         BYTE   c;
         char   save_ch=0;
 
+        /* Start with default LOADPARM value */
+        set_loadparm( sysblk.loadparm );
+
         /* Save the LOADPARM in case of error */
         orig_loadparm = strdup( str_loadparm() );
 
