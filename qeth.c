@@ -6483,7 +6483,7 @@ static int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
 {
     U32 netmask, mask;
     int pfxlen;
-    char cbuf[8];
+    char cbuf[16];
     netmask = ntohl( inet_addr( ttnetmask ));
     if (netmask == ntohl( INADDR_NONE ) &&
         strcmp( ttnetmask, "255.255.255.255" ) != 0)
@@ -6493,7 +6493,7 @@ static int  netmask2prefix( char* ttnetmask, char** ttpfxlen )
     /* we don't support discontiguous subnets */
     if (netmask != (0xFFFFFFFF << (32-pfxlen)))
         return -1;
-    MSGBUF( cbuf, "%u", pfxlen );
+    MSGBUF( cbuf, "%d", pfxlen );
     free( *ttpfxlen );
     *ttpfxlen = strdup( cbuf );
     return 0;
