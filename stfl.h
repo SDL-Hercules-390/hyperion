@@ -85,25 +85,25 @@
                                                is one if bit 19 is one.  */
 #define STFL_020_HFP_MULT_ADD_SUB     20    /* HFP multiply-add/subtract
                                                facility is installed     */
-#define STFL_021_EXTENDED_IMMED       21    /* Extended immediate     
+#define STFL_021_EXTENDED_IMMED       21    /* Extended immediate
                                                facility is installed     */
 #define STFL_022_EXT_TRANSL_3         22    /* Extended translation
                                                facility 3 is installed   */
 #define STFL_023_HFP_UNNORM_EXT       23    /* HFP unnormalized extension
                                                facility is installed     */
-#define STFL_024_ETF2_ENHANCEMENT     24    /* Extended translation   
+#define STFL_024_ETF2_ENHANCEMENT     24    /* Extended translation
                                                facility 2 enhancement    */
-#define STFL_025_STORE_CLOCK_FAST     25    /* Store clock fast       
+#define STFL_025_STORE_CLOCK_FAST     25    /* Store clock fast
                                                enhancement installed     */
-#define STFL_026_PARSING_ENHANCE      26    /* Parsing-Enhancement    
+#define STFL_026_PARSING_ENHANCE      26    /* Parsing-Enhancement
                                                facility is installed     */
 #define STFL_027_MVCOS                27    /* MVCOS instruction
                                                is installed              */
-#define STFL_028_TOD_CLOCK_STEER      28    /* TOD clock steering     
-                                               facility is installed  
+#define STFL_028_TOD_CLOCK_STEER      28    /* TOD clock steering
+                                               facility is installed     */
 #define STFL_029_UNASSIGNED           29    /* Unassigned                */
 
-#define STFL_030_ETF3_ENHANCEMENT     30    /* Extended translation   
+#define STFL_030_ETF3_ENHANCEMENT     30    /* Extended translation
                                                facility 3 enhancement    */
 #define STFL_031_EXTRACT_CPU_TIME     31    /* Extract CPU time facility
                                                is installed              */
@@ -111,11 +111,11 @@
                                                facility is installed     */
 #define STFL_033_CSSF2                33    /* Compare-and-Swap-and-Store
                                                facility 2 is installed   */
-#define STFL_034_GEN_INST_EXTN        34    /* General-Instr-Extn     
+#define STFL_034_GEN_INST_EXTN        34    /* General-Instr-Extn
                                                facility is installed     */
-#define STFL_035_EXECUTE_EXTN         35    /* Execute-Extensions     
+#define STFL_035_EXECUTE_EXTN         35    /* Execute-Extensions
                                                facility is installed     */
-#define STFL_036_ENH_MONITOR          36    /* Enhanced-Monitor       
+#define STFL_036_ENH_MONITOR          36    /* Enhanced-Monitor
                                                facility installed        */
 #define STFL_037_FP_EXTENSION         37    /* Floating-point extension
                                                facility installed. When bit
