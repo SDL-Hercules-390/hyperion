@@ -326,14 +326,7 @@ U64     dreg;
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (STATEBK->mx & SIE_MX_ESAME)
     {
-        /* If GUESTREGS was initialized for a different architecture,
-           then we need to initialize it for the new architecture */
-        if (GUESTREGS->arch_mode != ARCH_900_IDX)
-        {
-            /* REGS 'arch_mode' MUST be set BEFORE calling cpu_init! */
-            GUESTREGS->arch_mode = ARCH_900_IDX;
-            cpu_init( regs->cpuad, GUESTREGS, regs );
-        }
+        GUESTREGS->arch_mode = ARCH_900_IDX;
         GUESTREGS->program_interrupt = &z900_program_interrupt;
         icode = z900_load_psw( GUESTREGS, STATEBK->psw );
     }
