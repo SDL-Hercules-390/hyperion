@@ -2111,13 +2111,12 @@ decContext      set;                    /* Working context           */
 DEF_INST(convert_fix32_to_dfp_ext_reg)
 {
 int             r1, r2;                 /* Values of R fields        */
-int             m3, m4;                 /* Values of M fields        */
 S32             n2;                     /* Value of R2 register      */
 decimal128      x1;                     /* Extended DFP value        */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 
-    RRF_MM(inst, regs, r1, r2, m3, m4);
+    RRE(inst, regs, r1, r2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -2125,7 +2124,7 @@ decContext      set;                    /* Working context           */
 
     /* Initialise the context for extended DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL128);
-    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
 
     /* Load 32-bit binary integer value from r2 register */
     n2 = (S32)(regs->GR_L(r2));
@@ -2146,21 +2145,20 @@ decContext      set;                    /* Working context           */
 DEF_INST(convert_fix32_to_dfp_long_reg)
 {
 int             r1, r2;                 /* Values of R fields        */
-int             m3, m4;                 /* Values of M fields        */
 S32             n2;                     /* Value of R2 register      */
 decimal64       x1;                     /* Long DFP value            */
 decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 BYTE            dxc;                    /* Data exception code       */
 
-    RRF_MM(inst, regs, r1, r2, m3, m4);
+    RRE(inst, regs, r1, r2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
     decContextDefault(&set, DEC_INIT_DECIMAL64);
-    ARCH_DEP(dfp_rounding_mode)(&set, m3, regs);
+    ARCH_DEP(dfp_rounding_mode)(&set, 0, regs);
 
     /* Load 32-bit binary integer value from r2 register */
     n2 = (S32)(regs->GR_L(r2));
