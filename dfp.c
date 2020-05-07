@@ -2075,7 +2075,7 @@ decContext      set;                    /* Working context           */
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
 /*-------------------------------------------------------------------*/
-/* B959 CXFTR - Convert from fixed 32 to DFP Extended Register [RRE] */
+/* B959 CXFTR - Convert from fixed 32 to DFP Extended Reg.   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_fix32_to_dfp_ext_reg)
 {
@@ -2108,7 +2108,7 @@ decContext      set;                    /* Working context           */
 
 
 /*-------------------------------------------------------------------*/
-/* B951 CDFTR - Convert from fixed 32 to DFP Long Register     [RRE] */
+/* B951 CDFTR - Convert from fixed 32 to DFP Long Register   [RRF-e] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_fix32_to_dfp_long_reg)
 {
