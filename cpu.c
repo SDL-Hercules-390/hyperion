@@ -1662,15 +1662,23 @@ cpustate_stopping:
         regs->waittod = host_tod();
 
         /* Test for disabled wait PSW and issue message */
-        if( IS_IC_DISABLED_WAIT_PSW(regs) )
+        if (IS_IC_DISABLED_WAIT_PSW( regs ))
         {
-            char buf[40];
-            // "Processor %s%02X: disabled wait state %s"
-            WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, STR_PSW( regs, buf ));
+            /* Don't log the disabled wait when OSTAILOR VM is active
+               unless it is the very last CPU in the configuration. */
+            if (0
+                || ((sysblk.pgminttr & OS_VM) != OS_VM)   // not VM
+                || !(sysblk.started_mask ^ regs->cpubit)  // is last
+            )
+            {
+                char buf[40];
+                // "Processor %s%02X: disabled wait state %s"
+                WRMSG( HHC00809, "I", PTYPSTR( regs->cpuad ),
+                    regs->cpuad, STR_PSW( regs, buf ));
+            }
             regs->cpustate = CPUSTATE_STOPPING;
-            RELEASE_INTLOCK(regs);
-
-            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+            RELEASE_INTLOCK( regs );
+            longjmp( regs->progjmp, SIE_NO_INTERCEPT );
         }
 
         /* Indicate waiting and invoke CPU wait */

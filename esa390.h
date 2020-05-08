@@ -798,7 +798,8 @@ typedef struct LSED LSED;
 #define SIGP_SENSE_RUNNING_STATE 0x15   /* Sense Running State       */
 
 #define MAX_SIGPORDER            0x15   /* Maximum SIGP order value  */
-#define LOG_SIGPORDER            0x03   /* Log any SIGP > this value */
+#define LOG_SIGPORDER    SIGP_RESTART   /* Log any SIGP > this value
+                                          except Sense Running State */
 
 /*-------------------------------------------------------------------*/
 /* SIGP status codes */
