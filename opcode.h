@@ -1784,9 +1784,8 @@ void init_runtime_opcode_tables();
 void init_regs_runtime_opcode_pointers( REGS* regs );
 
 
-/* Functions in module panel.c */
+/* Functions in module hscmisc.c */
 void ARCH_DEP( display_inst ) (REGS *regs, BYTE *inst);
-void display_inst (REGS *regs, BYTE *inst);
 
 
 /* Functions in module sie.c */

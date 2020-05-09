@@ -19,1662 +19,48 @@
 #include "esa390io.h"
 #include "hexdumpe.h"
 
-#if !defined(_HSCMISC_C)
-#define _HSCMISC_C
-
 /*-------------------------------------------------------------------*/
-/*                System Shutdown Processing                         */
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
 /*-------------------------------------------------------------------*/
 
-/* The following 'sigq' functions are responsible for ensuring all of
-   the CPUs are stopped ("quiesced") before continuing with Hercules
-   shutdown processing, and should NEVER be called directly. Instead,
-   they are called by the main 'do_shutdown' (or 'do_shutdown_wait')
-   function(s) (defined further below) as needed and/or appropriate.
-*/
-static int wait_sigq_pending = 0;
-
-static int is_wait_sigq_pending()
-{
-int pending;
-
-    OBTAIN_INTLOCK(NULL);
-    pending = wait_sigq_pending;
-    RELEASE_INTLOCK(NULL);
-
-    return pending;
-}
-
-static void wait_sigq_resp()
-{
-int pending;
-    /* Wait for all CPU's to stop */
-    do
-    {
-        OBTAIN_INTLOCK(NULL);
-        wait_sigq_pending = 0;
-        if (!are_all_cpus_stopped_intlock_held())
-            wait_sigq_pending = 1;
-        pending = wait_sigq_pending;
-        RELEASE_INTLOCK(NULL);
-
-        if(pending)
-            SLEEP(1);
-    }
-    while(is_wait_sigq_pending());
-}
-
-static void cancel_wait_sigq()
-{
-    OBTAIN_INTLOCK(NULL);
-    wait_sigq_pending = 0;
-    RELEASE_INTLOCK(NULL);
-}
-
-/*                       do_shutdown_now
-
-   This is the main shutdown processing function. It is NEVER called
-   directly, but is instead ONLY called by either the 'do_shutdown'
-   or 'do_shutdown_wait' functions after all CPUs have been stopped.
-
-   It is responsible for releasing the device configuration and then
-   calling the Hercules Dynamic Loader "hdl_atexit" function to invoke
-   all registered "Hercules at-exit/termination functions" (similar
-   to 'atexit' but unique to Hercules) (to perform any other needed
-   miscellaneous shutdown related processing).
-
-   Only after the above three tasks have been completed (stopping the
-   CPUs, releasing the device configuration, calling registered term-
-   ination routines/functions) can Hercules then be safely terminated.
-
-   Note too that, *technically*, this function *should* wait for *all*
-   other threads to finish terminating first before either exiting or
-   returning back to the caller, but we don't currently enforce that
-   (since that's *really* what hdl_addshut + hdl_atexit is designed for!).
-
-   At the moment, as long as the three previously mentioned three most
-   important shutdown tasks have been completed (stop cpus, release
-   device config, call term funcs), then we consider the brunt of our
-   shutdown processing to be completed and thus exit (or return back
-   to the caller to let them exit instead). If there happen to be any
-   threads still running when that happens, they will be automatically
-   terminated by the operating sytem as normal when a process exits.
-
-   SO... If there are any threads that must be terminated completely
-   and cleanly before Hercules can safely terminate, then you better
-   add code to this function to ENSURE that your thread is terminated
-   properly! (and/or add a call to 'hdl_addshut' at the appropriate place
-   in the startup sequence). For this purpose, the use of "join_thread"
-   is *strongly* encouraged as it *ensures* that your thread will not
-   continue until the thread in question has completely exited first.
-*/
-static void do_shutdown_now()
-{
-    // "Begin Hercules shutdown"
-    WRMSG(HHC01420, "I");
-
-    ASSERT( !sysblk.shutfini );  // (sanity check)
-
-    sysblk.shutfini = FALSE;  // (shutdown NOT finished yet)
-
-    sysblk.shutdown = TRUE;  // (system shutdown initiated)
-
-    /* Wakeup I/O subsystem to start I/O subsystem shutdown */
-    {
-        int n;
-
-        for (n = 0; sysblk.devtnbr && n < 100; ++n)
-        {
-            signal_condition(&sysblk.ioqcond);
-            usleep(10000);
-        }
-    }
-
-    // "Calling termination routines"
-    WRMSG( HHC01423, "I" );
-
-#if !defined( _MSVC_ )
-    logger_unredirect();
-#endif
-
-    hdl_atexit();
-
-    // "All termination routines complete"
-    fprintf( stdout, MSG( HHC01424, "I" ));
-
-    /*
-    logmsg("Terminating threads\n");
-    {
-        // (none we really care about at the moment...)
-    }
-    logmsg("Threads terminations complete\n");
-    */
-
-    // "Hercules shutdown complete"
-    fprintf( stdout, MSG( HHC01425, "I" ));
-
-    sysblk.shutfini = TRUE;    // (shutdown is now complete)
-
-    // "Hercules terminated"
-    fprintf( stdout, MSG( HHC01412, "I" ));
-
-    //                     PROGRAMMING NOTE
-
-    // If we're NOT in "daemon_mode" (i.e. panel_display in control),
-    // -OR- if a daemon_task DOES exist, then THEY are in control of
-    // shutdown; THEY are responsible for exiting the system whenever
-    // THEY feel it's proper to do so (by simply returning back to the
-    // caller thereby allowing 'main' to return back to the operating
-    // system).
-
-    // OTHEWRWISE we ARE in "daemon_mode", but a daemon_task does NOT
-    // exist, which means the main thread (tail end of 'impl.c') is
-    // stuck in a loop reading log messages and writing them to the
-    // logfile, so we need to do the exiting here since it obviously
-    // cannot.
-
-    if (sysblk.daemon_mode && !daemon_task)
-    {
-#ifdef _MSVC_
-        socket_deinit();
-#endif
-        fflush( stdout );
-        exit(0);
-    }
-}
-
-/*                     do_shutdown_wait
-
-   This function simply waits for the CPUs to stop and then calls
-   the above do_shutdown_now function to perform the actual shutdown
-   (which releases the device configuration, etc)
-*/
-static void* do_shutdown_wait(void* arg)
-{
-    UNREFERENCED( arg );
-    WRMSG(HHC01426, "I");
-    wait_sigq_resp();
-    do_shutdown_now();
-    return NULL;
-}
-
-/*                 *****  do_shutdown  *****
-
-   This is the main system shutdown function, and the ONLY function
-   that should EVER be called to shut the system down. It calls one
-   or more of the above static helper functions as needed.
-*/
-void do_shutdown()
-{
-TID tid;
-    if ( sysblk.shutimmed )
-        do_shutdown_now();
-    else
-    {
-        if(is_wait_sigq_pending())
-            cancel_wait_sigq();
-        else
-            if(can_signal_quiesce() && !signal_quiesce(0,0))
-                create_thread(&tid, DETACHED, do_shutdown_wait,
-                              NULL, "do_shutdown_wait");
-            else
-                do_shutdown_now();
-    }
-}
-
-/*-------------------------------------------------------------------*/
-/* The following 2 routines display an array of 32/64 registers      */
-/* 1st parameter is the register type (GR, CR, AR, etc..)            */
-/* 2nd parameter is the CPU Address involved                         */
-/* 3rd parameter is an array of 32/64 bit regs                       */
-/* NOTE : 32 bit regs are displayed 4 by 4, while 64 bit regs are    */
-/*        displayed 2 by 2. Change the modulo if to change this      */
-/*        behaviour.                                                 */
-/* These routines are intended to be invoked by display_gregs,       */
-/* display_cregs and display_aregs                                   */
-/* Ivan Warren 2005/11/07                                            */
-/*-------------------------------------------------------------------*/
-static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int buflen,char *msghdr)
-{
-    int i;
-    int len=0;
-    for(i=0;i<16;i++)
-    {
-        if(!(i%4))
-        {
-            if(i)
-            {
-                len+=snprintf(buf+len, buflen-len, "%s", "\n");
-            }
-            len+=snprintf(buf+len, buflen-len, "%s", msghdr);
-            if(numcpus>1)
-            {
-                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
-            }
-        }
-        if(i%4)
-        {
-            len+=snprintf(buf+len,buflen-len,"%s", " ");
-        }
-        len+=snprintf(buf+len,buflen-len,"%s%2.2d=%8.8"PRIX32,hdr,i,r[i]);
-    }
-    len+=snprintf(buf+len,buflen-len,"%s","\n");
-    return(len);
-}
-
-#if defined(_900)
-
-static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int buflen,char *msghdr)
-{
-    int i;
-    int rpl;
-    int len=0;
-    if(numcpus>1 && !(sysblk.insttrace || sysblk.inststep) )
-    {
-        rpl=2;
-    }
-    else
-    {
-        rpl=4;
-    }
-    for(i=0;i<16;i++)
-    {
-        if(!(i%rpl))
-        {
-            if(i)
-            {
-                len+=snprintf(buf+len,buflen-len,"%s", "\n");
-            }
-            len+=snprintf(buf+len,buflen-len, "%s", msghdr);
-            if(numcpus>1)
-            {
-                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
-            }
-        }
-        if(i%rpl)
-        {
-            len+=snprintf(buf+len,buflen-len,"%s"," ");
-        }
-        len+=snprintf(buf+len,buflen-len,"%s%1.1X=%16.16"PRIX64,hdr,i,r[i]);
-    }
-    len+=snprintf(buf+len,buflen-len,"%s","\n");
-    return(len);
-}
-
-#endif
-
-/*-------------------------------------------------------------------*/
-/* Display registers for the instruction display                     */
-/*-------------------------------------------------------------------*/
-int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int buflen )
-{
-    int len=0;
-
-    /* Display the general purpose registers */
-    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F))
-        || (opcode == 0xB3 && (
-                (inst[1] >= 0x80 && inst[1] <= 0xCF)
-                || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
-           )))
-    {
-        len += display_gregs (regs, buf + len, buflen - len - 1, "HHC02269I " );
-    }
-
-    /* Display control registers if appropriate */
-    if (!REAL_MODE(&regs->psw) || opcode == 0xB2 || opcode == 0xB6 || opcode == 0xB7)
-    {
-        len += display_cregs (regs, buf + len, buflen - len - 1, "HHC02271I ");
-    }
-
-    /* Display access registers if appropriate */
-    if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
-    {
-        len += display_aregs (regs, buf + len, buflen - len - 1, "HHC02272I ");
-    }
-
-    /* Display floating point control register if AFP enabled */
-    if ((regs->CR(0) & CR0_AFP) && (
-                                (opcode == 0x01 && inst[1] == 0x0A)          /* PFPO Perform Floating Point Operation  */
-                                || (opcode == 0xB2 && inst[1] == 0x99)       /* SRNM   Set BFP Rounding mode 2-bit     */
-                                || (opcode == 0xB2 && inst[1] == 0x9C)       /* STFPC  Store FPC                       */
-                                || (opcode == 0xB2 && inst[1] == 0x9D)       /* LFPC   Load FPC                        */
-                                || (opcode == 0xB2 && inst[1] == 0xB8)       /* SRNMB  Set BFP Rounding mode 3-bit     */
-                                || (opcode == 0xB2 && inst[1] == 0xB9)       /* SRNMT  Set DFP Rounding mode           */
-                                || (opcode == 0xB2 && inst[1] == 0xBD)       /* LFAS   Load FPC and Signal             */
-                                || (opcode == 0xB3 && (inst[1] <= 0x1F))                       /* RRE BFP arithmetic   */
-                                || (opcode == 0xB3 && (inst[1] >= 0x40 && inst[1] <= 0x5F))    /* RRE BFP arithmetic   */
-                                || (opcode == 0xB3 && (inst[1] >= 0x84 && inst[1] <= 0x8C))    /* SFPC, SFASR, EFPC    */
-                                || (opcode == 0xB3 && (inst[1] >= 0x90 && inst[1] <= 0xAF))    /* RRE BFP arithmetic   */
-                                || (opcode == 0xB3 && (inst[1] >= 0xD0))/*inst[1] <= 0xFF)) */ /* RRE DFP arithmetic   */
-                                || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43))    /* DFP Conversions      */
-                                || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B))    /* DFP Conversions      */
-                                || (opcode == 0xED && (inst[1] <= 0x1F))                       /* RXE BFP arithmetic   */
-                                || (opcode == 0xED && (inst[1] >= 0x40 && inst[1] <= 0x59))    /* RXE DFP shifts, tests*/
-                                || (opcode == 0xED && (inst[1] >= 0xA8 && inst[1] <= 0xAF)))   /* RXE DFP conversions  */
-        )
-    {
-        len += snprintf(buf + len, buflen - len, MSG(HHC02276,"I", regs->fpc));
-    }
-
-    /* Display floating-point registers if appropriate */
-    if ( (opcode == 0xB3 && !((inst[1] == 0x84) || (inst[1] == 0x85) || (inst[1] == 0x8C)))  /* exclude FPC-only instrs  */
-        || (opcode == 0xED)
-        || (opcode >= 0x20 && opcode <= 0x3F)  /* HFP Arithmetic and load/store  */
-        || (opcode >= 0x60 && opcode <= 0x70)  /* HFP Arithmetic and load/store  */
-        || (opcode >= 0x78 && opcode <= 0x7F)  /* HFP Arithmetic and load/store  */
-        || (opcode == 0xB2 && inst[1] == 0x2D) /* DXR  Divide HFP extended               */
-        || (opcode == 0xB2 && inst[1] == 0x44) /* SQDR Square Root HFP long              */
-        || (opcode == 0xB2 && inst[1] == 0x45) /* SQER Square Root HFP short             */
-        || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43)) /* DFP Conversions*/
-        || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B)) /* DFP Conversions*/
-        || (opcode == 0x01 && inst[1] == 0x0A) /* PFPO Perform Floating Point Operation  */
-        )
-    {
-        len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
-    }
-
-    if (len && sysblk.showregsfirst)
-        len += snprintf( buf + len, buflen - len, "\n" );
-
-    return len;
-}
-
-/*-------------------------------------------------------------------*/
-/* Display general purpose registers                                 */
-/*-------------------------------------------------------------------*/
-int display_gregs (REGS *regs, char *buf, int buflen, char *hdr)
-{
-    int i;
-    U32 gprs[16];
-#if defined(_900)
-    U64 ggprs[16];
-#endif
-
-#if defined(_900)
-    if(regs->arch_mode != ARCH_900_IDX)
-    {
-#endif
-        for(i=0;i<16;i++)
-        {
-            gprs[i]=regs->GR_L(i);
-        }
-        return(display_regs32("GR",regs->cpuad,gprs,sysblk.cpus,buf,buflen,hdr));
-#if defined(_900)
-    }
-    else
-    {
-        for(i=0;i<16;i++)
-        {
-            ggprs[i]=regs->GR_G(i);
-        }
-        return(display_regs64("R",regs->cpuad,ggprs,sysblk.cpus,buf,buflen,hdr));
-    }
-#endif
-
-} /* end function display_gregs */
-
-
-/*-------------------------------------------------------------------*/
-/* Display control registers                                         */
-/*-------------------------------------------------------------------*/
-int display_cregs (REGS *regs, char *buf, int buflen, char *hdr)
-{
-    int i;
-    U32 crs[16];
-#if defined(_900)
-    U64 gcrs[16];
-#endif
-
-#if defined(_900)
-    if(regs->arch_mode != ARCH_900_IDX)
-    {
-#endif
-        for(i=0;i<16;i++)
-        {
-            crs[i]=regs->CR_L(i);
-        }
-        return(display_regs32("CR",regs->cpuad,crs,sysblk.cpus,buf,buflen,hdr));
-#if defined(_900)
-    }
-    else
-    {
-        for(i=0;i<16;i++)
-        {
-            gcrs[i]=regs->CR_G(i);
-        }
-        return(display_regs64("C",regs->cpuad,gcrs,sysblk.cpus,buf,buflen,hdr));
-    }
-#endif
-
-} /* end function display_cregs */
-
-
-/*-------------------------------------------------------------------*/
-/* Display access registers                                          */
-/*-------------------------------------------------------------------*/
-int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
-{
-    int i;
-    U32 ars[16];
-
-    for(i=0;i<16;i++)
-    {
-        ars[i]=regs->AR(i);
-    }
-    return(display_regs32("AR",regs->cpuad,ars,sysblk.cpus,buf,buflen,hdr));
-
-} /* end function display_aregs */
-
-
-/*-------------------------------------------------------------------*/
-/* Display floating point registers                                  */
-/*-------------------------------------------------------------------*/
-int display_fregs (REGS *regs, char *buf, int buflen, char *hdr)
-{
-char cpustr[32] = "";
-
-    if(sysblk.cpus>1)
-        MSGBUF(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
-    else
-        MSGBUF(cpustr, "%s", hdr);
-
-    if(regs->CR(0) & CR0_AFP)
-        return(snprintf(buf,buflen,
-            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
-            "%sFPR1=%8.8X%8.8X FPR3=%8.8X%8.8X\n"
-            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
-            "%sFPR5=%8.8X%8.8X FPR7=%8.8X%8.8X\n"
-            "%sFPR8=%8.8X%8.8X FP10=%8.8X%8.8X\n"
-            "%sFPR9=%8.8X%8.8X FP11=%8.8X%8.8X\n"
-            "%sFP12=%8.8X%8.8X FP14=%8.8X%8.8X\n"
-            "%sFP13=%8.8X%8.8X FP15=%8.8X%8.8X\n"
-            ,cpustr, regs->fpr[0],  regs->fpr[1],  regs->fpr[4],  regs->fpr[5]
-            ,cpustr, regs->fpr[2],  regs->fpr[3],  regs->fpr[6],  regs->fpr[7]
-            ,cpustr, regs->fpr[8],  regs->fpr[9],  regs->fpr[12], regs->fpr[13]
-            ,cpustr, regs->fpr[10], regs->fpr[11], regs->fpr[14], regs->fpr[15]
-            ,cpustr, regs->fpr[16], regs->fpr[17], regs->fpr[20], regs->fpr[21]
-            ,cpustr, regs->fpr[18], regs->fpr[19], regs->fpr[22], regs->fpr[23]
-            ,cpustr, regs->fpr[24], regs->fpr[25], regs->fpr[28], regs->fpr[29]
-            ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
-        ));
-    else
-        return(snprintf(buf,buflen,
-            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
-            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
-            ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
-            ,cpustr, regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]
-        ));
-
-} /* end function display_fregs */
-
-
-/*-------------------------------------------------------------------*/
-/* Display subchannel                                                */
-/*-------------------------------------------------------------------*/
-int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
-{
-    static const char*  status_type[3] = {"Device Status    ",
-                                          "Unit Status      ",
-                                          "Subchannel Status"};
-
-    struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
-    union ByteToBits { struct BITS b; U8 status; } u;
-    int len = 0;
-
-    len+=snprintf(buf+len,buflen-len,
-        "%s%1d:%04X D/T%04X\n",
-        hdr, LCSS_DEVNUM, dev->devtype);
-
-    if (ARCH_370_IDX == sysblk.arch_mode)
-    {
-        len+=snprintf(buf+len,buflen-len,
-            "%s  CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X            Flags\n"
-            "%s         US:%2.2X  CS:%2.2X Count:%2.2X%2.2X       (Key) Subchannel key          %1.1X\n"
-            "%s                                       (S)   Suspend control         %1.1X\n"
-            "%s                                       (L)   Extended format         %1.1X\n"
-            "%s  Subchannel Internal Management       (CC)  Deferred condition code %1.1X\n",
-            hdr, dev->scsw.flag0,
-                 dev->scsw.ccwaddr[1], dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3],
-            hdr, dev->scsw.unitstat, dev->scsw.chanstat,
-                 dev->scsw.count[0], dev->scsw.count[1],
-                 (dev->scsw.flag0 & SCSW0_KEY)      >> 4,
-            hdr, (dev->scsw.flag0 & SCSW0_S)        >> 3,
-            hdr, (dev->scsw.flag0 & SCSW0_L)        >> 2,
-            hdr, (dev->scsw.flag0 & SCSW0_CC));
-    }
-
-    len+=snprintf(buf+len,buflen-len,
-        "%s  Subchannel Number[%04X]\n"
-        "%s    Path Management Control Word (PMCW)\n"
-        "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
-        "%s    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
-        "%s      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
-        "%s      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
-        "%s  CHPID 0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
-        "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
-        "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
-        hdr, dev->subchan,
-        hdr,
-        hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
-        dev->pmcw.intparm[2], dev->pmcw.intparm[3],
-        hdr, dev->pmcw.flag4, dev->pmcw.flag5,
-        dev->pmcw.devnum[0], dev->pmcw.devnum[1],
-        hdr, dev->pmcw.lpm, dev->pmcw.pnom, dev->pmcw.lpum, dev->pmcw.pim,
-        hdr, dev->pmcw.mbi[0], dev->pmcw.mbi[1],
-        dev->pmcw.pom, dev->pmcw.pam,
-        hdr, dev->pmcw.chpid[0], dev->pmcw.chpid[1],
-        dev->pmcw.chpid[2], dev->pmcw.chpid[3],
-        hdr, dev->pmcw.chpid[4], dev->pmcw.chpid[5],
-        dev->pmcw.chpid[6], dev->pmcw.chpid[7],
-        hdr,dev->pmcw.zone, dev->pmcw.flag25,
-        dev->pmcw.flag26, dev->pmcw.flag27);
-
-    len+=snprintf(buf+len,buflen-len,
-        "%s  Subchannel Status Word (SCSW)\n"
-        "%s    Flags: %2.2X%2.2X  Subchan Ctl: %2.2X%2.2X     (FC)  Function Control\n"
-        "%s      CCW: %2.2X%2.2X%2.2X%2.2X                          Start                   %1.1X\n"
-        "%s       DS: %2.2X  SS: %2.2X  Count: %2.2X%2.2X           Halt                    %1.1X\n"
-        "%s                                             Clear                   %1.1X\n"
-        "%s    Flags                              (AC)  Activity Control\n"
-        "%s      (Key) Subchannel key          %1.1X        Resume pending          %1.1X\n"
-        "%s      (S)   Suspend control         %1.1X        Start pending           %1.1X\n"
-        "%s      (L)   Extended format         %1.1X        Halt pending            %1.1X\n"
-        "%s      (CC)  Deferred condition code %1.1X        Clear pending           %1.1X\n"
-        "%s      (F)   CCW-format control      %1.1X        Subchannel active       %1.1X\n"
-        "%s      (P)   Prefetch control        %1.1X        Device active           %1.1X\n"
-        "%s      (I)   Initial-status control  %1.1X        Suspended               %1.1X\n"
-        "%s      (A)   Address-limit control   %1.1X  (SC)  Status Control\n"
-        "%s      (U)   Suppress-suspend int.   %1.1X        Alert                   %1.1X\n"
-        "%s    Subchannel Control                       Intermediate            %1.1X\n"
-        "%s      (Z)   Zero condition code     %1.1X        Primary                 %1.1X\n"
-        "%s      (E)   Extended control (ECW)  %1.1X        Secondary               %1.1X\n"
-        "%s      (N)   Path not operational    %1.1X        Status pending          %1.1X\n"
-        "%s      (Q)   QDIO active             %1.1X\n",
-        hdr,
-        hdr, dev->scsw.flag0, dev->scsw.flag1, dev->scsw.flag2, dev->scsw.flag3,
-        hdr, dev->scsw.ccwaddr[0], dev->scsw.ccwaddr[1],
-             dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3],
-             (dev->scsw.flag2 & SCSW2_FC_START) >> 6,
-        hdr, dev->scsw.unitstat, dev->scsw.chanstat,
-             dev->scsw.count[0], dev->scsw.count[1],
-             (dev->scsw.flag2 & SCSW2_FC_HALT)  >> 5,
-        hdr, (dev->scsw.flag2 & SCSW2_FC_CLEAR) >> 4,
-        hdr,
-        hdr, (dev->scsw.flag0 & SCSW0_KEY)      >> 4,
-             (dev->scsw.flag2 & SCSW2_AC_RESUM) >> 3,
-        hdr, (dev->scsw.flag0 & SCSW0_S)        >> 3,
-             (dev->scsw.flag2 & SCSW2_AC_START) >> 2,
-        hdr, (dev->scsw.flag0 & SCSW0_L)        >> 2,
-             (dev->scsw.flag2 & SCSW2_AC_HALT)  >> 1,
-        hdr, (dev->scsw.flag0 & SCSW0_CC),
-             (dev->scsw.flag2 & SCSW2_AC_CLEAR),
-        hdr, (dev->scsw.flag1 & SCSW1_F)        >> 7,
-             (dev->scsw.flag3 & SCSW3_AC_SCHAC) >> 7,
-        hdr, (dev->scsw.flag1 & SCSW1_P)        >> 6,
-             (dev->scsw.flag3 & SCSW3_AC_DEVAC) >> 6,
-        hdr, (dev->scsw.flag1 & SCSW1_I)        >> 5,
-             (dev->scsw.flag3 & SCSW3_AC_SUSP)  >> 5,
-        hdr, (dev->scsw.flag1 & SCSW1_A)        >> 4,
-        hdr, (dev->scsw.flag1 & SCSW1_U)        >> 3,
-             (dev->scsw.flag3 & SCSW3_SC_ALERT) >> 4,
-        hdr, (dev->scsw.flag3 & SCSW3_SC_INTER) >> 3,
-        hdr, (dev->scsw.flag1 & SCSW1_Z)        >> 2,
-             (dev->scsw.flag3 & SCSW3_SC_PRI)   >> 2,
-        hdr, (dev->scsw.flag1 & SCSW1_E)        >> 1,
-             (dev->scsw.flag3 & SCSW3_SC_SEC)   >> 1,
-        hdr, (dev->scsw.flag1 & SCSW1_N),
-             (dev->scsw.flag3 & SCSW3_SC_PEND),
-        hdr, (dev->scsw.flag2 & SCSW2_Q)        >> 7);
-
-    u.status = (U8)dev->scsw.unitstat;
-    len+=snprintf(buf+len,buflen-len,
-        "%s    %s %s%s%s%s%s%s%s%s%s\n",
-        hdr, status_type[(sysblk.arch_mode == ARCH_370_IDX)],
-        u.status == 0 ? "is Normal" : "",
-        u.b.b0 ? "Attention " : "",
-        u.b.b1 ? "SM " : "",
-        u.b.b2 ? "CUE " : "",
-        u.b.b3 ? "Busy " : "",
-        u.b.b4 ? "CE " : "",
-        u.b.b5 ? "DE " : "",
-        u.b.b6 ? "UC " : "",
-        u.b.b7 ? "UE " : "");
-
-    u.status = (U8)dev->scsw.chanstat;
-    len+=snprintf(buf+len,buflen-len,
-        "%s    %s %s%s%s%s%s%s%s%s%s\n",
-        hdr, status_type[2],
-        u.status == 0 ? "is Normal" : "",
-        u.b.b0 ? "PCI " : "",
-        u.b.b1 ? "IL " : "",
-        u.b.b2 ? "PC " : "",
-        u.b.b3 ? "ProtC " : "",
-        u.b.b4 ? "CDC " : "",
-        u.b.b5 ? "CCC " : "",
-        u.b.b6 ? "ICC " : "",
-        u.b.b7 ? "CC " : "");
-
-    // PROGRAMMING NOTE: the following ugliness is needed
-    // because 'snprintf' is a macro on Windows builds and
-    // you obviously can't use the preprocessor to select
-    // the arguments to be passed to a preprocessor macro.
-
-#if defined( OPTION_SHARED_DEVICES )
-  #define BUSYSHAREABLELINE_PATTERN     "%s    busy             %1.1X    shareable     %1.1X\n"
-  #define BUSYSHAREABLELINE_VALUE       hdr, dev->busy, dev->shareable,
-#else // !defined( OPTION_SHARED_DEVICES )
-  #define BUSYSHAREABLELINE_PATTERN     "%s    busy             %1.1X\n"
-  #define BUSYSHAREABLELINE_VALUE       hdr, dev->busy,
-#endif // defined( OPTION_SHARED_DEVICES )
-
-    len+=snprintf(buf+len,buflen-len,
-        "%s  DEVBLK Status\n"
-        BUSYSHAREABLELINE_PATTERN
-        "%s    suspended        %1.1X    console       %1.1X    rlen3270 %5d\n"
-        "%s    pending          %1.1X    connected     %1.1X\n"
-        "%s    pcipending       %1.1X    readpending   %1.1X\n"
-        "%s    attnpending      %1.1X    connecting    %1.1X\n"
-        "%s    startpending     %1.1X    localhost     %1.1X\n"
-        "%s    resumesuspended  %1.1X    reserved      %1.1X\n"
-        "%s    tschpending      %1.1X    locked        %1.1X\n",
-        hdr,
-        BUSYSHAREABLELINE_VALUE
-        hdr, dev->suspended,          dev->console,     dev->rlen3270,
-        hdr, dev->pending,            dev->connected,
-        hdr, dev->pcipending,         dev->readpending,
-        hdr, dev->attnpending,        dev->connecting,
-        hdr, dev->startpending,       dev->localhost,
-        hdr, dev->resumesuspended,    dev->reserved,
-        hdr, dev->tschpending,        test_lock(&dev->lock) ? 1 : 0);
-
-    return(len);
-
-} /* end function display_subchannel */
-
-
-/*-------------------------------------------------------------------*/
-/* Parse a storage range or storage alteration operand               */
-/*                                                                   */
-/* Valid formats for a storage range operand are:                    */
-/*      startaddr                                                    */
-/*      startaddr-endaddr                                            */
-/*      startaddr.length                                             */
-/* where startaddr, endaddr, and length are hexadecimal values.      */
-/*                                                                   */
-/* Valid format for a storage alteration operand is:                 */
-/*      startaddr=hexstring (up to 32 pairs of digits)               */
-/*                                                                   */
-/* Return values:                                                    */
-/*      0  = operand contains valid storage range display syntax;    */
-/*           start/end of range is returned in saddr and eaddr       */
-/*      >0 = operand contains valid storage alteration syntax;       */
-/*           return value is number of bytes to be altered;          */
-/*           start/end/value are returned in saddr, eaddr, newval    */
-/*      -1 = error message issued                                    */
-/*-------------------------------------------------------------------*/
-static int parse_range (char *operand, U64 maxadr, U64 *sadrp,
-                        U64 *eadrp, BYTE *newval)
-{
-U64     opnd1, opnd2;                   /* Address/length operands   */
-U64     saddr, eaddr;                   /* Range start/end addresses */
-int     rc;                             /* Return code               */
-int     n;                              /* Number of bytes altered   */
-int     h1, h2;                         /* Hexadecimal digits        */
-char    *s;                             /* Alteration value pointer  */
-BYTE    delim;                          /* Operand delimiter         */
-BYTE    c;                              /* Character work area       */
-
-    if (!operand)
-    {
-        // "Missing or invalid argument(s)"
-        WRMSG( HHC17000, "E" );
-        return -1;
-    }
-
-    rc = sscanf(operand, "%"SCNx64"%c%"SCNx64"%c",
-                &opnd1, &delim, &opnd2, &c);
-
-    /* Process storage alteration operand */
-    if (rc > 2 && delim == '=' && newval)
-    {
-        s = strchr (operand, '=');
-        n = 0;
-        while (1)
-        {
-            h1 = *(++s);
-            if (h1 == '\0'  || h1 == '#' ) break;
-            if (h1 == SPACE || h1 == '\t') continue;
-            h1 = toupper(h1);
-            h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' :
-                 (h1 >= 'A' && h1 <= 'F') ? h1 - 'A' + 10 : -1;
-            if (h1 < 0)
-            {
-                WRMSG(HHC02205, "E", s, ": invalid hex digit");
-                return -1;
-            }
-            h2 = *(++s);
-            h2 = toupper(h2);
-            h2 = (h2 >= '0' && h2 <= '9') ? h2 - '0' :
-                 (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
-            if (h2 < 0)
-            {
-                WRMSG(HHC02205, "E", --s, ": invalid hex pair");
-                return -1;
-            }
-            if (n >= 32)
-            {
-                WRMSG(HHC02205, "E", --s, ": only a maximum of 32 bytes may be altered");
-                return -1;
-            }
-            newval[n++] = (h1 << 4) | h2;
-        } /* end for(n) */
-        saddr = opnd1;
-        eaddr = saddr + n - 1;
-    }
-    else
-    {
-        /* Process storage range operand */
-        saddr = opnd1;
-        if (rc == 1)
-        {
-            /* If only starting address is specified, default to
-               64 byte display, or less if near end of storage */
-            eaddr = saddr + 0x3F;
-            if (eaddr > maxadr) eaddr = maxadr;
-        }
-        else
-        {
-            /* Ending address or length is specified */
-            if (rc != 3 || !(delim == '-' || delim == '.'))
-            {
-                WRMSG(HHC02205, "E", operand, "");
-                return -1;
-            }
-            eaddr = (delim == '.') ? saddr + opnd2 - 1 : opnd2;
-        }
-        /* Set n=0 to indicate storage display only */
-        n = 0;
-    }
-
-    /* Check for valid range */
-    if (saddr > maxadr || eaddr > maxadr || eaddr < saddr)
-    {
-        WRMSG(HHC02205, "E", operand, ": invalid range");
-        return -1;
-    }
-
-    /* Return start/end addresses and number of bytes altered */
-    *sadrp = saddr;
-    *eadrp = eaddr;
-    return n;
-
-} /* end function parse_range */
-
-
-/*-------------------------------------------------------------------*/
-/* get_connected_client   return IP address and hostname of the      */
-/*                        client that is connected to this device    */
-/*-------------------------------------------------------------------*/
-void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
-{
-    *pclientip   = NULL;
-    *pclientname = NULL;
-
-    obtain_lock (&dev->lock);
-
-    if (dev->bs             /* if device is a socket device,   */
-        && dev->fd != -1)   /* and a client is connected to it */
-    {
-        *pclientip   = strdup(dev->bs->clientip);
-        *pclientname = strdup(dev->bs->clientname);
-    }
-
-    release_lock (&dev->lock);
-}
-
-/*-------------------------------------------------------------------*/
-/* Return the address of a regs structure to be used for address     */
-/* translation.  This address should be freed by the caller.         */
-/*-------------------------------------------------------------------*/
-static REGS  *copy_regs (REGS *regs)
-{
- REGS  *newregs, *hostregs;
- size_t size;
-
-    size = (SIE_MODE(regs) || SIE_ACTIVE(regs)) ? 2*sizeof(REGS) : sizeof(REGS);
-    newregs = malloc_aligned(size, 4096);
-    if (newregs == NULL)
-    {
-        char buf[64];
-        MSGBUF(buf, "malloc(%d)", (int)size);
-        WRMSG(HHC00075, "E", buf, strerror(errno));
-        return NULL;
-    }
-
-    /* Perform partial copy and clear the TLB */
-    memcpy(newregs, regs, sysblk.regs_copy_len);
-    memset(&newregs->tlb.vaddr, 0, TLBN * sizeof(DW));
-    newregs->tlbID = 1;
-    newregs->ghostregs = 1;
-    newregs->hostregs = newregs;
-    newregs->guestregs = NULL;
-    newregs->sie_active=0;
-
-    /* Copy host regs if in SIE mode */
-    /* newregs is a SIE Guest REGS */
-    if(SIE_MODE(newregs))
-    {
-        hostregs = newregs + 1;
-        memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
-        memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
-        hostregs->tlbID = 1;
-        hostregs->ghostregs = 1;
-        hostregs->hostregs = hostregs;
-        hostregs->guestregs = newregs;
-        newregs->hostregs = hostregs;
-        newregs->guestregs = newregs;
-    }
-
-    return newregs;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format Channel Report Word (CRW) for display                      */
-/*-------------------------------------------------------------------*/
-const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
-{
-    static const char* rsctab[] =
-    {
-        "0",
-        "1",
-        "MONIT",
-        "SUBCH",
-        "CHPID",
-        "5",
-        "6",
-        "7",
-        "8",
-        "CAF",
-        "10",
-        "CSS",
-    };
-    static const BYTE  numrsc  =  _countof( rsctab );
-
-    static const char* erctab[] =
-    {
-        "NULL",
-        "AVAIL",
-        "INIT",
-        "TEMP",
-        "ALERT",
-        "ABORT",
-        "ERROR",
-        "RESET",
-        "MODFY",
-        "9",
-        "RSTRD",
-    };
-    static const BYTE  numerc  =  _countof( erctab );
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        *buf = 0;
-    if (bufsz <= 1)
-        return buf;
-
-    if (crw)
-    {
-        U32     flags   =  (U32)    ( crw & CRW_FLAGS_MASK );
-        BYTE    erc     =  (BYTE) ( ( crw & CRW_ERC_MASK   ) >> 16 );
-        BYTE    rsc     =  (BYTE) ( ( crw & CRW_RSC_MASK   ) >> 24 );
-        U16     rsid    =  (U16)    ( crw & CRW_RSID_MASK  );
-
-        snprintf( buf, bufsz,
-
-            "RSC:%d=%s, ERC:%d=%s, RSID:%d=0x%4.4X Flags:%s%s%s%s%s%s%s"
-
-            , rsc
-            , rsc < numrsc ? rsctab[ rsc ] : "???"
-
-            , erc
-            , erc < numerc ? erctab[ erc ] : "???"
-
-            , rsid
-            , rsid
-
-            , ( flags & CRW_FLAGS_MASK ) ? ""            : "0"
-            , ( flags & 0x80000000     ) ? "0x80000000," : ""
-            , ( flags & CRW_SOL        ) ? "SOL,"        : ""
-            , ( flags & CRW_OFLOW      ) ? "OFLOW,"      : ""
-            , ( flags & CRW_CHAIN      ) ? "CHAIN,"      : ""
-            , ( flags & CRW_AR         ) ? "AR,"         : ""
-            , ( flags & 0x00400000     ) ? "0x00400000," : ""
-        );
-
-        rtrim( buf, "," );              // (remove trailing comma)
-    }
-    else
-        strlcpy( buf, "(end)", bufsz ); // (end of channel report)
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format Operation-Request Block (ORB) for display                  */
-/*-------------------------------------------------------------------*/
-const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
-{
-    if (!buf)
-        return NULL;
-
-    if (bufsz)
-        *buf = 0;
-
-    if (bufsz <= 1 || !orb)
-        return buf;
-
-    snprintf( buf, bufsz,
-
-        "IntP:%2.2X%2.2X%2.2X%2.2X Key:%d LPM:%2.2X "
-        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c%c%c%c%c %c%c.....%c "
-        "%cCW:%2.2X%2.2X%2.2X%2.2X"
-
-        , orb->intparm[0], orb->intparm[1], orb->intparm[2], orb->intparm[3]
-        , (orb->flag4 & ORB4_KEY) >> 4
-        , orb->lpm
-
-        , (orb->flag4 & ~ORB4_KEY)
-        , orb->flag5
-        , orb->flag7
-
-        , ( orb->flag4 & ORB4_S ) ? 'S' : '.'
-        , ( orb->flag4 & ORB4_C ) ? 'C' : '.'
-        , ( orb->flag4 & ORB4_M ) ? 'M' : '.'
-        , ( orb->flag4 & ORB4_Y ) ? 'Y' : '.'
-
-        , ( orb->flag5 & ORB5_F ) ? 'F' : '.'
-        , ( orb->flag5 & ORB5_P ) ? 'P' : '.'
-        , ( orb->flag5 & ORB5_I ) ? 'I' : '.'
-        , ( orb->flag5 & ORB5_A ) ? 'A' : '.'
-
-        , ( orb->flag5 & ORB5_U ) ? 'U' : '.'
-        , ( orb->flag5 & ORB5_B ) ? 'B' : '.'
-        , ( orb->flag5 & ORB5_H ) ? 'H' : '.'
-        , ( orb->flag5 & ORB5_T ) ? 'T' : '.'
-
-        , ( orb->flag7 & ORB7_L ) ? 'L' : '.'
-        , ( orb->flag7 & ORB7_D ) ? 'D' : '.'
-        , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
-
-        , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
-
-        , orb->ccwaddr[0], orb->ccwaddr[1], orb->ccwaddr[2], orb->ccwaddr[3]
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format ESW's Subchannel Logout information for display            */
-/*-------------------------------------------------------------------*/
-const char* FormatSCL( ESW* esw, char* buf, size_t bufsz )
-{
-static const char* sa[] =
-{
-    "00",
-    "RD",
-    "WR",
-    "BW",
-};
-static const char* tc[] =
-{
-    "HA",
-    "ST",
-    "CL",
-    "11",
-};
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        *buf = 0;
-    if (bufsz <= 1 || !esw)
-        return buf;
-
-    snprintf( buf, bufsz,
-
-        "ESF:%c%c%c%c%c%c%c%c%s FVF:%c%c%c%c%c LPUM:%2.2X SA:%s TC:%s Flgs:%c%c%c SC=%d"
-
-        , ( esw->scl0 & 0x80           ) ? '0' : '.'
-        , ( esw->scl0 & SCL0_ESF_KEY   ) ? 'K' : '.'
-        , ( esw->scl0 & SCL0_ESF_MBPGK ) ? 'G' : '.'
-        , ( esw->scl0 & SCL0_ESF_MBDCK ) ? 'D' : '.'
-        , ( esw->scl0 & SCL0_ESF_MBPTK ) ? 'P' : '.'
-        , ( esw->scl0 & SCL0_ESF_CCWCK ) ? 'C' : '.'
-        , ( esw->scl0 & SCL0_ESF_IDACK ) ? 'I' : '.'
-        , ( esw->scl0 & 0x01           ) ? '7' : '.'
-
-        , ( esw->scl2 & SCL2_R ) ? " (R)" : ""
-
-        , ( esw->scl2 & SCL2_FVF_LPUM  ) ? 'L' : '.'
-        , ( esw->scl2 & SCL2_FVF_TC    ) ? 'T' : '.'
-        , ( esw->scl2 & SCL2_FVF_SC    ) ? 'S' : '.'
-        , ( esw->scl2 & SCL2_FVF_USTAT ) ? 'D' : '.'
-        , ( esw->scl2 & SCL2_FVF_CCWAD ) ? 'C' : '.'
-
-        , esw->lpum
-
-        , sa[  esw->scl2 & SCL2_SA ]
-
-        , tc[ (esw->scl3 & SCL3_TC) >> 6 ]
-
-        , ( esw->scl3 & SCL3_D ) ? 'D' : '.'
-        , ( esw->scl3 & SCL3_E ) ? 'E' : '.'
-        , ( esw->scl3 & SCL3_A ) ? 'A' : '.'
-
-        , ( esw->scl3 & SCL3_SC )
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format ESW's Extended-Report Word (ERW) for display               */
-/*-------------------------------------------------------------------*/
-const char* FormatERW( ESW* esw, char* buf, size_t bufsz )
-{
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        *buf = 0;
-    if (bufsz <= 1 || !esw)
-        return buf;
-
-    snprintf( buf, bufsz,
-
-        "Flags:%c%c%c%c%c%c%c%c %c%c SCNT:%d"
-
-        , ( esw->erw0 & ERW0_RSV ) ? '0' : '.'
-        , ( esw->erw0 & ERW0_L   ) ? 'L' : '.'
-        , ( esw->erw0 & ERW0_E   ) ? 'E' : '.'
-        , ( esw->erw0 & ERW0_A   ) ? 'A' : '.'
-        , ( esw->erw0 & ERW0_P   ) ? 'P' : '.'
-        , ( esw->erw0 & ERW0_T   ) ? 'T' : '.'
-        , ( esw->erw0 & ERW0_F   ) ? 'F' : '.'
-        , ( esw->erw0 & ERW0_S   ) ? 'S' : '.'
-
-        , ( esw->erw1 & ERW1_C   ) ? 'C' : '.'
-        , ( esw->erw1 & ERW1_R   ) ? 'R' : '.'
-
-        , ( esw->erw1 & ERW1_SCNT )
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format Extended-Status Word (ESW) for display                     */
-/*-------------------------------------------------------------------*/
-const char* FormatESW( ESW* esw, char* buf, size_t bufsz )
-{
-char scl[64];                               /* Subchannel Logout     */
-char erw[64];                               /* Extended-Report Word  */
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        *buf = 0;
-    if (bufsz <= 1 || !esw)
-        return buf;
-
-    snprintf( buf, bufsz,
-
-        "SCL = %s, ERW = %s"
-
-        , FormatSCL( esw, scl, _countof( scl ))
-        , FormatERW( esw, erw, _countof( erw ))
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format SDC (Self Describing Component) information                */
-/*-------------------------------------------------------------------*/
-
-static BYTE
-sdcchar(BYTE c)
-{
-    /* This  suberfuge  resolved a compiler bug that leads to a slew */
-    /* of warnings about c possibly being undefined.                 */
-    c = guest_to_host( c );
-    return isgraph(c) ? c : '?';
-}
-
-const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
-{
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !sdc)
-        return buf;
-
-    #define SDCCHAR(fld, n) sdcchar(sdc->fld[n])
-
-    snprintf( buf, bufsz,
-
-        "SDC: type/model:%c%c%c%c%c%c-%c%c%c mfg:%c%c%c plant:%c%c seq/serial:%c%c%c%c%c%c%c%c%c%c%c%c\n"
-
-        , SDCCHAR(type,0),SDCCHAR(type,1),SDCCHAR(type,2),SDCCHAR(type,3),SDCCHAR(type,4),SDCCHAR(type,5)
-        , SDCCHAR(model,0),SDCCHAR(model,1),SDCCHAR(model,2)
-        , SDCCHAR(mfr,0),SDCCHAR(mfr,1),SDCCHAR(mfr,2)
-        , SDCCHAR(plant,0),SDCCHAR(plant,1)
-        , SDCCHAR(serial,0),SDCCHAR(serial,1),SDCCHAR(serial,2),SDCCHAR(serial,3),SDCCHAR(serial,4),SDCCHAR(serial,5)
-        , SDCCHAR(serial,6),SDCCHAR(serial,7),SDCCHAR(serial,8),SDCCHAR(serial,9),SDCCHAR(serial,10),SDCCHAR(serial,11)
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* NEQ (Node-Element Qualifier) type table                           */
-/*-------------------------------------------------------------------*/
-static const char* NED_NEQ_type[] =
-{
-    "UNUSED", "NEQ", "GENEQ", "NED",
-};
-
-
-/*-------------------------------------------------------------------*/
-/* Format NED (Node-Element Descriptor)                              */
-/*-------------------------------------------------------------------*/
-const char* FormatNED( NED* ned, char* buf, size_t bufsz )
-{
-    const char* typ;
-    char bad_typ[4];
-    char sdc_info[256];
-    static const char* sn_ind[] = { "NEXT", "UNIQUE", "NODE", "CODE3" };
-    static const char* ned_type[] = { "UNSPEC", "DEVICE", "CTLUNIT" };
-    static const char* dev_class[] =
-    {
-        "UNKNOWN",
-        "DASD",
-        "TAPE",
-        "READER",
-        "PUNCH",
-        "PRINTER",
-        "COMM",
-        "DISPLAY",
-        "CONSOLE",
-        "CTCA",
-        "SWITCH",
-        "PROTO",
-    };
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !ned)
-        return buf;
-
-    if (ned->type < _countof( ned_type ))
-        typ = ned_type[ ned->type ];
-    else
-    {
-        snprintf( bad_typ, sizeof(bad_typ), "%u", ned->type );
-        bad_typ[3] = 0;
-        typ = bad_typ;
-    }
-
-
-    if (ned->type == NED_TYP_DEVICE)
-    {
-        const char* cls;
-        char bad_class[4];
-
-        if (ned->cls < _countof( dev_class ))
-            cls = dev_class[ ned->cls ];
-        else
-        {
-            snprintf( bad_class, sizeof(bad_class), "%u", ned->cls );
-            bad_class[3] = 0;
-            cls = bad_class;
-        }
-
-        snprintf( buf, bufsz,
-
-            "NED:%s%styp:%s cls:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
-
-            , (ned->flags & 0x20) ? "*" : " "
-            , (ned->flags & 0x01) ? "(EMULATED) " : ""
-            , typ
-            , cls
-            , (ned->lvl & 0x01) ? "UNRELATED" : "RELATED"
-            , sn_ind[ (ned->flags >> 3) & 0x03 ]
-            , ned->tag[0], ned->tag[1]
-            , FormatSDC( &ned->info, sdc_info, sizeof(sdc_info))
-        );
-    }
-    else
-    {
-        snprintf( buf, bufsz,
-
-            "NED:%s%styp:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
-
-            , (ned->flags & 0x20) ? "*" : " "
-            , (ned->flags & 0x01) ? "(EMULATED) " : ""
-            , typ
-            , (ned->lvl & 0x01) ? "UNRELATED" : "RELATED"
-            , sn_ind[ (ned->flags >> 3) & 0x03 ]
-            , ned->tag[0], ned->tag[1]
-            , FormatSDC( &ned->info, sdc_info, sizeof(sdc_info))
-        );
-    }
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format NEQ (Node-Element Qualifier)                               */
-/*-------------------------------------------------------------------*/
-const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
-{
-    BYTE* byte = (BYTE*) neq;
-    U16 iid;
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !neq)
-        return buf;
-
-    iid = fetch_hw( &neq->iid );
-
-    snprintf( buf, bufsz,
-
-        "NEQ: typ:%s IID:%02X%02X DDTO:%u\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-
-        , NED_NEQ_type[ neq->flags >> 6 ]
-        , (BYTE)(iid >> 8), (BYTE)(iid & 0xFF)
-        , neq->ddto
-        , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
-        , byte[ 8],byte[ 9],byte[10],byte[11],  byte[12],byte[13],byte[14],byte[15]
-        , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
-        , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Helper function to format data as just individual BYTES           */
-/*-------------------------------------------------------------------*/
-static void FormatBytes( BYTE* data, int len, char* buf, size_t bufsz )
-{
-    char temp[4];
-    int  i;
-
-    for (i=0; i < len; ++i)
-    {
-        if (i == 4)
-            strlcat( buf, " ", bufsz );
-        MSGBUF( temp, "%02X", data[i] );
-        strlcat( buf, temp, bufsz );
-    }
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format RCD (Read Configuration Data) response                     */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
-{
-    char temp[256];
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !rcd || !len)
-        return buf;
-
-    for (; len > 0; rcd += sizeof(NED), len -= sizeof(NED))
-    {
-        if (len < (int)sizeof(NED))
-        {
-            FormatBytes( rcd, len, buf, bufsz );
-            break;
-        }
-
-        switch (rcd[0] >> 6)
-        {
-        case FIELD_IS_NEQ:
-        case FIELD_IS_GENEQ:
-
-            FormatNEQ( (NEQ*)rcd, temp, sizeof(temp)-1);
-            break;
-
-        case FIELD_IS_NED:
-
-            FormatNED( (NED*)rcd, temp, sizeof(temp)-1);
-            break;
-
-        case FIELD_IS_UNUSED:
-
-            snprintf( temp, sizeof(temp), "n/a\n" );
-            break;
-        }
-
-        strlcat( buf, temp, bufsz );
-    }
-
-    RTRIM( buf );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format ND (Node Descriptor)                                       */
-/*-------------------------------------------------------------------*/
-const char* FormatND( ND* nd, char* buf, size_t bufsz )
-{
-    const char* val;
-    const char* cls;
-    const char* by3;
-    const char* typ;
-    char bad_cls[4];
-    char sdc_info[256];
-    static const char* css_class[] = { "UNKNOWN", "CHPATH", "CTCA" };
-    static const char* val_type[] =
-    {
-        "VALID", "UNSURE", "INVALID", "3", "4", "5", "6", "7",
-    };
-    static const char* dev_class[] =
-    {
-        "UNKNOWN",
-        "DASD",
-        "TAPE",
-        "READER",
-        "PUNCH",
-        "PRINTER",
-        "COMM",
-        "DISPLAY",
-        "CONSOLE",
-        "CTCA",
-        "SWITCH",
-        "PROTO",
-    };
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !nd)
-        return buf;
-
-    val = val_type[ nd->flags >> 5 ];
-
-    switch (nd->flags >> 5)
-    {
-    case ND_VAL_VALID:
-    case ND_VAL_UNSURE:
-
-        cls = NULL;
-        if (nd->flags & 0x01)
-        {
-            typ = "CSS";
-            by3 = "CHPID";
-            if (nd->cls < _countof( css_class ))
-                cls = css_class[ nd->cls ];
-        }
-        else
-        {
-            typ = "DEV";
-            by3 = (nd->cls == ND_DEV_PROTO) ? "LINK" : "BYTE3";
-            if (nd->cls < _countof( dev_class ))
-                cls = dev_class[ nd->cls ];
-        }
-        if (!cls)
-        {
-            snprintf( bad_cls, sizeof(bad_cls), "%u", nd->cls );
-            bad_cls[3] = 0;
-            cls = bad_cls;
-        }
-        snprintf( buf, bufsz,
-
-            "ND:  val:%s typ:%s cls:%s %s:%02X tag:%02X%02X\n     %s"
-
-            , val
-            , typ
-            , cls
-            , by3, nd->ua
-            , nd->tag[0], nd->tag[1]
-            , FormatSDC( &nd->info, sdc_info, sizeof(sdc_info))
-        );
-        break;
-
-    case ND_VAL_INVALID:
-
-        snprintf( buf, bufsz, "ND:  val:INVALID\n" );
-        break;
-
-    default:
-
-        snprintf( buf, bufsz, "ND:  val:%u (invalid)\n",
-            (int)(nd->flags >> 5) );
-        break;
-    }
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format NQ (Node Qualifier)                                        */
-/*-------------------------------------------------------------------*/
-const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
-{
-    BYTE* byte = (BYTE*) nq;
-    static const char* type[] =
-    {
-        "IIL", "MODEP", "2", "3", "4", "5", "6", "7",
-    };
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !nq)
-        return buf;
-
-    snprintf( buf, bufsz,
-
-        "NQ:  %02X%02X%02X%02X %02X%02X%02X%02X  (typ:%s)\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
-
-        , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
-        , type[ nq->flags >> 5 ]
-        , byte[ 8],byte[ 9],byte[10],byte[11],  byte[12],byte[13],byte[14],byte[15]
-        , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
-        , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
-    );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format RNI (Read Node Identifier) response                        */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
-{
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !rni || !len)
-        return buf;
-
-    if (len >= (int)sizeof(ND))
-    {
-        char work[256];
-
-        register ND* nd = (ND*) rni;
-
-        FormatND( nd, work, sizeof(work)-1);
-        strlcat( buf, work, bufsz );
-
-        len -= sizeof(ND);
-        rni += sizeof(ND);
-
-        if (len >= (int)sizeof(NQ))
-        {
-            register NQ* nq = (NQ*) rni;
-
-            FormatNQ( nq, work, sizeof(work)-1);
-            strlcat( buf, work, bufsz );
-
-            len -= sizeof(NQ);
-            rni += sizeof(NQ);
-
-            if (len)
-                FormatBytes( rni, len, buf, bufsz );
-        }
-        else
-            FormatBytes( rni, len, buf, bufsz );
-    }
-    else
-        FormatBytes( rni, len, buf, bufsz );
-
-    RTRIM( buf );
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format CIW (Command Information Word)                             */
-/*-------------------------------------------------------------------*/
-const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
-{
-    static const char* type[] =
-    {
-        "RCD", "SII", "RNI", "3  ", "4  ", "5  ", "6  ", "7  ",
-        "8  ", "9  ", "10 ", "11 ", "12 ", "13 ", "14 ", "15 ",
-    };
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !ciw)
-        return buf;
-
-    if ((ciw[0] & 0xC0) == 0x40)
-    {
-        snprintf( buf, bufsz,
-
-            "CIW: %02X%02X%02X%02X  typ:%s op:%02X len:%u\n"
-
-            , ciw[0], ciw[1], ciw[2], ciw[3]
-            , type[ ciw[0] & 0x0F ]
-            , ciw[1]
-            , fetch_hw( ciw+2 )
-        );
-    }
-    else
-    {
-        snprintf( buf, bufsz,
-
-            "CIW: %02X%02X%02X%02X  not a CIW\n"
-
-            , ciw[0]
-            , ciw[1]
-            , ciw[2]
-            , ciw[3]
-        );
-    }
-
-    return buf;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Format SID (Sense ID) response                                    */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
-{
-    char temp[128];
-
-    if (!buf)
-        return NULL;
-    if (bufsz)
-        buf[0] = 0;
-    if (bufsz <= 1 || !ciw || !len)
-        return buf;
-
-    if (len < 8)
-        FormatBytes( ciw, len, buf, bufsz );
-    else
-    {
-        snprintf( buf, bufsz,
-
-            "%02X CU=%02X%02X-%02X DEV=%02X%02X-%02X %02X\n"
-
-            , ciw[0]
-            , ciw[1], ciw[2], ciw[3]
-            , ciw[4], ciw[5], ciw[6]
-            , ciw[7]
-        );
-
-        ciw += 8;
-        len -= 8;
-
-        for (; len >= 4; ciw += 4, len -= 4)
-        {
-            FormatCIW( ciw, temp, sizeof(temp)-1);
-            strlcat( buf, temp, bufsz );
-        }
-
-        if (len)
-            FormatBytes( ciw, len, buf, bufsz );
-
-        RTRIM( buf );
-    }
-
-    return buf;
-}
-
-#endif /*!defined(_HSCMISC_C)*/
-
-
-#define RANGE_LIMIT     _64_KILOBYTE
-#define LIMIT_RANGE( _s, _e, _n )                       \
-    do {                                                \
-        if ((_e) > (_n) && ((_e) - (_n) + 1) > (_s))    \
-            (_e) = ((_s) + (_n) - 1);                   \
+#ifndef COMPILE_THIS_ONLY_ONCE
+#define COMPILE_THIS_ONLY_ONCE
+
+//-------------------------------------------------------------------
+//                     Helper macro
+//-------------------------------------------------------------------
+
+#define LIMIT_RANGE( _start, _end, _limit )                           \
+    do {                                                              \
+        if ((_end) > (_limit) && ((_end) - (_limit) + 1) > (_start))  \
+            (_end) = ((_start) + (_limit) - 1);                       \
     } while(0)
 
+#define RANGE_LIMIT  _64_KILOBYTE  // (default limit for LIMIT_RANGE)
+
+//-------------------------------------------------------------------
+//         (static helper function forward references)
+//-------------------------------------------------------------------
+
+static REGS*  copy_regs         ( REGS* regs );
+static int    display_inst_regs ( REGS* regs, BYTE* inst, BYTE opcode, char* buf, int buflen );
+static int    parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* eadrp, BYTE* newval );
+
+#endif /* COMPILE_THIS_ONLY_ONCE */
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
 /* Convert virtual address to real address                           */
@@ -2642,19 +1028,17 @@ char    regs_msg_buf[4*512] = {0};
 
     /* Format registers associated with the instruction */
     if (!sysblk.showregsnone)
-        display_inst_regs (regs, inst, opcode, regs_msg_buf, sizeof(regs_msg_buf)-1);
+        display_inst_regs( regs, inst, opcode, regs_msg_buf, sizeof( regs_msg_buf )-1 );
+
+    /* Remove unwanted extra trailing newline from regs_msg_buf */
+    RTRIM( regs_msg_buf );
 
     /* Now display all instruction tracing messages all at once */
     if (sysblk.showregsfirst)
-    {
-        /* Remove unwanted extra trailing newline from regs_msg_buf */
-        size_t len = strlen(regs_msg_buf);
-        if (len)
-            regs_msg_buf[len-1] = 0;
-        LOGMSG( "%s%s%s%s", regs_msg_buf, psw_inst_msg, op1_stor_msg, op2_stor_msg );
-    }
-    else
-        LOGMSG( "%s%s%s%s", psw_inst_msg, op1_stor_msg, op2_stor_msg, regs_msg_buf );
+         LOGMSG( "%s%s%s%s", regs_msg_buf,
+                             psw_inst_msg, op1_stor_msg, op2_stor_msg );
+    else LOGMSG( "%s%s%s%s", psw_inst_msg, op1_stor_msg, op2_stor_msg,
+                             regs_msg_buf );
 
     if (!iregs->ghostregs)
         free_aligned( regs );
@@ -2662,22 +1046,1711 @@ char    regs_msg_buf[4*512] = {0};
 } /* end function display_inst */
 
 
-#if !defined(_GEN_ARCH)
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
 
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "hscmisc.c"
-#endif
+#if !defined( _GEN_ARCH )
 
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "hscmisc.c"
-#endif
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "hscmisc.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "hscmisc.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*                System Shutdown Processing                         */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The following 'sigq' functions are responsible for ensuring all   */
+/* of the CPUs are stopped ("quiesced") before continuing with the   */
+/* Hercules shutdown processing and should NEVER be called directly. */
+/*                                                                   */
+/* They are instead called by 'do_shutdown' or 'do_shutdown_wait'    */
+/* (defined further below), as needed and/or as appropriate.         */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+static int wait_sigq_pending = 0;
+
+static int is_wait_sigq_pending()
+{
+int pending;
+
+    OBTAIN_INTLOCK(NULL);
+    pending = wait_sigq_pending;
+    RELEASE_INTLOCK(NULL);
+
+    return pending;
+}
+
+static void wait_sigq_resp()
+{
+int pending;
+    /* Wait for all CPU's to stop */
+    do
+    {
+        OBTAIN_INTLOCK(NULL);
+        wait_sigq_pending = 0;
+        if (!are_all_cpus_stopped_intlock_held())
+            wait_sigq_pending = 1;
+        pending = wait_sigq_pending;
+        RELEASE_INTLOCK(NULL);
+
+        if(pending)
+            SLEEP(1);
+    }
+    while(is_wait_sigq_pending());
+}
+
+static void cancel_wait_sigq()
+{
+    OBTAIN_INTLOCK(NULL);
+    wait_sigq_pending = 0;
+    RELEASE_INTLOCK(NULL);
+}
 
 
 /*-------------------------------------------------------------------*/
-/* Wrappers for architecture-dependent functions                     */
+/*                       do_shutdown_now                             */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*  This is the main shutdown processing function. It is NEVER       */
+/*  called directly, but is instead ONLY called by either the        */
+/*  'do_shutdown' or 'do_shutdown_wait' functions after all CPUs     */
+/*  have been stopped.                                               */
+/*                                                                   */
+/*  It is responsible for releasing the device configuration and     */
+/*  then calling the Hercules Dynamic Loader "hdl_atexit" function   */
+/*  to invoke all registered Hercules at-exit/termination functions  */
+/*  (similar to 'atexit' but unique to Hercules) to perform any      */
+/*  other needed miscellaneous shutdown related processing.          */
+/*                                                                   */
+/*  Only after the above three tasks have been completed (stopping   */
+/*  the CPUs, releasing the device configuration, calling registered */
+/*  termination routines/functions) can Hercules then safely exit.   */
+/*                                                                   */
+/*  Note too that, *technically*, this function *should* wait for    */
+/*  ALL other threads to finish terminating first before either      */
+/*  exiting or returning back to the caller, but we currently don't  */
+/*  enforce that (since that's REALLY what hdl_addshut + hdl_atexit  */
+/*  are actually designed for!).                                     */
+/*                                                                   */
+/*  At the moment, as long as the three previously mentioned three   */
+/*  most important shutdown tasks have been completed (stop cpus,    */
+/*  release device config, call term funcs), then we consider the    */
+/*  brunt of our shutdown processing to be completed and thus exit   */
+/*  (or return back to the caller to let them exit instead).         */
+/*                                                                   */
+/*  If there are any stray threads still running when that happens,  */
+/*  they will be automatically terminated by the operating sytem as  */
+/*  is normal whenever a process exits.                              */
+/*                                                                   */
+/*  So if there are any threads that must be terminated completely   */
+/*  and cleanly before Hercules can safely terminate, you BETTER     */
+/*  add code to this function to ENSURE your thread is terminated    */
+/*  properly! (and/or add a call to 'hdl_addshut' at the appropriate */
+/*  place in your startup sequence). For this purpose, the use of    */
+/*  "join_thread" is STRONGLY encouraged as it ENSURES that your     */
+/*  thread will not continue until the thread in question has first  */
+/*  completely exited beforehand.                                    */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+
+static void do_shutdown_now()
+{
+    // "Begin Hercules shutdown"
+    WRMSG(HHC01420, "I");
+
+    ASSERT( !sysblk.shutfini );  // (sanity check)
+
+    sysblk.shutfini = FALSE;  // (shutdown NOT finished yet)
+
+    sysblk.shutdown = TRUE;  // (system shutdown initiated)
+
+    /* Wakeup I/O subsystem to start I/O subsystem shutdown */
+    {
+        int n;
+
+        for (n = 0; sysblk.devtnbr && n < 100; ++n)
+        {
+            signal_condition(&sysblk.ioqcond);
+            usleep(10000);
+        }
+    }
+
+    // "Calling termination routines"
+    WRMSG( HHC01423, "I" );
+
+#if !defined( _MSVC_ )
+    logger_unredirect();
+#endif
+
+    hdl_atexit();
+
+    // "All termination routines complete"
+    fprintf( stdout, MSG( HHC01424, "I" ));
+
+    /*
+    logmsg("Terminating threads\n");
+    {
+        // (none we really care about at the moment...)
+    }
+    logmsg("Threads terminations complete\n");
+    */
+
+    // "Hercules shutdown complete"
+    fprintf( stdout, MSG( HHC01425, "I" ));
+
+    sysblk.shutfini = TRUE;    // (shutdown is now complete)
+
+    // "Hercules terminated"
+    fprintf( stdout, MSG( HHC01412, "I" ));
+
+    //                     PROGRAMMING NOTE
+
+    // If we're NOT in "daemon_mode" (i.e. panel_display in control),
+    // -OR- if a daemon_task DOES exist, then THEY are in control of
+    // shutdown; THEY are responsible for exiting the system whenever
+    // THEY feel it's proper to do so (by simply returning back to the
+    // caller thereby allowing 'main' to return back to the operating
+    // system).
+
+    // OTHEWRWISE we ARE in "daemon_mode", but a daemon_task does NOT
+    // exist, which means the main thread (tail end of 'impl.c') is
+    // stuck in a loop reading log messages and writing them to the
+    // logfile, so we need to do the exiting here since it obviously
+    // cannot.
+
+    if (sysblk.daemon_mode && !daemon_task)
+    {
+#ifdef _MSVC_
+        socket_deinit();
+#endif
+        fflush( stdout );
+        exit(0);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                     do_shutdown_wait                              */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This function simply waits for the CPUs to stop and then calls    */
+/* the above do_shutdown_now function to perform the actual shutdown */
+/* (which releases the device configuration, etc)                    */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+static void* do_shutdown_wait(void* arg)
+{
+    UNREFERENCED( arg );
+    WRMSG(HHC01426, "I");
+    wait_sigq_resp();
+    do_shutdown_now();
+    return NULL;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                       do_shutdown                                 */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This is the main system shutdown function, and the ONLY function  */
+/* that should EVER be called to shut the system down. It calls one  */
+/* or more of the above static helper functions as needed.           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+void do_shutdown()
+{
+TID tid;
+    if ( sysblk.shutimmed )
+        do_shutdown_now();
+    else
+    {
+        if(is_wait_sigq_pending())
+            cancel_wait_sigq();
+        else
+            if(can_signal_quiesce() && !signal_quiesce(0,0))
+                create_thread(&tid, DETACHED, do_shutdown_wait,
+                              NULL, "do_shutdown_wait");
+            else
+                do_shutdown_now();
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                      display_regs32                               */
+/*                      display_regs64                               */
+/*-------------------------------------------------------------------*/
+/* The following 2 routines display an array of 32/64 registers      */
+/* 1st parameter is the register type (GR, CR, AR, etc..)            */
+/* 2nd parameter is the CPU Address involved                         */
+/* 3rd parameter is an array of 32/64 bit regs                       */
+/* NOTE : 32 bit regs are displayed 4 by 4, while 64 bit regs are    */
+/*        displayed 2 by 2. Change the modulo if to change this      */
+/*        behaviour.                                                 */
+/* These routines are intended to be invoked by display_gregs,       */
+/* display_cregs and display_aregs                                   */
+/* Ivan Warren 2005/11/07                                            */
+/*-------------------------------------------------------------------*/
+static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int buflen,char *msghdr)
+{
+    int i;
+    int len=0;
+    for(i=0;i<16;i++)
+    {
+        if(!(i%4))
+        {
+            if(i)
+            {
+                len+=snprintf(buf+len, buflen-len, "%s", "\n");
+            }
+            len+=snprintf(buf+len, buflen-len, "%s", msghdr);
+            if(numcpus>1)
+            {
+                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+            }
+        }
+        if(i%4)
+        {
+            len+=snprintf(buf+len,buflen-len,"%s", " ");
+        }
+        len+=snprintf(buf+len,buflen-len,"%s%2.2d=%8.8"PRIX32,hdr,i,r[i]);
+    }
+    len+=snprintf(buf+len,buflen-len,"%s","\n");
+    return(len);
+}
+
+#if defined(_900)
+
+static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int buflen,char *msghdr)
+{
+    int i;
+    int rpl;
+    int len=0;
+    if(numcpus>1 && !(sysblk.insttrace || sysblk.inststep) )
+    {
+        rpl=2;
+    }
+    else
+    {
+        rpl=4;
+    }
+    for(i=0;i<16;i++)
+    {
+        if(!(i%rpl))
+        {
+            if(i)
+            {
+                len+=snprintf(buf+len,buflen-len,"%s", "\n");
+            }
+            len+=snprintf(buf+len,buflen-len, "%s", msghdr);
+            if(numcpus>1)
+            {
+                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+            }
+        }
+        if(i%rpl)
+        {
+            len+=snprintf(buf+len,buflen-len,"%s"," ");
+        }
+        len+=snprintf(buf+len,buflen-len,"%s%1.1X=%16.16"PRIX64,hdr,i,r[i]);
+    }
+    len+=snprintf(buf+len,buflen-len,"%s","\n");
+    return(len);
+}
+
+#endif // _900
+
+
+/*-------------------------------------------------------------------*/
+/*        Display registers for the instruction display              */
+/*-------------------------------------------------------------------*/
+static int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, int buflen )
+{
+    int len=0;
+
+    /* Display the general purpose registers */
+    if (!(opcode == 0xB3 || (opcode >= 0x20 && opcode <= 0x3F))
+        || (opcode == 0xB3 && (
+                (inst[1] >= 0x80 && inst[1] <= 0xCF)
+                || (inst[1] >= 0xE1 && inst[1] <= 0xFE)
+           )))
+    {
+        len += display_gregs (regs, buf + len, buflen - len - 1, "HHC02269I " );
+    }
+
+    /* Display control registers if appropriate */
+    if (!REAL_MODE(&regs->psw) || opcode == 0xB2 || opcode == 0xB6 || opcode == 0xB7)
+    {
+        len += display_cregs (regs, buf + len, buflen - len - 1, "HHC02271I ");
+    }
+
+    /* Display access registers if appropriate */
+    if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
+    {
+        len += display_aregs (regs, buf + len, buflen - len - 1, "HHC02272I ");
+    }
+
+    /* Display floating point control register if AFP enabled */
+    if ((regs->CR(0) & CR0_AFP) && (
+                                (opcode == 0x01 && inst[1] == 0x0A)          /* PFPO Perform Floating Point Operation  */
+                                || (opcode == 0xB2 && inst[1] == 0x99)       /* SRNM   Set BFP Rounding mode 2-bit     */
+                                || (opcode == 0xB2 && inst[1] == 0x9C)       /* STFPC  Store FPC                       */
+                                || (opcode == 0xB2 && inst[1] == 0x9D)       /* LFPC   Load FPC                        */
+                                || (opcode == 0xB2 && inst[1] == 0xB8)       /* SRNMB  Set BFP Rounding mode 3-bit     */
+                                || (opcode == 0xB2 && inst[1] == 0xB9)       /* SRNMT  Set DFP Rounding mode           */
+                                || (opcode == 0xB2 && inst[1] == 0xBD)       /* LFAS   Load FPC and Signal             */
+                                || (opcode == 0xB3 && (inst[1] <= 0x1F))                       /* RRE BFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0x40 && inst[1] <= 0x5F))    /* RRE BFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0x84 && inst[1] <= 0x8C))    /* SFPC, SFASR, EFPC    */
+                                || (opcode == 0xB3 && (inst[1] >= 0x90 && inst[1] <= 0xAF))    /* RRE BFP arithmetic   */
+                                || (opcode == 0xB3 && (inst[1] >= 0xD0))/*inst[1] <= 0xFF)) */ /* RRE DFP arithmetic   */
+                                || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43))    /* DFP Conversions      */
+                                || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B))    /* DFP Conversions      */
+                                || (opcode == 0xED && (inst[1] <= 0x1F))                       /* RXE BFP arithmetic   */
+                                || (opcode == 0xED && (inst[1] >= 0x40 && inst[1] <= 0x59))    /* RXE DFP shifts, tests*/
+                                || (opcode == 0xED && (inst[1] >= 0xA8 && inst[1] <= 0xAF)))   /* RXE DFP conversions  */
+        )
+    {
+        len += snprintf(buf + len, buflen - len, MSG(HHC02276,"I", regs->fpc));
+    }
+
+    /* Display floating-point registers if appropriate */
+    if ( (opcode == 0xB3 && !((inst[1] == 0x84) || (inst[1] == 0x85) || (inst[1] == 0x8C)))  /* exclude FPC-only instrs  */
+        || (opcode == 0xED)
+        || (opcode >= 0x20 && opcode <= 0x3F)  /* HFP Arithmetic and load/store  */
+        || (opcode >= 0x60 && opcode <= 0x70)  /* HFP Arithmetic and load/store  */
+        || (opcode >= 0x78 && opcode <= 0x7F)  /* HFP Arithmetic and load/store  */
+        || (opcode == 0xB2 && inst[1] == 0x2D) /* DXR  Divide HFP extended               */
+        || (opcode == 0xB2 && inst[1] == 0x44) /* SQDR Square Root HFP long              */
+        || (opcode == 0xB2 && inst[1] == 0x45) /* SQER Square Root HFP short             */
+        || (opcode == 0xB9 && (inst[1] >= 0x41 && inst[1] <= 0x43)) /* DFP Conversions*/
+        || (opcode == 0xB9 && (inst[1] >= 0x49 && inst[1] <= 0x5B)) /* DFP Conversions*/
+        || (opcode == 0x01 && inst[1] == 0x0A) /* PFPO Perform Floating Point Operation  */
+        )
+    {
+        len += display_fregs (regs, buf + len, buflen - len - 1, "HHC02270I ");
+    }
+
+    if (len && sysblk.showregsfirst)
+        len += snprintf( buf + len, buflen - len, "\n" );
+
+    return len;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*             Display general purpose registers                     */
+/*-------------------------------------------------------------------*/
+int display_gregs (REGS *regs, char *buf, int buflen, char *hdr)
+{
+    int i;
+    U32 gprs[16];
+#if defined(_900)
+    U64 ggprs[16];
+#endif
+
+#if defined(_900)
+    if(regs->arch_mode != ARCH_900_IDX)
+    {
+#endif
+        for(i=0;i<16;i++)
+        {
+            gprs[i]=regs->GR_L(i);
+        }
+        return(display_regs32("GR",regs->cpuad,gprs,sysblk.cpus,buf,buflen,hdr));
+#if defined(_900)
+    }
+    else
+    {
+        for(i=0;i<16;i++)
+        {
+            ggprs[i]=regs->GR_G(i);
+        }
+        return(display_regs64("R",regs->cpuad,ggprs,sysblk.cpus,buf,buflen,hdr));
+    }
+#endif
+
+} /* end function display_gregs */
+
+
+/*-------------------------------------------------------------------*/
+/*                  Display control registers                        */
+/*-------------------------------------------------------------------*/
+int display_cregs (REGS *regs, char *buf, int buflen, char *hdr)
+{
+    int i;
+    U32 crs[16];
+#if defined(_900)
+    U64 gcrs[16];
+#endif
+
+#if defined(_900)
+    if(regs->arch_mode != ARCH_900_IDX)
+    {
+#endif
+        for(i=0;i<16;i++)
+        {
+            crs[i]=regs->CR_L(i);
+        }
+        return(display_regs32("CR",regs->cpuad,crs,sysblk.cpus,buf,buflen,hdr));
+#if defined(_900)
+    }
+    else
+    {
+        for(i=0;i<16;i++)
+        {
+            gcrs[i]=regs->CR_G(i);
+        }
+        return(display_regs64("C",regs->cpuad,gcrs,sysblk.cpus,buf,buflen,hdr));
+    }
+#endif
+
+} /* end function display_cregs */
+
+
+/*-------------------------------------------------------------------*/
+/*                    Display access registers                       */
+/*-------------------------------------------------------------------*/
+int display_aregs (REGS *regs, char *buf, int buflen, char *hdr)
+{
+    int i;
+    U32 ars[16];
+
+    for(i=0;i<16;i++)
+    {
+        ars[i]=regs->AR(i);
+    }
+    return(display_regs32("AR",regs->cpuad,ars,sysblk.cpus,buf,buflen,hdr));
+
+} /* end function display_aregs */
+
+
+/*-------------------------------------------------------------------*/
+/*               Display floating point registers                    */
+/*-------------------------------------------------------------------*/
+int display_fregs (REGS *regs, char *buf, int buflen, char *hdr)
+{
+char cpustr[32] = "";
+
+    if(sysblk.cpus>1)
+        MSGBUF(cpustr, "%s%s%02X: ", hdr, PTYPSTR(regs->cpuad), regs->cpuad);
+    else
+        MSGBUF(cpustr, "%s", hdr);
+
+    if(regs->CR(0) & CR0_AFP)
+        return(snprintf(buf,buflen,
+            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
+            "%sFPR1=%8.8X%8.8X FPR3=%8.8X%8.8X\n"
+            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
+            "%sFPR5=%8.8X%8.8X FPR7=%8.8X%8.8X\n"
+            "%sFPR8=%8.8X%8.8X FP10=%8.8X%8.8X\n"
+            "%sFPR9=%8.8X%8.8X FP11=%8.8X%8.8X\n"
+            "%sFP12=%8.8X%8.8X FP14=%8.8X%8.8X\n"
+            "%sFP13=%8.8X%8.8X FP15=%8.8X%8.8X\n"
+            ,cpustr, regs->fpr[0],  regs->fpr[1],  regs->fpr[4],  regs->fpr[5]
+            ,cpustr, regs->fpr[2],  regs->fpr[3],  regs->fpr[6],  regs->fpr[7]
+            ,cpustr, regs->fpr[8],  regs->fpr[9],  regs->fpr[12], regs->fpr[13]
+            ,cpustr, regs->fpr[10], regs->fpr[11], regs->fpr[14], regs->fpr[15]
+            ,cpustr, regs->fpr[16], regs->fpr[17], regs->fpr[20], regs->fpr[21]
+            ,cpustr, regs->fpr[18], regs->fpr[19], regs->fpr[22], regs->fpr[23]
+            ,cpustr, regs->fpr[24], regs->fpr[25], regs->fpr[28], regs->fpr[29]
+            ,cpustr, regs->fpr[26], regs->fpr[27], regs->fpr[30], regs->fpr[31]
+        ));
+    else
+        return(snprintf(buf,buflen,
+            "%sFPR0=%8.8X%8.8X FPR2=%8.8X%8.8X\n"
+            "%sFPR4=%8.8X%8.8X FPR6=%8.8X%8.8X\n"
+            ,cpustr, regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3]
+            ,cpustr, regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]
+        ));
+
+} /* end function display_fregs */
+
+
+/*-------------------------------------------------------------------*/
+/*                     Display subchannel                            */
+/*-------------------------------------------------------------------*/
+int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
+{
+    static const char*  status_type[3] = {"Device Status    ",
+                                          "Unit Status      ",
+                                          "Subchannel Status"};
+
+    struct BITS { U8 b7:1; U8 b6:1; U8 b5:1; U8 b4:1; U8 b3:1; U8 b2:1; U8 b1:1; U8 b0:1; };
+    union ByteToBits { struct BITS b; U8 status; } u;
+    int len = 0;
+
+    len+=snprintf(buf+len,buflen-len,
+        "%s%1d:%04X D/T%04X\n",
+        hdr, LCSS_DEVNUM, dev->devtype);
+
+    if (ARCH_370_IDX == sysblk.arch_mode)
+    {
+        len+=snprintf(buf+len,buflen-len,
+            "%s  CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X            Flags\n"
+            "%s         US:%2.2X  CS:%2.2X Count:%2.2X%2.2X       (Key) Subchannel key          %1.1X\n"
+            "%s                                       (S)   Suspend control         %1.1X\n"
+            "%s                                       (L)   Extended format         %1.1X\n"
+            "%s  Subchannel Internal Management       (CC)  Deferred condition code %1.1X\n",
+            hdr, dev->scsw.flag0,
+                 dev->scsw.ccwaddr[1], dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3],
+            hdr, dev->scsw.unitstat, dev->scsw.chanstat,
+                 dev->scsw.count[0], dev->scsw.count[1],
+                 (dev->scsw.flag0 & SCSW0_KEY)      >> 4,
+            hdr, (dev->scsw.flag0 & SCSW0_S)        >> 3,
+            hdr, (dev->scsw.flag0 & SCSW0_L)        >> 2,
+            hdr, (dev->scsw.flag0 & SCSW0_CC));
+    }
+
+    len+=snprintf(buf+len,buflen-len,
+        "%s  Subchannel Number[%04X]\n"
+        "%s    Path Management Control Word (PMCW)\n"
+        "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
+        "%s    Flags:%2.2X%2.2X        Dev:%2.2X%2.2X\n"
+        "%s      LPM:%2.2X PNOM:%2.2X LPUM:%2.2X PIM:%2.2X\n"
+        "%s      MBI:%2.2X%2.2X        POM:%2.2X PAM:%2.2X\n"
+        "%s  CHPID 0:%2.2X    1:%2.2X    2:%2.2X   3:%2.2X\n"
+        "%s        4:%2.2X    5:%2.2X    6:%2.2X   7:%2.2X\n"
+        "%s     Misc:%2.2X%2.2X%2.2X%2.2X\n",
+        hdr, dev->subchan,
+        hdr,
+        hdr, dev->pmcw.intparm[0], dev->pmcw.intparm[1],
+        dev->pmcw.intparm[2], dev->pmcw.intparm[3],
+        hdr, dev->pmcw.flag4, dev->pmcw.flag5,
+        dev->pmcw.devnum[0], dev->pmcw.devnum[1],
+        hdr, dev->pmcw.lpm, dev->pmcw.pnom, dev->pmcw.lpum, dev->pmcw.pim,
+        hdr, dev->pmcw.mbi[0], dev->pmcw.mbi[1],
+        dev->pmcw.pom, dev->pmcw.pam,
+        hdr, dev->pmcw.chpid[0], dev->pmcw.chpid[1],
+        dev->pmcw.chpid[2], dev->pmcw.chpid[3],
+        hdr, dev->pmcw.chpid[4], dev->pmcw.chpid[5],
+        dev->pmcw.chpid[6], dev->pmcw.chpid[7],
+        hdr,dev->pmcw.zone, dev->pmcw.flag25,
+        dev->pmcw.flag26, dev->pmcw.flag27);
+
+    len+=snprintf(buf+len,buflen-len,
+        "%s  Subchannel Status Word (SCSW)\n"
+        "%s    Flags: %2.2X%2.2X  Subchan Ctl: %2.2X%2.2X     (FC)  Function Control\n"
+        "%s      CCW: %2.2X%2.2X%2.2X%2.2X                          Start                   %1.1X\n"
+        "%s       DS: %2.2X  SS: %2.2X  Count: %2.2X%2.2X           Halt                    %1.1X\n"
+        "%s                                             Clear                   %1.1X\n"
+        "%s    Flags                              (AC)  Activity Control\n"
+        "%s      (Key) Subchannel key          %1.1X        Resume pending          %1.1X\n"
+        "%s      (S)   Suspend control         %1.1X        Start pending           %1.1X\n"
+        "%s      (L)   Extended format         %1.1X        Halt pending            %1.1X\n"
+        "%s      (CC)  Deferred condition code %1.1X        Clear pending           %1.1X\n"
+        "%s      (F)   CCW-format control      %1.1X        Subchannel active       %1.1X\n"
+        "%s      (P)   Prefetch control        %1.1X        Device active           %1.1X\n"
+        "%s      (I)   Initial-status control  %1.1X        Suspended               %1.1X\n"
+        "%s      (A)   Address-limit control   %1.1X  (SC)  Status Control\n"
+        "%s      (U)   Suppress-suspend int.   %1.1X        Alert                   %1.1X\n"
+        "%s    Subchannel Control                       Intermediate            %1.1X\n"
+        "%s      (Z)   Zero condition code     %1.1X        Primary                 %1.1X\n"
+        "%s      (E)   Extended control (ECW)  %1.1X        Secondary               %1.1X\n"
+        "%s      (N)   Path not operational    %1.1X        Status pending          %1.1X\n"
+        "%s      (Q)   QDIO active             %1.1X\n",
+        hdr,
+        hdr, dev->scsw.flag0, dev->scsw.flag1, dev->scsw.flag2, dev->scsw.flag3,
+        hdr, dev->scsw.ccwaddr[0], dev->scsw.ccwaddr[1],
+             dev->scsw.ccwaddr[2], dev->scsw.ccwaddr[3],
+             (dev->scsw.flag2 & SCSW2_FC_START) >> 6,
+        hdr, dev->scsw.unitstat, dev->scsw.chanstat,
+             dev->scsw.count[0], dev->scsw.count[1],
+             (dev->scsw.flag2 & SCSW2_FC_HALT)  >> 5,
+        hdr, (dev->scsw.flag2 & SCSW2_FC_CLEAR) >> 4,
+        hdr,
+        hdr, (dev->scsw.flag0 & SCSW0_KEY)      >> 4,
+             (dev->scsw.flag2 & SCSW2_AC_RESUM) >> 3,
+        hdr, (dev->scsw.flag0 & SCSW0_S)        >> 3,
+             (dev->scsw.flag2 & SCSW2_AC_START) >> 2,
+        hdr, (dev->scsw.flag0 & SCSW0_L)        >> 2,
+             (dev->scsw.flag2 & SCSW2_AC_HALT)  >> 1,
+        hdr, (dev->scsw.flag0 & SCSW0_CC),
+             (dev->scsw.flag2 & SCSW2_AC_CLEAR),
+        hdr, (dev->scsw.flag1 & SCSW1_F)        >> 7,
+             (dev->scsw.flag3 & SCSW3_AC_SCHAC) >> 7,
+        hdr, (dev->scsw.flag1 & SCSW1_P)        >> 6,
+             (dev->scsw.flag3 & SCSW3_AC_DEVAC) >> 6,
+        hdr, (dev->scsw.flag1 & SCSW1_I)        >> 5,
+             (dev->scsw.flag3 & SCSW3_AC_SUSP)  >> 5,
+        hdr, (dev->scsw.flag1 & SCSW1_A)        >> 4,
+        hdr, (dev->scsw.flag1 & SCSW1_U)        >> 3,
+             (dev->scsw.flag3 & SCSW3_SC_ALERT) >> 4,
+        hdr, (dev->scsw.flag3 & SCSW3_SC_INTER) >> 3,
+        hdr, (dev->scsw.flag1 & SCSW1_Z)        >> 2,
+             (dev->scsw.flag3 & SCSW3_SC_PRI)   >> 2,
+        hdr, (dev->scsw.flag1 & SCSW1_E)        >> 1,
+             (dev->scsw.flag3 & SCSW3_SC_SEC)   >> 1,
+        hdr, (dev->scsw.flag1 & SCSW1_N),
+             (dev->scsw.flag3 & SCSW3_SC_PEND),
+        hdr, (dev->scsw.flag2 & SCSW2_Q)        >> 7);
+
+    u.status = (U8)dev->scsw.unitstat;
+    len+=snprintf(buf+len,buflen-len,
+        "%s    %s %s%s%s%s%s%s%s%s%s\n",
+        hdr, status_type[(sysblk.arch_mode == ARCH_370_IDX)],
+        u.status == 0 ? "is Normal" : "",
+        u.b.b0 ? "Attention " : "",
+        u.b.b1 ? "SM " : "",
+        u.b.b2 ? "CUE " : "",
+        u.b.b3 ? "Busy " : "",
+        u.b.b4 ? "CE " : "",
+        u.b.b5 ? "DE " : "",
+        u.b.b6 ? "UC " : "",
+        u.b.b7 ? "UE " : "");
+
+    u.status = (U8)dev->scsw.chanstat;
+    len+=snprintf(buf+len,buflen-len,
+        "%s    %s %s%s%s%s%s%s%s%s%s\n",
+        hdr, status_type[2],
+        u.status == 0 ? "is Normal" : "",
+        u.b.b0 ? "PCI " : "",
+        u.b.b1 ? "IL " : "",
+        u.b.b2 ? "PC " : "",
+        u.b.b3 ? "ProtC " : "",
+        u.b.b4 ? "CDC " : "",
+        u.b.b5 ? "CCC " : "",
+        u.b.b6 ? "ICC " : "",
+        u.b.b7 ? "CC " : "");
+
+    // PROGRAMMING NOTE: the following ugliness is needed
+    // because 'snprintf' is a macro on Windows builds and
+    // you obviously can't use the preprocessor to select
+    // the arguments to be passed to a preprocessor macro.
+
+#if defined( OPTION_SHARED_DEVICES )
+  #define BUSYSHAREABLELINE_PATTERN     "%s    busy             %1.1X    shareable     %1.1X\n"
+  #define BUSYSHAREABLELINE_VALUE       hdr, dev->busy, dev->shareable,
+#else // !defined( OPTION_SHARED_DEVICES )
+  #define BUSYSHAREABLELINE_PATTERN     "%s    busy             %1.1X\n"
+  #define BUSYSHAREABLELINE_VALUE       hdr, dev->busy,
+#endif // defined( OPTION_SHARED_DEVICES )
+
+    len+=snprintf(buf+len,buflen-len,
+        "%s  DEVBLK Status\n"
+        BUSYSHAREABLELINE_PATTERN
+        "%s    suspended        %1.1X    console       %1.1X    rlen3270 %5d\n"
+        "%s    pending          %1.1X    connected     %1.1X\n"
+        "%s    pcipending       %1.1X    readpending   %1.1X\n"
+        "%s    attnpending      %1.1X    connecting    %1.1X\n"
+        "%s    startpending     %1.1X    localhost     %1.1X\n"
+        "%s    resumesuspended  %1.1X    reserved      %1.1X\n"
+        "%s    tschpending      %1.1X    locked        %1.1X\n",
+        hdr,
+        BUSYSHAREABLELINE_VALUE
+        hdr, dev->suspended,          dev->console,     dev->rlen3270,
+        hdr, dev->pending,            dev->connected,
+        hdr, dev->pcipending,         dev->readpending,
+        hdr, dev->attnpending,        dev->connecting,
+        hdr, dev->startpending,       dev->localhost,
+        hdr, dev->resumesuspended,    dev->reserved,
+        hdr, dev->tschpending,        test_lock(&dev->lock) ? 1 : 0);
+
+    return(len);
+
+} /* end function display_subchannel */
+
+
+/*-------------------------------------------------------------------*/
+/*      Parse a storage range or storage alteration operand          */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* Valid formats for a storage range operand are:                    */
+/*      startaddr                                                    */
+/*      startaddr-endaddr                                            */
+/*      startaddr.length                                             */
+/* where startaddr, endaddr, and length are hexadecimal values.      */
+/*                                                                   */
+/* Valid format for a storage alteration operand is:                 */
+/*      startaddr=hexstring (up to 32 pairs of digits)               */
+/*                                                                   */
+/* Return values:                                                    */
+/*      0  = operand contains valid storage range display syntax;    */
+/*           start/end of range is returned in saddr and eaddr       */
+/*      >0 = operand contains valid storage alteration syntax;       */
+/*           return value is number of bytes to be altered;          */
+/*           start/end/value are returned in saddr, eaddr, newval    */
+/*      -1 = error message issued                                    */
+/*-------------------------------------------------------------------*/
+static int parse_range (char *operand, U64 maxadr, U64 *sadrp,
+                        U64 *eadrp, BYTE *newval)
+{
+U64     opnd1, opnd2;                   /* Address/length operands   */
+U64     saddr, eaddr;                   /* Range start/end addresses */
+int     rc;                             /* Return code               */
+int     n;                              /* Number of bytes altered   */
+int     h1, h2;                         /* Hexadecimal digits        */
+char    *s;                             /* Alteration value pointer  */
+BYTE    delim;                          /* Operand delimiter         */
+BYTE    c;                              /* Character work area       */
+
+    if (!operand)
+    {
+        // "Missing or invalid argument(s)"
+        WRMSG( HHC17000, "E" );
+        return -1;
+    }
+
+    rc = sscanf(operand, "%"SCNx64"%c%"SCNx64"%c",
+                &opnd1, &delim, &opnd2, &c);
+
+    /* Process storage alteration operand */
+    if (rc > 2 && delim == '=' && newval)
+    {
+        s = strchr (operand, '=');
+        n = 0;
+        while (1)
+        {
+            h1 = *(++s);
+            if (h1 == '\0'  || h1 == '#' ) break;
+            if (h1 == SPACE || h1 == '\t') continue;
+            h1 = toupper(h1);
+            h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' :
+                 (h1 >= 'A' && h1 <= 'F') ? h1 - 'A' + 10 : -1;
+            if (h1 < 0)
+            {
+                WRMSG(HHC02205, "E", s, ": invalid hex digit");
+                return -1;
+            }
+            h2 = *(++s);
+            h2 = toupper(h2);
+            h2 = (h2 >= '0' && h2 <= '9') ? h2 - '0' :
+                 (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
+            if (h2 < 0)
+            {
+                WRMSG(HHC02205, "E", --s, ": invalid hex pair");
+                return -1;
+            }
+            if (n >= 32)
+            {
+                WRMSG(HHC02205, "E", --s, ": only a maximum of 32 bytes may be altered");
+                return -1;
+            }
+            newval[n++] = (h1 << 4) | h2;
+        } /* end for(n) */
+        saddr = opnd1;
+        eaddr = saddr + n - 1;
+    }
+    else
+    {
+        /* Process storage range operand */
+        saddr = opnd1;
+        if (rc == 1)
+        {
+            /* If only starting address is specified, default to
+               64 byte display, or less if near end of storage */
+            eaddr = saddr + 0x3F;
+            if (eaddr > maxadr) eaddr = maxadr;
+        }
+        else
+        {
+            /* Ending address or length is specified */
+            if (rc != 3 || !(delim == '-' || delim == '.'))
+            {
+                WRMSG(HHC02205, "E", operand, "");
+                return -1;
+            }
+            eaddr = (delim == '.') ? saddr + opnd2 - 1 : opnd2;
+        }
+        /* Set n=0 to indicate storage display only */
+        n = 0;
+    }
+
+    /* Check for valid range */
+    if (saddr > maxadr || eaddr > maxadr || eaddr < saddr)
+    {
+        WRMSG(HHC02205, "E", operand, ": invalid range");
+        return -1;
+    }
+
+    /* Return start/end addresses and number of bytes altered */
+    *sadrp = saddr;
+    *eadrp = eaddr;
+    return n;
+
+} /* end function parse_range */
+
+
+/*-------------------------------------------------------------------*/
+/*  get_connected_client   return IP address and hostname of the     */
+/*                         client that is connected to this device   */
+/*-------------------------------------------------------------------*/
+void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
+{
+    *pclientip   = NULL;
+    *pclientname = NULL;
+
+    obtain_lock (&dev->lock);
+
+    if (dev->bs             /* if device is a socket device,   */
+        && dev->fd != -1)   /* and a client is connected to it */
+    {
+        *pclientip   = strdup(dev->bs->clientip);
+        *pclientname = strdup(dev->bs->clientname);
+    }
+
+    release_lock (&dev->lock);
+}
+
+/*-------------------------------------------------------------------*/
+/*  Return the address of a regs structure to be used for address    */
+/*  translation.  This address should be freed by the caller.        */
+/*-------------------------------------------------------------------*/
+static REGS  *copy_regs (REGS *regs)
+{
+ REGS  *newregs, *hostregs;
+ size_t size;
+
+    size = (SIE_MODE(regs) || SIE_ACTIVE(regs)) ? 2*sizeof(REGS) : sizeof(REGS);
+    newregs = malloc_aligned(size, 4096);
+    if (newregs == NULL)
+    {
+        char buf[64];
+        MSGBUF(buf, "malloc(%d)", (int)size);
+        WRMSG(HHC00075, "E", buf, strerror(errno));
+        return NULL;
+    }
+
+    /* Perform partial copy and clear the TLB */
+    memcpy(newregs, regs, sysblk.regs_copy_len);
+    memset(&newregs->tlb.vaddr, 0, TLBN * sizeof(DW));
+    newregs->tlbID = 1;
+    newregs->ghostregs = 1;
+    newregs->hostregs = newregs;
+    newregs->guestregs = NULL;
+    newregs->sie_active=0;
+
+    /* Copy host regs if in SIE mode */
+    /* newregs is a SIE Guest REGS */
+    if(SIE_MODE(newregs))
+    {
+        hostregs = newregs + 1;
+        memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
+        memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
+        hostregs->tlbID = 1;
+        hostregs->ghostregs = 1;
+        hostregs->hostregs = hostregs;
+        hostregs->guestregs = newregs;
+        newregs->hostregs = hostregs;
+        newregs->guestregs = newregs;
+    }
+
+    return newregs;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*      Format Channel Report Word (CRW) for display                 */
+/*-------------------------------------------------------------------*/
+const char* FormatCRW( U32 crw, char* buf, size_t bufsz )
+{
+    static const char* rsctab[] =
+    {
+        "0",
+        "1",
+        "MONIT",
+        "SUBCH",
+        "CHPID",
+        "5",
+        "6",
+        "7",
+        "8",
+        "CAF",
+        "10",
+        "CSS",
+    };
+    static const BYTE  numrsc  =  _countof( rsctab );
+
+    static const char* erctab[] =
+    {
+        "NULL",
+        "AVAIL",
+        "INIT",
+        "TEMP",
+        "ALERT",
+        "ABORT",
+        "ERROR",
+        "RESET",
+        "MODFY",
+        "9",
+        "RSTRD",
+    };
+    static const BYTE  numerc  =  _countof( erctab );
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1)
+        return buf;
+
+    if (crw)
+    {
+        U32     flags   =  (U32)    ( crw & CRW_FLAGS_MASK );
+        BYTE    erc     =  (BYTE) ( ( crw & CRW_ERC_MASK   ) >> 16 );
+        BYTE    rsc     =  (BYTE) ( ( crw & CRW_RSC_MASK   ) >> 24 );
+        U16     rsid    =  (U16)    ( crw & CRW_RSID_MASK  );
+
+        snprintf( buf, bufsz,
+
+            "RSC:%d=%s, ERC:%d=%s, RSID:%d=0x%4.4X Flags:%s%s%s%s%s%s%s"
+
+            , rsc
+            , rsc < numrsc ? rsctab[ rsc ] : "???"
+
+            , erc
+            , erc < numerc ? erctab[ erc ] : "???"
+
+            , rsid
+            , rsid
+
+            , ( flags & CRW_FLAGS_MASK ) ? ""            : "0"
+            , ( flags & 0x80000000     ) ? "0x80000000," : ""
+            , ( flags & CRW_SOL        ) ? "SOL,"        : ""
+            , ( flags & CRW_OFLOW      ) ? "OFLOW,"      : ""
+            , ( flags & CRW_CHAIN      ) ? "CHAIN,"      : ""
+            , ( flags & CRW_AR         ) ? "AR,"         : ""
+            , ( flags & 0x00400000     ) ? "0x00400000," : ""
+        );
+
+        rtrim( buf, "," );              // (remove trailing comma)
+    }
+    else
+        strlcpy( buf, "(end)", bufsz ); // (end of channel report)
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*      Format Operation-Request Block (ORB) for display             */
+/*-------------------------------------------------------------------*/
+const char* FormatORB( ORB* orb, char* buf, size_t bufsz )
+{
+    if (!buf)
+        return NULL;
+
+    if (bufsz)
+        *buf = 0;
+
+    if (bufsz <= 1 || !orb)
+        return buf;
+
+    snprintf( buf, bufsz,
+
+        "IntP:%2.2X%2.2X%2.2X%2.2X Key:%d LPM:%2.2X "
+        "Flags:%X%2.2X%2.2X %c%c%c%c%c%c%c%c%c%c%c%c %c%c.....%c "
+        "%cCW:%2.2X%2.2X%2.2X%2.2X"
+
+        , orb->intparm[0], orb->intparm[1], orb->intparm[2], orb->intparm[3]
+        , (orb->flag4 & ORB4_KEY) >> 4
+        , orb->lpm
+
+        , (orb->flag4 & ~ORB4_KEY)
+        , orb->flag5
+        , orb->flag7
+
+        , ( orb->flag4 & ORB4_S ) ? 'S' : '.'
+        , ( orb->flag4 & ORB4_C ) ? 'C' : '.'
+        , ( orb->flag4 & ORB4_M ) ? 'M' : '.'
+        , ( orb->flag4 & ORB4_Y ) ? 'Y' : '.'
+
+        , ( orb->flag5 & ORB5_F ) ? 'F' : '.'
+        , ( orb->flag5 & ORB5_P ) ? 'P' : '.'
+        , ( orb->flag5 & ORB5_I ) ? 'I' : '.'
+        , ( orb->flag5 & ORB5_A ) ? 'A' : '.'
+
+        , ( orb->flag5 & ORB5_U ) ? 'U' : '.'
+        , ( orb->flag5 & ORB5_B ) ? 'B' : '.'
+        , ( orb->flag5 & ORB5_H ) ? 'H' : '.'
+        , ( orb->flag5 & ORB5_T ) ? 'T' : '.'
+
+        , ( orb->flag7 & ORB7_L ) ? 'L' : '.'
+        , ( orb->flag7 & ORB7_D ) ? 'D' : '.'
+        , ( orb->flag7 & ORB7_X ) ? 'X' : '.'
+
+        , ( orb->flag5 & ORB5_B ) ? 'T' : 'C'  // (TCW or CCW)
+
+        , orb->ccwaddr[0], orb->ccwaddr[1], orb->ccwaddr[2], orb->ccwaddr[3]
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*     Format ESW's Subchannel Logout information for display        */
+/*-------------------------------------------------------------------*/
+const char* FormatSCL( ESW* esw, char* buf, size_t bufsz )
+{
+static const char* sa[] =
+{
+    "00",
+    "RD",
+    "WR",
+    "BW",
+};
+static const char* tc[] =
+{
+    "HA",
+    "ST",
+    "CL",
+    "11",
+};
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !esw)
+        return buf;
+
+    snprintf( buf, bufsz,
+
+        "ESF:%c%c%c%c%c%c%c%c%s FVF:%c%c%c%c%c LPUM:%2.2X SA:%s TC:%s Flgs:%c%c%c SC=%d"
+
+        , ( esw->scl0 & 0x80           ) ? '0' : '.'
+        , ( esw->scl0 & SCL0_ESF_KEY   ) ? 'K' : '.'
+        , ( esw->scl0 & SCL0_ESF_MBPGK ) ? 'G' : '.'
+        , ( esw->scl0 & SCL0_ESF_MBDCK ) ? 'D' : '.'
+        , ( esw->scl0 & SCL0_ESF_MBPTK ) ? 'P' : '.'
+        , ( esw->scl0 & SCL0_ESF_CCWCK ) ? 'C' : '.'
+        , ( esw->scl0 & SCL0_ESF_IDACK ) ? 'I' : '.'
+        , ( esw->scl0 & 0x01           ) ? '7' : '.'
+
+        , ( esw->scl2 & SCL2_R ) ? " (R)" : ""
+
+        , ( esw->scl2 & SCL2_FVF_LPUM  ) ? 'L' : '.'
+        , ( esw->scl2 & SCL2_FVF_TC    ) ? 'T' : '.'
+        , ( esw->scl2 & SCL2_FVF_SC    ) ? 'S' : '.'
+        , ( esw->scl2 & SCL2_FVF_USTAT ) ? 'D' : '.'
+        , ( esw->scl2 & SCL2_FVF_CCWAD ) ? 'C' : '.'
+
+        , esw->lpum
+
+        , sa[  esw->scl2 & SCL2_SA ]
+
+        , tc[ (esw->scl3 & SCL3_TC) >> 6 ]
+
+        , ( esw->scl3 & SCL3_D ) ? 'D' : '.'
+        , ( esw->scl3 & SCL3_E ) ? 'E' : '.'
+        , ( esw->scl3 & SCL3_A ) ? 'A' : '.'
+
+        , ( esw->scl3 & SCL3_SC )
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*      Format ESW's Extended-Report Word (ERW) for display          */
+/*-------------------------------------------------------------------*/
+const char* FormatERW( ESW* esw, char* buf, size_t bufsz )
+{
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !esw)
+        return buf;
+
+    snprintf( buf, bufsz,
+
+        "Flags:%c%c%c%c%c%c%c%c %c%c SCNT:%d"
+
+        , ( esw->erw0 & ERW0_RSV ) ? '0' : '.'
+        , ( esw->erw0 & ERW0_L   ) ? 'L' : '.'
+        , ( esw->erw0 & ERW0_E   ) ? 'E' : '.'
+        , ( esw->erw0 & ERW0_A   ) ? 'A' : '.'
+        , ( esw->erw0 & ERW0_P   ) ? 'P' : '.'
+        , ( esw->erw0 & ERW0_T   ) ? 'T' : '.'
+        , ( esw->erw0 & ERW0_F   ) ? 'F' : '.'
+        , ( esw->erw0 & ERW0_S   ) ? 'S' : '.'
+
+        , ( esw->erw1 & ERW1_C   ) ? 'C' : '.'
+        , ( esw->erw1 & ERW1_R   ) ? 'R' : '.'
+
+        , ( esw->erw1 & ERW1_SCNT )
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*       Format Extended-Status Word (ESW) for display               */
+/*-------------------------------------------------------------------*/
+const char* FormatESW( ESW* esw, char* buf, size_t bufsz )
+{
+char scl[64];                               /* Subchannel Logout     */
+char erw[64];                               /* Extended-Report Word  */
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        *buf = 0;
+    if (bufsz <= 1 || !esw)
+        return buf;
+
+    snprintf( buf, bufsz,
+
+        "SCL = %s, ERW = %s"
+
+        , FormatSCL( esw, scl, _countof( scl ))
+        , FormatERW( esw, erw, _countof( erw ))
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*      Format SDC (Self Describing Component) information           */
+/*-------------------------------------------------------------------*/
+static BYTE sdcchar( BYTE c )
+{
+    /* This  suberfuge  resolved a compiler bug that leads to a slew */
+    /* of warnings about c possibly being undefined.                 */
+    c = guest_to_host( c );
+    return isgraph(c) ? c : '?';
+}
+
+const char* FormatSDC( SDC* sdc, char* buf, size_t bufsz )
+{
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !sdc)
+        return buf;
+
+    #define SDCCHAR(fld, n) sdcchar(sdc->fld[n])
+
+    snprintf( buf, bufsz,
+
+        "SDC: type/model:%c%c%c%c%c%c-%c%c%c mfg:%c%c%c plant:%c%c seq/serial:%c%c%c%c%c%c%c%c%c%c%c%c\n"
+
+        , SDCCHAR(type,0),SDCCHAR(type,1),SDCCHAR(type,2),SDCCHAR(type,3),SDCCHAR(type,4),SDCCHAR(type,5)
+        , SDCCHAR(model,0),SDCCHAR(model,1),SDCCHAR(model,2)
+        , SDCCHAR(mfr,0),SDCCHAR(mfr,1),SDCCHAR(mfr,2)
+        , SDCCHAR(plant,0),SDCCHAR(plant,1)
+        , SDCCHAR(serial,0),SDCCHAR(serial,1),SDCCHAR(serial,2),SDCCHAR(serial,3),SDCCHAR(serial,4),SDCCHAR(serial,5)
+        , SDCCHAR(serial,6),SDCCHAR(serial,7),SDCCHAR(serial,8),SDCCHAR(serial,9),SDCCHAR(serial,10),SDCCHAR(serial,11)
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*           NEQ (Node-Element Qualifier) type table                 */
+/*-------------------------------------------------------------------*/
+static const char* NED_NEQ_type[] =
+{
+    "UNUSED", "NEQ", "GENEQ", "NED",
+};
+
+
+/*-------------------------------------------------------------------*/
+/*            Format NED (Node-Element Descriptor)                   */
+/*-------------------------------------------------------------------*/
+const char* FormatNED( NED* ned, char* buf, size_t bufsz )
+{
+    const char* typ;
+    char bad_typ[4];
+    char sdc_info[256];
+    static const char* sn_ind[] = { "NEXT", "UNIQUE", "NODE", "CODE3" };
+    static const char* ned_type[] = { "UNSPEC", "DEVICE", "CTLUNIT" };
+    static const char* dev_class[] =
+    {
+        "UNKNOWN",
+        "DASD",
+        "TAPE",
+        "READER",
+        "PUNCH",
+        "PRINTER",
+        "COMM",
+        "DISPLAY",
+        "CONSOLE",
+        "CTCA",
+        "SWITCH",
+        "PROTO",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !ned)
+        return buf;
+
+    if (ned->type < _countof( ned_type ))
+        typ = ned_type[ ned->type ];
+    else
+    {
+        snprintf( bad_typ, sizeof(bad_typ), "%u", ned->type );
+        bad_typ[3] = 0;
+        typ = bad_typ;
+    }
+
+
+    if (ned->type == NED_TYP_DEVICE)
+    {
+        const char* cls;
+        char bad_class[4];
+
+        if (ned->cls < _countof( dev_class ))
+            cls = dev_class[ ned->cls ];
+        else
+        {
+            snprintf( bad_class, sizeof(bad_class), "%u", ned->cls );
+            bad_class[3] = 0;
+            cls = bad_class;
+        }
+
+        snprintf( buf, bufsz,
+
+            "NED:%s%styp:%s cls:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
+
+            , (ned->flags & 0x20) ? "*" : " "
+            , (ned->flags & 0x01) ? "(EMULATED) " : ""
+            , typ
+            , cls
+            , (ned->lvl & 0x01) ? "UNRELATED" : "RELATED"
+            , sn_ind[ (ned->flags >> 3) & 0x03 ]
+            , ned->tag[0], ned->tag[1]
+            , FormatSDC( &ned->info, sdc_info, sizeof(sdc_info))
+        );
+    }
+    else
+    {
+        snprintf( buf, bufsz,
+
+            "NED:%s%styp:%s lvl:%s sn:%s tag:%02X%02X\n     %s"
+
+            , (ned->flags & 0x20) ? "*" : " "
+            , (ned->flags & 0x01) ? "(EMULATED) " : ""
+            , typ
+            , (ned->lvl & 0x01) ? "UNRELATED" : "RELATED"
+            , sn_ind[ (ned->flags >> 3) & 0x03 ]
+            , ned->tag[0], ned->tag[1]
+            , FormatSDC( &ned->info, sdc_info, sizeof(sdc_info))
+        );
+    }
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*            Format NEQ (Node-Element Qualifier)                    */
+/*-------------------------------------------------------------------*/
+const char* FormatNEQ( NEQ* neq, char* buf, size_t bufsz )
+{
+    BYTE* byte = (BYTE*) neq;
+    U16 iid;
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !neq)
+        return buf;
+
+    iid = fetch_hw( &neq->iid );
+
+    snprintf( buf, bufsz,
+
+        "NEQ: typ:%s IID:%02X%02X DDTO:%u\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+
+        , NED_NEQ_type[ neq->flags >> 6 ]
+        , (BYTE)(iid >> 8), (BYTE)(iid & 0xFF)
+        , neq->ddto
+        , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
+        , byte[ 8],byte[ 9],byte[10],byte[11],  byte[12],byte[13],byte[14],byte[15]
+        , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
+        , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*    Helper function to format data as just individual BYTES        */
+/*-------------------------------------------------------------------*/
+static void FormatBytes( BYTE* data, int len, char* buf, size_t bufsz )
+{
+    char temp[4];
+    int  i;
+
+    for (i=0; i < len; ++i)
+    {
+        if (i == 4)
+            strlcat( buf, " ", bufsz );
+        MSGBUF( temp, "%02X", data[i] );
+        strlcat( buf, temp, bufsz );
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/*        Format RCD (Read Configuration Data) response              */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatRCD( BYTE* rcd, int len, char* buf, size_t bufsz )
+{
+    char temp[256];
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !rcd || !len)
+        return buf;
+
+    for (; len > 0; rcd += sizeof(NED), len -= sizeof(NED))
+    {
+        if (len < (int)sizeof(NED))
+        {
+            FormatBytes( rcd, len, buf, bufsz );
+            break;
+        }
+
+        switch (rcd[0] >> 6)
+        {
+        case FIELD_IS_NEQ:
+        case FIELD_IS_GENEQ:
+
+            FormatNEQ( (NEQ*)rcd, temp, sizeof(temp)-1);
+            break;
+
+        case FIELD_IS_NED:
+
+            FormatNED( (NED*)rcd, temp, sizeof(temp)-1);
+            break;
+
+        case FIELD_IS_UNUSED:
+
+            snprintf( temp, sizeof(temp), "n/a\n" );
+            break;
+        }
+
+        strlcat( buf, temp, bufsz );
+    }
+
+    RTRIM( buf );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                 Format ND (Node Descriptor)                       */
+/*-------------------------------------------------------------------*/
+const char* FormatND( ND* nd, char* buf, size_t bufsz )
+{
+    const char* val;
+    const char* cls;
+    const char* by3;
+    const char* typ;
+    char bad_cls[4];
+    char sdc_info[256];
+    static const char* css_class[] = { "UNKNOWN", "CHPATH", "CTCA" };
+    static const char* val_type[] =
+    {
+        "VALID", "UNSURE", "INVALID", "3", "4", "5", "6", "7",
+    };
+    static const char* dev_class[] =
+    {
+        "UNKNOWN",
+        "DASD",
+        "TAPE",
+        "READER",
+        "PUNCH",
+        "PRINTER",
+        "COMM",
+        "DISPLAY",
+        "CONSOLE",
+        "CTCA",
+        "SWITCH",
+        "PROTO",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !nd)
+        return buf;
+
+    val = val_type[ nd->flags >> 5 ];
+
+    switch (nd->flags >> 5)
+    {
+    case ND_VAL_VALID:
+    case ND_VAL_UNSURE:
+
+        cls = NULL;
+        if (nd->flags & 0x01)
+        {
+            typ = "CSS";
+            by3 = "CHPID";
+            if (nd->cls < _countof( css_class ))
+                cls = css_class[ nd->cls ];
+        }
+        else
+        {
+            typ = "DEV";
+            by3 = (nd->cls == ND_DEV_PROTO) ? "LINK" : "BYTE3";
+            if (nd->cls < _countof( dev_class ))
+                cls = dev_class[ nd->cls ];
+        }
+        if (!cls)
+        {
+            snprintf( bad_cls, sizeof(bad_cls), "%u", nd->cls );
+            bad_cls[3] = 0;
+            cls = bad_cls;
+        }
+        snprintf( buf, bufsz,
+
+            "ND:  val:%s typ:%s cls:%s %s:%02X tag:%02X%02X\n     %s"
+
+            , val
+            , typ
+            , cls
+            , by3, nd->ua
+            , nd->tag[0], nd->tag[1]
+            , FormatSDC( &nd->info, sdc_info, sizeof(sdc_info))
+        );
+        break;
+
+    case ND_VAL_INVALID:
+
+        snprintf( buf, bufsz, "ND:  val:INVALID\n" );
+        break;
+
+    default:
+
+        snprintf( buf, bufsz, "ND:  val:%u (invalid)\n",
+            (int)(nd->flags >> 5) );
+        break;
+    }
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*                Format NQ (Node Qualifier)                         */
+/*-------------------------------------------------------------------*/
+const char* FormatNQ( NQ* nq, char* buf, size_t bufsz )
+{
+    BYTE* byte = (BYTE*) nq;
+    static const char* type[] =
+    {
+        "IIL", "MODEP", "2", "3", "4", "5", "6", "7",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !nq)
+        return buf;
+
+    snprintf( buf, bufsz,
+
+        "NQ:  %02X%02X%02X%02X %02X%02X%02X%02X  (typ:%s)\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+        "     %02X%02X%02X%02X %02X%02X%02X%02X\n"
+
+        , byte[ 0],byte[ 1],byte[ 2],byte[ 3],  byte[ 4],byte[ 5],byte[ 6],byte[ 7]
+        , type[ nq->flags >> 5 ]
+        , byte[ 8],byte[ 9],byte[10],byte[11],  byte[12],byte[13],byte[14],byte[15]
+        , byte[16],byte[17],byte[18],byte[19],  byte[20],byte[21],byte[22],byte[23]
+        , byte[24],byte[25],byte[26],byte[27],  byte[28],byte[29],byte[30],byte[31]
+    );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*          Format RNI (Read Node Identifier) response               */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatRNI( BYTE* rni, int len, char* buf, size_t bufsz )
+{
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !rni || !len)
+        return buf;
+
+    if (len >= (int)sizeof(ND))
+    {
+        char work[256];
+
+        register ND* nd = (ND*) rni;
+
+        FormatND( nd, work, sizeof(work)-1);
+        strlcat( buf, work, bufsz );
+
+        len -= sizeof(ND);
+        rni += sizeof(ND);
+
+        if (len >= (int)sizeof(NQ))
+        {
+            register NQ* nq = (NQ*) rni;
+
+            FormatNQ( nq, work, sizeof(work)-1);
+            strlcat( buf, work, bufsz );
+
+            len -= sizeof(NQ);
+            rni += sizeof(NQ);
+
+            if (len)
+                FormatBytes( rni, len, buf, bufsz );
+        }
+        else
+            FormatBytes( rni, len, buf, bufsz );
+    }
+    else
+        FormatBytes( rni, len, buf, bufsz );
+
+    RTRIM( buf );
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*           Format CIW (Command Information Word)                   */
+/*-------------------------------------------------------------------*/
+const char* FormatCIW( BYTE* ciw, char* buf, size_t bufsz )
+{
+    static const char* type[] =
+    {
+        "RCD", "SII", "RNI", "3  ", "4  ", "5  ", "6  ", "7  ",
+        "8  ", "9  ", "10 ", "11 ", "12 ", "13 ", "14 ", "15 ",
+    };
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !ciw)
+        return buf;
+
+    if ((ciw[0] & 0xC0) == 0x40)
+    {
+        snprintf( buf, bufsz,
+
+            "CIW: %02X%02X%02X%02X  typ:%s op:%02X len:%u\n"
+
+            , ciw[0], ciw[1], ciw[2], ciw[3]
+            , type[ ciw[0] & 0x0F ]
+            , ciw[1]
+            , fetch_hw( ciw+2 )
+        );
+    }
+    else
+    {
+        snprintf( buf, bufsz,
+
+            "CIW: %02X%02X%02X%02X  not a CIW\n"
+
+            , ciw[0]
+            , ciw[1]
+            , ciw[2]
+            , ciw[3]
+        );
+    }
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*              Format SID (Sense ID) response                       */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
+{
+    char temp[128];
+
+    if (!buf)
+        return NULL;
+    if (bufsz)
+        buf[0] = 0;
+    if (bufsz <= 1 || !ciw || !len)
+        return buf;
+
+    if (len < 8)
+        FormatBytes( ciw, len, buf, bufsz );
+    else
+    {
+        snprintf( buf, bufsz,
+
+            "%02X CU=%02X%02X-%02X DEV=%02X%02X-%02X %02X\n"
+
+            , ciw[0]
+            , ciw[1], ciw[2], ciw[3]
+            , ciw[4], ciw[5], ciw[6]
+            , ciw[7]
+        );
+
+        ciw += 8;
+        len -= 8;
+
+        for (; len >= 4; ciw += 4, len -= 4)
+        {
+            FormatCIW( ciw, temp, sizeof(temp)-1);
+            strlcat( buf, temp, bufsz );
+        }
+
+        if (len)
+            FormatBytes( ciw, len, buf, bufsz );
+
+        RTRIM( buf );
+    }
+
+    return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*     Wrapper functions to allow calling ARCH_DEP functions         */
+/*                      from non-ARCH_DEP code                       */
 /*-------------------------------------------------------------------*/
 void alter_display_real_or_abs (REGS *regs, int argc, char *argv[], char *cmdline)
 {
@@ -2728,38 +2801,6 @@ void alter_display_virt (REGS *iregs, int argc, char *argv[], char *cmdline)
 } /* end function alter_display_virt */
 
 
-void display_inst(REGS *iregs, BYTE *inst)
-{
- REGS *regs;
-
-    if (iregs->ghostregs)
-        regs = iregs;
-    else if ((regs = copy_regs(iregs)) == NULL)
-        return;
-
-    switch(regs->arch_mode) {
-#if defined(_370)
-        case ARCH_370_IDX:
-            s370_display_inst(regs,inst);
-            break;
-#endif
-#if defined(_390)
-        case ARCH_390_IDX:
-            s390_display_inst(regs,inst);
-            break;
-#endif
-#if defined(_900)
-        case ARCH_900_IDX:
-            z900_display_inst(regs,inst);
-            break;
-#endif
-    }
-
-    if (!iregs->ghostregs)
-        free_aligned( regs );
-}
-
-
 void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
 {
  REGS *regs;
@@ -2792,13 +2833,13 @@ void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
 }
 
 /*-------------------------------------------------------------------*/
-/* Execute a Unix or Windows command                                 */
+/*              Execute a Unix or Windows command                    */
+/*-------------------------------------------------------------------*/
 /* Returns the system command status code                            */
 /* look at popen for this in the future                              */
 /*-------------------------------------------------------------------*/
 int herc_system (char* command)
 {
-
 #if HOW_TO_IMPLEMENT_SH_COMMAND == USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
 
     return system(command);
@@ -2862,4 +2903,4 @@ int pid, status;
 #endif
 } /* end function herc_system */
 
-#endif /*!defined(_GEN_ARCH)*/
+#endif // !defined(_GEN_ARCH)
