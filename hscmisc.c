@@ -1030,8 +1030,13 @@ char    regs_msg_buf[4*512] = {0};
     if (!sysblk.showregsnone)
         display_inst_regs( regs, inst, opcode, regs_msg_buf, sizeof( regs_msg_buf )-1 );
 
-    /* Remove unwanted extra trailing newline from regs_msg_buf */
-    RTRIM( regs_msg_buf );
+    if (sysblk.showregsfirst)
+    {
+        /* Remove unwanted extra trailing newline from regs_msg_buf */
+        size_t len = strlen(regs_msg_buf);
+        if (len)
+            regs_msg_buf[len-1] = 0;
+    }
 
     /* Now display all instruction tracing messages all at once */
     if (sysblk.showregsfirst)
