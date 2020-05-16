@@ -120,6 +120,7 @@
 #define SPG_PATHSTAT_RESV       0x40    /* ...reserved bit setting   */
 #define SPG_PATHSTAT_UNGROUPED  0x80    /* ...ungrouped              */
 #define SPG_PATHSTAT_GROUPED    0xC0    /* ...grouped                */
+#define SPG_PATHSTAT_RESERVED   0x30    /* ...to channel + pg members*/
 #define SPG_PARTSTAT            0x30    /* Partitioning status bits..*/
 #define SPG_PARTSTAT_IENABLED   0x00    /* ...implicitly enabled     */
 #define SPG_PARTSTAT_RESV       0x10    /* ...reserved bit setting   */
@@ -5889,6 +5890,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         iobuf[0] = SPG_PATHSTAT_RESET
                 | SPG_PARTSTAT_IENABLED
                 | SPG_PATHMODE_SINGLE;
+
+        /* If reserved then bits 2 & 3 must be set */
+        if (dev->reserved)
+        {
+            iobuf[0] |= SPG_PATHSTAT_RESERVED;
+        }
 
         /* Bytes 1-11 contain the path group identifier */
         memcpy (iobuf+1, dev->pgid, 11);
