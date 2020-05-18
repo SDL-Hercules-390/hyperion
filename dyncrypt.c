@@ -4541,7 +4541,7 @@ DEF_INST(dyn_cipher_message_with_chaining)
 
 #if defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 )
 /*----------------------------------------------------------------------------*/
-/* B92D KMCTR - Cipher message with counter                           [RRF-b] */
+/* B92D KMCTR - Cipher message with counter                             [RRF] */
 /*----------------------------------------------------------------------------*/
 DEF_INST(dyn_cipher_message_with_counter)
 {

@@ -360,11 +360,10 @@
 #define ctc_cmd_desc            "Enable/Disable CTC debugging"
 #define ctc_cmd_help            \
                                 \
-  "Format:  \"ctc  debug  { on | off | startup }  [ <devnum> | ALL ]\".\n\n"    \
-  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP/CTCE\n" \
-  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP/CTCE device\n"\
-  "groups if <devnum> is not specified or specified as 'ALL'.\n"                \
-  "Only CTCE devices support 'startup' debugging.\n"
+  "Format:  \"ctc  debug  { on | off }  [ <devnum> | ALL ]\".\n\n"              \
+  "Enables/disables debug packet tracing for the specified CTCI/LCS/PTP\n"      \
+  "device group(s) identified by <devnum> or for all CTCI/LCS/PTP device\n"     \
+  "groups if <devnum> is not specified or specified as 'ALL'.\n"
 
 #define define_cmd_desc         "Rename device"
 #define define_cmd_help         \
@@ -677,7 +676,7 @@
   "function prior to starting an IPL.\n"                                         \
   "\n"                                                                           \
   "The optional 'LOADPARM' keyword followed by a 1-8 character string can be\n"  \
-  "used to override the default value defined by the 'LOADPARM' command.\n"      \
+  "used to set the LOADPARM prior to the IPL.\n"                                 \
   "\n"                                                                           \
   "An optional 'PARM' keyword followed by string data can also be used to\n"     \
   "pass data to the IPL command processor. If specified the string data is\n"    \
@@ -714,14 +713,11 @@
   "'savecore' command. The default for 'address' is 0 (beginning of\n"          \
   "storage).\n"
 
-#define loadparm_cmd_desc       "Set the default IPL 'LOADPARM' parameter"
+#define loadparm_cmd_desc       "Set the IPL 'LOADPARM' parameter"
 #define loadparm_cmd_help       \
                                 \
-  "Specifies the default eight-character IPL 'LOADPARM' parameter used by\n"    \
-  "some operating systems to select certain initialization options. The\n"      \
-  "value specified here can be overridden by specifying a different value\n"   \
-  "on the the IPL command itself. The LOADPARM command simply defines the\n"    \
-  "default value that is used if not overridden on the IPL command itself.\n"
+  "Specifies the eight-character IPL 'LOADPARM' parameter which is used\n"      \
+  "by some operating systems to select certain initialization options.\n"
 
 #define loadtext_cmd_desc       "Load a text deck file"
 #define loadtext_cmd_help       \
@@ -733,12 +729,7 @@
 #define locks_cmd_desc          "Display internal locks list"
 #define locks_cmd_help          \
                                 \
-  "Format: \"locks [ALL|HELD|tid] [SORT NAME|{TID|OWNER}|{WHEN|TIME|TOD}|{WHERE|LOC}]\"\n"
-
-#define threads_cmd_desc        "Display internal threads list"
-#define threads_cmd_help        \
-                                \
-  "Format:  \"threads [ALL|WAITING|tid] [SORT NAME|TID|{WHEN|TIME|TOD}|{WHERE|LOC}]\"\n"
+  "Format: \"locks [HELD|tid|ALL] [SORT [TIME|TOD]|[OWNER|TID]|NAME|LOC]\"\n"
 
 #define log_cmd_desc            "Direct logger output"
 #define log_cmd_help            \
@@ -1877,7 +1868,6 @@ COMMAND( "exit",                    quit_cmd,               SYSALLNDIAG8,       
 COMMAND( "sizeof",                  sizeof_cmd,             SYSCMDNOPERNPROG,   sizeof_cmd_desc,        NULL                )
 
 COMMAND( "locks",                   EXTCMD( locks_cmd ),    SYSPROGDEVEL,       locks_cmd_desc,         locks_cmd_help      )
-COMMAND( "threads",                 EXTCMD( threads_cmd ),  SYSPROGDEVEL,       threads_cmd_desc,       threads_cmd_help    )
 
 /*-------------------------------------------------------------------*/
 /*             Commands optional by build option                     */

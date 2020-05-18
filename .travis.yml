@@ -1,8 +1,9 @@
 os: linux
 dist: trusty
 language: c
+sudo: required
 #
-jobs:
+matrix:
   include:
     - name: "Ub 14.04 -- gcc 4.8.4"
       dist: trusty
@@ -10,19 +11,19 @@ jobs:
 
     - name: "Ub 14.04 -- gcc 6.5.0"
       dist: trusty
-      compiler: gcc
       addons:
         apt:
           sources:  ubuntu-toolchain-r-test
           packages: g++-6
+      env: MATRIX_EVAL="CC=gcc-6"
 
     - name: "Ub 14.04 -- gcc 7.4.0"
       dist: trusty
-      compiler: gcc
       addons:
         apt:
           sources:  ubuntu-toolchain-r-test
           packages: g++-7
+      env: MATRIX_EVAL="CC=gcc-7"
 
     - name: "Ub 14.04 -- clang 5.0.0"
       dist: trusty
@@ -39,7 +40,6 @@ jobs:
 #
 before_install:
   - sudo apt-get install -y regina-rexx libregina3-dev
-  - sudo apt-get install -y binutils binutils-dev
   - eval "${MATRIX_EVAL}"
 
 #

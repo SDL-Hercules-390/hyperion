@@ -442,10 +442,6 @@
 #define CTC_CTCE                4       /* Enhanced CTC link via TCP */
 #define CTC_CTCT                6       /* CTC link via TCP          */
 
-#define CTCE_TRACE_ON          -1       /* CTCE permanent tracing on */
-#define CTCE_TRACE_OFF         -2       /* CTCE tracing turned off   */
-#define CTCE_TRACE_STARTUP     20       /* CTCE startup tracing max  */
-
 /*-------------------------------------------------------------------*/
 /*                Script processing constants                        */
 /*-------------------------------------------------------------------*/
@@ -463,13 +459,6 @@
 #define MAX_RUNTEST_FACTOR  (((4.0 * 1024.0 * 1024.0 * 1024.0) - 1.0) \
                             / 1000000.0 /* (usecs) */                 \
                             / MAX_RUNTEST_DUR)
-
-/*-------------------------------------------------------------------*/
-/*                  Watchdog thread interval                         */
-/*-------------------------------------------------------------------*/
-
-#define WATCHDOG_SECS           20      /* watchdog thread interval  */
-#define WAIT_FOR_DEBUGGER_SECS  45      /* wait for debugger attach  */
 
 /*-------------------------------------------------------------------*/
 /*                   Panel thread heartbeat                          */

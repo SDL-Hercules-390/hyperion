@@ -115,7 +115,6 @@ HAO_DLL_IMPORT void hao_command(char *command); /* process hao command */
 HCMD_DLL_IMPORT const char* ptyp2long ( BYTE ptyp );       // diag224_call()
 HCMD_DLL_IMPORT const char* ptyp2short( BYTE ptyp );       // PTYPSTR()
 HCMD_DLL_IMPORT BYTE short2ptyp( const char* shortname );  // engines_cmd()
-HCMD_DLL_IMPORT int devinit_cmd( int argc, char* argv[], char* cmdline ); // used by CTCE_Recovery()
 extern int qproc_cmd( int argc, char* argv[], char* cmdline );
 
 /* Functions in module hscpufun.c (so PTT debugging patches can access them) */
@@ -183,7 +182,6 @@ HSYS_DLL_IMPORT  DBGT32TR*      debug_tt32_tracing;
 
 HSYS_DLL_IMPORT  HDLDBGCD*      debug_cd_cmd;
 HSYS_DLL_IMPORT  HDLDBGCPU*     debug_cpu_state;
-HSYS_DLL_IMPORT  HDLDBGCPU*     debug_watchdog_signal;
 HSYS_DLL_IMPORT  HDLDBGPGMI*    debug_program_interrupt;
 HSYS_DLL_IMPORT  HDLDBGDIAG*    debug_diagnose;
 

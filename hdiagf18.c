@@ -104,7 +104,7 @@ CPB cap =
           + 0x03
 #elif defined(__APPLE__)
           + 0x04
-#elif defined( FREEBSD_OR_NETBSD )
+#elif defined(__FreeBSD__)
           + 0x05
 #elif defined(_AIX)
           + 0x06

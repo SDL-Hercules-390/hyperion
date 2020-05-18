@@ -626,27 +626,22 @@ static void DelSubchanFastLookup(U16 ssid, U16 subchan)
 
 static DEVBLK *get_devblk(U16 lcss, U16 devnum)
 {
-DEVBLK*   dev;
-DEVBLK**  dvpp;
-char      buf[32];
+DEVBLK *dev;
+DEVBLK**dvpp;
 
-    if (lcss >= FEATURE_LCSS_MAX)
+    if(lcss >= FEATURE_LCSS_MAX)
         lcss = 0;
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (!(dev->allocated) && dev->ssid == LCSS_TO_SSID( lcss ))
-            break;
+        if (!(dev->allocated) && dev->ssid == LCSS_TO_SSID(lcss)) break;
 
-    if (!dev)
+    if(!dev)
     {
-        size_t  amt  = sizeof( DEVBLK );
-                amt  = ROUND_UP( amt, _4K );
-
-        if (!(dev = (DEVBLK*) calloc_aligned( amt, _4K )))
+        if (!(dev = (DEVBLK*)calloc_aligned((sizeof(DEVBLK)+(_4K-1)) & ~(_4K-1),_4K)))
         {
-            MSGBUF( buf, "calloc(%d)", (int) amt );
-            // "%1d:%04X error in function %s: %s"
-            WRMSG( HHC01460, "E", lcss, devnum, buf, strerror( errno ));
+            char buf[64];
+            MSGBUF(buf, "calloc(%d)", (int)sizeof(DEVBLK));
+            WRMSG (HHC01460, "E", lcss, devnum, buf, strerror(errno));
             return NULL;
         }
 
@@ -673,8 +668,8 @@ char      buf[32];
         /* Add the new device block to the end of the chain */
         *dvpp = dev;
 
-        dev->ssid = LCSS_TO_SSID( lcss );
-        dev->subchan = sysblk.highsubchan[ lcss ]++;
+        dev->ssid = LCSS_TO_SSID(lcss);
+        dev->subchan = sysblk.highsubchan[lcss]++;
     }
 
     /* Obtain the device lock. Caller will release it. */
@@ -689,10 +684,6 @@ char      buf[32];
     dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
     dev->devnum = devnum;
-
-    MSGBUF( buf,  "&dev->lock %1d:%04X", LCSS_DEVNUM );
-    set_lock_name( &dev->lock, buf );
-
     dev->chanset = lcss;
     dev->chptype[0] = CHP_TYPE_EIO; /* Interim - default to emulated */
     dev->fd = -1;

@@ -48,9 +48,7 @@
 
 #endif
 
-#ifndef int32_t
 #define int32_t                 int32_t         /* (used by extpkgs) */
-#endif
 
 #ifndef HAVE_U_INT8_T
   typedef uint8_t               u_int8_t;

@@ -401,156 +401,6 @@ static void* WinMsgThread( void* arg )
 }
 #endif /* defined( _MSVC_ ) */
 
-#if defined( OPTION_WATCHDOG )
-/*-------------------------------------------------------------------*/
-/*  watchdog_thread - monitor system for deadlocks                   */
-/*-------------------------------------------------------------------*/
-static void* watchdog_thread( void* arg )
-{
-    REGS* regs;
-    S64   savecount[ MAX_CPU_ENGINES ];
-    int   cpu;
-
-    bool  deadlock_reported = false;
-    bool  hung_cpu_reported = false;
-
-    UNREFERENCED( arg );
-
-    for (cpu=0; cpu < sysblk.maxcpu; cpu++)
-        savecount[ cpu ] = -1;
-
-    /* Set watchdog priority LOWER than the CPU thread priority
-       such that it will not invalidly detect an inoperable CPU
-    */
-    set_thread_priority( MAX( sysblk.minprio, sysblk.cpuprio - 1 ));
-
-    do
-    {
-        /* Only check for problems "every once in a while" */
-        SLEEP( WATCHDOG_SECS );
-
-        /* Check for and report any deadlocks */
-        if (hthread_report_deadlocks( deadlock_reported ? NULL : "S" ))
-        {
-            /*****************************************************/
-            /*               DEADLOCK DETECTED!                  */
-            /*****************************************************/
-
-            if (!deadlock_reported)
-            {
-                // "DEADLOCK!"
-                WRMSG( HHC90024, "S" );
-                HDC1( debug_watchdog_signal, NULL );
-            }
-            deadlock_reported = true;
-        }
-
-        for (cpu=0; cpu < sysblk.maxcpu; cpu++)
-        {
-            /* We're only interested in ONLINE and STARTED CPUs */
-            if (0
-                || !IS_CPU_ONLINE( cpu )
-                || (regs = sysblk.regs[ cpu ])->cpustate != CPUSTATE_STARTED
-            )
-            {
-                /* CPU not ONLINE or not STARTED */
-                savecount[ cpu ] = -1;
-                continue;
-            }
-
-            /* CPU is ONLINE and STARTED. Now check to see if it's
-               maybe in a WAITSTATE. If so, we're not interested.
-            */
-            if (0
-                || WAITSTATE( &regs->psw )
-#if defined( _FEATURE_WAITSTATE_ASSIST )
-                || (1
-                    && regs->sie_active
-                    && WAITSTATE( &regs->guestregs->psw )
-                   )
-#endif
-            )
-            {
-                /* CPU is in a WAITSTATE */
-                savecount[ cpu ] = -1;
-                continue;
-            }
-
-            /* We have found a running CPU that should be executing
-               instructions. Compare its current instruction count
-               with our previously saved value. If they're different
-               then it has obviously executed SOME instructions and
-               all is well. Save its current instruction counter and
-               move on the next CPU. This one appears to be healthy.
-            */
-            if (INSTCOUNT( regs ) != (U64) savecount[ cpu ])
-            {
-                /* Save updated instruction count for next time */
-                savecount[ cpu ] = INSTCOUNT( regs );
-                continue;
-            }
-
-            /*****************************************************/
-            /*           MALFUNCTIONING CPU DETECTED!            */
-            /*****************************************************/
-
-            if (!hung_cpu_reported)
-            {
-                // "PROCESSOR %s%02X APPEARS TO BE HUNG!"
-                WRMSG( HHC00822, "S", PTYPSTR( regs->cpuad ), regs->cpuad );
-                HDC1( debug_watchdog_signal, regs );
-            }
-            hung_cpu_reported = true;
-        }
-
-        /* Create a crash dump if any problems were detected */
-        if (deadlock_reported || hung_cpu_reported)
-        {
-#if defined( _MSVC_ ) && !defined( DEBUG )
-            static bool did_wait = false;
-            if (!did_wait)
-            {
-                /* Give the developer time to attach a debugger */
-                int i;
-                for (i=0; i < WAIT_FOR_DEBUGGER_SECS; ++i)
-                    if (!IsDebuggerPresent())
-                        SLEEP( 1 );
-            }
-            did_wait = true;
-            /* Don't crash if a debugger is now/still attached */
-            if (IsDebuggerPresent())
-                continue;
-#endif
-            /* Display additional debugging information */
-            panel_command( "ptt" );
-            panel_command( "ipending" );
-            panel_command( "locks held sort tid" );
-            panel_command( "threads waiting sort tid" );
-
-            if (hung_cpu_reported)
-            {
-                /* Backup to actual instruction being executed */
-                BYTE* ip;
-                UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
-
-                /* Display instruction that appears to be hung */
-                ip = regs->ip < regs->aip ? regs->inst : regs->ip;
-                ARCH_DEP( display_inst )( regs, ip );
-            }
-
-            /* Give logger thread time to log messages */
-            SLEEP(1);
-
-            /* Create the crash dump for offline analysis */
-            CRASH();
-        }
-    }
-    while (!sysblk.shutdown);
-
-    return NULL;
-}
-#endif /* defined( OPTION_WATCHDOG ) */
-
 /*-------------------------------------------------------------------*/
 /* Herclin (plain line mode Hercules) message callback function      */
 /*-------------------------------------------------------------------*/
@@ -809,7 +659,6 @@ int     rc;
 #endif
 
     /* Initialize locks, conditions, and attributes */
-    initialize_lock( &sysblk.bindlock );
     initialize_lock( &sysblk.config   );
     initialize_lock( &sysblk.todlock  );
     initialize_lock( &sysblk.mainlock );
@@ -836,22 +685,17 @@ int     rc;
     /* Initialize thread creation attributes so all of hercules
        can use them at any time when they need to create_thread
     */
-    initialize_detach_attr( DETACHED );
-    initialize_join_attr( JOINABLE );
+    initialize_detach_attr (DETACHED);
+    initialize_join_attr   (JOINABLE);
 
-    initialize_condition( &sysblk.cpucond );
+    initialize_condition (&sysblk.cpucond);
     {
-        int i; char buf[32];
-        for (i=0; i < MAX_CPU_ENGINES; i++)
-        {
-            initialize_lock( &sysblk.cpulock[i] );
-            MSGBUF( buf, "&sysblk.cpulock[%*d]",
-                MAX_CPU_ENGINES > 99 ? 3 : 2, i );
-            set_lock_name( &sysblk.cpulock[i], buf );
-        }
+        int i;
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+            initialize_lock (&sysblk.cpulock[i]);
     }
-    initialize_condition( &sysblk.sync_cond );
-    initialize_condition( &sysblk.sync_bc_cond );
+    initialize_condition (&sysblk.sync_cond);
+    initialize_condition (&sysblk.sync_bc_cond);
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end
@@ -1080,7 +924,7 @@ int     rc;
 #endif // (KEEPALIVE)
 
     /* Initialize runtime opcode tables */
-    init_runtime_opcode_tables();
+    init_opcode_tables();
 
     /* Initialize the Hercules Dynamic Loader (HDL) */
     rc = hdl_main
@@ -1250,19 +1094,6 @@ int     rc;
     sysblk.todstart = hw_clock() << 8;
 
     hdl_addshut( "release_config", release_config, NULL );
-
-#if defined( OPTION_WATCHDOG )
-    /* Start the watchdog thread */
-    rc = create_thread( &sysblk.wdtid, DETACHED,
-        watchdog_thread, NULL, WATCHDOG_THREAD_NAME );
-    if (rc)
-    {
-        // "Error in function create_thread(): %s"
-        WRMSG( HHC00102, "E", strerror( rc ));
-        delayed_exit( -1 );
-        return 1;
-    }
-#endif /* defined( OPTION_WATCHDOG ) */
 
     /* Build system configuration */
     if ( build_config (cfgorrc[want_cfg].filename) )

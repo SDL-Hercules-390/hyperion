@@ -278,11 +278,9 @@
 
 
 /*-------------------------------------------------------------------*/
-/* Hard-coded FreeBSD/NetBSD-specific features and options...        */
+/* Hard-coded FreeBSD-specific features and options...               */
 /*-------------------------------------------------------------------*/
-#elif defined(__FreeBSD__) || defined( __NetBSD__ )
-
-#define FREEBSD_OR_NETBSD
+#elif defined(__FreeBSD__)              /* "FreeBSD" options         */
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT

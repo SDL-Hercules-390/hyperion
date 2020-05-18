@@ -634,12 +634,6 @@ static const char *build_info[] = {
     "Without Signal handling",
 #endif
 
-#if defined( OPTION_WATCHDOG )
-    "With    Watchdog monitoring",
-#else
-    "Without Watchdog monitoring",
-#endif
-
 #if defined( CCKD_BZIP2 )
     "With    CCKD BZIP2 support",
 #else

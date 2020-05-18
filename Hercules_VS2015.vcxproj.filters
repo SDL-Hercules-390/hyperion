@@ -366,9 +366,6 @@
     <ClCompile Include="ctcadpt.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dummydev.c">
-      <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hercifc.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
@@ -376,9 +373,6 @@
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="qeth.c">
-      <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tcpnje.c">
       <Filter>Source Files\Hercules\Devices\CTC\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tuntap.c">
@@ -968,9 +962,6 @@
     <None Include="readme\README.ECPSVM.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="readme\README.FACILITIES.md">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
     <None Include="readme\README.EXTPKG.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
@@ -1029,9 +1020,6 @@
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.TCPIP.md">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
-    <None Include="readme\README.TCPNJE.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
     <None Include="readme\README.VMFPLC2.md">
@@ -2500,9 +2488,6 @@
     <ClInclude Include="qeth.h">
       <Filter>Source Files\Hercules\Devices\CTC\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="tcpnje.h">
-      <Filter>Source Files\Hercules\Devices\CTC\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="tt32api.h">
       <Filter>Source Files\Hercules\Devices\CTC\Header Files</Filter>
     </ClInclude>
@@ -2765,9 +2750,6 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="inline.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="instfmts.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linklist.h">

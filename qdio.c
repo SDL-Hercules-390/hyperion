@@ -161,7 +161,7 @@ DEVBLK *dev;                            /* -> device block           */
 
 #if defined(FEATURE_QEBSM)
 /*-------------------------------------------------------------------*/
-/* EB8A SQBS  - Set Queue Buffer State                       [RSY-a] */
+/* EB8A SQBS  - Set Queue Buffer State                         [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_queue_buffer_state)
 {
@@ -255,7 +255,7 @@ U64     slsba;                 /* Storage list state block address   */
 
 
 /*-------------------------------------------------------------------*/
-/* B99C EQBS  - Extract Queue Buffer State                   [RRF-a] */
+/* B99C EQBS  - Extract Queue Buffer State                     [RRF] */
 /*-------------------------------------------------------------------*/
 DEF_INST(extract_queue_buffer_state)
 {
@@ -367,9 +367,9 @@ U64     slsba;                /* Storage list state block address    */
 /*-------------------------------------------------------------------*/
 DEF_INST(set_vector_summary)
 {
-int     r1, r2;                /* Register numbers                   */
+int     r1, unused;            /* Register numbers                   */
 
-    RRE0(inst, regs, r1, r2);
+    RRE0(inst, regs, r1, unused);
     PRIV_CHECK(regs);
     SIE_INTERCEPT(regs);
     ODD_CHECK(r1, regs);

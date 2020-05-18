@@ -104,7 +104,6 @@ dyndev_SRC =  \
   cardrdr.c   \
   comm3705.c  \
   commadpt.c  \
-  tcpnje.c    \
   con1052c.c  \
   console.c   \
   ctc_ctci.c  \
@@ -128,7 +127,6 @@ dyndev_SRC =  \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
-  dummydev.c  \
   zfcp.c
 
 #-----------------------------------------------------------------
@@ -192,14 +190,12 @@ HERCMODS =      \
   hdt1052c.la   \
   hdt1403.la    \
   hdt2703.la    \
-  hdttcpnje.la  \
   hdt3705.la    \
   hdt3088.la    \
   hdt3270.la    \
   hdt3420.la    \
   hdt3505.la    \
   hdt2880.la    \
-  hdtdummy.la   \
   hdt3525.la
 
 modexec_LTLIBRARIES = $(HERCMODS)
@@ -285,10 +281,6 @@ hdt2703_la_SOURCES  = commadpt.c
 hdt2703_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt2703_la_LIBADD   = $(DYNMOD_LD_ADD)
 
-hdttcpnje_la_SOURCES = tcpnje.c
-hdttcpnje_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
-hdttcpnje_la_LIBADD  = $(DYNMOD_LD_ADD)
-
 hdt3705_la_SOURCES  = comm3705.c
 hdt3705_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
 hdt3705_la_LIBADD   = $(DYNMOD_LD_ADD)
@@ -328,10 +320,6 @@ hdt1052c_la_LIBADD  = $(DYNMOD_LD_ADD)
 hdtptp_la_SOURCES   = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD    = $(DYNMOD_LD_ADD)
-
-hdtdummy_la_SOURCES = dummydev.c
-hdtdummy_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
-hdtdummy_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 #--------------------------------------------
 # Common data areas (shared) library
@@ -812,7 +800,7 @@ EXTRA_DIST =                  \
   msvc.makefile.includes/PCRE_RULES.msvc      \
   msvc.makefile.includes/REXX_RULES.msvc      \
   README.md                       \
-  readme/images/herclogo.jpg      \
+  readme/images/herclogo.jpg        \
   readme/images/image_header_herculeshyperionSDL.png  \
   readme/README.ADDING.md         \
   readme/README.AIX.md            \
@@ -821,10 +809,9 @@ EXTRA_DIST =                  \
   readme/README.CCKD64.md         \
   readme/README.CMPSC.md          \
   readme/README.COMMADPT.md       \
+  readme/README.DECNUMBER.md      \
   readme/README.DYNMOD.md         \
   readme/README.ECPSVM.md         \
-  readme/README.EXTPKG.md         \
-  readme/README.FACILITIES.md     \
   readme/README.HAO.md            \
   readme/README.HDL.md            \
   readme/README.HERCLOGO.md       \
@@ -842,11 +829,12 @@ EXTRA_DIST =                  \
   readme/README.RXVT4APL.md       \
   readme/README.S37X.md           \
   readme/README.SETUID.md         \
+  readme/README.SOFTFLOAT.md      \
   readme/README.SUN.md            \
   readme/README.TAPE.md           \
   readme/README.TCPIP.md          \
-  readme/README.TCPNJE.md         \
   readme/README.VMFPLC2.md        \
+  readme/README.TELNET.md         \
   readme/README.WIN64.md          \
   RELEASE.NOTES               \
   retail-all.jobs             \
@@ -892,7 +880,6 @@ noinst_HEADERS =          \
   codepage.h              \
   comm3705.h              \
   commadpt.h              \
-  tcpnje.h                \
   cpuint.h                \
   ctc_ptp.h               \
   ctcadpt.h               \
@@ -953,7 +940,6 @@ noinst_HEADERS =          \
   htypes.h                \
   impexp.h                \
   inline.h                \
-  instfmts.h              \
   linklist.h              \
   logger.h                \
   ltdl.h                  \
@@ -1069,7 +1055,6 @@ endif
 if OPTION_CAPABILITIES
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./hercules$(EXEEXT))
 	(cd $(DESTDIR)$(bindir); setcap 'cap_sys_nice=eip' ./herclin$(EXEEXT))
-	(cd $(DESTDIR)$(bindir); setcap 'cap_net_admin+ep' ./hercifc$(EXEEXT))
 endif
 
 uninstall-local:

@@ -352,7 +352,6 @@
     <ClCompile Include="diagmssf.c" />
     <ClCompile Include="diagnose.c" />
     <ClCompile Include="dmap2hrc.c" />
-    <ClCompile Include="dummydev.c" />
     <ClCompile Include="dyn76.c" />
     <ClCompile Include="dyngui.c" />
     <ClCompile Include="ecpsvm.c" />
@@ -446,7 +445,6 @@
     <ClCompile Include="tapemap.c" />
     <ClCompile Include="tapesplt.c" />
     <ClCompile Include="tcpip.c" />
-    <ClCompile Include="tcpnje.c" />
     <ClCompile Include="timer.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="transact.c" />
@@ -683,7 +681,6 @@
     <None Include="readme\README.DYNMOD.md" />
     <None Include="readme\README.ECPSVM.md" />
     <None Include="readme\README.EXTPKG.md" />
-    <None Include="readme\README.FACILITIES.md" />
     <None Include="readme\README.HAO.md" />
     <None Include="readme\README.HDL.md" />
     <None Include="readme\README.HERCLOGO.md" />
@@ -704,7 +701,6 @@
     <None Include="readme\README.SUN.md" />
     <None Include="readme\README.TAPE.md" />
     <None Include="readme\README.TCPIP.md" />
-    <None Include="readme\README.TCPNJE.md" />
     <None Include="readme\README.VMFPLC2.md" />
     <None Include="readme\README.WIN64.md" />
     <None Include="RELEASE.NOTES" />
@@ -1119,7 +1115,6 @@
     <ClInclude Include="htypes.h" />
     <ClInclude Include="impexp.h" />
     <ClInclude Include="inline.h" />
-    <ClInclude Include="instfmts.h" />
     <ClInclude Include="linklist.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="ltdl.h" />
@@ -1149,7 +1144,6 @@
     <ClInclude Include="tapedev.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tcpip.h" />
-    <ClInclude Include="tcpnje.h" />
     <ClInclude Include="tt32api.h" />
     <ClInclude Include="tt32if.h" />
     <ClInclude Include="tuntap.h" />

@@ -479,7 +479,6 @@ struct SYSBLK {
 
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
-        LOCK    bindlock;               /* Sockdev bind lock         */
         LOCK    config;                 /* (Re)Configuration Lock    */
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370   (ARCH_370_IDX)   */
@@ -502,9 +501,6 @@ struct SYSBLK {
         BYTE    cpuidfmt;               /* STIDP format 0|1          */
         TID     impltid;                /* Thread-id for main progr. */
         TID     loggertid;              /* logger_thread Thread-id   */
-#if defined( OPTION_WATCHDOG )
-        TID     wdtid;                  /* Thread-id for watchdog    */
-#endif
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
         U16     lparnum;                /* LPAR identification number*/
@@ -538,8 +534,8 @@ struct SYSBLK {
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
-        clockid_t                              /* CPU clock          */
-                cpuclockid[MAX_CPU_ENGINES];   /* identifiers        */
+        clockid_t                              /* CPU clock     @PJJ */
+                cpuclockid[MAX_CPU_ENGINES];   /* identifiers   @PJJ */
         BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
@@ -769,7 +765,6 @@ struct SYSBLK {
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */
         BYTE    iplparmstring[64];      /* 64 bytes loadable at IPL  */
-        char    loadparm[8+1];          /* Default LOADPARM          */
 #ifdef _FEATURE_ECPSVM
 //
         /* ECPS:VM */
@@ -836,9 +831,9 @@ struct SYSBLK {
         U64 imapb3[256];
         U64 imapb9[256];
         U64 imapc0[ 16];
-        U64 imapc2[ 16];
-        U64 imapc4[ 16];
-        U64 imapc6[ 16];
+        U64 imapc2[ 16];                                         /*@Z9*/
+        U64 imapc4[ 16];                                         /*208*/
+        U64 imapc6[ 16];                                         /*208*/
         U64 imapc8[ 16];
         U64 imape3[256];
         U64 imape4[256];
@@ -1158,7 +1153,7 @@ struct DEVBLK {                         /* Device configuration block*/
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
         int     reserved1;              /* ---(ensure alignment)---- */
-        ORB     orb;                    /* Operation request blk     */
+        ORB     orb;                    /* Operation request blk @IWZ*/
         PMCW    pmcw;                   /* Path management ctl word  */
         SCSW    scsw;                   /* Subchannel status word(XA)*/
         SCSW    pciscsw;                /* PCI subchannel status word*/
@@ -1321,37 +1316,26 @@ struct DEVBLK {                         /* Device configuration block*/
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 
-        /*  Device dependent fields for ctcadpt : Enhanced CTC       */
+        /*  Device dependent fields for ctcadpt : Enhanced CTC  @PJJ */
 
-        U16     ctcePktSeq;             /* CTCE Packet Sequence      */
-                                        /*      # in debug msgs      */
-        int     ctceSndSml;             /* CTCE Send Small size      */
-        BYTE    ctcexState;             /* CTCE State   x-side       */
-        BYTE    ctcexCmd;               /* CTCE Command x-side       */
-        BYTE    ctceyState;             /* CTCE State   y-side       */
-        BYTE    ctceyCmd;               /* CTCE Command y-side       */
-        BYTE    ctceyCmdSCB;            /* CTCE Cmd SCB source       */
-        BYTE    ctce_UnitStat;          /* CTCE final UnitStat       */
-        int     ctcefd;                 /* CTCE RecvThread File      */
-                                        /*      Desc / socket #      */
-        LOCK    ctceEventLock;          /* CTCE Condition LOCK       */
-        COND    ctceEvent;              /* CTCE Recvd Condition      */
-        int     ctce_lport;             /* CTCE Local  port #        */
-        int     ctce_connect_lport;     /* CTCE Connect lport #      */
-        int     ctce_rport;             /* CTCE Remote port #        */
-        struct in_addr ctce_ipaddr;     /* CTCE Dest IP addr         */
-        U16     ctce_WRT_sCount_rcvd[2];/* CTCE Last WRT sCount      */
-        U16     ctce_rccuu;             /* CTCE Remote CTCA dev      */
-        int     ctce_trace_cntr;        /* CTCE trace if > 0         */
-        int     ctce_attn_delay;        /* CTCE pre-ATTN delay       */
-        TID     ctce_listen_tid;        /* CTCE_ListenThread ID      */
-        u_int   ctce_contention_loser:1;/* CTCE cmd collision        */
-        u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progres       */
-        u_int   ctce_ficon:1;           /* CTCE type FICON           */
-        u_int   ctce_remote_xmode:1;    /* CTCE y-side Ext mode      */
-        u_int   ctce_system_reset:1;    /* CTCE initialized          */
-        u_int   ctce_buf_next_read:1;   /* CTCE alt. buf use RD      */
-        u_int   ctce_buf_next_write:1;  /* CTCE alt. buf use WR      */
+        U16     ctcePktSeq;             /* CTCE Packet Sequence @PJJ */
+                                        /*      # in debug msgs @PJJ */
+        int     ctceSndSml;             /* CTCE Send Small size @PJJ */
+        BYTE    ctcexState;             /* CTCE State   x-side  @PJJ */
+        BYTE    ctcexCmd;               /* CTCE Command x-side  @PJJ */
+        BYTE    ctceyState;             /* CTCE State   y-side  @PJJ */
+        BYTE    ctceyCmd;               /* CTCE Command y-side  @PJJ */
+        BYTE    ctceyCmdSCB;            /* CTCE Cmd SCB source  @PJJ */
+        BYTE    ctce_UnitStat;          /* CTCE final UnitStat  @PJJ */
+        int     ctcefd;                 /* CTCE RecvThread File @PJJ */
+                                        /*      Desc / socket # @PJJ */
+        LOCK    ctceEventLock;          /* CTCE Condition LOCK  @PJJ */
+        COND    ctceEvent;              /* CTCE Recvd Condition @PJJ */
+        int     ctce_lport;             /* CTCE Local  port #   @PJJ */
+        int     ctce_rport;             /* CTCE Remote port #   @PJJ */
+        struct in_addr ctce_ipaddr;     /* CTCE Dest IP addr    @PJJ */
+        u_int   ctce_contention_loser:1;/* CTCE cmd collision   @PJJ */
+        u_int   ctce_ccw_flags_cc:1;    /* CTCE ccw in progres  @PJJ */
 
         /*  Device dependent fields for printer                      */
 
@@ -1641,9 +1625,6 @@ struct DEVBLK {                         /* Device configuration block*/
         U16     ckdssdlen;              /* #of bytes of data prepared
                                            for Read Subsystem Data   */
 
-        /* Handler private data - all data that is private to a      */
-        /* should now go there.                                      */
-        void    *hpd;
         /*  Device dependent fields for QDIO devices                 */
         QDIO_DEV qdio;
         BYTE     qtype;                 /* QDIO device type          */

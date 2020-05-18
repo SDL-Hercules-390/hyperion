@@ -973,9 +973,9 @@ DLL_EXPORT char * hgets(char *b,size_t c,int s)
     while(ix<c)
     {
         b[ix]=hgetc(s);
-//      if(b[ix]==EOF)         /* GCC Warning: always false */
-//                             /* due to -Wtype-limits;     */
-        if ((int)b[ix] == EOF) /* Corrected.                */
+//      if(b[ix]==EOF)         /* GCC Warning: always false     @PJJ */
+//                             /* due to -Wtype-limits;         @PJJ */
+        if ((int)b[ix] == EOF) /* Corrected.                    @PJJ */
         {
             return NULL;
         }
@@ -1659,8 +1659,6 @@ DLL_EXPORT int nix_set_thread_name( pthread_t tid, const char* name )
     if (!pthread_equal( tid, pthread_self()))
         return EINVAL;
     rc = pthread_setname_np( threadname );
-#elif defined( PTHREAD_SET_NAME_3ARGS )
-    rc = pthread_setname_np( tid, "%s", threadname );
 #else
     rc = pthread_setname_np( tid, threadname );
 #endif

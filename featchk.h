@@ -311,10 +311,6 @@
  #define    _FEATURE_058_MISC_INSTR_EXT_FACILITY_2
 #endif
 
-#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
- #define    _FEATURE_061_MISC_INSTR_EXT_FACILITY_3
-#endif
-
 #if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
  #define    _FEATURE_066_RES_REF_BITS_MULT_FACILITY
 #endif
@@ -401,26 +397,6 @@
 
 #if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 )
  #define    _FEATURE_146_MSA_EXTENSION_FACILITY_8
-#endif
-
-#if defined( FEATURE_148_VECTOR_ENH_FACILITY_2 )
- #define    _FEATURE_148_VECTOR_ENH_FACILITY_2
-#endif
-
-#if defined( FEATURE_149_MOVEPAGE_SETKEY_FACILITY )
- #define    _FEATURE_149_MOVEPAGE_SETKEY_FACILITY
-#endif
-
-#if defined( FEATURE_151_DEFLATE_CONV_FACILITY )
- #define    _FEATURE_151_DEFLATE_CONV_FACILITY
-#endif
-
-#if defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY )
- #define    _FEATURE_152_VECT_PACKDEC_ENH_FACILITY
-#endif
-
-#if defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 )
- #define    _FEATURE_155_MSA_EXTENSION_FACILITY_9
 #endif
 
 #if defined( FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
@@ -718,43 +694,34 @@
 #endif
 
 //--------------------------------------------------------------------
-//                      PROGRAMMING NOTE
-//--------------------------------------------------------------------
+// PROGRAMMING NOTE: we need an extra 2 slots in each opcode table
+// entry to allow for the 2 extra pointers needed by the instruction
+// DISASM_TYPE disassembly functions called by the DISASM_ROUTE maro.
 //
-//  We need an extra 2 slots in each opcode table entry to allow for
-//  the 2 extra pointers needed by the instruction printing functions.
+// Notice the DISASM_ROUTE macro in opcode.c accessing the two extra
+// pointers in the opcode table entry:
 //
-//  Notice the ROUTE_IPRINT macro in opcode.c accessing these 2 extra
-//  pointers in the opcode table entry:
+//      mnemonic   =  opcode__table [...] [ NUM_INSTR_TAB_PTRS - 1 ];
+//      disasm_fn  =  opcode__table [...] [ NUM_INSTR_TAB_PTRS - 2 ];
+//      return disasm_fn( inst, mnemonic, p );
 //
-//      iprt_func = gen_opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 2 ];
-//      mnemonic  = gen_opcode_{tabname} [...] [ NUM_INSTR_TAB_PTRS - 1 ];
-//      return iprt_func( inst, mnemonic, prtbuf );
+// and how the DISASM_TYPE macro defines those functions:
 //
-//  and how the IPRINT_ROUT2 macro defines its routing function:
+//      int disasm_type( BYTE inst[], char mnemonic[], char *p );
 //
-//      int iprint_{asmfmt}( BYTE inst[], char mnemonic[], char* prtbuf );
+// Finally also notice the definition of the "GENx370x390x900" macro
+// in opcode.h, which defines opcode table entries for each opcode:
+// it defines not only a pointer to the intruction function for each
+// architecture, but also defines those 2 extra pointers:
 //
-//  Finally also notice the definition of the "GENx370x390x900" macro
-//  in opcode.h, which defines opcode table entries for each opcode:
-//  it defines not only a pointer to the intruction function for each
-//  architecture, but also defines those 2 extra pointers as the last
-//  two entries for each opcode table entry:
+//      (void*) &disasm_ ## _format,
+//      (void*) & _mnemonic "\0" #_name
 //
-//    #define GENx370x___x900( ... )
-//
-//        _GEN370( _ifunc_name )
-//        _GEN390( _ifunc_name )
-//        _GEN900( _ifunc_name )
-//
-//        (void*) &iprint_ ## _asmfmt,
-//        (void*) & _mnemonic "\0" #_ifunc_name
-//
-//  Thus we need "+2" in the below #define for "NUM_INSTR_TAB_PTRS"
-//  so the opcode tables in opcode.c defined by the "GENx370x390x900"
-//  macro have room for the 2 extra pointers used by the IPRINT_ROUT2
-//  instruction printing functions called during instruction tracing.
-//
+// as the last 2 entries for each opcode table entry. Thus the need
+// for the "+2" in the below #define for "NUM_INSTR_TAB_PTRS": so
+// the opcode tables in opcode.c defined by "GENx370x390x900" macro
+// has room for the 2 needed extra pointers used by the DISASM_TYPE
+// instruction disassembly functions called if tracing instructions.
 //--------------------------------------------------------------------
 
 #define NUM_INSTR_TAB_PTRS   NUM_GEN_ARCHS + 2   // (see NOTE above)
@@ -862,10 +829,6 @@
  #error Constrained-transactional-execution facility requires Transactional-execution facility
 #endif
 
-#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) && !defined( FEATURE_045_POPULATION_COUNT_FACILITY )
- #error Miscellaneous-Instruction-Extensions Facility 3 requires Population-Count facility
-#endif
-
 #if defined( FEATURE_067_CPU_MEAS_COUNTER_FACILITY ) && !defined( FEATURE_040_LOAD_PROG_PARAM_FACILITY )
  #error CPU Measurement Counter facility requires Load Program Parameter facility
 #endif
@@ -920,25 +883,6 @@
 
 #if defined( FEATURE_146_MSA_EXTENSION_FACILITY_8 ) && !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
  #error You cannot have "Message Security Assist extension 8" without having "Message Security Assist extension 3"
-#endif
-
-#if  defined( FEATURE_148_VECTOR_ENH_FACILITY_2 ) \
-&& (!defined( FEATURE_129_ZVECTOR_FACILITY ) || !defined( FEATURE_135_ZVECTOR_ENH_FACILITY_1 ))
- #error FEATURE_148_VECTOR_ENH_FACILITY_2 requires both FEATURE_129_ZVECTOR_FACILITY and FEATURE_135_ZVECTOR_ENH_FACILITY_1
-#endif
-
-#if defined( FEATURE_149_MOVEPAGE_SETKEY_FACILITY ) && !defined( FEATURE_014_NONQ_KEY_SET_FACILITY )
- #error Move-Page-and-Set-Key facility requires Nonquiescing Key-Setting facility
-#endif
-
-#if  defined( FEATURE_152_VECT_PACKDEC_ENH_FACILITY ) \
-&& (!defined( FEATURE_129_ZVECTOR_FACILITY ) || !defined( FEATURE_134_ZVECTOR_PACK_DEC_FACILITY ))
- #error FEATURE_152_VECT_PACKDEC_ENH_FACILITY requires both FEATURE_129_ZVECTOR_FACILITY and FEATURE_134_ZVECTOR_PACK_DEC_FACILITY
-#endif
-
-#if  defined( FEATURE_155_MSA_EXTENSION_FACILITY_9 ) \
-&& (!defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) || !defined( FEATURE_077_MSA_EXTENSION_FACILITY_4 ))
- #error FEATURE_155_MSA_EXTENSION_FACILITY_9 requires both FEATURE_076_MSA_EXTENSION_FACILITY_3 and FEATURE_077_MSA_EXTENSION_FACILITY_4
 #endif
 
 /*-------------------------------------------------------------------*/

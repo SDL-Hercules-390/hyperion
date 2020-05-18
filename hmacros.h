@@ -40,9 +40,9 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*         Round a value 'x' up to the next 'b' boundary             */
+/*             Round a value up to the next boundary                 */
 /*-------------------------------------------------------------------*/
-#define ROUND_UP(x,b)       ((x)?((((x)+((b)-1))/(b))*(b)):(b))
+#define ROUND_UP(x,y)       ((x)?((((x)+((y)-1))/(y))*(y)):(y))
 
 /*-------------------------------------------------------------------*/
 /*      Define min/max macros                                        */
@@ -488,31 +488,14 @@ typedef int CMPFUNC(const void*, const void*);
 /*-------------------------------------------------------------------*/
 
 #if defined( _MSVC_ )
-  #define  SET_THREAD_NAME_ID(t,n)          \
-    do                                      \
-    {                                       \
-      w32_set_thread_name((t),(n));         \
-      set_thread_name((t),(n));             \
-    }                                       \
-    while (0)
+  #define  SET_THREAD_NAME_ID(t,n)  w32_set_thread_name((t),(n))
   #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(GetCurrentThreadId(),(n))
 #elif defined( HAVE_PTHREAD_SETNAME_NP )
-  #define  SET_THREAD_NAME_ID(t,n)          \
-    do                                      \
-    {                                       \
-      nix_set_thread_name((t),(n));         \
-      set_thread_name((t),(n));             \
-    }                                       \
-    while (0)
+  #define  SET_THREAD_NAME_ID(t,n)  nix_set_thread_name((t),(n))
   #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(pthread_self(),(n))
 #else
-  #define  SET_THREAD_NAME_ID(t,n)          \
-    do                                      \
-    {                                       \
-      set_thread_name((t),(n));             \
-    }                                       \
-    while (0)
-  #define  SET_THREAD_NAME(n)       SET_THREAD_NAME_ID(pthread_self(),(n))
+  #define  SET_THREAD_NAME_ID(t,n)  /* nothing */
+  #define  SET_THREAD_NAME(n)       /* nothing */
 #endif
 
 /*-------------------------------------------------------------------*/

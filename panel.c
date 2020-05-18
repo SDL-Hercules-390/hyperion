@@ -1607,6 +1607,7 @@ DLL_EXPORT void the_real_panel_display()
 {
 #ifndef _MSVC_
   int     rc;                           /* Return code               */
+  int     maxfd;                        /* Highest file descriptor   */
   fd_set  readset;                      /* Select file descriptors   */
   struct  timeval tv;                   /* Select timeout structure  */
 #endif // _MSVC_
@@ -1755,12 +1756,18 @@ size_t  loopcount;                      /* Number of iterations done */
         /* Set the file descriptors for select */
         FD_ZERO (&readset);
         FD_SET (keybfd, &readset);
+        FD_SET (logger_syslogfd[LOG_READ], &readset);
+        FD_SET (0, &readset);
+        if(keybfd > logger_syslogfd[LOG_READ])
+          maxfd = keybfd;
+        else
+          maxfd = logger_syslogfd[LOG_READ];
 
-        /* Wait for a key to be pressed,
+        /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
         tv.tv_sec  =  sysblk.panrate / 1000;
         tv.tv_usec = (sysblk.panrate * 1000) % 1000000;
-        rc = select (keybfd + 1, &readset, NULL, NULL, &tv);
+        rc = select (maxfd + 1, &readset, NULL, NULL, &tv);
         if (rc < 0 )
         {
             if (errno == EINTR) continue;
@@ -2181,7 +2188,7 @@ size_t  loopcount;                      /* Number of iterations done */
 
                             while (*p && ncmd_tok < 10 )
                             {
-                                while (*p && isspace(*p))
+                                while (*p && isspace(*p)) 
                                 {
                                     p++;
                                 }
@@ -2194,14 +2201,14 @@ size_t  loopcount;                      /* Number of iterations done */
 
                                 cmd_tok[ncmd_tok] = p; ++ncmd_tok; // count new arg
 
-                                while ( *p
+                                while ( *p 
                                         && !isspace(*p)
                                         && *p != '\"'
                                         && *p != '\'' )
-                                {
+                                { 
                                     p++;
                                 }
-                                if (!*p)
+                                if (!*p) 
                                 {
                                     break; /* find end of arg */
                                 }

@@ -23,11 +23,11 @@
 /*      Fix program check on NOP due to addressing - Jan Jaeger      */
 /*      Fix program check on TIC as first ccw on RSCH - Jan Jaeger   */
 /*      Fix PCI intermediate status flags             - Jan Jaeger   */
-/*      64-bit IDAW support - Roger Bowler v209                      */
+/*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*      Incorrect-length-indication-suppression - Jan Jaeger         */
 /*      Read backward support contributed by Hackules   13jun2002    */
 /*      Read backward fixes contributed by Jay Jaeger   16sep2003    */
-/*      MIDAW support - Roger Bowler                    03aug2005    */
+/*      MIDAW support - Roger Bowler                    03aug2005 @MW*/
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -1189,23 +1189,19 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
     obtain_lock( &dev->lock );
 
     /* Test device status and set condition code */
-    if (dev->busy
-        /* CTCE devices need dev->hnd->halt to always be called
-           even when not busy!
-        */
-        || dev->ctctype == CTC_CTCE)
+    if (dev->busy)
     {
-        /* Invoke the provided halt device routine */
-        /* if it has been provided by the handler  */
-        /* code at init                            */
-        if (dev->hnd->halt != NULL)
-        {
-            dev->hnd->halt( dev );
+        /* Invoke the provided halt device routine @ISW */
+        /* if it has been provided by the handler  @ISW */
+        /* code at init                            @ISW */
+        if (dev->hnd->halt != NULL)             /* @ISW */
+        {                                       /* @ISW */
+            dev->hnd->halt( dev );              /* @ISW */
             psa = (PSA_3XX*)( regs->mainstor + regs->PX );
             psa->csw[4] = 0;    /*  Store partial CSW   */
             psa->csw[5] = 0;
             cc = 1;             /*  CC1 == CSW stored   */
-        }
+        }                                       /* @ISW */
         else
         {
             /* Set condition code 2 if device is busy */
@@ -1759,18 +1755,11 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
     obtain_lock( &dev->lock );
 
     /* If the device is busy then signal the device to clear */
-    if (0
-        || (dev->busy
+    if ((dev->busy
 #if defined( OPTION_SHARED_DEVICES )
         && dev->shioactive == DEV_SYS_LOCAL
 #endif
-           )
-        || dev->startpending
-        /* CTCE devices need dev->hnd->halt to always be called
-           even when not busy or startpending!
-        */
-        || dev->ctctype == CTC_CTCE
-    )
+    ) || dev->startpending)
     {
         /* Set clear pending condition */
         dev->scsw.flag2 |= SCSW2_FC_CLEAR | SCSW2_AC_CLEAR;
@@ -2132,17 +2121,6 @@ static void
 device_reset (DEVBLK *dev)
 {
     obtain_lock (&dev->lock);
-
-    if (dev->group)
-    {
-        DEVGRP* group = dev->group;
-        if (group->members != group->acount)
-        {
-            /* Group is incomplete; ignore */
-            release_lock (&dev->lock);
-            return;
-        }
-    }
 
     obtain_lock(&sysblk.iointqlk);
     DEQUEUE_IO_INTERRUPT_QLOCKED(&dev->ioint);
@@ -2854,7 +2832,7 @@ ARCH_DEP(raise_pci) (DEVBLK *dev,       /* -> Device block           */
 static INLINE void
 ARCH_DEP(fetch_ccw) (DEVBLK *dev,       /* -> Device block           */
                      BYTE ccwkey,       /* Bits 0-3=key, 4-7=zeroes  */
-                     BYTE ccwfmt,       /* CCW format (0 or 1)       */
+                     BYTE ccwfmt,       /* CCW format (0 or 1)   @IWZ*/
                      U32 ccwaddr,       /* Main storage addr of CCW  */
                      BYTE *code,        /* Returned operation code   */
                      U32 *addr,         /* Returned data address     */
@@ -2921,18 +2899,18 @@ static INLINE void
 ARCH_DEP(fetch_idaw) (DEVBLK *dev,      /* -> Device block           */
                       BYTE code,        /* CCW operation code        */
                       BYTE ccwkey,      /* Bits 0-3=key, 4-7=zeroes  */
-                      BYTE idawfmt,     /* IDAW format (1 or 2)      */
-                      U16 idapmask,     /* IDA page size - 1         */
+                      BYTE idawfmt,     /* IDAW format (1 or 2)  @IWZ*/
+                      U16 idapmask,     /* IDA page size - 1     @IWZ*/
                       int idaseq,       /* 0=1st IDAW                */
                       U32 idawaddr,     /* Main storage addr of IDAW */
-                      RADR *addr,       /* Returned IDAW content     */
+                      RADR *addr,       /* Returned IDAW content @IWZ*/
                       U16 *len,         /* Returned IDA data length  */
                       BYTE *chanstat)   /* Returned channel status   */
 {
-RADR    idaw;                           /* Contents of IDAW          */
-U32     idaw1;                          /* Format-1 IDAW             */
-U64     idaw2;                          /* Format-2 IDAW             */
-RADR    idapage;                        /* Addr of next IDA page     */
+RADR    idaw;                           /* Contents of IDAW      @IWZ*/
+U32     idaw1;                          /* Format-1 IDAW         @IWZ*/
+U64     idaw2;                          /* Format-2 IDAW         @IWZ*/
+RADR    idapage;                        /* Addr of next IDA page @IWZ*/
 U16     idalen;                         /* #of bytes until next page */
 BYTE    storkey;                        /* Storage key               */
 
@@ -2940,9 +2918,9 @@ BYTE    storkey;                        /* Storage key               */
     *addr = 0;
     *len = 0;
 
-    /* Channel program check if IDAW is not on correct
+    /* Channel program check if IDAW is not on correct           @IWZ
        boundary or is outside limit of main storage */
-    if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))
+    if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))            /*@IWZ*/
         || CHADDRCHK(idawaddr, dev)
         /* Program check if Format-0 CCW and IDAW address > 16M      */
         /* SA22-7201-05:                                             */
@@ -2966,39 +2944,40 @@ BYTE    storkey;                        /* Storage key               */
     STORAGE_KEY(idawaddr, dev) |= STORKEY_REF;
 
     /* Fetch IDAW from main storage */
-    if (idawfmt == 2)
-    {
-        /* Fetch format-2 IDAW */
-        FETCH_DW(idaw2, dev->mainstor + idawaddr);
+    if (idawfmt == 2)                                          /*@IWZ*/
+    {                                                          /*@IWZ*/
+        /* Fetch format-2 IDAW */                              /*@IWZ*/
+        FETCH_DW(idaw2, dev->mainstor + idawaddr);             /*@IWZ*/
 
-#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+       #ifndef FEATURE_001_ZARCH_INSTALLED_FACILITY                                   /*@IWZ*/
         /* Channel program check in ESA/390 mode
-           if the format-2 IDAW exceeds 2GB-1 */
-        if (idaw2 > 0x7FFFFFFF)
-        {
-            *chanstat = CSW_PROGC;
-            return;
-        }
-#endif
-        /* Save contents of format-2 IDAW */
-        idaw = idaw2;
-    }
-    else
-    {
-        /* Fetch format-1 IDAW */
-        FETCH_FW(idaw1, dev->mainstor + idawaddr);
+           if the format-2 IDAW exceeds 2GB-1 */               /*@IWZ*/
+        if (idaw2 > 0x7FFFFFFF)                                /*@IWZ*/
+        {                                                      /*@IWZ*/
+            *chanstat = CSW_PROGC;                             /*@IWZ*/
+            return;                                            /*@IWZ*/
+        }                                                      /*@IWZ*/
+       #endif /*!FEATURE_001_ZARCH_INSTALLED_FACILITY*/                               /*@IWZ*/
+
+        /* Save contents of format-2 IDAW */                   /*@IWZ*/
+        idaw = idaw2;                                          /*@IWZ*/
+    }                                                          /*@IWZ*/
+    else                                                       /*@IWZ*/
+    {                                                          /*@IWZ*/
+        /* Fetch format-1 IDAW */                              /*@IWZ*/
+        FETCH_FW(idaw1, dev->mainstor + idawaddr);             /*@IWZ*/
 
         /* Channel program check if bit 0 of
-           the format-1 IDAW is not zero */
-        if (idaw1 & 0x80000000)
-        {
-            *chanstat = CSW_PROGC;
-            return;
-        }
+           the format-1 IDAW is not zero */                    /*@IWZ*/
+        if (idaw1 & 0x80000000)                                /*@IWZ*/
+        {                                                      /*@IWZ*/
+            *chanstat = CSW_PROGC;                             /*@IWZ*/
+            return;                                            /*@IWZ*/
+        }                                                      /*@IWZ*/
 
-        /* Save contents of format-1 IDAW */
-        idaw = idaw1;
-    }
+        /* Save contents of format-1 IDAW */                   /*@IWZ*/
+        idaw = idaw1;                                          /*@IWZ*/
+    }                                                          /*@IWZ*/
 
     /* Channel program check if IDAW data
        location is outside main storage */
@@ -3009,7 +2988,7 @@ BYTE    storkey;                        /* Storage key               */
     }
 
     /* Channel program check if IDAW data location is not
-       on a page boundary, except for the first IDAW */
+       on a page boundary, except for the first IDAW */        /*@IWZ*/
     if (IS_CCW_RDBACK (code))
     {
         if (idaseq > 0 && ((idaw+1) & idapmask) != 0)
@@ -3028,14 +3007,14 @@ BYTE    storkey;                        /* Storage key               */
     }
     else
     {
-        if (idaseq > 0 && (idaw & idapmask) != 0)
+        if (idaseq > 0 && (idaw & idapmask) != 0)              /*@IWZ*/
         {
             *chanstat = CSW_PROGC;
             return;
         }
 
-        /* Calculate address of next page boundary */
-        idapage = (idaw + idapmask + 1) & ~idapmask;
+        /* Calculate address of next page boundary */          /*@IWZ*/
+        idapage = (idaw + idapmask + 1) & ~idapmask;           /*@IWZ*/
         idalen = idapage - idaw;
 
         /* Return the address and length for this IDAW */
@@ -3046,9 +3025,9 @@ BYTE    storkey;                        /* Storage key               */
 } /* end function fetch_idaw */
 
 
-#if defined(FEATURE_MIDAW_FACILITY)
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
 /*-------------------------------------------------------------------*/
-/* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE     */
+/* FETCH A MODIFIED INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE  @MW*/
 /*-------------------------------------------------------------------*/
 static INLINE void
 ARCH_DEP(fetch_midaw) (DEVBLK *dev,     /* -> Device block           */
@@ -3154,8 +3133,8 @@ U16     maxlen;                         /* Maximum allowable length  */
     *len = mcount;
     *flags = mflags;
 
-} /* end function fetch_midaw */
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+} /* end function fetch_midaw */                                /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
 
 
 /*-------------------------------------------------------------------*/
@@ -3168,8 +3147,8 @@ ARCH_DEP(copy_iobuf) (DEVBLK *dev,      /* -> Device block           */
                       U32 addr,         /* Data address              */
                       U32 count,        /* Data count                */
                       BYTE ccwkey,      /* Protection key            */
-                      BYTE idawfmt,     /* IDAW format (1 or 2)      */
-                      U16 idapmask,     /* IDA page size - 1         */
+                      BYTE idawfmt,     /* IDAW format (1 or 2)  @IWZ*/
+                      U16 idapmask,     /* IDA page size - 1     @IWZ*/
                       BYTE *iobuf,      /* -> Channel I/O buffer     */
                       BYTE *iobufstart, /* -> First byte of buffer   */
                       BYTE *iobufend,   /* -> Last byte of buffer    */
@@ -3182,7 +3161,7 @@ u_int   ps = 0;                         /* Prefetch entry            */
 U32     idawaddr;                       /* Main storage addr of IDAW */
 U16     idacount;                       /* IDA bytes remaining       */
 int     idaseq;                         /* IDA sequence number       */
-RADR    idadata;                        /* IDA data address          */
+RADR    idadata;                        /* IDA data address      @IWZ*/
 U16     idalen;                         /* IDA data length           */
 int     idasize;                        /* IDAW Size                 */
 BYTE    storkey;                        /* Storage key               */
@@ -3190,14 +3169,14 @@ RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    to_iobuf;                       /* 1=READ, SENSE, or RDBACK  */
 BYTE    to_memory;                      /* 1=READ, SENSE, or RDBACK  */
 BYTE    readbackwards;                  /* 1=RDBACK                  */
-#if defined(FEATURE_MIDAW_FACILITY)
-int     midawseq;                       /* MIDAW counter (0=1st)     */
-U32     midawptr;                       /* Real addr of MIDAW        */
-U16     midawrem;                       /* CCW bytes remaining       */
-U16     midawlen=0;                     /* MIDAW data length         */
-RADR    midawdat=0;                     /* MIDAW data area addr      */
-BYTE    midawflg;                       /* MIDAW flags               */
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
+int     midawseq;                       /* MIDAW counter (0=1st)  @MW*/
+U32     midawptr;                       /* Real addr of MIDAW     @MW*/
+U16     midawrem;                       /* CCW bytes remaining    @MW*/
+U16     midawlen=0;                     /* MIDAW data length      @MW*/
+RADR    midawdat=0;                     /* MIDAW data area addr   @MW*/
+BYTE    midawflg;                       /* MIDAW flags            @MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
 
 #if !defined(set_chanstat)
 #define set_chanstat(_status)                                          \
@@ -3265,7 +3244,7 @@ do {                                                                   \
     }
 
 
-#if defined(FEATURE_MIDAW_FACILITY)
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
     /* Move data when modified indirect data addressing is used */
     if (flags & CCW_FLAGS_MIDAW)
     {
@@ -3441,9 +3420,9 @@ do {                                                                   \
         )
             set_chanstat( CSW_PROGC );
 
-    } /* end if(CCW_FLAGS_MIDAW) */
-    else
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+    } /* end if(CCW_FLAGS_MIDAW) */                             /*@MW*/
+    else                                                        /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
     /* Move data when indirect data addressing is used */
     if (flags & CCW_FLAGS_IDA)
     {
@@ -3470,8 +3449,8 @@ do {                                                                   \
                 break;
 
             /* Fetch the IDAW and set IDA pointer and length */
-            ARCH_DEP( fetch_idaw )( dev, code, ccwkey, idawfmt,
-                        idapmask, idaseq, idawaddr,
+            ARCH_DEP( fetch_idaw )( dev, code, ccwkey, idawfmt, /*@IWZ*/
+                        idapmask, idaseq, idawaddr,             /*@IWZ*/
                         &idadata, &idalen, chanstat );
 
             /* Exit if fetch_idaw detected channel program check */
@@ -3628,6 +3607,7 @@ do {                                                                   \
     }
     else                              /* Non-IDA data addressing */
     {
+
         /* Point to start of data for read backward command */
         if (readbackwards)
             addr = addr - (count - 1);
@@ -3837,7 +3817,6 @@ do {                                                                   \
 DLL_EXPORT int
 ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 {
-    OBTAIN_INTLOCK(NULL);
     obtain_lock( &dev->lock );
 
     if (dev->hnd->attention)
@@ -3851,7 +3830,6 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
     )
     {
         release_lock( &dev->lock );
-        RELEASE_INTLOCK(NULL);
         return 3;
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
@@ -3888,7 +3866,6 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
             rc = 1;
 
         release_lock( &dev->lock );
-        RELEASE_INTLOCK(NULL);
         return rc;
     }
 
@@ -3896,8 +3873,28 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
         // "%1d:%04X CHAN: attention"
         WRMSG( HHC01305, "I", LCSS_DEVNUM );
 
-    /* We already have INTLOCK and dev->lock held, so now
-       we only need to acquire the interrupt queue lock. */
+    /*****************************************************************/
+    /* The release and obtain locks around OBTAIN_INTOCK have been   */
+    /* removed because they cause VM system abends IQM002 when using */
+    /* channel programs relying heavily on ATTN interrupts, such as  */
+    /* used by RSCS.  This is easily reproducible doing a large RSCS */
+    /* file transfer over a TYPE NJE link.  The IQM002 is always     */
+    /* caused by VM issueing a SSCH resulting in a CC=2, and most    */
+    /* probably due to the &dev->lock being released around the      */
+    /* OBTAIN_INTLOCK.  Also, there is no requirement for the device */
+    /* lock being held whilst issueing OBTAIN_INTLOCK.  Furthermore, */
+    /* Hercules Spinhawk version 3.12 does NOT produce IQM002 and it */
+    /* does not release + re-obtain the device lock around it.  And  */
+    /* lastly, since having removed this release + obtain device     */
+    /* lock around OBTAIN_INTLOCK no further IQM002 system abends    */
+    /* were encountered anymore.                                     */
+    /*                            Peter J. Jansen, 21-Jun-2016  @PJJ */
+    /*****************************************************************/
+
+    /* Switch to INTLOCK context for remainder of attention */
+/*  release_lock(&dev->lock);                                   @PJJ */
+    OBTAIN_INTLOCK(NULL);
+/*  obtain_lock(&dev->lock);                                    @PJJ */
     obtain_lock(&sysblk.iointqlk);
 
     /* Set SCSW for attention interrupt                              */
@@ -3931,8 +3928,6 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
     /* Update interrupt status */
     subchannel_interrupt_queue_cleanup(dev);
     UPDATE_IC_IOPENDING_QLOCKED();
-
-    /* Release locks and return to caller */
     release_lock(&sysblk.iointqlk);
     release_lock(&dev->lock);
     RELEASE_INTLOCK(NULL);
@@ -3947,7 +3942,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 /*-------------------------------------------------------------------*/
 /* Input                                                             */
 /*      dev     -> Device control block                              */
-/*      orb     -> Operation request block                           */
+/*      orb     -> Operation request block                       @IWZ*/
 /* Output                                                            */
 /*      The I/O parameters are stored in the device block, and a     */
 /*      thread is created to execute the CCW chain asynchronously.   */
@@ -3958,7 +3953,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 /*      valid, all other ORB parameters are set to zero.             */
 /*-------------------------------------------------------------------*/
 int
-ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)
+ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)          /*@IWZ*/
 {
 int     rc;                             /* Return code               */
 
@@ -3998,14 +3993,14 @@ int     rc;                             /* Return code               */
         /*************************************************************/
         /* VM system abends IQM00 were found to be caused by startio */
         /* SSCH resulting in cc=2 thanks to this additional log msg. */
-        /*                        Peter J. Jansen, 21-Jun-2016       */
+        /*                        Peter J. Jansen, 21-Jun-2016  @PJJ */
         /*************************************************************/
-        if (CCW_TRACE_OR_STEP( dev ))
-        {
+        if (CCW_TRACE_OR_STEP( dev ))                        /* @PJJ */
+        {                                                    /* @PJJ */
             // "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
-            WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),
-            dev->devnum, dev->busy, dev->startpending );
-        }
+            WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),   /* @PJJ */
+            dev->devnum, dev->busy, dev->startpending );     /* @PJJ */
+        }                                                    /* @PJJ */
 
         return 2;
     }
@@ -4041,8 +4036,8 @@ int     rc;                             /* Return code               */
     dev->startpending = 1;
 
     /* Copy the I/O parameter to the path management control word */
-    memcpy (dev->pmcw.intparm, orb->intparm,
-                        sizeof(dev->pmcw.intparm));
+    memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
+                        sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
     /* Store the start I/O parameters in the device block */
     if (orb->flag7 & ORB7_X)
@@ -4135,13 +4130,13 @@ ARCH_DEP(execute_ccw_chain) (void *arg)
 {
 DEVBLK *dev = (DEVBLK*) arg;            /* Device Block pointer      */
 IOBUF  *iobuf;                          /* Pointer to I/O buffer     */
-U32     ccwaddr = 0;                    /* Address of CCW            */
+U32     ccwaddr = 0;                    /* Address of CCW        @IWZ*/
 U32     ticaddr = 0;                    /* Previous CCW was a TIC    */
 U16     ticback = 0;                    /* Backwards TIC counter     */
-U16     idapmask = 0;                   /* IDA page size - 1         */
-BYTE    idawfmt = 0;                    /* IDAW format (1 or 2)      */
-BYTE    ccwfmt = 0;                     /* CCW format (0 or 1)       */
-BYTE    ccwkey = 0;                     /* Bits 0-3=key, 4-7=zero    */
+U16     idapmask = 0;                   /* IDA page size - 1     @IWZ*/
+BYTE    idawfmt = 0;                    /* IDAW format (1 or 2)  @IWZ*/
+BYTE    ccwfmt = 0;                     /* CCW format (0 or 1)   @IWZ*/
+BYTE    ccwkey = 0;                     /* Bits 0-3=key, 4-7=zero@IWZ*/
 BYTE    opcode;                         /* CCW operation code        */
 BYTE    flags;                          /* CCW flags                 */
 U32     addr;                           /* CCW data address          */
@@ -4291,23 +4286,23 @@ IOBUF iobuf_initial;                    /* Channel I/O buffer        */
         obtain_lock (&dev->lock);
     }
 
-    /* Extract the I/O parameters from the ORB */
-    FETCH_FW(ccwaddr, dev->orb.ccwaddr);
+    /* Extract the I/O parameters from the ORB */              /*@IWZ*/
+    FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
     dev->ccwaddr = ccwaddr;
     dev->ccwfmt = ccwfmt = (dev->orb.flag5 & ORB5_F) ? 1 : 0;
     dev->ccwkey = ccwkey = dev->orb.flag4 & ORB4_KEY;
     dev->idawfmt = idawfmt = (dev->orb.flag5 & ORB5_H) ? 2 : 1;
 
-    /* Determine IDA page size */
-    if (idawfmt == 2)
-    {
-        /* Page size is 2K or 4K depending on flag bit */
-        idapmask =
-            (dev->orb.flag5 & ORB5_T) ? 0x7FF : 0xFFF;
-    } else {
-        /* Page size is always 2K for format-1 IDAW */
-        idapmask = 0x7FF;
-    }
+    /* Determine IDA page size */                              /*@IWZ*/
+    if (idawfmt == 2)                                          /*@IWZ*/
+    {                                                          /*@IWZ*/
+        /* Page size is 2K or 4K depending on flag bit */      /*@IWZ*/
+        idapmask =                                             /*@IWZ*/
+            (dev->orb.flag5 & ORB5_T) ? 0x7FF : 0xFFF;         /*@IWZ*/
+    } else {                                                   /*@IWZ*/
+        /* Page size is always 2K for format-1 IDAW */         /*@IWZ*/
+        idapmask = 0x7FF;                                      /*@IWZ*/
+    }                                                          /*@IWZ*/
 
 
 resume_suspend:
@@ -4659,30 +4654,30 @@ execute_halt:
         // {}
         -------------------------------------------------------------*/
 
-#if !defined(FEATURE_MIDAW_FACILITY)
-        /* Channel program check if MIDAW not installed */
-        if (flags & CCW_FLAGS_MIDAW)
+#if !defined(FEATURE_MIDAW_FACILITY)                            /*@MW*/
+        /* Channel program check if MIDAW not installed */      /*@MW*/
+        if (flags & CCW_FLAGS_MIDAW)                            /*@MW*/
         {
             chanstat = CSW_PROGC;
             if (prefetch.seq)
                 goto prefetch;
             goto breakchain;
         }
-#endif /*!defined(FEATURE_MIDAW_FACILITY)*/
+#endif /*!defined(FEATURE_MIDAW_FACILITY)*/                     /*@MW*/
 
-#if defined(FEATURE_MIDAW_FACILITY)
+#if defined(FEATURE_MIDAW_FACILITY)                             /*@MW*/
         /* Channel program check if MIDAW not enabled in ORB, or     */
         /* with SKIP or IDA specified                                */
-        if ((flags & CCW_FLAGS_MIDAW) &&
+        if ((flags & CCW_FLAGS_MIDAW) &&                        /*@MW*/
             ((dev->orb.flag7 & ORB7_D) == 0 ||
              (flags & (CCW_FLAGS_SKIP | CCW_FLAGS_IDA))))
-        {
-            chanstat = CSW_PROGC;
+        {                                                       /*@MW*/
+            chanstat = CSW_PROGC;                               /*@MW*/
             if (prefetch.seq)
                 goto prefetch;
             goto breakchain;
-        }
-#endif /*defined(FEATURE_MIDAW_FACILITY)*/
+        }                                                       /*@MW*/
+#endif /*defined(FEATURE_MIDAW_FACILITY)*/                      /*@MW*/
 
         /* Suspend supported prior to GA22-7000-10 for the S/370     */
         /* Suspend channel program if suspend flag is set */
@@ -5698,49 +5693,36 @@ int     i;                              /* Interruption subclass     */
 
 
 /*-------------------------------------------------------------------*/
-/*                 PRESENT PENDING I/O INTERRUPT                     */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
+/* PRESENT PENDING I/O INTERRUPT                                     */
 /* Finds a device with a pending condition for which an interrupt    */
-/* is allowed by the CPU whose regs struct is passed as a parameter. */
-/*                                                                   */
-/* Clears the interrupt condition and returns the I/O address and    */
-/* I/O interruption parameter (for channel subsystem) or the I/O     */
-/* address and CSW (for S/370 channels).                             */
-/*                                                                   */
+/* is allowed by the CPU whose regs structure is passed as a         */
+/* parameter.  Clears the interrupt condition and returns the        */
+/* I/O address and I/O interruption parameter (for channel subsystem)*/
+/* or the I/O address and CSW (for S/370 channels).                  */
+/* This routine does not perform a PSW switch.                       */
+/* The CSW pointer is NULL in the case of TPI.                       */
 /* The return value is the condition code for the TPI instruction:   */
 /* 0 if no allowable pending interrupt exists, otherwise 1.          */
-/*                                                                   */
+/* Note: The caller MUST hold the interrupt lock (sysblk.intlock).   */
 /*-------------------------------------------------------------------*/
+/* I/O Assist:                                                       */
+/* This routine must return:                                         */
 /*                                                                   */
-/*   NOTE: Caller MUST hold the interrupt lock (sysblk.intlock).     */
-/*   NOTE: This routine does NOT perform a PSW switch.               */
-/*   NOTE: The CSW pointer is NULL in the case of TPI.               */
+/* 0                   - In the case of no pending interrupt         */
+/* SIE_NO_INTERCEPT    - For a non-intercepted I/O interrupt         */
+/* SIE_INTERCEPT_IOINT - For an I/O interrupt which must intercept   */
+/* SIE_INTERCEPT_IOINTP- For a pending I/O interception              */
 /*                                                                   */
+/* SIE_INTERCEPT_IOINT may only be returned to a guest               */
 /*-------------------------------------------------------------------*/
-/*                         I/O ASSIST                                */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/* This routine MUST return:                                         */
-/*                                                                   */
-/*  0                   - In the case of no pending interrupt        */
-/*                                                                   */
-/*  SIE_NO_INTERCEPT    - For a non-intercepted I/O interrupt        */
-/*                                                                   */
-/*  SIE_INTERCEPT_IOINT - For an I/O interrupt which must intercept  */
-/*                        (may ONLY be returned to a guest)          */
-/*                                                                   */
-/*  SIE_INTERCEPT_IOINTP- For a pending I/O interception             */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-int ARCH_DEP( present_io_interrupt )( REGS* regs, U32* ioid, U32* ioparm,
-                                      U32* iointid, BYTE* csw,
-                                      DEVBLK** pdev )
+int
+ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
+                                U32 *ioparm, U32 *iointid, BYTE *csw)
 {
 IOINT  *io, *io2;                       /* -> I/O interrupt entry    */
 DEVBLK *dev;                            /* -> Device control block   */
 int     icode = 0;                      /* Intercept code            */
-bool    dotsch = true;                  /* perform TSCH after int    */
+int     dotsch = 1;                     /* perform TSCH after int    */
                                         /* except for THININT        */
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
@@ -5759,281 +5741,261 @@ bool    PCI_dequeued  = false;
     UNREFERENCED_390(csw);
     UNREFERENCED_900(csw);
 
+    /* Find a device with pending interrupt */
+
+    /* (N.B. devlock cannot be acquired while iointqlk held;
+       iointqlk must be acquired after devlock) */
 retry:
-
-    /* Find a device with pending interrupt...
-
-       Please remember that the device lock CANNOT be acquired
-       while iointqlk is held. The iointqlk MUST be acquired AFTER
-       the device lock is first acquired. Thus the retry logic.
-    */
     dev = NULL;
-
-    obtain_lock( &sysblk.iointqlk );
+    obtain_lock(&sysblk.iointqlk);
+    for (io = sysblk.iointq; io != NULL; io = io->next)
     {
+        /* Can't present interrupt while TEST SUBCHANNEL required
+         * (interrupt already presented for this device)
+         */
+        if (io->dev->tschpending)
+            continue;
+
+        /* Exit loop if enabled for interrupts from this device */
+        if ((icode = ARCH_DEP(interrupt_enabled)(regs, io->dev))
+#if defined(_FEATURE_IO_ASSIST)
+          && icode != SIE_INTERCEPT_IOINTP
+#endif
+                                          )
+        {
+            dev = io->dev;
+            break;
+        }
+
+        /* See if another CPU can take this interrupt */
+        {
+            REGS *regs;
+            CPU_BITMAP mask = sysblk.waiting_mask;
+            CPU_BITMAP wake;
+            int i;
+
+            /* If any CPUs are waiting, isolate to subgroup enabled for
+             * I/O interrupts.
+             */
+            if (mask)
+            {
+                wake = mask;
+
+                /* Turn off wake mask bits for waiting CPUs that aren't
+                 * enabled for I/O interrupts for the device.
+                 */
+                for (i = 0; mask; mask >>= 1, ++i)
+                {
+                    if (mask & 1)
+                    {
+                        regs = sysblk.regs[i];
+                        if (!ARCH_DEP(interrupt_enabled)(regs, io->dev))
+                            wake ^= regs->cpubit;
+                    }
+                }
+
+                /* Wakeup the LRU waiting CPU enabled for I/O
+                 * interrupts.
+                 */
+                WAKEUP_CPU_MASK(wake);
+            }
+        }
+
+    } /* end for(io) */
+
+#if defined(_FEATURE_IO_ASSIST)
+    /* In the case of I/O assist, do a rescan, to see if there are
+       any devices with pending subclasses for which we are not
+       enabled, if so cause a interception */
+    if (io == NULL && SIE_MODE(regs))
+    {
+        /* Find a device with a pending interrupt, regardless
+           of the interrupt subclass mask */
+        ASSERT(dev == NULL);
         for (io = sysblk.iointq; io != NULL; io = io->next)
         {
-            /* Can't present interrupt while TEST SUBCHANNEL required
-             * (interrupt already presented for this device)
-             */
-            if (io->dev->tschpending)
-                continue;
-
-            /* Exit loop if enabled for interrupts from this device */
-            if ((icode = ARCH_DEP( interrupt_enabled )( regs, io->dev ))
-
-#if defined( _FEATURE_IO_ASSIST )
-              && icode != SIE_INTERCEPT_IOINTP
-#endif
-            )
+            /* Exit loop if pending interrupts from this device */
+            if (ARCH_DEP(interrupt_enabled)(regs, io->dev))
             {
                 dev = io->dev;
                 break;
             }
-
-            /* See if another CPU can take this interrupt */
-            {
-                REGS *regs;
-                CPU_BITMAP mask = sysblk.waiting_mask;
-                CPU_BITMAP wake;
-                int i;
-
-                /* If any CPUs are waiting, isolate to subgroup enabled for
-                 * I/O interrupts.
-                 */
-                if (mask)
-                {
-                    wake = mask;
-
-                    /* Turn off wake mask bits for waiting CPUs that aren't
-                     * enabled for I/O interrupts for the device.
-                     */
-                    for (i=0; mask; mask >>= 1, ++i)
-                    {
-                        if (mask & 1)
-                        {
-                            regs = sysblk.regs[i];
-
-                            if (!ARCH_DEP( interrupt_enabled )( regs, io->dev ))
-                                wake ^= regs->cpubit;
-                        }
-                    }
-
-                    /* Wakeup the LRU waiting CPU enabled for I/O
-                     * interrupts.
-                     */
-                    WAKEUP_CPU_MASK( wake );
-                }
-            }
-
         } /* end for(io) */
-
-#if defined( _FEATURE_IO_ASSIST )
-        /* In the case of I/O assist, do a rescan, to see
-           if there are any devices with pending subclasses
-           for which we are not enabled, if so cause an
-           interception.
-        */
-        if (io == NULL && SIE_MODE( regs ))
-        {
-            /* Find a device with a pending interrupt, regardless
-               of the interrupt subclass mask
-            */
-            ASSERT( dev == NULL );
-
-            for (io = sysblk.iointq; io != NULL; io = io->next)
-            {
-                /* Exit loop if pending interrupts from this device */
-                if (ARCH_DEP( interrupt_enabled )( regs, io->dev ))
-                {
-                    dev = io->dev;
-                    break;
-                }
-            } /* end for(io) */
-        }
-#endif
-        /* If no interrupt pending, or no device, exit with
-         * condition code 0
-         */
-        if (io == NULL || dev == NULL)
-        {
-            /* Pass back pointer to device block for device with interrupt */
-            *pdev = dev;
-
-            if (dev != NULL)
-                subchannel_interrupt_queue_cleanup( dev );
-
-            UPDATE_IC_IOPENDING_QLOCKED();
-
-            release_lock( &sysblk.iointqlk );
-            return 0;
-        }
     }
-    release_lock( &sysblk.iointqlk );
+#endif
+
+    /* If no interrupt pending, or no device, exit with
+     * condition code 0
+     */
+    if (io == NULL || dev == NULL)
+    {
+        if (dev != NULL)
+            subchannel_interrupt_queue_cleanup(dev);
+        UPDATE_IC_IOPENDING_QLOCKED();
+        release_lock(&sysblk.iointqlk);
+        return 0;
+    }
+
+    release_lock(&sysblk.iointqlk);
 
     /* Obtain device lock for device with interrupt */
-    obtain_lock( &dev->lock );
+    obtain_lock(&dev->lock);
+
+    /* Verify interrupt for this device still exists and TEST SUBCHANNEL
+     * has to be issued to clear an existing interrupt
+     */
+    obtain_lock(&sysblk.iointqlk);
+    for (io2 = sysblk.iointq; io2 != NULL && io2 != io; io2 = io2->next);
+
+    if (io2 == NULL ||
+        dev->tschpending)
     {
-        /* Pass back pointer to device block for device with interrupt */
-        *pdev = dev;
+        /* Our interrupt was dequeued; retry */
+        release_lock(&sysblk.iointqlk);
+        release_lock(&dev->lock);
+        goto retry;
+    }
 
-        /* Verify that the interrupt for this device still exists and that
-           TEST SUBCHANNEL has to be issued to clear an existing interrupt.
-         */
-        obtain_lock( &sysblk.iointqlk );
+
+    /* Extract the I/O address and interrupt parameter */
+    *ioid = (dev->ssid << 16) | dev->subchan;
+    FETCH_FW(*ioparm,dev->pmcw.intparm);
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)
+#if defined(FEATURE_QDIO_THININT)
+    if (unlikely( FACILITY_ENABLED( HERC_QDIO_THININT, regs )
+        && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint) )
+    {
+        saved_dotsch = dotsch;
+        PCI_dequeued = false;
+
+        dotsch = 0;     /* Do not require TSCH after INT */
+
+        *iointid = 0x80000000
+             | (
+#if defined(_FEATURE_IO_ASSIST)
+                /* For I/O Assisted devices use (V)ISC */
+                (SIE_MODE(regs)) ?
+                  (icode == SIE_NO_INTERCEPT) ?
+                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
+                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
+                      | (dev->pmcw.zone << 16)
+                      | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
+#endif
+                ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
+                  | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
+#if defined(_FEATURE_IO_ASSIST)
+                  | (dev->pmcw.zone << 16)
+                  | ((dev->pmcw.flag27 & PMCW27_I) << 8)
+#endif
+                                                                  ) ;
+
+        if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
         {
-            for (io2 = sysblk.iointq; io2 != NULL && io2 != io; io2 = io2->next);
+            /* Dequeue the interrupt */
+            PCI_dequeued = DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint ) == 0 ? true : false;
 
-            if (io2 == NULL || dev->tschpending)
-            {
-                /* Our interrupt was dequeued; retry */
-                release_lock( &sysblk.iointqlk );
-                release_lock( &dev->lock );
-                goto retry;
-            }
-
-            /* Extract the I/O address and interrupt parameter */
-            *ioid = (dev->ssid << 16) | dev->subchan;
-            FETCH_FW( *ioparm,dev->pmcw.intparm );
-
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( _FEATURE_IO_ASSIST )
-#if defined( FEATURE_QDIO_THININT )
-            if (unlikely( FACILITY_ENABLED( HERC_QDIO_THININT, regs )
-                && (dev->pciscsw.flag2 & SCSW2_Q) && dev->qdio.thinint ))
-            {
-                saved_dotsch = dotsch;
-                PCI_dequeued = false;
-
-                dotsch = false;  /* Do not require TSCH after INT */
-
-                *iointid = 0x80000000
-                     | (
-#if defined( _FEATURE_IO_ASSIST )
-                        /* For I/O Assisted devices use (V)ISC */
-                        (SIE_MODE(regs)) ?
-                          (icode == SIE_NO_INTERCEPT) ?
-                            ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
-                            ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
-                              | (dev->pmcw.zone << 16)
-                              | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
-#endif
-                        ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
-                          | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
-#if defined( _FEATURE_IO_ASSIST )
-                          | (dev->pmcw.zone << 16)
-                          | ((dev->pmcw.flag27 & PMCW27_I) << 8)
-#endif
-                ); // *iointid =
-
-                if (!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
-                {
-                    /* Dequeue the interrupt */
-                    PCI_dequeued = DEQUEUE_IO_INTERRUPT_QLOCKED( &dev->pciioint ) == 0 ? true : false;
-
-                    if (!PCI_dequeued)
-                        dotsch = saved_dotsch; // (restore)
-                    else
-                    {
-                        /* Clear the pending PCI status */
-                        dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
-                        dev->pciscsw.flag3 &= ~(SCSW3_SC);
-                    }
-                }
-                else
-                    PCI_dequeued = true; // (keep same logic as before!)
-            }
-
-            /* If no PCI interrupt dequeued, then dequeue a normal interrupt */
             if (!PCI_dequeued)
-#endif /*defined( FEATURE_QDIO_THININT )*/
-
-                *iointid = (
-#if defined(_FEATURE_IO_ASSIST)
-                            /* For I/O Assisted devices use (V)ISC */
-                            (SIE_MODE(regs)) ?
-                              (icode == SIE_NO_INTERCEPT) ?
-                                ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
-                                ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
-                                  | (dev->pmcw.zone << 16)
-                                  | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
-#endif
-                             ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
-                               | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
-#if defined(_FEATURE_IO_ASSIST)
-                               | (dev->pmcw.zone << 16)
-                               | ((dev->pmcw.flag27 & PMCW27_I) << 8)
-#endif
-                ); // *iointid =
-#endif /*defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( _FEATURE_IO_ASSIST ) */
-
-#if defined( _FEATURE_IO_ASSIST )
-            /* Do not drain pending interrupts
-               on intercept due to zero ISC mask
-             */
-            if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
-#endif
+                dotsch = saved_dotsch; // (restore)
+            else
             {
-                if (!SIE_MODE(regs) || icode != SIE_NO_INTERCEPT)
-                    dev->pmcw.flag27 &= ~PMCW27_I;
-
-                /* Dequeue the interrupt */
-                DEQUEUE_IO_INTERRUPT_QLOCKED( io );
+                /* Clear the pending PCI status */
+                dev->pciscsw.flag2 &= ~(SCSW2_FC | SCSW2_AC);
+                dev->pciscsw.flag3 &= ~(SCSW3_SC);
             }
-
-            /* TEST SUBCHANNEL is now required to clear the interrupt */
-            dev->tschpending = dotsch;
-
-            /* Perform additional architecture post processing and cleanup */
-            switch (sysblk.arch_mode)
-            {
-                case ARCH_370_IDX:
-                {
-                    IOINT*  ioint;              /* -> I/O interrupt          */
-                    IRB     irb;                /* -> IRB                    */
-                    SCSW*   scsw;               /* -> SCSW                   */
-                    int     cc;                 /* Condition code ignored    */
-
-                    /* Extract the I/O address and CSW */
-                    *ioid = dev->devnum;
-
-                    /* Perform core of TEST SUBCHANNEL work and store CSW */
-                    cc = test_subchan_locked( regs, dev, &irb, &ioint, &scsw );
-                    store_scsw_as_csw( regs, scsw );
-                    break;
-                }
-            }
-
-            subchannel_interrupt_queue_cleanup( dev );
-            UPDATE_IC_IOPENDING_QLOCKED();
         }
-        release_lock( &sysblk.iointqlk );
+        else
+            PCI_dequeued = true; // (keep same logic as before!)
+    }
+    /* If no PCI interrupt dequeued, then dequeue a normal interrupt */
+    if (!PCI_dequeued)
+#endif /*defined(FEATURE_QDIO_THININT)*/
+        *iointid = (
+#if defined(_FEATURE_IO_ASSIST)
+                    /* For I/O Assisted devices use (V)ISC */
+                    (SIE_MODE(regs)) ?
+                      (icode == SIE_NO_INTERCEPT) ?
+                        ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
+                        ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
+                          | (dev->pmcw.zone << 16)
+                          | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
+#endif
+                     ((dev->pmcw.flag4 & PMCW4_ISC) << 24)
+                       | ((dev->pmcw.flag25 & PMCW25_TYPE) << 7)
+#if defined(_FEATURE_IO_ASSIST)
+                       | (dev->pmcw.zone << 16)
+                       | ((dev->pmcw.flag27 & PMCW27_I) << 8)
+#endif
+                                                                  );
+#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) || defined(_FEATURE_IO_ASSIST)*/
+
+#if defined(_FEATURE_IO_ASSIST)
+    /* Do not drain pending interrupts on intercept due to zero ISC
+     * mask
+     */
+    if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
+#endif /*_FEATURE_IO_ASSIST)*/
+    {
+        if (!SIE_MODE(regs) || icode != SIE_NO_INTERCEPT)
+            dev->pmcw.flag27 &= ~PMCW27_I;
+
+        /* Dequeue the interrupt */
+        DEQUEUE_IO_INTERRUPT_QLOCKED(io);
+    }
+
+    /* TEST SUBCHANNEL is now required to clear the interrupt */
+    dev->tschpending = dotsch;
+
+    /* Perform additional architecture post processing and cleanup */
+    switch (sysblk.arch_mode)
+    {
+        case ARCH_370_IDX:
+        {
+            IOINT*  ioint;              /* -> I/O interrupt          */
+            IRB     irb;                /* -> IRB                    */
+            SCSW*   scsw;               /* -> SCSW                   */
+            int     cc;                 /* Condition code ignored    */
+
+            /* Extract the I/O address and CSW */
+            *ioid = dev->devnum;
+
+            /* Perform core of TEST SUBCHANNEL work and store CSW */
+            cc = test_subchan_locked(regs, dev, &irb, &ioint, &scsw);
+            store_scsw_as_csw(regs, scsw);
+            break;
+        }
+    }
+
+    subchannel_interrupt_queue_cleanup(dev);
+    UPDATE_IC_IOPENDING_QLOCKED();
+    release_lock(&sysblk.iointqlk);
 
 #if DEBUG_SCSW
-        if (unlikely(dev->ccwtrace))
+    if (unlikely(dev->ccwtrace))
+    {
+        SCSW*   scsw;                   /* SCSW to validate          */
+
+        /* Select SCSW */
+        if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
+            scsw = &dev->pciscsw;
+        else if (dev->scsw.flag3 & SCSW3_SC_PEND)
+            scsw = &dev->scsw;
+     /* else if (dev->attnscsw.flag3 & SCSW3_SC_PEND)   */
+     /*     scsw = &dev->attnscsw;                      */
+        else
+            scsw = NULL;
+
+        /* Check interrupt validity */
+        if (scsw != NULL                            &&
+            !(scsw->flag2 & (SCSW2_FC | SCSW2_AC))  &&
+            !(scsw->flag3 & SCSW3_AC))
         {
-            SCSW* scsw;   /* (selected SCSW) */
-
-                 if (dev->pciscsw.flag3  & SCSW3_SC_PEND) scsw = &dev->pciscsw;
-            else if (dev->scsw.flag3     & SCSW3_SC_PEND) scsw = &dev->scsw;
-         /* else if (dev->attnscsw.flag3 & SCSW3_SC_PEND) scsw = &dev->attnscsw; */
-            else scsw = NULL;
-
-            /* Check interrupt validity */
-
-            if (1
-                && scsw != NULL
-                && !(scsw->flag2 & (SCSW2_FC | SCSW2_AC))
-                && !(scsw->flag3 & SCSW3_AC)
-            )
-            {
-                WRMSG( HHC90000, "E", "  CHAN: Invalid SCSW presentation" );
-                display_scsw( dev, *scsw );
-            }
+            WRMSG(HHC90000, "E", "  CHAN: Invalid SCSW presentation");
+            display_scsw(dev, *scsw);
         }
+    }
 #endif /*DEBUG_SCSW*/
 
-    }
-    release_lock( &dev->lock );
+    release_lock(&dev->lock);
 
     /* Exit with condition code indicating queued interrupt cleared */
     return icode;

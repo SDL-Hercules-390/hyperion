@@ -28,8 +28,8 @@
 /*          Jan Jaeger, after a suggestion by Willem Konynenberg     */
 /*      Instruction decode rework - Jan Jaeger                       */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
-/*      Basic FP extensions support - Peter Kuschnerus               */
-/*      ASN-and-LX-reuse facility - Roger Bowler, June 2004          */
+/*      Basic FP extensions support - Peter Kuschnerus           v209*/
+/*      ASN-and-LX-reuse facility - Roger Bowler, June 2004      @ALR*/
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -389,16 +389,16 @@ static char *pgmintname[] = {
         /* 23 */        "EX-translation exception",
         /* 24 */        "Primary-authority exception",
         /* 25 */        "Secondary-authority exception",
-        /* 26 */        "LFX-translation exception",
-        /* 27 */        "LSX-translation exception",
+        /* 26 */        "LFX-translation exception",            /*@ALR*/
+        /* 27 */        "LSX-translation exception",            /*@ALR*/
         /* 28 */        "ALET-specification exception",
         /* 29 */        "ALEN-translation exception",
         /* 2A */        "ALE-sequence exception",
         /* 2B */        "ASTE-validity exception",
         /* 2C */        "ASTE-sequence exception",
         /* 2D */        "Extended-authority exception",
-        /* 2E */        "LSTE-sequence exception",
-        /* 2F */        "ASTE-instance exception",
+        /* 2E */        "LSTE-sequence exception",              /*@ALR*/
+        /* 2F */        "ASTE-instance exception",              /*@ALR*/
         /* 30 */        "Stack-full exception",
         /* 31 */        "Stack-empty exception",
         /* 32 */        "Stack-specification exception",
@@ -551,9 +551,9 @@ static char *pgmintname[] = {
       || code == PGM_AFX_TRANSLATION_EXCEPTION
       || code == PGM_ASX_TRANSLATION_EXCEPTION
       || code == PGM_LX_TRANSLATION_EXCEPTION
-      || code == PGM_LFX_TRANSLATION_EXCEPTION
-      || code == PGM_LSX_TRANSLATION_EXCEPTION
-      || code == PGM_LSTE_SEQUENCE_EXCEPTION
+      || code == PGM_LFX_TRANSLATION_EXCEPTION                 /*@ALR*/
+      || code == PGM_LSX_TRANSLATION_EXCEPTION                 /*@ALR*/
+      || code == PGM_LSTE_SEQUENCE_EXCEPTION                   /*@ALR*/
       || code == PGM_EX_TRANSLATION_EXCEPTION
       || code == PGM_PRIMARY_AUTHORITY_EXCEPTION
       || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
@@ -561,7 +561,7 @@ static char *pgmintname[] = {
       || code == PGM_ALE_SEQUENCE_EXCEPTION
       || code == PGM_ASTE_VALIDITY_EXCEPTION
       || code == PGM_ASTE_SEQUENCE_EXCEPTION
-      || code == PGM_ASTE_INSTANCE_EXCEPTION
+      || code == PGM_ASTE_INSTANCE_EXCEPTION                   /*@ALR*/
       || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
       || code == PGM_STACK_FULL_EXCEPTION
       || code == PGM_STACK_EMPTY_EXCEPTION
@@ -833,7 +833,7 @@ static char *pgmintname[] = {
           || code == PGM_ALE_SEQUENCE_EXCEPTION
           || code == PGM_ASTE_VALIDITY_EXCEPTION
           || code == PGM_ASTE_SEQUENCE_EXCEPTION
-          || code == PGM_ASTE_INSTANCE_EXCEPTION
+          || code == PGM_ASTE_INSTANCE_EXCEPTION               /*@ALR*/
           || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
           || code == PGM_PROTECTION_EXCEPTION
@@ -869,9 +869,9 @@ static char *pgmintname[] = {
           || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
           || code == PGM_SPACE_SWITCH_EVENT
           || code == PGM_LX_TRANSLATION_EXCEPTION
-          || code == PGM_LFX_TRANSLATION_EXCEPTION
-          || code == PGM_LSX_TRANSLATION_EXCEPTION
-          || code == PGM_LSTE_SEQUENCE_EXCEPTION
+          || code == PGM_LFX_TRANSLATION_EXCEPTION             /*@ALR*/
+          || code == PGM_LSX_TRANSLATION_EXCEPTION             /*@ALR*/
+          || code == PGM_LSTE_SEQUENCE_EXCEPTION               /*@ALR*/
           || code == PGM_EX_TRANSLATION_EXCEPTION)
         {
             STORE_FW(psa->TEA_L, regs->TEA);
@@ -1077,10 +1077,9 @@ U32     ioid;                           /* I/O interruption address  */
 U32     iointid;                        /* I/O interruption ident    */
 RADR    pfx;                            /* Prefix                    */
 DBLWRD  csw;                            /* CSW for S/370 channels    */
-DEVBLK *dev;                            /* dev presenting interrupt  */
 
     /* Test and clear pending I/O interrupt */
-    icode = ARCH_DEP( present_io_interrupt )( regs, &ioid, &ioparm, &iointid, csw, &dev );
+    icode = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, csw);
 
     /* Exit if no interrupt was presented */
     if (icode == 0) return;
@@ -1126,11 +1125,10 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     }
 
     /* Trace the I/O interrupt */
-    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace || dev->ccwstep)
+    if (CPU_STEPPING_OR_TRACING(regs, 0))
     {
         BYTE*   csw = psa->csw;
 
-        // "Processor %s%02X: I/O interrupt code %1.1X:%4.4X CSW %2.2X...
         WRMSG (HHC00804, "I", PTYPSTR(regs->cpuad), regs->cpuad,
                 SSID_TO_LCSS(ioid >> 16) & 0x07, ioid,
                 csw[0], csw[1], csw[2], csw[3],
@@ -1151,12 +1149,10 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
 #endif
 
     /* Trace the I/O interrupt */
-    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace || dev->ccwstep)
+    if (CPU_STEPPING_OR_TRACING(regs, 0))
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( _FEATURE_IO_ASSIST )
-        // "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
         WRMSG (HHC00805, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm);
 #else
-        // "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X id %8.8X"
         WRMSG (HHC00806, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm, iointid);
 #endif
 #endif /* FEATURE_CHANNEL_SUBSYSTEM */
@@ -1394,23 +1390,15 @@ cpustate_stopping:
         regs->waittod = host_tod();
 
         /* Test for disabled wait PSW and issue message */
-        if (IS_IC_DISABLED_WAIT_PSW( regs ))
+        if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
-            /* Don't log the disabled wait when OSTAILOR VM is active
-               unless it is the very last CPU in the configuration. */
-            if (0
-                || ((sysblk.pgminttr & OS_VM) != OS_VM)   // not VM
-                || !(sysblk.started_mask ^ regs->cpubit)  // is last
-            )
-            {
-                char buf[40];
-                // "Processor %s%02X: disabled wait state %s"
-                WRMSG( HHC00809, "I", PTYPSTR( regs->cpuad ),
-                    regs->cpuad, STR_PSW( regs, buf ));
-            }
+            char buf[40];
+            // "Processor %s%02X: disabled wait state %s"
+            WRMSG (HHC00809, "I", PTYPSTR(regs->cpuad), regs->cpuad, STR_PSW( regs, buf ));
             regs->cpustate = CPUSTATE_STOPPING;
-            RELEASE_INTLOCK( regs );
-            longjmp( regs->progjmp, SIE_NO_INTERCEPT );
+            RELEASE_INTLOCK(regs);
+
+            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
         /* Indicate waiting and invoke CPU wait */
@@ -1911,7 +1899,7 @@ int i;
     regs->AEA_AR( USE_HOME_SPACE      ) = 13;
 
     /* Initialize opcode table pointers */
-    init_regs_runtime_opcode_pointers( regs );
+    init_opcode_pointers (regs);
 
     regs->configured = 1;
 

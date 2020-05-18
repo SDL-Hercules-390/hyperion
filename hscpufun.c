@@ -486,9 +486,6 @@ char*   loadparm     = NULL;            /* Pointer to LOADPARM arg   */
         BYTE   c;
         char   save_ch=0;
 
-        /* Start with default LOADPARM value */
-        set_loadparm( sysblk.loadparm );
-
         /* Save the LOADPARM in case of error */
         orig_loadparm = strdup( str_loadparm() );
 
@@ -617,9 +614,6 @@ int restart_cmd( int argc, char* argv[], char* cmdline )
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return +1;
     }
-
-    /* Consider a restart the same as an ipl */
-    sysblk.ipled = TRUE;
 
     /* Indicate that a restart interrupt is pending */
     ON_IC_RESTART(sysblk.regs[sysblk.pcpu]);
