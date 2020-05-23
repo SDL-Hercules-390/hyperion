@@ -240,6 +240,12 @@ hdt3705_la_OBJECTS = $(am_hdt3705_la_OBJECTS)
 hdt3705_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(hdt3705_la_LDFLAGS) $(LDFLAGS) -o $@
+hdtdummy_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am_hdtdummy_la_OBJECTS = dummydev.lo
+hdtdummy_la_OBJECTS = $(am_hdtdummy_la_OBJECTS)
+hdtdummy_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(hdtdummy_la_LDFLAGS) $(LDFLAGS) -o $@
 hdteq_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_hdteq_la_OBJECTS = hdteq.lo
 hdteq_la_OBJECTS = $(am_hdteq_la_OBJECTS)
@@ -613,50 +619,51 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/dasdutil64.Plo ./$(DEPDIR)/dat.Plo \
 	./$(DEPDIR)/decimal.Plo ./$(DEPDIR)/dfp.Plo \
 	./$(DEPDIR)/diagmssf.Plo ./$(DEPDIR)/diagnose.Plo \
-	./$(DEPDIR)/dmap2hrc.Po ./$(DEPDIR)/dyn76.Plo \
-	./$(DEPDIR)/dyncrypt.Plo ./$(DEPDIR)/dyngui.Plo \
-	./$(DEPDIR)/ecpsvm.Plo ./$(DEPDIR)/esame.Plo \
-	./$(DEPDIR)/external.Plo ./$(DEPDIR)/facility.Plo \
-	./$(DEPDIR)/faketape.Plo ./$(DEPDIR)/fbadasd.Plo \
-	./$(DEPDIR)/fbadasd64.Plo ./$(DEPDIR)/fillfnam.Plo \
-	./$(DEPDIR)/float.Plo ./$(DEPDIR)/fthreads.Plo \
-	./$(DEPDIR)/ftlib.Plo ./$(DEPDIR)/general1.Plo \
-	./$(DEPDIR)/general2.Plo ./$(DEPDIR)/general3.Plo \
-	./$(DEPDIR)/hRexx.Plo ./$(DEPDIR)/hRexx_o.Plo \
-	./$(DEPDIR)/hRexx_r.Plo ./$(DEPDIR)/hao.Plo \
-	./$(DEPDIR)/hchan.Plo ./$(DEPDIR)/hconsole.Plo \
-	./$(DEPDIR)/hdiagf18.Plo ./$(DEPDIR)/hdl.Plo \
-	./$(DEPDIR)/hdteq.Plo ./$(DEPDIR)/hercifc.Po \
-	./$(DEPDIR)/herclin.Po ./$(DEPDIR)/hetget.Po \
-	./$(DEPDIR)/hetinit.Po ./$(DEPDIR)/hetlib.Plo \
-	./$(DEPDIR)/hetmap.Po ./$(DEPDIR)/hettape.Plo \
-	./$(DEPDIR)/hetupd.Po ./$(DEPDIR)/hexdumpe.Plo \
-	./$(DEPDIR)/history.Plo ./$(DEPDIR)/hostinfo.Plo \
-	./$(DEPDIR)/hsccmd.Plo ./$(DEPDIR)/hscemode.Plo \
-	./$(DEPDIR)/hscloc.Plo ./$(DEPDIR)/hscmisc.Plo \
-	./$(DEPDIR)/hscpufun.Plo ./$(DEPDIR)/hscutl.Plo \
-	./$(DEPDIR)/hsocket.Plo ./$(DEPDIR)/hsys.Plo \
-	./$(DEPDIR)/hthreads.Plo ./$(DEPDIR)/httpserv.Plo \
-	./$(DEPDIR)/ieee.Plo ./$(DEPDIR)/impl.Plo ./$(DEPDIR)/io.Plo \
-	./$(DEPDIR)/ipl.Plo ./$(DEPDIR)/loadmem.Plo \
-	./$(DEPDIR)/loadparm.Plo ./$(DEPDIR)/logger.Plo \
-	./$(DEPDIR)/logmsg.Plo ./$(DEPDIR)/losc.Plo \
-	./$(DEPDIR)/ltdl.Plo ./$(DEPDIR)/machchk.Plo \
-	./$(DEPDIR)/maketape.Po ./$(DEPDIR)/memrchr.Plo \
-	./$(DEPDIR)/mpc.Plo ./$(DEPDIR)/netsupp.Plo \
-	./$(DEPDIR)/omatape.Plo ./$(DEPDIR)/opcode.Plo \
-	./$(DEPDIR)/panel.Plo ./$(DEPDIR)/parser.Plo \
-	./$(DEPDIR)/pfpo.Plo ./$(DEPDIR)/plo.Plo \
-	./$(DEPDIR)/printer.Plo ./$(DEPDIR)/pttrace.Plo \
-	./$(DEPDIR)/qdio.Plo ./$(DEPDIR)/qeth.Plo \
-	./$(DEPDIR)/resolve.Plo ./$(DEPDIR)/scedasd.Plo \
-	./$(DEPDIR)/scescsi.Plo ./$(DEPDIR)/script.Plo \
-	./$(DEPDIR)/scsitape.Plo ./$(DEPDIR)/scsiutil.Plo \
-	./$(DEPDIR)/service.Plo ./$(DEPDIR)/shared.Plo \
-	./$(DEPDIR)/sie.Plo ./$(DEPDIR)/sllib.Plo \
-	./$(DEPDIR)/sockdev.Plo ./$(DEPDIR)/sr.Plo \
-	./$(DEPDIR)/stack.Plo ./$(DEPDIR)/strsignal.Plo \
-	./$(DEPDIR)/tapeccws.Plo ./$(DEPDIR)/tapecopy-scsiutil.Po \
+	./$(DEPDIR)/dmap2hrc.Po ./$(DEPDIR)/dummydev.Plo \
+	./$(DEPDIR)/dyn76.Plo ./$(DEPDIR)/dyncrypt.Plo \
+	./$(DEPDIR)/dyngui.Plo ./$(DEPDIR)/ecpsvm.Plo \
+	./$(DEPDIR)/esame.Plo ./$(DEPDIR)/external.Plo \
+	./$(DEPDIR)/facility.Plo ./$(DEPDIR)/faketape.Plo \
+	./$(DEPDIR)/fbadasd.Plo ./$(DEPDIR)/fbadasd64.Plo \
+	./$(DEPDIR)/fillfnam.Plo ./$(DEPDIR)/float.Plo \
+	./$(DEPDIR)/fthreads.Plo ./$(DEPDIR)/ftlib.Plo \
+	./$(DEPDIR)/general1.Plo ./$(DEPDIR)/general2.Plo \
+	./$(DEPDIR)/general3.Plo ./$(DEPDIR)/hRexx.Plo \
+	./$(DEPDIR)/hRexx_o.Plo ./$(DEPDIR)/hRexx_r.Plo \
+	./$(DEPDIR)/hao.Plo ./$(DEPDIR)/hchan.Plo \
+	./$(DEPDIR)/hconsole.Plo ./$(DEPDIR)/hdiagf18.Plo \
+	./$(DEPDIR)/hdl.Plo ./$(DEPDIR)/hdteq.Plo \
+	./$(DEPDIR)/hercifc.Po ./$(DEPDIR)/herclin.Po \
+	./$(DEPDIR)/hetget.Po ./$(DEPDIR)/hetinit.Po \
+	./$(DEPDIR)/hetlib.Plo ./$(DEPDIR)/hetmap.Po \
+	./$(DEPDIR)/hettape.Plo ./$(DEPDIR)/hetupd.Po \
+	./$(DEPDIR)/hexdumpe.Plo ./$(DEPDIR)/history.Plo \
+	./$(DEPDIR)/hostinfo.Plo ./$(DEPDIR)/hsccmd.Plo \
+	./$(DEPDIR)/hscemode.Plo ./$(DEPDIR)/hscloc.Plo \
+	./$(DEPDIR)/hscmisc.Plo ./$(DEPDIR)/hscpufun.Plo \
+	./$(DEPDIR)/hscutl.Plo ./$(DEPDIR)/hsocket.Plo \
+	./$(DEPDIR)/hsys.Plo ./$(DEPDIR)/hthreads.Plo \
+	./$(DEPDIR)/httpserv.Plo ./$(DEPDIR)/ieee.Plo \
+	./$(DEPDIR)/impl.Plo ./$(DEPDIR)/io.Plo ./$(DEPDIR)/ipl.Plo \
+	./$(DEPDIR)/loadmem.Plo ./$(DEPDIR)/loadparm.Plo \
+	./$(DEPDIR)/logger.Plo ./$(DEPDIR)/logmsg.Plo \
+	./$(DEPDIR)/losc.Plo ./$(DEPDIR)/ltdl.Plo \
+	./$(DEPDIR)/machchk.Plo ./$(DEPDIR)/maketape.Po \
+	./$(DEPDIR)/memrchr.Plo ./$(DEPDIR)/mpc.Plo \
+	./$(DEPDIR)/netsupp.Plo ./$(DEPDIR)/omatape.Plo \
+	./$(DEPDIR)/opcode.Plo ./$(DEPDIR)/panel.Plo \
+	./$(DEPDIR)/parser.Plo ./$(DEPDIR)/pfpo.Plo \
+	./$(DEPDIR)/plo.Plo ./$(DEPDIR)/printer.Plo \
+	./$(DEPDIR)/pttrace.Plo ./$(DEPDIR)/qdio.Plo \
+	./$(DEPDIR)/qeth.Plo ./$(DEPDIR)/resolve.Plo \
+	./$(DEPDIR)/scedasd.Plo ./$(DEPDIR)/scescsi.Plo \
+	./$(DEPDIR)/script.Plo ./$(DEPDIR)/scsitape.Plo \
+	./$(DEPDIR)/scsiutil.Plo ./$(DEPDIR)/service.Plo \
+	./$(DEPDIR)/shared.Plo ./$(DEPDIR)/sie.Plo \
+	./$(DEPDIR)/sllib.Plo ./$(DEPDIR)/sockdev.Plo \
+	./$(DEPDIR)/sr.Plo ./$(DEPDIR)/stack.Plo \
+	./$(DEPDIR)/strsignal.Plo ./$(DEPDIR)/tapeccws.Plo \
+	./$(DEPDIR)/tapecopy-scsiutil.Po \
 	./$(DEPDIR)/tapecopy-tapecopy.Po ./$(DEPDIR)/tapedev.Plo \
 	./$(DEPDIR)/tapemap.Po ./$(DEPDIR)/tapesplt.Po \
 	./$(DEPDIR)/tcpip.Plo ./$(DEPDIR)/tcpnje.Plo \
@@ -691,7 +698,8 @@ SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3088_la_SOURCES) $(hdt3270_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
-	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
+	$(hdtdummy_la_SOURCES) $(hdteq_la_SOURCES) \
+	$(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
 	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
 	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
 	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
@@ -716,7 +724,8 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdt3088_la_SOURCES) $(hdt3270_la_SOURCES) \
 	$(hdt3420_la_SOURCES) $(hdt3505_la_SOURCES) \
 	$(hdt3525_la_SOURCES) $(hdt3705_la_SOURCES) \
-	$(hdteq_la_SOURCES) $(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
+	$(hdtdummy_la_SOURCES) $(hdteq_la_SOURCES) \
+	$(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
 	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
 	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
 	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
@@ -947,6 +956,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -1059,6 +1069,7 @@ dyndev_SRC = \
   tapeccws.c  \
   tapedev.c   \
   tuntap.c    \
+  dummydev.c  \
   zfcp.c
 
 
@@ -1127,6 +1138,7 @@ HERCMODS = \
   hdt3420.la    \
   hdt3505.la    \
   hdt2880.la    \
+  hdtdummy.la   \
   hdt3525.la
 
 modexec_LTLIBRARIES = $(HERCMODS)
@@ -1192,6 +1204,9 @@ hdt1052c_la_LIBADD = $(DYNMOD_LD_ADD)
 hdtptp_la_SOURCES = ctc_ptp.c mpc.c resolve.c tuntap.c
 hdtptp_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
 hdtptp_la_LIBADD = $(DYNMOD_LD_ADD)
+hdtdummy_la_SOURCES = dummydev.c
+hdtdummy_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+hdtdummy_la_LIBADD = $(DYNMOD_LD_ADD)
 
 #--------------------------------------------
 # Common data areas (shared) library
@@ -2030,6 +2045,9 @@ hdt3525.la: $(hdt3525_la_OBJECTS) $(hdt3525_la_DEPENDENCIES) $(EXTRA_hdt3525_la_
 hdt3705.la: $(hdt3705_la_OBJECTS) $(hdt3705_la_DEPENDENCIES) $(EXTRA_hdt3705_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdt3705_la_LINK) -rpath $(modexecdir) $(hdt3705_la_OBJECTS) $(hdt3705_la_LIBADD) $(LIBS)
 
+hdtdummy.la: $(hdtdummy_la_OBJECTS) $(hdtdummy_la_DEPENDENCIES) $(EXTRA_hdtdummy_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(hdtdummy_la_LINK) -rpath $(modexecdir) $(hdtdummy_la_OBJECTS) $(hdtdummy_la_LIBADD) $(LIBS)
+
 hdteq.la: $(hdteq_la_OBJECTS) $(hdteq_la_DEPENDENCIES) $(EXTRA_hdteq_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(hdteq_la_LINK) -rpath $(modexecdir) $(hdteq_la_OBJECTS) $(hdteq_la_LIBADD) $(LIBS)
 
@@ -2289,6 +2307,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/diagmssf.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/diagnose.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmap2hrc.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummydev.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dyn76.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dyncrypt.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dyngui.Plo@am__quote@ # am--include-marker
@@ -2877,6 +2896,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/diagmssf.Plo
 	-rm -f ./$(DEPDIR)/diagnose.Plo
 	-rm -f ./$(DEPDIR)/dmap2hrc.Po
+	-rm -f ./$(DEPDIR)/dummydev.Plo
 	-rm -f ./$(DEPDIR)/dyn76.Plo
 	-rm -f ./$(DEPDIR)/dyncrypt.Plo
 	-rm -f ./$(DEPDIR)/dyngui.Plo
@@ -3104,6 +3124,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/diagmssf.Plo
 	-rm -f ./$(DEPDIR)/diagnose.Plo
 	-rm -f ./$(DEPDIR)/dmap2hrc.Po
+	-rm -f ./$(DEPDIR)/dummydev.Plo
 	-rm -f ./$(DEPDIR)/dyn76.Plo
 	-rm -f ./$(DEPDIR)/dyncrypt.Plo
 	-rm -f ./$(DEPDIR)/dyngui.Plo
