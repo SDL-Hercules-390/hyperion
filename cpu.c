@@ -1835,42 +1835,16 @@ int     aswitch;
     /* Set `execflag' to 0 in case EXecuted instruction did a longjmp() */
     regs->execflag = 0;
 
-    //--------------------------------------------------------------
-    //                    PROGRAMMING NOTE
-    //--------------------------------------------------------------
-    // The first 'fastest_no_txf_loop' loop below is used when the
-    // TXF facility is not enabled, and since facilities cannot be
-    // enabled or disabled once the guest system has been IPLed and
-    // started, it utilizes our original instruction execution loop
-    // which uses the 'EXECUTE_INSTRUCTION' and 'UNROLLED_EXECUTE'
-    // macros which do not have any TXF related code in them.
-    //
-    // The second and third loops below (the 'txf_facility_loop' and
-    // 'txf_slower_loop') are used when the TXF facility is enabled,
-    // requiring us to check whether or not a transaction is active
-    // or not after each instruction is executed.
-    //
-    // If no transaction is active, the normal 'EXECUTE_INSTRUCTION'
-    // and 'UNROLLED_EXECUTE' macros can be used, but a check for an
-    // active transaction still needs to be performed after each and
-    // every instruction (so we can know which loop we need to use).
-    //
-    // When a transaction is active, we use the third (slowest) loop
-    // called 'txf_slower_loop', using the 'TXF_EXECUTE_INSTRUCTION'
-    // and 'TXF_UNROLLED_EXECUTE' macros, which contain code that
-    // enforces certain Transaction-Exceution Facility constraints.
-    //--------------------------------------------------------------
+fastloop:
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
-        goto txf_facility_loop;
+    if (INTERRUPT_PENDING( regs ))
+        ARCH_DEP( process_interrupt )( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
+    if (regs->txf_tnd)
+        goto slowloop;
 #endif
 
-fastest_no_txf_loop:
-
-    if (INTERRUPT_PENDING( regs ))
-        ARCH_DEP( process_interrupt )( regs );
-
     ip = INSTRUCTION_FETCH( regs, 0 );
     EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
 
@@ -1884,49 +1858,16 @@ fastest_no_txf_loop:
     */
     for (i=0; i < 128; i++)
     {
-        UNROLLED_EXECUTE( current_opcode_table, regs );
-        UNROLLED_EXECUTE( current_opcode_table, regs );
-    }
-    regs->instcount   +=     1 + (i * 2);
-    UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
-
-    /* Perform automatic instruction tracing if it's enabled */
-    do_automatic_tracing();
-    goto fastest_no_txf_loop;
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-
-txf_facility_loop:
-
-    if (INTERRUPT_PENDING( regs ))
-        ARCH_DEP( process_interrupt )( regs );
-
-    if (regs->txf_tnd)
-        goto enter_txf_slower_loop;
-
-enter_txf_faster_loop:
-
-    ip = INSTRUCTION_FETCH( regs, 0 );
-    EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
-
-    /* BHe: I have tried several settings. But 2 unrolled
-       executes gives (core i7 at my place) the best results.
-
-       Even a 'do { } while(0);' with several unrolled executes
-       and without the 'i' was slower.
-
-       That surprised me.
-    */
-    for (i=0; i < 128; i++)
-    {
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
         if (regs->txf_tnd)
             break;
-
+#endif
         UNROLLED_EXECUTE( current_opcode_table, regs );
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
         if (regs->txf_tnd)
             break;
-
+#endif
         UNROLLED_EXECUTE( current_opcode_table, regs );
     }
     regs->instcount   +=     1 + (i * 2);
@@ -1935,15 +1876,15 @@ enter_txf_faster_loop:
     /* Perform automatic instruction tracing if it's enabled */
     do_automatic_tracing();
 
-//txf_slower_loop:
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP )
+
+slowloop:
 
     if (INTERRUPT_PENDING( regs ))
         ARCH_DEP( process_interrupt )( regs );
 
     if (!regs->txf_tnd)
-        goto enter_txf_faster_loop;
-
-enter_txf_slower_loop:
+        goto fastloop;
 
     ip = INSTRUCTION_FETCH( regs, 0 );
     TXF_EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
@@ -1973,9 +1914,10 @@ enter_txf_slower_loop:
 
     /* Perform automatic instruction tracing if it's enabled */
     do_automatic_tracing();
-    goto txf_facility_loop;
 
-#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_SLOWLOOP ) */
+
+    goto fastloop;
 
     UNREACHABLE_CODE( return NULL );
 
