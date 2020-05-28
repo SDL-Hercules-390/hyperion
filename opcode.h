@@ -837,60 +837,31 @@ do { \
 
 #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
-#if !defined( OPTION_TXF_SLOWLOOP )
+#undef  EXECUTE_INSTRUCTION
+#define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                       \
+do {                                                                  \
+    FOOTPRINT( (_ip), (_regs) );                                      \
+    ICOUNT_INST( (_ip), (_regs) );                                    \
+    (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                     \
+} while (0)
 
-  #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
-    #undef  EXECUTE_INSTRUCTION
-    #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                   \
-    do {                                                              \
-        FOOTPRINT( (_ip), (_regs) );                                  \
-        ICOUNT_INST( (_ip), (_regs) );                                \
-        (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                 \
-    } while (0)
-
-  #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
-    #undef  EXECUTE_INSTRUCTION
-    #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                   \
-    do {                                                              \
-        CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                      \
-        FOOTPRINT( (_ip), (_regs) );                                  \
-        ICOUNT_INST( (_ip), (_regs) );                                \
-        (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                 \
-    } while (0)
-
-  #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
-#else /* defined( OPTION_TXF_SLOWLOOP ) */
-
-  #undef  EXECUTE_INSTRUCTION
-  #define EXECUTE_INSTRUCTION( _oct, _ip, _regs )                     \
+  #undef  TXF_EXECUTE_INSTRUCTION
+  #define TXF_EXECUTE_INSTRUCTION( _oct, _ip, _regs )                 \
   do {                                                                \
+      CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                        \
       FOOTPRINT( (_ip), (_regs) );                                    \
       ICOUNT_INST( (_ip), (_regs) );                                  \
       (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                   \
   } while (0)
 
-  #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+  #undef  TXF_UNROLLED_EXECUTE
+  #define TXF_UNROLLED_EXECUTE( _oct, _regs )                         \
+    if ((_regs)->ip >= (_regs)->aie) break;                           \
+    TXF_EXECUTE_INSTRUCTION( (_oct), (_regs)->ip, (_regs) )
 
-    #undef  TXF_EXECUTE_INSTRUCTION
-    #define TXF_EXECUTE_INSTRUCTION( _oct, _ip, _regs )               \
-    do {                                                              \
-        CHECK_TXF_CONSTRAINTS( (_ip), (_regs) );                      \
-        FOOTPRINT( (_ip), (_regs) );                                  \
-        ICOUNT_INST( (_ip), (_regs) );                                \
-        (_oct)[ fetch_hw( (_ip) )]( (_ip), (_regs) );                 \
-    } while (0)
-
-    #undef  TXF_UNROLLED_EXECUTE
-    #define TXF_UNROLLED_EXECUTE( _oct, _regs )                       \
-      if ((_regs)->ip >= (_regs)->aie) break;                         \
-      TXF_EXECUTE_INSTRUCTION( (_oct), (_regs)->ip, (_regs) )
-
-  #endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
-#endif /* defined( OPTION_TXF_SLOWLOOP ) */
+#endif /* !defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 #undef  UNROLLED_EXECUTE
 #define UNROLLED_EXECUTE( _oct, _regs )                               \
