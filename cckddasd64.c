@@ -232,7 +232,7 @@ int             rc, i;                  /* Return code, Loop index   */
     dev->fd = -1;
 
     /* If no more devices then perform global termination */
-    if (cckdblk.dev1st == NULL) cckd_dasd_term ();
+    cckd_dasd_term_if_appropriate();
 
     dev->buf = NULL;
     dev->bufsize = 0;

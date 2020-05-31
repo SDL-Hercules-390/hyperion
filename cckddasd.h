@@ -41,7 +41,7 @@ extern CCKD64_L2ENT  empty64_l2 [ CKD_NULLTRK_FMTMAX + 1 ][256];
 /* Internal functions                                                */
 /*-------------------------------------------------------------------*/
 int     cckd_dasd_init(int argc, BYTE *argv[]);
-int     cckd_dasd_term();
+void    cckd_dasd_term_if_appropriate();
 /*-------------------------------------------------------------------*/
 int     cckd_dasd_init_handler( DEVBLK *dev, int argc, char *argv[] );
 int     cckd_dasd_close_device(DEVBLK *dev);
