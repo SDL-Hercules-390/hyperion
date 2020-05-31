@@ -62,6 +62,7 @@ typedef int (*PFNHALTEXECFUNC)( pid_t pid, TID tid );
 extern char*                PackageName;
 extern char*                PackageVersion;
 extern char*                PackageSource;
+extern char                 PackageMajorVers;
 extern BYTE                 MsgLevel;
 extern BYTE                 MsgPrefix;
 extern BYTE                 ErrPrefix;

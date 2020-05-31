@@ -1225,6 +1225,15 @@ static BYTE GetRexxVersionSource()
         *source++ = 0; // (null terminate version and point to source)
         REXX_DEP( PackageVersion ) = strdup( Result );
         REXX_DEP( PackageSource  ) = strdup( source );
+
+        /* Extract the major version number too */
+
+        // "REXX-ooRexx_4.2.0(MT)_32-bit"
+        //              ^
+        //              ^
+        //              ^
+
+        REXX_DEP( PackageMajorVers ) = REXX_DEP( PackageVersion )[12];
     }
 
     return source ? TRUE : FALSE;
@@ -1269,7 +1278,7 @@ BYTE REXX_DEP( LoadExtra )( BYTE verbose )
             if (verbose)
             {
                 // "REXX(%s) dlopen '%s' failed: %s"
-                WRMSG( HHC17531, "E", REXX_DEP( PackageName ),
+                WRMSG( HHC17531, "W", REXX_DEP( PackageName ),
                     libname, dlerror());
             }
         }
@@ -1388,12 +1397,19 @@ BYTE REXX_DEP( Load )( BYTE verbose )
     /*---------------------------------------------------------------*/
     if (!REXX_DEP( LoadExtra )( verbose ))
     {
-        dlclose( LibHandle );
-        if (ApiLibHandle != LibHandle)
-            dlclose( ApiLibHandle );
-        LibHandle    = NULL;
-        ApiLibHandle = NULL;
-        return FALSE;
+        // A failure to load the ExtraLibs is fatal for
+        // version 4.2.0 of ooRexx or earlier. For ooRexx
+        // version 5.0.0 and later it is only a warning.
+
+        if (REXX_DEP( PackageMajorVers ) < '5')
+        {
+            dlclose( LibHandle );
+            if (ApiLibHandle != LibHandle)
+                dlclose( ApiLibHandle );
+            LibHandle    = NULL;
+            ApiLibHandle = NULL;
+            return FALSE;
+        }
     }
 
     return TRUE;

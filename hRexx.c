@@ -59,6 +59,7 @@ static BYTE   DefaultMode;        // see InitializeDefaults() function
 char*           PackageName       = NULL;
 char*           PackageVersion    = NULL;
 char*           PackageSource     = NULL;
+char            PackageMajorVers  = '0';
 BYTE            MsgLevel          = DEFAULT_MSGLEVEL;
 BYTE            MsgPrefix         = DEFAULT_MSGPREFIX;
 BYTE            ErrPrefix         = DEFAULT_ERRPREFIX;
