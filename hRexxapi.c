@@ -47,9 +47,10 @@ typedef const RXSTRING          CRXSTRING, *PCRXSTRING;
 /*-------------------------------------------------------------------*/
 /* Private global variables                                          */
 /*-------------------------------------------------------------------*/
-static char*  REXX_DEP( PackageName    )  = QSTR( REXX_PKG );
-static char*  REXX_DEP( PackageVersion )  = NULL;
-static char*  REXX_DEP( PackageSource  )  = NULL;
+static char*  REXX_DEP( PackageName      )  = QSTR( REXX_PKG );
+static char*  REXX_DEP( PackageVersion   )  = NULL;
+static char*  REXX_DEP( PackageSource    )  = NULL;
+static char   REXX_DEP( PackageMajorVers )  = '0';
 
 static char*  LibName       = REXX_LIBNAME;
 static char*  ApiLibName    = REXX_APILIBNAME;
