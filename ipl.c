@@ -688,13 +688,9 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->sigp_ini_reset = regs->sigp_reset = 0;
 
     /* Clear the registers */
-    memset ( &regs->psw,           0, sizeof(regs->psw)           );
-    memset ( &regs->captured_zpsw, 0, sizeof(regs->captured_zpsw) );
-#if !defined( NOCHECK_AEA_ARRAY_BOUNDS )
-    memset ( &regs->cr_struct,     0, sizeof(regs->cr_struct)     );
-#else
-    memset ( &regs->cr,            0, sizeof(regs->cr)            );
-#endif
+    memset ( &regs->psw,           0, sizeof( regs->psw           ));
+    memset ( &regs->captured_zpsw, 0, sizeof( regs->captured_zpsw ));
+    memset ( &regs->cr_struct,     0, sizeof( regs->cr_struct     ));
     regs->fpc    = 0;
     regs->PX     = 0;
     regs->psw.AMASK_G = AMASK24;

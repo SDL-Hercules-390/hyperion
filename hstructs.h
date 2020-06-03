@@ -132,15 +132,8 @@ struct REGS {                           /* Processor registers       */
 #define CR_ASD_REAL     -1
 #define CR_ALB_OFFSET   16
 
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
 /*3B8*/ DW      cr_struct[1+16+16];
 #define XR(_crn) cr_struct[1+(_crn)]
-#else
-#define XR(_crn) cr[(_crn)]
-/*3B8*/ DW      cr_special[1];          /* Negative Index into cr    */
-/*3C0*/ DW      cr[16];                 /* Control registers         */
-/*440*/ DW      alb[16];                /* Accesslist Lookaside cr   */
-#endif
 
 /*4C0*/ U32     dxc;                    /* Data exception code       */
 /*4C4*/                                 /* Available...              */
@@ -334,24 +327,11 @@ struct REGS {                           /* Processor registers       */
 
         BYTE    aea_mode;               /* aea addressing mode       */
 
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
         int     aea_ar_struct[5+16];
 #define AEA_AR(_arn) aea_ar_struct[5+(_arn)]
-#else
-#define AEA_AR(_arn) aea_ar[(_arn)]
-        int     aea_ar_special[5];      /* Negative index into ar    */
-        int     aea_ar[16];             /* arn to cr number          */
-#endif
 
-#ifndef NOCHECK_AEA_ARRAY_BOUNDS
         BYTE    aea_common_struct[1+16+16];
 #define AEA_COMMON(_asd) aea_common_struct[1+(_asd)]
-#else
-#define AEA_COMMON(_asd) aea_common[(_asd)]
-        BYTE    aea_common_special[1];  /* real asd                  */
-        BYTE    aea_common[16];         /* 1=asd is not private      */
-        BYTE    aea_common_alb[16];     /* alb pseudo registers      */
-#endif
 
         BYTE    aea_aleprot[16];        /* ale protected             */
 

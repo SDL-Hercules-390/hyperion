@@ -3778,14 +3778,10 @@ int     rc;                             /* return code from load_psw */
     } /* end if (LSED_UET_PC) */
 
     /* Update the updated CPU registers from the working copy */
-    memcpy( &regs->psw, &newregs.psw, sizeof( newregs.psw ));
-    memcpy(  regs->gr,   newregs.gr,  sizeof( newregs.gr  ));
-#if !defined( NOCHECK_AEA_ARRAY_BOUNDS )
-    memcpy( regs->cr_struct, newregs.cr_struct, sizeof( newregs.cr_struct ));
-#else
-    memcpy( regs->cr, newregs.cr, sizeof( newregs.cr ));
-#endif
-    memcpy( regs->ar, newregs.ar, sizeof( newregs.ar ));
+    memcpy( &regs->psw,      &newregs.psw,       sizeof( newregs.psw       ));
+    memcpy(  regs->gr,        newregs.gr,        sizeof( newregs.gr        ));
+    memcpy(  regs->cr_struct, newregs.cr_struct, sizeof( newregs.cr_struct ));
+    memcpy(  regs->ar,        newregs.ar,        sizeof( newregs.ar        ));
     regs->bear = newregs.bear;
 
     /* Set the main storage reference and change bits */
