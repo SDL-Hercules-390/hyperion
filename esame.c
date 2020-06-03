@@ -1004,25 +1004,49 @@ U64     new;                            /* new value                 */
             /* Perform requested funtion specified as per request code in r2 */
             if (regs->GR_L(r2) & 3)
             {
+                /* Purge the TLB and/or ALB as requested */
                 OBTAIN_INTLOCK( regs );
                 {
                     SYNCHRONIZE_CPUS( regs );
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+                    /* Abort all active transactions w/255 cc=2 */
+                    {
+                        int    cpu;
+                        REGS*  cpu_regs;
+
+                        for (cpu=0, cpu_regs = sysblk.regs[ 0 ];
+                            cpu < sysblk.maxcpu; cpu_regs = sysblk.regs[ ++cpu ])
+                        {
+                            if (1
+                                && IS_CPU_ONLINE( cpu )
+                                && cpu_regs->cpuad != regs->cpuad
+                                && cpu_regs->txf_tnd
+                            )
+                            {
+                                PTT_TXF( "*TXF CSPG", 0, cpu_regs->txf_contran, cpu_regs->txf_tnd );
+                                /* Abort this CPU's transaction */
+                                cpu_regs->txf_tac = TAC_MISC;
+                            }
+                        }
+                    }
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
                     if (regs->GR_L(r2) & 1)
-                        ARCH_DEP(purge_tlb_all)();
+                        ARCH_DEP( purge_tlb_all )();
 
                     if (regs->GR_L(r2) & 2)
-                        ARCH_DEP(purge_alb_all)();
+                        ARCH_DEP( purge_alb_all )();
                 }
                 RELEASE_INTLOCK( regs );
             }
         }
         else
         {
-            PTT_CSF("*CSPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+            PTT_CSF( "*CSPG", regs->GR_L(r1), regs->GR_L(r2), regs->psw.IA_L );
 
             /* Otherwise yield */
-            regs->GR_G(r1) = CSWAP64(old);
+            regs->GR_G(r1) = CSWAP64( old );
 
             if (sysblk.cpus > 1)
                 sched_yield();
