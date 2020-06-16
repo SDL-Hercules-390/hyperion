@@ -901,9 +901,10 @@ U32     old;                            /* old value                 */
                                 && cpu_regs->txf_tnd
                             )
                             {
-                                PTT_TXF( "*TXF CSP", 0, cpu_regs->txf_contran, cpu_regs->txf_tnd );
                                 /* Abort this CPU's transaction */
+                                cpu_regs->txf_why |= TXF_WHY_CSP_INSTR;
                                 cpu_regs->txf_tac = TAC_MISC;
+                                PTT_TXF( "*TXF CSP", 0, cpu_regs->txf_contran, cpu_regs->txf_tnd );
                             }
                         }
                     }

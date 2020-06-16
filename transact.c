@@ -643,6 +643,7 @@ TPAGEMAP   *pmap;
         regs->txf_piid       = 0;          /* program interrupt id   */
         regs->txf_lastacctyp = 0;          /* last access type       */
         regs->txf_lastarn    = 0;          /* last access arn        */
+        regs->txf_why        = 0;          /* no abort cause (yet)   */
 
         memcpy( regs->txf_savedgr, regs->gr, sizeof( regs->txf_savedgr ));
         memset( regs->txf_pifctab, 0, sizeof( regs->txf_pifctab ));
@@ -899,10 +900,17 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 
     if (TXF_TRACE( FAILURE, txf_contran ))
     {
-        // "TXF: Failed %s %s Transaction for TND %d: %s (%s)"
+        char why[ 256 ] = {0};
+
+        if (regs->txf_why)
+            txf_why_str( why, sizeof( why ), regs->txf_why );
+        else
+            STRLCPY( why, " ?" );
+
+        // "TXF: Failed %s %s Transaction for TND %d: %s (%s), why =%s"
         WRMSG( HHC17703, "D", txf_tnd > 1 ? "Nested" : "Outermost",
             txf_contran ? "Cons" : "Uncons", txf_tnd,
-            tac2short( txf_tac ), tac2long( txf_tac ));
+            tac2short( txf_tac ), tac2long( txf_tac ), why );
 
         if (TXF_TRACE_MAP( txf_contran ))
         {
@@ -948,11 +956,11 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
         }
     }
 
-    obtain_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
+    OBTAIN_TXFLOCK( regs );
     {
         regs->txf_tnd = 0;
     }
-    release_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
+    RELEASE_TXFLOCK( regs );
 
     regs->txf_NTSTG     = false;
     regs->txf_contran   = false;
@@ -986,12 +994,10 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     /*---------------------------------------------*/
     if (txf_tac != TAC_UPGM)
     {
-        if (txf_tac && txf_tac < (int) _countof( tac2cc ))
-            regs->psw.cc = tac2cc[ txf_tac ];
-        else if (txf_tac == 255)
-            regs->psw.cc = TXF_CC_TRANSIENT;
-        else if (txf_tac >= 256)
-            regs->psw.cc = TXF_CC_INDETERMINATE;
+             if (txf_tac && txf_tac < (int) _countof( tac2cc ))
+                                        regs->psw.cc = tac2cc[ txf_tac ];
+        else if (txf_tac == TAC_MISC)   regs->psw.cc = TXF_CC_TRANSIENT;
+        else if (txf_tac >= TAC_TABORT) regs->psw.cc = TXF_CC_INDETERMINATE;
     }
 
     /*---------------------------------------------*/
@@ -1303,10 +1309,11 @@ TPAGEMAP*  pmap;
                 txf_tac = TAC_STORE_CNF;
             }
 
-            obtain_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
+            /* Abort this CPU's transaction */
+            OBTAIN_TXFLOCK( regs );
             {
-                /* Abort our CPU's transaction */
                 regs->txf_tac = txf_tac;
+                regs->txf_why |= TXF_WHY_CONFLICT;
 
                 /* Save the logical address where the conflict
                    occurred if we were able to determine that.
@@ -1321,7 +1328,7 @@ TPAGEMAP*  pmap;
                 else
                     regs->txf_conflict = 0;
             }
-            release_lock( &regs->sysblk->txf_lock[ regs->cpuad ] );
+            RELEASE_TXFLOCK( regs );
 
             PTT_TXF( "TXF chk!", addrpage, regs->txf_conflict, true );
             return true;    // (CONFLICT DETECTED!)
@@ -1601,6 +1608,8 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
         {
             int txf_tac = (acctype == ACCTYPE_READ) ?
                 TAC_FETCH_OVF : TAC_STORE_OVF;
+            regs->txf_why |= TXF_WHY_MAX_PAGES;
+
             PTT_TXF( "*TXF maddr_l", txf_tac, regs->txf_contran, regs->txf_tnd );
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, txf_tac );
             UNREACHABLE_CODE( return maddr );
@@ -1751,6 +1760,37 @@ static const char* tac2name( U64 tac, bool bLong )
 }
 const char* tac2long ( U64 tac ) { return tac2name( tac, true  ); }
 const char* tac2short( U64 tac ) { return tac2name( tac, false ); }
+
+/*-------------------------------------------------------------------*/
+/*            DEBUG:  Constraint Violation Names                     */
+/*-------------------------------------------------------------------*/
+const char* txf_why_str( char* buffer, int buffsize, int why )
+{
+    #define TXF_WHY_FORMAT( _why ) ((why & _why) ? " " #_why : "")
+
+    snprintf( buffer, buffsize, "%s%s%s%s%s%s%s%s%s%s%s%s%s"
+
+        , TXF_WHY_FORMAT( TXF_WHY_INSTRADDR                )
+        , TXF_WHY_FORMAT( TXF_WHY_INSTRCOUNT               )
+        , TXF_WHY_FORMAT( TXF_WHY_RAND_ABORT               )
+        , TXF_WHY_FORMAT( TXF_WHY_CSP_INSTR                )
+        , TXF_WHY_FORMAT( TXF_WHY_CSPG_INSTR               )
+        , TXF_WHY_FORMAT( TXF_WHY_SIE_EXIT                 )
+        , TXF_WHY_FORMAT( TXF_WHY_CONFLICT                 )
+        , TXF_WHY_FORMAT( TXF_WHY_MAX_PAGES                )
+        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_INSTR            )
+        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_BRANCH           )
+        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_RELATIVE_BRANCH  )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_INSTR               )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_FLOAT_INSTR         )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_ACCESS_INSTR        )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_NONRELATIVE_BRANCH  )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_BRANCH_SET_MODE     )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_SET_ADDRESSING_MODE )
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_MISC_INSTR          )
+    );
+    return buffer;
+}
 
 /*-------------------------------------------------------------------*/
 /*               DEBUG:  Hex dump a cache line                       */

@@ -959,7 +959,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
             regs->tlb.protect[tlbix]   = regs->dat.protect;
             regs->tlb.acc[tlbix]       = 0;
-            regs->tlb.main[tlbix]       = NULL;
+            regs->tlb.main[tlbix]      = NULL;
 
         /* Set adjacent TLB entry if 4K page sizes */
             if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
@@ -1097,7 +1097,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
             regs->tlb.acc[tlbix]       = 0;
             regs->tlb.protect[tlbix]   = regs->dat.protect;
-            regs->tlb.main[tlbix]       = NULL;
+            regs->tlb.main[tlbix]      = NULL;
         }
     } /* end if(!TLB) */
 

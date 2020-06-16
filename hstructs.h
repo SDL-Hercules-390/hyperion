@@ -429,6 +429,44 @@ struct REGS {                           /* Processor registers       */
                                            Interrupt Identifier      */
         BYTE    txf_dxcvxc;             /* Data/Vector Exception Code*/
 
+        U32     txf_why;                /* why transaction aborted   */
+
+        // Don't forget to update the "txf_why_str" function too!
+        // Don't forget to update the "txf_why_str" function too!
+
+#define TXF_WHY_INSTRADDR                   0x80000000
+#define TXF_WHY_INSTRCOUNT                  0x40000000
+#define TXF_WHY_RAND_ABORT                  0x20000000
+#define TXF_WHY_CSP_INSTR                   0x10000000
+#define TXF_WHY_CSPG_INSTR                  0x08000000
+#define TXF_WHY_SIE_EXIT                    0x04000000
+#define TXF_WHY_CONFLICT                    0x02000000
+#define TXF_WHY_MAX_PAGES                   0x01000000
+//#define TXF_WHY_XXXXXXXXXX                  0x00800000
+//#define TXF_WHY_XXXXXXXXXX                  0x00400000
+//#define TXF_WHY_XXXXXXXXXX                  0x00200000
+//#define TXF_WHY_XXXXXXXXXX                  0x00100000
+//#define TXF_WHY_XXXXXXXXXX                  0x00080000
+//#define TXF_WHY_XXXXXXXXXX                  0x00040000
+//#define TXF_WHY_XXXXXXXXXX                  0x00020000
+//#define TXF_WHY_XXXXXXXXXX                  0x00010000
+#define TXF_WHY_CONTRAN_INSTR               0x00008000
+#define TXF_WHY_CONTRAN_BRANCH              0x00004000
+#define TXF_WHY_CONTRAN_RELATIVE_BRANCH     0x00002000
+#define TXF_WHY_TRAN_INSTR                  0x00001000
+#define TXF_WHY_TRAN_FLOAT_INSTR            0x00000800
+#define TXF_WHY_TRAN_ACCESS_INSTR           0x00000400
+#define TXF_WHY_TRAN_NONRELATIVE_BRANCH     0x00000200
+#define TXF_WHY_TRAN_BRANCH_SET_MODE        0x00000100
+#define TXF_WHY_TRAN_SET_ADDRESSING_MODE    0x00000080
+#define TXF_WHY_TRAN_MISC_INSTR             0x00000040
+//#define TXF_WHY_XXXXXXXXXX                  0x00000020
+//#define TXF_WHY_XXXXXXXXXX                  0x00000010
+//#define TXF_WHY_XXXXXXXXXX                  0x00000008
+//#define TXF_WHY_XXXXXXXXXX                  0x00000004
+//#define TXF_WHY_XXXXXXXXXX                  0x00000002
+//#define TXF_WHY_XXXXXXXXXX                  0x00000001
+
         int     txf_lastacctyp;         /* Last access type          */
         int     txf_lastarn;            /* Last access arn           */
 
@@ -616,6 +654,8 @@ struct SYSBLK {
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         LOCK    txf_lock[ MAX_CPU_ENGINES ]; /* CPU transaction lock */
+#define OBTAIN_TXFLOCK( regs )     obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
+#define RELEASE_TXFLOCK( regs )    release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 #endif
 
         TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */

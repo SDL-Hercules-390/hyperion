@@ -179,4 +179,7 @@ void dump_cache( const char* pfx, int linenum , const BYTE* line);
 // Function to hexdump TDB (Transaction Diagnostic Block)
 void dump_tdb( TDB* tdb, U64 logical_addr );
 
+// Return reason why transaction was aborted
+const char* txf_why_str( char* buffer, int buffsize, int why );
+
 #endif // _TRANSACT_H_

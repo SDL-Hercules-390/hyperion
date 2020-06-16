@@ -821,8 +821,9 @@ static char *pgmintname[] = {
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {
     BYTE *ip;
-    char buf1[10] = "";
-    char buf2[32] = "";
+    char buf1[10]  = "";
+    char buf2[32]  = "";
+    char buf3[256] = "";
 #if defined(OPTION_FOOTPRINT_BUFFER)
         if(!(sysblk.insttrace || sysblk.inststep))
             for(n = sysblk.footprptr[realregs->cpuad] + 1 ;
@@ -836,11 +837,19 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
         if (SIE_MODE(realregs))
           STRLCPY( buf1, "SIE: " );
-#endif /*defined(_FEATURE_SIE)*/
+#endif
 
 #if defined( SIE_DEBUG )
         STRLCPY( buf2, QSTR( _GEN_ARCH ));
         STRLCAT( buf2, " " );
+#endif
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        if (1
+            && code == PGM_TRANSACTION_CONSTRAINT_EXCEPTION
+            && regs->txf_why
+        )
+            txf_why_str( buf3, sizeof( buf3 ), regs->txf_why );
 #endif
         if (code == PGM_DATA_EXCEPTION)
            snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);
@@ -859,12 +868,13 @@ static char *pgmintname[] = {
             || !sysblk.nolrasoe /* suppression not requested */
         )
         {
-            // "Processor %s%02X: %s%s %s code %4.4X  ilc %d%s"
-            WRMSG(HHC00801, "I",
-            PTYPSTR(realregs->cpuad), realregs->cpuad, buf1, buf2,
-                    pgmintname[ (code - 1) & 0x3F], pcode, ilc, dxcstr);
-
-            ARCH_DEP(display_inst) (realregs, ip);
+            // "Processor %s%02X: %s%s %s code %4.4X ilc %d%s%s"
+            WRMSG( HHC00801, "I",
+                PTYPSTR( realregs->cpuad ), realregs->cpuad,
+                buf1, buf2,
+                pgmintname[ (code - 1) & 0x3F], pcode,
+                ilc, dxcstr, buf3 );
+            ARCH_DEP( display_inst )( realregs, ip );
         }
     }
 

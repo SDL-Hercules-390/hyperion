@@ -1024,9 +1024,10 @@ U64     new;                            /* new value                 */
                                 && cpu_regs->txf_tnd
                             )
                             {
-                                PTT_TXF( "*TXF CSPG", 0, cpu_regs->txf_contran, cpu_regs->txf_tnd );
                                 /* Abort this CPU's transaction */
+                                cpu_regs->txf_why |= TXF_WHY_CSPG_INSTR;
                                 cpu_regs->txf_tac = TAC_MISC;
+                                PTT_TXF( "*TXF CSPG", 0, cpu_regs->txf_contran, cpu_regs->txf_tnd );
                             }
                         }
                     }
