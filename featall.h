@@ -5,6 +5,16 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+
+
+
+
+#define OPTION_GH275_PIC12_FIX          /* GitHub #275 PIC 12 fix    */
+
+
+
+
+
 /*-------------------------------------------------------------------*/
 /*               Default OPTIONs and FEATUREs                        */
 /*    *ALL* existing FEATUREs *must* be #undef-ed further below.     */

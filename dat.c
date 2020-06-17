@@ -294,8 +294,18 @@ auth_addr_excp:
 /*      If successful, the ASTE is copied into the 16-word area,     */
 /*      the real address of the ASTE is stored into the word pointed */
 /*      word pointed to by asteop, and the return value is zero;     */
+#if defined( OPTION_GH275_PIC12_FIX )
+/*                                                                   */
+/*      regs->dat.pvtaddr is set to 1 if the private address space   */
+/*      bit in the ALE is set, otherwise it is set to zero.          */
+/*                                                                   */
+/*      regs->dat.protect is set to 2 if the fetch-only bit in the   */
+/*      ALE is set and acctype specifies write access, otherwise     */
+/*      it is set to zero.                                           */
+#else
 /*      regs->dat.protect is set to 2 if the fetch-only bit          */
 /*      in the ALE is set, otherwise it is set to zero.              */
+#endif
 /*                                                                   */
 /*      If unsuccessful, the return value is a non-zero exception    */
 /*      code in the range X'0028' through X'002D' (this is to allow  */
@@ -320,7 +330,11 @@ U32     abs;                            /* Absolute address          */
 BYTE   *mn;                             /* Mainstor address          */
 int     i;                              /* Array subscript           */
 
+#if defined( OPTION_GH275_PIC12_FIX )
+    regs->dat.pvtaddr = regs->dat.protect = 0;
+#else // (original code)
     regs->dat.protect = 0;
+#endif
 
     /* [5.8.4.3] Check the reserved bits in the ALET */
     if ( alet & ALET_RESV )
@@ -438,9 +452,25 @@ int     i;                              /* Array subscript           */
 
     } /* end if(!ACCTYPE_BSG) */
 
+#if defined( OPTION_GH275_PIC12_FIX )
+
+    /* Check for private space */
+    if (ale[0] & ALE0_PRIVATE)
+        regs->dat.pvtaddr = 1;
+
+    /* [5.8.4.8] Check for access-list controlled protection */
+    if (ale[0] & ALE0_FETCHONLY)
+    {
+        if (acctype & (ACC_WRITE|ACC_CHECK))
+            regs->dat.protect = 2;
+    }
+
+#else // (original code)
+
     /* [5.8.4.8] Check for access-list controlled protection */
     if (ale[0] & ALE0_FETCHONLY)
         regs->dat.protect = 2;
+#endif
 
     /* Return the ASTE origin address */
     *asteo = aste_addr;
@@ -679,7 +709,15 @@ U16     eax;                            /* Authorization index       */
                     /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
                     regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
                     regs->dat.stid = TEA_ST_ARMODE;
-                    if(regs->dat.protect & 2)
+
+#if defined( OPTION_GH275_PIC12_FIX )
+
+                    if (regs->dat.pvtaddr)
+
+#else // (original code)
+
+                    if (regs->dat.protect & 2)
+#endif
                     {
                 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                        regs->dat.asd ^= ASCE_RESV;
