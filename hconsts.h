@@ -397,7 +397,8 @@
 /* Special value for arn parameter for translate functions in dat.c  */
 /*-------------------------------------------------------------------*/
 #define USE_INST_SPACE          (-1)    /* Instruction space virtual */
-#define USE_REAL_ADDR           (-2)    /* Real address              */
+#define USE_REAL_ADDR           (-2)    /* Real address (DAT access)
+                                           (prevents TLB hit/use)    */
 #define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
 #define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
 #define USE_HOME_SPACE          (-5)    /* Home space virtual        */

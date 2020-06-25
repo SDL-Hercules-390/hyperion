@@ -288,7 +288,9 @@ int     b2;                             /* Values of R fields        */
 RADR    effective_addr2;                /* address of state desc.    */
 int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */
+U64     sie_state;                      /* Last SIE state            */
 volatile int icode;                     /* Interception code         */
+bool    same_cpu, same_state;           /* boolean helper flags      */
 U64     dreg;
 
     S( inst, regs, b2, effective_addr2 );
@@ -658,29 +660,37 @@ U64     dreg;
     for (n=0; n < 16; n++)
         FETCH_W( GUESTREGS->CR( n ), STATEBK->cr[ n ]);
 
+    /* Remember whether CPU or state is different from last time */
     FETCH_HW( lhcpu, STATEBK->lhcpu );
+    sie_state = SIE_STATE( GUESTREGS );
+
+    same_cpu   = (regs->cpuad == lhcpu);
+    same_state = (effective_addr2 == sie_state);
+
+    /* Regardless, set both of them to their proper current value */
+    SIE_STATE( GUESTREGS ) = effective_addr2;
+    STORE_HW( STATEBK->lhcpu, regs->cpuad );
+
+#if !defined( OPTION_SIE_PURGE_DAT_ALWAYS )
     /*
      * If this is not the same last host cpu that dispatched this state
      * descriptor then clear the guest TLB entries.
      */
-    if (regs->cpuad != lhcpu
-     || SIE_STATE(GUESTREGS) != effective_addr2)
+    if (!same_cpu || !same_state)
     {
-        SIE_PERFMON(SIE_PERF_ENTER_F);
+        SIE_PERFMON( SIE_PERF_ENTER_F );
 
-        /* Absolute address of state descriptor block */
-        SIE_STATE(GUESTREGS) = effective_addr2;
-
-        /* Update Last Host CPU address */
-        STORE_HW(STATEBK->lhcpu, regs->cpuad);
-
+        /* Purge guest TLB entries */
+        ARCH_DEP( purge_tlb )( GUESTREGS );
+        ARCH_DEP( purge_alb )( GUESTREGS );
     }
+
+#else // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
+
     /* Always purge guest TLB entries */
-    /* FIXME - Force TLB/ALB purge of guest context since there
-       seem to be some areas in hercules where the guest TLB/ALB
-       is not properly maintained */
     ARCH_DEP( purge_tlb )( GUESTREGS );
     ARCH_DEP( purge_alb )( GUESTREGS );
+#endif
 
     /* Initialize interrupt mask and state */
     SET_IC_MASK( GUESTREGS );

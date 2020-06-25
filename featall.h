@@ -5,16 +5,6 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-
-
-
-
-#define OPTION_GH275_PIC12_FIX          /* GitHub #275 PIC 12 fix    */
-
-
-
-
-
 /*-------------------------------------------------------------------*/
 /*               Default OPTIONs and FEATUREs                        */
 /*    *ALL* existing FEATUREs *must* be #undef-ed further below.     */
@@ -32,6 +22,32 @@
 #define OPTION_900_MODE                 /* Generate z/Arch support   */
 #endif
 
+/*-------------------------------------------------------------------*/
+/*               Research/Workaround build options                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The following build options either fix or workaround a problem    */
+/* we were having where we were unsure exactly what was causing the  */
+/* problem (and thus were unsure whether the implemented workaround  */
+/* is proper/correct or not) and are thus technically *temporary*    */
+/* in nature/spirit until such time as the root cause can be found.  */
+/*                                                                   */
+/* They're implemented as #define build OPTIONS so the developer is  */
+/* able to see both what the original code WAS doing as well as how  */
+/* the fix/workaround was implemented. This allow us, at any time,   */
+/* to disable the fix/workaround and restore the original code if    */
+/* we think we might have discovered the root cause of the original  */
+/* problem and wish to test a possible permanent fix for it.         */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+#define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for Linux  */
+#define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
+#define OPTION_NO_E3_OPTINST            /* Temporary?                */
+#define OPTION_GH275_PIC12_FIX          /* GitHub #275 PIC 12 fix    */
+#define OPTION_SIE_PURGE_DAT_ALWAYS     /* Ivan 2016-07-30: purge DAT
+                                           ALWAYS at entry to SIE    */
+/*-------------------------------------------------------------------*/
+
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 
@@ -45,12 +61,7 @@
 #define MAX_TOD_UPDATE_USECS    1000000 /* Max TOD updt freq (usecs) */
 
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
-
-#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
-#define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
-#define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
 //efine OPTION_LONG_HOSTINFO            /* Detailed host & logo info */
-
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
@@ -62,11 +73,11 @@
 #define FEATURE_LCSS_MAX              4 /* Number of supported lcss's*/
 //efine SIE_DEBUG_PERFMON               /* SIE performance monitor   */
 
+#define OPTION_SINGLE_CPU_DW            /* Performance option (ia32) */
+
 #if !defined( OPTION_OPTINST ) && !defined( NO_OPTINST )
 #define OPTION_OPTINST                  /* Optimized instructions    */
 #endif
-
-#define OPTION_NO_E3_OPTINST            /* Temporary?                */
 
 #if defined( HAVE_FULL_KEEPALIVE )
   #if !defined( HAVE_PARTIAL_KEEPALIVE ) || !defined( HAVE_BASIC_KEEPALIVE )
