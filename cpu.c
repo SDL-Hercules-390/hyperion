@@ -552,74 +552,6 @@ int     nointercept;                    /* True for virtual pgmint   */
 U32     n;
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
 char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
-static char *pgmintname[] = {
-        /* 01 */        "Operation exception",
-        /* 02 */        "Privileged-operation exception",
-        /* 03 */        "Execute exception",
-        /* 04 */        "Protection exception",
-        /* 05 */        "Addressing exception",
-        /* 06 */        "Specification exception",
-        /* 07 */        "Data exception",
-        /* 08 */        "Fixed-point-overflow exception",
-        /* 09 */        "Fixed-point-divide exception",
-        /* 0A */        "Decimal-overflow exception",
-        /* 0B */        "Decimal-divide exception",
-        /* 0C */        "HFP-exponent-overflow exception",
-        /* 0D */        "HFP-exponent-underflow exception",
-        /* 0E */        "HFP-significance exception",
-        /* 0F */        "HFP-floating-point-divide exception",
-        /* 10 */        "Segment-translation exception",
-        /* 11 */        "Page-translation exception",
-        /* 12 */        "Translation-specification exception",
-        /* 13 */        "Special-operation exception",
-        /* 14 */        "Pseudo-page-fault exception",
-        /* 15 */        "Operand exception",
-        /* 16 */        "Trace-table exception",
-        /* 17 */        "ASN-translation exception",
-        /* 18 */        "Transaction constraint exception",
-        /* 19 */        "Vector/Crypto operation exception",
-        /* 1A */        "Page state exception",
-        /* 1B */        "Vector processing exception",
-        /* 1C */        "Space-switch event",
-        /* 1D */        "Square-root exception",
-        /* 1E */        "Unnormalized-operand exception",
-        /* 1F */        "PC-translation specification exception",
-        /* 20 */        "AFX-translation exception",
-        /* 21 */        "ASX-translation exception",
-        /* 22 */        "LX-translation exception",
-        /* 23 */        "EX-translation exception",
-        /* 24 */        "Primary-authority exception",
-        /* 25 */        "Secondary-authority exception",
-        /* 26 */        "LFX-translation exception",
-        /* 27 */        "LSX-translation exception",
-        /* 28 */        "ALET-specification exception",
-        /* 29 */        "ALEN-translation exception",
-        /* 2A */        "ALE-sequence exception",
-        /* 2B */        "ASTE-validity exception",
-        /* 2C */        "ASTE-sequence exception",
-        /* 2D */        "Extended-authority exception",
-        /* 2E */        "LSTE-sequence exception",
-        /* 2F */        "ASTE-instance exception",
-        /* 30 */        "Stack-full exception",
-        /* 31 */        "Stack-empty exception",
-        /* 32 */        "Stack-specification exception",
-        /* 33 */        "Stack-type exception",
-        /* 34 */        "Stack-operation exception",
-        /* 35 */        "Unassigned exception",
-        /* 36 */        "Unassigned exception",
-        /* 37 */        "Unassigned exception",
-        /* 38 */        "ASCE-type exception",
-        /* 39 */        "Region-first-translation exception",
-        /* 3A */        "Region-second-translation exception",
-        /* 3B */        "Region-third-translation exception",
-        /* 3C */        "Unassigned exception",
-        /* 3D */        "Unassigned exception",
-        /* 3E */        "Unassigned exception",
-        /* 3F */        "Unassigned exception",
-        /* 40 */        "Monitor event" };
-
-        /* 26 */ /* was "Page-fault-assist exception", */
-        /* 27 */ /* was "Control-switch exception", */
 
     /* If called with ghost registers (ie from hercules command
        then ignore all interrupt handling and report the error
@@ -872,7 +804,7 @@ static char *pgmintname[] = {
             WRMSG( HHC00801, "I",
                 PTYPSTR( realregs->cpuad ), realregs->cpuad,
                 buf1, buf2,
-                pgmintname[ (code - 1) & 0x3F], pcode,
+                PIC2Name( code ), pcode,
                 ilc, dxcstr, buf3 );
             ARCH_DEP( display_inst )( realregs, ip );
         }
@@ -1835,8 +1767,8 @@ int     aswitch;
            to here, thereby causing the instruction counter to not be
            properly updated. Thus, we need to update it here instead.
        */
-        regs->instcount   +=     128;      /* (just an estimate) */
-        UPDATE_SYSBLK_INSTCOUNT( 128 );    /* (just an estimate) */
+        regs->instcount   +=     MAX_CPU_LOOPS/2;   /* approximate */
+        UPDATE_SYSBLK_INSTCOUNT( MAX_CPU_LOOPS/2 ); /* approximate */
 
         /* Perform automatic instruction tracing if it's enabled */
         do_automatic_tracing();
@@ -1884,15 +1816,7 @@ fastest_no_txf_loop:
     ip = INSTRUCTION_FETCH( regs, 0 );
     EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
 
-    /* BHe: I have tried several settings. But 2 unrolled
-       executes gives (core i7 at my place) the best results.
-
-       Even a 'do { } while(0);' with several unrolled executes
-       and without the 'i' was slower.
-
-       That surprised me.
-    */
-    for (i=0; i < 128; i++)
+    for (i=0; i < MAX_CPU_LOOPS/2; i++)
     {
         UNROLLED_EXECUTE( current_opcode_table, regs );
         UNROLLED_EXECUTE( current_opcode_table, regs );
@@ -1919,15 +1843,7 @@ enter_txf_faster_loop:
     ip = INSTRUCTION_FETCH( regs, 0 );
     EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
 
-    /* BHe: I have tried several settings. But 2 unrolled
-       executes gives (core i7 at my place) the best results.
-
-       Even a 'do { } while(0);' with several unrolled executes
-       and without the 'i' was slower.
-
-       That surprised me.
-    */
-    for (i=0; i < 128; i++)
+    for (i=0; i < MAX_CPU_LOOPS/2; i++)
     {
         if (regs->txf_tnd)
             break;
@@ -1958,15 +1874,7 @@ enter_txf_slower_loop:
     ip = INSTRUCTION_FETCH( regs, 0 );
     TXF_EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
 
-    /* BHe: I have tried several settings. But 2 unrolled
-       executes gives (core i7 at my place) the best results.
-
-       Even a 'do { } while(0);' with several unrolled executes
-       and without the 'i' was slower.
-
-       That surprised me.
-    */
-    for (i=0; i < 128; i++)
+    for (i=0; i < MAX_CPU_LOOPS/2; i++)
     {
         if (!regs->txf_tnd)
             break;

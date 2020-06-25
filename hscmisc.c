@@ -194,8 +194,9 @@ int     stid;                           /* Segment table indication  */
     if (*xcode == 0)
         n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufl-n, 0, "");
     else
-        n += snprintf (buf+n,bufl-n," Translation exception %4.4hX",*xcode);
-
+        n += snprintf( buf+n, bufl-n,
+                       " Translation exception %4.4hX (%s)",
+                       *xcode, PIC2Name( *xcode ));
     return n;
 
 } /* end function display_virt */
@@ -385,7 +386,8 @@ char    buf[512];                       /* MSGBUF work buffer        */
             /* Convert virtual address to real address */
             if((xcode = ARCH_DEP(virt_to_real) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
             {
-                MSGBUF( buf, "R:"F_RADR"  Storage not accessible code = %4.4X", saddr, xcode );
+                MSGBUF( buf, "R:"F_RADR"  Storage not accessible code = %4.4X (%s)",
+                    saddr, xcode, PIC2Name( xcode ));
                 WRMSG( HHC02289, "I", buf );
                 return;
             }
@@ -691,8 +693,9 @@ size_t  totamt;                         /* Total amount to be dumped */
             /* Check for Translation Exception */
             if (0 != xcode)
             {
-                // "%c:"F_RADR"  Translation exception %4.4hX  %s"
-                WRMSG( HHC02329, "E", 'V', vaddr, xcode, trans );
+                // "%c:"F_RADR"  Translation exception %4.4hX (%s)  %s"
+                WRMSG( HHC02329, "E", 'V', vaddr, xcode, PIC2Name( xcode ),
+                    trans );
                 return;
             }
 
@@ -743,8 +746,9 @@ size_t  totamt;                         /* Total amount to be dumped */
             /* Check for Translation Exception */
             if (0 != xcode)
             {
-                // "%c:"F_RADR"  Translation exception %4.4hX  %s"
-                WRMSG( HHC02329, "E", 'V', vaddr, xcode, trans );
+                // "%c:"F_RADR"  Translation exception %4.4hX (%s)  %s"
+                WRMSG( HHC02329, "E", 'V', vaddr, xcode, PIC2Name( xcode ),
+                    trans );
             }
             else
             {
@@ -2750,6 +2754,86 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
     }
 
     return buf;
+}
+
+
+/*-------------------------------------------------------------------*/
+/*              Format Program Interrupt Name                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT const char* PIC2Name( int code )
+{
+    static const char* pgmintname[] =
+    {
+        /* 01 */    "Operation exception",
+        /* 02 */    "Privileged-operation exception",
+        /* 03 */    "Execute exception",
+        /* 04 */    "Protection exception",
+        /* 05 */    "Addressing exception",
+        /* 06 */    "Specification exception",
+        /* 07 */    "Data exception",
+        /* 08 */    "Fixed-point-overflow exception",
+        /* 09 */    "Fixed-point-divide exception",
+        /* 0A */    "Decimal-overflow exception",
+        /* 0B */    "Decimal-divide exception",
+        /* 0C */    "HFP-exponent-overflow exception",
+        /* 0D */    "HFP-exponent-underflow exception",
+        /* 0E */    "HFP-significance exception",
+        /* 0F */    "HFP-floating-point-divide exception",
+        /* 10 */    "Segment-translation exception",
+        /* 11 */    "Page-translation exception",
+        /* 12 */    "Translation-specification exception",
+        /* 13 */    "Special-operation exception",
+        /* 14 */    "Pseudo-page-fault exception",
+        /* 15 */    "Operand exception",
+        /* 16 */    "Trace-table exception",
+        /* 17 */    "ASN-translation exception",
+        /* 18 */    "Transaction constraint exception",
+        /* 19 */    "Vector/Crypto operation exception",
+        /* 1A */    "Page state exception",
+        /* 1B */    "Vector processing exception",
+        /* 1C */    "Space-switch event",
+        /* 1D */    "Square-root exception",
+        /* 1E */    "Unnormalized-operand exception",
+        /* 1F */    "PC-translation specification exception",
+        /* 20 */    "AFX-translation exception",
+        /* 21 */    "ASX-translation exception",
+        /* 22 */    "LX-translation exception",
+        /* 23 */    "EX-translation exception",
+        /* 24 */    "Primary-authority exception",
+        /* 25 */    "Secondary-authority exception",
+        /* 26 */ /* "Page-fault-assist exception",          */
+        /* 26 */    "LFX-translation exception",
+        /* 27 */ /* "Control-switch exception",             */
+        /* 27 */    "LSX-translation exception",
+        /* 28 */    "ALET-specification exception",
+        /* 29 */    "ALEN-translation exception",
+        /* 2A */    "ALE-sequence exception",
+        /* 2B */    "ASTE-validity exception",
+        /* 2C */    "ASTE-sequence exception",
+        /* 2D */    "Extended-authority exception",
+        /* 2E */    "LSTE-sequence exception",
+        /* 2F */    "ASTE-instance exception",
+        /* 30 */    "Stack-full exception",
+        /* 31 */    "Stack-empty exception",
+        /* 32 */    "Stack-specification exception",
+        /* 33 */    "Stack-type exception",
+        /* 34 */    "Stack-operation exception",
+        /* 35 */    "Unassigned exception",
+        /* 36 */    "Unassigned exception",
+        /* 37 */    "Unassigned exception",
+        /* 38 */    "ASCE-type exception",
+        /* 39 */    "Region-first-translation exception",
+        /* 3A */    "Region-second-translation exception",
+        /* 3B */    "Region-third-translation exception",
+        /* 3C */    "Unassigned exception",
+        /* 3D */    "Unassigned exception",
+        /* 3E */    "Unassigned exception",
+        /* 3F */    "Unassigned exception",
+        /* 40 */    "Monitor event"
+    };
+    int ndx = (code - 1) & 0x3F;
+    return (ndx < _countof( pgmintname )) ?
+        pgmintname[ ndx ] : "???";
 }
 
 

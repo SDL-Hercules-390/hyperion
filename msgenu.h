@@ -1438,7 +1438,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC02326 "%s"     // (instruction tracing: storage line)
 #define HHC02327 "%c:"F_RADR"  Storage address is not valid"
 #define HHC02328 "%c:"F_RADR"  Addressing exception"
-#define HHC02329 "%c:"F_VADR"  Translation exception %4.4hX  %s"
+#define HHC02329 "%c:"F_VADR"  Translation exception %4.4hX (%s)  %s"
 #define HHC02330 "Script %d: test: [re]start failed"
 #define HHC02331 "Script %d: test: aborted"
 #define HHC02332 "Script %d: test: timeout"

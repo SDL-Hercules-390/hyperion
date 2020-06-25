@@ -370,6 +370,7 @@ const char* FormatESW( ESW* esw, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatSID( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRCD( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRNI( BYTE* iobuf, int num, char* buf, size_t bufsz );
+HMISC_DLL_IMPORT const char* PIC2Name( int code );
 HMISC_DLL_IMPORT int s370_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
 HMISC_DLL_IMPORT int s390_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );
 HMISC_DLL_IMPORT int z900_virt_to_real( U64* raptr, int* siptr, U64 vaddr, int arn, REGS* regs, int acctype );

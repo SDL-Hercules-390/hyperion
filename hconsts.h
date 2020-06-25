@@ -33,6 +33,8 @@
                                             to 8 according to old
                                             MAX_CPU_ENGINES default  */
 
+#define MAX_CPU_LOOPS           256     /* UNROLLED_EXECUTE loops    */
+
 /*-------------------------------------------------------------------*/
 /*      Some handy quantity definitions                              */
 /*-------------------------------------------------------------------*/
