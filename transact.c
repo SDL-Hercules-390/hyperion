@@ -380,7 +380,7 @@ int         txf_tac;
         /*                 TRANSACTION SUCCESS!                    */
         /*---------------------------------------------------------*/
         /*  We have now validated all of the cache lines that we   */
-        /*  touched, and all other CPUs are dormant.   Now update  */
+        /*  touched, and all other CPUs are dormant.  Now update   */
         /*  the real cache lines from the shadow cache lines.      */
         /*---------------------------------------------------------*/
 
@@ -772,6 +772,37 @@ TPAGEMAP   *pmap;
         /*------------------------------------------------------*/
         /*              BEGIN NESTED TRANSACTION                */
         /*------------------------------------------------------*/
+
+        if (txf_contran)
+        {
+            /* Nested CONSTRAINED transactions are not allowed */
+            if (regs->txf_contran)
+            {
+                PTT_TXF( "*TXF begc", MAX_TXF_TND, regs->txf_contran, regs->txf_tnd );
+                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
+                UNREACHABLE_CODE( return );
+            }
+
+            /* Set CONSTRAINED trans instruction fetch constraint */
+            ARCH_DEP( set_txf_aie )( regs );
+
+            /* For constrained transactions, if the transaction
+               nesting depth is already greater than zero (meaning
+               the CPU is in the nonconstrained TX mode), then
+               execution simply proceeds as if this was an un-
+               constrained transaction.
+
+               In this case, the effective F control is zeroed,
+               and the effective PIFC remains unchanged. This
+               allows an outer, nonconstrained transaction to
+               call a service function that may or may not use
+               constrained TX mode.
+            */
+            i2 &= ~(TXF_CTL_FLOAT | TXF_CTL_PIFC);
+            i2 |= regs->txf_pifc;
+        }
+
+        /*------------------------------------------------------*/
         /* Update highest nesting level that allowed AR changes */
         /*------------------------------------------------------*/
 
@@ -852,15 +883,16 @@ static const int tac2cc[20] =
 /*  Common routine to abort a transaction.  This routine restores    */
 /*  the requested registers from transaction start, cleans up the    */
 /*  transaction flags, updates the current PSW to the abort PSW      */
-/*  and then does one of the following based on the retry flag:      */
+/*  and then does one of the following based on the 'retry' flag:    */
 /*                                                                   */
-/*    retry = 0  return to the caller.  This is used when abort      */
-/*               is called from an interrupt handler.                */
+/*    retry = ABORT_RETRY_RETURN: return to the caller. Used when    */
+/*            the abort is called from e.g. an interrupt handler.    */
 /*                                                                   */
-/*    retry = 1  set the condition code and do longjmp to progjmp.   */
+/*    retry = ABORT_RETRY_CC: set the condition code and then do     */
+/*            a longjmp to progjmp.                                  */
 /*                                                                   */
-/*    retry = 2  if in CONSTRAINED mode, generate a program check.   */
-/*               Otherwise longjmp to progjmp.                       */
+/*    retry = ABORT_RETRY_PGMCHK: if in CONSTRAINED mode, generate   */
+/*            a program check. Otherwise do a longjmp to progjmp.    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_tac )
@@ -1092,7 +1124,7 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     {
         tb_tdb->tdb_format = 1;
         tb_tdb->tdb_eaid   = regs->excarid;
-        pi_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
+        tb_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
         if (0
             || txf_tac == TAC_FETCH_CNF
