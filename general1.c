@@ -733,15 +733,23 @@ DEF_INST(branch_on_condition_register)
            the mask is all ones and R2 is register 0 */
         if ( inst[1] == 0xF0 )
         {
+#if defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
+            HARDWARE_SYNC();
+#else
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
+#endif
         }
 #if defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY )
         /* Perform serialization without checkpoint synchronization
            the mask is B'1110' and R2 is register 0 */
         else if (inst[1] == 0xE0)
         {
+#if defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
+            HARDWARE_SYNC();
+#else
             PERFORM_SERIALIZATION (regs);
+#endif
         }
 #endif /* defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY ) */
     }

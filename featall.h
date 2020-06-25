@@ -40,6 +40,12 @@
 /* problem and wish to test a possible permanent fix for it.         */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+
+#define OPTION_HARDWARE_SYNC_ALL        /* All PERFORM_SERIALIZATION */
+//#define OPTION_HARDWARE_SYNC_BCR_ONLY   /* ONLY the BCR instructions */
+#if defined( OPTION_HARDWARE_SYNC_ALL ) && defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
+  #error OPTION_HARDWARE_SYNC_ALL and OPTION_HARDWARE_SYNC_BCR_ONLY are mutually exclusive!
+#endif
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for Linux  */
 #define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
 #define OPTION_NO_E3_OPTINST            /* Temporary?                */

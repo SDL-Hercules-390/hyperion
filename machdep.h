@@ -26,9 +26,9 @@
 /*     64 bit architectures would normally not need to specify       */
 /*     any of the fetch_ or store_ macros.                           */
 /*                                                                   */
-/*     32 bit architectures should specify one of the `fetch_dw'     */
-/*     and `store_dw' macros.  Little-endian machines should specify */
-/*     the `noswap' macros.  Big-endian machines can specify either, */
+/*     32 bit architectures should specify one of the 'fetch_dw'     */
+/*     and 'store_dw' macros.  Little-endian machines should specify */
+/*     the 'noswap' macros.  Big-endian machines can specify either, */
 /*     both being the same.                                          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
@@ -243,7 +243,7 @@
 #if defined(_ext_ia32)
 
     /*
-     * If PIC is defined then ebx is used as the `thunk' reg
+     * If PIC is defined then ebx is used as the 'thunk' reg
      * However cmpxchg8b requires ebx
      * In this case we load the value into esi and then
      * exchange esi and ebx before and after cmpxchg8b
@@ -860,6 +860,18 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
 
 #ifndef BIT
 #define BIT(nr) (1<<(nr))
+#endif
+
+/*-------------------------------------------------------------------*/
+/*                      Hardware Sync                                */
+/*-------------------------------------------------------------------*/
+#if defined( OPTION_HARDWARE_SYNC_ALL ) || defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
+  #if defined( _MSVC_ )
+    #pragma intrinsic              ( _mm_mfence )
+    #define HARDWARE_SYNC()          _mm_mfence()
+  #else // gcc presumed
+    #define HARDWARE_SYNC()         __sync_synchronize()
+  #endif // (which compiler)
 #endif
 
 #endif /* _HERCULES_MACHDEP_H */

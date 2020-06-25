@@ -1501,7 +1501,6 @@ do {                                                                  \
 #undef SIE_INTERCEPT
 #undef SIE_TRANSLATE
 
-
 #if defined( _FEATURE_SIE )
 
 #define SIE_SET_VI(_who, _when, _why, _regs) \
@@ -1573,7 +1572,6 @@ do { \
 
 #endif /* !defined( _FEATURE_SIE ) */
 
-
 #undef SIE_XC_INTERCEPT
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
   #define SIE_XC_INTERCEPT(_regs) \
@@ -1583,11 +1581,20 @@ do { \
   #define SIE_XC_INTERCEPT(_regs)
 #endif
 
-#define PERFORM_SERIALIZATION(_regs)    do{}while(0)
-#define PERFORM_CHKPT_SYNC(_regs)       do{}while(0)
+/*-------------------------------------------------------------------*/
+/*                  Instruction serialization                        */
+/*-------------------------------------------------------------------*/
+
+#if defined( OPTION_HARDWARE_SYNC_ALL )
+  #define PERFORM_SERIALIZATION( _regs )    HARDWARE_SYNC()
+  #define PERFORM_CHKPT_SYNC( _regs )       do{}while(0)
+#else
+  #define PERFORM_SERIALIZATION( _regs )    do{}while(0)
+  #define PERFORM_CHKPT_SYNC( _regs )       do{}while(0)
+#endif
 
 /*-------------------------------------------------------------------*/
-/*               external function declarations                      */
+/*               External function declarations                      */
 /*-------------------------------------------------------------------*/
 
 /* Functions in module channel.c */
