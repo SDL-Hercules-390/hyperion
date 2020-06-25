@@ -431,6 +431,8 @@ int         txf_tac;
 
         /* Exiting from transactional-execution mode... */
         UPDATE_SYSBLK_TRANSCPUS( -1 );
+
+        PERFORM_SERIALIZATION( regs );
     }
     RELEASE_INTLOCK( regs );
 
@@ -634,6 +636,8 @@ TPAGEMAP   *pmap;
     /* Temporarily pause other CPUs while TBEGIN/TBEGINC is processed.
        NOTE: this *must* be done *BEFORE* checking nesting depth. */
     SYNCHRONIZE_CPUS( regs );
+
+    PERFORM_SERIALIZATION( regs );
 
     /* Check for maximum nesting depth exceeded */
     if (regs->txf_tnd >= MAX_TXF_TND)
@@ -932,6 +936,8 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
         had_INTLOCK = false;
     }
 
+    PERFORM_SERIALIZATION( regs );
+
     PTT_TXF( "TXF ABORT", 0, regs->txf_contran, regs->txf_tnd );
 
     /*---------------------------------------------*/
@@ -1067,7 +1073,10 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     /*---------------------------------------------*/
 
     if (!had_INTLOCK || retry != ABORT_RETRY_RETURN)
+    {
+        PERFORM_SERIALIZATION( regs );
         RELEASE_INTLOCK( regs );
+    }
 
     /*---------------------------------------------*/
     /* Populate the TDBs. For program-interrupts,  */
