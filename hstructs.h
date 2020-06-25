@@ -419,10 +419,10 @@ struct REGS {                           /* Processor registers       */
         /*-----------------------------------------------------------*/
         /* CONSTRAINED transaction instruction fetching constraint   */
 
-        BYTE*   txf_tbeginc_aip;        /* aip of TBEGINC instruction*/
-        BYTE*   txf_aie;                /* Mainstor end address for
-                                           CONSTRAINED transactions  */
-        int     txf_aie_off2;           /* txf_aie page cross offset */
+        BYTE*   txf_aie;                /* Maximum trans ip address  */
+        U64     txf_aie_aiv;            /* Virtual page address      */
+        U64     txf_aie_aiv2;           /* 2nd page if trans crosses */
+        int     txf_aie_off2;           /* Offset into 2nd page      */
         /*-----------------------------------------------------------*/
 
         U32     txf_piid;               /* Transaction Program

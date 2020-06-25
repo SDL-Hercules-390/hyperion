@@ -151,6 +151,33 @@ int     r1, r2;                         /* Operand register numbers  */
 
 } /* end DEF_INST( extract_transaction_nesting_depth ) */
 
+/*-------------------------------------------------------------------*/
+/*       Reset CONSTRAINED trans instruction fetch constraint        */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( reset_txf_aie )( REGS* regs )
+{
+    regs->txf_contran  = false;
+    regs->txf_aie      = NULL;
+    regs->txf_aie_aiv  = 0;
+    regs->txf_aie_aiv2 = 0;
+    regs->txf_aie_off2 = 0;
+}
+
+/*-------------------------------------------------------------------*/
+/*        Set CONSTRAINED trans instruction fetch constraint         */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_txf_aie )( REGS* regs )
+{
+    regs->txf_contran  = true;
+    regs->txf_aie      = regs->ip + 256;
+    regs->txf_aie_aiv  = regs->AIV;
+
+    if (regs->txf_aie > (regs->aip + ZPAGEFRAME_PAGESIZE))
+    {
+        regs->txf_aie_aiv2 = regs->txf_aie_aiv + ZPAGEFRAME_PAGESIZE;
+        regs->txf_aie_off2 = regs->txf_aie - (regs->aip + ZPAGEFRAME_PAGESIZE);
+    }
+}
 
 /*-------------------------------------------------------------------*/
 /* B2F8 TEND - Transaction End  (CONSTRAINED or unconstrained)   [S] */
@@ -207,8 +234,9 @@ int         txf_tac;
     {
         bool   txf_contran;      /* (saved original value) */
         U16    txf_abortctr;     /* (saved original value) */
-        BYTE*  txf_tbeginc_aip;  /* (saved original value) */
         BYTE*  txf_aie;          /* (saved original value) */
+        U64    txf_aie_aiv;      /* (saved original value) */
+        U64    txf_aie_aiv2;     /* (saved original value) */
         int    txf_aie_off2;     /* (saved original value) */
 
         SYNCHRONIZE_CPUS( regs );
@@ -250,6 +278,9 @@ int         txf_tac;
             /* Set PIFC for this nesting level */
             regs->txf_pifc = regs->txf_pifctab[ regs->txf_tnd - 1 ];
 
+            /* Reset CONSTRAINED trans instruction fetch constraint */
+            ARCH_DEP( reset_txf_aie )( regs );
+
             /* Remain in transactional-execution mode */
             PTT_TXF( "TXF TEND", 0, regs->txf_contran, regs->txf_tnd );
             RELEASE_INTLOCK( regs );
@@ -274,17 +305,19 @@ int         txf_tac;
         /* End transaction normally -- IF POSSIBLE (no conflicts)  */
         /*---------------------------------------------------------*/
 
-        txf_contran     = regs->txf_contran;        /* save */
-        txf_abortctr    = regs->txf_abortctr;       /* save */
-        txf_tbeginc_aip = regs->txf_tbeginc_aip;    /* save */
-        txf_aie         = regs->txf_aie;            /* save */
-        txf_aie_off2    = regs->txf_aie_off2;       /* save */
+        txf_contran  = regs->txf_contran;        /* save */
+        txf_abortctr = regs->txf_abortctr;       /* save */
+        txf_aie      = regs->txf_aie;            /* save */
+        txf_aie_aiv  = regs->txf_aie_aiv;        /* save */
+        txf_aie_aiv2 = regs->txf_aie_aiv2;       /* save */
+        txf_aie_off2 = regs->txf_aie_off2;       /* save */
 
-        regs->txf_contran     = false;              /* reset */
-        regs->txf_abortctr    = 0;                  /* reset */
-        regs->txf_tbeginc_aip = NULL;               /* reset */
-        regs->txf_aie         = NULL;               /* reset */
-        regs->txf_aie_off2    = 0;                  /* reset */
+        regs->txf_contran  = false;              /* reset */
+        regs->txf_abortctr = 0;                  /* reset */
+        regs->txf_aie      = NULL;               /* reset */
+        regs->txf_aie_aiv  = 0;                  /* reset */
+        regs->txf_aie_aiv2 = 0;                  /* reset */
+        regs->txf_aie_off2 = 0;                  /* reset */
 
         /*---------------------------------------------------------*/
         /*  Scan the page map table.  There is one entry in the    */
@@ -330,11 +363,12 @@ int         txf_tac;
 
                 PTT_TXF( "*TXF TEND", txf_tac, regs->txf_contran, regs->txf_tnd );
 
-                regs->txf_contran     = txf_contran;      /* restore */
-                regs->txf_abortctr    = txf_abortctr;     /* restore */
-                regs->txf_tbeginc_aip = txf_tbeginc_aip;  /* restore */
-                regs->txf_aie         = txf_aie;          /* restore */
-                regs->txf_aie_off2    = txf_aie_off2;     /* restore */
+                regs->txf_contran  = txf_contran;      /* restore */
+                regs->txf_abortctr = txf_abortctr;     /* restore */
+                regs->txf_aie      = txf_aie;          /* restore */
+                regs->txf_aie_aiv  = txf_aie_aiv;      /* restore */
+                regs->txf_aie_aiv2 = txf_aie_aiv2;     /* restore */
+                regs->txf_aie_off2 = txf_aie_off2;     /* restore */
 
                 regs->txf_tnd++; // (prevent 'abort_transaction' crash)
                 ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
@@ -655,22 +689,9 @@ TPAGEMAP   *pmap;
         regs->txf_highfloat    = (regs->txf_ctlflag & TXF_CTL_FLOAT) ? regs->txf_tnd : 0;
         regs->txf_tdb          = tdb;
 
-        /* Set CONSTRAINED transaction instruction fetch constraint */
+        /* Set CONSTRAINED trans instruction fetch constraint */
         if (txf_contran)
-        {
-            BYTE* aip2 = regs->aip + ZPAGEFRAME_PAGESIZE;
-
-            regs->txf_tbeginc_aip = regs->aip;
-            regs->txf_aie         = regs->ip + 256;
-            regs->txf_aie_off2    = (regs->txf_aie < aip2) ? 0 :
-                                    (regs->txf_aie - aip2);
-        }
-        else
-        {
-            regs->txf_tbeginc_aip = NULL;
-            regs->txf_aie         = NULL;
-            regs->txf_aie_off2    = 0;
-        }
+            ARCH_DEP( set_txf_aie )( regs );
 
         /*----------------------------------*/
         /*  Save the Transaction Abort PSW  */
@@ -774,7 +795,6 @@ TPAGEMAP   *pmap;
 
         regs->txf_pifctab[ regs->txf_tnd - 2 ] = regs->txf_pifc;
         regs->txf_pifc = MAX( regs->txf_pifc, (i2 & TXF_CTL_PIFC) );
-
     }
 
     PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
@@ -970,6 +990,9 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     regs->txf_pgcnt     = 0;
     regs->txf_conflict  = 0;
     regs->txf_piid      = 0;
+
+    /* Reset CONSTRAINED trans instruction fetch constraint */
+    ARCH_DEP( reset_txf_aie )( regs );
 
     /*----------------------------------------------------*/
     /*  Set the current PSW to the Transaction Abort PSW  */

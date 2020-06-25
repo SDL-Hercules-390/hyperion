@@ -744,13 +744,16 @@ int     len;                            /* Length for page crossing  */
         }
     }
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (1
-        && regs->txf_contran
-        && regs->aip != regs->txf_tbeginc_aip
-    )
-        regs->txf_aie = regs->aip + regs->txf_aie_off2;
-#endif
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+    /* Update CONSTRAINED trans instruction fetch constraint */
+    if (regs->txf_contran)
+    {
+        if (regs->AIV == regs->txf_aie_aiv2)
+            regs->txf_aie = regs->aip + regs->txf_aie_off2;
+    }
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     return dest;
 
