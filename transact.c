@@ -1443,34 +1443,6 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
 
     TPAGEMAP*  pmap;            /* Pointer to Transaction Page Map   */
 
-    /* Quick exit if no CPUs executing any transactions */
-    if (!sysblk.txf_transcpus)
-        return maddr;
-
-    /* Quick exit if NTSTG call */
-    if (regs && regs->txf_NTSTG)
-    {
-        regs->txf_NTSTG = false;
-        return maddr;
-    }
-
-    /* We are only interested in fetch and store accesses */
-    if (1
-        && acctype != ACCTYPE_READ
-        && acctype != ACCTYPE_WRITE
-        && acctype != ACCTYPE_WRITE_SKP
-    )
-        return maddr;
-
-    /* Not interested in instruction fetches either */
-    if (0
-        || arn == USE_INST_SPACE
-#if 0 // fishfix?
-        || arn == USE_REAL_ADDR   // ** FISH HIGHLY QUESTIONS THIS!! **
-#endif // fishfix?
-    )
-        return maddr;
-
     /* Save last translation access type and arn */
     if (regs && regs->txf_tnd)
     {

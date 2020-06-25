@@ -121,6 +121,36 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
     {
+        /* SA22-7832-12 Principles of Operation, page 5-99:
+
+             "Storage accesses for instruction and DAT- and ART-
+              table fetches follow the non-transactional rules."
+        */
+        if (0
+            || arn == USE_INST_SPACE    /* Instruction fetching */
+            || arn == USE_REAL_ADDR     /* Address translation  */
+        )
+            return maddr;               /* return ACTUAL address */
+
+        /* Quick exit if no CPUs executing any transactions */
+        if (!sysblk.txf_transcpus)
+            return maddr;
+
+        /* Quick exit if NTSTG call */
+        if (regs && regs->txf_NTSTG)
+        {
+            regs->txf_NTSTG = false;
+            return maddr;
+        }
+
+        /* We are only interested in fetch and store accesses */
+        if (1
+            && acctype != ACCTYPE_READ
+            && acctype != ACCTYPE_WRITE
+            && acctype != ACCTYPE_WRITE_SKP
+        )
+            return maddr;
+
         /* Translate to alternate TXF address if appropriate */
         maddr = TXF_MADDRL( addr, len, arn, regs, acctype, maddr );
     }
