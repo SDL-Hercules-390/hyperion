@@ -106,6 +106,7 @@ int     rc;
         if (regs->hostregs->txf_tnd)
         {
             PTT_TXF( "*TXF EI", 0, 0, regs->hostregs->txf_tnd );
+            regs->txf_why |= TXF_WHY_EXTERNAL_INTERUPT;
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_EXT );
             regs->psw.cc = TXF_CC_TRANSIENT;
         }

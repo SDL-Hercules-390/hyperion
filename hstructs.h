@@ -442,7 +442,7 @@ struct REGS {                           /* Processor registers       */
 #define TXF_WHY_SIE_EXIT                    0x04000000
 #define TXF_WHY_CONFLICT                    0x02000000
 #define TXF_WHY_MAX_PAGES                   0x01000000
-//#define TXF_WHY_XXXXXXXXXX                  0x00800000
+#define TXF_WHY_EXTERNAL_INTERUPT           0x00800000
 //#define TXF_WHY_XXXXXXXXXX                  0x00400000
 //#define TXF_WHY_XXXXXXXXXX                  0x00200000
 //#define TXF_WHY_XXXXXXXXXX                  0x00100000
