@@ -1071,6 +1071,9 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
             int ilc;
             STATEBK->f |= SIE_F_EX;
             ilc = ILC( GUESTREGS->exinst[0] );
+#if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
+            STATEBK->f |= (ilc << 4) & SIE_F_EXL;
+#endif
             memcpy( STATEBK->ipa, GUESTREGS->exinst, ilc );
         }
         else

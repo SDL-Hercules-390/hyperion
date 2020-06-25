@@ -8,6 +8,12 @@
 /* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
+/* Format-1 State Descriptor Block (SIE1BK) documented in:           */
+/*  SA22-7095-00 System-370 XA Interpretive Execution                */
+
+/* Format-2 State Descriptor Block (SIE2BK) documented at:           */
+/*  http://www.vm.ibm.com/pubs/cp710/SIEBK.HTML                      */
+
 #ifndef _ESA390_H
 #define _ESA390_H
 
@@ -1834,6 +1840,8 @@ struct SIE1BK
 };
 typedef struct SIE1BK   SIE1BK;
 
+CASSERT( sizeof( SIE1BK ) == 256, esa390_h );
+
 /*-------------------------------------------------------------------*/
 /*     SIE Format 2 State Descriptor Block (SIE2BK) structure        */
 /*-------------------------------------------------------------------*/
@@ -1987,6 +1995,7 @@ struct SIE2BK
 
 #define SIE_F           f
 #define SIE_F_IN        0x80            /* Intercept format 2        */
+#define SIE_F_EXL       0x60            /* ILC of EX/EXRL instr      */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
 
@@ -2008,6 +2017,14 @@ struct SIE2BK
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
 #define SIE_RCPO2       rcpo[2]
 #define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+
+#define SIE_ECB0        rcpo[1]         /* Execution Controls Byte 0 */
+#define SIE_QEBSM       0x80            /* QEBSM Interpretation Act. */
+#define SIE_ECGSF       0x40            /* Guard.Stor.Facil.     133 */
+#define SIE_ECTX        0x10            /* Trans.Exec.Facil.     073 */
+
+#define SIE_ECB1        rcpo[2]         /* Execution Controls Byte 1 */
+#define SIE_ECIEP       0x40            /* Inst.Exe.Prot.Facil.  130 */
 
 /*064*/ FWORD  scao;                    /* SCA area origin           */
 /*068*/ FWORD  resv068f;
@@ -2042,8 +2059,6 @@ struct SIE2BK
 #define SIE_II_PSA_OFFSET       0x30    /* Offset of the IP field
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
-
-/*0CE   HWORD  iprcc;                                                */
 /*0F4*/ BYTE   resv0f4b[6];
 /*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
 /*0FC*/ FWORD  resv0fcf;
@@ -2051,9 +2066,13 @@ struct SIE2BK
 /*180*/ DBLWRD gbea;
 /*188*/ BYTE   resv188b[24];
 /*1A0*/ FWORD  fld;                     /* Facility List Designation */
-/*1A4*/ BYTE   resv1a4b[92];
+/*1A4*/ BYTE   resv1a4b[68];
+/*1E8*/ DBLWRD itdba;                   /* Interception TDB address  */
+/*1F0*/ BYTE   resv1f0b[16];
 };
 typedef struct SIE2BK   SIE2BK;
+
+CASSERT( sizeof( SIE2BK ) == 512, esa390_h );
 
 /*-------------------------------------------------------------------*/
 /*                            WHO                                    */
