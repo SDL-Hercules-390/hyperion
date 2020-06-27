@@ -1507,6 +1507,17 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
 
     TPAGEMAP*  pmap;            /* Pointer to Transaction Page Map   */
 
+    /* Quick exit if no CPUs executing any transactions.
+
+       PROGRAMMING NOTE: We need this test here too (as well as in
+       the dat.h maddr_l function) since THIS function can also be
+       called directly by the channel via the TXF_FETCHREF and
+       TXF_STOREREF macros to check if the storage it is fetching
+       from or storing into conflicts with any active transactions.
+    */
+    if (!sysblk.txf_transcpus)
+        return maddr;
+
     /* Save last translation access type and arn */
     if (regs && regs->txf_tnd)
     {
@@ -1554,7 +1565,8 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     for (i=0; i < sysblk.hicpu; i++)
     {
         /* Point to this CPU's hostregs */
-        rchk = sysblk.regs[i];
+        if (!(rchk = sysblk.regs[i]))
+            continue; /* (skip uninitialized/nonexistent CPUs) */
 
         /* Check both hostregs *AND* guestregs for storage conflict
            with this CPU (as long as it's not ours!)
@@ -1574,6 +1586,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
                 && txf_conflict_chk( rchk, acctype, addrpage, cacheidx, cacheidxe )
                )
             || (1
+                && rchk->guestregs
                 && rchk->guestregs != regs
                 && txf_conflict_chk( rchk->guestregs, acctype, addrpage, cacheidx, cacheidxe )
                )
