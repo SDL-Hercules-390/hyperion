@@ -2832,7 +2832,7 @@ DLL_EXPORT const char* PIC2Name( int code )
         /* 40 */    "Monitor event"
     };
     int ndx = (code - 1) & 0x3F;
-    return (ndx < _countof( pgmintname )) ?
+    return (ndx < (int) _countof( pgmintname )) ?
         pgmintname[ ndx ] : "???";
 }
 
