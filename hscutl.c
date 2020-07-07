@@ -973,9 +973,7 @@ DLL_EXPORT char * hgets(char *b,size_t c,int s)
     while(ix<c)
     {
         b[ix]=hgetc(s);
-//      if(b[ix]==EOF)         /* GCC Warning: always false */
-//                             /* due to -Wtype-limits;     */
-        if ((int)b[ix] == EOF) /* Corrected.                */
+        if ((signed char)b[ix] == EOF)
         {
             return NULL;
         }
