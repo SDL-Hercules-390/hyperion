@@ -222,6 +222,43 @@ DLL_EXPORT int panel_command_capture( char* cmd, char** resp )
 }
 
 /*-------------------------------------------------------------------*/
+/*               _flog_write_pipe  helper function                   */
+/*-------------------------------------------------------------------*/
+/* logger is non-blocking to prevent stalls so we try for a short    */
+/* time to get the data through. Strictly log writes are atomic as   */
+/* they should be < PIPE_BUF bytes (see pipe(7) but we do try and    */
+/* handle the case where we are passed more data                     */
+/*-------------------------------------------------------------------*/
+static int do_write_pipe( int fd, const char *msg, int len)
+{
+    // Note: logger write fd is non-blocking
+    int retry = 5;
+    int written = 0;
+    int rc;
+    while ((rc = write_pipe( fd, msg, len )) != len && retry--)
+    {
+        if (rc == -1)
+        {
+            if (errno == EAGAIN)
+            {
+                // logger is backlogged; wait a bit before retrying
+                usleep(10000);
+                continue;
+            }
+            break;
+        }
+        if (rc < len)
+        {
+            // Short write (may occur if write >= PIPE_BUF)
+            len -= rc;
+            msg += rc;
+            written += rc;
+        }
+    }
+    return rc == -1 ? -1 : written + len;
+}
+
+/*-------------------------------------------------------------------*/
 /* internal helper function:  write message to logger facility pipe  */
 /*-------------------------------------------------------------------*/
 static void _flog_write_pipe( FILE* f, const char* msg )
@@ -237,26 +274,35 @@ static void _flog_write_pipe( FILE* f, const char* msg )
         || sysblk.shutdown
         || stdout != f
         || !logger_syslogfd[ LOG_WRITE ]
-        || (rc = write_pipe( logger_syslogfd[ LOG_WRITE ], msg, len )) < 0
+        || (rc = do_write_pipe( logger_syslogfd[ LOG_WRITE ], msg, len )) < 0
     )
     {
+        // Something went wrong or we're shutting down.
+        // Write the message to the screen instead...
+
         fprintf( f, "%s", msg );   /* (write msg to screen) */
 
-        if (1
-            && sysblk.shutdown
+        // PROGRAMMING NOTE: the external GUI receives messages
+        // not only via its logfile stream but also via its stderr
+        // stream too, so if there's an external gui, we skip the
+        // logfile write in order to prevent duplicate messages.
+        //
+        // If no external GUI exists however, then we need to
+        // write the message to the logfile WITH a timstamp.
 
-            // PROGRAMMING NOTE: the external GUI receives messages
-            // not only via its logfile stream but also via its
-            // stderr stream as well, so we skip the logfile write
-            // in order to prevent duplicate messages.
-            && !extgui
+        if (1
+            && sysblk.shutdown      // (shutting down?)
+            && !extgui              // (no external gui?)
         )
         {
-            // Note: call does nothing if no logfile exists.
+            // (then we need to timestamp the logmsg...)
+            // (note: call does nothing if no logfile exists!)
+
             logger_timestamped_logfile_write( msg, len );
         }
     }
 }
+
 
 /*-------------------------------------------------------------------*/
 /*                           flog_write                              */
