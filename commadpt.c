@@ -3533,21 +3533,30 @@ BYTE    b1, b2;                 /* 2741 overstrike rewriting */
                             {
                                 /* If there was a DLE on previous pass */
                                 if(gotdle)
-                            {
-                                /* check for DLE/ETX */
-                                if(b==0x02)
                                 {
-                                    /* Indicate transparent mode on */
-                                    turnxpar=1;
+                                    /* check for DLE/STX */
+                                    if(b==0x02)
+                                    {
+                                        /* Indicate transparent mode on */
+                                        turnxpar=1;
+                                    }
+                                   gotdle=0;
                                 }
+                                else 
+                                {   
+                                    if((b==0x03) || (b==0x26)) 
+                                    {
+                                        commadpt_ring_push(&dev->commadpt->outbfr,b);
+                                        break;
+                                    }
+                                }   
                             }
                         }
-                    }
-                }  /* end of else (async) */
-                /* Put the current byte on the output ring */
-                commadpt_ring_push(&dev->commadpt->outbfr,b);
-            }
-            if (IS_BSC_LNCTL(dev->commadpt))
+                    }  /* end of else (async) */
+                    /* Put the current byte on the output ring */
+                    commadpt_ring_push(&dev->commadpt->outbfr,b);
+                }
+            if (IS_BSC_LNCTL(dev->commadpt)) 
             {
                 /* If we had a DLE/STX, the line is now in Transparent Write Wait state */
                 /* meaning that no CCW codes except Write, No-Op, Sense are allowed     */
