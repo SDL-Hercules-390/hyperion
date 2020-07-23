@@ -425,6 +425,8 @@ static inline int Try_Obtain_Interrupt_Lock( REGS* regs, const char* location )
         HOSTREGS->intwait = true;
     if ((rc = hthread_try_obtain_lock( &sysblk.intlock, location )) == 0)
         Interrupt_Lock_Obtained( regs, location );
+    else if (regs)
+        HOSTREGS->intwait = false;
     return rc;
 }
 
