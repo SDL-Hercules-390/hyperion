@@ -849,8 +849,7 @@ TPAGEMAP   *pmap;
                 UNREACHABLE_CODE( return );
             }
 
-            /* Set CONSTRAINED trans instruction fetch constraint */
-            ARCH_DEP( set_txf_aie )( regs );
+            /* CONSTRAINED nested within unconstrained... */
 
             /* For CONSTRAINED transactions, if the transaction
                nesting depth is already greater than zero (i.e.
