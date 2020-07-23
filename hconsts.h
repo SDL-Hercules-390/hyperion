@@ -424,16 +424,20 @@
 #define SIE_INTERCEPT_IOINT    (-15)    /* I/O Interruption          */
 #define SIE_INTERCEPT_IOINTP   (-16)    /* I/O Interruption pending  */
 #define SIE_INTERCEPT_IOINST   (-17)    /* I/O Instruction           */
+#define SIE_MAX_NEG            (-17)    /* (maximum negative value)  */
+
 #if defined( SIE_DEBUG_PERFMON )
 #define SIE_PERF_ENTER         ( 0 )    /* SIE performance monitor   */
-#define SIE_PERF_ENTER_F       (-31)    /* Enter Fast (retain state) */
-#define SIE_PERF_EXIT          (-30)    /* SIE exit                  */
-#define SIE_PERF_RUNSIE        (-29)    /* run_sie entered           */
-#define SIE_PERF_RUNLOOP_1     (-28)    /* run_sie runloop 1         */
-#define SIE_PERF_RUNLOOP_2     (-27)    /* run_sue runloop 2         */
-#define SIE_PERF_INTCHECK      (-26)    /* run_sie intcheck          */
-#define SIE_PERF_EXEC          (-25)    /* run_sie execute inst      */
+#define SIE_MIN_NEG_DEBUG      (-24)    /* (minimum negative value)  */
 #define SIE_PERF_EXEC_U        (-24)    /* run_sie unrolled exec     */
+#define SIE_PERF_EXEC          (-25)    /* run_sie execute inst      */
+#define SIE_PERF_INTCHECK      (-26)    /* run_sie intcheck          */
+#define SIE_PERF_RUNLOOP_2     (-27)    /* run_sue runloop 2         */
+#define SIE_PERF_RUNLOOP_1     (-28)    /* run_sie runloop 1         */
+#define SIE_PERF_RUNSIE        (-29)    /* run_sie entered           */
+#define SIE_PERF_EXIT          (-30)    /* SIE exit                  */
+#define SIE_PERF_ENTER_F       (-31)    /* Enter Fast (retain state) */
+#define SIE_MAX_NEG_DEBUG      (-31)    /* (maximum negative value)  */
 #endif
 
 /*-------------------------------------------------------------------*/
