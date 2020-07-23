@@ -867,14 +867,14 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
         {
             regs->txf_piid   = pcode;
             regs->txf_piid  |= (ilc << 16);
-            regs->txf_dxcvxc =
+            regs->txf_dxc_vxc =
             (0
                 || pcode == PGM_DATA_EXCEPTION
                 || pcode == PGM_VECTOR_PROCESSING_EXCEPTION
             )
             ?  regs->dxc : 0;
 
-            PTT_TXF( "TXF PIID", regs->txf_piid, regs->txf_dxcvxc, 0 );
+            PTT_TXF( "TXF PIID", regs->txf_piid, regs->txf_dxc_vxc, 0 );
         }
 #endif
         /* Store the exception access identification at PSA+160 */

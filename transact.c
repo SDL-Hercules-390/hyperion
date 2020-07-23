@@ -679,7 +679,7 @@ TPAGEMAP   *pmap;
         regs->txf_tac        = 0;          /* clear the abort code   */
         regs->txf_conflict   = 0;          /* clear conflict address */
         regs->txf_piid       = 0;          /* program interrupt id   */
-        regs->txf_lastacctyp = 0;          /* last access type       */
+        regs->txf_lastacc    = 0;          /* last access type       */
         regs->txf_lastarn    = 0;          /* last access arn        */
         regs->txf_why        = 0;          /* no abort cause (yet)   */
 
@@ -1139,7 +1139,7 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
             || txf_piid == PGM_DATA_EXCEPTION
             || txf_piid == PGM_VECTOR_PROCESSING_EXCEPTION
         )
-            tb_tdb->tdb_dxc = regs->txf_dxcvxc;
+            tb_tdb->tdb_dxc = regs->txf_dxc_vxc;
 
         STORE_HW( tb_tdb->tdb_tnd,      (U16) txf_tnd      );
         STORE_DW( tb_tdb->tdb_tac,      (U64) txf_tac      );
@@ -1300,8 +1300,8 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
         /* Did interrupt occur during instruction fetch? */
         if (1
-            && regs->txf_lastacctyp == ACCTYPE_INSTFETCH
-            && regs->txf_lastarn    == USE_INST_SPACE
+            && regs->txf_lastacc == ACCTYPE_INSTFETCH
+            && regs->txf_lastarn == USE_INST_SPACE
         )
         {
             txclass = 1;        /* Class 1 can't be filtered */
@@ -1744,8 +1744,8 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     /* Save last translation access type and arn */
     if (regs && regs->txf_tnd)
     {
-        regs->txf_lastacctyp = acctype;
-        regs->txf_lastarn    = arn;
+        regs->txf_lastacc = acctype;
+        regs->txf_lastarn = arn;
     }
 
     addrwork = (U64) maddr;                     /* convert to U64    */

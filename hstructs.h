@@ -358,7 +358,8 @@ struct REGS {                           /* Processor registers       */
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_aborted;            /* true == aborted trans.    */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
-        BYTE    txf_tnd;                /* transaction nesting depth */
+        BYTE    txf_tnd;                /* Transaction nesting depth.
+                                           Use txf_lock to access!   */
 
         BYTE    txf_ctlflag;            /* Flags for access mode
                                            change, float allowed     */
@@ -413,8 +414,15 @@ struct REGS {                           /* Processor registers       */
         BYTE    txf_gprmask;            /* GPR register restore mask */
         DW      txf_savedgr[16];        /* Saved gpr register values */
 
-        int     txf_tac;                /* Transaction abort code    */
+        int     txf_tac;                /* Transaction abort code.
+                                           Use txf_lock to access!   */
+
         int     txf_random_tac;         /* Random abort code         */
+
+        /* --------------- TXF debugging --------------------------- */
+
+        int          txf_who;           /* CPU doing delayed abort   */
+        const char*  txf_loc;           /* Where the abort occurred  */
 
         /*-----------------------------------------------------------*/
         /* Transaction Abort PSW fields                              */
@@ -436,12 +444,12 @@ struct REGS {                           /* Processor registers       */
 
         U32     txf_piid;               /* Transaction Program
                                            Interrupt Identifier      */
-        BYTE    txf_dxcvxc;             /* Data/Vector Exception Code*/
+        BYTE    txf_dxc_vxc;            /* Data/Vector Exception Code*/
 
         U32     txf_why;                /* why transaction aborted   */
                                         /* see transact.h for codes  */
 
-        int     txf_lastacctyp;         /* Last access type          */
+        int     txf_lastacc;            /* Last access type          */
         int     txf_lastarn;            /* Last access arn           */
 
         U16     txf_pifctab[ MAX_TXF_TND ];   /* PIFC control table  */
