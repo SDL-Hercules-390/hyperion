@@ -29,7 +29,7 @@
 /* width of the bitmap depends on the maximum number of processing   */
 /* engines that was selected at build time.                          */
 /*                                                                   */
-/* Due to GCC and MSVC limitations, a MAX_CPU_ENGINES value greater  */
+/* Due to GCC and MSVC limitations, a MAX_CPU_ENGS value greater     */
 /* than 64 (e.g. 128) is only supported on platforms whose long long */
 /* integer size is actually 128 bits:                                */
 /*                                                                   */
@@ -40,21 +40,21 @@
 /*  less than 128 bits wide."                                        */
 /*-------------------------------------------------------------------*/
 
-#if MAX_CPU_ENGINES <= 0
-  #error MAX_CPU_ENGINES must be greater than zero!
-#elif MAX_CPU_ENGINES <= 32
+#if MAX_CPU_ENGS <= 0
+  #error MAX_CPU_ENGS must be greater than zero!
+#elif MAX_CPU_ENGS <= 32
     typedef U32                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%8.8"PRIX32
-#elif MAX_CPU_ENGINES <= 64
+#elif MAX_CPU_ENGS <= 64
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
-#elif MAX_CPU_ENGINES <= 128
-  typedef __uint128_t         CPU_BITMAP;
+#elif MAX_CPU_ENGS <= 128
+  typedef __uint128_t           CPU_BITMAP;
   // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
   #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
   #define F_CPU_BITMAP        "%16.16"PRIX64
 #else
-  #error MAX_CPU_ENGINES cannot exceed 128
+  #error MAX_CPU_ENGS cannot exceed 128
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -101,10 +101,10 @@ struct REGS {                           /* Processor registers       */
 
         ALIGN_128                       /* --- 64-byte cache line -- */
 /*100*/ BYTE    malfcpu                 /* Malfuction alert flags    */
-                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
+                    [MAX_CPU_ENGS];     /* for each CPU (1=pending)  */
         ALIGN_128
 /*180*/ BYTE    emercpu                 /* Emergency signal flags    */
-                    [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
+                    [MAX_CPU_ENGS];     /* for each CPU (1=pending)  */
 
      /* AIA - Instruction fetch accelerator                          */
 /*200*/ ALIGN_128
@@ -650,23 +650,23 @@ struct SYSBLK {
         U8      unused1;                /* (pad/align/unused/avail)  */
 
         COND    cpucond;                /* CPU config/deconfig cond  */
-        LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
+        LOCK    cpulock[MAX_CPU_ENGS];  /* CPU lock                  */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        LOCK    txf_lock[ MAX_CPU_ENGINES ]; /* CPU transaction lock */
+        LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock    */
 #define OBTAIN_TXFLOCK( regs )     obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 #define RELEASE_TXFLOCK( regs )    release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 #endif
 
-        TOD     cpucreateTOD[MAX_CPU_ENGINES];  /* CPU creation time */
-        TID     cputid[MAX_CPU_ENGINES];        /* CPU thread ids    */
-        clockid_t                               /* CPU clock         */
-                cpuclockid[MAX_CPU_ENGINES];    /* identifiers       */
+        TOD     cpucreateTOD[MAX_CPU_ENGS];  /* CPU creation time    */
+        TID     cputid[MAX_CPU_ENGS];        /* CPU thread ids       */
+        clockid_t                            /* CPU clock            */
+                cpuclockid[MAX_CPU_ENGS];    /* identifiers          */
 
-        BYTE    ptyp[MAX_CPU_ENGINES];  /* SCCB ptyp for each engine */
+        BYTE    ptyp[MAX_CPU_ENGS];     /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
-        REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
+        REGS   *regs[MAX_CPU_ENGS+1];   /* Registers for each CPU    */
 
         /* Active Facility List */
         BYTE    facility_list[ NUM_GEN_ARCHS ][ STFL_HERC_DW_SIZE * sizeof( DW ) ];
@@ -696,14 +696,14 @@ struct SYSBLK {
 #endif
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
-        VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
+        VFREGS  vf[MAX_CPU_ENGS];       /* Vector Facility           */
 #endif
 #if defined(_FEATURE_SIE)
         ZPBLK   zpb[FEATURE_SIE_MAXZONES];  /* SIE Zone Parameter Blk*/
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)
-        REGS    footprregs[MAX_CPU_ENGINES][OPTION_FOOTPRINT_BUFFER];
-        U32     footprptr[MAX_CPU_ENGINES];
+        REGS    footprregs[MAX_CPU_ENGS][OPTION_FOOTPRINT_BUFFER];
+        U32     footprptr[MAX_CPU_ENGS];
 #endif
 #define LOCK_OWNER_NONE  0xFFFF
 #define LOCK_OWNER_OTHER 0xFFFE

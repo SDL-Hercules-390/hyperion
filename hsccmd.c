@@ -3738,7 +3738,7 @@ int maxcpu_cmd( int argc, char* argv[], char* cmdline )
 
     /* Parse maximum number of CPUs operand */
     if (sscanf( argv[1], "%hu%c", &maxcpu, &c ) != 1
-        || maxcpu > MAX_CPU_ENGINES)
+        || maxcpu > MAX_CPU_ENGS)
     {
         // "Invalid value %s specified for %s"
         WRMSG( HHC01451, "E", argv[1], argv[0] );

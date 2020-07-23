@@ -340,7 +340,7 @@ BYTE   gui_wants_new_devlist = 1;       // (should always be initially on)
 BYTE   gui_wants_aggregates  = 1;
 BYTE   gui_wants_cpupct      = 0;
 BYTE   gui_wants_cpupct_all  = 0;
-int    prev_cpupct    [ MAX_CPU_ENGINES ];
+int    prev_cpupct    [ MAX_CPU_ENGS ];
 U32    prev_mips_rate  = 0;
 U32    prev_sios_rate  = 0;
 

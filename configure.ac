@@ -515,7 +515,7 @@ hc_error=no
 #  statements coded somewhere. We place them all here simply for convenience.
 
 AH_TEMPLATE( [CUSTOM_BUILD_STRING],     [Define to provide additional information about this build] )
-AH_TEMPLATE( [MAX_CPU_ENGINES],         [Defines the maximum number of emulated CPU engines] )
+AH_TEMPLATE( [MAX_CPU_ENGS],            [Defines the maximum number of emulated CPU engines] )
 AH_TEMPLATE( [HOST_ARCH],               [Define as quoted 'target_cpu' value = target host CPU architecture] )
 AH_TEMPLATE( [DEBUG],                   [Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros)] )
 AH_TEMPLATE( [C99_FLEXIBLE_ARRAYS],     [Define if your gcc properly supports C99 flexible arrays] )
@@ -2874,7 +2874,7 @@ if test "x$hc_cv_opt_custom_build_str" != "x"; then
     AC_DEFINE_UNQUOTED( [CUSTOM_BUILD_STRING], "${hc_cv_opt_custom_build_str}" )
 fi
 
-AC_DEFINE_UNQUOTED( [MAX_CPU_ENGINES],  ${hc_cv_opt_num_cpu_engines} )
+AC_DEFINE_UNQUOTED( [MAX_CPU_ENGS],     ${hc_cv_opt_num_cpu_engines} )
 AC_DEFINE_UNQUOTED( [HOST_ARCH],       "${target_cpu}" )
 
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_BOOL_LOCK_FREE],     ${hc_cv_c11_atomic_bool_lock_free}     )

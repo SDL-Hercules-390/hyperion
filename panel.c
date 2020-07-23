@@ -114,7 +114,7 @@ static U32    NPdata;
 static U32    NPmips;
 static U32    NPsios;
 static int    NPcpugraph;
-static int    NPcpugraphpct[MAX_CPU_ENGINES];
+static int    NPcpugraphpct[MAX_CPU_ENGS];
 
 /* Current device states */
 #define       NP_MAX_DEVICES (PANEL_MAX_ROWS - 3)

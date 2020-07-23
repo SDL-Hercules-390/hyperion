@@ -37,12 +37,12 @@ rcflags = $(rcflags) -D PRERELEASE=1
 rcflags = $(rcflags) -D _WIN64
 !ENDIF
 
-!IFNDEF MAX_CPU_ENGINES
-MAX_CPU_ENGINES = 8
+!IFNDEF MAX_CPU_ENGS
+MAX_CPU_ENGS = 8
 !ENDIF
 
-rcflags = $(rcflags) /D _MSVC_ /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
-cflags  = $(cflags)  /D _MSVC_ /D MAX_CPU_ENGINES=$(MAX_CPU_ENGINES)
+rcflags = $(rcflags) /D _MSVC_ /D MAX_CPU_ENGS=$(MAX_CPU_ENGS)
+cflags  = $(cflags)  /D _MSVC_ /D MAX_CPU_ENGS=$(MAX_CPU_ENGS)
 
 !IF DEFINED(CUSTOM_BUILD_STRING)
 cflags  = $(cflags)  /D CUSTOM_BUILD_STRING=\"$(CUSTOM_BUILD_STRING)\"

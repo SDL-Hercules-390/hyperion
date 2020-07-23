@@ -7121,13 +7121,13 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                     offset = (U16)(sysib122->accap - (BYTE*)sysib122);
                     STORE_HW( sysib122->accoff, offset );
                 }
-                STORE_FW( sysib122->nccap,   sysblk.cpncap   );
-                STORE_FW( sysib122->sccap,   sysblk.cpscap   );
-                STORE_FW( sysib122->cap,     sysblk.cpmcap   );
-                STORE_HW( sysib122->totcpu,  MAX_CPU_ENGINES );
-                STORE_HW( sysib122->confcpu, sysblk.cpus     );
-                STORE_HW( sysib122->sbcpu,   sysblk.maxcpu - sysblk.cpus );
-                STORE_HW( sysib122->resvcpu, MAX_CPU_ENGINES - sysblk.maxcpu );
+                STORE_FW( sysib122->nccap,   sysblk.cpncap );
+                STORE_FW( sysib122->sccap,   sysblk.cpscap );
+                STORE_FW( sysib122->cap,     sysblk.cpmcap );
+                STORE_HW( sysib122->totcpu,  MAX_CPU_ENGS  );
+                STORE_HW( sysib122->confcpu, sysblk.cpus   );
+                STORE_HW( sysib122->sbcpu,   sysblk.maxcpu - sysblk.cpus   );
+                STORE_HW( sysib122->resvcpu, MAX_CPU_ENGS  - sysblk.maxcpu );
                 get_mpfactors( (BYTE*)sysib122->mpfact );
                 if (sysib122->format)
                 {
@@ -7187,10 +7187,10 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                 memset( sysib222, 0, MAX( sizeof( SYSIB222 ), 64*4 ));
                 STORE_HW( sysib222->lparnum, sysblk.lparnum );
                 sysib222->lcpuc = SYSIB222_LCPUC_SHARED;
-                STORE_HW( sysib222->totcpu,  MAX_CPU_ENGINES );
-                STORE_HW( sysib222->confcpu, sysblk.cpus     );
-                STORE_HW( sysib222->sbcpu,   sysblk.maxcpu   - sysblk.cpus   );
-                STORE_HW( sysib222->resvcpu, MAX_CPU_ENGINES - sysblk.maxcpu );
+                STORE_HW( sysib222->totcpu,  MAX_CPU_ENGS );
+                STORE_HW( sysib222->confcpu, sysblk.cpus  );
+                STORE_HW( sysib222->sbcpu,   sysblk.maxcpu - sysblk.cpus   );
+                STORE_HW( sysib222->resvcpu, MAX_CPU_ENGS  - sysblk.maxcpu );
                 get_lparname(sysib222->lparname);
                 /* FIXME: Should be a percentage of 1000, where 1000
                  *        represents 1.000 and capable of full CPU
@@ -7226,10 +7226,10 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
         memset( sysib322, 0, sizeof( SYSIB322 ));
         sysib322->dbct = 1;
         sysibvmdb = (SYSIBVMDB *)&sysib322->vmdb[0];
-        STORE_HW( sysibvmdb->totcpu,  MAX_CPU_ENGINES );
-        STORE_HW( sysibvmdb->confcpu, sysblk.cpus     );
-        STORE_HW( sysibvmdb->sbcpu,   sysblk.maxcpu   - sysblk.cpus   );
-        STORE_HW( sysibvmdb->resvcpu, MAX_CPU_ENGINES - sysblk.maxcpu );
+        STORE_HW( sysibvmdb->totcpu,  MAX_CPU_ENGS );
+        STORE_HW( sysibvmdb->confcpu, sysblk.cpus  );
+        STORE_HW( sysibvmdb->sbcpu,   sysblk.maxcpu - sysblk.cpus   );
+        STORE_HW( sysibvmdb->resvcpu, MAX_CPU_ENGS  - sysblk.maxcpu );
         get_vmid( sysibvmdb->vmname );
         STORE_FW( sysibvmdb->vmcaf, 1000 ); /* Full capability factor */
         get_cpid( sysibvmdb->cpid );

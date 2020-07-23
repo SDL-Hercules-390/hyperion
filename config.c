@@ -1233,7 +1233,7 @@ int configure_maxcpu( int maxcpu )
     OBTAIN_INTLOCK( NULL );
     {
         /* Requested maxumim must be <= absolute maximum possible */
-        if (maxcpu > MAX_CPU_ENGINES)
+        if (maxcpu > MAX_CPU_ENGS)
         {
             RELEASE_INTLOCK( NULL );
             return HERRCPUOFF;  /* CPU offline; number > maximum */

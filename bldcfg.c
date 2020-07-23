@@ -76,11 +76,11 @@ int build_config( const char* hercules_cnf )
     sysblk.xpndsize = 0;
 
     /* Set sysblk.maxcpu to our preferred default value, if possible */
-#if (PREF_DEF_MAXCPU <= MAX_CPU_ENGINES)
+#if (PREF_DEF_MAXCPU <= MAX_CPU_ENGS)
     sysblk.maxcpu = PREF_DEF_MAXCPU;
 #else
-    WARNING( "sysblk.maxcpu reduced from " QSTR( PREF_DEF_MAXCPU ) " to " QSTR( MAX_CPU_ENGINES ))
-    sysblk.maxcpu = MAX_CPU_ENGINES;
+    WARNING( "sysblk.maxcpu reduced from " QSTR( PREF_DEF_MAXCPU ) " to " QSTR( MAX_CPU_ENGS ))
+    sysblk.maxcpu = MAX_CPU_ENGS;
 #endif
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )

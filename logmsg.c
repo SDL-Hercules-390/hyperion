@@ -99,7 +99,7 @@ typedef struct CAPTCTL          // message capturing control entry
 }
 CAPTCTL;
 
-static CAPTCTL  captctl_tab     [ MAX_CPU_ENGINES + 4 ]   = {0};
+static CAPTCTL  captctl_tab     [ MAX_CPU_ENGS + 4 ]   = {0};
 static LOCK     captctl_lock;
 
 #define  lock_capture()         obtain_lock(  &captctl_lock )

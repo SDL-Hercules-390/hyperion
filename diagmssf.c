@@ -459,8 +459,8 @@ RADR              abs;                 /* abs addr of data area      */
 int               i;                   /* loop counter               */
 struct timespec   cputime;             /* to obtain thread time data */
 ETOD              ETOD;                /* Extended TOD clock         */
-U64               uCPU[MAX_CPU_ENGINES];    /* User CPU time    (us) */
-U64               tCPU[MAX_CPU_ENGINES];    /* Total CPU time   (us) */
+U64               uCPU[MAX_CPU_ENGS];  /* User CPU time    (us)      */
+U64               tCPU[MAX_CPU_ENGS];  /* Total CPU time   (us)      */
 
 #if defined(FEATURE_PHYSICAL_DIAG204)
 static BYTE       physical[8] =
@@ -468,8 +468,8 @@ static BYTE       physical[8] =
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
 
 #if defined(FEATURE_EXTENDED_DIAG204)
-U64               oCPU[MAX_CPU_ENGINES];    /* Online CPU time  (us) */
-U64               wCPU[MAX_CPU_ENGINES];    /* Wait CPU time    (us) */
+U64               oCPU[MAX_CPU_ENGS];  /* Online CPU time  (us)      */
+U64               wCPU[MAX_CPU_ENGS];  /* Wait CPU time    (us)      */
 #endif /*defined(FEATURE_EXTENDED_DIAG204)*/
 
     /* Test DIAG204 command word */

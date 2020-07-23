@@ -51,7 +51,7 @@ INCDIR = msvc.makefile.includes
 !IFDEF DYNDIR
 !INCLUDE $(DYNDIR)$(DYNMOD).msvc
 MODULES = $(MODULES) $(X)$(DYNMOD).dll
-rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=\"$(MAX_CPU_ENGINES)\"
+rcflags = $(rcflags) -D TARGETFILENAME=\"$(DYNMOD).dll\" -D MAX_CPU_ENGINES_STR=\"$(MAX_CPU_ENGS)\"
 !ENDIF
 
 !IF EXIST($(HQA_DIR)\HQA.msvc)

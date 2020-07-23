@@ -2274,7 +2274,7 @@ void setCpuIdregs
     U16  MCEL;
 
     /* Return if CPU out-of-range */
-    if (regs->cpuad >= MAX_CPU_ENGINES)
+    if (regs->cpuad >= MAX_CPU_ENGS)
         return;
 
     /* Gather needed values */
@@ -2355,7 +2355,7 @@ void setCpuId
     REGS*  regs;
 
     /* Return if CPU out-of-range */
-    if (cpu >= MAX_CPU_ENGINES)
+    if (cpu >= MAX_CPU_ENGS)
         return;
 
     /* Return if CPU undefined */
@@ -2419,7 +2419,7 @@ BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S
     sysblk.cpuid = createCpuId( sysblk.cpumodel, sysblk.cpuversion, sysblk.cpuserial, mcel );
 
     /* Set a tailored CPU ID for each and every defined CPU */
-    for (cpu=0; cpu < MAX_CPU_ENGINES; ++cpu )
+    for (cpu=0; cpu < MAX_CPU_ENGS; ++cpu )
         setCpuId( cpu, model, version, serial, MCEL );
 
    return TRUE;

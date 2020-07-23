@@ -408,7 +408,7 @@ static void* WinMsgThread( void* arg )
 static void* watchdog_thread( void* arg )
 {
     REGS* regs;
-    S64   savecount[ MAX_CPU_ENGINES ];
+    S64   savecount[ MAX_CPU_ENGS ];
     int   cpu;
     int   sleep_seconds  = WATCHDOG_SECS;
     int   sleep_secs2nd  = 3;
@@ -884,14 +884,14 @@ int     rc;
     initialize_condition( &sysblk.cpucond );
     {
         int i; char buf[32];
-        for (i=0; i < MAX_CPU_ENGINES; i++)
+        for (i=0; i < MAX_CPU_ENGS; i++)
         {
-            MSGBUF( buf,    "&sysblk.cpulock[%*d]", MAX_CPU_ENGINES > 99 ? 3 : 2, i );
+            MSGBUF( buf,    "&sysblk.cpulock[%*d]", MAX_CPU_ENGS > 99 ? 3 : 2, i );
             initialize_lock( &sysblk.cpulock[i] );
             set_lock_name(   &sysblk.cpulock[i], buf );
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-            MSGBUF( buf,    "&sysblk.txf_lock[%*d]", MAX_CPU_ENGINES > 99 ? 3 : 2, i );
+            MSGBUF( buf,    "&sysblk.txf_lock[%*d]", MAX_CPU_ENGS > 99 ? 3 : 2, i );
             initialize_lock( &sysblk.txf_lock[i] );
             set_lock_name(   &sysblk.txf_lock[i], buf );
 #endif

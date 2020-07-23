@@ -379,7 +379,7 @@
 ::-----------------------------------------------------------------------------
 :nmake
 
-  set  "MAX_CPU_ENGINES=%num_cpus%"
+  set  "MAX_CPU_ENGS=%num_cpus%"
 
   call :set_herc_VERSION
 

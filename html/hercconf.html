@@ -1097,31 +1097,31 @@ a real System/390.  The configuration file is an ASCII text file.
     All processors are CP engines unless otherwise specified by the
     <a href="#ENGINES">ENGINES</a> statement.
     <p>
-    The value of MAXCPU cannot exceed the value of <code>MAX_CPU_ENGINES</code>.
+    The value of MAXCPU cannot exceed the value of <code>MAX_CPU_ENGS</code>.
 
     If MAXCPU is not specified in the Hercules configuration file,
     then its initial value is equal to NUMCPU.
 
     If MAXCPU and NUMCPU are both omitted, MAXCPU is set to 1.
     <p>
-    <code>MAX_CPU_ENGINES</code> is a compile-time variable which sets
+    <code>MAX_CPU_ENGS</code> is a compile-time variable which sets
     an upper limit on the value of MAXCPU.
-    The value of <code>MAX_CPU_ENGINES</code> is displayed in the
+    The value of <code>MAX_CPU_ENGS</code> is displayed in the
     Build information message on the Hercules control panel at startup time.
-    To change the value of <code>MAX_CPU_ENGINES</code> you must rebuild
+    To change the value of <code>MAX_CPU_ENGS</code> you must rebuild
     Hercules.
     For Unix builds, specify
     <tt>./configure --enable-multi-cpu=<em>nn</em></tt>
     before performing make.
     For Windows builds, specify
-    <tt>SET MAX_CPU_ENGINES=<em>nn</em></tt>
+    <tt>SET MAX_CPU_ENGS=<em>nn</em></tt>
     before performing nmake.
     <p>
-    <code>MAX_CPU_ENGINES</code> cannot exceed 64. For performance reasons,
+    <code>MAX_CPU_ENGS</code> cannot exceed 64. For performance reasons,
     values above 32 are not recommended for 32-bit platforms.
-    If <code>MAX_CPU_ENGINES</code> is set to 1 then multiprocessing is disabled.
+    If <code>MAX_CPU_ENGS</code> is set to 1 then multiprocessing is disabled.
     See also <a href="#NUMCPU">NUMCPU</a> for a discussion of the performance
-    implications of <code>MAX_CPU_ENGINES</code>.
+    implications of <code>MAX_CPU_ENGS</code>.
     <p>
 
 <a name="MODEL"></a>
@@ -1236,7 +1236,7 @@ a real System/390.  The configuration file is an ASCII text file.
     There is little point, however, in specifying <tt>NUMCPU</tt> greater
     than 1 unless your guest operating system (running under Hercules) is
     actually able to support multiple CPUs (and if you do not actually need
-    multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
+    multiprocessor emulation, then setting <tt>MAX_CPU_ENGS</tt> to 1 at
     compile time might even produce a slight performance advantage too).
     <p>
 

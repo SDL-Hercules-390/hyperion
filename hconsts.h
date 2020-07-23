@@ -20,20 +20,20 @@
 /* Maximum CPU Engines                                               */
 /*-------------------------------------------------------------------*/
 
-#if !defined( MAX_CPU_ENGINES )
+#if !defined( MAX_CPU_ENGS )
   #if defined( HAVE___INT128_T )
-    #define MAX_CPU_ENGINES     128
+    #define MAX_CPU_ENGS     128
   #else
-    #define MAX_CPU_ENGINES      64
+    #define MAX_CPU_ENGS      64
   #endif
 #endif
 
-// (PREFERRED default MAX_CPU_ENGINES)
-#define PREF_DEF_MAXCPU           8     /*  Default sysblk.maxcpu
+// (PREFERRED default MAX_CPU_ENGS)
+#define PREF_DEF_MAXCPU        8        /*  Default sysblk.maxcpu
                                             to 8 according to old
-                                            MAX_CPU_ENGINES default  */
+                                            MAX_CPU_ENGS default     */
 
-#define MAX_CPU_LOOPS           256     /* UNROLLED_EXECUTE loops    */
+#define MAX_CPU_LOOPS        256        /* UNROLLED_EXECUTE loops    */
 
 /*-------------------------------------------------------------------*/
 /*      Some handy quantity definitions                              */

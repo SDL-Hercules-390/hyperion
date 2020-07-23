@@ -754,7 +754,7 @@ void get_mpfactors(BYTE *dest)
 #define  MPFACTOR_DENOMINATOR     100
 #define  MPFACTOR_PERCENT          95
 
-    static U16 mpfactors[MAX_CPU_ENGINES-1] = {0};
+    static U16 mpfactors[MAX_CPU_ENGS-1] = {0};
     static BYTE didthis = 0;
 
     if (!didthis)
@@ -792,7 +792,7 @@ void get_mpfactors(BYTE *dest)
     }
 
     /* Return the requested information... */
-    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGINES-1) * sizeof(U16) );
+    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGS-1) * sizeof(U16) );
 }
 
 
@@ -823,11 +823,11 @@ get_RealCPCount (void)
             possible = hostinfo.num_procs;
     }
     else
-        possible = MAX_CPU_ENGINES;
+        possible = MAX_CPU_ENGS;
 
     /* Limit to the maximum number of Hercules CPU engines */
-    if (possible > MAX_CPU_ENGINES)
-        possible = MAX_CPU_ENGINES;
+    if (possible > MAX_CPU_ENGS)
+        possible = MAX_CPU_ENGS;
 
     /* Set number of reserved processors */
     reserved = possible - sysblk.cpus;
