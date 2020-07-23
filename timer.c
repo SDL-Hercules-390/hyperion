@@ -132,8 +132,8 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
         /* When running under SIE also update the SIE copy */
         if(regs->sie_active)
         {
-            if(SIE_STATB(regs->guestregs, M, 370)
-              && SIE_STATNB(regs->guestregs, M, ITMOF))
+            if(SIE_STATE_BIT_ON(regs->guestregs, M, 370)
+              && SIE_STATE_BIT_OFF(regs->guestregs, M, ITMOF))
             {
                 if( chk_int_timer(regs->guestregs) )
                     intmask |= regs->cpubit;

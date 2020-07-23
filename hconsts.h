@@ -408,8 +408,8 @@
 /*              Interception codes used by longjmp/SIE               */
 /*-------------------------------------------------------------------*/
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */
-#define SIE_HOST_INTERRUPT      (-2)    /* Host interrupt pending    */
-#define SIE_HOST_PGMINT         (-3)    /* Host program interrupt    */
+#define SIE_HOST_INT_PEND       (-2)    /* Host interrupt pending    */
+#define SIE_HOST_PGM_INT        (-3)    /* Host program interrupt    */
 #define SIE_INTERCEPT_INST      (-4)    /* Instruction interception  */
 #define SIE_INTERCEPT_INSTCOMP  (-5)    /* Instr. int TS/CS/CDS      */
 #define SIE_INTERCEPT_EXTREQ    (-6)    /* External interrupt        */

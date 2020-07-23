@@ -911,13 +911,13 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     switch (icode > 0 ? icode & ~PGM_PER_EVENT : icode)
     {
        /* If host interrupt pending, then backup psw and exit */
-        case SIE_HOST_INTERRUPT:
+        case SIE_HOST_INT_PEND:
 
             SET_PSW_IA( regs );
             UPD_PSW_IA( regs, regs->psw.IA -REAL_ILC( regs ));
             break;
 
-        case SIE_HOST_PGMINT:          /* do nothing */             break;
+        case SIE_HOST_PGM_INT:         /* do nothing */             break;
         case SIE_INTERCEPT_INST:       STATEBK->c = SIE_C_INST;     break;
         case SIE_INTERCEPT_PER:        STATEBK->f |= SIE_F_IF;
                                        /* fall through */
@@ -1387,7 +1387,7 @@ endloop:        ; // (nop to make compiler happy)
             else if (SIE_I_IO   ( GUESTREGS )) icode = SIE_INTERCEPT_IOREQ;
             else if (SIE_I_STOP ( GUESTREGS )) icode = SIE_INTERCEPT_STOPREQ;
             else if (SIE_I_WAIT ( GUESTREGS )) icode = SIE_INTERCEPT_WAIT;
-            else if (SIE_I_HOST (   regs    )) icode = SIE_HOST_INTERRUPT;
+            else if (SIE_I_HOST (   regs    )) icode = SIE_HOST_INT_PEND;
         }
     }
     while (!icode || icode == SIE_NO_INTERCEPT);

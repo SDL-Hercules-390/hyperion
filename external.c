@@ -50,10 +50,10 @@ int     rc;
     /* Set the main storage reference and change bits */
     if(SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       && !SIE_FEATB(regs, S, EXP_TIMER)
+                       && !SIE_FEAT_BIT_ON(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       && !SIE_FEATB(regs, EC0, EXTA)
+                       && !SIE_FEAT_BIT_ON(regs, EC0, EXTA)
 #endif
                                                             )
     {
@@ -93,10 +93,10 @@ int     rc;
 
     if ( !SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       || SIE_FEATB(regs, S, EXP_TIMER)
+                       || SIE_FEAT_BIT_ON(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       || SIE_FEATB(regs, EC0, EXTA)
+                       || SIE_FEAT_BIT_ON(regs, EC0, EXTA)
 #endif
        )
     {
@@ -133,10 +133,10 @@ int     rc;
 
     if ( SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       && !SIE_FEATB(regs, S, EXP_TIMER)
+                       && !SIE_FEAT_BIT_ON(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       && !SIE_FEATB(regs, EC0, EXTA)
+                       && !SIE_FEAT_BIT_ON(regs, EC0, EXTA)
 #endif
        )
         longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
@@ -306,7 +306,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 #if defined(FEATURE_INTERVAL_TIMER)
     if (OPEN_IC_ITIMER(regs)
 #if defined(_FEATURE_SIE)
-        && !(SIE_STATB(regs, M, ITMOF))
+        && !(SIE_STATE_BIT_ON(regs, M, ITMOF))
 #endif /*defined(_FEATURE_SIE)*/
         )
     {

@@ -154,7 +154,7 @@ U32  trap_flags;
 QWORD trap_psw;
 int  i;
 
-    if(SIE_STATB(regs, MX, XC))
+    if(SIE_STATE_BIT_ON(regs, MX, XC))
         ARCH_DEP(program_interrupt)(regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     if (   REAL_MODE(&regs->psw)

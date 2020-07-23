@@ -2242,7 +2242,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
                             && arn == USE_PRIMARY_SPACE
 #else
 //                          && ( (arn == USE_PRIMARY_SPACE)
-//                               || SIE_STATB(regs->guestregs, MX, XC) )
+//                               || SIE_STATE_BIT_ON(regs->guestregs, MX, XC) )
 #endif /* defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
           )
 #endif /* defined( FEATURE_INTERPRETIVE_EXECUTION ) */

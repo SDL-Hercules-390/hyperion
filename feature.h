@@ -781,7 +781,7 @@ do { \
   #define HOME_SPACE_MODE(p) \
     ((p)->asc == PSW_HOME_SPACE_MODE)
   #define AEA_MODE(_regs) \
-    ( ( REAL_MODE(&(_regs)->psw) ? (SIE_STATB((_regs), MX, XC) && AR_BIT(&(_regs)->psw) ? 2 : 0) : (((_regs)->psw.asc >> 6) + 1) ) \
+    ( ( REAL_MODE(&(_regs)->psw) ? (SIE_STATE_BIT_ON((_regs), MX, XC) && AR_BIT(&(_regs)->psw) ? 2 : 0) : (((_regs)->psw.asc >> 6) + 1) ) \
     | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
  )
 #else

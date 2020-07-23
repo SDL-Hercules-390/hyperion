@@ -377,7 +377,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-    if(SIE_STATB(regs, MX, XC)
+    if(SIE_STATE_BIT_ON(regs, MX, XC)
       && (psw[2] & 0x80))
         regs->program_interrupt (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -968,7 +968,7 @@ U64     new;                            /* new value                 */
     ODD_CHECK(r1, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs,IC0, IPTECSP))
+    if(SIE_STATE_BIT_ON(regs,IC0, IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1085,7 +1085,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs,IC0, IPTECSP))
+    if(SIE_STATE_BIT_ON(regs,IC0, IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1701,7 +1701,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
     TRAN_INSTR_CHECK( regs );
 
 #if defined( _FEATURE_ZSIE )
-    if (SIE_STATB( regs, IC1, LPSW ))
+    if (SIE_STATE_BIT_ON( regs, IC1, LPSW ))
         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 #endif
 
@@ -2252,7 +2252,7 @@ U64     gr0, gr1;                       /* Result register workareas */
     TRAN_INSTR_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, IC3, SPT))
+    if(SIE_STATE_BIT_ON(regs, IC3, SPT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -2538,7 +2538,7 @@ U64     new;                            /* new value                 */
     {
         regs->GR_G(r1) = CSWAP64(old);
 #if defined(_FEATURE_ZSIE)
-        if(SIE_STATB(regs, IC0, CS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -2602,7 +2602,7 @@ U64     newhi, newlo;                   /* new value                 */
         regs->GR_G( r1+1 ) = CSWAP64( old[1] );
 
 #if defined( _FEATURE_ZSIE )
-        if(SIE_STATB(regs, IC0, CS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -4259,7 +4259,7 @@ U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     DW_CHECK( effective_addr2, regs );
 
 #if defined( _FEATURE_ZSIE )
-    if (SIE_STATB( regs, IC1, STCTL ))
+    if (SIE_STATE_BIT_ON( regs, IC1, STCTL ))
         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 #endif
 
@@ -4945,7 +4945,7 @@ int     rc;
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
-    if(SIE_STATB(regs, IC1, LPSW))
+    if(SIE_STATE_BIT_ON(regs, IC1, LPSW))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_ZSIE)*/
 
@@ -5193,7 +5193,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
     a &= ~0x3ffffULL;
 
 #if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs) && (SIE_STATB(regs, IC2, RRBE)))
+    if(SIE_MODE(regs) && (SIE_STATE_BIT_ON(regs, IC2, RRBE)))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
 
@@ -5208,11 +5208,11 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
             if(regs->sie_pref)
             {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if((SIE_STATB(regs, RCPO0, SKA)
+                if((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                   || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
-                  ) && SIE_STATB(regs, RCPO2, RCPBY))
+                  ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
                 {
 #if !defined(FEATURE_2K_STORAGE_KEYS)
                     storkey = STORAGE_KEY(n, regs);
@@ -5237,7 +5237,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                 RADR rcpa;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                    if(SIE_STATB(regs, RCPO0, SKA)
+                    if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                       || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -5260,7 +5260,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                     {
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                        if(SIE_STATB(regs, MX, XC))
+                        if(SIE_STATE_BIT_ON(regs, MX, XC))
                             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -5459,17 +5459,17 @@ int     page_offset;                    /* Low order bits of R2      */
 #if defined(_FEATURE_SIE)
             if(SIE_MODE(regs))
             {
-                if(SIE_STATB(regs, IC2, SSKE))
+                if(SIE_STATE_BIT_ON(regs, IC2, SSKE))
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                 if(!regs->sie_pref)
                 {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                    if ((SIE_STATB(regs, RCPO0, SKA)
+                    if ((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                       || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
-                      ) && SIE_STATB(regs, RCPO2, RCPBY))
+                      ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
                         { SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, regs); }
                     else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5481,7 +5481,7 @@ int     page_offset;                    /* Low order bits of R2      */
                     RADR rcpa;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                        if(SIE_STATB(regs, RCPO0, SKA)
+                        if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                           || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -5504,7 +5504,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                         {
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                            if(SIE_STATB(regs, MX, XC))
+                            if(SIE_STATE_BIT_ON(regs, MX, XC))
                                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -5525,7 +5525,7 @@ int     page_offset;                    /* Low order bits of R2      */
 
                         if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                          && !(SIE_FEATB(regs, RCPO0, SKA)
+                          && !(SIE_FEAT_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                             || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -5571,7 +5571,7 @@ int     page_offset;                    /* Low order bits of R2      */
                         STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                         /* Insert key in new storage key */
-                        if(SIE_STATB(regs, RCPO0, SKA)
+                        if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                             || (regs->hostregs->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -5687,7 +5687,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     PRIV_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs,IC0, STFL))
+    if(SIE_STATE_BIT_ON(regs,IC0, STFL))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -5724,7 +5724,7 @@ int     cc;                             /* Condition code            */
     TRAN_INSTR_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs,IC0, STFL))
+    if(SIE_STATE_BIT_ON(regs,IC0, STFL))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -7053,7 +7053,7 @@ U32     old;                            /* old value                 */
     {
         regs->GR_L(r1) = CSWAP32(old);
 #if defined(_FEATURE_SIE)
-        if(SIE_STATB(regs, IC0, CS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -7113,7 +7113,7 @@ U64     old, new;                       /* old, new values           */
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
 #if defined(_FEATURE_SIE)
-        if(SIE_STATB(regs, IC0, CS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);

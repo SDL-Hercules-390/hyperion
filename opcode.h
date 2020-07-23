@@ -278,31 +278,43 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
 
 #if defined( _FEATURE_SIE )
 
-  #define SIE_MODE( _register_context ) unlikely((_register_context)->sie_mode)
-  #define SIE_STATE(_register_context ) ((_register_context)->sie_state)
+  #define SIE_MODE( _regs )         ((_regs)->sie_mode)
+  #define SIE_STATE( _regs )        ((_regs)->sie_state)
 
-  #define SIE_FEATB( _regs, _feat_byte, _feat_name ) \
-          (((_regs)->siebk->SIE_ ## _feat_byte) & (SIE_ ## _feat_byte ## _ ## _feat_name))
+  #define SIE_FEAT_BIT_ON( _regs, _byte, _bit ) \
+          ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _byte ## _ ## _bit)
 
-  #define SIE_STATB( _regs, _feat_byte, _feat_name ) \
-          (SIE_MODE((_regs)) && SIE_FEATB( (_regs), _feat_byte, _feat_name ))
+  #define SIE_EC_BIT_ON( _regs, _byte, _bit ) \
+          ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _bit)
 
-  #define SIE_STATNB( _regs, _feat_byte, _feat_name ) \
-          (SIE_MODE((_regs)) && !SIE_FEATB( (_regs), _feat_byte, _feat_name ))
+  #define SIE_FEAT_BIT_OFF( _regs, _byte, _bit )    !SIE_FEAT_BIT_ON( _regs, _byte, _bit )
+  #define SIE_EC_BIT_OFF(   _regs, _byte, _bit )    !SIE_EC_BIT_ON(   _regs, _byte, _bit )
+
+  #define SIE_STATE_BIT_ON( _regs, _byte, _bit ) \
+          (SIE_MODE((_regs)) && SIE_FEAT_BIT_ON(  (_regs), _byte, _bit ))
+
+  #define SIE_STATE_BIT_OFF( _regs, _byte, _bit ) \
+          (SIE_MODE((_regs)) && SIE_FEAT_BIT_OFF( (_regs), _byte, _bit ))
 
 #else // !defined( _FEATURE_SIE )
 
-  #define SIE_MODE(  _register_context )                          (0)
-  #define SIE_STATE( _register_context )                          (0)
-  #define SIE_FEATB( _register_context, _feat_byte, _feat_name )  (0)
-  #define SIE_STATB( _register_context, _feat_byte, _feat_name )  (0)
+  #define SIE_MODE(          _regs )                (0)
+  #define SIE_STATE(         _regs )                (0)
+
+  #define SIE_FEAT_BIT_ON(   _regs, _byte, _bit )   (0)
+  #define SIE_EC_BIT_ON(     _regs, _byte, _bit )   (0)
+  #define SIE_STATE_BIT_ON(  _regs, _byte, _bit )   (0)
+
+  #define SIE_FEAT_BIT_OFF(  _regs, _byte, _bit )   (1)
+  #define SIE_EC_BIT_OFF(    _regs, _byte, _bit )   (1)
+  #define SIE_STATE_BIT_OFF( _regs, _byte, _bit )   (1)
 
 #endif // defined( _FEATURE_SIE )
 
 #if defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
   #undef              MULTIPLE_CONTROLLED_DATA_SPACE
   #define             MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   \
-      (SIE_FEATB( (_regs), MX, XC ) && AR_BIT( &(_regs)->psw ))
+      (SIE_FEAT_BIT_ON( (_regs), MX, XC ) && AR_BIT( &(_regs)->psw ))
 #else
   #undef  MULTIPLE_CONTROLLED_DATA_SPACE
   #define MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   (0)
@@ -1575,7 +1587,7 @@ do { \
 #undef SIE_XC_INTERCEPT
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
   #define SIE_XC_INTERCEPT(_regs) \
-    if(SIE_STATB((_regs), MX, XC)) \
+    if(SIE_STATE_BIT_ON((_regs), MX, XC)) \
        SIE_INTERCEPT((_regs))
 #else
   #define SIE_XC_INTERCEPT(_regs)

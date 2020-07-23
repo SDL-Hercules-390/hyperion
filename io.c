@@ -79,7 +79,7 @@ DEVBLK* dev;                            /* -> device block           */
     PTIO( IO, "CSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "CSCH (sie)" );
@@ -136,7 +136,7 @@ DEVBLK* dev;                            /* -> device block           */
     PTIO( IO, "HSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "HSCH (sie)" );
@@ -381,7 +381,7 @@ DEVBLK* dev;                            /* -> device block           */
     PTIO( IO, "RSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "RSCH (sie)" );
@@ -459,7 +459,7 @@ VADR    effective_addr2;                /* Effective address         */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATNB(regs, EC0, IOA) && !regs->sie_pref)
+    if(SIE_STATE_BIT_OFF(regs, EC0, IOA) && !regs->sie_pref)
 #endif
         SIE_INTERCEPT(regs);
 
@@ -544,7 +544,7 @@ ORB     orb;                            /* Operation request block   */
     PTIO( IO, "SSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "SSCH (sie)" );
@@ -823,7 +823,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     PRIV_CHECK( regs );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
        SIE_INTERCEPT( regs );
 
@@ -936,7 +936,7 @@ int     cc;                             /* Condition Code            */
     PTIO( IO, "TSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "TSCH (sie)" );
@@ -1010,7 +1010,7 @@ DEVBLK* dev;                            /* -> device block           */
     PTIO( IO, "XSCH" );
 
 #if defined( _FEATURE_IO_ASSIST )
-    if (SIE_STATNB( regs, EC0, IOA ) && !regs->sie_pref)
+    if (SIE_STATE_BIT_OFF( regs, EC0, IOA ) && !regs->sie_pref)
 #endif
     {
         PTIO( IO, "XSCH (sie)" );

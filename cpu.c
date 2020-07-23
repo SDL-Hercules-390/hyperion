@@ -303,7 +303,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* Bits 5 and 16 must be zero in XC mode */
-    if( SIE_STATB(regs, MX, XC)
+    if( SIE_STATE_BIT_ON(regs, MX, XC)
       && ( (regs->psw.sysmask & PSW_DATMODE) || SPACE_BIT(&regs->psw)) )
         return PGM_SPECIFICATION_EXCEPTION;
 #endif
@@ -817,7 +817,7 @@ char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
     if(realregs->sie_active)
     {
         PTT_PGM( "*PROG SIEXIT", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
-        ARCH_DEP(sie_exit) (realregs, SIE_HOST_PGMINT);
+        ARCH_DEP(sie_exit) (realregs, SIE_HOST_PGM_INT);
     }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
@@ -836,13 +836,13 @@ char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
       (
 #if defined( _FEATURE_PROTECTION_INTERCEPTION_CONTROL )
          !(code == PGM_PROTECTION_EXCEPTION
-           && (!SIE_FEATB(regs, EC2, PROTEX)
+           && (!SIE_FEAT_BIT_ON(regs, EC2, PROTEX)
              || realregs->hostint))
 #else /*!defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
          code != PGM_PROTECTION_EXCEPTION
 #endif /*!defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
 #if defined( _FEATURE_PER2 )
-      && !((pcode & PGM_PER_EVENT) && SIE_FEATB(regs, M, GPE))
+      && !((pcode & PGM_PER_EVENT) && SIE_FEAT_BIT_ON(regs, M, GPE))
 #endif /* defined (_FEATURE_PER2) */
       && code != PGM_ADDRESSING_EXCEPTION
       && code != PGM_SPECIFICATION_EXCEPTION
@@ -852,17 +852,17 @@ char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
 #endif
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       && !(code == PGM_ALEN_TRANSLATION_EXCEPTION
-        && SIE_FEATB(regs, MX, XC))
+        && SIE_FEAT_BIT_ON(regs, MX, XC))
       && !(code == PGM_ALE_SEQUENCE_EXCEPTION
-        && SIE_FEATB(regs, MX, XC))
+        && SIE_FEAT_BIT_ON(regs, MX, XC))
       && !(code == PGM_EXTENDED_AUTHORITY_EXCEPTION
-        && SIE_FEATB(regs, MX, XC))
+        && SIE_FEAT_BIT_ON(regs, MX, XC))
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
       /* And conditional for the following exceptions */
       && !(code == PGM_OPERATION_EXCEPTION
-        && SIE_FEATB(regs, IC0, OPEREX))
+        && SIE_FEAT_BIT_ON(regs, IC0, OPEREX))
       && !(code == PGM_PRIVILEGED_OPERATION_EXCEPTION
-        && SIE_FEATB(regs, IC0, PRIVOP))
+        && SIE_FEAT_BIT_ON(regs, IC0, PRIVOP))
 #ifdef FEATURE_BASIC_FP_EXTENSIONS
       && !(code == PGM_DATA_EXCEPTION
         && (regs->dxc == 1 || regs->dxc == 2)
@@ -870,7 +870,7 @@ char    dxcstr[8]={0};                  /* " DXC=xx" if data excptn  */
         && !(regs->hostregs->CR(0) & CR0_AFP))
 #endif /*FEATURE_BASIC_FP_EXTENSIONS*/
       /* Or all exceptions if requested as such */
-      && !SIE_FEATB(regs, IC0, PGMALL) )
+      && !SIE_FEAT_BIT_ON(regs, IC0, PGMALL) )
     )
     {
 #endif /*defined(_FEATURE_SIE)*/

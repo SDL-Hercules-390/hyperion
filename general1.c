@@ -2012,7 +2012,7 @@ U32     new;                            /* new value                 */
         PTT_CSF("*CS",regs->GR_L(r1),regs->GR_L(r3),(U32)(effective_addr2 & 0xffffffff));
         regs->GR_L(r1) = CSWAP32(old);
 #if defined( _FEATURE_SIE )
-        if(SIE_STATB(regs, IC0, CS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -2075,7 +2075,7 @@ U64     old, new;                       /* old, new values           */
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
 #if defined( _FEATURE_SIE )
-        if(SIE_STATB(regs, IC0, CS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, CS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);

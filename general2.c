@@ -1078,7 +1078,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 
 #if defined( _FEATURE_SIE )
 
-    if (SIE_STATB( regs, IC2, STCK ))
+    if (SIE_STATE_BIT_ON( regs, IC2, STCK ))
         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 #endif
 
@@ -1136,7 +1136,7 @@ ETOD    ETOD;                           /* Extended clock work area  */
     TRAN_INSTR_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
-    if(SIE_STATB(regs, IC2, STCK))
+    if(SIE_STATE_BIT_ON(regs, IC2, STCK))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif
 
@@ -1571,7 +1571,7 @@ BYTE    old;                            /* Old value                 */
     if (regs->psw.cc == 1)
     {
 #if defined( _FEATURE_SIE )
-        if(SIE_STATB(regs, IC0, TS1))
+        if(SIE_STATE_BIT_ON(regs, IC0, TS1))
         {
             if( !OPEN_IC_PER(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
