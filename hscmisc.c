@@ -63,6 +63,8 @@ static int    parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* ea
 //-------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
+/*                       virt_to_real                                */
+/*-------------------------------------------------------------------*/
 /* Convert virtual address to real address                           */
 /*                                                                   */
 /* Input:                                                            */
@@ -70,37 +72,53 @@ static int    parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* ea
 /*      arn     Access register number                               */
 /*      regs    CPU register context                                 */
 /*      acctype Type of access (ACCTYPE_INSTFETCH, ACCTYPE_READ,     */
-/*              or ACCTYPE_LRA)                                      */
+/*              ACCTYPE_WRITE or ACCTYPE_LRA)                        */
 /* Output:                                                           */
 /*      raptr   Points to word in which real address is returned     */
 /*      siptr   Points to word to receive indication of which        */
 /*              STD or ASCE was used to perform the translation      */
 /* Return value:                                                     */
-/*      0=translation successful, non-zero=exception code            */
+/*      0 = translation successful, non-zero = exception code        */
+/*                                                                   */
 /* Note:                                                             */
 /*      To avoid unwanted alteration of the CPU register context     */
-/*      during translation (for example, the TEA will be updated     */
-/*      if a translation exception occurs), the translation is       */
-/*      performed using a temporary copy of the CPU registers.       */
+/*      during translation (e.g. regs->dat fields are updated and    */
+/*      the TEA is updated too if a translation exception occurs),   */
+/*      the translation is performed using a temporary copy of the   */
+/*      CPU registers. While inefficient, this is a utility function */
+/*      not meant to be used by executing CPUs. It is only designed  */
+/*      to be called by other utility functions like 'display_virt'  */
+/*      (v_vmd), 'alter_display_virt' (v_cmd), 'disasm_stor' (u_cmd) */
+/*      and 'display_inst'.                                          */
+/*                                                                   */
+/*      PLEASE NOTE HOWEVER, that since "logical_to_main" IS called, */
+/*      the storage key reference and change bits ARE updated when   */
+/*      the translation is successful.                               */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int ARCH_DEP(virt_to_real) (U64* raptr, int* siptr,
-                        U64 vaddr, int arn, REGS *regs, int acctype)
+int ARCH_DEP( virt_to_real )( U64* raptr, int* siptr, U64 vaddr,
+                              int arn, REGS* iregs, int acctype )
 {
-int icode;
+    int icode;
+    REGS* regs = copy_regs( iregs );    /* (temporary working copy) */
 
-    if( !(icode = setjmp(regs->progjmp)) )
+    if (!(icode = setjmp( regs->progjmp )))
     {
-        int temp_arn = arn; // bypass longjmp clobber warning
+        int temp_arn = arn;     /* (bypass longjmp clobber warning) */
+
         if (acctype == ACCTYPE_INSTFETCH)
             temp_arn = USE_INST_SPACE;
-        if (SIE_MODE(regs))
-            memcpy(HOSTREGS->progjmp, regs->progjmp,
-                   sizeof(jmp_buf));
-        ARCH_DEP(logical_to_main) ((VADR)vaddr, temp_arn, regs, acctype, 0);
+
+        if (SIE_MODE( regs ))
+            memcpy( HOSTREGS->progjmp, regs->progjmp, sizeof( jmp_buf ));
+
+        ARCH_DEP( logical_to_main )( (VADR)vaddr, temp_arn, regs, acctype, 0 );
     }
 
     *siptr = regs->dat.stid;
     *raptr = (U64) HOSTREGS->dat.raddr;
+
+    free_aligned( regs );   /* (discard temporary REGS working copy) */
 
     return icode;
 
