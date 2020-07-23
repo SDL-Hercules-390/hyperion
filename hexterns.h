@@ -283,6 +283,7 @@ TRANS_DLL_IMPORT void z900_abort_transaction( REGS* regs, int retry, int txf_tac
 TRANS_DLL_IMPORT void z900_txf_do_pi_filtering( REGS* regs, int* pcode, int code );
 void alloc_txfmap( REGS* regs );
 void free_txfmap( REGS* regs );
+void txf_abort_all( U16 cpuad, int why, const char* location );
 #endif
 
 /* Functions in module ckddasd.c */

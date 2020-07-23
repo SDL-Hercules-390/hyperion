@@ -1584,6 +1584,62 @@ TPAGEMAP*  pmap = regs->txf_pagesmap;
 }
 
 /*-------------------------------------------------------------------*/
+/*       Delay-Abort all active transactions due to CSP/CSPG         */
+/*-------------------------------------------------------------------*/
+void txf_abort_all( U16 cpuad, int why, const char* location )
+{
+    int    cpu;
+    REGS*  regs;
+
+    for (cpu=0, regs = sysblk.regs[ 0 ];
+        cpu < sysblk.maxcpu; regs = sysblk.regs[ ++cpu ])
+    {
+        /* Skip ourselves or any CPU that isn't online */
+        if (0
+            || !IS_CPU_ONLINE( cpu )
+            || regs->cpuad == cpuad
+        )
+            continue;
+
+        /* If this CPU is executing a transaction, then force it
+           to eventually fail by setting a transation abort code.
+        */
+        OBTAIN_TXFLOCK( regs );
+        {
+            if (1
+                &&  regs->txf_tnd
+                && !regs->txf_tac
+            )
+            {
+                regs->txf_tac   =  TAC_MISC;
+                regs->txf_why  |=  why | TXF_WHY_DELAYED_ABORT;
+                regs->txf_who   =  cpuad;
+                regs->txf_loc   =  TRIMLOC( location );
+
+                PTT_TXF( "*TXF h CSP/G", regs->cpuad, regs->txf_contran, regs->txf_tnd );
+            }
+
+            /* (check guestregs too just to be sure) */
+
+            if (1
+                &&  GUESTREGS
+                &&  GUESTREGS->txf_tnd
+                && !GUESTREGS->txf_tac
+            )
+            {
+                GUESTREGS->txf_tac   =  TAC_MISC;
+                GUESTREGS->txf_why  |=  why | TXF_WHY_DELAYED_ABORT;
+                GUESTREGS->txf_who   =  cpuad;
+                GUESTREGS->txf_loc   =  TRIMLOC( location );
+
+                PTT_TXF( "*TXF g CSP/G", GUESTREGS->cpuad, GUESTREGS->txf_contran, GUESTREGS->txf_tnd );
+            }
+        }
+        RELEASE_TXFLOCK( regs );
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /*                Check for TXF Storage Conflict                     */
 /*-------------------------------------------------------------------*/
 static inline bool txf_conflict_chk( REGS* regs, int acctype, U64 addrpage,

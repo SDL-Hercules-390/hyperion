@@ -887,29 +887,8 @@ U32     old;                            /* old value                 */
                     SYNCHRONIZE_CPUS( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-                    /* Abort all active transactions w/255 cc=2 */
-                    {
-                        int    cpu;
-                        REGS*  cpu_regs;
-
-                        for (cpu=0, cpu_regs = sysblk.regs[ 0 ];
-                            cpu < sysblk.maxcpu; cpu_regs = sysblk.regs[ ++cpu ])
-                        {
-                            if (1
-                                && IS_CPU_ONLINE( cpu )
-                                && cpu_regs->cpuad != regs->cpuad
-                                && cpu_regs->txf_tnd
-                            )
-                            {
-                                /* Abort this CPU's transaction */
-                                cpu_regs->txf_why |= TXF_WHY_CSP_INSTR;
-                                cpu_regs->txf_tac = TAC_MISC;
-                                PTT_TXF( "*TXF CSP", 0, cpu_regs->txf_contran, cpu_regs->txf_tnd );
-                            }
-                        }
-                    }
-#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
+                    txf_abort_all( regs->cpuad, TXF_WHY_CSP_INSTR, PTT_LOC );
+#endif
                     if (regs->GR_L(r2) & 1)
                         ARCH_DEP( purge_tlb_all )();
 
