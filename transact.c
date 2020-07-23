@@ -1219,6 +1219,233 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 
 } /* end ARCH_DEP( abort_transaction ) */
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+/*-------------------------------------------------------------------*/
+/*                  Program Interrupt Filtering                      */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* Determine the proper CC (Condition Code) based on the Exception   */
+/* Condition (pgm interrupt code) and Transactional-Execution class, */
+/* which depends on whether interrupt can/should be filtered or not. */
+/* Refer to Figure 5-16 on page 5-104 (and 5-14 on page 5-102) of    */
+/* manual: SA22-7832-12 "z/Architecture Principles of Operation".    */
+/*                                                                   */
+/* Program interrupts for CONSTRAINED transactions can't be filtered */
+/* so we return immediately back to the caller so they can continue  */
+/* with program interrupt processing. Otherwise for unconstrained    */
+/* transactions we check to see if the interrupt can be filtered.    */
+/*                                                                   */
+/* If it can be filtered, the abort_transaction function is called   */
+/* with the ABORT_RETRY_CC retry code, which causes it to longjmp    */
+/* back to the CPU instruction processing loop to continue on with   */
+/* the next instruction (which would be the instruction immediately  */
+/* after the TBEGIN instruction).                                    */
+/*                                                                   */
+/* Otherwise if the program interrupt cannot be filtered, we abort   */
+/* the transaction with an unfiltered program interrupt abort code   */
+/* and then return back to the caller so that they can continue with */
+/* normal program interrupt processing.                              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int* pcode, int code )
+{
+bool    filt;                   /* true == filter the interrupt      */
+int     txclass;                /* Transactional Execution Class     */
+int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
+
+    PTT_TXF( "TXF filt?", code, regs->txf_contran, regs->txf_tnd );
+
+    /* Always reset the NTSTG indicator on any program interrupt */
+    regs->txf_NTSTG = false;
+
+    /* Quick exit if no transaction is active */
+    if (!regs->txf_aborted)
+    {
+        PTT_TXF( "*TXF PIFILT", regs, *pcode, code );
+        return;
+    }
+
+    /* (reset flag) */
+    regs->txf_aborted = false;
+
+    /* Indicate TXF aborted event in interrupt code */
+    *pcode |= PGM_TXF_EVENT;
+
+    switch (code)  // (interrupt code)
+    {
+    case PGM_OPERATION_EXCEPTION:
+    case PGM_PRIVILEGED_OPERATION_EXCEPTION:
+    case PGM_EXECUTE_EXCEPTION:
+
+        txclass = 1;        /* Class 1 can't be filtered */
+        filt = false;
+        ucc = TXF_CC_PERSISTENT;
+        break;
+
+    case PGM_SPECIFICATION_EXCEPTION:
+
+        txclass = 3;
+        filt = true;
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
+        break;
+
+    case PGM_PROTECTION_EXCEPTION:
+    case PGM_ADDRESSING_EXCEPTION:
+    case PGM_SEGMENT_TRANSLATION_EXCEPTION:
+    case PGM_PAGE_TRANSLATION_EXCEPTION:
+    case PGM_ASCE_TYPE_EXCEPTION:
+    case PGM_REGION_FIRST_TRANSLATION_EXCEPTION:
+    case PGM_REGION_SECOND_TRANSLATION_EXCEPTION:
+    case PGM_REGION_THIRD_TRANSLATION_EXCEPTION:
+
+        /* Did interrupt occur during instruction fetch? */
+        if (1
+            && regs->txf_lastacctyp == ACCTYPE_INSTFETCH
+            && regs->txf_lastarn    == USE_INST_SPACE
+        )
+        {
+            txclass = 1;        /* Class 1 can't be filtered */
+            filt = false;
+        }
+        else
+        {
+            txclass = 2;
+            filt = true;
+        }
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
+        break;
+
+    case PGM_DATA_EXCEPTION:
+
+        /* Check Data Exception Code (DXC) */
+        switch (regs->dxc)
+        {
+        case DXC_AFP_REGISTER:
+        case DXC_BFP_INSTRUCTION:
+        case DXC_DFP_INSTRUCTION:
+        case DXC_VECTOR_INSTRUCTION:
+
+            txclass = 1;        /* Class 1 can't be filtered */
+            filt = false;
+            ucc = TXF_CC_TRANSIENT;
+            break;
+
+        default:
+
+            txclass = 3;
+            filt = true;
+            ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
+            break;
+
+        } /* end switch (regs->dxc) */
+        break;
+
+    case PGM_FIXED_POINT_OVERFLOW_EXCEPTION:
+    case PGM_FIXED_POINT_DIVIDE_EXCEPTION:
+    case PGM_DECIMAL_OVERFLOW_EXCEPTION:
+    case PGM_DECIMAL_DIVIDE_EXCEPTION:
+    case PGM_EXPONENT_OVERFLOW_EXCEPTION:
+    case PGM_EXPONENT_UNDERFLOW_EXCEPTION:
+    case PGM_SIGNIFICANCE_EXCEPTION:
+    case PGM_FLOATING_POINT_DIVIDE_EXCEPTION:
+    case PGM_VECTOR_PROCESSING_EXCEPTION:
+    case PGM_SQUARE_ROOT_EXCEPTION:
+
+        txclass = 3;
+        filt = true;
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
+        break;
+
+    case PGM_TRANSLATION_SPECIFICATION_EXCEPTION:
+    case PGM_SPECIAL_OPERATION_EXCEPTION:
+    case PGM_TRANSACTION_CONSTRAINT_EXCEPTION:
+
+        txclass = 1;        /* Class 1 can't be filtered */
+        filt = false;
+        ucc = TXF_CC_PERSISTENT;
+        break;
+
+    case PGM_ALET_SPECIFICATION_EXCEPTION:
+    case PGM_ALEN_TRANSLATION_EXCEPTION:
+    case PGM_ALE_SEQUENCE_EXCEPTION:
+    case PGM_ASTE_VALIDITY_EXCEPTION:
+    case PGM_ASTE_SEQUENCE_EXCEPTION:
+    case PGM_EXTENDED_AUTHORITY_EXCEPTION:
+
+        txclass = 2;
+        filt = true;
+        ucc = TXF_CC_TRANSIENT, fcc = TXF_CC_PERSISTENT;
+        break;
+
+    default:
+
+        txclass = 0;        /* Class 0 can't be filtered */
+        filt = false;
+        ucc = TXF_CC_SUCCESS;
+        break;
+
+    } /* end switch (code) */
+
+    /* CONSTRAINED transactions cannot be filtered */
+    if (regs->txf_contran)
+        filt = false;
+
+    /*---------------------------------------*/
+    /*  Can interrupt POSSIBLY be filtered?  */
+    /*---------------------------------------*/
+
+    if (filt)
+    {
+        /* Is Program-Interruption-Filtering Overide enabled? */
+        if (regs->CR(0) & CR0_PIFO)
+            filt = false; /* Then interrupt cannot be filtered */
+        else
+        {
+            /* Check PIFC (see Fig. 5-15 on page 5-104) */
+            switch (regs->txf_pifc)
+            {
+            case TXF_PIFC_NONE:
+
+                filt = false;
+                break;
+
+            case TXF_PIFC_LIMITED:
+
+                filt = (txclass >= 3) ? true : false;
+                break;
+
+            case TXF_PIFC_MODERATE:
+            case TXF_PIFC_RESERVED:
+            default:
+
+                filt = (txclass >= 2) ? true : false;
+                break;
+            }
+        }
+    }
+
+    /*-----------------------------------------*/
+    /*  Can interrupt ABSOLUTELY be filtered?  */
+    /*-----------------------------------------*/
+
+    if (filt)  /* NOW we can rely this flag! */
+    {
+        /* Yes, abort transaction with filtered condition code */
+        regs->psw.cc = fcc;
+        PTT_TXF( "TXF filt!", code, regs->txf_contran, regs->txf_tnd );
+        regs->txf_why |= TXF_WHY_FILT_INT;
+        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FPGM );
+        UNREACHABLE_CODE( return );
+    }
+
+    /* No, set unfiltered condition code and return to caller */
+    regs->psw.cc = ucc;
+    PTT_TXF( "TXF unfilt!", code, regs->txf_contran, regs->txf_tnd );
+    regs->txf_why |= TXF_WHY_UNFILT_INT;
+
+} /* end txf_do_pi_filtering */
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
@@ -1481,7 +1708,9 @@ TPAGEMAP*  pmap;
 /*      page map (TPAGEMAP) if the CPU is executing a transaction.   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int acctype, BYTE* maddr )
+DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
+                              const int  arn,     REGS*         regs,
+                              const int  acctype, BYTE*         maddr )
 {
     BYTE *pageaddr, *pageaddrc;
     BYTE *savepage, *savepagec;
