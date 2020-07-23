@@ -452,8 +452,9 @@ struct REGS {                           /* Processor registers       */
 
         U32     txf_why;                /* why transaction aborted   */
                                         /* see transact.h for codes  */
-
+#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
         int     txf_lastacc;            /* Last access type          */
+#endif
         int     txf_lastarn;            /* Last access arn           */
 
         U16     txf_pifctab[ MAX_TXF_TND ];   /* PIFC control table  */

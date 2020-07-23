@@ -40,6 +40,12 @@
 /* problem and wish to test a possible permanent fix for it.         */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+// Fishtest...
+
+#define OPTION_DEPRECATE_TXF_LASTACC    // Deprecate 'txf_lastacc'
+#define OPTION_NO_TXF_MADDR_L_ABORT     // Don't call abort_transaction directly from txf_maddr_l
+
+/*-------------------------------------------------------------------*/
 
 #define OPTION_HARDWARE_SYNC_ALL        // All PERFORM_SERIALIZATION
 //#define OPTION_HARDWARE_SYNC_BCR_ONLY   // ONLY the BCR instructions

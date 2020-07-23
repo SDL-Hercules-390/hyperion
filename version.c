@@ -691,6 +691,31 @@ static const char *build_info[] = {
 #endif
 
 
+
+
+//---------------------------------------------------------------------
+// Fishtest...
+
+
+#if defined( OPTION_DEPRECATE_TXF_LASTACC )     // Deprecate 'txf_lastacc'
+    "With    OPTION_DEPRECATE_TXF_LASTACC",
+#else
+    "Without OPTION_DEPRECATE_TXF_LASTACC",
+#endif
+
+#if defined( OPTION_NO_TXF_MADDR_L_ABORT )      // Don't call abort_transaction directly from txf_maddr_l
+    "With    OPTION_NO_TXF_MADDR_L_ABORT",
+#else
+    "Without OPTION_NO_TXF_MADDR_L_ABORT",
+#endif
+
+//---------------------------------------------------------------------
+
+
+
+
+
+
 /*-------------------------------------------------------------------*/
 /*                 Machine dependent assists:                        */
 /*-------------------------------------------------------------------*/

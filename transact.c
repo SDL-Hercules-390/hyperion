@@ -738,7 +738,9 @@ TPAGEMAP   *pmap;
         regs->txf_tac        = 0;          /* clear the abort code   */
         regs->txf_conflict   = 0;          /* clear conflict address */
         regs->txf_piid       = 0;          /* program interrupt id   */
+#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
         regs->txf_lastacc    = 0;          /* last access type       */
+#endif
         regs->txf_lastarn    = 0;          /* last access arn        */
         regs->txf_why        = 0;          /* no abort cause (yet)   */
 
@@ -1451,7 +1453,9 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
         /* Did interrupt occur during instruction fetch? */
         if (1
+#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
             && regs->txf_lastacc == ACCTYPE_INSTFETCH
+#endif
             && regs->txf_lastarn == USE_INST_SPACE
         )
         {
@@ -1953,7 +1957,9 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     /* Save last translation access type and arn */
     if (regs && regs->txf_tnd)
     {
+#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
         regs->txf_lastacc = acctype;
+#endif
         regs->txf_lastarn = arn;
     }
 
@@ -2032,13 +2038,22 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     if (!regs || !regs->txf_tnd)
         return maddr;
 
+#if !defined( OPTION_NO_TXF_MADDR_L_ABORT )
+
     /* Otherwise check if our own CPU's transaction was aborted */
     if (regs->txf_tac)
     {
         PTT_TXF( "*TXF mad TAC", regs->txf_tac, regs->txf_contran, regs->txf_tnd );
+        if (!(regs->txf_why & TXF_WHY_DELAYED_ABORT))
+        {
+            regs->txf_why  |=  TXF_WHY_DELAYED_ABORT;
+            regs->txf_who   =  regs->cpuad;
+            regs->txf_loc   =  TRIMLOC( PTT_LOC );
+        }
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_tac );
         UNREACHABLE_CODE( return maddr );
     }
+#endif // OPTION_NO_TXF_MADDR_L_ABORT
 
     /*-----------------------------------------------------------*/
     /*                  TXF Translation Call                     */
@@ -2085,7 +2100,8 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
             regs->txf_why |= TXF_WHY_MAX_PAGES;
 
             PTT_TXF( "*TXF mad max", txf_tac, regs->txf_contran, regs->txf_tnd );
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, txf_tac );
+            regs->txf_why |= TXF_WHY_MAX_PAGES;
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
             UNREACHABLE_CODE( return maddr );
         }
 
