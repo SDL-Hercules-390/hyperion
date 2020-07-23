@@ -461,6 +461,23 @@ int         txf_tnd, txf_tac;
         /* Exiting from transactional-execution mode... */
         UPDATE_SYSBLK_TRANSCPUS( -1 );
 
+        /*---------------------------------------------*/
+        /*  Trace CONSTRAINED failure retry success    */
+        /*---------------------------------------------*/
+        if (1
+            && MLVL( VERBOSE )
+            && regs->txf_caborts
+            && TXF_TRACE( FAILURE, txf_contran )
+        )
+        {
+            // "TXF: %s%02X: %sCONSTRAINED transaction succeeded after %d retries"
+            WRMSG( HHC17718, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
+                regs->txf_caborts );
+        }
+
+        /* Transaction suceeded. Reset abort count */
+        regs->txf_caborts = 0;
+
         PERFORM_SERIALIZATION( regs );
     }
     RELEASE_INTLOCK( regs );
@@ -714,6 +731,7 @@ TPAGEMAP   *pmap;
 
         /* Initialize other fields */
 
+        regs->txf_UPGM_abort = false;      /* reset flag             */
         regs->txf_contran    = txf_contran;/* set transaction type   */
         regs->txf_instctr    = 0;          /* instruction counter    */
         regs->txf_abortctr   = 0;          /* abort instr count      */
@@ -885,6 +903,20 @@ TPAGEMAP   *pmap;
             regs->txf_contran ? "C" : "", regs->txf_tnd );
     }
 
+    /*--------------------------------------------------------------*/
+    /* Report failed CONSTRAINED transaction retries                */
+    /*--------------------------------------------------------------*/
+    if (1
+        && MLVL( VERBOSE )
+        && regs->txf_caborts
+        && TXF_TRACE( FAILURE, regs->txf_contran )
+    )
+    {
+        // "TXF: %s%02X: %sCONSTRAINED transaction retry #%d..."
+        WRMSG( HHC17717, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
+            regs->txf_caborts );
+    }
+
 } /* end ARCH_DEP( process_tbegin ) */
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -982,6 +1014,22 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     PERFORM_SERIALIZATION( regs );
 
     PTT_TXF( "TXF abort", 0, regs->txf_contran, regs->txf_tnd );
+
+    /*---------------------------------------------*/
+    /*  Failure of CONSTRAINED transaction retry?  */
+    /*---------------------------------------------*/
+    if (1
+        && MLVL( VERBOSE )
+        && regs->txf_caborts
+        && TXF_TRACE( FAILURE, regs->txf_contran )
+    )
+    {
+        // "TXF: %s%02X: %sCONSTRAINED transaction retry #%d FAILED!"
+        WRMSG( HHC17719, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
+            regs->txf_caborts );
+    }
+
+    regs->txf_caborts = regs->txf_contran ? ++regs->txf_caborts : 0;
 
     /*---------------------------------------------*/
     /*  Clean up the transaction flags             */

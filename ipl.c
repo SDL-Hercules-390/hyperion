@@ -624,7 +624,9 @@ int i, rc = 0;                          /* Array subscript           */
     PTT_TXF( "TXF CPURES", 0, 0, regs->txf_tnd );
     /* EXIT SILENTLY from transactional execution mode */
     regs->txf_tnd = 0;
+    regs->txf_caborts = 0;
     regs->txf_contran = false;
+    regs->txf_UPGM_abort = false;
 #endif
     for (i = 0; i < sysblk.maxcpu; i++)
         regs->emercpu[i] = 0;
@@ -710,7 +712,9 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     PTT_TXF( "TXF ICPURES", 0, 0, regs->txf_tnd );
     /* EXIT SILENTLY from transactional execution mode */
     regs->txf_tnd = 0;
+    regs->txf_caborts = 0;
     regs->txf_contran = false;
+    regs->txf_UPGM_abort = false;
 #endif
     set_cpu_timer( regs, 0 );
 #if defined( _FEATURE_INTERVAL_TIMER )

@@ -358,6 +358,10 @@ struct REGS {                           /* Processor registers       */
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_aborted;            /* true == aborted trans.    */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
+        bool    txf_cfail;              /* true == CONSTRAINED failed*/
+        bool    txf_UPGM_abort;         /* true == transaction was
+                                           aborted due to TAC_UPGM   */
+        int     txf_caborts;            /* CONSTRAINED aborted count */
         BYTE    txf_tnd;                /* Transaction nesting depth.
                                            Use txf_lock to access!   */
 
