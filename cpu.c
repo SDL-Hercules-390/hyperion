@@ -325,7 +325,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 /* Load program interrupt new PSW                                    */
 /*-------------------------------------------------------------------*/
-void (ATTR_REGPARM(2) ARCH_DEP(program_interrupt)) (REGS *regs, int pcode)
+void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt ))( REGS* regs, int pcode )
 {
 PSA    *psa;                            /* -> Prefixed storage area  */
 REGS   *realregs;                       /* True regs structure       */
@@ -358,7 +358,7 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     if (regs->ghostregs)
         longjmp( regs->progjmp, pcode );
 
-    PTT_PGM("*PROG",pcode,(U32)(regs->TEA & 0xffffffff),regs->psw.IA_L);
+    PTT_PGM("PGM", pcode, regs->TEA, regs->psw.IA );
 
     /* program_interrupt() may be called with a shadow copy of the
        regs structure, realregs is the pointer to the real structure
@@ -372,6 +372,8 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
 #else
     realregs = HOST( sysblk.regs[ regs->cpuad ]);
 #endif
+
+    PTT_PGM( "PGM (r)h,g,a", realregs->host, realregs->guest, realregs->sie_active );
 
     /* Prevent machine check when in (almost) interrupt loop */
     realregs->instcount++;
@@ -613,14 +615,13 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         if (1
-            && code == PGM_TRANSACTION_CONSTRAINT_EXCEPTION
-            && regs->txf_why
+            && pcode & PGM_TXF_EVENT
+            && realregs->txf_why
         )
-            txf_why_str( buf3, sizeof( buf3 ), regs->txf_why );
+            txf_why_str( buf3, sizeof( buf3 ), realregs->txf_why );
 #endif
         if (code == PGM_DATA_EXCEPTION)
-           snprintf(dxcstr, sizeof(dxcstr), " DXC=%2.2X", regs->dxc);
-        dxcstr[sizeof(dxcstr)-1] = '\0';
+           MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
 
         /* Calculate instruction pointer */
         ip = realregs->instinvalid ? NULL
@@ -647,12 +648,13 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     realregs->instinvalid = 0;
 
 #if defined( FEATURE_INTERPRETIVE_EXECUTION )
+
     /*---------------------------------------------------------*/
     /* If this is a host exception in SIE state then leave SIE */
     /*---------------------------------------------------------*/
     if (realregs->sie_active)
     {
-        PTT_PGM( "*PROG SIEXIT", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
+        PTT_PGM( "PGM >sie_exit", SIE_HOST_PGM_INT, 0, 0 );
         ARCH_DEP( sie_exit )( realregs, SIE_HOST_PGM_INT );
     }
 #endif
@@ -668,13 +670,14 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
 
 #if defined( _FEATURE_SIE )
     /*---------------------------------------------------------------*/
-    /*  If we're in SIE mode, then we need to determine whether      */
-    /*  we must, or must not, intercept this program interrupt.      */
-    /*  By intercept we mean pass it to the SIE host to process.     */
+    /*   If we're in SIE mode, then we need to determine whether     */
+    /*   we must, or must not, intercept this program interrupt,     */
+    /*   and by intercept, we mean pass it on to the SIE host so     */
+    /*   that it (not the guest!) can decide what action to take.    */
     /*---------------------------------------------------------------*/
     if (0
 
-        /* If we're not in SIE mode then we mustn't intercept (duh!) */
+        /* If not in SIE mode, then we (duh!) must not intercept it  */
         || !SIE_MODE( regs )
 
         /* Interception is mandatory for the following exceptions,
@@ -723,6 +726,7 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
 #endif /*defined(_FEATURE_SIE)*/
 
         intercept = false;
+        PTT_PGM( "PGM !icept", intercept, 0, 0 );
 
         /* Set the main storage reference and change bits */
         STORAGE_KEY( px, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -743,6 +747,7 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     else /* The SIE host must deal with this program interrupt */
     {
         intercept = true;
+        PTT_PGM( "PGM icept", intercept, 0, 0 );
 
         /* This is a guest interruption interception so point to
            the interruption parm area in the state descriptor
@@ -846,6 +851,8 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     if (ECMODE( &realregs->psw ))
 #endif
     {
+        PTT_PGM( "PGM ec", 0, 0, 0 );
+
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
         psa->pgmint[1] = ilc;
@@ -1046,13 +1053,16 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
 #if defined( _FEATURE_SIE )
             if (SIE_MODE( realregs ))
             {
-                PTT_PGM( "*PROG JUMP", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
+                PTT_PGM( "*PGM *lpsw", code, 0, 0 );
+                PTT_PGM( "PGM progjmp", pcode, 0, 0 );
                 longjmp( realregs->progjmp, pcode );
             }
             else
 #endif
-            /* Invalid pgmnew: ==> program interrupt loop */
-            pgmintloop = detect_pgmintloop;
+            {
+                /* Invalid pgmnew: ==> program interrupt loop */
+                pgmintloop = detect_pgmintloop;
+            }
         }
         else if (detect_pgmintloop)
         {
@@ -1086,23 +1096,28 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
             RELEASE_INTLOCK( realregs );
         }
 
-        /* Normal non-intercepted program interrupt: return to either
-           the run_cpu or run_sie loop and start executing instructions
-           again, but starting at pgmnew psw.
-        */
-        PTT_PGM( "*PROG JUMP", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
+        /*-----------------------------------------------------------*/
+        /*  Normal non-intercepted program interrupt: return to      */
+        /*  either the run_cpu or run_sie loop and start executing   */
+        /*  instructions again, but at Program New PSW instead.      */
+        /*-----------------------------------------------------------*/
+
+        PTT_PGM( "PGM !icept", intercept, 0, 0 );
+        PTT_PGM( "PGM progjmp", SIE_NO_INTERCEPT, 0, 0 );
         longjmp( realregs->progjmp, SIE_NO_INTERCEPT );
     }
 
 #if defined( _FEATURE_SIE )
-    /* We're in SIE mode and the SIE host MUST intercept this program
-       interrupt. Jump to the run_sie loop with the interrupt code so
-       it can break out of its instruction execution loop and exit from
-       SIE mode (via sie_exit) in order to to pass the interrupt on to
-       the SIE host for handling.
-    */
-    PTT_SIE( "*SIE PROGJMP", pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
-    PTT_PGM( "*PROG JUMP",   pcode, (U32)(regs->TEA & 0xffffffff), regs->psw.IA_L );
+    /*---------------------------------------------------------------*/
+    /*  We're in SIE mode and SIE host MUST intercept this program   */
+    /*  interrupt. Jump back to the run_sie loop with the interrupt  */
+    /*  code so it can break out of its instruction execution loop   */
+    /*  and exit from run_sie back to sie_exit so the interrupt can  */
+    /*  be passed on to the SIE host for handling.                   */
+    /*---------------------------------------------------------------*/
+
+    PTT_PGM( "PGM icept", intercept, 0, 0 );
+    PTT_PGM( "PGM progjmp", pcode, 0, 0 );
     longjmp( realregs->progjmp, pcode );
 #endif
 
@@ -1133,8 +1148,8 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     if (regs->txf_tnd)
     {
         PTT_TXF( "*TXF MISC", 0, regs->txf_contran, regs->txf_tnd );
+        regs->txf_why |= TXF_WHY_RESTART_INT;
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MISC );
-        regs->psw.cc = TXF_CC_TRANSIENT;
     }
 #endif
     /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
@@ -1265,8 +1280,8 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
         if (regs->txf_tnd)
         {
             PTT_TXF( "*TXF IO", 0, regs->txf_contran, regs->txf_tnd );
+            regs->txf_why |= TXF_WHY_IO_INT;
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_IO );
-            regs->psw.cc = TXF_CC_TRANSIENT;
         }
 #endif
         /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
@@ -1344,8 +1359,8 @@ RADR    fsta;                           /* Failing storage address   */
     if (regs->txf_tnd)
     {
         PTT_TXF( "*TXF MCK", 0, regs->txf_contran, regs->txf_tnd );
+        regs->txf_why |= TXF_WHY_MCK_INT;
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MCK );
-        regs->psw.cc = TXF_CC_TRANSIENT;
     }
 #endif
     /* Store current PSW at PSA+X'30' */
