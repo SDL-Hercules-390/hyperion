@@ -916,7 +916,7 @@ S32 vtimer=0;
 
     if(getlock)
     {
-        OBTAIN_INTLOCK(regs->hostregs?regs:NULL);
+        OBTAIN_INTLOCK(HOSTREGS?regs:NULL);
     }
     itimer=int_timer(regs);
     STORE_FW(regs->psa->inttimer, itimer);
@@ -940,7 +940,7 @@ S32 vtimer=0;
 
     if(getlock)
     {
-        RELEASE_INTLOCK(regs->hostregs?regs:NULL);
+        RELEASE_INTLOCK(HOSTREGS?regs:NULL);
     }
 }
 
@@ -961,7 +961,7 @@ DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
 S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
-    OBTAIN_INTLOCK(regs->hostregs?regs:NULL);
+    OBTAIN_INTLOCK(HOSTREGS?regs:NULL);
     set_int_timer(regs, itimer);
 #if defined(FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
@@ -970,7 +970,7 @@ S32 itimer;
         set_ecps_vtimer(regs, itimer);
     }
 #endif /*defined(FEATURE_ECPSVM)*/
-    RELEASE_INTLOCK(regs->hostregs?regs:NULL);
+    RELEASE_INTLOCK(HOSTREGS?regs:NULL);
 }
 #endif
 

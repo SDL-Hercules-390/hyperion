@@ -748,5 +748,5 @@
 #define INTERRUPT_PENDING(_regs) IC_INTERRUPT_CPU((_regs))
 
 #define SIE_IC_INTERRUPT_CPU(_regs) \
-   (((_regs)->ints_state|((_regs)->hostregs->ints_state&IC_SIE_INT)) & (_regs)->ints_mask)
+   (((_regs)->ints_state|(HOST(_regs)->ints_state&IC_SIE_INT)) & (_regs)->ints_mask)
 #define SIE_INTERRUPT_PENDING(_regs) SIE_IC_INTERRUPT_CPU((_regs))

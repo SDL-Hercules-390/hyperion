@@ -29,7 +29,7 @@
 /* width of the bitmap depends on the maximum number of processing   */
 /* engines that was selected at build time.                          */
 /*                                                                   */
-/* Due to GCC and MSVC limitations, a MAX_CPU_ENGS value greater     */
+/* Due to GCC and MSVC limitations, a 'MAX_CPU_ENGS' value greater   */
 /* than 64 (e.g. 128) is only supported on platforms whose long long */
 /* integer size is actually 128 bits:                                */
 /*                                                                   */
@@ -49,7 +49,7 @@
     typedef U64                 CPU_BITMAP;
     #define F_CPU_BITMAP        "%16.16"PRIX64
 #elif MAX_CPU_ENGS <= 128
-  typedef __uint128_t           CPU_BITMAP;
+  typedef __uint128_t         CPU_BITMAP;
   // ZZ FIXME: No printf format support for __uint128_t yet, so we will incorrectly display...
   #define SUPPRESS_128BIT_PRINTF_FORMAT_WARNING
   #define F_CPU_BITMAP        "%16.16"PRIX64
@@ -101,10 +101,10 @@ struct REGS {                           /* Processor registers       */
 
         ALIGN_128                       /* --- 64-byte cache line -- */
 /*100*/ BYTE    malfcpu                 /* Malfuction alert flags    */
-                    [MAX_CPU_ENGS];     /* for each CPU (1=pending)  */
+                    [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
         ALIGN_128
 /*180*/ BYTE    emercpu                 /* Emergency signal flags    */
-                    [MAX_CPU_ENGS];     /* for each CPU (1=pending)  */
+                    [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
 
      /* AIA - Instruction fetch accelerator                          */
 /*200*/ ALIGN_128
@@ -244,25 +244,34 @@ struct REGS {                           /* Processor registers       */
             PSA_900 *zpsa;     /* -> PSA for this CPU when in z arch */
         };
 
-     /*
-      * The fields hostregs and guestregs have been move outside the
-      * scope of _FEATURE_SIE to reduce conditional code.
-      *
-      *   sysblk.regs[i] always points to the host regs
-      *   flag `host' is always 1 for the host regs
-      *   flag `guest' is always 1 for the guest regs
-      *   `hostregs' is always equal to sysblk.regs[i] (in both
-      *       hostregs and guestregs)
-      *   `guestregs' is always equal to sysblk.regs[i]->guestregs
-      *       (in both hostregs and guestregs).
-      *       sysblk.regs[i]->guestregs is NULL until the first SIE
-      *       instruction is executed on that CPU.
-      *   `sie_active' is 1 in hostregs if SIE is executing
-      *       and the current register context is `guestregs'
-      *   `sie_mode' is 1 in guestregs always
-      *   `sie_state' has the real address of the SIEBK
-      *   `siebk' has the mainstor address of the SIEBK
-      */
+    /*---------------------------------------------------------------*/
+    /*                     PROGRAMMING NOTE                          */
+    /*---------------------------------------------------------------*/
+    /* The fields 'hostregs' and 'guestregs' have been moved outside */
+    /* the scope of _FEATURE_SIE to reduce conditional code.         */
+    /*                                                               */
+    /*   'sysblk.regs[i]'   ALWAYS points to the host regs           */
+    /*                                                               */
+    /*   'hostregs'         ALWAYS = sysblk.regs[i]                  */
+    /*                      in BOTH host regs and guest regs         */
+    /*                                                               */
+    /*   'guestregs'        ALWAYS = sysblk.regs[i]->guestregs       */
+    /*                      in BOTH host regs and guest regs,        */
+    /*                      but will be NULL until the first SIE     */
+    /*                      instruction is executed on that CPU.     */
+    /*                                                               */
+    /*   'host'             ALWAYS 1 in host regs ONLY               */
+    /*   'sie_active'       ALWAYS 1 in host regs ONLY whenever      */
+    /*                      the SIE instruction is executing.        */
+    /*                                                               */
+    /*   'guest'            ALWAYS 1 in guest regs ONLY              */
+    /*   'sie_mode'         ALWAYS 1 in guest regs ONLY              */
+    /*                                                               */
+    /*   'sie_state'        host real address of the SIEBK           */
+    /*   'siebk'            mainstor  address of the SIEBK           */
+    /*                                                               */
+    /*---------------------------------------------------------------*/
+
         REGS   *hostregs;               /* Pointer to the hypervisor
                                            register context          */
         REGS   *guestregs;              /* Pointer to the guest
@@ -273,7 +282,7 @@ struct REGS {                           /* Processor registers       */
         RADR    sie_state;              /* Address of the SIE state
                                            descriptor block or 0 when
                                            not running under SIE     */
-        SIEBK  *siebk;                  /* Sie State Desc structure  */
+        SIEBK  *siebk;                  /* SIE State Desc structure  */
         RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
@@ -281,10 +290,10 @@ struct REGS {                           /* Processor registers       */
         RADR    sie_rcpo;               /* Ref and Change Preserv.   */
         RADR    sie_scao;               /* System Contol Area        */
         S64     sie_epoch;              /* TOD offset in state desc. */
-#endif /*defined(_FEATURE_SIE)*/
+#endif
         unsigned int
-                sie_active:1,           /* SIE active (host only)    */
-                sie_mode:1,             /* Running under SIE (guest) */
+                sie_active:1,           /* SIE active   (host  only) */
+                sie_mode:1,             /* In SIE mode  (guest only) */
                 sie_pref:1;             /* Preferred-storage mode    */
 
 // #if defined(FEATURE_PER)
@@ -301,7 +310,7 @@ struct REGS {                           /* Processor registers       */
       * used during synchronize broadcast (cpu<->cpu communication)
       */
         ALIGN_8
-        bool    intwait;                /* true=Waiting on intlock   */
+        bool    intwait;                /* true = Waiting on intlock */
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
                                            boundary                  */
@@ -650,23 +659,25 @@ struct SYSBLK {
         U8      unused1;                /* (pad/align/unused/avail)  */
 
         COND    cpucond;                /* CPU config/deconfig cond  */
-        LOCK    cpulock[MAX_CPU_ENGS];  /* CPU lock                  */
+        LOCK    cpulock[ MAX_CPU_ENGS ];/* CPU lock               */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-        LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock    */
+
+        LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock for
+                                             txf_tnd/txf_tac access  */
 #define OBTAIN_TXFLOCK( regs )     obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 #define RELEASE_TXFLOCK( regs )    release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
+
 #endif
+        TOD     cpucreateTOD[ MAX_CPU_ENGS ];  /* CPU creation time */
+        TID     cputid[ MAX_CPU_ENGS ];        /* CPU thread ids    */
+        clockid_t                              /* CPU clock         */
+                cpuclockid[ MAX_CPU_ENGS ];    /* identifiers       */
 
-        TOD     cpucreateTOD[MAX_CPU_ENGS];  /* CPU creation time    */
-        TID     cputid[MAX_CPU_ENGS];        /* CPU thread ids       */
-        clockid_t                            /* CPU clock            */
-                cpuclockid[MAX_CPU_ENGS];    /* identifiers          */
-
-        BYTE    ptyp[MAX_CPU_ENGS];     /* SCCB ptyp for each engine */
+        BYTE    ptyp[ MAX_CPU_ENGS ];   /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */
         TID     todtid;                 /* Thread-id for TOD update  */
-        REGS   *regs[MAX_CPU_ENGS+1];   /* Registers for each CPU    */
+        REGS   *regs[ MAX_CPU_ENGS + 1];/* Registers for each CPU    */
 
         /* Active Facility List */
         BYTE    facility_list[ NUM_GEN_ARCHS ][ STFL_HERC_DW_SIZE * sizeof( DW ) ];
@@ -696,14 +707,14 @@ struct SYSBLK {
 #endif
 
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
-        VFREGS  vf[MAX_CPU_ENGS];       /* Vector Facility           */
+        VFREGS  vf[ MAX_CPU_ENGS ];     /* Vector Facility           */
 #endif
 #if defined(_FEATURE_SIE)
         ZPBLK   zpb[FEATURE_SIE_MAXZONES];  /* SIE Zone Parameter Blk*/
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)
-        REGS    footprregs[MAX_CPU_ENGS][OPTION_FOOTPRINT_BUFFER];
-        U32     footprptr[MAX_CPU_ENGS];
+        REGS    footprregs[ MAX_CPU_ENGS ][OPTION_FOOTPRINT_BUFFER];
+        U32     footprptr[ MAX_CPU_ENGS ];
 #endif
 #define LOCK_OWNER_NONE  0xFFFF
 #define LOCK_OWNER_OTHER 0xFFFE
@@ -918,10 +929,11 @@ struct SYSBLK {
         TID     httptid;                /* HTTP listener thread id   */
 
      /* Fields used by SYNCHRONIZE_CPUS */
-        bool    syncing;                /* true=Sync in progress     */
+        bool    syncing;                /* 1=Sync in progress        */
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
         COND    sync_cond;              /* COND for syncing CPU      */
         COND    sync_bc_cond;           /* COND for other CPUs       */
+
 #if defined( OPTION_SHARED_DEVICES )
         LOCK    shrdlock;               /* shrdport LOCK             */
         COND    shrdcond;               /* shrdport COND             */
@@ -1008,7 +1020,7 @@ struct SYSBLK {
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 
         // PROGRAMMING NOTE: we purposely define the below count
-        // as a signed value (rather then unsigned) so that we can
+        // as a signed value (rather than unsigned) so that we can
         // detect if, due to a bug, it ever goes negative (which
         // would indicate a serious logic error!). This is checked
         // by the UPDATE_SYSBLK_TRANSCPUS macro, which should be

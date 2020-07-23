@@ -542,7 +542,7 @@ static const char *build_info[] = {
 #endif
     ,
 
-    "Max CPU Engines: " QSTR(MAX_CPU_ENGS),
+    "Max CPU Engines: " QSTR( MAX_CPU_ENGS ),
 
 /*-------------------------------------------------------------------*/
 /*                            Using:                                 */

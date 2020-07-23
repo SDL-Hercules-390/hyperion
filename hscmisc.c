@@ -94,13 +94,13 @@ int icode;
         if (acctype == ACCTYPE_INSTFETCH)
             temp_arn = USE_INST_SPACE;
         if (SIE_MODE(regs))
-            memcpy(regs->hostregs->progjmp, regs->progjmp,
+            memcpy(HOSTREGS->progjmp, regs->progjmp,
                    sizeof(jmp_buf));
         ARCH_DEP(logical_to_main) ((VADR)vaddr, temp_arn, regs, acctype, 0);
     }
 
     *siptr = regs->dat.stid;
-    *raptr = (U64) regs->hostregs->dat.raddr;
+    *raptr = (U64) HOSTREGS->dat.raddr;
 
     return icode;
 
@@ -136,7 +136,7 @@ BYTE    c;                              /* Character work area       */
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
     if (SIE_MODE(regs))
     {
-        if (regs->hostregs->mainlim == 0 || aaddr > regs->hostregs->mainlim)
+        if (HOSTREGS->mainlim == 0 || aaddr > HOSTREGS->mainlim)
         {
             n += snprintf (buf+n, bufl-n,
                 "A:"F_RADR" Guest real address is not valid", aaddr);
@@ -1929,43 +1929,48 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 /*  Return the address of a regs structure to be used for address    */
 /*  translation.  This address should be freed by the caller.        */
 /*-------------------------------------------------------------------*/
-static REGS  *copy_regs (REGS *regs)
+static REGS* copy_regs( REGS* regs )
 {
  REGS  *newregs, *hostregs;
  size_t size;
 
-    size = (SIE_MODE(regs) || SIE_ACTIVE(regs)) ? 2*sizeof(REGS) : sizeof(REGS);
-    newregs = malloc_aligned(size, 4096);
-    if (newregs == NULL)
+    size = (SIE_MODE( regs ) || SIE_ACTIVE( regs )) ? 2 * sizeof( REGS )
+                                                    :     sizeof( REGS );
+    if (!(newregs = malloc_aligned( size, 4096 )))
     {
         char buf[64];
-        MSGBUF(buf, "malloc(%d)", (int)size);
-        WRMSG(HHC00075, "E", buf, strerror(errno));
+        MSGBUF( buf, "malloc(%d)", (int)size );
+        // "Error in function %s: %s"
+        WRMSG( HHC00075, "E", buf, strerror( errno ));
         return NULL;
     }
 
     /* Perform partial copy and clear the TLB */
-    memcpy(newregs, regs, sysblk.regs_copy_len);
-    memset(&newregs->tlb.vaddr, 0, TLBN * sizeof(DW));
-    newregs->tlbID = 1;
-    newregs->ghostregs = 1;
-    newregs->hostregs = newregs;
-    newregs->guestregs = NULL;
-    newregs->sie_active=0;
+    memcpy(  newregs, regs, sysblk.regs_copy_len );
+    memset( &newregs->tlb.vaddr, 0, TLBN * sizeof( DW ));
 
-    /* Copy host regs if in SIE mode */
-    /* newregs is a SIE Guest REGS */
-    if(SIE_MODE(newregs))
+    newregs->tlbID      = 1;
+    newregs->ghostregs  = 1;
+    HOST(  newregs )    = newregs;
+    GUEST( newregs )    = NULL;
+    newregs->sie_active = 0;
+
+    /* Copy host regs if in SIE mode (newregs is SIE guest regs) */
+    if (SIE_MODE( newregs ))
     {
         hostregs = newregs + 1;
-        memcpy(hostregs, regs->hostregs, sysblk.regs_copy_len);
-        memset(&hostregs->tlb.vaddr, 0, TLBN * sizeof(DW));
-        hostregs->tlbID = 1;
+
+        memcpy(  hostregs, HOSTREGS, sysblk.regs_copy_len );
+        memset( &hostregs->tlb.vaddr, 0, TLBN * sizeof( DW ));
+
+        hostregs->tlbID     = 1;
         hostregs->ghostregs = 1;
-        hostregs->hostregs = hostregs;
-        hostregs->guestregs = newregs;
-        newregs->hostregs = hostregs;
-        newregs->guestregs = newregs;
+
+        HOST(  hostregs )   = hostregs;
+        GUEST( hostregs )   = newregs;
+
+        HOST(  newregs  )   = hostregs;
+        GUEST( newregs  )   = newregs;
     }
 
     return newregs;

@@ -475,7 +475,7 @@ static void* watchdog_thread( void* arg )
 #if defined( _FEATURE_WAITSTATE_ASSIST )
                 || (1
                     && regs->sie_active
-                    && WAITSTATE( &regs->guestregs->psw )
+                    && WAITSTATE( &GUESTREGS->psw )
                    )
 #endif
             )

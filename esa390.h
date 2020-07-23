@@ -2335,18 +2335,18 @@ struct SYSIB122                         /* Basic Machine CPUs        */
     HWORD   confcpu;                    /* Configured CPU count      */
     HWORD   sbcpu;                      /* Standby CPU count         */
     HWORD   resvcpu;                    /* Reserved CPU count        */
-    HWORD   mpfact[MAX_CPU_ENGS-1];     /* MP factors                */
+    HWORD   mpfact[ MAX_CPU_ENGS - 1];  /* MP factors                */
 
 
-#if ((MAX_CPU_ENGS-1) % 2)              /* if prev is odd #of HWORDs */
+#if ((MAX_CPU_ENGS - 1) % 2)            /* if prev is odd #of HWORDs */
     HWORD   resv3;                      /* then need some alignment  */
 #endif
 
     FWORD   accap;                      /* Alternate CPU Capability  */
-    HWORD   ampfact[MAX_CPU_ENGS-1];    /* Alternate MP factors      */
+    HWORD   ampfact[ MAX_CPU_ENGS - 1]; /* Alternate MP factors      */
 
 
-#if ((MAX_CPU_ENGS-1) % 2)              /* if prev is odd #of HWORDs */
+#if ((MAX_CPU_ENGS - 1) % 2)            /* if prev is odd #of HWORDs */
     HWORD   resv4;                      /* then need some alignment  */
 #endif
 };

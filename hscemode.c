@@ -231,7 +231,7 @@ int aea_cmd( int argc, char* argv[], char* cmdline )
             // HHC02282 == "%s"  // (aea_cmd)
             WRMSG( HHC02282, "I", "aea SIE" );
 
-            regs = regs->guestregs;
+            regs = GUESTREGS;
             report_aea( regs );
         }
     }
@@ -367,7 +367,7 @@ DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
         {
             char wrk[128];
 
-            regs = regs->guestregs;
+            regs = GUESTREGS;
 
             MSGBUF( wrk, "AIV %16.16"PRIx64" aip %p ip %p aie %p"
 
@@ -456,8 +456,8 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
 
     if (regs->sie_active)
     {
-        regs = regs->guestregs;
-        shift = regs->guestregs->arch_mode == ARCH_370_IDX ? 11 : 12;
+        regs = GUESTREGS;
+        shift = GUESTREGS->arch_mode == ARCH_370_IDX ? 11 : 12;
         bytemask = regs->arch_mode == ARCH_370_IDX ? 0x1FFFFF : 0x3FFFFF;
         pagemask = regs->arch_mode == ARCH_370_IDX ? 0x00E00000 :
                    regs->arch_mode == ARCH_390_IDX ? 0x7FC00000 :
@@ -1504,36 +1504,36 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         {
             WRMSG( HHC00850, "I", "IE", sysblk.regs[i]->cpuad,
                             IC_INTERRUPT_CPU(sysblk.regs[i]),
-                            sysblk.regs[i]->guestregs->ints_state,
-                            sysblk.regs[i]->guestregs->ints_mask);
+                            GUEST( sysblk.regs[i] )->ints_state,
+                            GUEST( sysblk.regs[i] )->ints_mask);
             WRMSG( HHC00851, "I", "IE", sysblk.regs[i]->cpuad,
-                            IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : "not ");
+                            IS_IC_INTERRUPT( GUEST( sysblk.regs[i] )) ? "" : "not ");
             WRMSG( HHC00852, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_IOPENDING ? "" : "not ");
-            WRMSG( HHC00853, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_CLKC(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00854, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_PTIMER(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00855, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_ITIMER(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00857, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EXTCALL(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00858, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EMERSIG(sysblk.regs[i]->guestregs) ? "" : "not ");
-            WRMSG( HHC00859, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_MCKPENDING(sysblk.regs[i]->guestregs) ? "" : "not ");
+            WRMSG( HHC00853, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_CLKC(       GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00854, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_PTIMER(     GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00855, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_ITIMER(     GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00857, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EXTCALL(    GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00858, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_EMERSIG(    GUEST( sysblk.regs[i] )) ? "" : "not ");
+            WRMSG( HHC00859, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_MCKPENDING( GUEST( sysblk.regs[i] )) ? "" : "not ");
             WRMSG( HHC00860, "I", "IE", sysblk.regs[i]->cpuad, IS_IC_SERVSIG ? "" : "not ");
             WRMSG( HHC00864, "I", "IE", sysblk.regs[i]->cpuad, test_lock(&sysblk.cpulock[i]) ? "" : "not ");
 
             if (ARCH_370_IDX == sysblk.arch_mode)
             {
-                if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
+                if (0xFFFF == GUEST( sysblk.regs[i] )->chanset)
                 {
                     MSGBUF( buf, "none");
                 }
                 else
                 {
-                    MSGBUF( buf, "%4.4X", sysblk.regs[i]->guestregs->chanset);
+                    MSGBUF( buf, "%4.4X", GUEST( sysblk.regs[i] )->chanset);
                 }
                 WRMSG( HHC00865, "I", "IE", sysblk.regs[i]->cpuad, buf );
             }
-            WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[sysblk.regs[i]->guestregs->cpustate]);
-            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (S64)sysblk.regs[i]->guestregs->instcount);
-            WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, sysblk.regs[i]->guestregs->siototal);
-            copy_psw(sysblk.regs[i]->guestregs, curpsw);
+            WRMSG( HHC00866, "I", "IE", sysblk.regs[i]->cpuad, states[ GUEST( sysblk.regs[i] )->cpustate ]);
+            WRMSG( HHC00867, "I", "IE", sysblk.regs[i]->cpuad, (S64)GUEST( sysblk.regs[i] )->instcount);
+            WRMSG( HHC00868, "I", "IE", sysblk.regs[i]->cpuad, GUEST( sysblk.regs[i] )->siototal);
+            copy_psw( GUEST( sysblk.regs[i] ), curpsw );
             if (ARCH_900_IDX == sysblk.arch_mode)
             {
                MSGBUF( buf, "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X",

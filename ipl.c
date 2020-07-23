@@ -660,12 +660,12 @@ int i, rc = 0;                          /* Array subscript           */
     ARCH_DEP(store_int_timer_nolock) (regs);
 #endif
 
-   if(regs->host && regs->guestregs)
+   if(regs->host && GUESTREGS)
    {
-        rc = ARCH_DEP(cpu_reset)(regs->guestregs);
+        rc = ARCH_DEP(cpu_reset)(GUESTREGS);
         /* CPU state of SIE copy cannot be controlled */
-        regs->guestregs->opinterv = 0;
-        regs->guestregs->cpustate = CPUSTATE_STARTED;
+        GUESTREGS->opinterv = 0;
+        GUESTREGS->cpustate = CPUSTATE_STARTED;
    }
 
     /* Re-initialize the facilities list for this CPU */
@@ -746,8 +746,8 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->CR(15) = 512;
 #endif
 
-    if (regs->host && regs->guestregs)
-        if ((rc = ARCH_DEP( initial_cpu_reset )( regs->guestregs )) != 0)
+    if (regs->host && GUESTREGS)
+        if ((rc = ARCH_DEP( initial_cpu_reset )( GUESTREGS )) != 0)
             rc1 = rc;
 
     return rc1;

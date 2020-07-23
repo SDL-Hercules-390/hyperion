@@ -1358,11 +1358,11 @@ BYTE    storkey;
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                            regs->hostregs, ACCTYPE_PTE ))
+                                            HOSTREGS, ACCTYPE_PTE ))
                         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    rcpa = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
@@ -1381,7 +1381,7 @@ BYTE    storkey;
 
                     /* host primary to host absolute */
                     rcpa = SIE_LOGICAL_TO_ABS( rcpa, USE_PRIMARY_SPACE,
-                                               regs->hostregs, ACCTYPE_SIE, 0 );
+                                               HOSTREGS, ACCTYPE_SIE, 0 );
                 }
 
                 /* fetch the RCP key */
@@ -1393,7 +1393,7 @@ BYTE    storkey;
 
                 /* guest absolute to host real */
                 if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                        regs->hostregs, ACCTYPE_SIE ))
+                                        HOSTREGS, ACCTYPE_SIE ))
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 {
                     /* In case of storage key assist obtain the
@@ -1410,7 +1410,7 @@ BYTE    storkey;
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
 #if !defined( FEATURE_2K_STORAGE_KEYS )
                     regs->GR_LHLCL(r1) = storkey
@@ -1487,7 +1487,7 @@ BYTE    storkey;
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if ((SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-              || (regs->hostregs->arch_mode == ARCH_900_IDX)
+              || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
               ) && SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
             {
@@ -1509,22 +1509,22 @@ BYTE    storkey;
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if (SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                  || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
                                                              )
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                            regs->hostregs, ACCTYPE_PTE ))
+                                            HOSTREGS, ACCTYPE_PTE ))
                         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    rcpa = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                        for ESAME mode, this entry is eight bytes long */
-                    rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
+                    rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                 }
                 else
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
@@ -1541,7 +1541,7 @@ BYTE    storkey;
 
                     /* host primary to host absolute */
                     rcpa = SIE_LOGICAL_TO_ABS( rcpa, USE_PRIMARY_SPACE,
-                                       regs->hostregs, ACCTYPE_SIE, 0 );
+                                       HOSTREGS, ACCTYPE_SIE, 0 );
                 }
 
                 /* fetch the RCP key */
@@ -1553,7 +1553,7 @@ BYTE    storkey;
 
                 /* guest absolute to host real */
                 if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                        regs->hostregs, ACCTYPE_SIE ))
+                                        HOSTREGS, ACCTYPE_SIE ))
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 {
                     /* In case of storage key assist obtain the
@@ -1570,7 +1570,7 @@ BYTE    storkey;
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     /* Insert the storage key into R1 register bits 24-31 */
 #if !defined( FEATURE_2K_STORAGE_KEYS )
@@ -1652,25 +1652,25 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
       && !regs->sie_pref
       && (SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-      || (regs->hostregs->arch_mode == ARCH_900_IDX)
+      || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
     ) && !SIE_FEAT_BIT_ON( regs, RCPO2, RCPBY ))
     {
         /* guest absolute to host absolute addr or PTE addr in case of rc2 */
         sr = SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                 regs->hostregs, ACCTYPE_SIE );
+                                 HOSTREGS, ACCTYPE_SIE );
 
-        n = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+        n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
         if (sr != 0 && sr != 2)
-            ARCH_DEP( program_interrupt )( regs->hostregs, regs->hostregs->dat.xcode );
+            ARCH_DEP( program_interrupt )( HOSTREGS, HOSTREGS->dat.xcode );
 
         if (sr == 2)
         {
             /* For ESA/390 the RCP byte entry is at offset 0 in a
                four byte entry directly beyond the page table,
                for ESAME mode, this entry is eight bytes long */
-            n += regs->hostregs->arch_mode == ARCH_900_IDX ? 2048 : 1024;
+            n += HOSTREGS->arch_mode == ARCH_900_IDX ? 2048 : 1024;
 
             /* Insert PGSTE key bits 0-4 into R1 register bits
                56-60 and set bits 61-63 to zeroes */
@@ -4305,11 +4305,11 @@ BYTE    storkey;                        /* Storage key               */
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                            regs->hostregs, ACCTYPE_PTE ))
+                                            HOSTREGS, ACCTYPE_PTE ))
                         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    rcpa = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
@@ -4328,7 +4328,7 @@ BYTE    storkey;                        /* Storage key               */
 
                     /* host primary to host absolute */
                     rcpa = SIE_LOGICAL_TO_ABS( rcpa, USE_PRIMARY_SPACE,
-                                               regs->hostregs, ACCTYPE_SIE, 0 );
+                                               HOSTREGS, ACCTYPE_SIE, 0 );
                 }
 
                 /* fetch the RCP key */
@@ -4336,9 +4336,9 @@ BYTE    storkey;                        /* Storage key               */
                 STORAGE_KEY( rcpa, regs ) |= STORKEY_REF;
 
                 if (!SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                         regs->hostregs, ACCTYPE_SIE ))
+                                         HOSTREGS, ACCTYPE_SIE ))
                 {
-                    ra = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    ra = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 #if !defined( FEATURE_2K_STORAGE_KEYS )
                     realkey = STORAGE_KEY( ra, regs )
 #else
@@ -4455,7 +4455,7 @@ BYTE    storkey;                        /* Storage key               */
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
             if ((SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-              || (regs->hostregs->arch_mode == ARCH_900_IDX)
+              || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
               ) && SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
             {
@@ -4485,22 +4485,22 @@ BYTE    storkey;                        /* Storage key               */
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if (SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                  || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
                                                          )
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                            regs->hostregs, ACCTYPE_PTE ))
+                                            HOSTREGS, ACCTYPE_PTE ))
                         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    rcpa = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
                        for ESAME mode, this entry is eight bytes long */
-                    rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
+                    rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                 }
                 else
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
@@ -4518,7 +4518,7 @@ BYTE    storkey;                        /* Storage key               */
 
                     /* host primary to host absolute */
                     rcpa = SIE_LOGICAL_TO_ABS( rcpa, USE_PRIMARY_SPACE,
-                                       regs->hostregs, ACCTYPE_SIE, 0 );
+                                       HOSTREGS, ACCTYPE_SIE, 0 );
                 }
 
                 /* fetch the RCP key */
@@ -4526,9 +4526,9 @@ BYTE    storkey;                        /* Storage key               */
                 STORAGE_KEY( rcpa, regs ) |= STORKEY_REF;
 
                 if (!SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                         regs->hostregs, ACCTYPE_SIE ))
+                                         HOSTREGS, ACCTYPE_SIE ))
                 {
-                    ra = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    ra = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 #if !defined( FEATURE_2K_STORAGE_KEYS )
                     realkey = STORAGE_KEY( ra, regs ) & (STORKEY_REF | STORKEY_CHANGE);
 #else
@@ -5205,11 +5205,11 @@ RADR    n;                              /* Absolute storage addr     */
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                            regs->hostregs, ACCTYPE_PTE ))
+                                            HOSTREGS, ACCTYPE_PTE ))
                         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    rcpa = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
@@ -5228,12 +5228,12 @@ RADR    n;                              /* Absolute storage addr     */
 
                     /* host primary to host absolute */
                     rcpa = SIE_LOGICAL_TO_ABS( rcpa, USE_PRIMARY_SPACE,
-                                               regs->hostregs, ACCTYPE_SIE, 0 );
+                                               HOSTREGS, ACCTYPE_SIE, 0 );
                 }
 
                 /* guest absolute to host real */
                 sr = SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                         regs->hostregs, ACCTYPE_SIE );
+                                         HOSTREGS, ACCTYPE_SIE );
 
                 if (sr
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
@@ -5249,7 +5249,7 @@ RADR    n;                              /* Absolute storage addr     */
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                    n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                     realkey =
 #if !defined( FEATURE_2K_STORAGE_KEYS )
@@ -5479,7 +5479,7 @@ BYTE    r1key;
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                 if ((SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                  || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
                   ) && SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
                     { SIE_TRANSLATE( &n, ACCTYPE_SIE, regs ); }
@@ -5495,22 +5495,22 @@ BYTE    r1key;
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                     if (SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-                      || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                      || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
                                                                  )
                     {
                         /* guest absolute to host PTE addr */
                         if (SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                                regs->hostregs, ACCTYPE_PTE ))
+                                                HOSTREGS, ACCTYPE_PTE ))
                             longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
                         /* Convert real address to absolute address */
-                        rcpa = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                        rcpa = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                         /* For ESA/390 the RCP byte entry is at offset 1 in a
                            four byte entry directly beyond the page table,
                            for ESAME mode, this entry is eight bytes long */
-                        rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
+                        rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                     }
                     else
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
@@ -5528,18 +5528,18 @@ BYTE    r1key;
 
                         /* host primary to host absolute */
                         rcpa = SIE_LOGICAL_TO_ABS( rcpa, USE_PRIMARY_SPACE,
-                                           regs->hostregs, ACCTYPE_SIE, 0 );
+                                           HOSTREGS, ACCTYPE_SIE, 0 );
                     }
 
                     /* guest absolute to host real */
                     sr = SIE_TRANSLATE_ADDR( regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                             regs->hostregs, ACCTYPE_SIE );
+                                             HOSTREGS, ACCTYPE_SIE );
 
                     if (sr
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
                       && !(SIE_FEAT_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-                        || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                        || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
                                                                   )
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
@@ -5562,7 +5562,7 @@ BYTE    r1key;
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                     {
                         /* host real to host absolute */
-                        n = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+                        n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
                         protkey =
 #if !defined( FEATURE_2K_STORAGE_KEYS )
@@ -5590,7 +5590,7 @@ BYTE    r1key;
                     /* Insert key in new storage key */
                     if (SIE_STATE_BIT_ON( regs, RCPO0, SKA )
 #if defined( _FEATURE_ZSIE )
-                        || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                        || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
                                                                   )
                         regs->mainstor[ rcpa-1 ] = r1key
@@ -7536,7 +7536,7 @@ U32     aste[16];                       /* ASN second table entry    */
     if (ARCH_DEP( translate_alet )( regs->AR(r1), regs->GR_LHH(r2),
                         ACCTYPE_TAR,
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
-                        SIE_STATE_BIT_ON( regs, MX, XC ) ? regs->hostregs :
+                        SIE_STATE_BIT_ON( regs, MX, XC ) ? HOSTREGS :
 #endif
                         regs,
                         &asteo, aste ))
@@ -7667,13 +7667,13 @@ BYTE    akey;                           /* Access key                */
                                 b1>0 &&
                                   MULTIPLE_CONTROLLED_DATA_SPACE( regs ) ?
                                     b1 : USE_PRIMARY_SPACE,
-                                regs->hostregs, ACCTYPE_SIE ))
+                                HOSTREGS, ACCTYPE_SIE ))
             longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
         /* Convert host real address to host absolute address */
-        aaddr = APPLY_PREFIXING( regs->hostregs->dat.raddr, regs->hostregs->PX );
+        aaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
-        if (aaddr > regs->hostregs->mainlim)
+        if (aaddr > HOSTREGS->mainlim)
             ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
     }
 #endif /* defined( _FEATURE_SIE ) */

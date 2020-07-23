@@ -287,15 +287,15 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
                 (SIE_STATE_BIT_ON(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0)
-                ? r2 : USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                ? r2 : USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                    USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                    USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
+                (HOSTREGS->program_interrupt) (HOSTREGS, HOSTREGS->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr2 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+            raddr2 = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -383,15 +383,15 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
                 (SIE_STATE_BIT_ON(regs, MX, XC) && AR_BIT(&regs->psw) && r1 > 0)
-                ? r1 : USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                ? r1 : USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                    USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+                    USE_PRIMARY_SPACE, HOSTREGS, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->hostregs->program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
+                (HOSTREGS->program_interrupt) (HOSTREGS, HOSTREGS->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr1 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+            raddr1 = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
         }
 #endif /*defined(_FEATURE_SIE)*/
 

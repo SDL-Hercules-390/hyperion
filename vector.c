@@ -230,7 +230,7 @@ U64     d;
 
     ODD_CHECK(r1, regs);
 
-    /* n contrains the current save area address */
+    /* n contains the current save area address */
     n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
@@ -307,7 +307,7 @@ U64     d;
 
     ODD_CHECK(r1, regs);
 
-    /* n contrains the current save area address */
+    /* n contains the current save area address */
     n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */
@@ -380,7 +380,7 @@ U64     d;
 
     ODD_CHECK(r1, regs);
 
-    /* n contrains the current save area address */
+    /* n contains the current save area address */
     n = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
 
     /* n1 contains the starting element number */

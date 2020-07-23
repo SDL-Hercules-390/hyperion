@@ -445,32 +445,34 @@ DEVBLK            *dev;                /* Device block pointer       */
 /*-------------------------------------------------------------------*/
 /* Process LPAR DIAG 204 call                                        */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs)
+void ARCH_DEP( diag204_call )( int r1, int r2, REGS* regs )
 {
 DIAG204_HDR       *hdrinfo;            /* Header                     */
 DIAG204_PART      *partinfo;           /* Partition info             */
 DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
-#if defined(FEATURE_EXTENDED_DIAG204)
-DIAG204_X_HDR      *hdrxinfo;          /* Header                     */
-DIAG204_X_PART     *partxinfo;         /* Partition info             */
-DIAG204_X_PART_CPU *cpuxinfo;          /* CPU info                   */
-#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
-RADR              abs;                 /* abs addr of data area      */
-int               i;                   /* loop counter               */
-struct timespec   cputime;             /* to obtain thread time data */
-ETOD              ETOD;                /* Extended TOD clock         */
-U64               uCPU[MAX_CPU_ENGS];  /* User CPU time    (us)      */
-U64               tCPU[MAX_CPU_ENGS];  /* Total CPU time   (us)      */
 
-#if defined(FEATURE_PHYSICAL_DIAG204)
+#if defined( FEATURE_EXTENDED_DIAG204 )
+DIAG204_X_HDR       *hdrxinfo;         /* Header                     */
+DIAG204_X_PART      *partxinfo;        /* Partition info             */
+DIAG204_X_PART_CPU  *cpuxinfo;         /* CPU info                   */
+#endif
+
+RADR             abs;                  /* abs addr of data area      */
+int              i;                    /* loop counter               */
+struct timespec  cputime;              /* to obtain thread time data */
+ETOD             ETOD;                 /* Extended TOD clock         */
+U64              uCPU[ MAX_CPU_ENGS ]; /* User CPU time    (usecs)   */
+U64              tCPU[ MAX_CPU_ENGS ]; /* Total CPU time   (usecs)   */
+
+#if defined( FEATURE_PHYSICAL_DIAG204 )
 static BYTE       physical[8] =
               {0xD7,0xC8,0xE8,0xE2,0xC9,0xC3,0xC1,0xD3}; /* PHYSICAL */
-#endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
+#endif
 
-#if defined(FEATURE_EXTENDED_DIAG204)
-U64               oCPU[MAX_CPU_ENGS];  /* Online CPU time  (us)      */
-U64               wCPU[MAX_CPU_ENGS];  /* Wait CPU time    (us)      */
-#endif /*defined(FEATURE_EXTENDED_DIAG204)*/
+#if defined( FEATURE_EXTENDED_DIAG204 )
+U64              oCPU[ MAX_CPU_ENGS ];  /* Online CPU time  (usecs)  */
+U64              wCPU[ MAX_CPU_ENGS ];  /* Wait CPU time    (usecs)  */
+#endif
 
     /* Test DIAG204 command word */
     switch (regs->GR_L(r2)) {

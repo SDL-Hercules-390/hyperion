@@ -6,75 +6,83 @@
 /*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
-/* This module implements DIAGNOSE code X'250'                       */
-/* described in SC24-6084 z/VM 5.4 CP Programming Services.          */
+/* This module implements DIAGNOSE code X'250' as described in:      */
+/* SC24-6084    z/VM 5.4 CP Programming Services                     */
+/* SC24-6179-04 z/VM 6.3 CP Programming Services                     */
+/* SC24-6272-03 z/VM 7.1 CP Programming Services                     */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
 /* Hercules extends the use to System/370 with 4K pages and 2K pages */
 /* with recommended constraints                                      */
-
-/* Unconditional log messages generated */
-/*  - Could not allocate storage for Block I/O environment   */
-/*  - Invalid list processor status code returned            */
-/*  - Error creating asynchronous thread                     */
-/*  - Could not allocate storage for asynchronous I/O request*/
-
-/* Conditional log messages when device tracing is enabled */
-/*  - BLKTAB information used when device tracing is enabled */
-/*  - Established environment when device tracing is enabled */
-/*  - Block I/O owns device                                  */
-/*  - Block I/O returned device                              */
-/*  - BIOE status returned                                   */
-/*  - List processor parameters                              */
-/*  - BIOE operation being performed                         */
-/*  - List processor status code                             */
-/*  - Read/Write I/O operation                               */
-/*  - Syncronous or asynchronous request information         */
-/*  - Address checking results                               */
-/*  - Device driver results                                  */
-/*  - Block I/O environment removed                          */
-/*  - Triggered Block I/O interrupt                          */
-
-
-/* The following structure exists between the different functions     */
-/*                                                                    */
-/* From diagnose.c                                                    */
-/*                                                                    */
-/* AD:vm_blockio                                                      */
-/*    |                                                               */
-/*   INIT:                                                            */
-/*    +---> d250_init32---+                                           */
-/*    |                   +---> d250_init                             */
-/*    +---> d250_init64---+                                           */
-/*    |                                                               */
-/*   IOREQ:                                                           */
-/*    +-> AD:d250_iorq32--+---SYNC----> d250_list32--+                */
-/*    |                   V                   ^      |                */
-/*    |               ASYNC Thread            |      |    d250_read   */
-/*    |                   +-> AD:d250_async32-+      +--> d250_write  */
-/*    |                       d250_bio_interrupt     |    (calls      */
-/*    |                                              |    drivers)    */
-/*    +-> AD:d250_iorq64--+----SYNC---> d250_list64--+                */
-/*    |                   V                   ^                       */
-/*    |               ASYNC Thread            |                       */
-/*    |                   +-> AD:d250_async64-+                       */
-/*    |                       d250_bio_interrupt                      */
-/*   REMOVE:                                                          */
-/*    +---> d250_remove                                               */
-/*                                                                    */
-/*  Function         ARCH_DEP   On CPU   On Async    Owns             */
-/*                              thread    thread     device           */
-/*                                                                    */
-/*  vm_blockio          Yes      Yes        No         No             */
-/*  d250_init32/64      No       Yes        No         No             */
-/*  d250_init           No       Yes        No         No             */
-/*  d250_iorq32/64      Yes      Yes        No         No             */
-/*  d250_async32/64     Yes      No         Yes        No             */
-/*  d250_list32/64      Yes      Yes        Yes       Yes             */
-/*  d250_bio_interrup   No       No         Yes       N/A             */
-/*  d250_read           No       Yes        Yes       Yes             */
-/*  d250_write          No       Yes        Yes       Yes             */
-/*  d250_remove         No       Yes        No         No             */
-/*  d250_addrck         Yes      Yes        Yes        No             */
+/*                                                                   */
+/* Unconditional log messages generated                              */
+/*                                                                   */
+/*  - Could not allocate storage for Block I/O environment           */
+/*  - Invalid list processor status code returned                    */
+/*  - Error creating asynchronous thread                             */
+/*  - Could not allocate storage for asynchronous I/O request        */
+/*                                                                   */
+/* Conditional log messages when device tracing is enabled           */
+/*                                                                   */
+/*  - BLKTAB information used when device tracing is enabled         */
+/*  - Established environment when device tracing is enabled         */
+/*  - Block I/O owns device                                          */
+/*  - Block I/O returned device                                      */
+/*  - BIOE status returned                                           */
+/*  - List processor parameters                                      */
+/*  - BIOE operation being performed                                 */
+/*  - List processor status code                                     */
+/*  - Read/Write I/O operation                                       */
+/*  - Syncronous or asynchronous request information                 */
+/*  - Address checking results                                       */
+/*  - Device driver results                                          */
+/*  - Block I/O environment removed                                  */
+/*  - Triggered Block I/O interrupt                                  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The following structure exists between the different functions    */
+/*                                                                   */
+/* From diagnose.c                                                   */
+/*                                                                   */
+/* AD:vm_blockio                                                     */
+/*    |                                                              */
+/*   INIT:                                                           */
+/*    +---> d250_init32---+                                          */
+/*    |                   +---> d250_init                            */
+/*    +---> d250_init64---+                                          */
+/*    |                                                              */
+/*   IOREQ:                                                          */
+/*    +-> AD:d250_iorq32--+---SYNC----> d250_list32--+               */
+/*    |                   V                   ^      |               */
+/*    |               ASYNC Thread            |      |    d250_read  */
+/*    |                   +-> AD:d250_async32-+      +--> d250_write */
+/*    |                       d250_bio_interrupt     |    (calls     */
+/*    |                                              |    drivers)   */
+/*    +-> AD:d250_iorq64--+----SYNC---> d250_list64--+               */
+/*    |                   V                   ^                      */
+/*    |               ASYNC Thread            |                      */
+/*    |                   +-> AD:d250_async64-+                      */
+/*    |                       d250_bio_interrupt                     */
+/*   REMOVE:                                                         */
+/*    +---> d250_remove                                              */
+/*                                                                   */
+/*  Function         ARCH_DEP   On CPU   On Async    Owns            */
+/*                              thread    thread     device          */
+/*                                                                   */
+/*  vm_blockio          Yes      Yes        No         No            */
+/*  d250_init32/64      No       Yes        No         No            */
+/*  d250_init           No       Yes        No         No            */
+/*  d250_iorq32/64      Yes      Yes        No         No            */
+/*  d250_async32/64     Yes      No         Yes        No            */
+/*  d250_list32/64      Yes      Yes        Yes       Yes            */
+/*  d250_bio_interrup   No       No         Yes       N/A            */
+/*  d250_read           No       Yes        Yes       Yes            */
+/*  d250_write          No       Yes        Yes       Yes            */
+/*  d250_remove         No       Yes        No         No            */
+/*  d250_addrck         Yes      Yes        Yes        No            */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
 

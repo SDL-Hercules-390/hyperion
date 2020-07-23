@@ -14,7 +14,6 @@
 /* Reference:                                                        */
 /*    GA24-3073-8 "IBM 1403 Printer Component Description"           */
 /*    GA24-3312-9 "IBM 2821 Control Unit Component Description"      */
-/*    GA24-3073-8 "IBM 1403 Printer Component Description"           */
 /*    GA33-1529-0 "IBM 3203 Printer Model 5 Component Description"   */
 /*    GA24-3543-0 "IBM 3211 Printer and 3811 Control Unit            */
 /*                                  Component Description"           */

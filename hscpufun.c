@@ -836,10 +836,10 @@ int rc = 0;
 #if defined(_FEATURE_SIE)
         if ( regs->sie_active )
         {
-            vtod_now = TOD_CLOCK(regs->guestregs);
-            vepoch_now = regs->guestregs->tod_epoch;
-            vclkc_now = regs->guestregs->clkc;
-            vcpt_now = CPU_TIMER(regs->guestregs);
+            vtod_now = TOD_CLOCK(GUESTREGS);
+            vepoch_now = GUESTREGS->tod_epoch;
+            vclkc_now = GUESTREGS->clkc;
+            vcpt_now = CPU_TIMER(GUESTREGS);
             sie_flag = 1;
         }
 #endif

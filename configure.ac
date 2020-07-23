@@ -2874,8 +2874,8 @@ if test "x$hc_cv_opt_custom_build_str" != "x"; then
     AC_DEFINE_UNQUOTED( [CUSTOM_BUILD_STRING], "${hc_cv_opt_custom_build_str}" )
 fi
 
-AC_DEFINE_UNQUOTED( [MAX_CPU_ENGS],     ${hc_cv_opt_num_cpu_engines} )
-AC_DEFINE_UNQUOTED( [HOST_ARCH],       "${target_cpu}" )
+AC_DEFINE_UNQUOTED( [MAX_CPU_ENGS],  ${hc_cv_opt_num_cpu_engines} )
+AC_DEFINE_UNQUOTED( [HOST_ARCH],    "${target_cpu}" )
 
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_BOOL_LOCK_FREE],     ${hc_cv_c11_atomic_bool_lock_free}     )
 AC_DEFINE_UNQUOTED( [C11_ATOMIC_CHAR_LOCK_FREE],     ${hc_cv_c11_atomic_char_lock_free}     )

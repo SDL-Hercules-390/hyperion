@@ -51,15 +51,15 @@ int     rc;
     if(SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !SIE_FEAT_BIT_ON(regs, S, EXP_TIMER)
-#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        && !SIE_FEAT_BIT_ON(regs, EC0, EXTA)
 #endif
                                                             )
     {
         /* Point to SIE copy of PSA in state descriptor */
-        psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
-        STORAGE_KEY(SIE_STATE(regs), regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+        psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
+        STORAGE_KEY(SIE_STATE(regs), HOSTREGS) |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
@@ -94,7 +94,7 @@ int     rc;
     if ( !SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        || SIE_FEAT_BIT_ON(regs, S, EXP_TIMER)
-#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        || SIE_FEAT_BIT_ON(regs, EC0, EXTA)
 #endif
@@ -103,9 +103,9 @@ int     rc;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Abort any active transaction and then return back to here
            to continue with external interrupt processing */
-        if (regs->hostregs->txf_tnd)
+        if (HOSTREGS->txf_tnd)
         {
-            PTT_TXF( "*TXF EI", 0, 0, regs->hostregs->txf_tnd );
+            PTT_TXF( "*TXF EI", 0, 0, HOSTREGS->txf_tnd );
             regs->txf_why |= TXF_WHY_EXTERNAL_INTERUPT;
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_EXT );
             regs->psw.cc = TXF_CC_TRANSIENT;
@@ -134,7 +134,7 @@ int     rc;
     if ( SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !SIE_FEAT_BIT_ON(regs, S, EXP_TIMER)
-#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        && !SIE_FEAT_BIT_ON(regs, EC0, EXTA)
 #endif
@@ -307,7 +307,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     if (OPEN_IC_ITIMER(regs)
 #if defined(_FEATURE_SIE)
         && !(SIE_STATE_BIT_ON(regs, M, ITMOF))
-#endif /*defined(_FEATURE_SIE)*/
+#endif
         )
     {
         if (CPU_STEPPING_OR_TRACING_ALL)

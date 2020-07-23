@@ -160,10 +160,10 @@ static inline  BYTE* ARCH_DEP( maddr_l )
 }
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
-U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
-        U32 *asteo, U32 aste[]);
-int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
-        int atemask, REGS *regs);
+
+U16  ARCH_DEP( translate_asn )( U16 asn, REGS* regs, U32* asteo, U32 aste[] );
+int  ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, REGS* regs );
+
 #endif
 
 /* end of DAT.H */

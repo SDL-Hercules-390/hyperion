@@ -1580,9 +1580,9 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
                 && txf_conflict_chk( rchk, acctype, addrpage, cacheidx, cacheidxe )
                )
             || (1
-                && rchk->guestregs
-                && rchk->guestregs != regs
-                && txf_conflict_chk( rchk->guestregs, acctype, addrpage, cacheidx, cacheidxe )
+                && GUEST( rchk )
+                && GUEST( rchk ) != regs
+                && txf_conflict_chk( GUEST( rchk ), acctype, addrpage, cacheidx, cacheidxe )
                )
         )
             break;  // CONFLICT DETECTED!

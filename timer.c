@@ -75,13 +75,13 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
         /* Signal clock comparator interrupt if needed */
-            if(TOD_CLOCK(regs->guestregs) > regs->guestregs->clkc)
+            if(TOD_CLOCK(GUESTREGS) > GUESTREGS->clkc)
             {
-                ON_IC_CLKC(regs->guestregs);
+                ON_IC_CLKC(GUESTREGS);
                 intmask |= regs->cpubit;
             }
             else
-                OFF_IC_CLKC(regs->guestregs);
+                OFF_IC_CLKC(GUESTREGS);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -106,13 +106,13 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
             /* Set interrupt flag if the CPU timer is negative */
-            if (CPU_TIMER(regs->guestregs) < 0)
+            if (CPU_TIMER(GUESTREGS) < 0)
             {
-                ON_IC_PTIMER(regs->guestregs);
+                ON_IC_PTIMER(GUESTREGS);
                 intmask |= regs->cpubit;
             }
             else
-                OFF_IC_PTIMER(regs->guestregs);
+                OFF_IC_PTIMER(GUESTREGS);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -132,10 +132,10 @@ CPU_BITMAP      intmask = 0;            /* Interrupt CPU mask        */
         /* When running under SIE also update the SIE copy */
         if(regs->sie_active)
         {
-            if(SIE_STATE_BIT_ON(regs->guestregs, M, 370)
-              && SIE_STATE_BIT_OFF(regs->guestregs, M, ITMOF))
+            if(SIE_STATE_BIT_ON(GUESTREGS, M, 370)
+              && SIE_STATE_BIT_OFF(GUESTREGS, M, ITMOF))
             {
-                if( chk_int_timer(regs->guestregs) )
+                if( chk_int_timer(GUESTREGS) )
                     intmask |= regs->cpubit;
             }
         }

@@ -754,7 +754,7 @@ void get_mpfactors(BYTE *dest)
 #define  MPFACTOR_DENOMINATOR     100
 #define  MPFACTOR_PERCENT          95
 
-    static U16 mpfactors[MAX_CPU_ENGS-1] = {0};
+    static U16 mpfactors[ MAX_CPU_ENGS - 1 ] = {0};
     static BYTE didthis = 0;
 
     if (!didthis)
@@ -792,7 +792,7 @@ void get_mpfactors(BYTE *dest)
     }
 
     /* Return the requested information... */
-    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGS-1) * sizeof(U16) );
+    memcpy( dest, &mpfactors[0], (MAX_CPU_ENGS - 1) * sizeof( U16 ));
 }
 
 

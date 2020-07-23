@@ -5210,7 +5210,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                  || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                  || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                   ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
                 {
@@ -5239,22 +5239,22 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                     if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                      || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                      || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                  )
                     {
                         /* guest absolute to host PTE addr */
                         if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                                regs->hostregs, ACCTYPE_PTE))
+                                                HOSTREGS, ACCTYPE_PTE))
                             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                         /* Convert real address to absolute address */
-                        rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+                        rcpa = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
 
                         /* For ESA/390 the RCP byte entry is at offset 1 in a
                            four byte entry directly beyond the page table,
                            for ESAME mode, this entry is eight bytes long */
-                        rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
+                        rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                     }
                     else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5272,7 +5272,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 
                         /* host primary to host absolute */
                         rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                                   regs->hostregs, ACCTYPE_SIE, 0);
+                                                   HOSTREGS, ACCTYPE_SIE, 0);
                     }
 
                     /* fetch the RCP key */
@@ -5280,9 +5280,9 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                     STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
 
                     if (!SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                             regs->hostregs, ACCTYPE_SIE))
+                                             HOSTREGS, ACCTYPE_SIE))
                     {
-                        ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
+                        ra = APPLY_PREFIXING(HOSTREGS->dat.raddr, HOSTREGS->PX);
 #if !defined(FEATURE_2K_STORAGE_KEYS)
                         realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF);
 #else
@@ -5467,7 +5467,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                     if ((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                      || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                      || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                       ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
                         { SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, regs); }
@@ -5483,22 +5483,22 @@ int     page_offset;                    /* Low order bits of R2      */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                         if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                          || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                          || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                      )
                         {
                             /* guest absolute to host PTE addr */
                             if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr, USE_PRIMARY_SPACE,
-                                                    regs->hostregs, ACCTYPE_PTE))
+                                                    HOSTREGS, ACCTYPE_PTE))
                                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                             /* Convert real address to absolute address */
-                            rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+                            rcpa = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
 
                             /* For ESA/390 the RCP byte entry is at offset 1 in a
                                four byte entry directly beyond the page table,
                                for ESAME mode, this entry is eight bytes long */
-                            rcpa += regs->hostregs->arch_mode == ARCH_900_IDX ? 2049 : 1025;
+                            rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
                         }
                         else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5516,18 +5516,18 @@ int     page_offset;                    /* Low order bits of R2      */
 
                             /* host primary to host absolute */
                             rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                               regs->hostregs, ACCTYPE_SIE, 0);
+                                               HOSTREGS, ACCTYPE_SIE, 0);
                         }
 
                         /* guest absolute to host real */
                         sr = SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr, USE_PRIMARY_SPACE,
-                                                 regs->hostregs, ACCTYPE_SIE);
+                                                 HOSTREGS, ACCTYPE_SIE);
 
                         if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                           && !(SIE_FEAT_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                            || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                            || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                       )
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -5550,7 +5550,7 @@ int     page_offset;                    /* Low order bits of R2      */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                         {
                             /* host real to host absolute */
-                            n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
+                            n = APPLY_PREFIXING(HOSTREGS->dat.raddr, HOSTREGS->PX);
 
                             protkey =
 #if !defined(FEATURE_2K_STORAGE_KEYS)
@@ -5573,7 +5573,7 @@ int     page_offset;                    /* Low order bits of R2      */
                         /* Insert key in new storage key */
                         if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
-                            || (regs->hostregs->arch_mode == ARCH_900_IDX)
+                            || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif /*defined(_FEATURE_ZSIE)*/
                                                                       )
                             regs->mainstor[rcpa-1] = sk

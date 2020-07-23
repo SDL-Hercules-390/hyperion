@@ -91,8 +91,6 @@ static int (*run_sie[ NUM_GEN_ARCHS ])( REGS* regs) =
 /*                     SIE helper macros                             */
 /*-------------------------------------------------------------------*/
 
-#define GUESTREGS   (regs->guestregs)
-#define HOSTREGS    (regs->hostregs)
 #define STATEBK     ((SIEBK *)GUESTREGS->siebk)
 
 #define SIE_I_STOP( _guestregs )                \
@@ -820,20 +818,22 @@ U64     dreg;
         if (icode)
             GUESTREGS->program_interrupt( GUESTREGS, icode );
 
-        /* Run SIE in guests architecture mode */
+        /* Run SIE in guest's architecture mode */
         icode = run_sie[ GUESTREGS->arch_mode ]( regs );
 
     } /* if (setjmp(GUESTREGS->progjmp)) */
 
+    /* Exit from SIE mode */
     ARCH_DEP( sie_exit )( regs, icode );
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION( regs );
     PERFORM_CHKPT_SYNC( regs );
 
+    /* Return back to host instruction processing */
     longjmp( regs->progjmp, SIE_NO_INTERCEPT );
 
-} /* end function start_interpretive_execution */
+} /* end of start_interpretive_execution instruction */
 
 
 /*-------------------------------------------------------------------*/

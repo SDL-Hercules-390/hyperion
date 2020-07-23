@@ -158,7 +158,7 @@ REGS* CopyREGS( int cpu )               // (same logic as in panel.c)
 #if defined(_FEATURE_SIE)
     if (regs->sie_active)
     {
-        memcpy( &copysieregs, regs->guestregs, sysblk.regs_copy_len );
+        memcpy( &copysieregs, GUESTREGS, sysblk.regs_copy_len );
         copyregs.guestregs = &copysieregs;
         copysieregs.hostregs = &copyregs;
         regs = &copysieregs;

@@ -296,6 +296,17 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
   #define SIE_STATE_BIT_OFF( _regs, _byte, _bit ) \
           (SIE_MODE((_regs)) && SIE_FEAT_BIT_OFF( (_regs), _byte, _bit ))
 
+  #define SIE_TXF_INTERCEPT( _regs )                            \
+    do                                                          \
+    {                                                           \
+        if (1                                                   \
+            && SIE_MODE( (_regs) )                              \
+            && SIE_EC_BIT_OFF( (_regs), ECB0, ECTX )            \
+        )                                                       \
+            longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );    \
+    }                                                           \
+    while (0)
+
 #else // !defined( _FEATURE_SIE )
 
   #define SIE_MODE(          _regs )                (0)
@@ -308,6 +319,8 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
   #define SIE_FEAT_BIT_OFF(  _regs, _byte, _bit )   (1)
   #define SIE_EC_BIT_OFF(    _regs, _byte, _bit )   (1)
   #define SIE_STATE_BIT_OFF( _regs, _byte, _bit )   (1)
+
+  #define SIE_TXF_INTERCEPT( _regs ) /* (do nothing) */
 
 #endif // defined( _FEATURE_SIE )
 
@@ -1084,7 +1097,7 @@ do {                                                                  \
     /* Program check if BFP instruction is executed when AFP control is zero */
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         }
@@ -1092,7 +1105,7 @@ do {                                                                  \
     /* Program check if DFP instruction is executed when AFP control is zero */
 #define DFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_DFP_INSTRUCTION; \
             (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
         }
@@ -1100,7 +1113,7 @@ do {                                                                  \
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
@@ -1110,7 +1123,7 @@ do {                                                                  \
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
@@ -1122,7 +1135,7 @@ do {                                                                  \
     if( (_r) & 2 ) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-               || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+               || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
@@ -1134,7 +1147,7 @@ do {                                                                  \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-                || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+                || (SIE_MODE((_regs)) && !(HOST(_regs)->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         (_regs)->program_interrupt( (_regs), PGM_DATA_EXCEPTION); \
@@ -1572,7 +1585,7 @@ do { \
 do { \
     if(SIE_MODE((_regs)) && !(_regs)->sie_pref) \
     *(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
-      USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
+      USE_PRIMARY_SPACE, HOST(_regs), (_acctype), 0); \
 } while(0)
 
 #else /* !defined( _FEATURE_SIE ) */

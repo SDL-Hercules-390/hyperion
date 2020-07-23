@@ -389,9 +389,15 @@ typedef int CMPFUNC(const void*, const void*);
 #define IS_CPU_ONLINE(_cpu) \
   (sysblk.regs[(_cpu)] != NULL)
 
+#define HOST(  _regs )  (_regs)->hostregs
+#define GUEST( _regs )  (_regs)->guestregs
+
+#define HOSTREGS        HOST(  regs )   // 'regs' presumed
+#define GUESTREGS       GUEST( regs )   // 'regs' presumed
+
 /* Instruction count for a CPU */
 #define INSTCOUNT(_regs) \
- ((_regs)->hostregs->prevcount + (_regs)->hostregs->instcount)
+ (HOST(_regs)->prevcount + HOST(_regs)->instcount)
 
 /*-------------------------------------------------------------------*/
 /*      Obtain/Release mainlock                                      */
@@ -400,15 +406,17 @@ typedef int CMPFUNC(const void*, const void*);
 
 #define OBTAIN_MAINLOCK_UNCONDITIONAL(_regs) \
  do { \
-  if ((_regs)->hostregs->cpubit != (_regs)->sysblk->started_mask) { \
+  if (HOST(_regs)->cpubit != (_regs)->sysblk->started_mask) { \
    obtain_lock(&(_regs)->sysblk->mainlock); \
-   (_regs)->sysblk->mainowner = regs->hostregs->cpuad; \
+   /* FIXME: BUG! the following line is WRONG!      */ \
+   /* It should be: ......... = HOST(_regs)->cpuad; */ \
+   (_regs)->sysblk->mainowner = HOSTREGS->cpuad; \
   } \
  } while (0)
 
 #define RELEASE_MAINLOCK_UNCONDITIONAL(_regs) \
  do { \
-   if ((_regs)->sysblk->mainowner == (_regs)->hostregs->cpuad) { \
+   if ((_regs)->sysblk->mainowner == HOST(_regs)->cpuad) { \
      (_regs)->sysblk->mainowner = LOCK_OWNER_NONE; \
      release_lock(&(_regs)->sysblk->mainlock); \
    } \
@@ -426,7 +434,7 @@ typedef int CMPFUNC(const void*, const void*);
 #define RELEASE_CRWLOCK()   release_lock( &sysblk.crwlock )
 
 /*-------------------------------------------------------------------*/
-/* Returns when all other CPU threads are blocked on intlock         */
+/* Return whether specified CPU is waiting to acquire intlock or not */
 /*-------------------------------------------------------------------*/
 #define AT_SYNCPOINT(_regs) ((_regs)->intwait)
 

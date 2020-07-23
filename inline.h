@@ -477,7 +477,7 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
     if (regs->dat.protect)
         return 1;
 #if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs) && regs->hostregs->dat.protect)
+    if(SIE_MODE(regs) && HOSTREGS->dat.protect)
         return 1;
 #endif
 

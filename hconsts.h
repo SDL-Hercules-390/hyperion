@@ -17,26 +17,26 @@
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
-/* Maximum CPU Engines                                               */
+/*                     Maximum CPU Engines                           */
 /*-------------------------------------------------------------------*/
 
 #if !defined( MAX_CPU_ENGS )
   #if defined( HAVE___INT128_T )
-    #define MAX_CPU_ENGS     128
+    #define MAX_CPU_ENGS      128
   #else
-    #define MAX_CPU_ENGS      64
+    #define MAX_CPU_ENGS       64
   #endif
 #endif
 
 // (PREFERRED default MAX_CPU_ENGS)
-#define PREF_DEF_MAXCPU        8        /*  Default sysblk.maxcpu
-                                            to 8 according to old
-                                            MAX_CPU_ENGS default     */
+#define PREF_DEF_MAXCPU         8       /* Default sysblk.maxcpu
+                                           to 8 according to old
+                                           MAX_CPU_ENGS default      */
 
-#define MAX_CPU_LOOPS        256        /* UNROLLED_EXECUTE loops    */
+#define MAX_CPU_LOOPS         256       /* UNROLLED_EXECUTE loops    */
 
 /*-------------------------------------------------------------------*/
-/*      Some handy quantity definitions                              */
+/*               Some handy quantity definitions                     */
 /*-------------------------------------------------------------------*/
 #define  ONE_KILOBYTE   ((U32)                     (1024))  /* 2^10 (16^2)  * 4  */
 #define  TWO_KILOBYTE   ((U32)(2           *        1024))  /* 2^11 (16^2)  * 8  */

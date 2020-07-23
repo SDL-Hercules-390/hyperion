@@ -868,8 +868,8 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
                 if (icode != SIE_NO_INTERCEPT)
                 {
                     /* Point to SIE copy of PSA in state descriptor */
-                    psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
-                    STORAGE_KEY( SIE_STATE( regs ), regs->hostregs ) |= (STORKEY_REF | STORKEY_CHANGE);
+                    psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
+                    STORAGE_KEY( SIE_STATE( regs ), HOSTREGS ) |= (STORKEY_REF | STORKEY_CHANGE);
                 }
                 else
 #endif

@@ -114,7 +114,7 @@ static U32    NPdata;
 static U32    NPmips;
 static U32    NPsios;
 static int    NPcpugraph;
-static int    NPcpugraphpct[MAX_CPU_ENGS];
+static int    NPcpugraphpct[ MAX_CPU_ENGS ];
 
 /* Current device states */
 #define       NP_MAX_DEVICES (PANEL_MAX_ROWS - 3)
@@ -670,7 +670,7 @@ static void NP_screen_redraw (REGS *regs)
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
-        regs = regs->guestregs;
+        regs = GUESTREGS;
 #endif /*defined(_FEATURE_SIE)*/
 
     /*
@@ -728,7 +728,7 @@ static void NP_screen_redraw (REGS *regs)
         NPpswmode = (regs->arch_mode == ARCH_900_IDX);
         NPpswzhost =
 #if defined(_FEATURE_SIE)
-                     !NPpswmode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX;
+                     !NPpswmode && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX;
 #else
                      0;
 #endif /*defined(_FEATURE_SIE)*/
@@ -741,7 +741,7 @@ static void NP_screen_redraw (REGS *regs)
         NPregzhost =
 #if defined(_FEATURE_SIE)
                      (regs->arch_mode != ARCH_900_IDX
-                   && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX
+                   && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX
                    && (NPregdisp == 0 || NPregdisp == 1));
 #else
                      0;
@@ -979,7 +979,7 @@ static void NP_update(REGS *regs)
 
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs))
-        regs = regs->hostregs;
+        regs = HOSTREGS;
 #endif /*defined(_FEATURE_SIE)*/
 
     /* percent CPU busy */
@@ -1004,13 +1004,13 @@ static void NP_update(REGS *regs)
     {
 #if defined(_FEATURE_SIE)
         if(regs->sie_active)
-            regs = regs->guestregs;
+            regs = GUESTREGS;
 #endif /*defined(_FEATURE_SIE)*/
 
         mode = (regs->arch_mode == ARCH_900_IDX);
         zhost =
 #if defined(_FEATURE_SIE)
-                !mode && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX;
+                !mode && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX;
 #else // !defined(_FEATURE_SIE)
                 0;
 #endif // defined(_FEATURE_SIE)
@@ -1086,7 +1086,7 @@ static void NP_update(REGS *regs)
         zhost =
 #if defined(_FEATURE_SIE)
                 (regs->arch_mode != ARCH_900_IDX
-              && SIE_MODE(regs) && regs->hostregs->arch_mode == ARCH_900_IDX
+              && SIE_MODE(regs) && HOSTREGS->arch_mode == ARCH_900_IDX
               && (NPregdisp == 0 || NPregdisp == 1));
 #else // !defined(_FEATURE_SIE)
                      0;
@@ -1579,7 +1579,7 @@ REGS *copy_regs(int cpu)
 #if defined(_FEATURE_SIE)
     if (regs->sie_active)
     {
-        memcpy (&copysieregs, regs->guestregs, sysblk.regs_copy_len);
+        memcpy (&copysieregs, GUESTREGS, sysblk.regs_copy_len);
         copyregs.guestregs = &copysieregs;
         copysieregs.hostregs = &copyregs;
         regs = &copysieregs;
