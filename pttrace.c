@@ -28,7 +28,7 @@ struct PTT_TRACE
     const void*     data2;              /* Data 2                    */
     const char*     loc;                /* File name:line number     */
     struct timeval  tv;                 /* Time of day               */
-    int             rc;                 /* Return code               */
+    S64             rc;                 /* Return code               */
 };
 typedef struct PTT_TRACE PTT_TRACE;
 
@@ -448,7 +448,7 @@ DLL_EXPORT void ptt_trace_init( int nTableSize, BOOL init )
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ptt_pthread_trace (U64 trclass, const char *msg,
                                    const void *data1, const void *data2,
-                                   const char *loc, int rc, TIMEVAL* pTV)
+                                   const char *loc, S64 rc, TIMEVAL* pTV)
 {
 int i, n;
 
@@ -527,22 +527,24 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                 FormatTIMEVAL( &pttrace[i].tv, tod, sizeof( tod ));
                 get_thread_name( pttrace[i].tid, threadname );
 
-                /* If this is the thread class, an 'rc' of PTT_MAGIC
-                   indicates its value is uninteresting to us, so we
-                   don't show it by formatting it as an empty string.
-                */
-                if (pttrace[i].rc == PTT_MAGIC && (pttrace[i].trclass & PTT_CL_THR))
-                    retcode[0] = 0;
+                if (pttrace[i].trclass & PTT_CL_THR)
+                {
+                    /* For the thread class, an 'rc' of PTT_MAGIC
+                       indicates its value is uninteresting to us,
+                       so we don't bother showing it. Otherwise we
+                       format it as a +/- decimal value.
+                    */
+                    if (pttrace[i].rc == PTT_MAGIC)
+                        retcode[0] = 0;
+                    else
+                        MSGBUF( retcode, "%"PRId64, pttrace[i].rc );
+                }
                 else
                 {
-                    /* If not thread class, format return code as just
-                       another 32-bit hex value. Otherwise if it is the
-                       thread class, format it as a +/- decimal value.
+                    /* Not thread class: format return code
+                       as just another 64-bit hex value.
                     */
-                    if((pttrace[i].trclass & ~PTT_CL_THR))
-                        MSGBUF(retcode, "%8.8"PRIx32, pttrace[i].rc);
-                    else
-                        MSGBUF(retcode, "%d", pttrace[i].rc);
+                    MSGBUF( retcode, "%16.16"PRIx64, pttrace[i].rc );
                 }
 
                 /* If this is the thread class we know the data1 value
@@ -554,7 +556,9 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                 */
                 lname = (pttrace[i].trclass & PTT_CL_THR) ?
                     get_lock_name( (LOCK*) pttrace[i].data1 ) : "";
+
                 MSGBUF( lockname, "%s%s", lname[0] ? " " : "", lname );
+
                 if (lockname[0] && !retcode[0])
                     retcode[0] = ' ', retcode[1] = 0;
 

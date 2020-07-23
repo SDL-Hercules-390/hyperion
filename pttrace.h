@@ -93,7 +93,7 @@ do {                                                                 \
     ptt_pthread_trace( (_class), (_msg),(void*)(uintptr_t)(_data1),  \
                                          (void*)(uintptr_t)(_data2), \
                                          PTT_LOC,                    \
-                                         (int)(_rc),NULL);           \
+                                         (S64)(_rc),NULL);           \
 } while(0)
 
 /*-------------------------------------------------------------------*/
@@ -130,7 +130,7 @@ do {                                                                 \
 /*-------------------------------------------------------------------*/
 PTT_DLL_IMPORT void ptt_trace_init    ( int nTableSize, BOOL init );
 PTT_DLL_IMPORT int  ptt_cmd           ( int argc, char* argv[], char* cmdline );
-PTT_DLL_IMPORT void ptt_pthread_trace ( U64, const char*, const void*, const void*, const char*, int, TIMEVAL* );
+PTT_DLL_IMPORT void ptt_pthread_trace ( U64, const char*, const void*, const void*, const char*, S64, TIMEVAL* );
 PTT_DLL_IMPORT int  ptt_pthread_print ();/* rc = #of entries printed */
 PTT_DLL_IMPORT U64  pttclass;
 PTT_DLL_IMPORT bool ptt_dtax(); // Dump Table At Exit
