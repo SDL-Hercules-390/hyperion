@@ -199,14 +199,14 @@ int         txf_tac;
 
     if (!(regs->CR(0) & CR0_TXC))
     {
-        PTT_TXF( "*TXF TEND", regs->CR(0), regs->txf_contran, regs->txf_tnd );
+        PTT_TXF( "*TXF end", regs->CR(0), regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
         UNREACHABLE_CODE( return );
     }
 
     if (regs->txf_abortctr)
     {
-        PTT_TXF( "*TXF TEND", regs->txf_abortctr, regs->txf_contran, regs->txf_tnd );
+        PTT_TXF( "*TXF end", regs->txf_abortctr, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );
         UNREACHABLE_CODE( return );
     }
@@ -218,7 +218,7 @@ int         txf_tac;
            Set CC 2 and treat as no-op (i.e. just return
            since there is no active transaction to end!)
         */
-        PTT_TXF( "*TXF TEND", 0, 0, 0 );
+        PTT_TXF( "*TXF end", 0, 0, 0 );
         regs->psw.cc = 2;   /* CPU wasn't in transaction mode! */
         return;             /* Nothing to do! Just return! */
     }
@@ -282,7 +282,7 @@ int         txf_tac;
             ARCH_DEP( reset_txf_aie )( regs );
 
             /* Remain in transactional-execution mode */
-            PTT_TXF( "TXF TEND", 0, regs->txf_contran, regs->txf_tnd );
+            PTT_TXF( "TXF end", 0, regs->txf_contran, regs->txf_tnd );
             RELEASE_INTLOCK( regs );
             return;
         }
@@ -295,7 +295,7 @@ int         txf_tac;
         /*---------------------------------------------------------*/
         if (regs->txf_tac)
         {
-            PTT_TXF( "*TXF TEND", regs->txf_tac, regs->txf_contran, regs->txf_tnd );
+            PTT_TXF( "*TXF end", regs->txf_tac, regs->txf_contran, regs->txf_tnd );
             regs->txf_tnd++; // (prevent 'abort_transaction' crash)
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_tac );
             UNREACHABLE_CODE( return );
@@ -361,7 +361,7 @@ int         txf_tac;
                 txf_tac = (pmap->cachemap[j] == CM_STORED) ?
                     TAC_STORE_CNF : TAC_FETCH_CNF;
 
-                PTT_TXF( "*TXF TEND", txf_tac, regs->txf_contran, regs->txf_tnd );
+                PTT_TXF( "*TXF end", txf_tac, regs->txf_contran, regs->txf_tnd );
 
                 regs->txf_contran  = txf_contran;      /* restore */
                 regs->txf_abortctr = txf_abortctr;     /* restore */
@@ -427,7 +427,7 @@ int         txf_tac;
         /*  We are done! Release INTLOCK and exit.  */
         /*------------------------------------------*/
 
-        PTT_TXF( "TXF TEND", 0, 0, 0 );
+        PTT_TXF( "TXF end", 0, 0, 0 );
 
         /* Exiting from transactional-execution mode... */
         UPDATE_SYSBLK_TRANSCPUS( -1 );
@@ -790,17 +790,18 @@ TPAGEMAP   *pmap;
             /* Set CONSTRAINED trans instruction fetch constraint */
             ARCH_DEP( set_txf_aie )( regs );
 
-            /* For constrained transactions, if the transaction
-               nesting depth is already greater than zero (meaning
-               the CPU is in the nonconstrained TX mode), then
-               execution simply proceeds as if this was an un-
-               constrained transaction.
+            /* For CONSTRAINED transactions, if the transaction
+               nesting depth is already greater than zero (i.e.
+               the CPU is already in the unconstrained TX mode),
+               then execution simply proceeds as if this were a
+               unconstrained transaction. (The TX mode does NOT
+               switch to constrained mode!)
 
                In this case, the effective F control is zeroed,
                and the effective PIFC remains unchanged. This
                allows an outer, nonconstrained transaction to
-               call a service function that may or may not use
-               constrained TX mode.
+               call a service function that may use constrained
+               TX mode.
             */
             i2 &= ~(TXF_CTL_FLOAT | TXF_CTL_PIFC);
             i2 |= regs->txf_pifc;
@@ -938,7 +939,7 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 
     PERFORM_SERIALIZATION( regs );
 
-    PTT_TXF( "TXF ABORT", 0, regs->txf_contran, regs->txf_tnd );
+    PTT_TXF( "TXF abort", 0, regs->txf_contran, regs->txf_tnd );
 
     /*---------------------------------------------*/
     /*  Decrement count of transacting CPUs        */
@@ -1045,13 +1046,6 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 
     /*---------------------------------------------*/
     /*     Set the condition code in the PSW       */
-    /*---------------------------------------------*/
-    /*  For unfiltered program interrupts (aborts) */
-    /*  the condition code is determined by the    */
-    /* 'program_interrupt' function in cpu.c.  For */
-    /* all other program interrupts (aborts), the  */
-    /* condition code is documented in Fig. 5-14   */
-    /* on page 5-102 of the z/Arch POPs.           */
     /*---------------------------------------------*/
     if (txf_tac != TAC_UPGM)
     {
@@ -1258,7 +1252,7 @@ size_t     msize;
 BYTE*      altpage;
 TPAGEMAP*  pmap = regs->txf_pagesmap;
 
-    PTT_TXF( "TXF alloc", 0, regs, regs->cpuad );
+    PTT_TXF( "TXF alloc", 0, 0, 0 );
 
     /* LOGIC ERROR if map still exists (memory leak; old map not freed)
        or if a transaction is still being executed on this CPU */
@@ -1292,7 +1286,7 @@ void free_txfmap( REGS* regs )
 int        i;
 TPAGEMAP*  pmap = regs->txf_pagesmap;
 
-    PTT_TXF( "TXF free", 0, regs, regs->cpuad );
+    PTT_TXF( "TXF free", 0, 0, 0 );
 
     /* LOGIC ERROR if CPU still executing a transaction */
     if (regs->txf_tnd)
@@ -1603,7 +1597,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
     /* Otherwise check if our own CPU's transaction was aborted */
     if (regs->txf_tac)
     {
-        PTT_TXF( "*TXF maddr_l", regs->txf_tac, regs->txf_contran, regs->txf_tnd );
+        PTT_TXF( "*TXF mad TAC", regs->txf_tac, regs->txf_contran, regs->txf_tnd );
         ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_tac );
         UNREACHABLE_CODE( return maddr );
     }
@@ -1659,7 +1653,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
                 TAC_FETCH_OVF : TAC_STORE_OVF;
             regs->txf_why |= TXF_WHY_MAX_PAGES;
 
-            PTT_TXF( "*TXF maddr_l", txf_tac, regs->txf_contran, regs->txf_tnd );
+            PTT_TXF( "*TXF mad max", txf_tac, regs->txf_contran, regs->txf_tnd );
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, txf_tac );
             UNREACHABLE_CODE( return maddr );
         }
@@ -1730,7 +1724,7 @@ DLL_EXPORT BYTE* txf_maddr_l( U64 vaddr, size_t len, int arn, REGS* regs, int ac
             {
                 // "TXF: Unable to cleanly refresh cache line"
                 WRMSG( HHC17712, "E" );
-                PTT_TXF( "*TXF maddr_l", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
+                PTT_TXF( "*TXF mad cac", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
                 ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
                 UNREACHABLE_CODE( return maddr );
             }

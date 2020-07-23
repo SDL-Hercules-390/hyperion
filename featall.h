@@ -41,17 +41,17 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define OPTION_HARDWARE_SYNC_ALL        /* All PERFORM_SERIALIZATION */
-//#define OPTION_HARDWARE_SYNC_BCR_ONLY   /* ONLY the BCR instructions */
+#define OPTION_HARDWARE_SYNC_ALL        // All PERFORM_SERIALIZATION
+//#define OPTION_HARDWARE_SYNC_BCR_ONLY   // ONLY the BCR instructions
 #if defined( OPTION_HARDWARE_SYNC_ALL ) && defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
   #error OPTION_HARDWARE_SYNC_ALL and OPTION_HARDWARE_SYNC_BCR_ONLY are mutually exclusive!
 #endif
-#define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for Linux  */
-#define OPTION_MVS_TELNET_WORKAROUND    /* Handle non-std MVS telnet */
-#define OPTION_NO_E3_OPTINST            /* Temporary?                */
-#define OPTION_GH275_PIC12_FIX          /* GitHub #275 PIC 12 fix    */
-#define OPTION_SIE_PURGE_DAT_ALWAYS     /* Ivan 2016-07-30: purge DAT
-                                           ALWAYS at entry to SIE    */
+#define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
+#define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
+#define OPTION_NO_E3_OPTINST            // (temporary?)
+#define OPTION_GH275_PIC12_FIX          // GitHub #275 PIC 12 fix
+#define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT
+                                        // ALWAYS at entry to SIE
 /*-------------------------------------------------------------------*/
 
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */

@@ -53,13 +53,9 @@
 /*-------------------------------------------------------------------*/
 /*          abort_transaction function 'retry' code                  */
 /*-------------------------------------------------------------------*/
-#define  ABORT_RETRY_RETURN     0     /* Return to caller. Used when */
-                                      /* abort called from e.g. ext
-                                         or I/O interrupt processing */
-#define  ABORT_RETRY_CC         1     /* Set condition code and then */
-                                      /* longjmp to progjmp.         */
-#define  ABORT_RETRY_PGMCHK     2     /* PGMCHK if CONSTRAINED mode, */
-                                      /* else longjmp to progjmp.    */
+#define  ABORT_RETRY_RETURN     0     /* Return to caller            */
+#define  ABORT_RETRY_CC         1     /* Set psw.cc, longjmp progjmp */
+#define  ABORT_RETRY_PGMCHK     2     /* CONSTRAINT EXCEPTION PGMCHK */
 
 /*-------------------------------------------------------------------*/
 /*                   Transaction Page Map                            */
@@ -132,7 +128,7 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
 /*               TXF tracing macros and functions                    */
 /*-------------------------------------------------------------------*/
 
-#define TXF_TRACE_UC( _contran )     /* (helper macro) */           \
+#define TXF_TRACE_UC( _contran )                                    \
     (0                                                              \
      || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))            \
      || ((sysblk.txf_tracing & TXF_TR_U) && !(_contran))            \
@@ -167,6 +163,10 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
      && (sysblk.txf_tracing & TXF_TR_LINES)                         \
      && (TXF_TRACE_UC( _contran ))                                  \
     )
+
+/*-------------------------------------------------------------------*/
+/*           Miscellaneous TXF functions and macros                  */
+/*-------------------------------------------------------------------*/
 
 // Functions to convert a TAC abort code into a printable string
 const char*  tac2short ( U64 tac );   // "TAC_INSTR"

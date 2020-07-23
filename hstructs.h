@@ -301,7 +301,7 @@ struct REGS {                           /* Processor registers       */
       * used during synchronize broadcast (cpu<->cpu communication)
       */
         ALIGN_8
-        int     intwait;                /* 1=Waiting on intlock      */
+        bool    intwait;                /* true=Waiting on intlock   */
         BYTE    inst[8];                /* Fetched instruction when
                                            instruction crosses a page
                                            boundary                  */
@@ -918,7 +918,7 @@ struct SYSBLK {
         TID     httptid;                /* HTTP listener thread id   */
 
      /* Fields used by SYNCHRONIZE_CPUS */
-        int     syncing;                /* 1=Sync in progress        */
+        bool    syncing;                /* true=Sync in progress     */
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
         COND    sync_cond;              /* COND for syncing CPU      */
         COND    sync_bc_cond;           /* COND for other CPUs       */

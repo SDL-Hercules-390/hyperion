@@ -1085,14 +1085,14 @@ int configure_cpu( int target_cpu )
         arecpu = are_cpu_thread( &ourcpu );
 
         if (arecpu)
-            sysblk.regs[ ourcpu ]->intwait = 1;
+            sysblk.regs[ ourcpu ]->intwait = true;
 
         /* Wait for CPU thread to initialize */
         while (!IS_CPU_ONLINE( target_cpu ))
            wait_condition( &sysblk.cpucond, &sysblk.intlock );
 
         if (arecpu)
-            sysblk.regs[ ourcpu ]->intwait = 0;
+            sysblk.regs[ ourcpu ]->intwait = false;
 
 #if defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY )
         /* Set topology-change-report-pending condition */
@@ -1128,7 +1128,7 @@ int deconfigure_cpu( int target_cpu )
 
             /* (if we're a cpu thread) */
             if (arecpu)
-                sysblk.regs[ ourcpu ]->intwait = 1;
+                sysblk.regs[ ourcpu ]->intwait = true;
 
             /* Wait for CPU thread to terminate */
             while (IS_CPU_ONLINE( target_cpu ))
@@ -1136,7 +1136,7 @@ int deconfigure_cpu( int target_cpu )
 
             /* (if we're a cpu thread) */
             if (arecpu)
-                sysblk.regs[ ourcpu ]->intwait = 0;
+                sysblk.regs[ ourcpu ]->intwait = false;
 
             join_thread( sysblk.cputid[ target_cpu ], NULL );
             detach_thread( sysblk.cputid[ target_cpu ]);

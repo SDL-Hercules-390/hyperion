@@ -285,13 +285,13 @@ static inline void synchronize_cpus( REGS* regs, const char* location )
     if (n && mask)
     {
         sysblk.sync_mask = mask;
-        sysblk.syncing   = 1;
+        sysblk.syncing   = true;
         sysblk.intowner  = LOCK_OWNER_NONE;
 
         hthread_wait_condition( &sysblk.sync_cond, &sysblk.intlock, location );
 
         sysblk.intowner  = (regs)->hostregs->cpuad;
-        sysblk.syncing   = 0;
+        sysblk.syncing   = false;
 
         hthread_broadcast_condition( &sysblk.sync_bc_cond, location );
     }
@@ -399,7 +399,7 @@ static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
             hthread_wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock, location );
         }
 
-        regs->hostregs->intwait = 0;
+        regs->hostregs->intwait = false;
         sysblk.intowner = regs->hostregs->cpuad;
     }
     else
@@ -411,7 +411,7 @@ static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
 static inline void Obtain_Interrupt_Lock( REGS* regs, const char* location )
 {
     if (regs)
-        regs->hostregs->intwait = 1;
+        regs->hostregs->intwait = true;
     hthread_obtain_lock( &sysblk.intlock, location );
     Interrupt_Lock_Obtained( regs, location );
 }
@@ -422,7 +422,7 @@ static inline int Try_Obtain_Interrupt_Lock( REGS* regs, const char* location )
 {
     int rc;
     if (regs)
-        regs->hostregs->intwait = 1;
+        regs->hostregs->intwait = true;
     if ((rc = hthread_try_obtain_lock( &sysblk.intlock, location )) == 0)
         Interrupt_Lock_Obtained( regs, location );
     return rc;
