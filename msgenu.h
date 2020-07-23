@@ -2497,20 +2497,29 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 // range 17600 - 17699 available
 
 // Reserve 17700-17749 for TXF related messages
-#define HHC17700 "TXF: Successful %s Nested TEND for TND %d => %d"
-#define HHC17701 "TXF: Successful Outermost %s TEND"
-#define HHC17702 "TXF: Successful %s TBEGIN%s; TND now %d"
-#define HHC17703 "TXF: Failed %s %s Transaction for TND %d: %s (%s), why =%s"
-#define HHC17704 "TXF: virt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
-#define HHC17705 "TXF: There now:  +"
-#define HHC17706 "TXF: We fetched: +"
-#define HHC17707 "TXF: We stored:  +"
-#define HHC17708 "TXF: Error in function %s: %s"
-#define HHC17709 "TXF: TDB at 0x%16.16"PRIX64":"
-#define HHC17710 "TXF: TDB: +"
-#define HHC17711 "TXF: Unable to obtain clean capture of page"
-#define HHC17712 "TXF: Unable to cleanly refresh cache line"
-//efine HHC17713 - HHC17749 (available)
+#define HHC17700 "TXF: %s%02X: %sSuccessful %s Nested TEND for TND %d => %d"
+#define HHC17701 "TXF: %s%02X: %sSuccessful Outermost %s TEND"
+#define HHC17702 "TXF: %s%02X: %sSuccessful %s TBEGIN%s; TND now %d"
+#define HHC17703 "TXF: %s%02X: %sFailed %s %s Transaction for TND %d: %s (%s), why =%s"
+#define HHC17704 "TXF: %s%02X: %svirt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
+#define HHC17705 "TXF: %s%02X: %sThere now:  +"
+#define HHC17706 "TXF: %s%02X: %sWe fetched: +"
+#define HHC17707 "TXF: %s%02X: %sWe stored:  +"
+#define HHC17708 "TXF: %s%02X: %sError in function %s: %s"
+#define HHC17709 "TXF: %s%02X: %sTDB at 0x%16.16"PRIX64":"
+#define HHC17710 "TXF: %s%02X: %s+"
+#define HHC17711 "TXF: %s%02X: %sUnable to obtain clean capture of page"
+#define HHC17712 "TXF: %s%02X: %sUnable to cleanly refresh cache line"
+#define HHC17713 "TXF: %s%02X: %sTranslation exception %4.4hX (%s) for TBEGIN tdba 0x%16.16"PRIx64
+#define HHC17714 "TXF: %s%02X: SIE: Populating Interception TDB at 0x%16.16"PRIx64
+#define HHC17715 "TXF: %s%02X: SIE: Intercepting %s instruction"
+#define HHC17716 "TXF: %s%02X: SIE: Interception TDB address not provided!"
+//  HHC17717 ... HHC17720 = MLVL( VERBOSE ) only
+#define HHC17717 "TXF: %s%02X: %sCONSTRAINED transaction retry #%d..."
+#define HHC17718 "TXF: %s%02X: %sCONSTRAINED transaction succeeded after %d retries"
+#define HHC17719 "TXF: %s%02X: %sCONSTRAINED transaction retry #%d FAILED!"
+#define HHC17720 "TXF: %s%02X: %sAbort set by %s at %s"
+//efine HHC17721 - HHC17749 (available)
 
 // range 17750 - 17799 available
 // range 17800 - 17899 available

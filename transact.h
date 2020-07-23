@@ -175,14 +175,18 @@ const char*  tac2short ( U64 tac );   // "TAC_INSTR"
 const char*  tac2long  ( U64 tac );   // "Restricted instruction"
 
 // Function to hexdump a cache line (HHC17705, HHC17706, HHC17707)
-#define DUMP_PFX( _msg )    #_msg "D " _msg
-void dump_cache( const char* pfx, int linenum , const BYTE* line);
+void dump_cache( REGS* regs, const char* pfxfmt, int linenum , const BYTE* line);
 
 // Function to hexdump TDB (Transaction Diagnostic Block)
-void dump_tdb( TDB* tdb, U64 logical_addr );
+void dump_tdb( REGS* regs, TDB* tdb, U64 logical_addr );
 
 // Return reason why transaction was aborted
 const char* txf_why_str( char* buffer, int buffsize, int why );
+
+/* Helper macros for issuing TXF debugging messages */
+#define TXF_CPUAD( _regs )    PTYPSTR( (_regs)->cpuad ), (_regs)->cpuad
+#define TXF_QSIE( _regs )     SIE_MODE( _regs ) ? "SIE: " : ""
+#define TXF_DUMP_PFX( _msg )  #_msg "D " _msg
 
 /*-------------------------------------------------------------------*/
 /*               Why transaction was aborted codes                   */

@@ -108,7 +108,6 @@ int     rc;
             PTT_TXF( "*TXF EI", 0, 0, HOSTREGS->txf_tnd );
             regs->txf_why |= TXF_WHY_EXT_INT;
             ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_EXT );
-            regs->psw.cc = TXF_CC_TRANSIENT;
         }
 #endif
         /* Store current PSW at PSA+X'18' */

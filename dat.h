@@ -52,7 +52,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static inline  BYTE* ARCH_DEP( maddr_l )
-    ( VADR addr, size_t len, int arn, REGS* regs, int acctype, BYTE akey )
+    ( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey )
 {
     /* Note: ALL of the below conditions must be true for a TLB hit
        to occur.  If ANY of them are false, then it's a TLB miss,
