@@ -698,7 +698,7 @@ int     len;                            /* Length for page crossing  */
         regs->instinvalid = 1;
 
     /* Get instruction address */
-    ia = MADDR( addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
+    ia = MADDRL( addr, 6, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
 
     /* If boundary is crossed then copy instruction to destination */
     if (offset + ILC( ia[0] ) > pagesz)
