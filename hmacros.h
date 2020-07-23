@@ -408,9 +408,7 @@ typedef int CMPFUNC(const void*, const void*);
  do { \
   if (HOST(_regs)->cpubit != (_regs)->sysblk->started_mask) { \
    obtain_lock(&(_regs)->sysblk->mainlock); \
-   /* FIXME: BUG! the following line is WRONG!      */ \
-   /* It should be: ......... = HOST(_regs)->cpuad; */ \
-   (_regs)->sysblk->mainowner = HOSTREGS->cpuad; \
+   (_regs)->sysblk->mainowner = HOST(_regs)->cpuad; \
   } \
  } while (0)
 
@@ -436,7 +434,7 @@ typedef int CMPFUNC(const void*, const void*);
 /*-------------------------------------------------------------------*/
 /* Return whether specified CPU is waiting to acquire intlock or not */
 /*-------------------------------------------------------------------*/
-#define AT_SYNCPOINT(_regs) ((_regs)->intwait)
+#define AT_SYNCPOINT(_regs) (HOST(_regs)->intwait)
 
 /*-------------------------------------------------------------------*/
 /*      Macro to check if DEVBLK is for an existing device           */
