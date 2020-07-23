@@ -410,9 +410,13 @@ static void* watchdog_thread( void* arg )
     REGS* regs;
     S64   savecount[ MAX_CPU_ENGINES ];
     int   cpu;
+    int   sleep_seconds  = WATCHDOG_SECS;
+    int   sleep_secs2nd  = 3;
 
     bool  deadlock_reported = false;
     bool  hung_cpu_reported = false;
+
+    CPU_BITMAP  hung_cpus_mask  = 0;
 
     UNREFERENCED( arg );
 
@@ -427,8 +431,13 @@ static void* watchdog_thread( void* arg )
     do
     {
         /* Only check for problems "every once in a while" */
-        SLEEP( WATCHDOG_SECS );
+        SLEEP( sleep_seconds );
 
+#if defined( _MSVC_ )
+        // Disable all watchdog logic while debugger is attached
+        if (IsDebuggerPresent())
+            continue;
+#endif
         /* Check for and report any deadlocks */
         if (hthread_report_deadlocks( deadlock_reported ? NULL : "S" ))
         {
@@ -494,32 +503,54 @@ static void* watchdog_thread( void* arg )
             /*           MALFUNCTIONING CPU DETECTED!            */
             /*****************************************************/
 
-            if (!hung_cpu_reported)
+            hung_cpus_mask |= CPU_BIT( cpu );
+        }
+
+        /* If any hung CPUs were detected, do a second pass in
+           case there is another CPU that also stopped executing
+           instructions a few seconds after the first one did.
+        */
+        if (hung_cpus_mask && sleep_seconds != sleep_secs2nd)
+        {
+            sleep_seconds = sleep_secs2nd;
+            continue;
+        }
+
+        /* Report all hung CPUs all at the same time */
+        if (hung_cpus_mask && !hung_cpu_reported)
+        {
+            for (cpu=0; cpu < sysblk.maxcpu; cpu++)
             {
-                // "PROCESSOR %s%02X APPEARS TO BE HUNG!"
-                WRMSG( HHC00822, "S", PTYPSTR( regs->cpuad ), regs->cpuad );
-                HDC1( debug_watchdog_signal, regs );
+                if (hung_cpus_mask & CPU_BIT( cpu ))
+                {
+                    // "PROCESSOR %s%02X APPEARS TO BE HUNG!"
+                    WRMSG( HHC00822, "S", PTYPSTR( cpu ), cpu );
+                    HDC1( debug_watchdog_signal, sysblk.regs[ cpu ]);
+                }
             }
+
             hung_cpu_reported = true;
         }
 
         /* Create a crash dump if any problems were detected */
         if (deadlock_reported || hung_cpu_reported)
         {
-#if defined( _MSVC_ ) && !defined( DEBUG )
-            static bool did_wait = false;
-            if (!did_wait)
+#if defined( _MSVC_ )
+            // Give developer time to attach a debugger before crashing
+            // If they do so, then prevent the crash from occurring as
+            // long as their debugger is still attached, but once they
+            // detach their debugger, then go ahead and allow the crash
             {
-                /* Give the developer time to attach a debugger */
                 int i;
-                for (i=0; i < WAIT_FOR_DEBUGGER_SECS; ++i)
-                    if (!IsDebuggerPresent())
-                        SLEEP( 1 );
+                for (i=0; !IsDebuggerPresent() && i < WAIT_FOR_DEBUGGER_SECS; ++i)
+                    SLEEP( 1 );
+
+                // Don't crash if there is now a debugger attached
+                if (IsDebuggerPresent())
+                    continue; // (don't crash)
+
+                // They chose not to attach a debugger. Allow crash.
             }
-            did_wait = true;
-            /* Don't crash if a debugger is now/still attached */
-            if (IsDebuggerPresent())
-                continue;
 #endif
             /* Display additional debugging information */
             panel_command( "ptt" );
@@ -527,15 +558,25 @@ static void* watchdog_thread( void* arg )
             panel_command( "locks held sort tid" );
             panel_command( "threads waiting sort tid" );
 
-            if (hung_cpu_reported)
+            /* Display the instruction each hung CPU was executing */
+            if (hung_cpus_mask)
             {
-                /* Backup to actual instruction being executed */
                 BYTE* ip;
-                UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+                REGS* regs;
 
-                /* Display instruction that appears to be hung */
-                ip = regs->ip < regs->aip ? regs->inst : regs->ip;
-                ARCH_DEP( display_inst )( regs, ip );
+                for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+                {
+                    if (hung_cpus_mask & CPU_BIT( cpu ))
+                    {
+                        /* Backup to actual instruction being executed */
+                        regs = sysblk.regs[ cpu ];
+                        UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+
+                        /* Display instruction that appears to be hung */
+                        ip = regs->ip < regs->aip ? regs->inst : regs->ip;
+                        ARCH_DEP( display_inst )( regs, ip );
+                    }
+                }
             }
 
             /* Give logger thread time to log messages */
