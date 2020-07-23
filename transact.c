@@ -191,7 +191,7 @@ BYTE       *altaddr;
 BYTE       *saveaddr;
 BYTE       *mainaddr;
 TPAGEMAP   *pmap;
-int         txf_tac;
+int         txf_tnd, txf_tac;
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -242,12 +242,29 @@ int         txf_tac;
 
         SYNCHRONIZE_CPUS( regs );
 
-        /* Decrease nesting depth */
-        regs->txf_tnd--;
+        OBTAIN_TXFLOCK( regs );
+        {
+            regs->txf_tnd--;
+
+            txf_tnd = regs->txf_tnd;
+            txf_tac = regs->txf_tac;
+        }
+        RELEASE_TXFLOCK( regs );
 
         /* Still in transaction-execution mode? */
-        if (regs->txf_tnd)
+        if (txf_tnd)
         {
+            /*---------------------------------------------------------*/
+            /* Abort transaction if abort code already set by someone. */
+            /*---------------------------------------------------------*/
+            if (txf_tac)
+            {
+                PTT_TXF( "*TXF end", txf_tac, regs->txf_contran, txf_tnd );
+                regs->txf_why |= TXF_WHY_DELAYED_ABORT;
+                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
+                UNREACHABLE_CODE( return );
+            }
+
             /*--------------------------------------------*/
             /*           NESTED TRANSACTION END           */
             /*--------------------------------------------*/
@@ -256,7 +273,7 @@ int         txf_tac;
             {
                 // "TXF: %s%02X: %sSuccessful %s Nested TEND for TND %d => %d"
                 WRMSG( HHC17700, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-                    regs->txf_contran ? "Cons" : "Uncons", regs->txf_tnd + 1, regs->txf_tnd );
+                    regs->txf_contran ? "Cons" : "Uncons", txf_tnd + 1, txf_tnd );
             }
 
             /* If we're now at or below the highest nesting level
@@ -264,26 +281,26 @@ int         txf_tac;
                enable (set) the corresponding control flag.
                Otherwise leave it alone (should already be off).
             */
-            if (regs->txf_tnd <= regs->txf_higharchange)
+            if (txf_tnd <= regs->txf_higharchange)
             {
-                regs->txf_higharchange = regs->txf_tnd;
+                regs->txf_higharchange = txf_tnd;
                 regs->txf_ctlflag |= TXF_CTL_AR;
             }
 
-            if (regs->txf_tnd <= regs->txf_highfloat)
+            if (txf_tnd <= regs->txf_highfloat)
             {
-                regs->txf_highfloat = regs->txf_tnd;
+                regs->txf_highfloat = txf_tnd;
                 regs->txf_ctlflag |= TXF_CTL_FLOAT;
             }
 
             /* Set PIFC for this nesting level */
-            regs->txf_pifc = regs->txf_pifctab[ regs->txf_tnd - 1 ];
+            regs->txf_pifc = regs->txf_pifctab[ txf_tnd - 1 ];
 
             /* Reset CONSTRAINED trans instruction fetch constraint */
             ARCH_DEP( reset_txf_aie )( regs );
 
             /* Remain in transactional-execution mode */
-            PTT_TXF( "TXF end", 0, regs->txf_contran, regs->txf_tnd );
+            PTT_TXF( "TXF end", 0, regs->txf_contran, txf_tnd );
             RELEASE_INTLOCK( regs );
             return;
         }
@@ -295,12 +312,12 @@ int         txf_tac;
         /*---------------------------------------------------------*/
         /* Abort transaction if abort code already set by someone. */
         /*---------------------------------------------------------*/
-        if (regs->txf_tac)
+        if (txf_tac)
         {
-            PTT_TXF( "*TXF end", regs->txf_tac, regs->txf_contran, regs->txf_tnd );
+            PTT_TXF( "*TXF end", txf_tac, regs->txf_contran, txf_tnd );
             regs->txf_why |= TXF_WHY_DELAYED_ABORT;
             regs->txf_tnd++; // (prevent 'abort_transaction' crash)
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_tac );
+            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
             UNREACHABLE_CODE( return );
         }
 
@@ -369,7 +386,7 @@ int         txf_tac;
                 txf_tac = (pmap->cachemap[j] == CM_STORED) ?
                     TAC_STORE_CNF : TAC_FETCH_CNF;
 
-                PTT_TXF( "*TXF end", txf_tac, txf_contran, regs->txf_tnd );
+                PTT_TXF( "*TXF end", txf_tac, txf_contran, txf_tnd );
 
                 regs->txf_contran  = txf_contran;      /* restore */
                 regs->txf_abortctr = txf_abortctr;     /* restore */
@@ -663,8 +680,17 @@ TPAGEMAP   *pmap;
 
     CONTRAN_INSTR_CHECK( regs );    /* Unallowed in CONSTRAINED mode */
 
-    regs->txf_tnd++;                /* increase the nesting level    */
-    regs->psw.cc = TXF_CC_SUCCESS;  /* set cc=0 at transaction start */
+    /*---------------------------------------------*/
+    /*  Increase nesting depth                     */
+    /*---------------------------------------------*/
+    OBTAIN_TXFLOCK( regs );
+    {
+        regs->txf_tnd++;
+    }
+    RELEASE_TXFLOCK( regs );
+
+    /* set cc=0 at transaction start */
+    regs->psw.cc = TXF_CC_SUCCESS;
 
     /* first/outermost transaction? */
     if (regs->txf_tnd == 1)
@@ -958,11 +984,6 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     PTT_TXF( "TXF abort", 0, regs->txf_contran, regs->txf_tnd );
 
     /*---------------------------------------------*/
-    /*  Decrement count of transacting CPUs        */
-    /*---------------------------------------------*/
-    UPDATE_SYSBLK_TRANSCPUS( -1 );
-
-    /*---------------------------------------------*/
     /*  Clean up the transaction flags             */
     /*---------------------------------------------*/
 
@@ -1060,12 +1081,6 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
         }
     }
 
-    OBTAIN_TXFLOCK( regs );
-    {
-        regs->txf_tnd = 0;
-    }
-    RELEASE_TXFLOCK( regs );
-
     /*---------------------------------------------*/
     /*  Clean up the transaction flags             */
     /*---------------------------------------------*/
@@ -1078,6 +1093,20 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     regs->txf_pgcnt     = 0;
     regs->txf_conflict  = 0;
     regs->txf_piid      = 0;
+
+    /*---------------------------------------------*/
+    /*  Reset transaction nesting depth            */
+    /*---------------------------------------------*/
+    OBTAIN_TXFLOCK( regs );
+    {
+        regs->txf_tnd = 0;
+    }
+    RELEASE_TXFLOCK( regs );
+
+    /*---------------------------------------------*/
+    /*  Decrement count of transacting CPUs        */
+    /*---------------------------------------------*/
+    UPDATE_SYSBLK_TRANSCPUS( -1 );
 
     /* Reset CONSTRAINED trans instruction fetch constraint */
     ARCH_DEP( reset_txf_aie )( regs );
@@ -1096,29 +1125,25 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     /*---------------------------------------------*/
     /*     Set the condition code in the PSW       */
     /*---------------------------------------------*/
-    if (txf_tac != TAC_UPGM)
-    {
-             if (txf_tac && txf_tac < (int) _countof( tac2cc ))
-                                        regs->psw.cc = tac2cc[ txf_tac ];
-        else if (txf_tac == TAC_MISC)   regs->psw.cc = TXF_CC_TRANSIENT;
-        else if (txf_tac >= TAC_TABORT) regs->psw.cc = TXF_CC_INDETERMINATE;
-    }
+
+    if (txf_tac && txf_tac < (int) _countof( tac2cc ))
+                                    regs->psw.cc = tac2cc[ txf_tac ];
+    else if (txf_tac == TAC_MISC)   regs->psw.cc = TXF_CC_TRANSIENT;
+    else if (txf_tac >= TAC_TABORT) regs->psw.cc = TXF_CC_INDETERMINATE;
 
     /*---------------------------------------------*/
-    /* Release the interrupt lock if we obtained   */
-    /* it, or if we won't be directly returning    */
-    /* from this function i.e. if we'll be jumping */
-    /* to progjmp via program_interrupt or via     */
-    /* SIE_NO_INTERCEPT, then we need to release   */
-    /* the interrupt lock beforehand. Otherwise if */
-    /* it was already held upon entry then we need */
-    /* to return to the caller with it still held. */
+    /*      Put data/vector exception code         */
+    /*    into byte 2 of FPCR if appropriate.      */
     /*---------------------------------------------*/
 
-    if (!had_INTLOCK || retry != ABORT_RETRY_RETURN)
+    if (1
+        && (txf_piid & 0xFF) == PGM_DATA_EXCEPTION
+        && regs->txf_ctlflag & TXF_CTL_FLOAT
+        && regs->CR(0) & CR0_AFP
+    )
     {
-        PERFORM_SERIALIZATION( regs );
-        RELEASE_INTLOCK( regs );
+        regs->fpc &= ~((U32) 0xFF              << 8);
+        regs->fpc |=  ((U32) regs->txf_dxc_vxc << 8);
     }
 
     /*------------------------------------------------*/
@@ -1207,9 +1232,9 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
             dump_tdb( regs, tb_tdb, regs->txf_tdb_addr );
     }
 
-    /*---------------------------------------------*/
-    /*      Restore the requested registers        */
-    /*---------------------------------------------*/
+    /*----------------------------------------------------*/
+    /*         Restore the requested registers            */
+    /*----------------------------------------------------*/
     for (i=0; i < 16; i += 2, txf_gprmask <<= 1)
     {
         if (txf_gprmask & 0x80)
@@ -1220,8 +1245,27 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     }
 
     /*----------------------------------------------------*/
+    /*                 Release INTLOCK                    */
+    /*----------------------------------------------------*/
+    /*  Release the interrupt lock if we obtained it, or  */
+    /*  if we won't be directly returning. That is if we  */
+    /*  will be jumping to progjmp via program_interrupt  */
+    /*  or via SIE_NO_INTERCEPT, then we need to release  */
+    /*  the interrupt lock beforehand. Otherwise if we    */
+    /*  already held it when we were called, then we need */
+    /*  to return to the caller with it still held.       */
+    /*----------------------------------------------------*/
+
+    if (!had_INTLOCK || retry != ABORT_RETRY_RETURN)
+    {
+        PERFORM_SERIALIZATION( regs );
+        RELEASE_INTLOCK( regs );
+    }
+
+    /*----------------------------------------------------*/
     /*       RETURN TO CALLER OR JUMP AS REQUESTED        */
     /*----------------------------------------------------*/
+
     if (retry == ABORT_RETRY_RETURN)
     {
         /* Caller requested that we return back to
@@ -1234,36 +1278,44 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
         return; // (caller decides what to do next)
     }
 
-    /* Constrained transaction failures are routed
-       to the program interrupt handler to be tried
-       again since the architecture REQUIRES that
-       all constrained transactions MUST eventually
-       succeed.
-    */
-    if (txf_contran && retry == ABORT_RETRY_PGMCHK)
+    if (retry == ABORT_RETRY_CC)
     {
-        PTT_TXF( "*TXF ABRTPI", regs, txf_tac, retry );
-        regs->txf_aborted = true;
-        ARCH_DEP( program_interrupt )( regs, PGM_TRANSACTION_CONSTRAINT_EXCEPTION );
+        /* Transaction failures have their PSW set to the
+           Transaction Abort PSW, which for unconstrained
+           transactions points to the instruction immediately
+           following the TBEGIN instruction (so that the
+           condition code can then be used to decide whether
+           to bother retrying the transaction or not), and
+           for constrained transactions points to the TBEGINC
+           instruction itself (so that the transaction can
+           then be unconditionally retried).
+
+           Either way, we simply jump directly back to the
+           'run_cpu' loop to redispatch this CPU, thereby
+           causing it to continue executing instructions at
+           where the Transaction Abort PSW said it should.
+        */
+        PTT_TXF( "*TXF abrtjmp", 0, txf_contran, txf_tnd );
+        longjmp( regs->progjmp, SIE_NO_INTERCEPT );
         UNREACHABLE_CODE( return );
     }
 
-    /* Transaction failures have their PSW set to the
-       Transaction Abort PSW, which for unconstrained
-       transactions points to the instruction immediately
-       following the TBEGIN instruction (so that the
-       condition code can then be used to decide whether
-       to bother retrying the transaction or not), and
-       for constrained transactions points to the TBEGINC
-       instruction itself (so that the transaction can
-       then be unconditionally retried). Either way, we
-       simply jump directly back to the 'run_cpu' loop
-       to redispatch this CPU, thereby causing it to
-       continue executing instructions at wherever the
-       the Transaction Abort PSW said it should.
+    /*   (a transaction constraint has been violated...)   */
+
+    ASSERT( retry == ABORT_RETRY_PGMCHK );  // (sanity check)
+
+    /* The caller has requested via retry == ABORT_RETRY_PGMCHK
+       that a program interrupt should be thrown for this aborted
+       transaction. This of course implies an unfilterable program
+       interrupt since transaction constraints cannot be ignored
+       nor filtered. A program interrupt WILL occur. If it was a
+       CONSTRAINED transaction, it will be retried at the TBEGINC
+       instruction. For unconstrained transactions it will restart
+       at the instruction immediately following TBEGIN instruction
+       with a condition code of 3.
     */
-    PTT_TXF( "*TXF ABRTJMP", regs, txf_tac, retry );
-    longjmp( regs->progjmp, SIE_NO_INTERCEPT );
+    PTT_TXF( "*TXF abrtpgm", 0, txf_contran, txf_tnd );
+    ARCH_DEP( program_interrupt )( regs, PGM_TRANSACTION_CONSTRAINT_EXCEPTION );
     UNREACHABLE_CODE( return );
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -1567,7 +1619,7 @@ TPAGEMAP*  pmap = regs->txf_pagesmap;
     PTT_TXF( "TXF free", 0, 0, 0 );
 
     /* LOGIC ERROR if CPU still executing a transaction */
-    if (regs->txf_tnd)
+    if (!sysblk.shutdown && regs->txf_tnd)
         CRASH();
 
     /* Free TXF pages */
