@@ -128,6 +128,8 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
 /*               TXF tracing macros and functions                    */
 /*-------------------------------------------------------------------*/
 
+#define TXF_TRACING()   (sysblk.txf_tracing)
+
 #define TXF_TRACE_UC( _contran )                                    \
     (0                                                              \
      || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))            \
@@ -142,8 +144,8 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
 
 #define TXF_TRACE_TDB( _contran )                                   \
     (1                                                              \
-     && (sysblk.txf_tracing & (TXF_TR_FAILURE | TXF_TR_TDB))        \
-     && (TXF_TRACE_UC( _contran ))                                  \
+     && (sysblk.txf_tracing & TXF_TR_TDB)                           \
+     && (TXF_TRACE( FAILURE, _contran ))                            \
     )
 
 #define TXF_TRACE_MAP( _contran )                                   \
@@ -181,5 +183,45 @@ void dump_tdb( TDB* tdb, U64 logical_addr );
 
 // Return reason why transaction was aborted
 const char* txf_why_str( char* buffer, int buffsize, int why );
+
+/*-------------------------------------------------------------------*/
+/*               Why transaction was aborted codes                   */
+/*-------------------------------------------------------------------*/
+
+//  PROGRAMMING NOTE: If you add/remove/change any of the below
+//  codes, don't forget to update the "txf_why_str" function too!
+
+#define TXF_WHY_INSTRADDR                   0x80000000    // 1
+#define TXF_WHY_INSTRCOUNT                  0x40000000    // 2
+#define TXF_WHY_RAND_ABORT                  0x20000000    // 3
+#define TXF_WHY_CSP_INSTR                   0x10000000    // 4
+#define TXF_WHY_CSPG_INSTR                  0x08000000    // 5
+#define TXF_WHY_SIE_EXIT                    0x04000000    // 6
+#define TXF_WHY_CONFLICT                    0x02000000    // 7
+#define TXF_WHY_MAX_PAGES                   0x01000000    // 8
+#define TXF_WHY_EXT_INT                     0x00800000    // 9
+#define TXF_WHY_UNFILT_INT                  0x00400000    // 10
+#define TXF_WHY_FILT_INT                    0x00200000    // 11
+#define TXF_WHY_RESTART_INT                 0x00100000    // 12
+#define TXF_WHY_IO_INT                      0x00080000    // 13
+#define TXF_WHY_MCK_INT                     0x00040000    // 14
+#define TXF_WHY_DELAYED_ABORT               0x00020000    // 15
+#define TXF_WHY_TABORT_INSTR                0x00010000    // 16
+#define TXF_WHY_CONTRAN_INSTR               0x00008000    // 17
+#define TXF_WHY_CONTRAN_BRANCH              0x00004000    // 18
+#define TXF_WHY_CONTRAN_RELATIVE_BRANCH     0x00002000    // 19
+#define TXF_WHY_TRAN_INSTR                  0x00001000    // 20
+#define TXF_WHY_TRAN_FLOAT_INSTR            0x00000800    // 21
+#define TXF_WHY_TRAN_ACCESS_INSTR           0x00000400    // 22
+#define TXF_WHY_TRAN_NONRELATIVE_BRANCH     0x00000200    // 23
+#define TXF_WHY_TRAN_BRANCH_SET_MODE        0x00000100    // 24
+#define TXF_WHY_TRAN_SET_ADDRESSING_MODE    0x00000080    // 25
+#define TXF_WHY_TRAN_MISC_INSTR             0x00000040    // 26
+#define TXF_WHY_NESTING                     0x00000020    // 27
+#define TXF_WHY_CAPTURE_FAIL                0x00000010    // 28
+//efine TXF_WHY_XXXXXXXXXX                  0x00000008    // 29
+//efine TXF_WHY_XXXXXXXXXX                  0x00000004    // 30
+//efine TXF_WHY_XXXXXXXXXX                  0x00000002    // 31
+//efine TXF_WHY_XXXXXXXXXX                  0x00000001    // 32
 
 #endif // _TRANSACT_H_

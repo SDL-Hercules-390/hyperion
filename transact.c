@@ -1811,8 +1811,8 @@ const char* txf_why_str( char* buffer, int buffsize, int why )
 {
     #define TXF_WHY_FORMAT( _why ) ((why & _why) ? " " #_why : "")
 
-    //                           1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
-    snprintf( buffer, buffsize, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
+    //                           1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
+    snprintf( buffer, buffsize, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s"
 
         , TXF_WHY_FORMAT( TXF_WHY_INSTRADDR                ) // 1
         , TXF_WHY_FORMAT( TXF_WHY_INSTRCOUNT               ) // 2
@@ -1822,17 +1822,30 @@ const char* txf_why_str( char* buffer, int buffsize, int why )
         , TXF_WHY_FORMAT( TXF_WHY_SIE_EXIT                 ) // 6
         , TXF_WHY_FORMAT( TXF_WHY_CONFLICT                 ) // 7
         , TXF_WHY_FORMAT( TXF_WHY_MAX_PAGES                ) // 8
-        , TXF_WHY_FORMAT( TXF_WHY_EXTERNAL_INTERUPT        ) // 9
-        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_INSTR            ) // 10
-        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_BRANCH           ) // 11
-        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_RELATIVE_BRANCH  ) // 12
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_INSTR               ) // 13
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_FLOAT_INSTR         ) // 14
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_ACCESS_INSTR        ) // 15
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_NONRELATIVE_BRANCH  ) // 16
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_BRANCH_SET_MODE     ) // 17
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_SET_ADDRESSING_MODE ) // 18
-        , TXF_WHY_FORMAT( TXF_WHY_TRAN_MISC_INSTR          ) // 19
+        , TXF_WHY_FORMAT( TXF_WHY_EXT_INT                  ) // 9
+        , TXF_WHY_FORMAT( TXF_WHY_UNFILT_INT               ) // 10
+        , TXF_WHY_FORMAT( TXF_WHY_FILT_INT                 ) // 11
+        , TXF_WHY_FORMAT( TXF_WHY_RESTART_INT              ) // 12
+        , TXF_WHY_FORMAT( TXF_WHY_IO_INT                   ) // 13
+        , TXF_WHY_FORMAT( TXF_WHY_MCK_INT                  ) // 14
+        , TXF_WHY_FORMAT( TXF_WHY_DELAYED_ABORT            ) // 15
+        , TXF_WHY_FORMAT( TXF_WHY_TABORT_INSTR             ) // 16
+        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_INSTR            ) // 17
+        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_BRANCH           ) // 18
+        , TXF_WHY_FORMAT( TXF_WHY_CONTRAN_RELATIVE_BRANCH  ) // 19
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_INSTR               ) // 20
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_FLOAT_INSTR         ) // 21
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_ACCESS_INSTR        ) // 22
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_NONRELATIVE_BRANCH  ) // 23
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_BRANCH_SET_MODE     ) // 24
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_SET_ADDRESSING_MODE ) // 25
+        , TXF_WHY_FORMAT( TXF_WHY_TRAN_MISC_INSTR          ) // 26
+        , TXF_WHY_FORMAT( TXF_WHY_NESTING                  ) // 27
+        , TXF_WHY_FORMAT( TXF_WHY_CAPTURE_FAIL             ) // 28
+        , ""                                                 // 29
+        , ""                                                 // 30
+        , ""                                                 // 31
+        , ""                                                 // 32
     );
     return buffer;
 }
