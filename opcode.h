@@ -1505,10 +1505,10 @@ do {                                                                  \
           txf_maddr_l( (_vaddr), (_len), (_arn), (_regs), (_acctype), (_maddr) )
 
   #define TXF_FETCHREF( _maddr, _len ) \
-          TXF_MADDRL( 0, (_len), 0, NULL, ACCTYPE_READ, (_maddr) )
+          TXF_MADDRL( 0, (_len), 0, NULL, ACC_READ, (_maddr) )
 
   #define TXF_STOREREF( _maddr, _len ) \
-          TXF_MADDRL( 0, (_len), 0, NULL, ACCTYPE_WRITE, (_maddr) )
+          TXF_MADDRL( 0, (_len), 0, NULL, ACC_WRITE, (_maddr) )
 
   #define ALLOC_TXFMAP( _regs )     alloc_txfmap( _regs )
   #define FREE_TXFMAP( _regs )      free_txfmap( _regs )

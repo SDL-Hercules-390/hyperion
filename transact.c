@@ -1743,72 +1743,96 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
 }
 
 /*-------------------------------------------------------------------*/
-/*                Check for TXF Storage Conflict                     */
+/*                    Fetch Conflict Scan                            */
 /*-------------------------------------------------------------------*/
-static inline bool txf_conflict_chk( REGS* regs, int acctype, U64 addrpage,
-                                     int cacheidx, int cacheidxe )
+/* This function is called by txf_maddr_l for FETCH accesses when    */
+/* the caller is NOT in TXF mode. (This function does NOT need to    */
+/* be called for CPUs which are still in TXF mode.)                  */
+/*                                                                   */
+/* It checks if the FETCH being done by the executing CPU/channel    */
+/* (identified by the 'cpuad' argument) conflicts with any CPU's     */
+/* currently executing a transaction. If it does, then that CPU's    */
+/* transaction is scheduled for an eventual abort by setting its     */
+/* abort code. This is called a DELAYED ABORT since the other CPU's  */
+/* transaction is not being directly aborted (since it can't be!)    */
+/* but rather is simply being scheduled (triggered) for an EVENTUAL  */
+/* abort which won't occur until it reaches its TEND instruction.    */
+/*                                                                   */
+/* We do this since we cannot directly abort the transaction since   */
+/* it's not us. It's some other CPU in the middle of executing its   */
+/* stream of instructions. Instead, we must simply do something to   */
+/* let it know that its transaction needs to fail. We do this by     */
+/* setting its abort code for it to eventually notice whenever it    */
+/* eventually reaches its TEND instruction.                          */
+/*                                                                   */
+/* The "cpuad" argument identifies the CPU that originally called    */
+/* the txf_maddr_l function (that then called us) that is doing the  */
+/* checking. If it's the channel subsystem that is calling, then     */
+/* the cpuad will be set to (-1) instead, to indicate that.          */
+/*                                                                   */
+/* The "regs" argument is the regs context of the potential OTHER    */
+/* CPU whose transaction that this FETCH might conflict with. This   */
+/* is the CPU whose transactional page map we need to scan. If our   */
+/* FETCH conflicts with any of its transactional cache lines, then   */
+/* we schedule it for an eventual abort (i.e. delayed abort).        */
+/*-------------------------------------------------------------------*/
+static inline void txf_fetch_conflict_scan
+(
+    REGS*        regs,          /* REGS of the CPU we are checking */
+    const U64    addrpage,      /* Address of page being fetched   */
+    const int    cacheidx,      /* First cache line being fetched  */
+    const int    cacheidxe,     /* Last cache line being fetched   */
+    const int    cpuad,         /* Debug: Who's doing the fetching */
+    const char*  location       /* Debug: where conflict detected  */
+)
 {
-int        i, k;
-int        txf_tac = 0;
-TPAGEMAP*  pmap;
-
-    /* Skip if our CPU is not in transaction mode or if our transaction
-       has already been aborted or if our CPU hasn't been started yet.
-    */
-    if (0
-        || !regs
-        || !regs->txf_tnd
-        ||  regs->txf_tac
-        ||  regs->cpustate != CPUSTATE_STARTED
-    )
-        return false;   // (no conflict detected)
-
-    /* Scan our CPU's page map... */
-    for (pmap = regs->txf_pagesmap, i=0; i < regs->txf_pgcnt; i++, pmap++)
+    OBTAIN_TXFLOCK( regs );
     {
-        /* (skip if not same page as the one we're to check) */
-        if ((U64)pmap->mainpageaddr != addrpage)
-            continue;
+        int i, k;
+        const TPAGEMAP* pmap;
 
-        /* Check for storage conflict with our CPU */
-        for (k = cacheidx; k <= cacheidxe; k++)
+        /* Skip CPU if it's not in TXF mode or has already been aborted */
+        if (0
+            || !regs->txf_tnd       // (not in TXF mode)
+            ||  regs->txf_tac       // (already aborted)
+        )
         {
-            /* If our transaction hasn't touched or accessed
-               (stored into or fetched from) this cache line yet,
-               then no conflict is possible. Skip this entry.
-            */
-            if (pmap->cachemap[k] == CM_CLEAN)
+            RELEASE_TXFLOCK( regs );
+            return;
+        }
+
+        /* Scan this CPU's page map... */
+        for (pmap = regs->txf_pagesmap, i=0; i < regs->txf_pgcnt; i++, pmap++)
+        {
+            /* (skip if not same page as the one we're to check) */
+            if ((U64)pmap->mainpageaddr != addrpage)
                 continue;
 
-            /* If we only fetched this cache line and they're only
-               fetching from it too, then it's not a real conflict.
-            */
-            if (pmap->cachemap[k] == CM_FETCHED)
+            /* Check for fetch conflict with this CPU */
+            for (k = cacheidx; k <= cacheidxe; k++)
             {
-                if (acctype == ACCTYPE_READ)
+                /* If this CPU's transaction hasn't accessed the cache
+                   line yet, then there obviously is no conflict yet.
+                */
+                if (pmap->cachemap[k] == CM_CLEAN)
                     continue;
 
-                /* Otherwise since they're storing into this cache
-                   line, we must abort our CPU's transaction with
-                   a fetch conflict.
+                /* If they only fetched from the same cache line too,
+                   then there is obviously no conflict yet.
                 */
-                txf_tac = TAC_FETCH_CNF;
-            }
-            else // (pmap->cachemap[k] == CM_STORED)
-            {
-                /* We stored into this cache line. Since they're
-                   either fetching from or storing into the same
-                   cache line, we must abort our CPU's transaction
-                   with a store conflict.
-                */
-                txf_tac = TAC_STORE_CNF;
-            }
+                if (pmap->cachemap[k] == CM_FETCHED)
+                    continue;
 
-            /* Abort this CPU's transaction */
-            OBTAIN_TXFLOCK( regs );
-            {
-                regs->txf_tac = txf_tac;
-                regs->txf_why |= TXF_WHY_CONFLICT;
+                /* Otherwise since this CPU's transaction did a store
+                   into the same cache line that the caller is currently
+                   fetching from, we must abort this CPU's transaction
+                   since the caller would otherwise be fetching a stale
+                   cache line.
+                */
+                regs->txf_tac   =  TAC_FETCH_CNF;
+                regs->txf_why  |=  TXF_WHY_CONFLICT;
+                regs->txf_who   =  cpuad;
+                regs->txf_loc   =  TRIMLOC( location );
 
                 /* Save the logical address where the conflict
                    occurred if we were able to determine that.
@@ -1822,17 +1846,16 @@ TPAGEMAP*  pmap;
                     regs->txf_conflict = pmap->virtpageaddr + (cacheidx << ZCACHE_LINE_SHIFT);
                 else
                     regs->txf_conflict = 0;
-            }
-            RELEASE_TXFLOCK( regs );
 
-            PTT_TXF( "TXF chk!", addrpage, regs->txf_conflict, true );
-            return true;    // (CONFLICT DETECTED!)
+                PTT_TXF( "*TXF cnflct!", regs->cpuad, regs->txf_conflict, regs->txf_contran );
+                break;
 
-        } // end for cache line loop...
+            } // end for cache line loop...
 
-    } // end for page map loop...
+        } // end for page map loop...
+    }
 
-    return false;   // (no conflict detected)
+    RELEASE_TXFLOCK( regs );
 }
 
 //---------------------------------------------------------------------
@@ -1928,8 +1951,6 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     BYTE *savepage, *savepagec;
     BYTE *altpage,  *altpagec;
 
-    REGS*  rchk;                /* Ptr to other CPU's hostregs       */
-
     U64  addrwork;              /* maddr converted to U64            */
     U64  addrpage;              /* Corresponding page address        */
 
@@ -1937,10 +1958,19 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     int  cacheidx;              /* Corresponding cache line          */
     int  cacheidxe;             /* Corresponding ending cache line   */
     int  i;                     /* Work variable                     */
+    int  txf_acctype;           /* ACC_READ or ACC_WRITE             */
 
     BYTE cmtype;                /* Cache Map access type             */
 
     TPAGEMAP*  pmap;            /* Pointer to Transaction Page Map   */
+
+#if defined( FISHTEST_TXF_STATS )
+    if ( (acctype & (ACC_READ                        ))) atomic_update64( &sysblk.acc_read,  +1 );
+    if ( (acctype & (ACC_WRITE                       ))) atomic_update64( &sysblk.acc_write, +1 );
+    if ( (acctype & (ACC_CHECK                       ))) atomic_update64( &sysblk.acc_check, +1 );
+    if (!(acctype & (ACC_READ | ACC_WRITE            ))) atomic_update64( &sysblk.acc_notrw, +1 );
+    if (!(acctype & (ACC_READ | ACC_WRITE | ACC_CHECK))) atomic_update64( &sysblk.acc_none,  +1 );
+#endif
 
     /* Quick exit if no CPUs executing any transactions.
 
@@ -1953,14 +1983,39 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     if (!sysblk.txf_transcpus)
         return maddr;
 
+    /* Normalize access type for TXF usage */
+    txf_acctype = TXF_ACCTYPE( acctype );
+
+    /*---------------------------------------------------------------*/
+    /*                       STORE access                            */
+    /*---------------------------------------------------------------*/
+    /* For STORE accesses it doesn't matter whether who is calling   */
+    /* is in TXF mode or not. Just do the store. No conflict check   */
+    /* is needed. Store conflicts will be detected at TEND. Besides  */
+    /* that, we do NOT want to prematurely abort a CPU's transaction */
+    /* since we don't know yet whose will reach TEND first. If our   */
+    /* transaction ends first, then it will succeed and theirs will  */
+    /* fail (due to the store conflict from our atomic commit of our */
+    /* store). Otherwise if they reach TEND first, then their's will */
+    /* succeed and ours will fail for the very same exact reason.    */
+    /*---------------------------------------------------------------*/
+    if (TXF_IS_STORE_ACCTYPE())
+    {
+        /* For non-TXF callers just return the untranslated address */
+        if (!regs || !regs->txf_tnd)
+            return maddr;   /* (no TXF translation needed) */
+    }
+
     /* Save last translation access type and arn */
     if (regs && regs->txf_tnd)
     {
 #if !defined( OPTION_DEPRECATE_TXF_LASTACC )
-        regs->txf_lastacc = acctype;
+        regs->txf_lastacc = txf_acctype;
 #endif
         regs->txf_lastarn = arn;
     }
+
+    /* Calculate range of cache lines this this storage access */
 
     addrwork = (U64) maddr;                     /* convert to U64    */
     addrpage = addrwork & ZPAGEFRAME_PAGEMASK;  /* address of page   */
@@ -1984,53 +2039,71 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         cacheidxe = endingoff >> ZCACHE_LINE_SHIFT;
     }
 
-    /*------------------------------------------------------------------*/
-    /*   If any CPUs are in transaction mode, we need to see if this    */
-    /*   CPU is storing or fetching into a cache line that has been     */
-    /*   touched by a CPU in transaction mode.  If that is the case,    */
-    /*   we will flag the other CPU for abort.  The actual abort will   */
-    /*   happen the next time the transacting CPU references storage    */
-    /*   or gets to transaction end.                                    */
-    /*                                                                  */
-    /*   The process of moving CPUs in and out of transaction mode is   */
-    /*   serialized, so that state will not change during the check.    */
-    /*                                                                  */
-    /*   The scan of the cache lines for the CPU is serialized by       */
-    /*   obtaining the transaction lock for that CPU.  The lock is      */
-    /*   also obtained to update the pagemap and/or cachemap.           */
-    /*------------------------------------------------------------------*/
-    for (i=0; i < sysblk.hicpu; i++)
+    /*---------------------------------------------------------------*/
+    /*                         FETCH access                          */
+    /*---------------------------------------------------------------*/
+    /* For FETCHES, if the caller is NOT in TXF mode, then we need   */
+    /* to abort all CPUs currently in TXF mode if they did a STORE   */
+    /* to the same cache line, since they would otherwise not know   */
+    /* that someone fetched an otherwise stale cache line that their */
+    /* transaction was wanting to atomically update.                 */
+    /*                                                               */
+    /* For FETCHES where the caller IS in TXF mode however, we skip  */
+    /* the conflict check altogether. Instead, we simply update our  */
+    /* cache map to record the fact that we fetched from that cache  */
+    /* line, and we'll detect the conflict when we eventually reach  */
+    /* TEND and notice that the cache line was modified (isn't the   */
+    /* same at that time as when the transaction started).           */
+    /*                                                               */
+    /* For STORE accesses we always skip all conflict checking too   */
+    /* as previously explained further above. And besides, all our   */
+    /* stores are made to our alternate page anyway and not actual   */
+    /* live storage. That won't occur until we eventually reach TEND */
+    /* and do the atomic commit of all of our accumulated stores.    */
+    /*---------------------------------------------------------------*/
+    if (1
+        && TXF_IS_FETCH_ACCTYPE()
+        && (!regs || !regs->txf_tnd)
+    )
     {
-        /* Point to this CPU's hostregs */
-        if (!(rchk = sysblk.regs[i]))
-            continue; /* (skip uninitialized/nonexistent CPUs) */
+        REGS*        rchk;      /* Pointer to other CPU's regs     */
+        int          cpuad;     /* Debug: Who was doing accessing  */
+        const char*  location;  /* Debug: where conflict detected  */
 
-        /* Check both hostregs *AND* guestregs for storage conflict
-           with this CPU (as long as it's not ours!)
+        cpuad = regs ? HOSTREGS->cpuad : -1;
+        location = TRIMLOC( PTT_LOC );
 
-           PROGRAMMING NOTE: it's safe to stop checking if our
-           store or fetch access to this cache line conflicts
-           with any OTHER transacting CPU's cache line access
-           (i.e. it's safe to stop our loop here) as we can be
-           ABSOLUTELY 100% CERTAIN that there AREN'T any since
-           no two transacting CPU's accesses can ever conflict
-           with any other's (otherwise one of them would have
-           had their transaction aborted due to the conflict).
-        */
-        if (0
-            || (1
-                && rchk != regs
-                && txf_conflict_chk( rchk, acctype, addrpage, cacheidx, cacheidxe )
-               )
-            || (1
-                && GUEST( rchk )
-                && GUEST( rchk ) != regs
-                && txf_conflict_chk( GUEST( rchk ), acctype, addrpage, cacheidx, cacheidxe )
-               )
-        )
-            break;  // CONFLICT DETECTED!
+        for (i=0; i < sysblk.hicpu; i++)
+        {
+            /* Point to this CPU's hostregs */
+            rchk = sysblk.regs[i];
 
-    } // end for all CPUs loop...
+            /* Skip non-existent CPUs or CPUs that aren't running */
+            if (0
+                || !rchk
+                ||  rchk->cpustate != CPUSTATE_STARTED
+            )
+                continue;
+
+            /* HOSTREGS */
+            txf_fetch_conflict_scan
+            (
+                rchk,
+                addrpage, cacheidx, cacheidxe, cpuad, location
+            );
+
+            /* Is there a guestregs too? */
+            if (!GUEST( rchk ))
+                continue;
+
+            /* GUESTREGS */
+            txf_fetch_conflict_scan
+            (
+                GUEST( rchk),
+                addrpage, cacheidx, cacheidxe, cpuad, location
+            );
+        }
+    }
 
     /* Return now if channel conflict-check-only call
        or if our CPU is not executing any transaction */
@@ -2094,7 +2167,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         /* Abort transaction if too many pages were touched */
         if (regs->txf_pgcnt >= MAX_TXF_PAGES)
         {
-            int txf_tac = (acctype == ACCTYPE_READ) ?
+            int txf_tac = TXF_IS_FETCH_ACCTYPE() ?
                 TAC_FETCH_OVF : TAC_STORE_OVF;
             regs->txf_why |= TXF_WHY_MAX_PAGES;
 
@@ -2137,8 +2210,8 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     }
 
     /* Calculate alternate address and cache map access type */
-    maddr  = altpage + pageoffs;
-    cmtype = (acctype == ACCTYPE_READ) ? CM_FETCHED : CM_STORED;
+    maddr = altpage + pageoffs;
+    cmtype = TXF_IS_FETCH_ACCTYPE() ? CM_FETCHED : CM_STORED;
 
     PTT_TXF( "TXF maddr_l:", addrpage, altpage, regs->txf_tnd );
 

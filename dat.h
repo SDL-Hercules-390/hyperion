@@ -143,14 +143,6 @@ static inline  BYTE* ARCH_DEP( maddr_l )
             return maddr;
         }
 
-        /* We are only interested in fetch and store accesses */
-        if (1
-            && acctype != ACCTYPE_READ
-            && acctype != ACCTYPE_WRITE
-            && acctype != ACCTYPE_WRITE_SKP
-        )
-            return maddr;
-
         /* Translate to alternate TXF address if appropriate */
         maddr = TXF_MADDRL( addr, len, arn, regs, acctype, maddr );
     }

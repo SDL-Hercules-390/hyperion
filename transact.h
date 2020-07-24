@@ -74,6 +74,17 @@ struct TPAGEMAP
 typedef struct TPAGEMAP  TPAGEMAP;   // Transaction Page Map table
 
 /*-------------------------------------------------------------------*/
+/*                  txf_maddr_l acctype values                       */
+/*-------------------------------------------------------------------*/
+
+#define TXF_ACCTYPE( _acc )         ( (_acc) & ACC_READ ? ACC_READ      \
+                                    : (_acc) & (ACC_WRITE | ACC_CHECK)  \
+                                    ? ACC_WRITE : ACC_READ )
+
+#define TXF_IS_FETCH_ACCTYPE()      (txf_acctype & ACC_READ)
+#define TXF_IS_STORE_ACCTYPE()      (txf_acctype & ACC_WRITE)
+
+/*-------------------------------------------------------------------*/
 /*                Transaction Diagnostic Block                       */
 /*-------------------------------------------------------------------*/
 struct TDB

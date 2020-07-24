@@ -697,6 +697,12 @@ static const char *build_info[] = {
 // Fishtest...
 
 
+#if defined( FISHTEST_TXF_STATS )               // gather/track TXF metrics
+    "With    FISHTEST_TXF_STATS",
+#else
+    "Without FISHTEST_TXF_STATS",
+#endif
+
 #if defined( OPTION_DEPRECATE_TXF_LASTACC )     // Deprecate 'txf_lastacc'
     "With    OPTION_DEPRECATE_TXF_LASTACC",
 #else

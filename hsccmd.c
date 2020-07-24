@@ -308,6 +308,16 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
         else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
         else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
 #endif
+#if defined( FISHTEST_TXF_STATS )
+        else if (CMD( argv[1], TXF, 3 ))
+        {
+            LOGMSG("+++ acc_read  =% 12"PRIu64"\n", sysblk.acc_read   );
+            LOGMSG("+++ acc_write =% 12"PRIu64"\n", sysblk.acc_write  );
+            LOGMSG("+++ acc_check =% 12"PRIu64"\n", sysblk.acc_check  );
+            LOGMSG("+++ acc_notrw =% 12"PRIu64"\n", sysblk.acc_notrw  );
+            LOGMSG("+++ acc_none  =% 12"PRIu64"\n", sysblk.acc_none   );
+        }
+#endif
         else
             // "%s%s"
             WRMSG( HHC00001, "E", argv[1], ": unknown test");
