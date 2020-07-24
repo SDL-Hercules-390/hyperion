@@ -709,6 +709,12 @@ static const char *build_info[] = {
     "Without OPTION_DEPRECATE_TXF_LASTACC",
 #endif
 
+#if defined( OPTION_FIX_SIE_ICODE_BUG )         // fix possible SIE icode bug
+    "With    OPTION_FIX_SIE_ICODE_BUG",
+#else
+    "Without OPTION_FIX_SIE_ICODE_BUG",
+#endif
+
 #if defined( OPTION_NO_TXF_MADDR_L_ABORT )      // Don't call abort_transaction directly from txf_maddr_l
     "With    OPTION_NO_TXF_MADDR_L_ABORT",
 #else

@@ -286,7 +286,13 @@ RADR    effective_addr2;                /* address of state desc.    */
 int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */
 U64     sie_state;                      /* Last SIE state            */
+#if defined( OPTION_FIX_SIE_ICODE_BUG )
+int lpsw_xcode;                         /* xcode from load_psw       */
+volatile int icode = 0;                 /* interrupt code            */
+                                        /* (why is this volatile?!)  */
+#else
 volatile int icode;                     /* Interception code         */
+#endif
 bool    same_cpu, same_state;           /* boolean helper flags      */
 U64     dreg;
 
@@ -369,7 +375,11 @@ U64     dreg;
     {
         GUESTREGS->arch_mode = ARCH_900_IDX;
         GUESTREGS->program_interrupt = &z900_program_interrupt;
+#if defined( OPTION_FIX_SIE_ICODE_BUG )
+        lpsw_xcode = z900_load_psw( GUESTREGS, STATEBK->psw );
+#else
         icode = z900_load_psw( GUESTREGS, STATEBK->psw );
+#endif
     }
 #else /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     if (STATEBK->m & SIE_M_370)
@@ -377,7 +387,11 @@ U64     dreg;
 #if defined(_370)
         GUESTREGS->arch_mode = ARCH_370_IDX;
         GUESTREGS->program_interrupt = &s370_program_interrupt;
+#if defined( OPTION_FIX_SIE_ICODE_BUG )
+        lpsw_xcode = s370_load_psw(GUESTREGS, STATEBK->psw);
+#else
         icode = s370_load_psw(GUESTREGS, STATEBK->psw);
+#endif
 #else
         /* Validity intercept when 370 mode not installed */
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
@@ -394,7 +408,11 @@ U64     dreg;
     {
         GUESTREGS->arch_mode = ARCH_390_IDX;
         GUESTREGS->program_interrupt = &s390_program_interrupt;
+#if defined( OPTION_FIX_SIE_ICODE_BUG )
+        lpsw_xcode = s390_load_psw(GUESTREGS, STATEBK->psw);
+#else
         icode = s390_load_psw(GUESTREGS, STATEBK->psw);
+#endif
     }
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     else
@@ -707,7 +725,11 @@ U64     dreg;
     /* Must do setjmp(progjmp) here since the 'translate_addr' further
        below may result in longjmp(progjmp) for addressing exceptions.
     */
-    if (!setjmp(GUESTREGS->progjmp))
+#if defined( OPTION_FIX_SIE_ICODE_BUG )
+    if (!(icode = setjmp( GUESTREGS->progjmp )))
+#else
+    if (!setjmp( GUESTREGS->progjmp ))
+#endif
     {
         /*
          * Set sie_active to 1. This means other threads
@@ -822,12 +844,19 @@ U64     dreg;
         RELEASE_INTLOCK( regs );
 
         /* Early exceptions associated with the guest load_psw() */
+#if defined( OPTION_FIX_SIE_ICODE_BUG )
+        if (lpsw_xcode)
+        {
+            PTT_SIE( "*SIE > pgmint", lpsw_xcode, 0, 0 );
+            GUESTREGS->program_interrupt( GUESTREGS, lpsw_xcode );
+        }
+#else
         if (icode)
         {
             PTT_SIE( "*SIE > pgmint", icode, 0, 0 );
             GUESTREGS->program_interrupt( GUESTREGS, icode );
         }
-
+#endif
         /* Run SIE in guest's architecture mode */
         PTT_SIE( "SIE > run_sie", GUESTREGS->arch_mode, 0, 0 );
         icode = run_sie[ GUESTREGS->arch_mode ]( regs );
