@@ -859,24 +859,6 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
 
         STORE_HW( psa->pgmint + 2, pcode );
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-        /* Save the program interrupt and data exception
-           codes if there was any transaction active
-        */
-        if (regs->txf_tnd)
-        {
-            regs->txf_piid   = pcode;
-            regs->txf_piid  |= (ilc << 16);
-            regs->txf_dxc_vxc =
-            (0
-                || pcode == PGM_DATA_EXCEPTION
-                || pcode == PGM_VECTOR_PROCESSING_EXCEPTION
-            )
-            ?  regs->dxc : 0;
-
-            PTT_TXF( "TXF PIID", regs->txf_piid, regs->txf_dxc_vxc, 0 );
-        }
-#endif
         /* Store the exception access identification at PSA+160 */
         if (0
             || code == PGM_PAGE_TRANSLATION_EXCEPTION
