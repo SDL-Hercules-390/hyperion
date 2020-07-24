@@ -296,14 +296,29 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
   #define SIE_STATE_BIT_OFF( _regs, _byte, _bit ) \
           (SIE_MODE((_regs)) && SIE_FEAT_BIT_OFF( (_regs), _byte, _bit ))
 
-  #define SIE_TXF_INTERCEPT( _regs )                            \
+  #define TXF_SIE_INTERCEPT( _regs, _name )                     \
     do                                                          \
     {                                                           \
+        /* Only allow direct execution of TXF instructions      \
+           if the z/VM host says to allow it. Otherwise let     \
+           the z/VM host intercept this instruction so it       \
+           can simulate it, throw a PIC001, or at least be      \
+           informed that we are executing this instruction.     \
+        */                                                      \
         if (1                                                   \
             && SIE_MODE( (_regs) )                              \
             && SIE_EC_BIT_OFF( (_regs), ECB0, ECTX )            \
         )                                                       \
+        {                                                       \
+            if (TXF_TRACING())                                  \
+            {                                                   \
+                /* "TXF: %s%02X: SIE: Intercepting              \
+                         %s instruction" */                     \
+                WRMSG( HHC17715, "D",                           \
+                    TXF_CPUAD( _regs ), #_name );               \
+            }                                                   \
             longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );    \
+        }                                                       \
     }                                                           \
     while (0)
 
@@ -320,7 +335,7 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
   #define SIE_EC_BIT_OFF(    _regs, _byte, _bit )   (1)
   #define SIE_STATE_BIT_OFF( _regs, _byte, _bit )   (1)
 
-  #define SIE_TXF_INTERCEPT( _regs ) /* (do nothing) */
+  #define TXF_SIE_INTERCEPT( _regs, _name )  /* (do nothing) */
 
 #endif // defined( _FEATURE_SIE )
 
@@ -816,7 +831,6 @@ do { \
       (_regs)->txf_why |= TXF_WHY_INSTRADDR;                          \
       ARCH_DEP( abort_transaction )( (_regs),                         \
         ABORT_RETRY_PGMCHK, TAC_INSTR );                              \
-      UNREACHABLE_CODE(;);                                            \
     }                                                                 \
   } while (0)
 
@@ -832,7 +846,6 @@ do { \
       (_regs)->txf_why |= TXF_WHY_INSTRCOUNT;                         \
       ARCH_DEP( abort_transaction )( (_regs),                         \
         ABORT_RETRY_PGMCHK, TAC_INSTR );                              \
-      UNREACHABLE_CODE(;);                                            \
     }                                                                 \
   } while (0)
 
@@ -847,7 +860,6 @@ do { \
       (_regs)->txf_why |= TXF_WHY_RAND_ABORT;                         \
       ARCH_DEP( abort_transaction )( (_regs),                         \
         ABORT_RETRY_PGMCHK, (_regs)->txf_random_tac );                \
-      UNREACHABLE_CODE(;);                                            \
     }                                                                 \
   } while (0)
 
@@ -1359,7 +1371,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_INSTR;                                      \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1374,7 +1385,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_BRANCH;                                     \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1390,7 +1400,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_RELATIVE_BRANCH;                            \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1401,7 +1410,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_INSTR;                                         \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1418,7 +1426,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_FLOAT_INSTR;                                   \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1432,7 +1439,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_ACCESS_INSTR;                                  \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1447,7 +1453,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_NONRELATIVE_BRANCH;                            \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1462,7 +1467,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_BRANCH_SET_MODE;                               \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1476,7 +1480,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_SET_ADDRESSING_MODE;                           \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1487,7 +1490,6 @@ do {                                                                  \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_MISC_INSTR;                                    \
         ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_MISC );         \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 
@@ -1497,7 +1499,6 @@ do {                                                                  \
       if ((_regs)->execflag)                                                            \
       {                                                                                 \
         ARCH_DEP( program_interrupt )( (_regs), PGM_EXECUTE_EXCEPTION );                \
-        UNREACHABLE_CODE(;);                                                            \
       }                                                                                 \
     } while (0)
 

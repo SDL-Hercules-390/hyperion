@@ -136,6 +136,8 @@ int     r1, r2;                         /* Operand register numbers  */
 
     RRE( inst, regs, r1, r2 );
 
+    TXF_SIE_INTERCEPT( regs, ETND );
+
     if (!(regs->CR(0) & CR0_TXC))
     {
         PTT_TXF( "*TXF ETND", regs->CR(0), regs->txf_contran, regs->txf_tnd );
@@ -194,6 +196,8 @@ TPAGEMAP   *pmap;
 int         txf_tnd, txf_tac;
 
     S( inst, regs, b2, effective_addr2 );
+
+    TXF_SIE_INTERCEPT( regs, TEND );
 
     TRAN_EXECUTE_INSTR_CHECK( regs );
 
@@ -495,6 +499,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     S( inst, regs, b2, effective_addr2 );
 
+    TXF_SIE_INTERCEPT( regs, TABORT );
+
     CONTRAN_INSTR_CHECK( regs );
     TRAN_EXECUTE_INSTR_CHECK( regs );
 
@@ -569,6 +575,8 @@ TDB*    tdb = NULL;                     /* Pointer to TDB            */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
 
+    TXF_SIE_INTERCEPT( regs, TBEGIN );
+
     if (!(regs->CR(0) & CR0_TXC))
     {
         PTT_TXF( "*TXF TBEGIN", regs->CR(0), regs->txf_contran, regs->txf_tnd );
@@ -636,6 +644,8 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
+
+    TXF_SIE_INTERCEPT( regs, TBEGINC );
 
     if (!(regs->CR(0) & CR0_TXC))
     {
