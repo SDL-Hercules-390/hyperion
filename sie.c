@@ -1212,6 +1212,12 @@ endloop:        ; // (nop to make compiler happy)
 void ARCH_DEP( sie_exit )( REGS* regs, int icode )
 {
     int n;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    U64  itdba = 0;
+    TDB* itdb = NULL;
+    bool txf_contran = false;
+    BYTE txf_tnd = 0;
+#endif
 
     PTT_SIE( "sie_xit i,h,g", icode, regs->host, regs->guest );
 
@@ -1290,7 +1296,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     STATEBK->f = 0;
 
     /* Set the interception code in the SIE block */
-    switch (icode > 0 ? icode & ~PGM_PER_EVENT : icode)
+    switch (icode < 0 ? icode : icode & 0xFF)
     {
        /* If host interrupt pending, then backup psw so that the SIE
           instruction gets re-executed again to re-enter SIE mode
@@ -1319,6 +1325,100 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
         case PGM_OPERATION_EXCEPTION:  STATEBK->c = SIE_C_OPEREXC;  break;
         default:                       STATEBK->c = SIE_C_PGMINT;   break;
     }
+
+    PTT_SIE( "sie_xit STA_c", STATEBK->c, 0, 0  );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+    /* US 8,880,959 B2, Greiner et al, 17.20:
+    
+       "Interception TDB: The 256-byte host real location 
+        specified by locations 488-495 (x'1E8') of the state
+        description."
+    */
+    FETCH_DW( itdba, STATEBK->itdba );
+    if (itdba)
+        itdba = APPLY_PREFIXING( itdba, HOSTREGS->PX );
+
+    PTT_TXF( "TXF itdb", itdba, 0, 0 );
+
+    OBTAIN_TXFLOCK( GUESTREGS );
+    {
+        txf_tnd     = GUESTREGS->txf_tnd;
+        txf_contran = GUESTREGS->txf_contran;
+    }
+    RELEASE_TXFLOCK( GUESTREGS );
+
+    PTT_TXF( "TXF tnd,con", txf_tnd, txf_contran, 0 );
+
+    /* "A transaction may be aborted due to causes that
+        are outside the scope of the immediate configuration
+        in which it executes. For example, transient events
+        recognized by a hypervisor (such as LPAR or z/VM)
+        may cause a transaction to be aborted."
+    */
+    if (txf_tnd)
+    {
+        PTT_TXF( "TXF abrt", 0, 0, TAC_MISC );
+
+        GUESTREGS->txf_why |= TXF_WHY_SIE_EXIT;
+        ARCH_DEP( abort_transaction )( GUESTREGS, ABORT_RETRY_RETURN, TAC_MISC );
+        itdb = txf_contran ? &GUESTREGS->txf_pi_tdb
+                           : &GUESTREGS->txf_tb_tdb;
+    }
+    else if (GUESTREGS->txf_UPGM_abort)
+    {
+        PTT_TXF( "TXF upgm", GUESTREGS->txf_UPGM_abort, GUESTREGS->txf_caborts, 0 );
+
+        itdb = GUESTREGS->txf_caborts ? &GUESTREGS->txf_pi_tdb
+                                      : &GUESTREGS->txf_tb_tdb;
+    }
+
+    /* Check if we need to fill in an Interception TDB */
+    if (STATEBK->c == SIE_C_PGMINT && itdba && itdb)
+    {
+        PTT_TXF( "TXF itdb <=", itdba, itdb, itdb->tdb_tac );
+
+        /* US 8,880,959 B2, Greiner et al, 17.20:
+
+           "The interception TDB is stored when an aborted
+            transaction results in a guest program interruption
+            interception (i.e. interception code 8).  When a
+            transaction is aborted due to other causes, the
+            contents of the interception TDB are unpredictable."
+        */
+        if (TXF_TRACING())
+        {
+            // "TXF: %s%02X: SIE: Populating Interception TDB at 0x%16.16"PRIx64
+            WRMSG( HHC17714, "D", TXF_CPUAD( GUESTREGS ), itdba );
+        }
+
+        memcpy( HOSTREGS->mainstor + itdba, itdb, sizeof( TDB ));
+    }
+    else if (STATEBK->c == SIE_C_PGMINT && itdb)
+    {
+        PTT_TXF( "*TXF !itdba", itdba, itdb, itdb->tdb_tac );
+
+        if (TXF_TRACING())
+        {
+            // "TXF: %s%02X: SIE: Interception TDB address not provided!"
+            WRMSG( HHC17716, "D", TXF_CPUAD( GUESTREGS ));
+        }
+    }
+    else if (STATEBK->c != SIE_C_PGMINT && itdba)
+    {
+        PTT_TXF( "*TXF itdba<=0", itdba, 0, 0 );
+
+        /* The address of an Interception TDB was provided, but no
+           transaction was aborted as a result of this intercepted
+           program interrupt. For safety, return a "NULL" (empty)
+           Interception TDB instead. (Sorry Dan! Could not locate
+           Claudia Schiffer’s phone number!)
+        */
+        memset( HOSTREGS->mainstor + itdba, 0, sizeof( TDB ));
+    }
+
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     /* Save CPU timer  */
     STORE_DW( STATEBK->cputimer, cpu_timer( GUESTREGS ));

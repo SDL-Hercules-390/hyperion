@@ -1452,7 +1452,7 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 /* normal program interrupt processing.                              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int* pcode, int code )
+DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int code )
 {
 bool    filt;                   /* true == filter the interrupt      */
 int     txclass;                /* Transactional Execution Class     */
@@ -1464,19 +1464,13 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     regs->txf_NTSTG = false;
 
     /* No filtering if no transaction was active */
-    if (!regs->txf_aborted)
+    if (!regs->txf_tnd)
     {
         PTT_TXF( "*TXF !filt", code, regs->txf_contran, regs->txf_tnd );
         return;
     }
 
-    /* (reset flag) */
-    regs->txf_aborted = false;
-
-    /* Indicate TXF aborted event in interrupt code */
-    *pcode |= PGM_TXF_EVENT;
-
-    switch (code)  // (interrupt code)
+    switch (code & 0xFF)  // (interrupt code)
     {
     case PGM_OPERATION_EXCEPTION:
     case PGM_PRIVILEGED_OPERATION_EXCEPTION:
@@ -1649,6 +1643,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     regs->psw.cc = ucc;
     PTT_TXF( "TXF unfilt!", code, regs->txf_contran, regs->txf_tnd );
     regs->txf_why |= TXF_WHY_UNFILT_INT;
+    ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_UPGM );
 
 } /* end txf_do_pi_filtering */
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */

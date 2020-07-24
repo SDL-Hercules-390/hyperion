@@ -359,7 +359,6 @@ struct REGS {                           /* Processor registers       */
         TDB     txf_tb_tdb;             /* TBEGIN instruction TDB    */
 
         bool    txf_NTSTG;              /* true == NTSTG instruction */
-        bool    txf_aborted;            /* true == aborted trans.    */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
         bool    txf_cfail;              /* true == CONSTRAINED failed*/
         bool    txf_UPGM_abort;         /* true == transaction was

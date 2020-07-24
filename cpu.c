@@ -441,17 +441,62 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     code = pcode & ~PGM_PER_EVENT;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    ARCH_DEP( txf_do_pi_filtering )( realregs, &pcode, code );
-    /* Abort any active transaction w/unfiltered program interrupt and
-       return to here to continue with program interrupt processing */
-    PTT_TXF( "TXF UPGM", realregs, 0, realregs->txf_tnd );
+
+    /* If transaction is active, check if interrupt can be filtered */
     if (realregs->txf_tnd)
     {
-        PTT_TXF( "*TXF UPGM", realregs, ABORT_RETRY_RETURN, TAC_UPGM );
-        ARCH_DEP( abort_transaction )( realregs, ABORT_RETRY_RETURN, TAC_UPGM );
-        ilc = REAL_ILC( realregs );
+        /* Indicate TXF related program interrupt */
+        pcode |= PGM_TXF_EVENT;
+
+        /* Save the program interrupt and data exception codes */
+        realregs->txf_piid   = pcode;
+        realregs->txf_piid  |= (ilc << 16);
+
+        realregs->txf_dxc_vxc =
+        (0
+            || pcode == PGM_DATA_EXCEPTION
+            || pcode == PGM_VECTOR_PROCESSING_EXCEPTION
+        )
+        ?  realregs->dxc : 0;
+
+        PTT_TXF( "TXF PIID", realregs->txf_piid, realregs->txf_dxc_vxc, 0 );
+
+        /* 'txf_do_pi_filtering' does not return for filterable
+            program interrupts. It returns only if the program
+            interrupt is unfilterable, and when it returns, the
+            active transaction has already been aborted.
+        */
+
+        PTT_TXF( "TXF PROG?", (code & 0xFF), realregs->txf_contran, realregs->txf_tnd );
+
+        ARCH_DEP( txf_do_pi_filtering )( realregs, (code & 0xFF) );
+
+        if (realregs->txf_tnd ) // (sanity check)
+            CRASH();            // (sanity check)
+
+        PTT_TXF( "*TXF UPROG!", (code & 0xFF), 0, 0 );
+
+        /* Set flag for sie_exit */
+        realregs->txf_UPGM_abort = true;
     }
-#endif
+    else /* (no transaction is CURRENTLY active) */
+    {
+        /* While no transaction is CURRENTLY active, it's possible
+           that a previously active transaction was aborted BEFORE
+           we were called, so we need to check for that.
+        */
+        if ((code & 0xFF) == PGM_TRANSACTION_CONSTRAINT_EXCEPTION)
+        {
+            /* Indicate TXF related program interrupt */
+            pcode |= PGM_TXF_EVENT;
+
+            PTT_TXF( "*TXF 218!", pcode, 0, 0 );
+
+            /* Set flag for sie_exit */
+            realregs->txf_UPGM_abort = true;
+        }
+    }
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     /* If this is a concurrent PER event
        then we must add the PER bit to the interrupts code */
