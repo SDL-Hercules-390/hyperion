@@ -479,6 +479,13 @@ int         txf_tnd, txf_tac;
                 regs->txf_caborts );
         }
 
+#if defined( FISHTEST_TXF_STATS )
+        {
+            int n = regs->txf_caborts < 9 ? regs->txf_caborts : 9-1;
+            atomic_update64( &sysblk.txf_ctrans,       +1 );
+            atomic_update64( &sysblk.txf_caborts[ n ], +1 );
+        }
+#endif
         /* Transaction suceeded. Reset abort count */
         regs->txf_caborts = 0;
 

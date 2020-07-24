@@ -1003,6 +1003,8 @@ struct SYSBLK {
         U64  acc_check;         // ACC_CHECK
         U64  acc_notrw;         // !(ACC_READ | ACC_WRITE)
         U64  acc_none;          // !(ACC_READ | ACC_WRITE | ACC_CHECK)
+        U64  txf_ctrans;        // Total CONSTRAINED transactions
+        U64  txf_caborts[9];    // CONSTRAINED aborted counts
 #endif
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 

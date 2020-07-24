@@ -316,6 +316,28 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
             LOGMSG("+++ acc_check =% 12"PRIu64"\n", sysblk.acc_check  );
             LOGMSG("+++ acc_notrw =% 12"PRIu64"\n", sysblk.acc_notrw  );
             LOGMSG("+++ acc_none  =% 12"PRIu64"\n", sysblk.acc_none   );
+            LOGMSG("+++ ctrans    =% 12"PRIu64"\n", sysblk.txf_ctrans );
+
+            if (sysblk.txf_ctrans)
+            {
+                double count, total = sysblk.txf_ctrans;
+
+#define         TXF_BUCKET(n) \
+                count = sysblk.txf_caborts[n]; \
+                LOGMSG("+++ " #n " retries =% 12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[n], (count/total) * 100.0 )
+
+                TXF_BUCKET(0);
+                TXF_BUCKET(1);
+                TXF_BUCKET(2);
+                TXF_BUCKET(3);
+                TXF_BUCKET(4);
+                TXF_BUCKET(5);
+                TXF_BUCKET(6);
+                TXF_BUCKET(7);
+//              TXF_BUCKET(8);
+                count = sysblk.txf_caborts[8];
+                LOGMSG("+++ 8+retries =% 12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[8], (count/total) * 100.0 );
+            }
         }
 #endif
         else
