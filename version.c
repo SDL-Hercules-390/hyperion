@@ -709,6 +709,12 @@ static const char *build_info[] = {
     "Without OPTION_DEPRECATE_TXF_LASTACC",
 #endif
 
+#if defined( OPTION_TXF_SINGLE_THREAD )         // one transaction at a time
+    "With    OPTION_TXF_SINGLE_THREAD",
+#else
+    "Without OPTION_TXF_SINGLE_THREAD",
+#endif
+
 #if defined( OPTION_FIX_SIE_ICODE_BUG )         // fix possible SIE icode bug
     "With    OPTION_FIX_SIE_ICODE_BUG",
 #else

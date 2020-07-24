@@ -648,6 +648,12 @@ struct SYSBLK {
 #define OBTAIN_TXFLOCK( regs )     obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 #define RELEASE_TXFLOCK( regs )    release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 
+#if defined( OPTION_TXF_SINGLE_THREAD )
+        LOCK    txf_lock2[ MAX_CPU_ENGS ];
+#define OBTAIN_TXFLOCK2( regs )     obtain_lock ( &(regs)->sysblk->txf_lock2[ (regs)->cpuad ])
+#define RELEASE_TXFLOCK2( regs )    release_lock( &(regs)->sysblk->txf_lock2[ (regs)->cpuad ])
+#endif
+
 #endif
         TOD     cpucreateTOD[ MAX_CPU_ENGS ];  /* CPU creation time */
         TID     cputid[ MAX_CPU_ENGS ];        /* CPU thread ids    */

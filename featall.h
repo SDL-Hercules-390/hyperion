@@ -45,6 +45,7 @@
 #define FISHTEST_TXF_STATS              // gather/track TXF metrics
 
 #define OPTION_DEPRECATE_TXF_LASTACC    // Deprecate 'txf_lastacc'
+#define OPTION_TXF_SINGLE_THREAD        // one transaction at a time
 #define OPTION_FIX_SIE_ICODE_BUG        // fix possible SIE icode bug
 #define OPTION_NO_TXF_MADDR_L_ABORT     // Don't call abort_transaction directly from txf_maddr_l
 

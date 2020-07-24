@@ -489,6 +489,11 @@ int         txf_tnd, txf_tac;
         /* Transaction suceeded. Reset abort count */
         regs->txf_caborts = 0;
 
+#if defined( OPTION_TXF_SINGLE_THREAD )
+        if (txf_contran)
+            RELEASE_TXFLOCK2( regs );
+#endif
+
         PERFORM_SERIALIZATION( regs );
     }
     RELEASE_INTLOCK( regs );
@@ -663,6 +668,10 @@ VADR    effective_addr1;                /* Effective address         */
 
     /* CONSTRAINED: ignore some i2 bits */
     i2 &= ~(TXF_CTL_FLOAT | TXF_CTL_PIFC);
+
+#if defined( OPTION_TXF_SINGLE_THREAD )
+    OBTAIN_TXFLOCK2( regs );
+#endif
 
     OBTAIN_INTLOCK( regs );
     {
@@ -1363,6 +1372,11 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
         PERFORM_SERIALIZATION( regs );
         RELEASE_INTLOCK( regs );
     }
+
+#if defined( OPTION_TXF_SINGLE_THREAD )
+    if (txf_contran)
+        RELEASE_TXFLOCK2( regs );
+#endif
 
     /*----------------------------------------------------*/
     /*       RETURN TO CALLER OR JUMP AS REQUESTED        */
