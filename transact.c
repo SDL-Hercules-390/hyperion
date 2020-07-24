@@ -557,7 +557,8 @@ VADR    effective_addr2;                /* Effective address         */
 
 
 /* (forward reference) */
-void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, TDB* tdb );
+void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2,
+                                 U64 tdba, int b1 );
 
 /*-------------------------------------------------------------------*/
 /* E560 TBEGIN - Transaction Begin      (unconstrained)        [SIL] */
@@ -571,7 +572,6 @@ DEF_INST( transaction_begin )
 S16     i2;                             /* 16-bit immediate value    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-TDB*    tdb = NULL;                     /* Pointer to TDB            */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
 
@@ -597,29 +597,19 @@ TDB*    tdb = NULL;                     /* Pointer to TDB            */
     /* Unconstrained: if b1 non-zero TDB must be aligned else ignore */
     if (b1)
     {
-        RADR  real_tdb;
-        int   stid;
-
         DW_CHECK( effective_addr1, regs );
 
         /* Check that all bytes of the TDB are accessible */
         ARCH_DEP( validate_operand )( effective_addr1, b1,
                                       sizeof( TDB ) - 1,
                                       ACCTYPE_WRITE, regs );
-
-        /* Convert TDB address to absolute mainstor address */
-        VERIFY( ARCH_DEP( virt_to_real )( &real_tdb, &stid, effective_addr1,
-                                  b1, regs, ACCTYPE_WRITE ) == 0);
-        real_tdb = APPLY_PREFIXING( real_tdb, regs->PX );
-        tdb = (TDB*)(regs->mainstor + real_tdb);
     }
 
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
-        regs->txf_tdb_addr = effective_addr1;
         PTT_TXF( "TXF TBEGIN", 0, regs->txf_contran, regs->txf_tnd );
-        ARCH_DEP( process_tbegin )( false, regs, i2, tdb );
+        ARCH_DEP( process_tbegin )( false, regs, i2, effective_addr1, b1 );
     }
     RELEASE_INTLOCK( regs );
 
@@ -670,9 +660,8 @@ VADR    effective_addr1;                /* Effective address         */
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
-        regs->txf_tdb_addr = 0x1800;
         PTT_TXF( "TXF TBEGINC", 0, regs->txf_contran, regs->txf_tnd );
-        ARCH_DEP( process_tbegin )( true, regs, i2, NULL );
+        ARCH_DEP( process_tbegin )( true, regs, i2, 0, 0 );
     }
     RELEASE_INTLOCK( regs );
 
@@ -685,7 +674,8 @@ VADR    effective_addr1;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /*    The interrupt lock (INTLOCK) *MUST* be held upon entry!        */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2, TDB* tdb )
+void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2,
+                                 U64 tdba, int b1 )
 {
 int         n, tdc;
 TPAGEMAP   *pmap;
@@ -728,6 +718,12 @@ TPAGEMAP   *pmap;
 
         UPDATE_SYSBLK_TRANSCPUS( +1 );  /* bump transacting CPUs ctr */
 
+        /* Set both TDBs to invalid until they're actually populated */
+
+        if (!txf_contran && b1)
+        ARCH_DEP( vstoreb )( 0x00, tdba,  b1, regs );
+        ARCH_DEP( vstoreb )( 0x00, 0x1800, 0, regs );
+
         /* Initialize the page map */
 
         pmap = regs->txf_pagesmap;
@@ -762,7 +758,8 @@ TPAGEMAP   *pmap;
         regs->txf_gprmask      = (i2 >> 8) & (0xFF);
         regs->txf_higharchange = (regs->txf_ctlflag & TXF_CTL_AR)    ? regs->txf_tnd : 0;
         regs->txf_highfloat    = (regs->txf_ctlflag & TXF_CTL_FLOAT) ? regs->txf_tnd : 0;
-        regs->txf_tdb          = tdb;
+        regs->txf_tdba         = tdba;
+        regs->txf_tdba_b1      = b1;
 
         /* Set CONSTRAINED trans instruction fetch constraint */
         if (txf_contran)
@@ -1216,79 +1213,118 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     /*  for TBEGINC is ignored.)                      */
     /*------------------------------------------------*/
 
-    /* Program Interrupt TDB? */
+    /* CONSTRAINED transaction or Program Interrupt?  */
     if (0
-        || txf_tac == TAC_UPGM  /* Unfiltered PGM? */
-        || txf_tac == TAC_FPGM  /* Filtered   PGM? */
+        || txf_contran          /* CONSTRAINED trans? */
+        || txf_tac == TAC_UPGM  /* Unfiltered PGM?    */
+        || txf_tac == TAC_FPGM  /* Filtered   PGM?    */
     )
     {
-        RADR tdb = 0x1800;
-        tdb = APPLY_PREFIXING( tdb, regs->PX );
-        pi_tdb = (TDB*)(regs->mainstor + tdb);
+        RADR pi_tdba = 0x1800;
+        pi_tdba = APPLY_PREFIXING( pi_tdba, regs->PX );
+        pi_tdb = (TDB*)(regs->mainstor + pi_tdba);
     }
 
     /* TBEGIN-specified TDB? */
-    if (!txf_contran && regs->txf_tdb)
-        tb_tdb = regs->txf_tdb;
+    if (!txf_contran && regs->txf_tdba_b1)
+    {
+        RADR  real_tdb;
+        int   stid;
+        int   xcode;
 
-    /* Populate the TDBs */
+        /* Convert TDB address to absolute mainstor address */
+        if ((xcode = ARCH_DEP( virt_to_real )( &real_tdb, &stid,
+            regs->txf_tdba, regs->txf_tdba_b1, regs, ACCTYPE_WRITE )) == 0)
+        {
+            tb_tdb = (TDB*)(regs->mainstor + APPLY_PREFIXING( real_tdb, regs->PX ));
+        }
+        else
+        {
+            PTT_TXF( "*TXF vrfail", xcode, regs->txf_tdba, regs->txf_tdba_b1 );
 
-    if (pi_tdb)
+            if (TXF_TRACING())
+            {
+                // "TXF: %s%02X: %sTranslation exception %4.4hX (%s) on TBEGIN tdba 0x%16.16"PRIx64
+                WRMSG( HHC17713, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
+                    xcode, PIC2Name( xcode ), regs->txf_tdba );
+            }
+        }
+    }
+
+    /*------------------------------------------------*/
+    /*  Always populate our internal CONSTRAINED tdb  */
+    /*------------------------------------------------*/
     {
         /* PROGAMMING NOTE: see Figure 5-13 on page 5-94:
            certain TDB fields are stored only for TBEGIN-
            specified TDB. Otherwise the field is reserved.
         */
-        pi_tdb->tdb_format = 1;
-//      pi_tdb->tdb_eaid   = regs->excarid;
-        pi_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
+        regs->txf_pi_tdb.tdb_format = 1;
+//      regs->txf_pi_tdb.tdb_eaid   = regs->excarid;
+        regs->txf_pi_tdb.tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
-        STORE_HW( pi_tdb->tdb_tnd,      (U16) txf_tnd      );
-        STORE_DW( pi_tdb->tdb_tac,      (U64) txf_tac      );
-//      STORE_DW( pi_tdb->tdb_teid,     (U64) regs->TEA    );
-//      STORE_FW( pi_tdb->tdb_piid,     (U32) txf_piid     );
-        STORE_DW( pi_tdb->tdb_atia,     (U64) txf_atia     );
-//      STORE_DW( pi_tdb->tdb_conflict, (U64) txf_conflict );
-//      STORE_DW( pi_tdb->tdb_bea,      (U64) txf_bea      );
+        STORE_HW( regs->txf_pi_tdb.tdb_tnd,      (U16) txf_tnd      );
+        STORE_DW( regs->txf_pi_tdb.tdb_tac,      (U64) txf_tac      );
+//      STORE_DW( regs->txf_pi_tdb.tdb_teid,     (U64) regs->TEA    );
+//      STORE_FW( regs->txf_pi_tdb.tdb_piid,     (U32) txf_piid     );
+        STORE_DW( regs->txf_pi_tdb.tdb_atia,     (U64) txf_atia     );
+//      STORE_DW( regs->txf_pi_tdb.tdb_conflict, (U64) txf_conflict );
+//      STORE_DW( regs->txf_pi_tdb.tdb_bea,      (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
-            STORE_DW( pi_tdb->tdb_gpr[i], regs->GR_G( i ));
-
-        if (TXF_TRACE_TDB( txf_contran ))
-            dump_tdb( regs, pi_tdb, regs->txf_tdb_addr );
+            STORE_DW( regs->txf_pi_tdb.tdb_gpr[i], regs->GR_G( i ));
     }
 
-    if (tb_tdb)
+    /*--------------------------------------------------*/
+    /*  Always populate our internal unconstrained tdb  */
+    /*--------------------------------------------------*/
     {
-        tb_tdb->tdb_format = 1;
-        tb_tdb->tdb_eaid   = regs->excarid;
-        tb_tdb->tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
+        regs->txf_tb_tdb.tdb_format = 1;
+        regs->txf_tb_tdb.tdb_eaid   = regs->excarid;
+        regs->txf_tb_tdb.tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
         if (0
             || txf_tac == TAC_FETCH_CNF
             || txf_tac == TAC_STORE_CNF
         )
-            tb_tdb->tdb_flags |= (txf_conflict ? TDB_CTV : 0x00);
+            regs->txf_tb_tdb.tdb_flags |= (txf_conflict ? TDB_CTV : 0x00);
 
         if (0
-            || txf_piid == PGM_DATA_EXCEPTION
-            || txf_piid == PGM_VECTOR_PROCESSING_EXCEPTION
+            || (txf_piid & 0xFF) == PGM_DATA_EXCEPTION
+            || (txf_piid & 0xFF) == PGM_VECTOR_PROCESSING_EXCEPTION
         )
-            tb_tdb->tdb_dxc = regs->txf_dxc_vxc;
+            regs->txf_tb_tdb.tdb_dxc = regs->txf_dxc_vxc;
 
-        STORE_HW( tb_tdb->tdb_tnd,      (U16) txf_tnd      );
-        STORE_DW( tb_tdb->tdb_tac,      (U64) txf_tac      );
-        STORE_DW( tb_tdb->tdb_teid,     (U64) regs->TEA    );
-        STORE_FW( tb_tdb->tdb_piid,     (U32) txf_piid     );
-        STORE_DW( tb_tdb->tdb_atia,     (U64) txf_atia     );
-        STORE_DW( tb_tdb->tdb_conflict, (U64) txf_conflict );
-        STORE_DW( tb_tdb->tdb_bea,      (U64) txf_bea      );
+        STORE_HW( regs->txf_tb_tdb.tdb_tnd,      (U16) txf_tnd      );
+        STORE_DW( regs->txf_tb_tdb.tdb_tac,      (U64) txf_tac      );
+        STORE_DW( regs->txf_tb_tdb.tdb_teid,     (U64) regs->TEA    );
+        STORE_FW( regs->txf_tb_tdb.tdb_piid,     (U32) txf_piid     );
+        STORE_DW( regs->txf_tb_tdb.tdb_atia,     (U64) txf_atia     );
+        STORE_DW( regs->txf_tb_tdb.tdb_conflict, (U64) txf_conflict );
+        STORE_DW( regs->txf_tb_tdb.tdb_bea,      (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
-            STORE_DW( tb_tdb->tdb_gpr[i], regs->GR_G( i ));
+            STORE_DW( regs->txf_tb_tdb.tdb_gpr[i], regs->GR_G( i ));
+    }
+
+    /*----------------------------------------------------*/
+    /*  Copy internal TDB to its proper storage location  */
+    /*----------------------------------------------------*/
+
+    if (pi_tdb)
+    {
+        memcpy( pi_tdb, &regs->txf_pi_tdb, sizeof( TDB ));
 
         if (TXF_TRACE_TDB( txf_contran ))
-            dump_tdb( regs, tb_tdb, regs->txf_tdb_addr );
+            dump_tdb( regs, pi_tdb, 0x1800 );
+    }
+
+    if (tb_tdb)
+    {
+        memcpy( tb_tdb, &regs->txf_tb_tdb, sizeof( TDB ));
+
+        if (TXF_TRACE_TDB( txf_contran ))
+            dump_tdb( regs, tb_tdb, regs->txf_tdba );
     }
 
     /*----------------------------------------------------*/

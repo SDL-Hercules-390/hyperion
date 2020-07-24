@@ -355,6 +355,9 @@ struct REGS {                           /* Processor registers       */
     /*      Transactional-Execution Facility control fields          */
     /*---------------------------------------------------------------*/
 
+        TDB     txf_pi_tdb;             /* Program Interrupt TDB     */
+        TDB     txf_tb_tdb;             /* TBEGIN instruction TDB    */
+
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_aborted;            /* true == aborted trans.    */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
@@ -407,8 +410,8 @@ struct REGS {                           /* Processor registers       */
 
 #define TXF_PIFC_RESERVED   3           /* Reserved (invalid)        */
 
-        TDB*    txf_tdb;                /* Mainstor pointer to TDB   */
-        U64     txf_tdb_addr;           /* Logical address of TDB    */
+        U64     txf_tdba;               /* TBEGIN TDB address        */
+        int     txf_tdba_b1;            /* TBEGIN op1 base address   */
         U64     txf_conflict;           /* Logical address where
                                            conflict was detected     */
 
