@@ -48,6 +48,7 @@
 #define FEATURE_TEST_BLOCK
 #define FEATURE_VM_BLOCKIO
 #define FEATURE_TCPIP_EXTENSION
+#define TCPNJE_CDWMERGE_KLUDGE
 
 /*-------------------------------------------------------------------*/
 /*          "Hercules S/370 Instruction Extension Facility"          */

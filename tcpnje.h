@@ -5,6 +5,8 @@
 
 #define TCPNJE_DEFAULT_PORT      175  /* Standard port for TCPNJE / VMNET     */
 #define TCPNJE_DEFAULT_BUFSIZE  8192  /* Default TCPNJE / VMNET buffer size   */
+#define TCPNJE_DEFAULT_LISTEN      1  /* Default is to listen                 */
+#define TCPNJE_DEFAULT_CONNECT     1  /* Default is to connect                */
 
 #define TCPNJE_DEFAULT_DEBUG     127  /* Default debug bitmask                */
 #define TCPNJE_DEFAULT_TRACE   65535  /* Default trace bitmask                */
@@ -173,6 +175,8 @@ struct TCPNJE
                                 /* has already been issued                  */
     u_int  signoff:1;           /* Send signoff to RSCS at next read        */
     u_int  datalostcond:1;      /* Data Lost Condition Raised               */
+    u_int  listen:1;            /* This is a listening device               */
+    u_int  connect:1;           /* This is a connecting device              */
 };
 
 enum {

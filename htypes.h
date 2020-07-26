@@ -203,6 +203,7 @@ typedef struct GUISTAT   GUISTAT;   // EXTERNALGUI Device Status Ctl
 
 typedef struct COMMADPT         COMMADPT;         // Comm Adapter
 typedef struct bind_struct      bind_struct;      // Socket Device Ctl
+typedef struct TCPNJE           TCPNJE;           // TCPNJE communications
 
 typedef struct TAPEMEDIA_HANDLER  TAPEMEDIA_HANDLER;  // (see tapedev.h)
 typedef struct TAPEAUTOLOADENTRY  TAPEAUTOLOADENTRY;  // (see tapedev.h)

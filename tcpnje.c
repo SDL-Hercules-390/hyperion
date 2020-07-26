@@ -115,6 +115,8 @@ static PARSER ptab[] = {
     {"debug", "%s"},
     {"trace", "%s"},
     {"bufsize", "%s"},
+    {"listen", "%s"},
+    {"connect", "%s"},
     {NULL, NULL}
 };
 
@@ -132,7 +134,9 @@ enum {
     TCPNJE_KW_RNODE,
     TCPNJE_KW_DEBUG,
     TCPNJE_KW_TRACE,
-    TCPNJE_KW_BUFSIZE
+    TCPNJE_KW_BUFSIZE,
+    TCPNJE_KW_LISTEN,
+    TCPNJE_KW_CONNECT
 } tcpnje_kw;
 
 static void logdump(char *txt, DEVBLK *dev, BYTE *bfr, size_t sz)
@@ -347,6 +351,7 @@ static int tcpnje_getaddr(in_addr_t *ia, char *txt)
 /*                 -5 -> bind() failed (no access to privileged port)*/
 /*                 -6 -> bind() failed (some other reason).          */
 /*                 -7 -> listen() failed.                            */
+/*                 >0 -> nothing done due to listen parm being zero  */
 /*-------------------------------------------------------------------*/
 static int tcpnje_listen(struct TCPNJE *tn)
 {
@@ -355,6 +360,8 @@ static int tcpnje_listen(struct TCPNJE *tn)
     int savederrno;
     int sockopt;                /* Used for setsocketoption          */
     int rc;                     /* return code from various rtns     */
+
+    if (!tn->listen) return(999);
 
     intmp.s_addr = tn->lhost;   /* To display ip addresses in msgs   */
 
@@ -472,6 +479,7 @@ static int tcpnje_listen(struct TCPNJE *tn)
 /* tcpnje_connout : make a tcp outgoing call                         */
 /* return values : 0 -> call succeeded or initiated                  */
 /*                <0 -> call failed                                  */
+/*                >0 -> nothing done due to connect parm being zero  */
 /*-------------------------------------------------------------------*/
 static int tcpnje_connout(struct TCPNJE *tn)
 {
@@ -480,16 +488,19 @@ static int tcpnje_connout(struct TCPNJE *tn)
     struct in_addr intmp;
     char lnodestring[9], rnodestring[9];
 
+    if (!tn->connect) return(999);
+
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = tn->rhost;
     sin.sin_port = htons(tn->rport);
 
     /* Are we randomly delaying to avoid colliding with other end's open attempts? */
-    if (tn->activeopendelay)
+    if (tn->activeopendelay && tn->listen)
     {
         DBGMSG(256, "HHCTN033I %4.4X:TCPNJE - delaying link %s - %s active open for %d attempt(s)\n",
                      tn->dev->devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
                                  guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode), tn->activeopendelay);
+        if (tn->activeopendelay > 3) usleep(1000);
         tn->activeopendelay--;
 
         /* Pretend we failed to connect */
@@ -561,6 +572,7 @@ static int tcpnje_connout(struct TCPNJE *tn)
                 guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
         tn->state = TCPCONACT;
     }
+    disable_nagle(tn->afd);
     return(0);
 }
 /*-------------------------------------------------------------------*/
@@ -1156,7 +1168,9 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
                         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 3, tn);
                         close_socket(tn->pfd);
                         tn->pfd = -1;
-                        if (tn->state == TCPCONPAS) tn->state = tn->listening ? TCPLISTEN : CLOSED;
+                        close_socket(tn->afd);
+                        tn->afd = -1;
+                        tn->state = tn->listening ? TCPLISTEN : CLOSED;
                         return;
                     }
 
@@ -1250,6 +1264,9 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 3, tn);
         close_socket(tn->pfd);
         tn->pfd = -1;
+        close_socket(tn->afd);
+        tn->afd = -1;
+        tn->state = tn->listening ? TCPLISTEN : CLOSED;
         return;
     }
 
@@ -1263,6 +1280,9 @@ static void tcpnje_process_request(struct TNBUFFER *buffer, struct TCPNJE *tn)
         tcpnje_ttc(tn->pfd, TCPNJE_NAK, 3, tn);
         close_socket(tn->pfd);
         tn->pfd = -1;
+        close_socket(tn->afd);
+        tn->afd = -1;
+        tn->state = tn->listening ? TCPLISTEN : CLOSED;
         return;
     }
 
@@ -1352,9 +1372,20 @@ static void tcpnje_process_reply(struct TNBUFFER *buffer, struct TCPNJE *tn)
 
             /* Only retry active open after randomish number of attempts */
             tn->activeopendelay = (timenow.tv_sec + timenow.tv_usec) & 3;
+
+            /* However, if we got bashed by a NAK 3, restart the listener and
+               give active connecting a good long pause */
+            if (buffer->base.ttc->r == 3)
+            {
+                tn->activeopendelay = 20;
+                close_socket(tn->lfd);
+                tn->lfd = -1;
+                tn->listening = 0;
+            }
         }
 
         close_socket(tn->afd);
+        tn->afd = -1;
         tn->state = tn->listening ? TCPLISTEN : CLOSED;
     }
     else
@@ -1656,9 +1687,10 @@ static void *tcpnje_thread(void *vtn)
                             /* to prevent OSes from issuing a loop of WRITES       */
                             else
                             {
-                                DBGMSG(32, "HHCTN007W %4.4X:TCPNJE - outgoing connection for link %s - %s failed or deferred\n",
-                                        devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
-                                                guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
+                                if (rc != 999)
+                                    DBGMSG(32, "HHCTN007W %4.4X:TCPNJE - outgoing connection for link %s - %s failed or deferred\n",
+                                            devnum, guest_to_host_string(lnodestring, sizeof(lnodestring), tn->lnode),
+                                                    guest_to_host_string(rnodestring, sizeof(rnodestring), tn->rnode));
                                 seltv = tcpnje_setto(&tv, tn->cto);
                             }
                         }
@@ -2144,6 +2176,7 @@ static void *tcpnje_thread(void *vtn)
                 }
 
                 tn->pfd = tempfd;
+                disable_nagle(tn->pfd);
 
                 /* Don't mess up any existing connection in case this one is not for us or doesn't work out */
                 if (tn->state == TCPLISTEN) tn->state = TCPCONPAS;
@@ -2392,6 +2425,8 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         tn->trace = TCPNJE_DEFAULT_TRACE;      /* Trace level bitmask */
         tn->maxidlewrites = TCPNJE_DEFAULT_KEEPALIVE;
         dev->bufsize = TCPNJE_DEFAULT_BUFSIZE;
+        tn->listen = TCPNJE_DEFAULT_LISTEN;
+        tn->connect = TCPNJE_DEFAULT_CONNECT;
 
         for(i = 0; i < 8; i++)
         {
@@ -2580,6 +2615,12 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
                         break;
                     }
                     dev->bufsize = atoi(res.text);
+                    break;
+                case TCPNJE_KW_LISTEN:
+                    tn->listen = atoi(res.text);
+                    break;
+                case TCPNJE_KW_CONNECT:
+                    tn->connect = atoi(res.text);
                     break;
                 default:
                     break;
