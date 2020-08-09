@@ -4180,6 +4180,7 @@ int     divide_overflow;                /* 1=divide overflow         */
 
     RR(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Divide r1::r1+1 by r2, remainder in r1, quotient in r1+1 */
@@ -4922,6 +4923,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     RX0(inst, regs, r1, b2, effective_addr2);
+
+    CONTRAN_INSTR_CHECK( regs );
 
     /* Load operand address into register */
     SET_GR_A(r1, regs,effective_addr2);

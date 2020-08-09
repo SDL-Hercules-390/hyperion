@@ -836,6 +836,7 @@ U32     d;
 
     RRE(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     n = ((U64)regs->GR_L(r1) << 32) | regs->GR_L(r1 + 1);
@@ -865,6 +866,7 @@ U64     r, q, d;
 
     RRE(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     d = regs->GR_G(r2);
@@ -1479,6 +1481,7 @@ U64     n;
 
     RRE(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     if(regs->GR_G(r2) == 0
@@ -1507,6 +1510,7 @@ U32     n;
 
     RRE(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     if(regs->GR_L(r2) == 0
