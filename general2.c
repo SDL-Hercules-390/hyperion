@@ -54,7 +54,7 @@ DEF_INST(or_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* OR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) |= regs->GR_L(r2) ) ? 1 : 0;
@@ -676,7 +676,7 @@ DEF_INST(set_access_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     TRAN_ACCESS_INSTR_CHECK( regs );
 
@@ -694,7 +694,7 @@ DEF_INST(set_program_mask)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Set condition code from bits 2-3 of R1 register */
     regs->psw.cc = ( regs->GR_L(r1) & 0x30000000 ) >> 28;
@@ -855,7 +855,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* Integer work areas        */
 
-    RS0(inst, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -932,7 +932,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* Integer work areas        */
 
-    RS0(inst, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -958,7 +958,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* Integer work areas        */
 
-    RS0(inst, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -1404,7 +1404,7 @@ DEF_INST(subtract_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Subtract unsigned operands and set condition code */
     if (likely(r1 == r2))
@@ -1652,7 +1652,7 @@ U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* AND register bits 0-15 with immediate operand */
     h1 = i2 & regs->GR_LHH(r1);
@@ -1682,7 +1682,7 @@ U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* AND register bits 16-31 with immediate operand */
     h1 = i2 & regs->GR_LHL(r1);

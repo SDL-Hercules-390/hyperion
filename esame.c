@@ -904,7 +904,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     carry = 0;
 U64     n;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     n = regs->GR_G(r2);
 
@@ -932,7 +932,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     borrow = 2;
 U64     n;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     n = regs->GR_G(r2);
 
@@ -1298,7 +1298,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     carry = 0;
 U32     n;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     n = regs->GR_L(r2);
 
@@ -1326,7 +1326,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     borrow = 2;
 U32     n;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     n = regs->GR_L(r2);
 
@@ -1743,7 +1743,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     SET_GR_A(r1, regs, likely(!regs->execflag)
                      ? PSW_IA(regs, -6 + 2LL*(S32)i2)
@@ -1763,7 +1763,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_HHH(r1) = i2;
 
@@ -1781,7 +1781,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_HHL(r1) = i2;
 
@@ -1799,7 +1799,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_LHH(r1) = i2;
 
@@ -1817,7 +1817,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_LHL(r1) = i2;
 
@@ -1835,7 +1835,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_HHH(r1) &= i2;
 
@@ -1856,7 +1856,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_HHL(r1) &= i2;
 
@@ -1877,7 +1877,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_LHH(r1) &= i2;
 
@@ -1898,7 +1898,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_LHL(r1) &= i2;
 
@@ -1919,7 +1919,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_HHH(r1) |= i2;
 
@@ -1940,7 +1940,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_HHL(r1) |= i2;
 
@@ -1961,7 +1961,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_LHH(r1) |= i2;
 
@@ -1982,7 +1982,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_LHL(r1) |= i2;
 
@@ -2003,7 +2003,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2 << 48;
 
@@ -2021,7 +2021,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2 << 32;
 
@@ -2039,7 +2039,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2 << 16;
 
@@ -2057,7 +2057,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2;
 
@@ -2077,7 +2077,7 @@ DEF_INST(branch_relative_on_condition_long)
     if (inst[1] & (0x80 >> regs->psw.cc))
         SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*(S32)fetch_fw(inst+2));
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_relative_on_condition_long) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
@@ -2373,7 +2373,7 @@ S64     i,j;                            /* Integer workareas         */
     if ( (S64)regs->GR_G(r1) > j )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i2, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_relative_on_index_high_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2406,7 +2406,7 @@ S64     i,j;                            /* Integer workareas         */
     if ( (S64)regs->GR_G(r1) <= j )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i2, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2440,7 +2440,7 @@ S64     i, j;                           /* Integer work areas        */
     if ( (S64)regs->GR_G(r1) > j )
         SUCCESSFUL_BRANCH(regs, effective_addr2, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_on_index_high_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2474,7 +2474,7 @@ S64     i, j;                           /* Integer work areas        */
     if ( (S64)regs->GR_G(r1) <= j )
         SUCCESSFUL_BRANCH(regs, effective_addr2, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_on_index_low_or_equal_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2621,7 +2621,7 @@ VADR    effective_addr2;                /* Effective address         */
     if ( --(regs->GR_G(r1)) )
         SUCCESSFUL_BRANCH(regs, effective_addr2, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_on_count_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2648,7 +2648,7 @@ VADR    newia;                          /* New instruction address   */
     if ( --(regs->GR_G(r1)) && r2 != 0 )
         SUCCESSFUL_BRANCH(regs, newia, 2);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_count_long_register) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2662,7 +2662,7 @@ DEF_INST(compare_long_register)
 {
 register int     r1, r2;                /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2681,7 +2681,7 @@ DEF_INST(compare_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -3090,7 +3090,7 @@ DEF_INST(load_positive_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 S64     gpr2l;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     gpr2l = (S32)regs->GR_L(r2);
 
@@ -3111,7 +3111,7 @@ DEF_INST(load_negative_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
     regs->GR_G(r1) = (S64)regs->GR_G(r2) > 0 ?
@@ -3133,7 +3133,7 @@ DEF_INST(load_negative_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 S64     gpr2l;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     gpr2l = (S32)regs->GR_L(r2);
 
@@ -3154,7 +3154,7 @@ DEF_INST(load_and_test_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand and set condition code */
     regs->GR_G(r1) = regs->GR_G(r2);
@@ -3174,7 +3174,7 @@ DEF_INST(load_and_test_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand and set condition code */
     regs->GR_G(r1) = (S32)regs->GR_L(r2);
@@ -3225,7 +3225,7 @@ DEF_INST(load_complement_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 S64     gpr2l;
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     gpr2l = (S32)regs->GR_L(r2);
 
@@ -3251,7 +3251,7 @@ U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* AND register bits 0-15 with immediate operand */
     h1 = i2 & regs->GR_HHH(r1);
@@ -3282,7 +3282,7 @@ U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* AND register bits 16-31 with immediate operand */
     h1 = i2 & regs->GR_HHL(r1);
@@ -3319,7 +3319,7 @@ U16     i2;                             /* 16-bit operand values     */
     if ( --(regs->GR_G(r1)) )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 } /* end DEF_INST(branch_relative_on_count_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
@@ -3380,7 +3380,7 @@ DEF_INST(compare_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_G(r1) < regs->GR_L(r2) ? 1 :
@@ -3398,7 +3398,7 @@ DEF_INST(load_logical_long_thirtyone_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     regs->GR_G(r1) = regs->GR_L(r2) & 0x7FFFFFFF;
 
@@ -3414,7 +3414,7 @@ DEF_INST(compare_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
@@ -3435,7 +3435,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3459,7 +3459,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost five bits of operand address as shift count */
     n = effective_addr2 & 0x1F;
@@ -3483,7 +3483,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3506,7 +3506,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3581,7 +3581,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3653,7 +3653,7 @@ DEF_INST(multiply_single_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S32)regs->GR_L(r2);
@@ -3670,7 +3670,7 @@ DEF_INST(multiply_single_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S64)regs->GR_G(r2);
@@ -3689,7 +3689,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Load operand into register */
     regs->GR_G(r1) = (S16)i2;
@@ -3733,7 +3733,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Multiply register by operand ignoring overflow  */
     regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S16)i2;
@@ -3752,7 +3752,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -3771,7 +3771,7 @@ DEF_INST(and_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_G(r1) &= regs->GR_G(r2) ) ? 1 : 0;
@@ -3788,7 +3788,7 @@ DEF_INST(or_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* OR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_G(r1) |= regs->GR_G(r2) ) ? 1 : 0;
@@ -3805,7 +3805,7 @@ DEF_INST(exclusive_or_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_G(r1) ^= regs->GR_G(r2) ) ? 1 : 0;
@@ -3891,7 +3891,7 @@ DEF_INST(load_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = regs->GR_G(r2);
@@ -3908,7 +3908,7 @@ DEF_INST(load_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = regs->GR_L(r2);
@@ -3925,7 +3925,7 @@ DEF_INST(load_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = (S32)regs->GR_L(r2);
@@ -3942,7 +3942,7 @@ DEF_INST(add_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
@@ -3961,7 +3961,7 @@ DEF_INST(add_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
@@ -3980,7 +3980,7 @@ DEF_INST(subtract_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
@@ -3999,7 +3999,7 @@ DEF_INST(subtract_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
@@ -4740,7 +4740,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXYX0(inst, regs, r1, b2, effective_addr2);
+    RXYX(inst, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
@@ -4806,7 +4806,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXYX0(inst, regs, r1, b2, effective_addr2);
+    RXYX(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -5783,7 +5783,7 @@ DEF_INST(load_reversed_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = bswap_64(regs->GR_G(r2));
@@ -5800,7 +5800,7 @@ DEF_INST(load_reversed_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_L(r1) = bswap_32(regs->GR_L(r2));
@@ -7404,7 +7404,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY0(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
     SET_GR_A(r1, regs, effective_addr2);
@@ -8031,7 +8031,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_logical (&(regs->GR_L(r1)),
@@ -8050,7 +8050,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
@@ -8069,7 +8069,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* And fullword operand with high 32 bits of register */
     regs->GR_H(r1) &= i2;
@@ -8089,7 +8089,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* And fullword operand with low 32 bits of register */
     regs->GR_L(r1) &= i2;
@@ -8109,7 +8109,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc = (S32)regs->GR_L(r1) < (S32)i2 ? 1 :
@@ -8127,7 +8127,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc = (S64)regs->GR_G(r1) < (S32)i2 ? 1 :
@@ -8145,7 +8145,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_L(r1) < i2 ? 1 :
@@ -8163,7 +8163,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_G(r1) < i2 ? 1 :
@@ -8181,7 +8181,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* XOR fullword operand with high 32 bits of register */
     regs->GR_H(r1) ^= i2;
@@ -8201,7 +8201,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* XOR fullword operand with low 32 bits of register */
     regs->GR_L(r1) ^= i2;
@@ -8221,7 +8221,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Insert fullword operand into high 32 bits of register */
     regs->GR_H(r1) = i2;
@@ -8238,7 +8238,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Insert fullword operand into low 32 bits of register */
     regs->GR_L(r1) = i2;
@@ -8255,7 +8255,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Load fullword operand into high 32 bits of register
        and set remaining bits to zero */
@@ -8274,7 +8274,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Load fullword operand into low 32 bits of register
        and set remaining bits to zero */
@@ -8292,7 +8292,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Load operand into register */
     regs->GR_G(r1) = (S32)i2;
@@ -8309,7 +8309,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Or fullword operand with high 32 bits of register */
     regs->GR_H(r1) |= i2;
@@ -8329,7 +8329,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Or fullword operand with low 32 bits of register */
     regs->GR_L(r1) |= i2;
@@ -8349,7 +8349,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical (&(regs->GR_L(r1)),
@@ -8368,7 +8368,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
@@ -8427,7 +8427,7 @@ DEF_INST(load_byte_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load sign-extended byte from second register */
     regs->GR_L(r1) = (S32)(S8)(regs->GR_LHLCL(r2));
@@ -8442,7 +8442,7 @@ DEF_INST(load_long_byte_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load sign-extended byte from second register */
     regs->GR_G(r1) = (S64)(S8)(regs->GR_LHLCL(r2));
@@ -8457,7 +8457,7 @@ DEF_INST(load_halfword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load sign-extended halfword from second register */
     regs->GR_L(r1) = (S32)(S16)(regs->GR_LHL(r2));
@@ -8472,7 +8472,7 @@ DEF_INST(load_long_halfword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load sign-extended halfword from second register */
     regs->GR_G(r1) = (S64)(S16)(regs->GR_LHL(r2));
@@ -8503,7 +8503,7 @@ DEF_INST(load_logical_character_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load bits 56-63 from second register and clear bits 32-55 */
     regs->GR_L(r1) = regs->GR_LHLCL(r2);
@@ -8518,7 +8518,7 @@ DEF_INST(load_logical_long_character_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load bits 56-63 from second register and clear bits 0-55 */
     regs->GR_G(r1) = regs->GR_LHLCL(r2);
@@ -8549,7 +8549,7 @@ DEF_INST(load_logical_halfword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load bits 48-63 from second register and clear bits 32-47 */
     regs->GR_L(r1) = regs->GR_LHL(r2);
@@ -8564,7 +8564,7 @@ DEF_INST(load_logical_long_halfword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load bits 48-63 from second register and clear bits 0-47 */
     regs->GR_G(r1) = regs->GR_LHL(r2);

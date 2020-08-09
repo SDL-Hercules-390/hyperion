@@ -154,7 +154,7 @@ U16     i2;                             /* 16-bit immediate op       */
   DEF_INST(1E ## r1 ## r2) \
   { \
     UNREFERENCED(inst); \
-    INST_UPDATE_PSW(regs, 2, 0); \
+    INST_UPDATE_PSW(regs, 2, 2); \
     regs->psw.cc = add_logical(&(regs->GR_L(0x ## r1)), regs->GR_L(0x ## r1), regs->GR_L(0x ## r2)); \
   }
 #define ALRgenr2(r1) \
@@ -201,7 +201,7 @@ DEF_INST(add_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc =
@@ -218,7 +218,7 @@ DEF_INST(and_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) &= regs->GR_L(r2) ) ? 1 : 0;
@@ -460,7 +460,7 @@ VADR    newia;                          /* New instruction address   */
     if ( r2 != 0 )
         SUCCESSFUL_BRANCH(regs, newia, 2);
     else
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
 
 } /* end DEF_INST(branch_and_link_register) */
 
@@ -536,7 +536,7 @@ VADR    newia;                          /* New instruction address   */
     if ( r2 != 0 )
         SUCCESSFUL_BRANCH(regs, newia, 2);
     else
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
 
 } /* end DEF_INST(branch_and_save_register) */
 
@@ -601,7 +601,7 @@ BYTE    *ipsav;                         /* save for ip               */
     {
         /* save ip and update it for mode switch trace */
         ipsav = regs->ip;
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
         regs->psw.ilc = 2;
         regs->CR(12) = ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE ? 1 : 0,
                                            newia & ~0x01, regs);
@@ -644,7 +644,7 @@ BYTE    *ipsav;                         /* save for ip               */
         SUCCESSFUL_BRANCH(regs, newia, 2);
     }
     else
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
 
 } /* end DEF_INST(branch_and_save_and_set_mode) */
 #endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
@@ -672,7 +672,7 @@ VADR    newia;                          /* New instruction address   */
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
     {
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
         regs->psw.ilc = 2;
         regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
     }
@@ -706,7 +706,7 @@ VADR    newia;                          /* New instruction address   */
         SUCCESSFUL_BRANCH(regs, newia, 2);
     }
     else
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
 
 } /* end DEF_INST(branch_and_set_mode) */
 #endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
@@ -728,7 +728,7 @@ DEF_INST(branch_on_condition_register)
         SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
     else
     {
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
         /* Perform serialization and checkpoint synchronization if
            the mask is all ones and R2 is register 0 */
         if ( inst[1] == 0xF0 )
@@ -787,11 +787,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 2);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -802,7 +802,7 @@ DEF_INST(nop4)
 {
     CONTRAN_INSTR_CHECK( regs );
     UNREFERENCED(inst);
-    INST_UPDATE_PSW(regs, 4, 0);
+    INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -819,11 +819,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 3)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -840,11 +840,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 2)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -861,11 +861,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc > 1)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -882,11 +882,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc == 1)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -903,11 +903,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc & 0x01)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -924,11 +924,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -945,11 +945,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(!regs->psw.cc)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -966,11 +966,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(!(regs->psw.cc & 0x01))
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -987,11 +987,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 1)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -1008,11 +1008,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc < 2)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -1029,11 +1029,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 2)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -1050,11 +1050,11 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if(regs->psw.cc != 3)
     {
-        RXX0_BC(inst, regs, b2, effective_addr2);
+        RXX_BC(inst, regs, b2, effective_addr2);
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -1067,7 +1067,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     CONTRAN_INSTR_CHECK( regs );
-    RXX0_BC(inst, regs, b2, effective_addr2);
+    RXX_BC(inst, regs, b2, effective_addr2);
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
 } /* end DEF_INST(branch_on_condition) */
@@ -1091,11 +1091,11 @@ VADR    effective_addr2;                /* Effective address         */
         RXXx_BC(inst, regs, b2, effective_addr2);
 #else
         RX_BC(inst, regs, b2, effective_addr2);
-#endif /* #ifdef OPTION_OPTINST */
+#endif
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_condition) */
 
@@ -1162,7 +1162,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXXx(inst, regs, r1, b2, effective_addr2);
 #else
     RX(inst, regs, r1, b2, effective_addr2);
-#endif /* #ifdef OPTION_OPTINST */
+#endif
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1212,7 +1212,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXXx(inst, regs, r1, b2, effective_addr2);
 #else
     RX(inst, regs, r1, b2, effective_addr2);
-#endif /* #ifdef OPTION_OPTINST */
+#endif
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
@@ -1226,7 +1226,7 @@ VADR    effective_addr2;                /* Effective address         */
   { \
     int b2; \
     VADR effective_addr2; \
-    RX0X0RX(inst, regs, b2, effective_addr2); \
+    RXX0RX(inst, regs, b2, effective_addr2); \
     SET_GR_A(0x ## r1, regs, effective_addr2); \
   }
 
@@ -1259,10 +1259,10 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
 #ifdef OPTION_OPTINST
-    RX0Xx(inst, regs, r1, b2, effective_addr2);
+    RXXx(inst, regs, r1, b2, effective_addr2);
 #else
-    RX0(inst, regs, r1, b2, effective_addr2);
-#endif /* #ifdef OPTION_OPTINST */
+    RX(inst, regs, r1, b2, effective_addr2);
+#endif
 
     /* Load operand address into register */
     SET_GR_A(r1, regs, effective_addr2);
@@ -1353,7 +1353,7 @@ U32     n;                              /* 32-bit operand values     */
     RXXx(inst, regs, r1, b2, effective_addr2);
 #else
     RX(inst, regs, r1, b2, effective_addr2);
-#endif /* #ifdef OPTION_OPTINST */
+#endif
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1397,7 +1397,7 @@ U16   i2;                               /* 16-bit operand values     */
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     }
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_relative_on_condition) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1422,7 +1422,7 @@ VADR    newia;                          /* New instruction address   */
     if ( --(regs->GR_L(r1)) && r2 != 0 )
         SUCCESSFUL_BRANCH(regs, newia, 2);
     else
-        INST_UPDATE_PSW(regs, 2, 0);
+        INST_UPDATE_PSW(regs, 2, 2);
 
 } /* end DEF_INST(branch_on_count_register) */
 
@@ -1444,7 +1444,7 @@ VADR    effective_addr2;                /* Effective address         */
     if ( --(regs->GR_L(r1)) )
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_count) */
 
@@ -1476,7 +1476,7 @@ S32     i, j;                           /* Integer work areas        */
     if ( (S32)regs->GR_L(r1) > j )
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_index_high) */
 
@@ -1508,7 +1508,7 @@ S32     i, j;                           /* Integer work areas        */
     if ( (S32)regs->GR_L(r1) <= j )
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_on_index_low_or_equal) */
 
@@ -1562,7 +1562,7 @@ U16     i2;                             /* 16-bit operand values     */
     if ( --(regs->GR_L(r1)) )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_relative_on_count) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1595,7 +1595,7 @@ S32     i,j;                            /* Integer workareas         */
     if ( (S32)regs->GR_L(r1) > j )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_relative_on_index_high) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1628,7 +1628,7 @@ S32     i,j;                            /* Integer workareas         */
     if ( (S32)regs->GR_L(r1) <= j )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
-        INST_UPDATE_PSW(regs, 4, 0);
+        INST_UPDATE_PSW(regs, 4, 4);
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1774,7 +1774,7 @@ DEF_INST(compare_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2364,7 +2364,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2381,7 +2381,7 @@ U16     i2;                             /* 16-bit operand            */
   DEF_INST(15 ## r1 ## r2) \
   { \
     UNREFERENCED(inst); \
-    INST_UPDATE_PSW(regs, 2, 0); \
+    INST_UPDATE_PSW(regs, 2, 2); \
     regs->psw.cc = regs->GR_L(0x ## r1) < regs->GR_L(0x ## r2) ? 1 : regs->GR_L(0x ## r1) > regs->GR_L(0x ## r2) ? 2 : 0; \
   }
 #define CLRgenr2(r1) \
@@ -2428,7 +2428,7 @@ DEF_INST(compare_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
@@ -4158,7 +4158,7 @@ DEF_INST(copy_access)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     TRAN_ACCESS_INSTR_CHECK( regs );
 
@@ -4236,7 +4236,7 @@ DEF_INST(exclusive_or_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) ^= regs->GR_L(r2) ) ? 1 : 0;
@@ -4631,7 +4631,7 @@ DEF_INST(extract_access_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy R2 access register to R1 general register */
     regs->GR_L(r1) = regs->AR(r2);
@@ -4796,7 +4796,7 @@ DEF_INST(insert_program_mask)
 {
 int     r1, r2;                         /* Value of R field          */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Insert condition code in R1 bits 2-3, program mask
        in R1 bits 4-7, and set R1 bits 0-1 to zero */
@@ -4809,7 +4809,7 @@ int     r1, r2;                         /* Value of R field          */
   DEF_INST(18 ## r1 ## r2) \
   { \
     UNREFERENCED(inst); \
-    INST_UPDATE_PSW(regs, 2, 0); \
+    INST_UPDATE_PSW(regs, 2, 2); \
     regs->GR_L(0x ## r1) = regs->GR_L(0x ## r2); \
   }
 #define LRgenr2(r1) \
@@ -4856,7 +4856,7 @@ DEF_INST(load_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_L(r1) = regs->GR_L(r2);
@@ -4922,7 +4922,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX0(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -4950,7 +4950,7 @@ DEF_INST(load_and_test_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Copy second operand and set condition code */
     regs->GR_L(r1) = regs->GR_L(r2);
@@ -4997,7 +4997,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Load operand into register */
     regs->GR_L(r1) = (S16)i2;
@@ -5096,7 +5096,7 @@ DEF_INST(load_negative_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR0(inst, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
     regs->GR_L(r1) = (S32)regs->GR_L(r2) > 0 ?
@@ -6126,7 +6126,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI0(inst, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Multiply register by operand ignoring overflow  */
     regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S16)i2;
@@ -6141,7 +6141,7 @@ DEF_INST(multiply_single_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
     regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S32)regs->GR_L(r2);

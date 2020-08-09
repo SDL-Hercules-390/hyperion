@@ -340,7 +340,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_and_branch_register) */
 
@@ -369,7 +369,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_and_branch_long_register) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -397,7 +397,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_and_branch_relative_register) */
 
@@ -425,7 +425,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_and_branch_relative_long_register) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -641,7 +641,7 @@ BYTE    i2;                             /* Immediate value           */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_immediate_and_branch) */
 
@@ -671,7 +671,7 @@ BYTE    i2;                             /* Immediate value           */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_immediate_and_branch_long) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -700,7 +700,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_immediate_and_branch_relative) */
 
@@ -729,7 +729,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_immediate_and_branch_relative_long) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -812,7 +812,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_and_branch_register) */
 
@@ -841,7 +841,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_and_branch_long_register) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -869,7 +869,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_and_branch_relative_register) */
 
@@ -897,7 +897,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_and_branch_relative_long_register) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -979,7 +979,7 @@ BYTE    i2;                             /* Immediate value           */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_immediate_and_branch) */
 
@@ -1009,7 +1009,7 @@ BYTE    i2;                             /* Immediate value           */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_BRANCH(regs, effective_addr4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_immediate_and_branch_long) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -1038,7 +1038,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_immediate_and_branch_relative) */
 
@@ -1067,7 +1067,7 @@ int     cc;                             /* Comparison result         */
     if ((0x8 >> cc) & m3)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i4, 6);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(compare_logical_immediate_and_branch_relative_long) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
@@ -1479,7 +1479,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY0(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
     SET_GR_A(r1, regs,effective_addr2);
@@ -2223,7 +2223,7 @@ DEF_INST(add_logical_high_high_high_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_logical (&(regs->GR_H(r1)),
@@ -2240,7 +2240,7 @@ DEF_INST(add_logical_high_high_low_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_logical (&(regs->GR_H(r1)),
@@ -2259,7 +2259,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Add operands and set condition code */
     regs->psw.cc = (S32)i2 < 0 ?
@@ -2278,7 +2278,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Add operands without setting condition code */
     if ((S32)i2 < 0) {
@@ -2307,7 +2307,7 @@ S32     i2;                             /* 32-bit operand value      */
     if ( --(regs->GR_H(r1)) )
         SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*i2);
     else
-        INST_UPDATE_PSW(regs, 6, 0);
+        INST_UPDATE_PSW(regs, 6, 6);
 
 } /* end DEF_INST(branch_relative_on_count_high) */
 
@@ -2319,7 +2319,7 @@ DEF_INST(compare_high_high_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2336,7 +2336,7 @@ DEF_INST(compare_high_low_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2378,7 +2378,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc = (S32)regs->GR_H(r1) < (S32)i2 ? 1 :
@@ -2394,7 +2394,7 @@ DEF_INST(compare_logical_high_high_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_H(r1) < regs->GR_H(r2) ? 1 :
@@ -2410,7 +2410,7 @@ DEF_INST(compare_logical_high_low_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_H(r1) < regs->GR_L(r2) ? 1 :
@@ -2450,7 +2450,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand value      */
 
-    RIL0(inst, regs, r1, opcd, i2);
+    RIL(inst, regs, r1, opcd, i2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_H(r1) < i2 ? 1 :
@@ -2662,7 +2662,7 @@ DEF_INST(subtract_logical_high_high_high_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical (&(regs->GR_H(r1)),
@@ -2679,7 +2679,7 @@ DEF_INST(subtract_logical_high_high_low_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical (&(regs->GR_H(r1)),
@@ -3304,7 +3304,7 @@ DEF_INST(add_logical_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_logical (&(regs->GR_L(r1)),
@@ -3322,7 +3322,7 @@ DEF_INST(add_logical_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
@@ -3341,7 +3341,7 @@ DEF_INST(add_logical_distinct_signed_halfword_immediate)
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
 
-    RIE0(inst, regs, r1, r3, i2);
+    RIE(inst, regs, r1, r3, i2);
 
     /* Add operands and set condition code */
     regs->psw.cc = (S16)i2 < 0 ?
@@ -3360,7 +3360,7 @@ DEF_INST(add_logical_distinct_long_signed_halfword_immediate)
 int     r1, r3;                         /* Values of R fields        */
 U16     i2;                             /* 16-bit immediate operand  */
 
-    RIE0(inst, regs, r1, r3, i2);
+    RIE(inst, regs, r1, r3, i2);
 
     /* Add operands and set condition code */
     regs->psw.cc = (S16)i2 < 0 ?
@@ -3378,7 +3378,7 @@ DEF_INST(and_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* AND second and third operands and put result in first operand */
     regs->GR_L(r1) = regs->GR_L(r2) & regs->GR_L(r3);
@@ -3397,7 +3397,7 @@ DEF_INST(and_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* AND second and third operands and put result in first operand */
     regs->GR_G(r1) = regs->GR_G(r2) & regs->GR_G(r3);
@@ -3416,7 +3416,7 @@ DEF_INST(exclusive_or_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* XOR second and third operands and put result in first operand */
     regs->GR_L(r1) = regs->GR_L(r2) ^ regs->GR_L(r3);
@@ -3435,7 +3435,7 @@ DEF_INST(exclusive_or_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* XOR second and third operands and put result in first operand */
     regs->GR_G(r1) = regs->GR_G(r2) ^ regs->GR_G(r3);
@@ -3454,7 +3454,7 @@ DEF_INST(or_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* OR second and third operands and put result in first operand */
     regs->GR_L(r1) = regs->GR_L(r2) | regs->GR_L(r3);
@@ -3473,7 +3473,7 @@ DEF_INST(or_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* OR second and third operands and put result in first operand */
     regs->GR_G(r1) = regs->GR_G(r2) | regs->GR_G(r3);
@@ -3495,7 +3495,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3580,7 +3580,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3601,7 +3601,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
-    RSY0(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3664,7 +3664,7 @@ DEF_INST(subtract_logical_distinct_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical (&(regs->GR_L(r1)),
@@ -3682,7 +3682,7 @@ DEF_INST(subtract_logical_distinct_long_register)
 {
 int     r1, r2, r3;                     /* Values of R fields        */
 
-    RRR0(inst, regs, r1, r2, r3);
+    RRR(inst, regs, r1, r2, r3);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
@@ -3707,7 +3707,7 @@ U64     n;                              /* Contents of R2 register   */
 U64     result;                         /* Result counter            */
 U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
 
-    RRE0(inst, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Load the value to be counted from the R2 register */
     n = regs->GR_G(r2);
@@ -3951,7 +3951,7 @@ VADR    effective_addr3;                /* Effective address         */
 int     b3;                             /* Base of effective address */
 int     m1;                             /* Mask value                */
 
-    SMI_A0(inst, regs, m1, effective_addr2, b3, effective_addr3);
+    SMI_A(inst, regs, m1, effective_addr2, b3, effective_addr3);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -3972,7 +3972,7 @@ VADR    effective_addr2;                /* Effective address         */
 VADR    effective_addr3;                /* Effective address         */
 int     m1;                             /* Mask value                */
 
-    MII_A0(inst, regs, m1, effective_addr2, effective_addr3);
+    MII_A(inst, regs, m1, effective_addr2, effective_addr3);
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -3991,7 +3991,7 @@ DEF_INST(next_instruction_access_intent)
 {
 BYTE    i1, i2;                         /* Immediate fields          */
 
-    IE0(inst, regs, i1, i2);
+    IE(inst, regs, i1, i2);
 
     /* Depending on the model, the CPU may not recognize all of the
        access intents. For access intents that are not recognized by

@@ -497,7 +497,7 @@ architecture:
       {
       int     r1, r2;                         /* Values of R fields        */
 
-          RRE0( inst, regs, r1, r2 );
+          RRE( inst, regs, r1, r2 );
 
           /* Load sign-extended halfword from second operand register */
           regs->GR_G( r1 ) = (S64)(S16)(regs->GR_LHL( r2 ));
