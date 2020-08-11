@@ -930,88 +930,107 @@ do {                                                                  \
 #undef  SUCCESSFUL_BRANCH
 #define SUCCESSFUL_BRANCH( _regs, _addr, _len )                       \
 do {                                                                  \
-  VADR _newia;                                                        \
+  VADR _newia = (_addr) & ADDRESS_MAXWRAP( (_regs) );                 \
                                                                       \
-  SET_BEAR_IP( (_regs), 0 );                                          \
-  _newia = (_addr) & ADDRESS_MAXWRAP( (_regs) );                      \
+  /* Point bear_ip at the branch instruction itself */                \
+  SET_BEAR_IP( (_regs), 0 ); /* (point bear_ip at branch instr) */    \
                                                                       \
+  /* Branch target still within same page as branch instruction? */   \
   if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
    && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV))   \
   {                                                                   \
-    (_regs)->ip = (BYTE*)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
+    /* Check for constraint BEFORE actually updating to new ip */     \
+    BYTE* _new_ip = (BYTE*)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
+    TXF_INSTRADDR_CONSTRAINT( (_new_ip), (_regs) );                   \
+    (_regs)->ip = (_new_ip);   /* (branch to the new instruction) */  \
     return;                                                           \
   }                                                                   \
-  else                                                                \
-  {                                                                   \
-    if (unlikely( (_regs)->execflag ))                                \
-      SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );       \
+  /* Branch target is in another page... */                           \
                                                                       \
-    (_regs)->psw.IA = _newia;                                         \
-    (_regs)->aie    = NULL;                                           \
-    PER_SB( (_regs), (_regs)->psw.IA );                               \
-  }                                                                   \
+  /* Point bear_ip at the branch instruction itself */                \
+  if (unlikely( (_regs)->execflag ))                                  \
+    SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
+                                                                      \
+  /* Set new ip by forcing full instruction fetch from target */      \
+  (_regs)->psw.IA = _newia;     /* (point PSW to target instr) */     \
+  (_regs)->aie = NULL;          /* (force a fresh 'instfetch') */     \
+  PER_SB( (_regs), (_regs)->psw.IA );                                 \
 } while (0)
+
+//---------------------------------------------------------------------
 
 #undef  SUCCESSFUL_RELATIVE_BRANCH
 #define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset, _len )            \
 do {                                                                  \
+  /* Point bear_ip at the branch instruction itself */                \
   SET_BEAR_IP( (_regs), 0 );                                          \
                                                                       \
-  /* Branch target still within same page as instruction? */          \
+  /* Branch target still within same page as branch instruction? */   \
   if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
    && likely( (_regs)->ip + (_offset) >= (_regs)->aip)                \
    && likely( (_regs)->ip + (_offset) <  (_regs)->aie) )              \
   {                                                                   \
-    (_regs)->ip += (_offset);                                         \
+    /* Check for constraint BEFORE actually updating to new ip */     \
+    BYTE* _new_ip = (_regs)->ip + (_offset);                          \
+    TXF_INSTRADDR_CONSTRAINT( (_new_ip), (_regs) );                   \
+    (_regs)->ip = (_new_ip);                                          \
     return;                                                           \
   }                                                                   \
+  /* Branch target is in another page... */                           \
                                                                       \
   /* Branch target in another page: calculate new ip */               \
   if (likely(!(_regs)->execflag))                                     \
     (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
   else                                                                \
   {                                                                   \
+    /* Point bear_ip at the branch instruction itself */              \
     SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
     (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
     (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
   }                                                                   \
                                                                       \
-  /* Force full instruction fetch from the new page */                \
-  (_regs)->aie = NULL;                                                \
+  /* Set new ip by forcing full instruction fetch from target */      \
+  (_regs)->aie = NULL;            /* (force a fresh 'instfetch') */   \
   PER_SB( (_regs), (_regs)->psw.IA );                                 \
 } while (0)
 
-/*          BRCL, BRASL can branch +/- 4G.
-            This is problematic on a 32 bit host
-*/
+//---------------------------------------------------------------------
+//          BRCL, BRASL can branch +/- 4G.
+//          This is problematic on a 32 bit host.
+
 #undef  SUCCESSFUL_RELATIVE_BRANCH_LONG
 #define SUCCESSFUL_RELATIVE_BRANCH_LONG( _regs, _offset )             \
 do {                                                                  \
+  /* Point bear_ip at the branch instruction itself */                \
   SET_BEAR_IP( (_regs), 0 );                                          \
                                                                       \
-  /* Branch target still within same page as instruction? */          \
+  /* Branch target still within same page as branch instruction? */   \
   if (likely(!(_regs)->permode && !(_regs)->execflag  )               \
    && likely(               (_offset) >      -4096    )               \
    && likely(               (_offset) <       4096    )               \
    && likely( (_regs)->ip + (_offset) >= (_regs)->aip )               \
    && likely( (_regs)->ip + (_offset) <  (_regs)->aie ))              \
   {                                                                   \
-    (_regs)->ip += (_offset);                                         \
+    /* Check for constraint BEFORE actually updating to new ip */     \
+    BYTE* _new_ip = (_regs)->ip + (_offset);                          \
+    TXF_INSTRADDR_CONSTRAINT( (_new_ip), (_regs) );                   \
+    (_regs)->ip = (_new_ip);                                          \
     return;                                                           \
   }                                                                   \
+  /* Branch target is in another page... */                           \
                                                                       \
-  /* Branch target in another page: calculate new ip */               \
   if (likely(!(_regs)->execflag))                                     \
     (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
   else                                                                \
   {                                                                   \
+    /* Point bear_ip at the branch instruction itself */              \
     SET_BEAR_IP( (_regs), 6 - ((_regs)->exrl ? 6 : 4) );              \
     (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
     (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
   }                                                                   \
                                                                       \
-  /* Force full instruction fetch from the new page */                \
-  (_regs)->aie = NULL;                                                \
+  /* Set new ip by forcing full instruction fetch from target */      \
+  (_regs)->aie = NULL;            /* (force a fresh 'instfetch') */   \
   PER_SB( (_regs), (_regs)->psw.IA );                                 \
 } while (0)
 
