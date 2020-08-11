@@ -1628,7 +1628,8 @@
                                 \
   "Format:\n"                                                                   \
   "\n"                                                                          \
-  "   txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]\n"           \
+  "   txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [Pages|Lines]\n"             \
+  "        [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]\n"         \
   "\n"                                                                          \
   "Where:\n"                                                                    \
   "\n"                                                                          \
@@ -1651,12 +1652,20 @@
   "   PAGES   Displays a transaction's page map information.\n"                 \
   "   LINES   Displays a page map's cache line information.\n"                  \
   "\n"                                                                          \
+  "   WHY     Trace only when why abort is any of mask hhhhhhhh.\n"             \
+  "   TAC     Trace only when abort code = nnn.\n"                              \
+  "   TND     Trace only when nesting depth >= nn.\n"                           \
+  "   CPU     Trace only when transaction executes on CPU nnn.\n"               \
+  "   CFAILS  Trace only when constrained cabort count >= nn.\n"                \
+  "\n"                                                                          \
   "Enter 'txf' by itself to display the current options. Use 'txf 0'\n"         \
   "to disable all txf tracing. If 'INSTR' is not specified then only\n"         \
   "the results of transactions are traced. If any option other than\n"          \
   "'U' or 'C' is also specified with 'INSTR' then both instructions\n"          \
   "and transaction results are traced. Note: 'txf INSTR' does not by\n"         \
-  "itself enable instruction tracing. Use the 't+' command to do that.\n"
+  "itself enable instruction tracing. Use the 't+' command to do that.\n"       \
+  "WHY masks are #defined in source file transact.h. A common WHY mask\n"       \
+  "is 0xC000FFFF to detect unexpected aborts.\n"
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

@@ -273,7 +273,7 @@ int         txf_tnd, txf_tac;
             /*           NESTED TRANSACTION END           */
             /*--------------------------------------------*/
 
-            if (TXF_TRACE( SUCCESS, regs->txf_contran ))
+            if (TXF_TRACE( regs, SUCCESS, regs->txf_contran ))
             {
                 // "TXF: %s%02X: %sSuccessful %s Nested TEND for TND %d => %d"
                 WRMSG( HHC17700, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
@@ -414,7 +414,7 @@ int         txf_tnd, txf_tac;
         /*  the real cache lines from the shadow cache lines.      */
         /*---------------------------------------------------------*/
 
-        if (TXF_TRACE( SUCCESS, txf_contran ))
+        if (TXF_TRACE( regs, SUCCESS, txf_contran ))
         {
             // "TXF: %s%02X: %sSuccessful Outermost %s TEND"
             WRMSG( HHC17701, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
@@ -426,7 +426,7 @@ int         txf_tnd, txf_tac;
 
         for (i=0; i < regs->txf_pgcnt; i++, pmap++)
         {
-            if (TXF_TRACE_PAGES( txf_contran ))
+            if (TXF_TRACE_PAGES( regs, txf_contran ))
             {
                 // "TXF: %s%02X: %svirt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
                 WRMSG( HHC17704, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
@@ -445,7 +445,7 @@ int         txf_tnd, txf_tac;
 
                 memcpy( mainaddr, altaddr, ZCACHE_LINE_SIZE );
 
-                if (TXF_TRACE_LINES( txf_contran ))
+                if (TXF_TRACE_LINES( regs, txf_contran ))
                 {
                     // "TXF: %s%02X: %sWe stored:  +"
                     dump_cache( regs, TXF_DUMP_PFX( HHC17707 ), j, altaddr );
@@ -471,7 +471,7 @@ int         txf_tnd, txf_tac;
         if (1
             && MLVL( VERBOSE )
             && regs->txf_caborts
-            && TXF_TRACE( FAILURE, txf_contran )
+            && TXF_TRACE( regs, FAILURE, txf_contran )
         )
         {
             // "TXF: %s%02X: %sCONSTRAINED transaction succeeded after %d retries"
@@ -919,7 +919,7 @@ TPAGEMAP   *pmap;
 
     PTT_TXF( "TXF beg", 0, regs->txf_contran, regs->txf_tnd );
 
-    if (TXF_TRACE( SUCCESS, regs->txf_contran ))
+    if (TXF_TRACE( regs, SUCCESS, regs->txf_contran ))
     {
         // "TXF: %s%02X: %sSuccessful %s TBEGIN%s; TND now %d"
         WRMSG( HHC17702, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
@@ -933,7 +933,7 @@ TPAGEMAP   *pmap;
     if (1
         && MLVL( VERBOSE )
         && regs->txf_caborts
-        && TXF_TRACE( FAILURE, regs->txf_contran )
+        && TXF_TRACE( regs, FAILURE, regs->txf_contran )
     )
     {
         // "TXF: %s%02X: %sCONSTRAINED transaction retry #%d..."
@@ -1080,7 +1080,7 @@ int        retry;           /* Actual retry code                     */
     if (1
         && MLVL( VERBOSE )
         && regs->txf_caborts
-        && TXF_TRACE( FAILURE, regs->txf_contran )
+        && TXF_TRACE( regs, FAILURE, regs->txf_contran )
     )
     {
         // "TXF: %s%02X: %sCONSTRAINED transaction retry #%d FAILED!"
@@ -1105,7 +1105,7 @@ int        retry;           /* Actual retry code                     */
     /*  Log the failure if debugging enabled       */
     /*---------------------------------------------*/
 
-    if (TXF_TRACE( FAILURE, txf_contran ))
+    if (TXF_TRACE( regs, FAILURE, txf_contran ))
     {
         /* Report the reason WHY the transaction was aborted */
         char why[ 256 ] = {0};
@@ -1143,7 +1143,7 @@ int        retry;           /* Actual retry code                     */
         }
 
         /* Print page map if requested */
-        if (TXF_TRACE_MAP( txf_contran ))
+        if (TXF_TRACE_MAP( regs, txf_contran ))
         {
             TPAGEMAP*  pmap;
             BYTE*      mainaddr;
@@ -1154,7 +1154,7 @@ int        retry;           /* Actual retry code                     */
 
             for (i=0; i < regs->txf_pgcnt; i++, pmap++)
             {
-                if (TXF_TRACE_PAGES( txf_contran ))
+                if (TXF_TRACE_PAGES( regs, txf_contran ))
                 {
                     // "TXF: %s%02X: %svirt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
                     WRMSG( HHC17704, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
@@ -1163,7 +1163,7 @@ int        retry;           /* Actual retry code                     */
                         (U64) pmap->altpageaddr );
                 }
 
-                if (TXF_TRACE_LINES( txf_contran ))
+                if (TXF_TRACE_LINES( regs, txf_contran ))
                 {
                     for (j=0; j < ZCACHE_LINE_PAGE; j++)
                     {
@@ -1401,7 +1401,7 @@ int        retry;           /* Actual retry code                     */
         memcpy( tb_tdb, &regs->txf_tdb, sizeof( TDB ));
 
     /* Trace TDB if requested */
-    if (TXF_TRACE_TDB( txf_contran ))
+    if (TXF_TRACE_TDB( regs, txf_contran ))
         dump_tdb( regs, &regs->txf_tdb );
 
     /*----------------------------------------------------*/

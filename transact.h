@@ -141,40 +141,87 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
 
 #define TXF_TRACING()   (sysblk.txf_tracing)
 
-#define TXF_TRACE_UC( _contran )                                    \
+//--------------------------------------------------------------------
+
+#define TXF_TRACE_CPU( _regs )                                      \
     (0                                                              \
-     || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))            \
-     || ((sysblk.txf_tracing & TXF_TR_U) && !(_contran))            \
+     || !(sysblk.txf_tracing & TXF_TR_CPU)                          \
+     ||  ((_regs)->cpuad == sysblk.txf_cpuad )                      \
     )
 
-#define TXF_TRACE( _successfailure, _contran )                      \
+#define TXF_TRACE_TND( _regs )                                      \
+    (0                                                              \
+     || !(sysblk.txf_tracing & TXF_TR_TND)                          \
+     ||  ((_regs)->txf_tnd >= sysblk.txf_tnd )                      \
+    )
+
+//--------------------------------------------------------------------
+
+#define TXF_TRACE_UC( _regs, _contran )                             \
+    (1                                                              \
+     && (TXF_TRACE_CPU( _regs ))                                    \
+     && (TXF_TRACE_TND( _regs ))                                    \
+     && (0                                                          \
+         || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))        \
+         || ((sysblk.txf_tracing & TXF_TR_U) && !(_contran))        \
+        )                                                           \
+    )
+
+//--------------------------------------------------------------------
+
+#define TXF_TRACE( _regs, _successfailure, _contran )               \
     (1                                                              \
      && (sysblk.txf_tracing & TXF_TR_ ## _successfailure)           \
-     && (TXF_TRACE_UC( _contran ))                                  \
+     && (TXF_TRACE_UC( _regs, _contran ))                           \
     )
 
-#define TXF_TRACE_TDB( _contran )                                   \
+//--------------------------------------------------------------------
+
+#define TXF_TRACE_WHY( _regs )                                      \
+    (0                                                              \
+     || !(sysblk.txf_tracing & TXF_TR_WHY)                          \
+     ||  ((_regs)->txf_why & sysblk.txf_why_mask )                  \
+    )
+
+#define TXF_TRACE_TAC( _regs )                                      \
+    (0                                                              \
+     || !(sysblk.txf_tracing & TXF_TR_TAC)                          \
+     ||  ((_regs)->txf_tac == sysblk.txf_tac )                      \
+    )
+
+#define TXF_TRACE_CFAILS( _regs )                                   \
+    (0                                                              \
+     || !(sysblk.txf_tracing & TXF_TR_CFAILS)                       \
+     ||  ((_regs)->txf_caborts >= sysblk.txf_cfails )               \
+    )
+
+//--------------------------------------------------------------------
+
+#define TXF_TRACE_TDB( _regs, _contran )                            \
     (1                                                              \
      && (sysblk.txf_tracing & TXF_TR_TDB)                           \
-     && (TXF_TRACE( FAILURE, _contran ))                            \
+     && (TXF_TRACE( _regs, FAILURE, _contran ))                     \
+     && (TXF_TRACE_WHY( _regs ))                                    \
+     && (TXF_TRACE_TAC( _regs ))                                    \
+     && (TXF_TRACE_CFAILS( _regs ))                                 \
     )
 
-#define TXF_TRACE_MAP( _contran )                                   \
+#define TXF_TRACE_MAP( _regs, _contran )                            \
     (1                                                              \
-     && (sysblk.txf_tracing & TXF_TR_MAP)                           \
-     && (TXF_TRACE_UC( _contran ))                                  \
+     && (sysblk.txf_tracing & (TXF_TR_PAGES | TXF_TR_LINES))        \
+     && (TXF_TRACE_UC( _regs, _contran ))                           \
     )
 
-#define TXF_TRACE_PAGES( _contran )                                 \
+#define TXF_TRACE_PAGES( _regs, _contran )                          \
     (1                                                              \
      && (sysblk.txf_tracing & TXF_TR_PAGES)                         \
-     && (TXF_TRACE_UC( _contran ))                                  \
+     && (TXF_TRACE_UC( _regs, _contran ))                           \
     )
 
-#define TXF_TRACE_LINES( _contran )                                 \
+#define TXF_TRACE_LINES( _regs, _contran )                          \
     (1                                                              \
      && (sysblk.txf_tracing & TXF_TR_LINES)                         \
-     && (TXF_TRACE_UC( _contran ))                                  \
+     && (TXF_TRACE_UC( _regs, _contran ))                           \
     )
 
 /*-------------------------------------------------------------------*/

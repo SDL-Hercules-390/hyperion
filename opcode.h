@@ -396,9 +396,13 @@ do { \
     && (_regs)->txf_tnd && !(_regs)->txf_contran)
 
 #define TXF_TRACE_THIS_INSTR( _regs )                                 \
-  (0                                                                  \
-   || TXF_CONSTRAINED_TRANS_INSTR( _regs )                            \
-   || TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                          \
+  (1                                                                  \
+   && TXF_TRACE_CPU( _regs )                                          \
+   && TXF_TRACE_TND( _regs )                                          \
+   && (0                                                              \
+       || TXF_CONSTRAINED_TRANS_INSTR( _regs )                        \
+       || TXF_UNCONSTRAINED_TRANS_INSTR( _regs )                      \
+      )                                                               \
   )
 
 #define CPU_STEPPING(_regs, _ilc)                                     \

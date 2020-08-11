@@ -1175,13 +1175,20 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
 int txf_cmd( int argc, char* argv[], char* cmdline )
 {
     U32  txf_tracing  = sysblk.txf_tracing;
+    U32  txf_why_mask = sysblk.txf_why_mask;
+    int  txf_tac      = sysblk.txf_tac;
+    int  txf_tnd      = sysblk.txf_tnd;
+    int  txf_cpuad    = sysblk.txf_cpuad;
+    int  txf_cfails   = sysblk.txf_cfails;
     int  rc           = 0;
+    char c;
 
     UNREFERENCED( cmdline );
 
-    // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]
+    // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
+    //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]
 
-    if (argc > 1)
+    if (argc > 1)  // (define new settings?)
     {
         // Disable all TXF tracing?
         if (str_caseless_eq( argv[1], "0"))
@@ -1195,7 +1202,12 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
         {
             int i;
 
-            txf_tracing = 0;
+            txf_tracing  = 0;
+            txf_why_mask = 0;
+            txf_tac      = 0;
+            txf_tnd      = 0;    
+            txf_cpuad    = -1;
+            txf_cfails   = 0;
 
             for (i=1; i < argc; ++i)
             {
@@ -1210,6 +1222,51 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
                 else if (str_caseless_eq( argv[i], "TDB"     )) txf_tracing |= TXF_TR_TDB;
                 else if (str_caseless_eq( argv[i], "PAGES"   )) txf_tracing |= TXF_TR_PAGES;
                 else if (str_caseless_eq( argv[i], "LINES"   )) txf_tracing |= TXF_TR_LINES;
+                else if (1
+                    && str_caseless_eq(   argv[i+0], "WHY" )
+                    &&                    argv[i+1]
+                    && sscanf(            argv[i+1], "%"SCNx32, &txf_why_mask, &c ) == 1
+                )
+                {
+                    txf_tracing |= TXF_TR_WHY;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq( argv[i+0], "TAC" )
+                    &&                  argv[i+1]
+                    && (txf_tac = atoi( argv[i+1] )) > 0
+                )
+                {
+                    txf_tracing |= TXF_TR_TAC;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq( argv[i+0], "TND" )
+                    &&                  argv[i+1]
+                    && (txf_tnd = atoi( argv[i+1] )) > 0
+                )
+                {
+                    txf_tracing |= TXF_TR_TND;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq(   argv[i+0], "CPU" )
+                    &&                    argv[i+1]
+                    && (txf_cpuad = atoi( argv[i+1] )) >= 0
+                )
+                {
+                    txf_tracing |= TXF_TR_CPU;
+                    ++i;
+                }
+                else if (1
+                    && str_caseless_eq(    argv[i+0], "CFAILS" )
+                    &&                     argv[i+1]
+                    && (txf_cfails = atoi( argv[i+1] )) > 0
+                )
+                {
+                    txf_tracing |= TXF_TR_CFAILS;
+                    ++i;
+                }
                 else
                 {
                     rc = -1;
@@ -1222,35 +1279,98 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
                 //------------------------------------------------
                 //   If neither U nor C specified, set both.
                 //------------------------------------------------
-                if (!(txf_tracing & TXF_TR_TYPE))
-                    txf_tracing |= TXF_TR_TYPE;
+                if (!(txf_tracing & (TXF_TR_U | TXF_TR_C)))
+                {
+                    txf_tracing |= (TXF_TR_U | TXF_TR_C);
+                }
 
                 //------------------------------------------------
                 //  If neither GOOD nor BAD specified, set both.
                 //------------------------------------------------
-                if ((txf_tracing & TXF_TR_TRANS) &&
-                   !(txf_tracing & (TXF_TR_SUCCESS | TXF_TR_FAILURE)))
+                if (!(txf_tracing & (TXF_TR_SUCCESS | TXF_TR_FAILURE)))
+                {
                     txf_tracing |= (TXF_TR_SUCCESS | TXF_TR_FAILURE);
+                }
+
+                //------------------------------------------------
+                //   If WHY, TAC or CFAILS specified, set BAD.
+                //------------------------------------------------
+                if (txf_tracing & (TXF_TR_WHY | TXF_TR_TAC | TXF_TR_CFAILS))
+                {
+                    txf_tracing |= TXF_TR_FAILURE;
+                }
+
+                //------------------------------------------------
+                //   If CFAILS specified, set C BAD.
+                //------------------------------------------------
+                if (txf_tracing & TXF_TR_CFAILS)
+                {
+                    txf_tracing |= (TXF_TR_C | TXF_TR_FAILURE);
+                }
+
+                //------------------------------------------------
+                //      If LINES specified, set PAGES too.
+                //------------------------------------------------
+                if (txf_tracing & TXF_TR_LINES)
+                {
+                    txf_tracing |= TXF_TR_PAGES;
+                }
 
                 //------------------------------------------------
                 //     Ignore TDB unless BAD also specified.
                 //------------------------------------------------
                 if (!(txf_tracing & TXF_TR_FAILURE))
+                {
                     txf_tracing &= ~TXF_TR_TDB;
+                }
 
                 //------------------------------------------------
-                //      If LINES specified, set PAGES too.
+                //     Ignore WHY unless BAD also specified.
                 //------------------------------------------------
-                if (1
-                    && (txf_tracing & TXF_TR_TRANS)
-                    && (txf_tracing & TXF_TR_LINES)
-                )
-                    txf_tracing |= TXF_TR_PAGES;
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_WHY;
+                    txf_why_mask = 0;
+                }
+
+                //------------------------------------------------
+                //     Ignore TAC unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_TAC;
+                    txf_tac = 0;
+                }
+
+                //------------------------------------------------
+                //     Ignore CFAILS unless BAD also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_FAILURE))
+                {
+                    txf_tracing &= ~TXF_TR_CFAILS;
+                    txf_cfails = 0;
+                }
+
+                //------------------------------------------------
+                //     Ignore CFAILS unless C also specified.
+                //------------------------------------------------
+                if (!(txf_tracing & TXF_TR_C))
+                {
+                    txf_tracing &= ~TXF_TR_CFAILS;
+                    txf_cfails = 0;
+                }
             }
         }
 
         if (rc == 0)
-            sysblk.txf_tracing = txf_tracing;
+        {
+            sysblk.txf_tracing  = txf_tracing;
+            sysblk.txf_why_mask = txf_why_mask;
+            sysblk.txf_tac      = txf_tac;
+            sysblk.txf_tnd      = txf_tnd;
+            sysblk.txf_cpuad    = txf_cpuad;
+            sysblk.txf_cfails   = txf_cfails;
+        }
     }
 
     if (rc != 0)
@@ -1258,34 +1378,55 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
         // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
     }
-    else
+    else // Display new/current settings
     {
-        char buf[64];
+        char buf[1024] = {0};
 
-        // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES] ]
+        // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
+        //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]
 
-        if (!txf_tracing) STRLCPY( buf, "0" );
+        if (txf_tracing)
+        {
+            char why[256] = {0}; // WHY hhhhhhhh (xxx xxx xxx ... )
+            char tac[64]  = {0};
+            char tnd[32]  = {0};
+            char cpu[32]  = {0};
+            char cfl[32]  = {0};
+  
+            if (txf_why_mask)    MSGBUF( why, "WHY 0x%08.8"PRIX32" ",  txf_why_mask );
+            if (txf_tac    >  0) MSGBUF( tac, "TAC %d ",           txf_tac      );
+            if (txf_tnd    >  0) MSGBUF( tnd, "TND %d ",           txf_tnd      );
+            if (txf_cpuad  >= 0) MSGBUF( cpu, "CPU %d ",           txf_cpuad    );
+            if (txf_cfails >  0) MSGBUF( cfl, "CFAILS %d ",        txf_cfails   );
 
-        else MSGBUF( buf, "%s%s%s%s%s%s%s%s"
+            MSGBUF( buf, "%s%s%s%s%s%s%s%s" "%s%s%s%s%s"
 
-            , txf_tracing & TXF_TR_INSTR   ? "INSTR " : ""
-            , txf_tracing & TXF_TR_U       ? "U "     : ""
-            , txf_tracing & TXF_TR_C       ? "C "     : ""
-            , txf_tracing & TXF_TR_SUCCESS ? "GOOD "  : ""
-            , txf_tracing & TXF_TR_FAILURE ? "BAD "   : ""
-            , txf_tracing & TXF_TR_TDB     ? "TDB "   : ""
-            , txf_tracing & TXF_TR_PAGES   ? "PAGES " : ""
-            , txf_tracing & TXF_TR_LINES   ? "LINES " : ""
-        );
+                , txf_tracing & TXF_TR_INSTR   ? "INSTR " : ""
+                , txf_tracing & TXF_TR_U       ? "U "     : ""
+                , txf_tracing & TXF_TR_C       ? "C "     : ""
+                , txf_tracing & TXF_TR_SUCCESS ? "GOOD "  : ""
+                , txf_tracing & TXF_TR_FAILURE ? "BAD "   : ""
+                , txf_tracing & TXF_TR_TDB     ? "TDB "   : ""
+                , txf_tracing & TXF_TR_PAGES   ? "PAGES " : ""
+                , txf_tracing & TXF_TR_LINES   ? "LINES " : ""
+
+                , why
+                , tac
+                , tnd
+                , cpu
+                , cfl
+            );
+            RTRIM( buf );
+        }
 
         UPPER_ARGV_0( argv );
 
-        if (argc > 1)
+        if (argc > 1)  // Defined new options...
         {
             // "%-14s set to %s"
             WRMSG( HHC02204, "I", argv[0], buf );
         }
-        else
+        else // Display current settings...
         {
             // "%-14s: %s"
             WRMSG( HHC02203, "I", argv[0], buf );

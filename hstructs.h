@@ -1022,19 +1022,27 @@ struct SYSBLK {
 
         S32     txf_transcpus;          /* counts transacting CPUs   */
 #endif
-        U32     txf_tracing;            /* TXF tracing control       */
+        U32     txf_tracing;            /* TXF tracing control;      */
+                                        /* see #defines below.       */
+        U32     txf_why_mask;           /* (only when TXF_TR_WHY)    */
+        int     txf_tac;                /* (only when TXF_TR_TAC)    */
+        int     txf_tnd;                /* (only when TXF_TR_TND)    */
+        int     txf_cfails;             /* (only when TXF_TR_CFAILS) */
+        int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
 
 #define TXF_TR_INSTR    0x80000000      // instructions
-#define TXF_TR_TYPE     0x0C000000      // type
-#define TXF_TR_C        0x08000000      //   constrained
-#define TXF_TR_U        0x04000000      //   unconstrained
-#define TXF_TR_TRANS    0x00FFFFFF      // transactions
-#define TXF_TR_SUCCESS  0x00800000      //   success
-#define TXF_TR_FAILURE  0x00400000      //   failure
+#define TXF_TR_C        0x08000000      // constrained
+#define TXF_TR_U        0x04000000      // unconstrained
+#define TXF_TR_SUCCESS  0x00800000      // success
+#define TXF_TR_FAILURE  0x00400000      // failure
+#define TXF_TR_WHY      0x00200000      // why mask
+#define TXF_TR_TAC      0x00100000      // TAC
+#define TXF_TR_TND      0x00080000      // TND
+#define TXF_TR_CPU      0x00040000      // specific CPU
+#define TXF_TR_CFAILS   0x00020000      // aborted count
 #define TXF_TR_TDB      0x00000800      // tdb
-#define TXF_TR_MAP      0x000000C0      // page map
-#define TXF_TR_PAGES    0x00000080      //   page information
-#define TXF_TR_LINES    0x00000040      //   cache lines too
+#define TXF_TR_PAGES    0x00000080      // page information
+#define TXF_TR_LINES    0x00000040      // cache lines too
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 
