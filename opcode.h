@@ -172,6 +172,9 @@
 #define REAL_ILC(_regs) \
  (likely(!(_regs)->execflag) ? (_regs)->psw.ilc : (_regs)->exrl ? 6 : 4)
 
+#define ILC_FROM_PIID( piid )    (((piid) & 0x00070000) >> 16)
+#define CODE_FROM_PIID( piid )   (((piid) & 0x0000FFFF)      )
+
 /*-------------------------------------------------------------------*/
 /*  Instruction tracing helper function to print the instruction     */
 /*-------------------------------------------------------------------*/
@@ -381,7 +384,7 @@ do { \
 /*                  CPU Stepping or Tracing                          */
 /*-------------------------------------------------------------------*/
 
-#define TXF_INSTR_TRACING( _regs )                                    \
+#define TXF_INSTR_TRACING()                                           \
   (sysblk.txf_tracing & TXF_TR_INSTR)
 
 #define TXF_CONSTRAINED_TRANS_INSTR( _regs )                          \
@@ -402,7 +405,7 @@ do { \
   (                                                                   \
       sysblk.inststep                                                 \
    && (0                                                              \
-       || !TXF_INSTR_TRACING( _regs )                                 \
+       || !TXF_INSTR_TRACING()                                        \
        ||  TXF_TRACE_THIS_INSTR( _regs )                              \
       )                                                               \
    && (                                                               \
@@ -422,7 +425,7 @@ do { \
   (                                                                   \
       sysblk.insttrace                                                \
    && (0                                                              \
-       || !TXF_INSTR_TRACING( _regs )                                 \
+       || !TXF_INSTR_TRACING()                                        \
        ||  TXF_TRACE_THIS_INSTR( _regs )                              \
       )                                                               \
    && (                                                               \

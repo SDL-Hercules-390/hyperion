@@ -1088,7 +1088,7 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
         else
             STRLCPY( why, " ?" );
 
-        // "TXF: %s%02X: %sFailed %s %s Transaction for TND %d: %s (%s), why =%s"
+        // "TXF: %s%02X: %sFailed %s %s Transaction for TND %d: %s = %s, why =%s"
         WRMSG( HHC17703, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
             txf_tnd > 1 ? "Nested" : "Outermost",
             txf_contran ? "Cons" : "Uncons", txf_tnd,

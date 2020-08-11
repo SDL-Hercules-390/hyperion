@@ -1553,7 +1553,7 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 
 ///////////////////////////////////////////////////////////////////////
 
-REGS *copy_regs(int cpu)
+static REGS *my_copy_regs(int cpu)
 {
     REGS *regs;
 
@@ -1843,7 +1843,7 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 'o':
                             if (!sysblk.hicpu)
                               break;
-                            regs = copy_regs(sysblk.pcpu);
+                            regs = my_copy_regs(sysblk.pcpu);
                             aaddr = APPLY_PREFIXING (NPaddress, regs->PX);
                             if (aaddr > regs->mainlim)
                                 break;
@@ -2837,7 +2837,7 @@ FinishShutdown:
         /* =END= */
 
         /* Obtain the PSW for target CPU */
-        regs = copy_regs( sysblk.pcpu );
+        regs = my_copy_regs( sysblk.pcpu );
         memset( curr_psw, 0, sizeof( curr_psw ));
         copy_psw( regs, curr_psw );
 

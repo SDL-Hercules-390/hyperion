@@ -42,9 +42,8 @@
 //         (static helper function forward references)
 //-------------------------------------------------------------------
 
-static REGS*  copy_regs         ( REGS* regs );
-static int    display_inst_regs ( REGS* regs, BYTE* inst, BYTE opcode, char* buf, int buflen );
-static int    parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* eadrp, BYTE* newval );
+static int  display_inst_regs ( REGS* regs, BYTE* inst, BYTE opcode, char* buf, int buflen );
+static int  parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* eadrp, BYTE* newval );
 
 #endif /* COMPILE_THIS_ONLY_ONCE */
 
@@ -1947,7 +1946,7 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 /*  Return the address of a regs structure to be used for address    */
 /*  translation.  This address should be freed by the caller.        */
 /*-------------------------------------------------------------------*/
-static REGS* copy_regs( REGS* regs )
+DLL_EXPORT REGS* copy_regs( REGS* regs )
 {
  REGS  *newregs, *hostregs;
  size_t size;

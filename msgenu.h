@@ -659,7 +659,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
-#define HHC00801 "Processor %s%02X: %s%s%s code %4.4X ilc %d%s%s"
+#define HHC00801 "Processor %s%02X: %s%s%s code %4.4X ilc %d%s"
 #define HHC00802 "Processor %s%02X: PER event: code %4.4X perc %2.2X addr "F_VADR
 #define HHC00803 "Processor %s%02X: program interrupt loop PSW %s"
 #define HHC00804 "Processor %s%02X: I/O interrupt code %1.1X:%4.4X CSW %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
@@ -2500,7 +2500,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17700 "TXF: %s%02X: %sSuccessful %s Nested TEND for TND %d => %d"
 #define HHC17701 "TXF: %s%02X: %sSuccessful Outermost %s TEND"
 #define HHC17702 "TXF: %s%02X: %sSuccessful %s TBEGIN%s; TND now %d"
-#define HHC17703 "TXF: %s%02X: %sFailed %s %s Transaction for TND %d: %s (%s), why =%s"
+#define HHC17703 "TXF: %s%02X: %sFailed %s %s Transaction for TND %d: %s = %s, why =%s"
 #define HHC17704 "TXF: %s%02X: %svirt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
 #define HHC17705 "TXF: %s%02X: %sThere now:  +"
 #define HHC17706 "TXF: %s%02X: %sWe fetched: +"
