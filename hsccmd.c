@@ -311,12 +311,12 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
 #if defined( FISHTEST_TXF_STATS )
         else if (CMD( argv[1], TXF, 3 ))
         {
-            LOGMSG("+++ acc_read  =% 12"PRIu64"\n", sysblk.acc_read   );
-            LOGMSG("+++ acc_write =% 12"PRIu64"\n", sysblk.acc_write  );
-            LOGMSG("+++ acc_check =% 12"PRIu64"\n", sysblk.acc_check  );
-            LOGMSG("+++ acc_notrw =% 12"PRIu64"\n", sysblk.acc_notrw  );
-            LOGMSG("+++ acc_none  =% 12"PRIu64"\n", sysblk.acc_none   );
-            LOGMSG("+++ ctrans    =% 12"PRIu64"\n", sysblk.txf_ctrans );
+            LOGMSG("+++ acc_read  =%12"PRIu64"\n", sysblk.acc_read   );
+            LOGMSG("+++ acc_write =%12"PRIu64"\n", sysblk.acc_write  );
+            LOGMSG("+++ acc_check =%12"PRIu64"\n", sysblk.acc_check  );
+            LOGMSG("+++ acc_notrw =%12"PRIu64"\n", sysblk.acc_notrw  );
+            LOGMSG("+++ acc_none  =%12"PRIu64"\n", sysblk.acc_none   );
+            LOGMSG("+++ ctrans    =%12"PRIu64"\n", sysblk.txf_ctrans );
 
             if (sysblk.txf_ctrans)
             {
@@ -324,7 +324,7 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
 
 #define         TXF_BUCKET(n) \
                 count = sysblk.txf_caborts[n]; \
-                LOGMSG("+++ " #n " retries =% 12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[n], (count/total) * 100.0 )
+                LOGMSG("+++ " #n " retries =%12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[n], (count/total) * 100.0 )
 
                 TXF_BUCKET(0);
                 TXF_BUCKET(1);
@@ -336,10 +336,10 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
                 TXF_BUCKET(7);
 //              TXF_BUCKET(8);
                 count = sysblk.txf_caborts[8];
-                LOGMSG("+++ 8+retries =% 12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[8], (count/total) * 100.0 );
+                LOGMSG("+++ 8+retries =%12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[8], (count/total) * 100.0 );
             }
         }
-#endif
+#endif /* defined( FISHTEST_TXF_STATS ) */
         else
             // "%s%s"
             WRMSG( HHC00001, "E", argv[1], ": unknown test");
