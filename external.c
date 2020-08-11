@@ -287,6 +287,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (1
             && CPU_STEPPING_OR_TRACING_ALL
+            && !TXF_INSTR_TRACING()
         )
         {
             // "External interrupt: clock comparator"
@@ -303,6 +304,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (1
             && CPU_STEPPING_OR_TRACING_ALL
+            && !TXF_INSTR_TRACING()
         )
         {
             // "External interrupt: CPU timer=%16.16"PRIX64
@@ -321,6 +323,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     {
         if (1
             && CPU_STEPPING_OR_TRACING_ALL
+            && !TXF_INSTR_TRACING()
         )
         {
             // "External interrupt: interval timer"
@@ -374,6 +377,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 /* 8-byte interrupt parm */
                 if (1
                     && CPU_STEPPING_OR_TRACING_ALL
+                    && !TXF_INSTR_TRACING()
                 )
                 {
                     char buf[40];
@@ -413,6 +417,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 /* 4-byte interrupt parm */
                 if (1
                     && CPU_STEPPING_OR_TRACING_ALL
+                    && !TXF_INSTR_TRACING()
                 )
                 {
                     char buf[40];
@@ -447,6 +452,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
             if (1
                 && CPU_STEPPING_OR_TRACING_ALL
+                && !TXF_INSTR_TRACING()
             )
             {
                 // "External interrupt: service signal %8.8X"
@@ -478,6 +484,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
         if (1
             && CPU_STEPPING_OR_TRACING_ALL
+            && !TXF_INSTR_TRACING()
         )
         {
             // "External interrupt: service signal %8.8X"
