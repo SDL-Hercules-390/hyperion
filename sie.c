@@ -33,7 +33,9 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #if !defined( COMPILE_THIS_ONLY_ONCE )
 #define       COMPILE_THIS_ONLY_ONCE
 
+#if defined( SIE_DEBUG )
 static const char* sie_icode_2str( int icode );
+#endif
 
 /*-------------------------------------------------------------------*/
 /*              static function forward references                   */
@@ -1823,6 +1825,7 @@ U32    newgr1;
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
 
+#if defined( SIE_DEBUG )
 static const char* sie_icode_2str( int icode )
 {
     static const char* icode_names[] =
@@ -1899,5 +1902,6 @@ static const char* sie_icode_2str( int icode )
 
     return name;
 }
+#endif /* defined( SIE_DEBUG ) */
 
 #endif /*!defined(_GEN_ARCH)*/

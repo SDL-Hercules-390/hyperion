@@ -805,9 +805,9 @@ size_t  totamt;                         /* Total amount to be dumped */
 
 
 /*-------------------------------------------------------------------*/
-/* Display instruction                                               */
+/*                    display_inst_adj                               */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(display_inst) (REGS *iregs, BYTE *inst)
+static void ARCH_DEP( display_inst_adj )( REGS* iregs, BYTE* inst, bool pgmint )
 {
 QWORD   qword;                          /* Doubleword work area      */
 BYTE    opcode;                         /* Instruction operation code*/
@@ -818,16 +818,17 @@ VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 char    buf[2048];                      /* Message buffer            */
 char    buf2[512];
 int     n;                              /* Number of bytes in buffer */
-REGS   *regs;                           /* Copied regs               */
-char    psw_inst_msg[160] = {0};
-char    op1_stor_msg[128] = {0};
-char    op2_stor_msg[128] = {0};
+REGS*   regs;                           /* Copied regs               */
+
+char    psw_inst_msg[160]   = {0};
+char    op1_stor_msg[128]   = {0};
+char    op2_stor_msg[128]   = {0};
 char    regs_msg_buf[4*512] = {0};
 
     /* Ensure storage exists to attempt the display */
     if (iregs->mainlim == 0)
     {
-        WRMSG(HHC02267, "I", "Real address is not valid");
+        WRMSG( HHC02267, "I", "Real address is not valid" );
         return;
     }
 
@@ -836,43 +837,43 @@ char    regs_msg_buf[4*512] = {0};
 
     if (iregs->ghostregs)
         regs = iregs;
-    else if ((regs = copy_regs(iregs)) == NULL)
+    else if (!(regs = copy_regs( iregs )))
         return;
 
-  #if defined(_FEATURE_SIE)
-    if(SIE_MODE (regs))
-        n += snprintf (buf + n, sizeof(buf)-n, "SIE: ");
-  #endif /*defined(_FEATURE_SIE)*/
+#if defined( _FEATURE_SIE )
+    if (SIE_MODE( regs ))
+        n += snprintf( buf + n, sizeof( buf )-n, "SIE: " );
+#endif
 
     /* Display the PSW */
-    memset (qword, 0, sizeof(qword));
-    copy_psw (regs, qword);
+    memset( qword, 0, sizeof( qword ));
+    copy_psw( regs, qword );
 
-    if ( sysblk.cpus > 1 )
-        n += snprintf (buf + n, sizeof(buf)-n, "%s%02X: ", PTYPSTR(regs->cpuad), regs->cpuad);
+    if (sysblk.cpus > 1)
+        n += snprintf( buf + n, sizeof( buf )-n, "%s%02X: ", PTYPSTR( regs->cpuad ), regs->cpuad );
 
-    n += snprintf (buf + n, sizeof(buf)-n,
+    n += snprintf( buf + n, sizeof( buf )-n,
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7]);
+                qword[4], qword[5], qword[6], qword[7] );
 
-  #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     n += snprintf (buf + n, sizeof(buf)-n,
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
-  #endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     /* Exit if instruction is not valid */
-    if (inst == NULL)
+    if (!inst)
     {
         size_t len;
         MSGBUF( psw_inst_msg, "%s Instruction fetch error\n", buf );
         display_gregs( regs, regs_msg_buf, sizeof(regs_msg_buf)-1, "HHC02269I " );
         /* Remove unwanted extra trailing newline from regs_msg_buf */
-        len = strlen(regs_msg_buf);
+        len = strlen( regs_msg_buf );
         if (len)
-            regs_msg_buf[len-1] = 0;
+            regs_msg_buf[ len-1 ] = 0;
         // "%s%s" // (instruction fetch error + regs)
         WRMSG( HHC02325, "E", psw_inst_msg, regs_msg_buf );
         if (!iregs->ghostregs)
@@ -882,108 +883,147 @@ char    regs_msg_buf[4*512] = {0};
 
     /* Extract the opcode and determine the instruction length */
     opcode = inst[0];
-    ilc = ILC(opcode);
+    ilc = ILC( opcode );
 
     /* Format instruction line */
-    n += snprintf (buf + n, sizeof(buf)-n, "INST=%2.2X%2.2X", inst[0], inst[1]);
-    if (ilc > 2) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[2], inst[3]);
-    if (ilc > 4) n += snprintf (buf + n, sizeof(buf)-n, "%2.2X%2.2X", inst[4], inst[5]);
-    n += snprintf (buf + n, sizeof(buf)-n, " %s", (ilc<4) ? "        " : (ilc<6) ? "    " : "");
-    n += PRINT_INST(inst, buf + n);
+                 n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
+    if (ilc > 2) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );
+    if (ilc > 4) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );
+                 n += snprintf( buf + n, sizeof( buf )-n, " %s", (ilc < 4) ? "        " :
+                                                                 (ilc < 6) ? "    " : "" );
+    n += PRINT_INST( inst, buf + n );
     MSGBUF( psw_inst_msg, MSG( HHC02324, "I", buf ));
 
     n = 0;
     buf[0] = '\0';
 
     /* Process the first storage operand */
-    if (ilc > 2
-        && opcode != 0x84 && opcode != 0x85
-        && opcode != 0xA5 && opcode != 0xA7
-        && opcode != 0xB3
-        && opcode != 0xC0 && opcode != 0xC4 && opcode != 0xC6
-        && opcode != 0xEC)
+    if (1
+        && ilc > 2
+        && opcode != 0x84   // BRXH
+        && opcode != 0x85   // BRXLE
+        && opcode != 0xA5   // RI-x     (relative)
+        && opcode != 0xA7   // RI-x     (relative)
+        && opcode != 0xB3   // RRE/RRF
+        && opcode != 0xC0   // RIL-x    (relative)
+        && opcode != 0xC4   // RIL-x    (relative)
+        && opcode != 0xC6   // RIL-x    (relative)
+        && opcode != 0xEC   // RIE-x
+    )
     {
         /* Calculate the effective address of the first operand */
         b1 = inst[2] >> 4;
         addr1 = ((inst[2] & 0x0F) << 8) | inst[3];
         if (b1 != 0)
         {
-            addr1 += regs->GR(b1);
-            addr1 &= ADDRESS_MAXWRAP(regs);
+            addr1 += regs->GR( b1 );
+            addr1 &= ADDRESS_MAXWRAP( regs );
         }
 
         /* Apply indexing for RX/RXE/RXF instructions */
-        if ((opcode >= 0x40 && opcode <= 0x7F) || opcode == 0xB1
-            || opcode == 0xE3 || opcode == 0xED)
+        if (0
+            || (opcode >= 0x40 && opcode <= 0x7F)
+            || opcode == 0xB1   // LRA
+            || opcode == 0xE3   // RXY-x
+            || opcode == 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
+        )
         {
             x1 = inst[1] & 0x0F;
             if (x1 != 0)
             {
-                addr1 += regs->GR(x1);
-                addr1 &= ADDRESS_MAXWRAP(regs);
+                addr1 += regs->GR( x1 );
+                addr1 &= ADDRESS_MAXWRAP( regs );
             }
         }
     }
 
     /* Process the second storage operand */
-    if (ilc > 4
-        && opcode != 0xC0 && opcode != 0xC4 && opcode != 0xC6
-        && opcode != 0xE3 && opcode != 0xEB
-        && opcode != 0xEC && opcode != 0xED)
+    if (1
+        && ilc > 4
+        && opcode != 0xC0   // RIL-x    (relative)
+        && opcode != 0xC4   // RIL-x    (relative)
+        && opcode != 0xC6   // RIL-x    (relative)
+        && opcode != 0xE3   // RXY-x
+        && opcode != 0xEB   // RSY-x, SIY-x
+        && opcode != 0xEC   // RIE-x
+        && opcode != 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
+    )
     {
         /* Calculate the effective address of the second operand */
         b2 = inst[4] >> 4;
         addr2 = ((inst[4] & 0x0F) << 8) | inst[5];
         if (b2 != 0)
         {
-            addr2 += regs->GR(b2);
-            addr2 &= ADDRESS_MAXWRAP(regs);
+            addr2 += regs->GR( b2 );
+            addr2 &= ADDRESS_MAXWRAP( regs );
         }
     }
 
     /* Calculate the operand addresses for MVCL(E) and CLCL(E) */
-    if (opcode == 0x0E || opcode == 0x0F
-        || opcode == 0xA8 || opcode == 0xA9)
+    if (0
+        || opcode == 0x0E   // MVCL
+        || opcode == 0x0F   // CLCL
+        || opcode == 0xA8   // MVCLE
+        || opcode == 0xA9   // CLCLE
+    )
     {
-        b1 = inst[1] >> 4;
-        addr1 = regs->GR(b1) & ADDRESS_MAXWRAP(regs);
-        b2 = inst[1] & 0x0F;
-        addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
+        b1 = inst[1] >> 4;   addr1 = regs->GR( b1 ) & ADDRESS_MAXWRAP( regs );
+        b2 = inst[1] & 0x0F; addr2 = regs->GR( b2 ) & ADDRESS_MAXWRAP( regs );
     }
 
     /* Calculate the operand addresses for RRE instructions */
-    if ((opcode == 0xB2 &&
-            ((inst[1] >= 0x20 && inst[1] <= 0x2F)
-            || (inst[1] >= 0x40 && inst[1] <= 0x6F)
-            || (inst[1] >= 0xA0 && inst[1] <= 0xAF)))
+    if (0
+        || (opcode == 0xB2 &&
+            (0
+             || (inst[1] >= 0x20 && inst[1] <= 0x2F)
+             || (inst[1] >= 0x40 && inst[1] <= 0x6F)
+             || (inst[1] >= 0xA0 && inst[1] <= 0xAF)
+            )
+           )
         || (opcode == 0xB9 &&
             (0
-            || (inst[1] == 0x05)    /*LURAG*/
-            || (inst[1] == 0x25)    /*STURG*/
-            || (inst[1] >= 0x31)))) /*FIXME : Needs more specifics ! */
+             || (inst[1] == 0x05)   // LURAG
+             || (inst[1] == 0x25)   // STURG
+             || (inst[1] >= 0x31)   // FIXME: Needs more specifics!
+            )
+           )
+    )
     {
         b1 = inst[3] >> 4;
-        addr1 = regs->GR(b1) & ADDRESS_MAXWRAP(regs);
+        addr1 = regs->GR( b1 ) & ADDRESS_MAXWRAP( regs );
         b2 = inst[3] & 0x0F;
         if (inst[1] >= 0x29 && inst[1] <= 0x2C)
-            addr2 = regs->GR(b2) & ADDRESS_MAXWRAP_E(regs);
+            addr2 = regs->GR( b2 ) & ADDRESS_MAXWRAP_E( regs );
         else
-            addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
+            addr2 = regs->GR( b2 ) & ADDRESS_MAXWRAP( regs );
     }
 
-    /* Calculate the operand address for RIL_A instructions */
-    if ((opcode == 0xC0 &&
-            ((inst[1] & 0x0F) == 0x00
-            || (inst[1] & 0x0F) == 0x04
-            || (inst[1] & 0x0F) == 0x05))
-        || opcode == 0xC4
-        || opcode == 0xC6)
+    /* Calculate the operand address for RIL-x (relative) instructions */
+    if (0
+        || (opcode == 0xC0 &&
+            (0
+             || (inst[1] & 0x0F) == 0x00    // LARL   (relative)
+             || (inst[1] & 0x0F) == 0x04    // BRCL   (relative)
+             || (inst[1] & 0x0F) == 0x05    // BRASL  (relative)
+            )
+           )
+        || opcode == 0xC4   // RIL-x  (relative)
+        || opcode == 0xC6   // RIL-x  (relative)
+    )
     {
-        S64 offset = 2LL*(S32)(fetch_fw(inst+2));
-        addr1 = (likely(!regs->execflag)) ?
-                        PSW_IA(regs, offset) : \
-                        (regs->ET + offset) & ADDRESS_MAXWRAP(regs);
+        S64 offset = 2LL * (S32) (fetch_fw( inst+2 ));
+        addr1 = (!regs->execflag) ? PSW_IA( regs, offset )
+            : (regs->ET + offset) & ADDRESS_MAXWRAP( regs );
         b1 = 0;
+
+        /* If we were called to display the instruction that
+           program checked, then since the PSW's IA is pointing
+           PAST the instruction (and not at it) and the operand
+           is relative to the instruction, then we need to make
+           a minor adjustment to our calculated operand address.
+        */
+        if (pgmint)         // ("display_pgmint_inst" call?)
+            addr1 -= ilc;   // (yes, adjust operand address)
     }
 
     /* Format storage at first storage operand location */
@@ -992,27 +1032,26 @@ char    regs_msg_buf[4*512] = {0};
         n = 0;
         buf2[0] = '\0';
 
-  #if defined(_FEATURE_SIE)
-        if(SIE_MODE (regs))
-            n += snprintf (buf2 + n, sizeof(buf2)-n, "SIE: ");
-  #endif /*defined(_FEATURE_SIE)*/
-
+#if defined( _FEATURE_SIE )
+        if (SIE_MODE( regs ))
+            n += snprintf( buf2 + n, sizeof( buf2 )-n, "SIE: " );
+#endif
         if (sysblk.cpus > 1)
-            n += snprintf(buf2 + n, sizeof(buf2)-n, "%s%02X: ",
-                          PTYPSTR(regs->cpuad), regs->cpuad );
+            n += snprintf( buf2 + n, sizeof( buf2 )-n, "%s%02X: ",
+                          PTYPSTR( regs->cpuad ), regs->cpuad );
 
-        if(REAL_MODE(&regs->psw))
-            ARCH_DEP(display_virt) (regs, addr1, buf2+n, sizeof(buf2)-n-1, USE_REAL_ADDR,
-                                                ACCTYPE_READ, "", &xcode);
+        if (REAL_MODE( &regs->psw ))
+            ARCH_DEP( display_virt )( regs, addr1, buf2+n, sizeof( buf2 )-n-1,
+                                      USE_REAL_ADDR, ACCTYPE_READ, "", &xcode );
         else
-            ARCH_DEP(display_virt) (regs, addr1, buf2+n, sizeof(buf2)-n-1, b1,
-                                (opcode == 0x44
-#if defined(FEATURE_035_EXECUTE_EXTN_FACILITY)
+            ARCH_DEP( display_virt )( regs, addr1, buf2+n, sizeof( buf2 )-n-1,
+                                      b1, (opcode == 0x44
+#if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
                                  || (opcode == 0xc6 && !(inst[1] & 0x0f))
-#endif /*defined(FEATURE_035_EXECUTE_EXTN_FACILITY)*/
+#endif
                                                 ? ACCTYPE_INSTFETCH :
                                  opcode == 0xB1 ? ACCTYPE_LRA :
-                                                  ACCTYPE_READ),"", &xcode);
+                                                  ACCTYPE_READ ), "", &xcode );
 
         MSGBUF( op1_stor_msg, MSG( HHC02326, "I", buf2 ));
     }
@@ -1020,29 +1059,28 @@ char    regs_msg_buf[4*512] = {0};
     /* Format storage at second storage operand location */
     if (b2 >= 0)
     {
+        int ar = b2;
         n = 0;
         buf2[0] = '\0';
 
-  #if defined(_FEATURE_SIE)
-    if(SIE_MODE (regs))
-        n += snprintf (buf2 + n, sizeof(buf2)-n, "SIE: ");
-  #endif /*defined(_FEATURE_SIE)*/
-
+#if defined(_FEATURE_SIE)
+        if (SIE_MODE( regs ))
+            n += snprintf( buf2 + n, sizeof( buf2 )-n, "SIE: " );
+#endif
         if (sysblk.cpus > 1)
-            n += snprintf(buf2 + n, sizeof(buf2)-n, "%s%02X: ",
-                          PTYPSTR(regs->cpuad), regs->cpuad );
+            n += snprintf( buf2 + n, sizeof( buf2 )-n, "%s%02X: ",
+                           PTYPSTR( regs->cpuad ), regs->cpuad );
         if (0
-            || (REAL_MODE(&regs->psw)
-            || (opcode == 0xB2 && inst[1] == 0x4B) /*LURA*/
-            || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
-            || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
-            || (opcode == 0xB9 && inst[1] == 0x25)) /*STURG*/
+            || REAL_MODE( &regs->psw )
+            || (opcode == 0xB2 && inst[1] == 0x4B)  /*LURA*/
+            || (opcode == 0xB2 && inst[1] == 0x46)  /*STURA*/
+            || (opcode == 0xB9 && inst[1] == 0x05)  /*LURAG*/
+            || (opcode == 0xB9 && inst[1] == 0x25)  /*STURG*/
         )
-            ARCH_DEP(display_virt) (regs, addr2, buf2+n, sizeof(buf2)-n-1, USE_REAL_ADDR,
-                                    ACCTYPE_READ, "", &xcode);
-        else
-            ARCH_DEP(display_virt) (regs, addr2, buf2+n, sizeof(buf2)-n-1, b2,
-                                    ACCTYPE_READ, "", &xcode);
+            ar = USE_REAL_ADDR;
+
+        ARCH_DEP( display_virt )( regs, addr2, buf2+n, sizeof( buf2 )-n-1,
+                                  ar, ACCTYPE_READ, "", &xcode );
 
         MSGBUF( op2_stor_msg, MSG( HHC02326, "I", buf2 ));
     }
@@ -1054,9 +1092,9 @@ char    regs_msg_buf[4*512] = {0};
     if (sysblk.showregsfirst)
     {
         /* Remove unwanted extra trailing newline from regs_msg_buf */
-        size_t len = strlen(regs_msg_buf);
+        size_t len = strlen( regs_msg_buf );
         if (len)
-            regs_msg_buf[len-1] = 0;
+            regs_msg_buf[ len-1 ] = 0;
     }
 
     /* Now display all instruction tracing messages all at once */
@@ -1071,6 +1109,21 @@ char    regs_msg_buf[4*512] = {0};
 
 } /* end function display_inst */
 
+/*-------------------------------------------------------------------*/
+/*                    display_inst                                   */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( display_inst )( REGS* iregs, BYTE* inst )
+{
+    ARCH_DEP( display_inst_adj )( iregs, inst, false );
+}
+
+/*-------------------------------------------------------------------*/
+/*                    display_pgmint_inst                            */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( display_pgmint_inst )( REGS* iregs, BYTE* inst )
+{
+    ARCH_DEP( display_inst_adj )( iregs, inst, true );
+}
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
@@ -2782,7 +2835,7 @@ DLL_EXPORT const char* FormatSID( BYTE* ciw, int len, char* buf, size_t bufsz )
 /*-------------------------------------------------------------------*/
 /*              Format Program Interrupt Name                        */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT const char* PIC2Name( int code )
+DLL_EXPORT const char* PIC2Name( int pcode )
 {
     static const char* pgmintname[] =
     {
@@ -2853,9 +2906,12 @@ DLL_EXPORT const char* PIC2Name( int code )
         /* 3F */    "Unassigned exception",
         /* 40 */    "Monitor event"
     };
-    int ndx = (code - 1) & 0x3F;
-    return (ndx < (int) _countof( pgmintname )) ?
-        pgmintname[ ndx ] : "???";
+    int ndx, code = (pcode & 0xFF);
+    if (code < 1 || code > (int) _countof( pgmintname ))
+        return "Unassigned exception";
+    ndx = ((code - 1) & 0x3F);
+    return (ndx >= 0 && ndx < (int) _countof( pgmintname )) ?
+        pgmintname[ ndx ] : "Unassigned exception";
 }
 
 

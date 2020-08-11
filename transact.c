@@ -951,7 +951,7 @@ TPAGEMAP   *pmap;
 /*-------------------------------------------------------------------*/
 /*         Transaction Abort Code to Condition Code table            */
 /*-------------------------------------------------------------------*/
-/*     (see Fig. 514 on page 5-102 of SA22-7832-12 z/Arch POPs)      */
+/*     (see Fig. 5-14 on page 5-102 of SA22-7832-12 z/Arch POPs)     */
 /*-------------------------------------------------------------------*/
 static const int tac2cc[20] =
 {
@@ -1414,7 +1414,8 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
        with a condition code of 3.
     */
     PTT_TXF( "*TXF abrtpgm", 0, txf_contran, txf_tnd );
-    ARCH_DEP( program_interrupt )( regs, PGM_TRANSACTION_CONSTRAINT_EXCEPTION );
+    ARCH_DEP( program_interrupt )( regs,
+        PGM_TXF_EVENT | PGM_TRANSACTION_CONSTRAINT_EXCEPTION );
     UNREACHABLE_CODE( return );
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
@@ -1449,13 +1450,17 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 /* normal program interrupt processing.                              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int code )
+DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int pcode )
 {
 bool    filt;                   /* true == filter the interrupt      */
 int     txclass;                /* Transactional Execution Class     */
 int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
 
-    PTT_TXF( "TXF filt?", code, regs->txf_contran, regs->txf_tnd );
+    PTT_TXF( "TXF filt?", pcode, regs->txf_contran, regs->txf_tnd );
+
+    /* We shouldn't even be called if no transaction is active! */
+    if (!regs->txf_tnd)
+        CRASH();
 
     /* Always reset the NTSTG indicator on any program interrupt */
     regs->txf_NTSTG = false;
@@ -1463,11 +1468,11 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     /* No filtering if no transaction was active */
     if (!regs->txf_tnd)
     {
-        PTT_TXF( "*TXF !filt", code, regs->txf_contran, regs->txf_tnd );
+        PTT_TXF( "*TXF !filt", pcode, regs->txf_contran, regs->txf_tnd );
         return;
     }
 
-    switch (code & 0xFF)  // (interrupt code)
+    switch (pcode & 0xFF)  // (interrupt code)
     {
     case PGM_OPERATION_EXCEPTION:
     case PGM_PRIVILEGED_OPERATION_EXCEPTION:
@@ -1582,7 +1587,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
         ucc = TXF_CC_SUCCESS;
         break;
 
-    } /* end switch (code) */
+    } /* end switch (pcode & 0xFF) */
 
     /* CONSTRAINED transactions cannot be filtered */
     if (regs->txf_contran)
@@ -1622,23 +1627,30 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
         }
     }
 
-    /*-----------------------------------------*/
-    /*  Can interrupt ABSOLUTELY be filtered?  */
-    /*-----------------------------------------*/
+    /*-------------------------------------------*/
+    /*   Can interrupt ABSOLUTELY be filtered?   */
+    /*-------------------------------------------*/
 
     if (filt)  /* NOW we can rely this flag! */
     {
-        /* Yes, abort transaction with filtered condition code */
+        /*--------------------------------------*/
+        /* TAC_FPGM: filtered Program Interrupt */
+        /*--------------------------------------*/
+
         regs->psw.cc = fcc;
-        PTT_TXF( "TXF filt!", code, regs->txf_contran, regs->txf_tnd );
+        PTT_TXF( "TXF filt!", pcode, regs->txf_contran, regs->txf_tnd );
         regs->txf_why |= TXF_WHY_FILT_INT;
         ABORT_TRANS( regs, ABORT_RETRY_CC, TAC_FPGM );
         UNREACHABLE_CODE( return );
     }
 
-    /* No, set unfiltered condition code and return to caller */
+    /*---------------------------------------------*/
+    /*  TAC_UPGM: unfilterable Program Interrupt   */
+    /*---------------------------------------------*/
+
+    /* Abort the transaction and return to the caller */
     regs->psw.cc = ucc;
-    PTT_TXF( "TXF unfilt!", code, regs->txf_contran, regs->txf_tnd );
+    PTT_TXF( "TXF unfilt!", pcode, regs->txf_contran, regs->txf_tnd );
     regs->txf_why |= TXF_WHY_UNFILT_INT;
     ABORT_TRANS( regs, ABORT_RETRY_RETURN, TAC_UPGM );
 

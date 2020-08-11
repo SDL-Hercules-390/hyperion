@@ -314,7 +314,8 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
     {
         char buf[40];
-        WRMSG(HHC00800, "I", PTYPSTR(regs->cpuad), regs->cpuad, STR_PSW( regs, buf ));
+        // "Processor %s%02X: loaded wait state PSW %s"
+        WRMSG( HHC00800, "I", PTYPSTR( regs->cpuad ), regs->cpuad, STR_PSW( regs, buf ));
     }
 
     TEST_SET_AEA_MODE(regs);
@@ -323,7 +324,127 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 } /* end function ARCH_DEP(load_psw) */
 
 /*-------------------------------------------------------------------*/
-/* Load program interrupt new PSW                                    */
+/*                    trace_program_interrupt_ip                     */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void ARCH_DEP( trace_program_interrupt_ip )( REGS* regs, BYTE* ip, int pcode, int ilc )
+{
+    int code = (pcode & 0xFF);
+
+    /* Trace program checks other then PER event */
+    if (1
+        && code
+        && (0
+            || CPU_STEPPING_OR_TRACING( regs, ilc )
+            || sysblk.pgminttr & ((U64) 1 << ((code - 1) & 0x3F))
+           )
+    )
+    {
+        /* Work variables... */
+        char sie_mode_str    [ 10]  = {0};  // maybe "SIE: "
+        char sie_debug_arch  [ 32]  = {0};  // "370", "390" or "900" if defined( SIE_DEBUG )
+        char txf_why         [256]  = {0};  // TXF "why" string if txf pgmint
+        char dxcstr          [  8]  = {0};  // data exception code if PGM_DATA_EXCEPTION
+
+#if defined( OPTION_FOOTPRINT_BUFFER )
+        if (!(sysblk.insttrace || sysblk.inststep))
+        {
+            U32  n;
+            for (n = sysblk.footprptr[ regs->cpuad ] + 1;
+                n != sysblk.footprptr[ regs->cpuad ];
+                n++, n &= OPTION_FOOTPRINT_BUFFER - 1
+            )
+            {
+                ARCH_DEP( display_inst )(
+                    &sysblk.footprregs[ regs->cpuad ][n],
+                     sysblk.footprregs[ regs->cpuad ][n].inst );
+            }
+        }
+#endif
+
+#if defined( _FEATURE_SIE )
+        if (SIE_MODE( regs ))
+          STRLCPY( sie_mode_str, "SIE: " );
+#endif
+
+#if defined( SIE_DEBUG )
+        STRLCPY( sie_debug_arch, QSTR( _GEN_ARCH ));
+        STRLCAT( sie_debug_arch, " " );
+#endif
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        if (1
+            && pcode & PGM_TXF_EVENT
+            && regs->txf_why
+        )
+            txf_why_str( txf_why, sizeof( txf_why ), regs->txf_why );
+#endif
+        if (code == PGM_DATA_EXCEPTION)
+           MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
+
+        /* Trace pgm interrupt if not being specially suppressed */
+        if (0
+            || !ip
+            || ip[0] != 0xB1 /* LRA */
+            || code != PGM_SPECIAL_OPERATION_EXCEPTION
+            || !sysblk.nolrasoe /* suppression not requested */
+        )
+        {
+            // "Processor %s%02X: %s%s %s code %4.4X ilc %d%s%s"
+            WRMSG( HHC00801, "I",
+                PTYPSTR( regs->cpuad ), regs->cpuad,
+                sie_mode_str, sie_debug_arch,
+                PIC2Name( code ), pcode,
+                ilc, dxcstr, txf_why );
+            ARCH_DEP( display_pgmint_inst )( regs, ip );
+        }
+    }
+
+} /* end function ARCH_DEP( trace_program_interrupt_ip ) */
+
+/*-------------------------------------------------------------------*/
+/*                    trace_program_interrupt                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void (ATTR_REGPARM(2) ARCH_DEP( trace_program_interrupt ))( REGS* regs, int pcode, int ilc )
+{
+    /* Calculate instruction pointer */
+    BYTE* ip = regs->instinvalid ? NULL
+        : (regs->ip - ilc < regs->aip) ? regs->inst
+        : (regs->ip - ilc);
+
+    ARCH_DEP( trace_program_interrupt_ip )( regs, ip, pcode, ilc );
+}
+
+/*-------------------------------------------------------------------*/
+/*                  fix_program_interrupt_PSW                        */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT int ARCH_DEP( fix_program_interrupt_PSW )( REGS* regs )
+{
+    /* Get instruction length (ilc) */
+    int ilc = regs->psw.zeroilc ? 0 : REAL_ILC( regs );
+
+    if (regs->psw.ilc == 0 && !regs->psw.zeroilc)
+    {
+        /* This can happen if BALR, BASR, BASSM or BSM
+           program checks during trace
+        */
+        ilc = likely( !regs->execflag ) ? 2 : regs->exrl ? 6 : 4;
+
+        regs->ip      += ilc;
+        regs->psw.IA  += ilc;
+        regs->psw.ilc  = ilc;
+    }
+
+    return ilc;
+}
+
+/*-------------------------------------------------------------------*/
+/*                       program_interrupt                           */
+/*-------------------------------------------------------------------*/
+/* The purpose of this function is to store the current PSW into the */
+/* Program interrupt old PSW field in low core followed by loading   */
+/* the Program interrupt new PSW and then jumping via regs->progjmp  */
+/* back to the run_cpu instruction execution loop to begin executing */
+/* instructions at the Progran new PSW location.                     */
 /*-------------------------------------------------------------------*/
 void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt ))( REGS* regs, int pcode )
 {
@@ -394,20 +515,8 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
         INVALIDATE_AIA( GUEST( realregs ));
 #endif
 
-    /* Set instruction length (ilc) */
-    ilc = realregs->psw.zeroilc ? 0 : REAL_ILC( realregs );
-
-    if (realregs->psw.ilc == 0 && !realregs->psw.zeroilc)
-    {
-        /* This can happen if BALR, BASR, BASSM or BSM
-           program checks during trace
-        */
-        ilc = likely( !realregs->execflag ) ? 2 : realregs->exrl ? 6 : 4;
-
-        realregs->ip      += ilc;
-        realregs->psw.IA  += ilc;
-        realregs->psw.ilc  = ilc;
-    }
+    /* Fix PSW and get instruction length (ilc) */
+    ilc = ARCH_DEP( fix_program_interrupt_PSW )( realregs );
 
 #if defined( FEATURE_INTERPRETIVE_EXECUTION )
     if (realregs->sie_active)
@@ -619,76 +728,11 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     HDC2( debug_program_interrupt, regs, pcode );
 
     /* Trace program checks other then PER event */
-    if (1
-        && code
-        && (0
-            || CPU_STEPPING_OR_TRACING( realregs, ilc )
-            || sysblk.pgminttr & ((U64) 1 << ((code - 1) & 0x3F))
-           )
-    )
+    regs->psw.IA -= ilc;
     {
-        BYTE*  ip         = NULL;
-        char   buf1[10]   = {0};
-        char   buf2[32]   = {0};
-        char   buf3[256]  = {0};
-
-#if defined( OPTION_FOOTPRINT_BUFFER )
-        if (!(sysblk.insttrace || sysblk.inststep))
-        {
-            U32 n;
-            for(n  = sysblk.footprptr[realregs->cpuad] + 1;
-                n != sysblk.footprptr[realregs->cpuad];
-                n++, n &= OPTION_FOOTPRINT_BUFFER - 1)
-            {
-                ARCH_DEP( display_inst )(
-                    &sysblk.footprregs[realregs->cpuad][n],
-                     sysblk.footprregs[realregs->cpuad][n].inst );
-            }
-        }
-#endif
-
-
-#if defined( _FEATURE_SIE )
-        if (SIE_MODE( realregs ))
-          STRLCPY( buf1, "SIE: " );
-#endif
-
-#if defined( SIE_DEBUG )
-        STRLCPY( buf2, QSTR( _GEN_ARCH ));
-        STRLCAT( buf2, " " );
-#endif
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-        if (1
-            && pcode & PGM_TXF_EVENT
-            && realregs->txf_why
-        )
-            txf_why_str( buf3, sizeof( buf3 ), realregs->txf_why );
-#endif
-        if (code == PGM_DATA_EXCEPTION)
-           MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
-
-        /* Calculate instruction pointer */
-        ip = realregs->instinvalid ? NULL
-                                   : (realregs->ip - ilc < realregs->aip) ? realregs->inst
-                                                                          : realregs->ip - ilc;
-        /* Trace pgm interrupt if not being specially suppressed */
-        if (0
-            || !ip
-            || ip[0] != 0xB1 /* LRA */
-            || code != PGM_SPECIAL_OPERATION_EXCEPTION
-            || !sysblk.nolrasoe /* suppression not requested */
-        )
-        {
-            // "Processor %s%02X: %s%s %s code %4.4X ilc %d%s%s"
-            WRMSG( HHC00801, "I",
-                PTYPSTR( realregs->cpuad ), realregs->cpuad,
-                buf1, buf2,
-                PIC2Name( code ), pcode,
-                ilc, dxcstr, buf3 );
-            ARCH_DEP( display_inst )( realregs, ip );
-        }
+        ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
     }
+    regs->psw.IA += ilc;
 
     realregs->instinvalid = 0;
 

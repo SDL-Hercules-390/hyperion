@@ -1703,7 +1703,11 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int co
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
 #endif
 
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt )) (REGS *regs, int code);
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt ))        ( REGS* regs, int code );
+CPU_DLL_IMPORT int                   ARCH_DEP( fix_program_interrupt_PSW ) ( REGS* regs );
+CPU_DLL_IMPORT void                  ARCH_DEP( trace_program_interrupt )   ( REGS* regs, int pcode, int ilc );
+CPU_DLL_IMPORT void                  ARCH_DEP( trace_program_interrupt_ip )( REGS* regs, BYTE* ip, int pcode, int ilc );
+
 void *cpu_thread (void *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);
 int   display_psw(                 REGS* regs, char* buf, int buflen );
@@ -1823,7 +1827,8 @@ void init_regs_runtime_opcode_pointers( REGS* regs );
 
 
 /* Functions in module hscmisc.c */
-void ARCH_DEP( display_inst ) (REGS *regs, BYTE *inst);
+void ARCH_DEP( display_inst )       ( REGS* regs, BYTE* inst );
+void ARCH_DEP( display_pgmint_inst )( REGS* regs, BYTE* inst );
 
 
 /* Functions in module sie.c */
