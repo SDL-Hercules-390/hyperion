@@ -613,11 +613,11 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
 /*      (either 0 or 1) the references to exec are optimized out by  */
 /*      the compiler.                                                */
 /*-------------------------------------------------------------------*/
-_VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec)
+_VFETCH_C_STATIC BYTE* ARCH_DEP( instfetch )( REGS* regs, int exec )
 {
 VADR    addr;                           /* Instruction address       */
-BYTE   *ia;                             /* Instruction pointer       */
-BYTE   *dest;                           /* Copied instruction        */
+BYTE*   ip;                             /* Instruction pointer       */
+BYTE*   dest;                           /* Copied instruction        */
 int     pagesz;                         /* Effective page size       */
 int     offset;                         /* Address offset into page  */
 int     len;                            /* Length for page crossing  */
@@ -688,6 +688,19 @@ int     len;                            /* Length for page crossing  */
             &&  regs->ip < regs->aip + pagesz - 5
         )
         {
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+            /* Update CONSTRAINED trans instruction fetch constraint */
+            if (regs->txf_contran)
+            {
+                if (regs->AIV == regs->txf_aie_aiv2)
+                    regs->txf_aie = regs->aip + regs->txf_aie_off2;
+            }
+
+            TXF_INSTRADDR_CONSTRAINT( regs->ip, regs );
+
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
             return regs->ip;
         }
     }
@@ -698,29 +711,29 @@ int     len;                            /* Length for page crossing  */
         regs->instinvalid = 1;
 
     /* Get instruction address */
-    ia = MADDRL( addr, 6, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
+    ip = MADDRL( addr, 6, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
 
     /* If boundary is crossed then copy instruction to destination */
-    if (offset + ILC( ia[0] ) > pagesz)
+    if (offset + ILC( ip[0] ) > pagesz)
     {
         /* Copy first part of instruction (note: dest is 8 bytes) */
         dest = exec ? regs->exinst : regs->inst;
-        memcpy( dest, ia, 4 );
+        memcpy( dest, ip, 4 );
 
         /* Copy second part of instruction */
         len = pagesz - offset;
         addr = (addr + len) & ADDRESS_MAXWRAP( regs );
-        ia = MADDR( addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
+        ip = MADDR( addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey );
         if (!exec)
-            regs->ip = ia - len;
-        memcpy( dest + len, ia, 4 );
+            regs->ip = ip - len;
+        memcpy( dest + len, ip, 4 );
     }
-    else
+    else /* boundary NOT crossed */
     {
-        dest = ia;
+        dest = ip;
 
         if (!exec)
-            regs->ip = ia;
+            regs->ip = ip;
     }
 
     if (!exec)
@@ -730,7 +743,7 @@ int     len;                            /* Length for page crossing  */
 
         /* Update the AIA */
         regs->AIV = addr & PAGEFRAME_PAGEMASK;
-        regs->aip = (BYTE *)((uintptr_t)ia & ~PAGEFRAME_BYTEMASK);
+        regs->aip = (BYTE *)((uintptr_t)ip & ~PAGEFRAME_BYTEMASK);
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
 
         if (likely( !regs->tracing && !regs->permode ))
@@ -752,6 +765,8 @@ int     len;                            /* Length for page crossing  */
         if (regs->AIV == regs->txf_aie_aiv2)
             regs->txf_aie = regs->aip + regs->txf_aie_off2;
     }
+
+    TXF_INSTRADDR_CONSTRAINT( regs->ip, regs );
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

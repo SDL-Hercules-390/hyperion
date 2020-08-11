@@ -171,7 +171,7 @@ void ARCH_DEP( reset_txf_aie )( REGS* regs )
 void ARCH_DEP( set_txf_aie )( REGS* regs )
 {
     regs->txf_contran  = true;
-    regs->txf_aie      = regs->ip + 256;
+    regs->txf_aie      = regs->ip - 6 + 256; // (minus-6 for TBEGINC)
     regs->txf_aie_aiv  = regs->AIV;
 
     if (regs->txf_aie > (regs->aip + ZPAGEFRAME_PAGESIZE))
