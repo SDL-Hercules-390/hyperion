@@ -203,8 +203,11 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 /*               Why transaction was aborted codes                   */
 /*-------------------------------------------------------------------*/
 
-//  PROGRAMMING NOTE: If you add/remove/change any of the below
-//  codes, don't forget to update the "txf_why_str" function too!
+//  PROGRAMMING NOTE: If you add/remove any of the below codes,
+//  don't forget to update the "txf_why_str" function too!
+
+//  PROGRAMMING NOTE: If you CHANGE any of the below codes,
+//  be sure to update the "txf_cmd_help" #define in cmdtab.h!
 
 #define TXF_WHY_INSTRADDR                   0x80000000    // 1
 #define TXF_WHY_INSTRCOUNT                  0x40000000    // 2
@@ -234,8 +237,8 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 #define TXF_WHY_TRAN_MISC_INSTR             0x00000040    // 26
 #define TXF_WHY_NESTING                     0x00000020    // 27
 #define TXF_WHY_CAPTURE_FAIL                0x00000010    // 28
-//efine TXF_WHY_XXXXXXXXXX                  0x00000008    // 29
-//efine TXF_WHY_XXXXXXXXXX                  0x00000004    // 30
+#define TXF_WHY_IPTE_INSTR                  0x00000008    // 29
+#define TXF_WHY_IDTE_INSTR                  0x00000004    // 30
 //efine TXF_WHY_XXXXXXXXXX                  0x00000002    // 31
 //efine TXF_WHY_XXXXXXXXXX                  0x00000001    // 32
 

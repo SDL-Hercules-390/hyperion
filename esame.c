@@ -1138,10 +1138,16 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
            a clearing ASCE is passed in the r3 register. This conforms
            to the POP which only specifies the minimum set of entries
            which must be cleared from the TLB. */
-        OBTAIN_INTLOCK(regs);
-        SYNCHRONIZE_CPUS(regs);
-        ARCH_DEP(purge_tlb_all)();
-        RELEASE_INTLOCK(regs);
+        OBTAIN_INTLOCK( regs );
+        {
+            SYNCHRONIZE_CPUS( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+            txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
+#endif
+            ARCH_DEP( purge_tlb_all )();
+        }
+        RELEASE_INTLOCK( regs );
 
     } /* end if(invalidation-and-clearing) */
     else
@@ -1153,10 +1159,16 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
            clearing ASCE passed in the r3 register. This conforms
            to the POP which only specifies the minimum set of entries
            which must be cleared from the TLB. */
-        OBTAIN_INTLOCK(regs);
-        SYNCHRONIZE_CPUS(regs);
-        ARCH_DEP(purge_tlb_all)();
-        RELEASE_INTLOCK(regs);
+        OBTAIN_INTLOCK( regs );
+        {
+            SYNCHRONIZE_CPUS( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+            txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
+#endif
+            ARCH_DEP( purge_tlb_all )();
+        }
+        RELEASE_INTLOCK( regs );
 
     } /* end else(clearing-by-ASCE) */
 

@@ -929,7 +929,7 @@ do {                                                                  \
 do {                                                                  \
   VADR _newia;                                                        \
                                                                       \
-  UPDATE_BEAR( (_regs), 0 );                                          \
+  SET_BEAR_IP( (_regs), 0 );                                          \
   _newia = (_addr) & ADDRESS_MAXWRAP( (_regs) );                      \
                                                                       \
   if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
@@ -941,7 +941,7 @@ do {                                                                  \
   else                                                                \
   {                                                                   \
     if (unlikely( (_regs)->execflag ))                                \
-      UPDATE_BEAR( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );       \
+      SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );       \
                                                                       \
     (_regs)->psw.IA = _newia;                                         \
     (_regs)->aie    = NULL;                                           \
@@ -952,7 +952,7 @@ do {                                                                  \
 #undef  SUCCESSFUL_RELATIVE_BRANCH
 #define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset, _len )            \
 do {                                                                  \
-  UPDATE_BEAR( (_regs), 0 );                                          \
+  SET_BEAR_IP( (_regs), 0 );                                          \
                                                                       \
   /* Branch target still within same page as instruction? */          \
   if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
@@ -968,7 +968,7 @@ do {                                                                  \
     (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
   else                                                                \
   {                                                                   \
-    UPDATE_BEAR( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
+    SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
     (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
     (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
   }                                                                   \
@@ -984,7 +984,7 @@ do {                                                                  \
 #undef  SUCCESSFUL_RELATIVE_BRANCH_LONG
 #define SUCCESSFUL_RELATIVE_BRANCH_LONG( _regs, _offset )             \
 do {                                                                  \
-  UPDATE_BEAR( (_regs), 0 );                                          \
+  SET_BEAR_IP( (_regs), 0 );                                          \
                                                                       \
   /* Branch target still within same page as instruction? */          \
   if (likely(!(_regs)->permode && !(_regs)->execflag  )               \
@@ -1002,7 +1002,7 @@ do {                                                                  \
     (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
   else                                                                \
   {                                                                   \
-    UPDATE_BEAR( (_regs), 6 - ((_regs)->exrl ? 6 : 4) );              \
+    SET_BEAR_IP( (_regs), 6 - ((_regs)->exrl ? 6 : 4) );              \
     (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
     (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
   }                                                                   \
@@ -1050,23 +1050,35 @@ do {                                                                  \
 /*          PER3 Breaking Event Address Recording (BEAR)             */
 /*-------------------------------------------------------------------*/
 
-#undef UPDATE_BEAR
+#undef SET_BEAR_IP
 #undef SET_BEAR_REG
 
 #if defined( FEATURE_PER3 )
- #define UPDATE_BEAR(_regs, _n)     (_regs)->bear_ip = (_regs)->ip + (_n)
- #define SET_BEAR_REG(_regs, _ip) \
-  do { \
-    if ((_ip)) { \
-        (_regs)->bear = (_regs)->AIV \
-                      + (intptr_t)((_ip) - (_regs)->aip); \
-        (_regs)->bear &= ADDRESS_MAXWRAP((_regs)); \
-        regs->bear_ip = NULL; \
-    } \
-  } while (0)
+
+  #define SET_BEAR_IP(  _regs, _n  )                                  \
+                                                                      \
+    (_regs)->bear_ip = (_regs)->ip + (_n)
+
+
+  #define SET_BEAR_REG( _regs, _ip )                                  \
+    do                                                                \
+    {                                                                 \
+      if ((_ip))                                                      \
+      {                                                               \
+        /* BEAR = address of the begin of virtual ('AIV') page        \
+           + same displacement from begin of mainstore ('ip') page    \
+        */                                                            \
+        (_regs)->bear = (_regs)->AIV + (intptr_t)                     \
+                        ((_ip) - (_regs)->aip);                       \
+        (_regs)->bear &= ADDRESS_MAXWRAP( (_regs) );                  \
+        (_regs)->bear_ip = NULL;                                      \
+      }                                                               \
+    } while (0)
+
+
 #else
-#define UPDATE_BEAR(_regs, _n)     do{}while(0)
-#define SET_BEAR_REG(_regs, _ip)   do{}while(0)
+  #define SET_BEAR_IP(  _regs, _n  )    do{}while(0)
+  #define SET_BEAR_REG( _regs, _ip )    do{}while(0)
 #endif
 
 /*-------------------------------------------------------------------*/

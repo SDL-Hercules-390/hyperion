@@ -821,7 +821,7 @@ VADR    n = 0;                          /* Work area                 */
     /* Execute the branch unless R2 specifies register 0 */
     if (r2 != 0)
     {
-        UPDATE_BEAR( regs, -4 );
+        SET_BEAR_IP( regs, -4 );
         UPD_PSW_IA( regs, regs->GR(r2) );
         PER_SB( regs, regs->psw.IA );
     }
@@ -1736,12 +1736,15 @@ int     op3;
         }
 #endif /* defined( _FEATURE_SIE ) */
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        txf_abort_all( regs->cpuad, TXF_WHY_IPTE_INSTR, PTT_LOC );
+#endif
+
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
         /* Invalidate the additional ptes as specfied by op3 */
         for ( ; op3; op3--, op2 += 0x1000)
            ARCH_DEP( invalidate_pte )( inst[1], op1, op2, regs );
 #endif
-
         /* Invalidate page table entry */
         ARCH_DEP( invalidate_pte )( inst[1], op1, op2, regs );
 
