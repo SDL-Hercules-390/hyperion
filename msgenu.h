@@ -2506,7 +2506,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17706 "TXF: %s%02X: %sWe fetched: +"
 #define HHC17707 "TXF: %s%02X: %sWe stored:  +"
 #define HHC17708 "TXF: %s%02X: %sError in function %s: %s"
-#define HHC17709 "TXF: %s%02X: %sTDB at 0x%16.16"PRIX64":"
+#define HHC17709 "TXF: %s%02X: %s%s dump of TDB:"
 #define HHC17710 "TXF: %s%02X: %s+"
 #define HHC17711 "TXF: %s%02X: %sUnable to obtain clean capture of page"
 #define HHC17712 "TXF: %s%02X: %sUnable to cleanly refresh cache line"

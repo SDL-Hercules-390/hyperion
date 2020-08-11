@@ -1363,15 +1363,12 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
 
         GUESTREGS->txf_why |= TXF_WHY_SIE_EXIT;
         ABORT_TRANS( GUESTREGS, ABORT_RETRY_RETURN, TAC_MISC );
-        itdb = txf_contran ? &GUESTREGS->txf_pi_tdb
-                           : &GUESTREGS->txf_tb_tdb;
+        itdb = &GUESTREGS->txf_tdb;
     }
     else if (GUESTREGS->txf_UPGM_abort)
     {
         PTT_TXF( "TXF upgm", GUESTREGS->txf_UPGM_abort, GUESTREGS->txf_caborts, 0 );
-
-        itdb = GUESTREGS->txf_caborts ? &GUESTREGS->txf_pi_tdb
-                                      : &GUESTREGS->txf_tb_tdb;
+        itdb = &GUESTREGS->txf_tdb;
     }
 
     /* Check if we need to fill in an Interception TDB */

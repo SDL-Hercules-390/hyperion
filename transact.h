@@ -89,7 +89,7 @@ typedef struct TPAGEMAP  TPAGEMAP;   // Transaction Page Map table
 /*-------------------------------------------------------------------*/
 struct TDB
 {
-    BYTE    tdb_format;         /* Format, 0 = invalid, 1 = valid    */
+    BYTE    tdb_format;         /* Format: 1 = valid, else invalid   */
     BYTE    tdb_flags;          /* Flags                             */
 
 #define TDB_CTV     0x80        /* Conflict-Token Validity           */
@@ -188,8 +188,8 @@ const char*  tac2long  ( U64 tac );   // "Restricted instruction"
 // Function to hexdump a cache line (HHC17705, HHC17706, HHC17707)
 void dump_cache( REGS* regs, const char* pfxfmt, int linenum , const BYTE* line);
 
-// Function to hexdump TDB (Transaction Diagnostic Block)
-void dump_tdb( REGS* regs, TDB* tdb, U64 logical_addr );
+// Function to hexdump our internal TDB (Transaction Diagnostic Block)
+void dump_tdb( REGS* regs, TDB* tdb );
 
 // Return reason why transaction was aborted
 const char* txf_why_str( char* buffer, int buffsize, int why );

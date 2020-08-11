@@ -737,11 +737,8 @@ TPAGEMAP   *pmap;
 
         UPDATE_SYSBLK_TRANSCPUS( +1 );  /* bump transacting CPUs ctr */
 
-        /* Set both TDBs to invalid until they're actually populated */
-
-        if (!txf_contran && b1)
-        ARCH_DEP( vstoreb )( 0x00, tdba,  b1, regs );
-        ARCH_DEP( vstoreb )( 0x00, 0x1800, 0, regs );
+        /* Set internal TDB to invalid until it's actually populated */
+        memset( &regs->txf_tdb, 0, sizeof( TDB ));
 
         /* Initialize the page map */
 
@@ -1270,65 +1267,48 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
             {
                 // "TXF: %s%02X: %sTranslation exception %4.4hX (%s) on TBEGIN tdba 0x%16.16"PRIx64
                 WRMSG( HHC17713, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-                    xcode, PIC2Name( xcode ), regs->txf_tdba );
+                    (U16)xcode, PIC2Name( xcode ), regs->txf_tdba );
             }
+
+            /* Transaction Abort processing, Note 4: "If the TDBA is
+               valid, but the block has become inaccessible subsequent
+               to the execution of the outermost TBEGIN instruction,
+               the TDB is not accessed and condition code 1 applies."
+            */
+            regs->psw.cc = TXF_CC_INDETERMINATE;
         }
     }
 
-    /*------------------------------------------------*/
-    /*  Always populate our internal CONSTRAINED tdb  */
-    /*------------------------------------------------*/
-    {
-        /* PROGAMMING NOTE: see Figure 5-13 on page 5-94:
-           certain TDB fields are stored only for TBEGIN-
-           specified TDB. Otherwise the field is reserved.
-        */
-        regs->txf_pi_tdb.tdb_format = 1;
-//      regs->txf_pi_tdb.tdb_eaid   = regs->excarid;
-        regs->txf_pi_tdb.tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
-
-        STORE_HW( regs->txf_pi_tdb.tdb_tnd,      (U16) txf_tnd      );
-        STORE_DW( regs->txf_pi_tdb.tdb_tac,      (U64) txf_tac      );
-//      STORE_DW( regs->txf_pi_tdb.tdb_teid,     (U64) regs->TEA    );
-//      STORE_FW( regs->txf_pi_tdb.tdb_piid,     (U32) txf_piid     );
-        STORE_DW( regs->txf_pi_tdb.tdb_atia,     (U64) txf_atia     );
-//      STORE_DW( regs->txf_pi_tdb.tdb_conflict, (U64) txf_conflict );
-//      STORE_DW( regs->txf_pi_tdb.tdb_bea,      (U64) txf_bea      );
-
-        for (i=0; i < 16; i++)
-            STORE_DW( regs->txf_pi_tdb.tdb_gpr[i], regs->GR_G( i ));
-    }
-
     /*--------------------------------------------------*/
-    /*  Always populate our internal unconstrained tdb  */
+    /*             Populate our internal TDB            */
     /*--------------------------------------------------*/
     {
-        regs->txf_tb_tdb.tdb_format = 1;
-        regs->txf_tb_tdb.tdb_eaid   = regs->excarid;
-        regs->txf_tb_tdb.tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
+        regs->txf_tdb.tdb_format = 1;
+        regs->txf_tdb.tdb_eaid   = regs->excarid;
+        regs->txf_tdb.tdb_flags  = (txf_contran ? TDB_CTI : 0x00);
 
         if (0
             || txf_tac == TAC_FETCH_CNF
             || txf_tac == TAC_STORE_CNF
         )
-            regs->txf_tb_tdb.tdb_flags |= (txf_conflict ? TDB_CTV : 0x00);
+            regs->txf_tdb.tdb_flags |= (txf_conflict ? TDB_CTV : 0x00);
 
         if (0
             || (txf_piid & 0xFF) == PGM_DATA_EXCEPTION
             || (txf_piid & 0xFF) == PGM_VECTOR_PROCESSING_EXCEPTION
         )
-            regs->txf_tb_tdb.tdb_dxc = regs->txf_dxc_vxc;
+            regs->txf_tdb.tdb_dxc = regs->txf_dxc_vxc;
 
-        STORE_HW( regs->txf_tb_tdb.tdb_tnd,      (U16) txf_tnd      );
-        STORE_DW( regs->txf_tb_tdb.tdb_tac,      (U64) txf_tac      );
-        STORE_DW( regs->txf_tb_tdb.tdb_teid,     (U64) regs->TEA    );
-        STORE_FW( regs->txf_tb_tdb.tdb_piid,     (U32) txf_piid     );
-        STORE_DW( regs->txf_tb_tdb.tdb_atia,     (U64) txf_atia     );
-        STORE_DW( regs->txf_tb_tdb.tdb_conflict, (U64) txf_conflict );
-        STORE_DW( regs->txf_tb_tdb.tdb_bea,      (U64) txf_bea      );
+        STORE_HW( regs->txf_tdb.tdb_tnd,      (U16) txf_tnd      );
+        STORE_DW( regs->txf_tdb.tdb_tac,      (U64) txf_tac      );
+        STORE_DW( regs->txf_tdb.tdb_teid,     (U64) regs->TEA    );
+        STORE_FW( regs->txf_tdb.tdb_piid,     (U32) txf_piid     );
+        STORE_DW( regs->txf_tdb.tdb_atia,     (U64) txf_atia     );
+        STORE_DW( regs->txf_tdb.tdb_conflict, (U64) txf_conflict );
+        STORE_DW( regs->txf_tdb.tdb_bea,      (U64) txf_bea      );
 
         for (i=0; i < 16; i++)
-            STORE_DW( regs->txf_tb_tdb.tdb_gpr[i], regs->GR_G( i ));
+            STORE_DW( regs->txf_tdb.tdb_gpr[i], regs->GR_G( i ));
     }
 
     /*----------------------------------------------------*/
@@ -1336,20 +1316,14 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     /*----------------------------------------------------*/
 
     if (pi_tdb)
-    {
-        memcpy( pi_tdb, &regs->txf_pi_tdb, sizeof( TDB ));
-
-        if (TXF_TRACE_TDB( txf_contran ))
-            dump_tdb( regs, pi_tdb, 0x1800 );
-    }
+        memcpy( pi_tdb, &regs->txf_tdb, sizeof( TDB ));
 
     if (tb_tdb)
-    {
-        memcpy( tb_tdb, &regs->txf_tb_tdb, sizeof( TDB ));
+        memcpy( tb_tdb, &regs->txf_tdb, sizeof( TDB ));
 
-        if (TXF_TRACE_TDB( txf_contran ))
-            dump_tdb( regs, tb_tdb, regs->txf_tdba );
-    }
+    /* Trace TDB if requested */
+    if (TXF_TRACE_TDB( txf_contran ))
+        dump_tdb( regs, &regs->txf_tdb );
 
     /*----------------------------------------------------*/
     /*         Restore the requested registers            */
@@ -2449,7 +2423,7 @@ const char* txf_why_str( char* buffer, int buffsize, int why )
 /*-------------------------------------------------------------------*/
 void dump_cache( REGS* regs, const char* pfxfmt, int linenum , const BYTE* line)
 {
-    char*  /* (work) */  buf  = NULL;
+    char*  /* (work) */  dmp  = NULL;
     const char*          dat  = (const char*) line;
     static const size_t  skp  = 0;
     static const size_t  amt  = ZCACHE_LINE_SIZE;
@@ -2458,14 +2432,14 @@ void dump_cache( REGS* regs, const char* pfxfmt, int linenum , const BYTE* line)
     static const size_t  gpl  = 4; // formatted groups per line
     char dump_pfx[64]         = {0};
 
-    MSGBUF( dump_pfx, pfxfmt, TXF_CPUAD( regs ), TXF_QSIE( regs ));
-    RTRIM( dump_pfx );
-    hexdumpe16( dump_pfx, &buf, dat, skp, amt, adr, bpg, gpl );
+    MSGBUF(     dump_pfx, pfxfmt, TXF_CPUAD( regs ), TXF_QSIE( regs ));
+    RTRIM(      dump_pfx );
+    hexdumpe16( dump_pfx, &dmp, dat, skp, amt, adr, bpg, gpl );
 
-    if (buf)
+    if (dmp)
     {
-        LOGMSG( "%s", buf );
-        free( buf );
+        LOGMSG( "%s", dmp );
+        free( dmp );
     }
     else
     {
@@ -2478,34 +2452,174 @@ void dump_cache( REGS* regs, const char* pfxfmt, int linenum , const BYTE* line)
 /*-------------------------------------------------------------------*/
 /*                   DEBUG:  Hex dump TDB                            */
 /*-------------------------------------------------------------------*/
-void dump_tdb( REGS* regs, TDB* tdb, U64 logical_addr )
+void dump_tdb( REGS* regs, TDB* tdb )
 {
-    char*  /* (work) */  buf  = NULL;
-    const char*          dat  = (const char*) tdb;
-    static const size_t  skp  = 0;
-    static const size_t  amt  = sizeof( TDB );
-    static const U64     adr  = 0; // (cosmetic)
-    static const size_t  bpg  = 8; // bytes per formatted group
-    static const size_t  gpl  = 2; // formatted groups per line
-    char dump_pfx[64]         = {0};
-
-    // "TXF: %s%02X: %sTDB at 0x%16.16"PRIX64":"
-    WRMSG( HHC17709, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), logical_addr );
-
-    MSGBUF( dump_pfx, MSG( HHC17710, "D", TXF_CPUAD( regs ), TXF_QSIE( regs )));
-    RTRIM( dump_pfx );
-    hexdumpe16( dump_pfx, &buf, dat, skp, amt, adr, bpg, gpl );
-
-    if (buf)
+    /* NOT verbose tracing -or- invalid TDB : do storage dump of TDB */
+    if (!MLVL( VERBOSE ) || tdb->tdb_format != 1)
     {
-        LOGMSG( "%s", buf );
-        free( buf );
+        char*  /* (work) */  dmp  = NULL;
+        const char*          dat  = (const char*) tdb;
+        static const size_t  skp  = 0;
+        static const size_t  amt  = sizeof( TDB );
+        static const U64     adr  = 0; // (cosmetic)
+        static const size_t  bpg  = 8; // bytes per formatted group
+        static const size_t  gpl  = 2; // formatted groups per line
+        char dump_pfx[64]         = {0};
+
+        // "TXF: %s%02X: %s%s dump of TDB:"
+        WRMSG( HHC17709, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), "Storage" );
+
+        MSGBUF(     dump_pfx, MSG( HHC17710, "D", TXF_CPUAD( regs ), TXF_QSIE( regs )));
+        RTRIM(      dump_pfx );
+        hexdumpe16( dump_pfx, &dmp, dat, skp, amt, adr, bpg, gpl );
+
+        if (dmp)
+        {
+            LOGMSG( "%s", dmp );
+            free( dmp );
+        }
+        else
+        {
+            // "TXF: %s%02X: %serror in function %s: %s"
+            WRMSG( HHC17708, "E", TXF_CPUAD( regs ), TXF_QSIE( regs ),
+                "dump_tdb()", strerror( errno ));
+        }
+        return;
     }
-    else
+
+    /* Otherwise if verbose messages wanted and TDB is valid,
+       then do a formatted print of each individual TDB field.
+    */
+    if (tdb->tdb_format == 1 && MLVL( VERBOSE ))
     {
-        // "TXF: %s%02X: %serror in function %s: %s"
-        WRMSG( HHC17708, "E", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-            "dump_tdb()", strerror( errno ));
+        char buf[128] = {0};
+        char flgs[32] = {0};
+
+        U16  tnd;
+        U32  piid;
+        U64  tac, tkn, atia, teid, bea;
+
+        U64  gr[16];
+
+        // "TXF: %s%02X: %s%s dump of TDB:"
+        WRMSG( HHC17709, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), "Formatted" );
+
+        // Fmt: 1, TND: 1, EAID: 00, DXC/VXC: 00, PIID: 00000000, Flags: (none)
+
+        FETCH_HW( tnd,  tdb->tdb_tnd  );
+        FETCH_FW( piid, tdb->tdb_piid );
+
+        if (!tdb->tdb_flags) STRLCPY( flgs, "none" );
+        else MSGBUF( flgs, "%s%s"
+            , tdb->tdb_flags & TDB_CTV ? "TDB_CTV, " : ""
+            , tdb->tdb_flags & TDB_CTI ? "TDB_CTI, " : ""
+        );
+        RTRIM(  flgs ); rtrim ( flgs, "," );
+
+        MSGBUF( buf, "Fmt: %u, TND: %"PRIu16", EAID: %02X, DXC/VXC: %02X, PIID: %08"PRIX32", Flags: (%s)",
+            tdb->tdb_format, tnd, tdb->tdb_eaid, tdb->tdb_dxc, piid, flgs );
+        WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+
+        // TAC:   0x0000000000000008: TAC_STORE_OVF = Store overflow
+
+        FETCH_DW( tac, tdb->tdb_tac );
+
+        MSGBUF( buf, "TAC:   0x%16.16"PRIX64": %s = %s",
+            tac, tac2short( tac ), tac2long( tac ) );
+        WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+
+        // Token: 0x0000000000000000, ATIA:  0x00000000000024EA
+
+        FETCH_DW( tkn,  tdb->tdb_conflict );
+        FETCH_DW( atia, tdb->tdb_atia     );
+
+        MSGBUF( buf, "Token: 0x%16.16"PRIX64", ATIA:  0x%16.16"PRIX64, tkn, atia );
+        WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+
+        /* Display the instruction that the transaction aborted on */
+        {
+            REGS*  tregs = copy_regs( regs );
+            int    xcode, stid;
+            RADR   real_atia;
+
+            /* Point the PSW to the aborted instruction */
+            UPD_PSW_IA( tregs, atia );
+
+            /* Get absolute mainstor addr of that instruction */
+            if ((xcode = ARCH_DEP( virt_to_real )( &real_atia,
+                &stid, atia, 0, tregs, ACCTYPE_INSTFETCH )) == 0)
+            {
+                BYTE*  ip        = (tregs->mainstor + APPLY_PREFIXING( real_atia, tregs->PX ));
+                bool   showregs  = sysblk.showregsnone;
+                U16    code      = CODE_FROM_PIID( piid );
+                int    ilc       = ILC_FROM_PIID(  piid );
+
+                // (blank line)
+                WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), "" );
+                {
+                    // e.g. "Operation exception code 0201 ilc 2"
+                    MSGBUF( buf, "%s code %4.4X ilc %d", PIC2Name( code ), code, ilc );
+                    WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+
+                    sysblk.showregsnone = true;
+                    {
+                        int n = 0;
+                        BYTE inst[6];
+
+                        memcpy( inst, ip, sizeof( inst ));
+                        ilc = ILC( inst[0] );
+
+                                     n += snprintf( buf + n, sizeof( buf )-n, "%16.16"PRIX64" ", atia );
+                                     n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
+                        if (ilc > 2) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );
+                        if (ilc > 4) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );
+                                     n += snprintf( buf + n, sizeof( buf )-n, " %s", (ilc < 4) ? "        " 
+                                                                                   : (ilc < 6) ? "    "
+                                                                                   :             "" );
+                        n += PRINT_INST( inst, buf + n );
+
+                        // "AAAAAAAAAAAAAAAA INST=112233445566 XXXXX op1,op2                name"
+                        WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+                    }
+                    sysblk.showregsnone = showregs;
+                }
+                // (blank line)
+                WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), "" );
+            }
+            free_aligned( tregs );
+        }
+
+        // TEID:  0x0000000000000000, BEA:   0x000000000000255C
+
+        FETCH_DW( teid, tdb->tdb_teid );
+        FETCH_DW( bea,  tdb->tdb_bea  );
+
+        MSGBUF( buf, "TEID:  0x%16.16"PRIX64", BEA:   0x%16.16"PRIX64, teid, bea );
+        WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+
+        // GR (General Registers)
+
+#define GRPAIR_FMT( r )                                 \
+        do                                              \
+        {                                               \
+            FETCH_DW( gr[r+0], tdb->tdb_gpr[r+0] );     \
+            FETCH_DW( gr[r+1], tdb->tdb_gpr[r+1] );     \
+            MSGBUF( buf, "GR %02u: 0x%16.16"PRIX64      \
+                       ", GR %02u: 0x%16.16"PRIX64,     \
+                       r+0, gr[r+0], r+1, gr[r+1] );    \
+            WRMSG( HHC17721, "D", TXF_CPUAD( regs ),    \
+                TXF_QSIE( regs ), buf );                \
+        }                                               \
+        while (0)
+
+        GRPAIR_FMT(  0 );
+        GRPAIR_FMT(  2 );
+        GRPAIR_FMT(  4 );
+        GRPAIR_FMT(  6 );
+        GRPAIR_FMT(  8 );
+        GRPAIR_FMT( 10 );
+        GRPAIR_FMT( 12 );
+        GRPAIR_FMT( 14 );
     }
 }
 

@@ -355,8 +355,7 @@ struct REGS {                           /* Processor registers       */
     /*      Transactional-Execution Facility control fields          */
     /*---------------------------------------------------------------*/
 
-        TDB     txf_pi_tdb;             /* Program Interrupt TDB     */
-        TDB     txf_tb_tdb;             /* TBEGIN instruction TDB    */
+        TDB     txf_tdb;                /* Internal TDB              */
 
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
