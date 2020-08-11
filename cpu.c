@@ -311,7 +311,11 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     regs->psw.zeroilc = 0;
 
     /* Check for wait state PSW */
-    if (WAITSTATE(&regs->psw) && CPU_STEPPING_OR_TRACING_ALL)
+    if (1
+        && WAITSTATE( &regs->psw )
+        && CPU_STEPPING_OR_TRACING_ALL
+        && !TXF_INSTR_TRACING()
+    )
     {
         char buf[40];
         // "Processor %s%02X: loaded wait state PSW %s"
@@ -471,7 +475,9 @@ int     sie_ilc=0;                      /* SIE instruction length    */
 bool    intercept;                      /* False for virtual pgmint  */
                                         /* (True for host interrupt?)*/
 #endif
-char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+bool    txf_traced_pgmint = false;      /* true = TXF already traced */
+#endif
 
     /* If called with ghost registers (ie from hercules command
        then ignore all interrupt handling and report the error
@@ -557,6 +563,9 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
         /* Indicate TXF related program interrupt */
         pcode |= PGM_TXF_EVENT;
 
+        /* Always reset the NTSTG indicator on any program interrupt */
+        regs->txf_NTSTG = false;
+
         /* Save the program interrupt and data exception codes */
         realregs->txf_piid   = pcode;
         realregs->txf_piid  |= (ilc << 16);
@@ -575,15 +584,16 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
             interrupt is unfilterable, and when it returns, the
             active transaction has already been aborted.
         */
-
         PTT_TXF( "TXF PROG?", (code & 0xFF), realregs->txf_contran, realregs->txf_tnd );
-
-        ARCH_DEP( txf_do_pi_filtering )( realregs, (code & 0xFF) );
+        ARCH_DEP( txf_do_pi_filtering )( realregs, pcode );
 
         if (realregs->txf_tnd ) // (sanity check)
             CRASH();            // (sanity check)
 
         PTT_TXF( "*TXF UPROG!", (code & 0xFF), 0, 0 );
+
+        /* Program interrupt already traced by txf_do_pi_filtering */
+        txf_traced_pgmint = true;
 
         /* Set flag for sie_exit */
         realregs->txf_UPGM_abort = true;
@@ -600,6 +610,9 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
             pcode |= PGM_TXF_EVENT;
 
             PTT_TXF( "*TXF 218!", pcode, 0, 0 );
+
+            /* Program interrupt already traced by abort_transaction */
+            txf_traced_pgmint = true;
 
             /* Set flag for sie_exit */
             realregs->txf_UPGM_abort = true;
@@ -727,12 +740,18 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     /* Call debugger if active */
     HDC2( debug_program_interrupt, regs, pcode );
 
-    /* Trace program checks other then PER event */
-    regs->psw.IA -= ilc;
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* Don't trace program interrupt again if already traced */
+    if (!txf_traced_pgmint)
+#endif
     {
-        ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
+        /* Trace program checks other then PER event */
+        regs->psw.IA -= ilc;
+        {
+            ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
+        }
+        regs->psw.IA += ilc;
     }
-    regs->psw.IA += ilc;
 
     realregs->instinvalid = 0;
 
@@ -1192,7 +1211,7 @@ char    dxcstr[8] = {0};                /* " DXC=xx" if data excptn  */
     longjmp( realregs->progjmp, pcode );
 #endif
 
-} /* end function ARCH_DEP(program_interrupt) */
+} /* end function ARCH_DEP( program_interrupt ) */
 
 /*-------------------------------------------------------------------*/
 /* Load restart new PSW                                              */

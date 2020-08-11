@@ -994,18 +994,30 @@ static const int tac2cc[20] =
 /*    retry = ABORT_RETRY_CC: set the condition code and then do     */
 /*            a longjmp to progjmp.                                  */
 /*                                                                   */
-/*    retry = ABORT_RETRY_PGMCHK: if in CONSTRAINED mode, generate   */
-/*            a program check. Otherwise do a longjmp to progjmp.    */
+/*    retry = ABORT_RETRY_PGMCHK: generate a program check. Used     */
+/*            only for constraint violations.                        */
+/*                                                                   */
+/*  PROGRAMMING NOTE: a negative ABORT_RETRY_PGMCHK code is passed   */
+/*  when called directly from run_cpu/run_sie logic in cpu.c/sie.c   */
+/*  to properly deal with the fact that the instruction, at that     */
+/*  that point in time, has not been dispatched nor decoded yet,     */
+/*  and thus the ip instruction pointer is still pointing AT the     */
+/*  instruction being aborted instead of past it (as what normally   */
+/*  occurs when we're called from an instruction function) as well   */
+/*  as the fact that the ilc has not been calculated yet either      */
+/*  (since the instruction hasn't been decoded yet). This is done    */
+/*  SOLELY for proper reporting of where the actual program check    */
+/*  interruption actually occurred.                                  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_tac, const char* loc )
+void ARCH_DEP( abort_transaction )( REGS* regs, int raw_retry, int txf_tac, const char* loc )
 {
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
     /* S370 and S390 don't support Transactional-Execution Facility */
 
     UNREFERENCED( regs );
-    UNREFERENCED( retry );
+    UNREFERENCED( raw_retry );
     UNREFERENCED( txf_tac );
 
     CRASH();   /* Should NEVER be called for S/370 or S/390! */
@@ -1020,7 +1032,8 @@ U64        txf_conflict;
 U64        txf_bea;
 TDB*       pi_tdb   = NULL; /* Program Interrupt TDB @ fixed 0x1800  */
 TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
-VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
+VADR       txf_atia;        /* Aborted Transaction Instruction Addr. */
+int        retry;           /* Actual retry code                     */
 
     /* Identify where we were called from */
     if (MLVL( VERBOSE ))
@@ -1030,6 +1043,23 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     // LOGIC ERROR if CPU not in transactional-execution mode!
     if (!regs->txf_tnd)
         CRASH();
+
+    /* Get the ACTUAL 'retry' code */
+    retry = ((raw_retry < 0) ? -raw_retry : raw_retry);
+
+    /* Normal abort? Or special instruction dispatch abort? */
+    if (raw_retry >= 0)
+    {
+        /* Normal instruction abort: the PREVIOUS instruction
+           is the one where the abort actually occurred at. */
+        txf_atia = PSW_IA( regs, -REAL_ILC( regs ));
+    }
+    else // (raw_retry < 0)
+    {
+        /* Instruction dispatch abort: the CURRENT instruction
+           address is where the abort actually occurred at. */
+        txf_atia = PSW_IA( regs, 0 );
+    }
 
     /* Obtain the interrupt lock if we don't already have it */
     if (sysblk.intowner == regs->cpuad)
@@ -1187,6 +1217,55 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 
     /* Reset CONSTRAINED trans instruction fetch constraint */
     ARCH_DEP( reset_txf_aie )( regs );
+
+    /*-----------------------------------------------------*/
+    /*    Trace program interrupt before updating PSW      */
+    /*-----------------------------------------------------*/
+    /*  If the retry code is ABORT_RETRY_PGMCHK, then we   */
+    /*  will eventually be calling the program_interrupt   */
+    /*  function for PGM_TRANSACTION_CONSTRAINT_EXCEPTION  */
+    /*  so we MUST trace the program interrupt here. We    */
+    /*  CANNOT let the program_interrupt function do that  */
+    /*  for us like it normally does since it would report */
+    /*  the wrong PSW! Thus we MUST do it ourselves here.  */
+    /*-----------------------------------------------------*/
+
+    if (retry == ABORT_RETRY_PGMCHK)
+    {
+        int pcode, ilc;
+
+        pcode = PGM_TRANSACTION_CONSTRAINT_EXCEPTION | PGM_TXF_EVENT;
+
+        if (raw_retry == -ABORT_RETRY_PGMCHK) // (negative?)
+        {
+            /* Instruction dispatch program interrupt: since the
+               instruction has not been decoded yet (and the PSW
+               and 'ip' pointer bumped appropriately (instead,
+               it is pointing directly AT the failing instruction
+               and not past it like normal)), we must report this
+               program interrupt slightly differently (without
+               any PSW or instruction pointer adjustment).
+            */
+            ilc = ILC( *regs->ip );
+            ARCH_DEP( trace_program_interrupt_ip )( regs, regs->ip, pcode, ilc );
+        }
+        else /* Normal program interrupt after instruction decode */
+        {
+            /* Fix PSW and get instruction length (ilc) */
+            ilc = ARCH_DEP( fix_program_interrupt_PSW )( regs );
+
+            /* Trace program checks other then PER event */
+            regs->ip -= ilc;
+            {
+                ARCH_DEP( trace_program_interrupt_ip )( regs, regs->ip, pcode, ilc );
+            }
+            regs->ip += ilc;
+        }
+
+        /* Save the program interrupt id */
+        txf_piid   = pcode;
+        txf_piid  |= (ilc << 16);
+    }
 
     /*----------------------------------------------------*/
     /*  Set the current PSW to the Transaction Abort PSW  */
@@ -1433,21 +1512,18 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
 /* Refer to Figure 5-16 on page 5-104 (and 5-14 on page 5-102) of    */
 /* manual: SA22-7832-12 "z/Architecture Principles of Operation".    */
 /*                                                                   */
-/* Program interrupts for CONSTRAINED transactions can't be filtered */
-/* so we return immediately back to the caller so they can continue  */
-/* with program interrupt processing. Otherwise for unconstrained    */
-/* transactions we check to see if the interrupt can be filtered.    */
+/* If the program interrupt can be filtered, the abort_transaction   */
+/* function is called with retry = ABORT_RETRY_CC, which causes it   */
+/* to jump back to the CPU instruction processing loop to continue   */
+/* on with the next instruction (which abort_transaction should've   */
+/* set, via Transaction Abort PSW, to the instruction immediately    */
+/* following the TBEGIN instruction, which should normally be a      */
+/* jump on condition instruction).                                   */
 /*                                                                   */
-/* If it can be filtered, the abort_transaction function is called   */
-/* with the ABORT_RETRY_CC retry code, which causes it to longjmp    */
-/* back to the CPU instruction processing loop to continue on with   */
-/* the next instruction (which would be the instruction immediately  */
-/* after the TBEGIN instruction).                                    */
-/*                                                                   */
-/* Otherwise if the program interrupt cannot be filtered, we abort   */
+/* Otherwise if the program interrupt CANNOT be filtered, we abort   */
 /* the transaction with an unfiltered program interrupt abort code   */
-/* and then return back to the caller so that they can continue with */
-/* normal program interrupt processing.                              */
+/* (TAC_UPGM) and then return back to the caller so that they can    */
+/* continue with normal program interrupt processing.                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int pcode )
@@ -1455,22 +1531,13 @@ DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int pcode )
 bool    filt;                   /* true == filter the interrupt      */
 int     txclass;                /* Transactional Execution Class     */
 int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
+int     ilc;                    /* Instruction Length Code           */
 
     PTT_TXF( "TXF filt?", pcode, regs->txf_contran, regs->txf_tnd );
 
     /* We shouldn't even be called if no transaction is active! */
     if (!regs->txf_tnd)
         CRASH();
-
-    /* Always reset the NTSTG indicator on any program interrupt */
-    regs->txf_NTSTG = false;
-
-    /* No filtering if no transaction was active */
-    if (!regs->txf_tnd)
-    {
-        PTT_TXF( "*TXF !filt", pcode, regs->txf_contran, regs->txf_tnd );
-        return;
-    }
 
     switch (pcode & 0xFF)  // (interrupt code)
     {
@@ -1647,6 +1714,22 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     /*---------------------------------------------*/
     /*  TAC_UPGM: unfilterable Program Interrupt   */
     /*---------------------------------------------*/
+    /* We must report the program interrupt BEFORE */
+    /* abort_transaction gets called as it updates */
+    /* the PSW to the Transaction Abort PSW and we */
+    /* want to report the actual TRUE location of  */
+    /* where the program interrupt truly occurred. */
+    /*---------------------------------------------*/
+
+    /* Fix PSW and get instruction length (ilc) */
+    ilc = ARCH_DEP( fix_program_interrupt_PSW )( regs );
+
+    /* Trace program checks other then PER event */
+    regs->psw.IA -= ilc;
+    {
+        ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
+    }
+    regs->psw.IA += ilc;
 
     /* Abort the transaction and return to the caller */
     regs->psw.cc = ucc;
