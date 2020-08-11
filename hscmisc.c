@@ -1259,27 +1259,34 @@ static void cancel_wait_sigq()
 static void do_shutdown_now()
 {
     // "Begin Hercules shutdown"
-    WRMSG(HHC01420, "I");
+    WRMSG( HHC01420, "I" );
 
-    ASSERT( !sysblk.shutfini );  // (sanity check)
+    // (hack to prevent minor message glitch during shutdown)
+    fflush( stdout );
+    fflush( stderr );
+    usleep( 10000 );
 
-    sysblk.shutfini = FALSE;  // (shutdown NOT finished yet)
-
-    sysblk.shutdown = TRUE;  // (system shutdown initiated)
+    ASSERT( !sysblk.shutfini );   // (sanity check)
+    sysblk.shutfini = FALSE;      // (shutdown NOT finished yet)
+    sysblk.shutdown = TRUE;       // (system shutdown initiated)
 
     /* Wakeup I/O subsystem to start I/O subsystem shutdown */
     {
-        int n;
-
-        for (n = 0; sysblk.devtnbr && n < 100; ++n)
+        int  n;
+        for (n=0; sysblk.devtnbr && n < 100; ++n)
         {
-            signal_condition(&sysblk.ioqcond);
-            usleep(10000);
+            signal_condition( &sysblk.ioqcond );
+            usleep( 10000 );
         }
     }
 
     // "Calling termination routines"
     WRMSG( HHC01423, "I" );
+
+    // (hack to prevent minor message glitch during shutdown)
+    fflush( stdout );
+    fflush( stderr );
+    usleep( 10000 );
 
 #if !defined( _MSVC_ )
     logger_unredirect();
