@@ -696,35 +696,16 @@ static const char *build_info[] = {
 //---------------------------------------------------------------------
 // Fishtest...
 
-
 #if defined( FISHTEST_TXF_STATS )               // gather/track TXF metrics
     "With    FISHTEST_TXF_STATS",
 #else
     "Without FISHTEST_TXF_STATS",
 #endif
 
-#if defined( OPTION_DEPRECATE_TXF_LASTACC )     // Deprecate 'txf_lastacc'
-    "With    OPTION_DEPRECATE_TXF_LASTACC",
-#else
-    "Without OPTION_DEPRECATE_TXF_LASTACC",
-#endif
-
 #if defined( OPTION_TXF_SINGLE_THREAD )         // one transaction at a time
     "With    OPTION_TXF_SINGLE_THREAD",
 #else
     "Without OPTION_TXF_SINGLE_THREAD",
-#endif
-
-#if defined( OPTION_FIX_SIE_ICODE_BUG )         // fix possible SIE icode bug
-    "With    OPTION_FIX_SIE_ICODE_BUG",
-#else
-    "Without OPTION_FIX_SIE_ICODE_BUG",
-#endif
-
-#if defined( OPTION_NO_TXF_MADDR_L_ABORT )      // Don't call abort_transaction directly from txf_maddr_l
-    "With    OPTION_NO_TXF_MADDR_L_ABORT",
-#else
-    "Without OPTION_NO_TXF_MADDR_L_ABORT",
 #endif
 
 //---------------------------------------------------------------------
