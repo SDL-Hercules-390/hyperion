@@ -2514,12 +2514,14 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17714 "TXF: %s%02X: SIE: Populating Interception TDB at 0x%16.16"PRIx64
 #define HHC17715 "TXF: %s%02X: SIE: Intercepting %s instruction"
 #define HHC17716 "TXF: %s%02X: SIE: Interception TDB address not provided!"
-//  HHC17717 ... HHC17720 = MLVL( VERBOSE ) only
+//  HHC17717 ... HHC17722 = MLVL( VERBOSE ) only
 #define HHC17717 "TXF: %s%02X: %sCONSTRAINED transaction retry #%d..."
 #define HHC17718 "TXF: %s%02X: %sCONSTRAINED transaction succeeded after %d retries"
 #define HHC17719 "TXF: %s%02X: %sCONSTRAINED transaction retry #%d FAILED!"
 #define HHC17720 "TXF: %s%02X: %sAbort set by %s at %s"
-//efine HHC17721 - HHC17749 (available)
+#define HHC17721 "TXF: %s%02X: %s%s"
+#define HHC17722 "TXF: %s%02X: %sabort_transaction called from %s"
+//efine HHC17723 - HHC17749 (available)
 
 // range 17750 - 17799 available
 // range 17800 - 17899 available

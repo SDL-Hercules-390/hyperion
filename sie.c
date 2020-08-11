@@ -1362,7 +1362,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
         PTT_TXF( "TXF abrt", 0, 0, TAC_MISC );
 
         GUESTREGS->txf_why |= TXF_WHY_SIE_EXIT;
-        ARCH_DEP( abort_transaction )( GUESTREGS, ABORT_RETRY_RETURN, TAC_MISC );
+        ABORT_TRANS( GUESTREGS, ABORT_RETRY_RETURN, TAC_MISC );
         itdb = txf_contran ? &GUESTREGS->txf_pi_tdb
                            : &GUESTREGS->txf_tb_tdb;
     }

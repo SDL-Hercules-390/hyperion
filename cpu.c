@@ -1176,7 +1176,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     {
         PTT_TXF( "*TXF MISC", 0, regs->txf_contran, regs->txf_tnd );
         regs->txf_why |= TXF_WHY_RESTART_INT;
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MISC );
+        ABORT_TRANS( regs, ABORT_RETRY_RETURN, TAC_MISC );
     }
 #endif
     /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
@@ -1308,7 +1308,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
         {
             PTT_TXF( "*TXF IO", 0, regs->txf_contran, regs->txf_tnd );
             regs->txf_why |= TXF_WHY_IO_INT;
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_IO );
+            ABORT_TRANS( regs, ABORT_RETRY_RETURN, TAC_IO );
         }
 #endif
         /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
@@ -1387,7 +1387,7 @@ RADR    fsta;                           /* Failing storage address   */
     {
         PTT_TXF( "*TXF MCK", 0, regs->txf_contran, regs->txf_tnd );
         regs->txf_why |= TXF_WHY_MCK_INT;
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_MCK );
+        ABORT_TRANS( regs, ABORT_RETRY_RETURN, TAC_MCK );
     }
 #endif
     /* Store current PSW at PSA+X'30' */

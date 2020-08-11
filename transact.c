@@ -212,7 +212,7 @@ int         txf_tnd, txf_tac;
     {
         PTT_TXF( "*TXF end", regs->txf_abortctr, regs->txf_contran, regs->txf_tnd );
         regs->txf_why |= TXF_WHY_RAND_ABORT;
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );
+        ABORT_TRANS( regs, ABORT_RETRY_PGMCHK, regs->txf_random_tac );
         UNREACHABLE_CODE( return );
     }
 
@@ -265,7 +265,7 @@ int         txf_tnd, txf_tac;
             {
                 PTT_TXF( "*TXF end", txf_tac, regs->txf_contran, txf_tnd );
                 regs->txf_why |= TXF_WHY_DELAYED_ABORT;
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
+                ABORT_TRANS( regs, ABORT_RETRY_CC, txf_tac );
                 UNREACHABLE_CODE( return );
             }
 
@@ -321,7 +321,7 @@ int         txf_tnd, txf_tac;
             PTT_TXF( "*TXF end", txf_tac, regs->txf_contran, txf_tnd );
             regs->txf_why |= TXF_WHY_DELAYED_ABORT;
             regs->txf_tnd++; // (prevent 'abort_transaction' crash)
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
+            ABORT_TRANS( regs, ABORT_RETRY_CC, txf_tac );
             UNREACHABLE_CODE( return );
         }
 
@@ -401,7 +401,7 @@ int         txf_tnd, txf_tac;
 
                 regs->txf_why |= TXF_WHY_CONFLICT;
                 regs->txf_tnd++; // (prevent 'abort_transaction' crash)
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
+                ABORT_TRANS( regs, ABORT_RETRY_CC, txf_tac );
                 UNREACHABLE_CODE( return );
             }
         }
@@ -539,7 +539,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     PTT_TXF( "TXF TABORT", effective_addr2, regs->txf_contran, regs->txf_tnd );
     regs->txf_why |= TXF_WHY_TABORT_INSTR;
-    ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, (int) effective_addr2 );
+    ABORT_TRANS( regs, ABORT_RETRY_CC, (int) effective_addr2 );
     UNREACHABLE_CODE( return );
 
 } /* end DEF_INST( transaction_abort ) */
@@ -707,7 +707,7 @@ TPAGEMAP   *pmap;
     {
         PTT_TXF( "*TXF beg", MAX_TXF_TND, regs->txf_contran, regs->txf_tnd );
         regs->txf_why |= TXF_WHY_NESTING;
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
+        ABORT_TRANS( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
         UNREACHABLE_CODE( return );
     }
 
@@ -868,7 +868,7 @@ TPAGEMAP   *pmap;
             {
                 PTT_TXF( "*TXF begc", MAX_TXF_TND, regs->txf_contran, regs->txf_tnd );
                 regs->txf_why |= TXF_WHY_NESTING;
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
+                ABORT_TRANS( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
                 UNREACHABLE_CODE( return );
             }
 
@@ -998,7 +998,7 @@ static const int tac2cc[20] =
 /*            a program check. Otherwise do a longjmp to progjmp.    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_tac )
+void ARCH_DEP( abort_transaction )( REGS* regs, int retry, int txf_tac, const char* loc )
 {
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
@@ -1021,6 +1021,11 @@ U64        txf_bea;
 TDB*       pi_tdb   = NULL; /* Program Interrupt TDB @ fixed 0x1800  */
 TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
 VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
+
+    /* Identify where we were called from */
+    if (MLVL( VERBOSE ))
+        // "TXF: %s%02X: %sabort_transaction called from %s"
+        WRMSG( HHC17722, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), TRIMLOC( loc ));
 
     // LOGIC ERROR if CPU not in transactional-execution mode!
     if (!regs->txf_tnd)
@@ -1649,7 +1654,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
         regs->psw.cc = fcc;
         PTT_TXF( "TXF filt!", code, regs->txf_contran, regs->txf_tnd );
         regs->txf_why |= TXF_WHY_FILT_INT;
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FPGM );
+        ABORT_TRANS( regs, ABORT_RETRY_CC, TAC_FPGM );
         UNREACHABLE_CODE( return );
     }
 
@@ -1657,9 +1662,10 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     regs->psw.cc = ucc;
     PTT_TXF( "TXF unfilt!", code, regs->txf_contran, regs->txf_tnd );
     regs->txf_why |= TXF_WHY_UNFILT_INT;
-    ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_RETURN, TAC_UPGM );
+    ABORT_TRANS( regs, ABORT_RETRY_RETURN, TAC_UPGM );
 
 } /* end txf_do_pi_filtering */
+
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
@@ -2077,7 +2083,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         regs->txf_lastarn = arn;
     }
 
-    /* Calculate range of cache lines this this storage access */
+    /* Calculate range of cache lines for this storage access */
 
     addrwork = (U64) maddr;                     /* convert to U64    */
     addrpage = addrwork & ZPAGEFRAME_PAGEMASK;  /* address of page   */
@@ -2184,7 +2190,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
             regs->txf_who   =  regs->cpuad;
             regs->txf_loc   =  TRIMLOC( PTT_LOC );
         }
-        ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, regs->txf_tac );
+        ABORT_TRANS( regs, ABORT_RETRY_CC, regs->txf_tac );
         UNREACHABLE_CODE( return maddr );
     }
 #endif // OPTION_NO_TXF_MADDR_L_ABORT
@@ -2235,7 +2241,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
 
             PTT_TXF( "*TXF mad max", txf_tac, regs->txf_contran, regs->txf_tnd );
             regs->txf_why |= TXF_WHY_MAX_PAGES;
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, txf_tac );
+            ABORT_TRANS( regs, ABORT_RETRY_CC, txf_tac );
             UNREACHABLE_CODE( return maddr );
         }
 
@@ -2261,7 +2267,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
             WRMSG( HHC17711, "E", TXF_CPUAD( regs ), TXF_QSIE( regs ));
             PTT_TXF( "*TXF mad cap", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
             regs->txf_why |= TXF_WHY_CAPTURE_FAIL;
-            ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
+            ABORT_TRANS( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
             UNREACHABLE_CODE( return maddr );
         }
 
@@ -2307,7 +2313,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
                 WRMSG( HHC17712, "E", TXF_CPUAD( regs ), TXF_QSIE( regs ));
                 PTT_TXF( "*TXF mad cac", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
                 regs->txf_why |= TXF_WHY_CAPTURE_FAIL;
-                ARCH_DEP( abort_transaction )( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
+                ABORT_TRANS( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
                 UNREACHABLE_CODE( return maddr );
             }
 

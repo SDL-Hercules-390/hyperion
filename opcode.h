@@ -705,6 +705,13 @@ do { \
   if ((_regs)->aie) (_regs)->psw.IA = PSW_IA((_regs), 0); \
 } while (0)
 
+#undef  INST_UPDATE_PSW
+#define INST_UPDATE_PSW(_regs, _len, _ilc) \
+     do { \
+            if (_len) (_regs)->ip += (_len); \
+            if (_ilc) (_regs)->psw.ilc = (_ilc); \
+        } while(0)
+
 #undef  UPD_PSW_IA
 #define UPD_PSW_IA(_regs, _addr) \
 do { \
@@ -806,6 +813,9 @@ do { \
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
+  #undef  ABORT_TRANS                               /* (nothing) */
+  #define ABORT_TRANS( _regs, _retry, _tac )        /* (nothing) */
+
   #undef  TXF_INSTRADDR_CONSTRAINT                  /* (nothing) */
   #define TXF_INSTRADDR_CONSTRAINT( _ip, _regs )    /* (nothing) */
 
@@ -820,6 +830,10 @@ do { \
 
 #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
+  #undef  ABORT_TRANS
+  #define ABORT_TRANS( _regs, _retry, _tac )                          \
+    ARCH_DEP( abort_transaction )( (_regs), (_retry), (_tac), PTT_LOC )
+
   #undef  TXF_INSTRADDR_CONSTRAINT
   #define TXF_INSTRADDR_CONSTRAINT( _ip, _regs )                      \
   do {                                                                \
@@ -829,8 +843,7 @@ do { \
     )                                                                 \
     {                                                                 \
       (_regs)->txf_why |= TXF_WHY_INSTRADDR;                          \
-      ARCH_DEP( abort_transaction )( (_regs),                         \
-        ABORT_RETRY_PGMCHK, TAC_INSTR );                              \
+      ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );         \
     }                                                                 \
   } while (0)
 
@@ -844,8 +857,7 @@ do { \
     )                                                                 \
     {                                                                 \
       (_regs)->txf_why |= TXF_WHY_INSTRCOUNT;                         \
-      ARCH_DEP( abort_transaction )( (_regs),                         \
-        ABORT_RETRY_PGMCHK, TAC_INSTR );                              \
+      ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );         \
     }                                                                 \
   } while (0)
 
@@ -858,8 +870,8 @@ do { \
     )                                                                 \
     {                                                                 \
       (_regs)->txf_why |= TXF_WHY_RAND_ABORT;                         \
-      ARCH_DEP( abort_transaction )( (_regs),                         \
-        ABORT_RETRY_PGMCHK, (_regs)->txf_random_tac );                \
+      ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK,                      \
+        (_regs)->txf_random_tac );                                    \
     }                                                                 \
   } while (0)
 
@@ -1314,12 +1326,6 @@ do {                                                                  \
   ARCH_DEP( fetch_main_absolute )((_addr), (_regs))
 #endif
 
-#define INST_UPDATE_PSW(_regs, _len, _ilc) \
-     do { \
-            if (_len) (_regs)->ip += (_len); \
-            if (_ilc) (_regs)->psw.ilc = (_ilc); \
-        } while(0)
-
 /*-------------------------------------------------------------------*/
 /*        Transactional-Execution Facility support macros            */
 /*-------------------------------------------------------------------*/
@@ -1370,7 +1376,7 @@ do {                                                                  \
       if ((_regs)->txf_contran)                                                         \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_INSTR;                                      \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1384,7 +1390,7 @@ do {                                                                  \
       ))                                                                                \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_BRANCH;                                     \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1399,7 +1405,7 @@ do {                                                                  \
       ))                                                                                \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_RELATIVE_BRANCH;                            \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1409,7 +1415,7 @@ do {                                                                  \
       if ((_regs)->txf_tnd)                                                             \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_INSTR;                                         \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1425,7 +1431,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_FLOAT_INSTR;                                   \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1438,7 +1444,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_ACCESS_INSTR;                                  \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1452,7 +1458,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_NONRELATIVE_BRANCH;                            \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1466,7 +1472,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_BRANCH_SET_MODE;                               \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1479,7 +1485,7 @@ do {                                                                  \
       )                                                                                 \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_SET_ADDRESSING_MODE;                           \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );        \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
       }                                                                                 \
     } while (0)
 
@@ -1489,7 +1495,7 @@ do {                                                                  \
       if ((_regs)->txf_tnd)                                                             \
       {                                                                                 \
         (_regs)->txf_why |= TXF_WHY_TRAN_MISC_INSTR;                                    \
-        ARCH_DEP( abort_transaction )( (_regs), ABORT_RETRY_PGMCHK, TAC_MISC );         \
+        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_MISC );                           \
       }                                                                                 \
     } while (0)
 

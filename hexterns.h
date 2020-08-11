@@ -277,9 +277,9 @@ int servc_hresume(void *file);
 TRANS_DLL_IMPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
                                     const int  arn,     REGS*         regs,
                                     const int  acctype, BYTE*         maddr );
-TRANS_DLL_IMPORT void s370_abort_transaction( REGS* regs, int retry, int txf_tac );
-TRANS_DLL_IMPORT void s390_abort_transaction( REGS* regs, int retry, int txf_tac );
-TRANS_DLL_IMPORT void z900_abort_transaction( REGS* regs, int retry, int txf_tac );
+TRANS_DLL_IMPORT void s370_abort_transaction( REGS* regs, int retry, int txf_tac, const char* loc );
+TRANS_DLL_IMPORT void s390_abort_transaction( REGS* regs, int retry, int txf_tac, const char* loc );
+TRANS_DLL_IMPORT void z900_abort_transaction( REGS* regs, int retry, int txf_tac, const char* loc );
 TRANS_DLL_IMPORT void z900_txf_do_pi_filtering( REGS* regs, int code );
 void alloc_txfmap( REGS* regs );
 void free_txfmap( REGS* regs );
