@@ -490,8 +490,9 @@ int         txf_tnd, txf_tac;
         regs->txf_caborts = 0;
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
+        /* Release transaction lock */
         if (txf_contran)
-            RELEASE_TXFLOCK2( regs );
+            RELEASE_TXF_TRANLOCK();
 #endif
 
         PERFORM_SERIALIZATION( regs );
@@ -670,7 +671,9 @@ VADR    effective_addr1;                /* Effective address         */
     i2 &= ~(TXF_CTL_FLOAT | TXF_CTL_PIFC);
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
-    OBTAIN_TXFLOCK2( regs );
+    /* Obtain transaction lock */
+    if (!regs->txf_tnd)
+        OBTAIN_TXF_TRANLOCK();
 #endif
 
     OBTAIN_INTLOCK( regs );
@@ -1379,8 +1382,9 @@ VADR       txf_atia = PSW_IA( regs, -REAL_ILC( regs ) );
     }
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
+    /* Release transaction lock */
     if (txf_contran)
-        RELEASE_TXFLOCK2( regs );
+        RELEASE_TXF_TRANLOCK();
 #endif
 
     /*----------------------------------------------------*/

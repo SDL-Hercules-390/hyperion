@@ -861,6 +861,9 @@ int     rc;
     initialize_lock( &sysblk.crwlock  );
     initialize_lock( &sysblk.ioqlock  );
     initialize_lock( &sysblk.dasdcache_lock );
+#if defined( OPTION_TXF_SINGLE_THREAD )
+    initialize_lock( &sysblk.txf_tran_lock );
+#endif
 
     initialize_condition( &sysblk.scrcond );
     initialize_condition( &sysblk.ioqcond );
@@ -894,11 +897,6 @@ int     rc;
             MSGBUF( buf,    "&sysblk.txf_lock[%*d]", MAX_CPU_ENGS > 99 ? 3 : 2, i );
             initialize_lock( &sysblk.txf_lock[i] );
             set_lock_name(   &sysblk.txf_lock[i], buf );
-#if defined( OPTION_TXF_SINGLE_THREAD )
-            MSGBUF( buf,    "&sysblk.txf_lock2[%*d]", MAX_CPU_ENGS > 99 ? 3 : 2, i );
-            initialize_lock( &sysblk.txf_lock2[i] );
-            set_lock_name(   &sysblk.txf_lock2[i], buf );
-#endif
 #endif
         }
     }

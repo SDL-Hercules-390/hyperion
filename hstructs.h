@@ -645,16 +645,17 @@ struct SYSBLK {
 
         LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock for
                                              txf_tnd/txf_tac access  */
-#define OBTAIN_TXFLOCK( regs )     obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
-#define RELEASE_TXFLOCK( regs )    release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
+#define OBTAIN_TXFLOCK( regs )    obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
+#define RELEASE_TXFLOCK( regs )   release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
-        LOCK    txf_lock2[ MAX_CPU_ENGS ];
-#define OBTAIN_TXFLOCK2( regs )     obtain_lock ( &(regs)->sysblk->txf_lock2[ (regs)->cpuad ])
-#define RELEASE_TXFLOCK2( regs )    release_lock( &(regs)->sysblk->txf_lock2[ (regs)->cpuad ])
+        LOCK    txf_tran_lock;
+#define OBTAIN_TXF_TRANLOCK()     obtain_lock ( &sysblk.txf_tran_lock )
+#define RELEASE_TXF_TRANLOCK()    release_lock( &sysblk.txf_tran_lock )
 #endif
 
-#endif
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
         TOD     cpucreateTOD[ MAX_CPU_ENGS ];  /* CPU creation time */
         TID     cputid[ MAX_CPU_ENGS ];        /* CPU thread ids    */
         clockid_t                              /* CPU clock         */
