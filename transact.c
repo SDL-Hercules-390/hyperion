@@ -1038,8 +1038,22 @@ TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
 VADR       txf_atia;        /* Aborted Transaction Instruction Addr. */
 int        retry;           /* Actual retry code                     */
 
-    /* Identify where we were called from */
-    if (MLVL( VERBOSE ))
+    /* Set the initial Transaction Abort Code */
+    if (!regs->txf_tac)
+        regs->txf_tac = txf_tac;
+
+    /* Identify who called us (if appropriate) */
+    if (1
+        && TXF_TRACING()            // (debug tracing enabled?)
+        && MLVL( VERBOSE )          // (verbose debug messages?)
+                                    // (non-specific tracing or
+                                    // tracing matches specifics...)
+        && TXF_TRACE_CPU( regs )
+        && TXF_TRACE_TND( regs )
+        && TXF_TRACE_WHY( regs )
+        && TXF_TRACE_TAC( regs )
+        && TXF_TRACE_CFAILS( regs )
+    )
         // "TXF: %s%02X: %sabort_transaction called from %s"
         WRMSG( HHC17722, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), TRIMLOC( loc ));
 
@@ -2655,9 +2669,12 @@ void dump_tdb( REGS* regs, TDB* tdb )
                 // (blank line)
                 WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), "" );
                 {
-                    // e.g. "Operation exception code 0201 ilc 2"
-                    MSGBUF( buf, "%s code %4.4X ilc %d", PIC2Name( code ), code, ilc );
-                    WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+                    if (code)
+                    {
+                        // e.g. "Operation exception code 0201 ilc 2"
+                        MSGBUF( buf, "%s code %4.4X ilc %d", PIC2Name( code ), code, ilc );
+                        WRMSG( HHC17721, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), buf );
+                    }
 
                     sysblk.showregsnone = true;
                     {

@@ -141,7 +141,8 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
 
 #define TXF_TRACING()   (sysblk.txf_tracing)
 
-//--------------------------------------------------------------------
+/*-------------------------------------------------------------------*/
+// (true == non-specific tracing or tracing matches specifics)
 
 #define TXF_TRACE_CPU( _regs )                                      \
     (0                                                              \
@@ -154,28 +155,6 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
      || !(sysblk.txf_tracing & TXF_TR_TND)                          \
      ||  ((_regs)->txf_tnd >= sysblk.txf_tnd )                      \
     )
-
-//--------------------------------------------------------------------
-
-#define TXF_TRACE_UC( _regs, _contran )                             \
-    (1                                                              \
-     && (TXF_TRACE_CPU( _regs ))                                    \
-     && (TXF_TRACE_TND( _regs ))                                    \
-     && (0                                                          \
-         || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))        \
-         || ((sysblk.txf_tracing & TXF_TR_U) && !(_contran))        \
-        )                                                           \
-    )
-
-//--------------------------------------------------------------------
-
-#define TXF_TRACE( _regs, _successfailure, _contran )               \
-    (1                                                              \
-     && (sysblk.txf_tracing & TXF_TR_ ## _successfailure)           \
-     && (TXF_TRACE_UC( _regs, _contran ))                           \
-    )
-
-//--------------------------------------------------------------------
 
 #define TXF_TRACE_WHY( _regs )                                      \
     (0                                                              \
@@ -196,15 +175,48 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
     )
 
 //--------------------------------------------------------------------
+// Should we trace this constrained or unconstrained transaction?
+
+#define TXF_TRACE_UC( _regs, _contran )                             \
+    (1                                                              \
+     && TXF_TRACE_CPU( _regs )                                      \
+     && TXF_TRACE_TND( _regs )                                      \
+     && (0                                                          \
+         || ((sysblk.txf_tracing & (TXF_TR_C | TXF_TR_U))           \
+                                == (TXF_TR_C | TXF_TR_U))           \
+         || ((sysblk.txf_tracing & TXF_TR_C) &&  (_contran))        \
+         || ((sysblk.txf_tracing & TXF_TR_U) && !(_contran))        \
+        )                                                           \
+    )
+
+//--------------------------------------------------------------------
+// Trace successful/failed constrained/unconstrained transaction?
+
+#define TXF_TRACE( _regs, _successfailure, _contran )               \
+    (1                                                              \
+     && (sysblk.txf_tracing & TXF_TR_ ## _successfailure)           \
+     && TXF_TRACE_UC( _regs, _contran )                             \
+     && (0 /* Failures uninteresting or interesting failure? */     \
+         || !(sysblk.txf_tracing & TXF_TR_FAILURE)                  \
+         || (1                                                      \
+             && TXF_TRACE_WHY( _regs )                              \
+             && TXF_TRACE_TAC( _regs )                              \
+             && TXF_TRACE_CFAILS( _regs )                           \
+            )                                                       \
+        )                                                           \
+    )
+
+//--------------------------------------------------------------------
+// TDB tracing...       (always only failed transactions)
 
 #define TXF_TRACE_TDB( _regs, _contran )                            \
     (1                                                              \
      && (sysblk.txf_tracing & TXF_TR_TDB)                           \
      && (TXF_TRACE( _regs, FAILURE, _contran ))                     \
-     && (TXF_TRACE_WHY( _regs ))                                    \
-     && (TXF_TRACE_TAC( _regs ))                                    \
-     && (TXF_TRACE_CFAILS( _regs ))                                 \
     )
+
+//--------------------------------------------------------------------
+// Page Map tracing...  (successful -OR- failed transactions)
 
 #define TXF_TRACE_MAP( _regs, _contran )                            \
     (1                                                              \
