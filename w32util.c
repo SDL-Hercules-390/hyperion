@@ -2227,7 +2227,7 @@ static DWORD WINAPI ReadStdInThread( LPVOID lpParameter )
 
             MSGBUF
             (
-                 buf, "ReadFile( hDupedStdIn ) failed! dwLastError=%d (0x%08.8X): %s"
+                 buf, "ReadFile( hDupedStdIn ) failed! dwLastError=%d (0x%8.8X): %s"
                 ,dwLastError
                 ,dwLastError
                 ,szErrMsg
@@ -2315,7 +2315,7 @@ static void CreateReadStdInThread()
             DWORD  dwLastError;
             char   szErrMsg[ 256 ];
 
-            // "DuplicateHandle() failed: dwLastError=%d (0x%08.8X): %s"
+            // "DuplicateHandle() failed: dwLastError=%d (0x%8.8X): %s"
             dwLastError = GetLastError();
             WRMSG( HHC04110, "W", dwLastError, dwLastError,
                 w32_w32errmsg( dwLastError, szErrMsg, sizeof( szErrMsg )));

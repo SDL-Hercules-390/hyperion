@@ -334,7 +334,7 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt_ip )( REGS* regs, BYTE* ip, in
 {
     int code = (pcode & 0xFF);
 
-    /* Trace program checks other then PER event */
+    /* Trace program checks other than PER event */
     if (1
         && code
         && (0
@@ -745,7 +745,7 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     if (!txf_traced_pgmint)
 #endif
     {
-        /* Trace program checks other then PER event */
+        /* Trace program checks other than PER event */
         regs->psw.IA -= ilc;
         {
             ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );

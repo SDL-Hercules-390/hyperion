@@ -923,9 +923,9 @@ u_int   ts;
 U32     used = count - residual;
 char    msgbuf[133];
 
-    MSGBUF(msgbuf, "Prefetch ps=%d count=%llu (%08.8LLX) "
-                       "residual=%llu (%08.8LLX) more=%d "
-                       "used=%llu (%08.8LLX)",
+    MSGBUF(msgbuf, "Prefetch ps=%d count=%llu (%8.8LLX) "
+                       "residual=%llu (%8.8LLX) more=%d "
+                       "used=%llu (%8.8LLX)",
                    ps, count, count, residual, residual, more,
                    used, used);
     WRMSG(HHC90000, "I", msgbuf);

@@ -238,7 +238,7 @@ const int  bflexpmax   [5] = { 0, 255, 2047, 0, 32767 };
 /***************************************************************/
 void arraydiv(unsigned int *ltab,int divisor,int ntab,unsigned int *rem)
 {
-  unsigned long long temp1;
+  unsigned long long temp1 = 0;
   unsigned long long work1;
   unsigned long long divisort;
   unsigned long long dividend;
@@ -543,7 +543,7 @@ int checkhfp(unsigned int *hfltab, int hflnum, int *hexpptr, unsigned char ccbit
   int mid;
   int rem;
   int hexp = *hexpptr;
-  int shiftmax;
+  int shiftmax = 0;
   int shiftamt;
   unsigned int remtab[4];
   if (hexp > 127)
@@ -689,7 +689,7 @@ int checkbfp(unsigned int *bfltab, int bflnum, int bexp, unsigned char ccbits, i
   int rem;
   int i;
   int shiftamt;
-  int shiftmax;
+  int shiftmax = 0;
   unsigned int remtab[4];
   int maxexp = bflexpmax[bflnum];
   if (bexp > maxexp)
@@ -825,7 +825,6 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   long long wk;
   int decnum;
   int cc = 0;
-  int decctr;
   int roundrule;
   int hexp;
   int rx;
@@ -834,7 +833,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int maxdigit;
   int maxbits;
   int numbits;
-  int expword2;
+  int expword2 = 0;
   int shiftamt;
   int shiftstd;
   int bitctr;
@@ -843,10 +842,9 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int neg = 0;
   int exact = 1;
   int exp;
-  int dexp;
   int bexp;
   int delta;
-  int expword;
+  int expword = 0;
   //  the following table is used to reverse the bits in a byte.  This is needed
   //  for nan processing
   unsigned int bittab1[256] = {
@@ -1020,11 +1018,9 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   lzero = getlzerobits(dec, ARRAYMAX);
   memset(hfl,0x00,sizeof(hfl));
   memset(decwork,0x00,sizeof(decwork));
-  decctr = 0;
   fac10 = 0;
   hexp = 0;
   bexp = 0;
-  dexp = exp;
   if (binflg)
     maxbits = bflmaxdigit[hflwords];
   else
@@ -1367,7 +1363,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
 int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dflwords, unsigned char ccbits, int binflg, int *FPC)
 {
   int exp;
-  int dexp;
+  int dexp = 0;
   unsigned int exp1;
   unsigned int hfl[ARRAYMAX];
   unsigned int dec[ARRAYMAX];
@@ -1381,17 +1377,15 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
   int decctr;
   int neg = 0;
   unsigned int wk1;
-  unsigned int wk2;
   unsigned int rem;
   int ndpdctr;
   int ndpd;
-  int roundrule;
   unsigned int rbe;
   int lzero;
   int lzerohex;
-  int bexp;
+  int bexp = 0;
   int delta;
-  int hexp;
+  int hexp = 0;
   int shiftamt;
   unsigned int maxexp;
   int maxdigits;
@@ -1425,20 +1419,11 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
   unsigned int temptab[4];
   int expword;
   int cbits;
-  int maxbits;
-  int tradix;
+  int maxbits = 0;
   unsigned int temp1;
   unsigned int temp2;
   memset(binzero, 0x00, sizeof(binzero));
   temp1 = (unsigned int)(ccbits & 0x0f);
-  if (temp1 == 0)
-    roundrule = (*FPC & 0x00000070) >> 4;
-  else
-    if (temp1 == 1)
-      roundrule = (*FPC & 0x00000007);
-    else
-      roundrule = (int)(temp1 - 8);
-  tradix = (int)((ccbits & 0x30) >> 4);
   if (hfltab[0] & 0x80000000)
   {
     neg = 1;
@@ -1679,7 +1664,6 @@ int hflbfl2dfl(unsigned int *hfltab, unsigned int *dfltab, int hflwords, int dfl
     if (memcmp(decwork, binzero, delta) != 0)
       rview = 0;
     wk1 = (unsigned int)decwork[delta - 1];
-    wk2 = (unsigned int)decwork[delta];
     rem = 0;
     if (wk1 > 5)
       rem = 1;
@@ -1846,7 +1830,6 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
   int roundrule;
   int shiftword;
   int maxword;
-  int tradix;
   int rem;
   unsigned int temp1;
   unsigned int temp2;
@@ -1858,7 +1841,6 @@ int hfl2bfl(unsigned int *tab,unsigned int *tabout, int nwordin, int nwordout, u
       roundrule = (*FPC & 0x00000007);
     else
       roundrule = (int)(temp1 - 8);
-  tradix = (int)((ccbits & 0x30) >> 4);
   memset(temptab1, 0x00,sizeof(temptab1));
   memcpy(temptab1, tab, nwordin * 4);
   neg = tab[0] >> 31;
@@ -2034,7 +2016,7 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
   unsigned int temptab1[6];
   unsigned int remtab[4];
   int hexp;
-  int bexpbias;
+  int bexpbias = 0;
   int hexp2;
   int bexp = 0;
   int bexpround;
@@ -2047,7 +2029,6 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
   int shiftctr;
   int roundrule;
   int maxword;
-  int tradix;
   unsigned int temp1;
   unsigned int temp2;
   unsigned char binzero[32];
@@ -2061,7 +2042,6 @@ int bfl2hfl(unsigned int *tab, unsigned int *tabout, int nwordin, int nwordout, 
       roundrule = (*FPC & 0x00000007);
     else
       roundrule = (int)(temp1 - 8);
-  tradix = (int)((ccbits & 0x30) >> 4);
   memset(temptab1, 0x00, sizeof(temptab1));
   memcpy(temptab1, tab, sizeof(int) * nwordin);
   neg = tab[0] >> 31;

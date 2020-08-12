@@ -80,6 +80,8 @@ U32     abort_count;                    /* Transaction Abort count   */
 
     RRF_M( inst, regs, r1, r2, m3 );
 
+    UNREFERENCED( r2 );
+
     TRAN_INSTR_CHECK( regs );
 
     /* Retrieve abort count */
@@ -1016,9 +1018,10 @@ void ARCH_DEP( abort_transaction )( REGS* regs, int raw_retry, int txf_tac, cons
 
     /* S370 and S390 don't support Transactional-Execution Facility */
 
-    UNREFERENCED( regs );
+    UNREFERENCED( regs      );
     UNREFERENCED( raw_retry );
-    UNREFERENCED( txf_tac );
+    UNREFERENCED( txf_tac   );
+    UNREFERENCED( loc       );
 
     CRASH();   /* Should NEVER be called for S/370 or S/390! */
 
@@ -1254,7 +1257,7 @@ int        retry;           /* Actual retry code                     */
             /* Fix PSW and get instruction length (ilc) */
             ilc = ARCH_DEP( fix_program_interrupt_PSW )( regs );
 
-            /* Trace program checks other then PER event */
+            /* Trace program checks other than PER event */
             regs->ip -= ilc;
             {
                 ARCH_DEP( trace_program_interrupt_ip )( regs, regs->ip, pcode, ilc );
@@ -1724,7 +1727,7 @@ int     ilc;                    /* Instruction Length Code           */
     /* Fix PSW and get instruction length (ilc) */
     ilc = ARCH_DEP( fix_program_interrupt_PSW )( regs );
 
-    /* Trace program checks other then PER event */
+    /* Trace program checks other than PER event */
     regs->psw.IA -= ilc;
     {
         ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );

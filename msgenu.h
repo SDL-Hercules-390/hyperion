@@ -659,7 +659,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 
 // reserve 008xx for processor related messages
 #define HHC00800 "Processor %s%02X: loaded wait state PSW %s"
-#define HHC00801 "Processor %s%02X: %s%s%s code %4.4X ilc %d%s"
+#define HHC00801 "Processor %s%02X: %s%s%s code %4.4X ilc %d%s%s"
 #define HHC00802 "Processor %s%02X: PER event: code %4.4X perc %2.2X addr "F_VADR
 #define HHC00803 "Processor %s%02X: program interrupt loop PSW %s"
 #define HHC00804 "Processor %s%02X: I/O interrupt code %1.1X:%4.4X CSW %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
@@ -2349,7 +2349,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC04107 (available)
 //efine HHC04108 (available)
 //efine HHC04109 (available)
-#define HHC04110 "DuplicateHandle() failed: dwLastError=%d (0x%08.8X): %s"
+#define HHC04110 "DuplicateHandle() failed: dwLastError=%d (0x%8.8X): %s"
 //efine HHC04111 (available)
 #define HHC04112 "Cannot provide minimum emulated TOD clock resolution"
 //efine HHC04113 - HHC04199 (available)

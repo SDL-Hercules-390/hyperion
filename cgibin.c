@@ -677,7 +677,7 @@ U32 addr = 0;
     /* INCOMPLETE
      * no storage alter
      * no storage type (abs/real/prim virt/sec virt/access reg virt)
-     * no cpu selection for storage other then abs
+     * no cpu selection for storage other than abs
      */
 
     if((value = cgi_variable(webblk,"alter_a0")))

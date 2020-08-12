@@ -1728,7 +1728,7 @@ CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int co
 
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt ))        ( REGS* regs, int code );
 CPU_DLL_IMPORT int                   ARCH_DEP( fix_program_interrupt_PSW ) ( REGS* regs );
-CPU_DLL_IMPORT void                  ARCH_DEP( trace_program_interrupt )   ( REGS* regs, int pcode, int ilc );
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( trace_program_interrupt ))  ( REGS* regs, int pcode, int ilc );
 CPU_DLL_IMPORT void                  ARCH_DEP( trace_program_interrupt_ip )( REGS* regs, BYTE* ip, int pcode, int ilc );
 
 void *cpu_thread (void *cpu);

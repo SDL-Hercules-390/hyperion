@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
             case SE_ERR_NOASSOC:         pszErrMsg = "There is no application associated with the given file name extension. This error will also be returned if you attempt to print a file that is not printable"; break;
 
             default:
-                printf(PGMNAME": ShellExecute(\"%s\", \"%s\",...) failed: Unknown error; rc=%d (0x%08.8X).\n",
+                printf(PGMNAME": ShellExecute(\"%s\", \"%s\",...) failed: Unknown error; rc=%d (0x%8.8X).\n",
                     lpFile, lpParameters, rc, rc );
                 return -1;
         }

@@ -1225,7 +1225,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
                 else if (1
                     && str_caseless_eq(   argv[i+0], "WHY" )
                     &&                    argv[i+1]
-                    && sscanf(            argv[i+1], "%"SCNx32, &txf_why_mask, &c ) == 1
+                    && sscanf(            argv[i+1], "%"SCNx32"%c", &txf_why_mask, &c ) == 1
                 )
                 {
                     txf_tracing |= TXF_TR_WHY;
@@ -1393,11 +1393,11 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
             char cpu[32]  = {0};
             char cfl[32]  = {0};
   
-            if (txf_why_mask)    MSGBUF( why, "WHY 0x%08.8"PRIX32" ",  txf_why_mask );
-            if (txf_tac    >  0) MSGBUF( tac, "TAC %d ",           txf_tac      );
-            if (txf_tnd    >  0) MSGBUF( tnd, "TND %d ",           txf_tnd      );
-            if (txf_cpuad  >= 0) MSGBUF( cpu, "CPU %d ",           txf_cpuad    );
-            if (txf_cfails >  0) MSGBUF( cfl, "CFAILS %d ",        txf_cfails   );
+            if (txf_why_mask)    MSGBUF( why, "WHY 0x%8.8"PRIX32" ",  txf_why_mask );
+            if (txf_tac    >  0) MSGBUF( tac, "TAC %d ",              txf_tac      );
+            if (txf_tnd    >  0) MSGBUF( tnd, "TND %d ",              txf_tnd      );
+            if (txf_cpuad  >= 0) MSGBUF( cpu, "CPU %d ",              txf_cpuad    );
+            if (txf_cfails >  0) MSGBUF( cfl, "CFAILS %d ",           txf_cfails   );
 
             MSGBUF( buf, "%s%s%s%s%s%s%s%s" "%s%s%s%s%s"
 
