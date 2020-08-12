@@ -138,6 +138,8 @@ int     r1, r2;                         /* Operand register numbers  */
 
     RRE( inst, regs, r1, r2 );
 
+    UNREFERENCED( r2 );
+
     TXF_SIE_INTERCEPT( regs, ETND );
 
     if (!(regs->CR(0) & CR0_TXC))
