@@ -170,7 +170,7 @@ typedef struct _ETHFRM ETHFRM, *PETHFRM;
 
 #define  ETH_TYPE_IP        0x0800
 #define  ETH_TYPE_ARP       0x0806
-#define  ETH_TYPE_RARP      0x0835
+#define  ETH_TYPE_RARP      0x8035
 #define  ETH_TYPE_SNA       0x80D5
 #define  ETH_TYPE_IPV6      0x86dd
 
