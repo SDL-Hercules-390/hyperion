@@ -916,6 +916,9 @@ int     rc;
     if (!isatty(STDERR_FILENO) && !isatty(STDOUT_FILENO))
         sysblk.daemon_mode = 1;       /* Leave -d intact */
 
+    /* Initialize panel colors */
+    set_panel_colors();
+
     /* Initialize the logmsg pipe and associated logger thread.
        This causes all subsequent logmsg's to be redirected to
        the logger facility for handling by virtue of stdout/stderr

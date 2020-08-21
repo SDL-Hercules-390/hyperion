@@ -105,6 +105,7 @@ HPAN_DLL_IMPORT U32    prev_high_sios_rate; // (saved high water mark for previo
 HPAN_DLL_IMPORT time_t curr_int_start_time; // (start time of current interval)
 HPAN_DLL_IMPORT time_t prev_int_start_time; // (start time of previous interval)
 HPAN_DLL_IMPORT void update_maxrates_hwm(); // (update high-water-mark values)
+HPAN_DLL_IMPORT void set_panel_colors();    // (set panel message colors)
 
 /* Functions in module hao.c (Hercules Automatic Operator) */
 #if defined(OPTION_HAO)

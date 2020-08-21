@@ -1594,6 +1594,85 @@ static REGS *my_copy_regs(int cpu)
     return regs;
 }
 
+DLL_EXPORT void set_panel_colors()
+{
+    if (sysblk.pan_colors)
+    {
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_BLUE;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+    }
+    else // no colors: use default
+    {
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+    }
+}
+
+static int msgcolor( int sev, int fgbg )
+{
+    switch (sev) {
+    case 'I': return sysblk.pan_color[ PANC_I_IDX ][ fgbg ];
+    case 'E': return sysblk.pan_color[ PANC_E_IDX ][ fgbg ];
+    case 'W': return sysblk.pan_color[ PANC_W_IDX ][ fgbg ];
+    case 'D': return sysblk.pan_color[ PANC_D_IDX ][ fgbg ]; default: break; }
+              return sysblk.pan_color[ PANC_X_IDX ][ fgbg ];
+}
+static int fg_msgcolor( int sev ) { return msgcolor( sev, PANC_FG_IDX ); }
+static int bg_msgcolor( int sev ) { return msgcolor( sev, PANC_BG_IDX ); }
+
+static bool have_regexp = false;
+
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+
+static regex_t     regex;
+static regmatch_t  regmatch;
+
+static void init_HHC_regexp()
+{
+    // "HHC99999S"
+    have_regexp = (0 == regcomp( &regex, "(HHC\\d\\d\\d\\d\\d\\S)", REG_EXTENDED ))
+        ? true : false;
+}
+#endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+
+static int msg_sev( const char* msg )
+{
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    if (have_regexp)
+    {
+        if (regexec( &regex, msg, 1, &regmatch, 0 ) == 0)
+            return (int)(msg[ regmatch.rm_so + 8 ]);
+    }
+    else
+#endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    {
+        int sevidx = MLVL( DEBUG ) ? MLVL_DEBUG_PFXIDX + 8 : 8;
+        if (strlen( msg ) > sevidx)
+            return (int)(msg[ sevidx ]);
+    }
+    return (int)' ';
+}
 
 /*-------------------------------------------------------------------*/
 /* Panel display thread                                              */
@@ -1639,6 +1718,10 @@ size_t  loopcount;                      /* Number of iterations done */
     SET_THREAD_NAME( PANEL_THREAD_NAME );
     hdl_addshut( "panel_cleanup", panel_cleanup, NULL );
     history_init();
+
+#if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+    init_HHC_regexp();
+#endif
 
     /* Set Some Function Key Defaults */
     {
@@ -2880,6 +2963,7 @@ FinishShutdown:
         /*        the NP display as an else after those ifs */
 
         if (NPDup == 0) {
+            int sev, fg_color, bg_color;
             /* Rewrite the screen if display update indicators are set */
             if (redraw_msgs && !npquiet)
             {
@@ -2894,9 +2978,14 @@ FinishShutdown:
                 /* Then draw current screen */
                 for (p=topmsg; i < (SCROLL_LINES + numkept) && (p != curmsg->next || p == topmsg); i++, p = p->next)
                 {
-                    set_pos (i+1, 1);
-                    set_color (COLOR_DEFAULT_FG, COLOR_DEFAULT_BG);
-                    write_text (p->msg, MSG_SIZE);
+                    sev = msg_sev( p->msg );
+
+                    fg_color = fg_msgcolor( sev );
+                    bg_color = bg_msgcolor( sev );
+
+                    set_pos( i+1, 1 );
+                    set_color( fg_color, bg_color );
+                    write_text( p->msg, MSG_SIZE );
                 }
 
                 /* Pad remainder of screen with blank lines */

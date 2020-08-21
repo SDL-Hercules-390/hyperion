@@ -770,6 +770,18 @@ struct SYSBLK {
 #define SHCMDOPT_ENABLE   0x01          /* Allow host shell access   */
 #define SHCMDOPT_DIAG8    0x02          /* Allow for DIAG8 as well   */
         int     panrate;                /* Panel refresh rate        */
+
+        bool pan_colors;                /* true = colored panel msgs */
+        int pan_color[5][2];            /* Panel colors              */
+
+#define PANC_X_IDX      0               /*    (default)              */
+#define PANC_I_IDX      1               /*    'I'nformational        */
+#define PANC_E_IDX      2               /*    'E'rror                */
+#define PANC_W_IDX      3               /*    'W'arning              */
+#define PANC_D_IDX      4               /*    'D'ebug                */
+#define PANC_FG_IDX     0               /*    Foreground             */
+#define PANC_BG_IDX     1               /*    Background             */
+
         int     timerint;               /* microsecs timer interval  */
         char   *pantitle;               /* Alt console panel title   */
 #if defined( OPTION_SCSI_TAPE )

@@ -3983,30 +3983,53 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int panopt_cmd( int argc, char* argv[], char* cmdline)
 {
+    char buf[64];
+
     UNREFERENCED( cmdline );
     UPPER_ARGV_0(  argv   );
 
-    if (argc < 2)
+    // panopt [MSGCOLOR=NO|YES] [FULLPATH|NAMEONLY]
+
+    if (argc <= 1)
     {
+        MSGBUF( buf, "MSGCOLOR=%s %s",
+            sysblk.pan_colors  ? "YES"      : "NO",
+            sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
+        );
+
         // "%-14s: %s"
-        WRMSG( HHC02203, "I", argv[0], sysblk.devnameonly ?
-            "NAMEONLY" : "FULLPATH" );
+        WRMSG( HHC02203, "I", argv[0], buf );
         return 0;
     }
-    else if (argc == 2)
+    else if (argc <= 3)
     {
-        if      (CMD( argv[1], NAMEONLY, 4 )) sysblk.devnameonly = 1;
-        else if (CMD( argv[1], FULLPATH, 4 )) sysblk.devnameonly = 0;
-        else // error
+        int  i;
+        for (i=1; i < argc; i++)
         {
-            // "Invalid argument %s%s"
-            WRMSG( HHC02205, "E", argv[1], "" );
-            return -1;
+            if      (CMD( argv[i], NAMEONLY,      4 )) sysblk.devnameonly = 1;
+            else if (CMD( argv[i], FULLPATH,      4 )) sysblk.devnameonly = 0;
+            else if (CMD( argv[i], MSGCOLOR=NO,  11 )) sysblk.pan_colors = false;
+            else if (CMD( argv[i], MSGCOLOR=YES, 12 )) sysblk.pan_colors = true;
+            else // error
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[i], "" );
+                return -1;
+            }
         }
 
+        set_panel_colors();
+
         if (MLVL( VERBOSE ))
+        {
+            MSGBUF( buf, "MSGCOLOR=%s %s",
+                sysblk.pan_colors  ? "YES"      : "NO",
+                sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
+            );
+
             // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], argv[1] );
+            WRMSG( HHC02204, "I", argv[0], buf );
+        }
 
         return 0;
     }
