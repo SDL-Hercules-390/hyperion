@@ -1668,7 +1668,7 @@ static int msg_sev( const char* msg )
 #endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
     {
         int sevidx = MLVL( DEBUG ) ? MLVL_DEBUG_PFXIDX + 8 : 8;
-        if (strlen( msg ) > sevidx)
+        if ((int)strlen( msg ) > sevidx)
             return (int)(msg[ sevidx ]);
     }
     return (int)' ';
