@@ -103,9 +103,9 @@ int     rc;
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
         /* Abort any active transaction and then return back to here
            to continue with external interrupt processing */
-        if (HOSTREGS->txf_tnd)
+        if (regs->txf_tnd)
         {
-            PTT_TXF( "*TXF EI", 0, 0, HOSTREGS->txf_tnd );
+            PTT_TXF( "*TXF EI", 0, 0, regs->txf_tnd );
             regs->txf_why |= TXF_WHY_EXT_INT;
             ABORT_TRANS( regs, ABORT_RETRY_RETURN, TAC_EXT );
         }
