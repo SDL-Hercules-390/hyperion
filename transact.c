@@ -178,10 +178,17 @@ void ARCH_DEP( set_txf_aie )( REGS* regs )
     regs->txf_aie      = regs->ip - 6 + 256; // (minus-6 for TBEGINC)
     regs->txf_aie_aiv  = regs->AIV;
 
-    if (regs->txf_aie > (regs->aip + ZPAGEFRAME_PAGESIZE))
+    /* Is AIE in next page? */
+    if (regs->txf_aie >= (regs->aip + ZPAGEFRAME_PAGESIZE))
     {
+        /* Define AIE offset into next page for vstore.h */
         regs->txf_aie_aiv2 = regs->txf_aie_aiv + ZPAGEFRAME_PAGESIZE;
         regs->txf_aie_off2 = regs->txf_aie - (regs->aip + ZPAGEFRAME_PAGESIZE);
+    }
+    else
+    {
+        /* Prevent vstore.h next page offset match */
+        regs->txf_aie_aiv2 = ~regs->txf_aie_aiv;
     }
 }
 
