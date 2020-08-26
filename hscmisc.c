@@ -848,6 +848,27 @@ char    regs_msg_buf[4*512] = {0};
         n += snprintf( buf + n, sizeof( buf )-n, "SIE: " );
 #endif
 
+    /* Save the opcode and determine the instruction length */
+    opcode = inst[0];
+    ilc = ILC( opcode );
+
+    PTT_PGM( "dinst op,ilc", opcode, ilc, pgmint );
+
+    /* If we were called to display the instruction that program
+       checked, then since the "iregs" REGS value that was passed
+       to us (that we made a working copy of) was pointing PAST
+       the instruction that actually program checked (not at it),
+       we need to backup by the ilc amount so that it points at
+       the instruction that program checked, not past it.
+    */
+    PTT_PGM( "dinst ip,IA", regs->ip, regs->psw.IA, pgmint );
+    if (pgmint)
+    {
+        regs->ip -= ilc;
+        regs->psw.IA = PSW_IA( regs, 0 );
+    }
+    PTT_PGM( "dinst ip,IA", regs->ip, regs->psw.IA, pgmint );
+
     /* Display the PSW */
     memset( qword, 0, sizeof( qword ));
     copy_psw( regs, qword );
@@ -883,10 +904,6 @@ char    regs_msg_buf[4*512] = {0};
             free_aligned( regs );
         return;
     }
-
-    /* Extract the opcode and determine the instruction length */
-    opcode = inst[0];
-    ilc = ILC( opcode );
 
     /* Format instruction line */
                  n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
@@ -1014,19 +1031,18 @@ char    regs_msg_buf[4*512] = {0};
         || opcode == 0xC6   // RIL-x  (relative)
     )
     {
-        S64 offset = 2LL * (S32) (fetch_fw( inst+2 ));
-        addr1 = (!regs->execflag) ? PSW_IA( regs, offset )
-            : (regs->ET + offset) & ADDRESS_MAXWRAP( regs );
+        S64 offset;
+        S32 relative_long_operand = fetch_fw( inst+2 );
+        offset = 2LL * relative_long_operand;
+        addr1 = PSW_IA( regs, 0 );  // (current instruction address)
+
+        PTT_PGM( "dinst rel1:", addr1, offset, relative_long_operand );
+
+        addr1 += (VADR)offset;      // (plus relative offset)
+        addr1 &= ADDRESS_MAXWRAP( regs );
         b1 = 0;
 
-        /* If we were called to display the instruction that
-           program checked, then since the PSW's IA is pointing
-           PAST the instruction (and not at it) and the operand
-           is relative to the instruction, then we need to make
-           a minor adjustment to our calculated operand address.
-        */
-        if (pgmint)         // ("display_pgmint_inst" call?)
-            addr1 -= ilc;   // (yes, adjust operand address)
+        PTT_PGM( "dinst rel1=", addr1, offset, relative_long_operand );
     }
 
     /* Format storage at first storage operand location */

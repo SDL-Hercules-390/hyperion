@@ -485,95 +485,126 @@ void ARCH_DEP( SuccessfulRelativeBranch )( REGS* regs, S64 offset )
 }
 
 /*-------------------------------------------------------------------*/
-/*                    trace_program_interrupt_ip                     */
+/*                   trace_program_interrupt                         */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT void ARCH_DEP( trace_program_interrupt_ip )( REGS* regs, BYTE* ip, int pcode, int ilc )
+DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int ilc )
 {
+    char sie_mode_str    [ 10]  = {0};  // maybe "SIE: "
+    char sie_debug_arch  [ 32]  = {0};  // "370", "390" or "900" if defined( SIE_DEBUG )
+    char txf_why         [256]  = {0};  // TXF "why" string if txf pgmint
+    char dxcstr          [  8]  = {0};  // data exception code if PGM_DATA_EXCEPTION
+
+    BYTE* ip;      /* ptr to instr that program checked or NULL  */
+
+    /* Just the low byte of program interrupt code itself please */
     int code = (pcode & 0xFF);
 
-    /* Trace program checks other than PER event */
-    if (1
-        && code
-        && (0
-            || CPU_STEPPING_OR_TRACING( regs, ilc )
-            || sysblk.pgminttr & ((U64) 1 << ((code - 1) & 0x3F))
+    /* If the program interrupt code is zero, or if it's not, if the
+       code isn't one they're interested in seeing (as determiend by
+       OSTAILOR/pgmtrace) AND instruction tracing is NOT active, then
+       there's nothing for us to do.
+    */
+    if (0
+        || !code
+        || (1
+            && !(sysblk.pgminttr & ((U64) 1 << ((code - 1) & 0x3F)))
+            && !CPU_STEPPING_OR_TRACING( regs, ilc )
            )
     )
     {
-        /* Work variables... */
-        char sie_mode_str    [ 10]  = {0};  // maybe "SIE: "
-        char sie_debug_arch  [ 32]  = {0};  // "370", "390" or "900" if defined( SIE_DEBUG )
-        char txf_why         [256]  = {0};  // TXF "why" string if txf pgmint
-        char dxcstr          [  8]  = {0};  // data exception code if PGM_DATA_EXCEPTION
+        return;     // (nothing to do; quick exit)
+    }
+
+    /*
+       First things first: backup the 'ip' by the 'ilc' value to point
+       to the actual instruction that actually program checked.
+
+       If 'instinvalid' is set it means an instruction fetch error
+       occurred so we shouldn't rely on the value of regs->ip.
+
+       Otherwise if the instruction that program checked (i.e. after
+       backing up 'ip' by 'ilc' amount) appears to be in the previous
+       mainstor page (meaning the instruction itself crossed a page
+       boundary), use the the copy of the instruction that was saved
+       in regs->inst for our instruction pointer instead.
+
+       If neither condition is true (the most common case) then we
+       simply use current regs->ip value backed up by the ilc amount.
+    */
+    PTT_PGM( "tr PGM int", regs->ip, regs->aip, ilc );
+    ip =
+    (
+        /* Instruction fetch error? (least likely) */
+        regs->instinvalid ? NULL
+
+        /* Instruction crossed page boundary? (unlikely) */
+        : ((regs->ip - ilc) < regs->aip) ? regs->inst
+
+        /* Instruction still on same page (most likely) */
+        :  (regs->ip - ilc)
+    );
+    PTT_PGM( "tr PGM int", ip, regs->aip, ilc );
 
 #if defined( OPTION_FOOTPRINT_BUFFER )
-        if (!(sysblk.insttrace || sysblk.inststep))
+    if (!(sysblk.insttrace || sysblk.inststep))
+    {
+        U32  n;
+        for (n = sysblk.footprptr[ regs->cpuad ] + 1;
+            n != sysblk.footprptr[ regs->cpuad ];
+            n++, n &= OPTION_FOOTPRINT_BUFFER - 1
+        )
         {
-            U32  n;
-            for (n = sysblk.footprptr[ regs->cpuad ] + 1;
-                n != sysblk.footprptr[ regs->cpuad ];
-                n++, n &= OPTION_FOOTPRINT_BUFFER - 1
-            )
-            {
-                ARCH_DEP( display_inst )(
-                    &sysblk.footprregs[ regs->cpuad ][n],
-                     sysblk.footprregs[ regs->cpuad ][n].inst );
-            }
+            ARCH_DEP( display_inst )(
+                &sysblk.footprregs[ regs->cpuad ][n],
+                 sysblk.footprregs[ regs->cpuad ][n].inst );
         }
+    }
 #endif
 
+    /* Suppress LRA Special Operation Exception tracing if requested */
+    if (1
+        && code == PGM_SPECIAL_OPERATION_EXCEPTION
+        && ip && ip[0] == 0xB1    // LRA
+        && sysblk.nolrasoe        // suppression enabled
+    )
+    {
+        return;     // (nothing to do; quick exit)
+    }
+
+    /* Trace this program interrupt... */
+
 #if defined( _FEATURE_SIE )
-        if (SIE_MODE( regs ))
-          STRLCPY( sie_mode_str, "SIE: " );
+    if (SIE_MODE( regs ))
+      STRLCPY( sie_mode_str, "SIE: " );
 #endif
 
 #if defined( SIE_DEBUG )
-        STRLCPY( sie_debug_arch, QSTR( _GEN_ARCH ));
-        STRLCAT( sie_debug_arch, " " );
+    STRLCPY( sie_debug_arch, QSTR( _GEN_ARCH ));
+    STRLCAT( sie_debug_arch, " " );
 #endif
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-        if (1
-            && pcode & PGM_TXF_EVENT
-            && regs->txf_why
-        )
-            txf_why_str( txf_why, sizeof( txf_why ), regs->txf_why );
+    if (1
+        && pcode & PGM_TXF_EVENT
+        && regs->txf_why
+    )
+        txf_why_str( txf_why, sizeof( txf_why ), regs->txf_why );
 #endif
-        if (code == PGM_DATA_EXCEPTION)
-           MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
 
-        /* Trace pgm interrupt if not being specially suppressed */
-        if (0
-            || !ip
-            || ip[0] != 0xB1 /* LRA */
-            || code != PGM_SPECIAL_OPERATION_EXCEPTION
-            || !sysblk.nolrasoe /* suppression not requested */
-        )
-        {
-            // "Processor %s%02X: %s%s %s code %4.4X ilc %d%s%s"
-            WRMSG( HHC00801, "I",
-                PTYPSTR( regs->cpuad ), regs->cpuad,
-                sie_mode_str, sie_debug_arch,
-                PIC2Name( code ), pcode,
-                ilc, dxcstr, txf_why );
-            ARCH_DEP( display_pgmint_inst )( regs, ip );
-        }
-    }
+    if (code == PGM_DATA_EXCEPTION)
+       MSGBUF( dxcstr, " DXC=%2.2X", regs->dxc );
 
-} /* end function ARCH_DEP( trace_program_interrupt_ip ) */
+    // HHC00801 "Processor %s%02X: %s%s %s code %4.4X ilc %d%s%s"
+    WRMSG( HHC00801, "I",
+        PTYPSTR( regs->cpuad ), regs->cpuad,
+        sie_mode_str, sie_debug_arch,
+        PIC2Name( code ), pcode,
+        ilc, dxcstr, txf_why );
 
-/*-------------------------------------------------------------------*/
-/*                    trace_program_interrupt                        */
-/*-------------------------------------------------------------------*/
-DLL_EXPORT void (ATTR_REGPARM(2) ARCH_DEP( trace_program_interrupt ))( REGS* regs, int pcode, int ilc )
-{
-    /* Calculate instruction pointer */
-    BYTE* ip = regs->instinvalid ? NULL
-        : (regs->ip - ilc < regs->aip) ? regs->inst
-        : (regs->ip - ilc);
+    // HHC02324 "PSW=... INST=...  OPCODE  operands   name"
+    ARCH_DEP( display_pgmint_inst )( regs, ip );
 
-    ARCH_DEP( trace_program_interrupt_ip )( regs, ip, pcode, ilc );
-}
+} /* end function ARCH_DEP( trace_program_interrupt ) */
 
 /*-------------------------------------------------------------------*/
 /*                  fix_program_interrupt_PSW                        */
@@ -666,9 +697,6 @@ int     sie_ilc=0;                      /* SIE instruction length    */
 bool    intercept;                      /* False for virtual pgmint  */
                                         /* (True for host interrupt?)*/
 #endif
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-bool    txf_traced_pgmint = false;      /* true = TXF already traced */
-#endif
 
     /* If called with ghost registers (ie from hercules command
        then ignore all interrupt handling and report the error
@@ -733,17 +761,8 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     }
 #endif
 
-    /* Set `execflag' to 0 in case EXecuted instruction program-checked */
-    realregs->execflag = 0;
-
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-    if (realregs->sie_active)
-        GUEST( realregs )->execflag = 0;
-#endif
-
-    /* Unlock the main storage lock if held */
-    if (realregs->cpuad == sysblk.mainowner)
-        RELEASE_MAINLOCK_UNCONDITIONAL(realregs);
+    /* Trace the program interrupt right away */
+    ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
 
     /* Remove PER indication from program interrupt code
        such that interrupt code specific tests may be done.
@@ -788,9 +807,6 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
 
         PTT_TXF( "*TXF UPROG!", (code & 0xFF), 0, 0 );
 
-        /* Program interrupt already traced by txf_do_pi_filtering */
-        txf_traced_pgmint = true;
-
         /* Set flag for sie_exit */
         realregs->txf_UPGM_abort = true;
     }
@@ -807,14 +823,22 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
 
             PTT_TXF( "*TXF 218!", pcode, 0, 0 );
 
-            /* Program interrupt already traced by abort_transaction */
-            txf_traced_pgmint = true;
-
             /* Set flag for sie_exit */
             realregs->txf_UPGM_abort = true;
         }
     }
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+
+    /* Set 'execflag' to 0 in case EXecuted instruction program-checked */
+
+    PTT_PGM( "PGM execflag", realregs->execflag, realregs->sie_active, 0 );
+    realregs->execflag = 0;
+
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+    if (realregs->sie_active)
+        GUEST( realregs )->execflag = 0;
+#endif
+    PTT_PGM( "PGM execflag", realregs->execflag, realregs->sie_active, 0 );
 
     /* If this is a concurrent PER event
        then we must add the PER bit to the interrupts code */
@@ -942,19 +966,6 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
 
     /* Call debugger if active */
     HDC2( debug_program_interrupt, regs, pcode );
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    /* Don't trace program interrupt again if already traced */
-    if (!txf_traced_pgmint)
-#endif
-    {
-        /* Trace program checks other than PER event */
-        regs->psw.IA -= ilc;
-        {
-            ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
-        }
-        regs->psw.IA += ilc;
-    }
 
     realregs->instinvalid = 0;
     PTT_PGM( "PGM inval=0", 0, 0, 0 );

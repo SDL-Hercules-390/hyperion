@@ -1287,12 +1287,18 @@ int        retry;           /* Actual retry code                     */
                instruction has not been decoded yet (and the PSW
                and 'ip' pointer bumped appropriately (instead,
                it is pointing directly AT the failing instruction
-               and not past it like normal)), we must report this
-               program interrupt slightly differently (without
-               any PSW or instruction pointer adjustment).
+               and not past it like normal)), we must bump the ip
+               past the instruction that program checked so that
+               the 'trace_program_interrupt' function can then
+               back it up to point to the correct instruction.
             */
             ilc = ILC( *regs->ip );
-            ARCH_DEP( trace_program_interrupt_ip )( regs, regs->ip, pcode, ilc );
+            regs->ip += ilc;
+            {
+                PTT_TXF( "TXF trpi+ilc", regs->ip, ilc, 0 );
+                ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
+            }
+            regs->ip -= ilc;
         }
         else /* Normal program interrupt after instruction decode */
         {
@@ -1300,11 +1306,8 @@ int        retry;           /* Actual retry code                     */
             ilc = ARCH_DEP( fix_program_interrupt_PSW )( regs );
 
             /* Trace program checks other than PER event */
-            regs->ip -= ilc;
-            {
-                ARCH_DEP( trace_program_interrupt_ip )( regs, regs->ip, pcode, ilc );
-            }
-            regs->ip += ilc;
+            PTT_TXF( "TXF trpi", regs->ip, ilc, 0 );
+            ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
         }
 
         /* Save the program interrupt id */
@@ -1576,7 +1579,6 @@ DLL_EXPORT void ARCH_DEP( txf_do_pi_filtering )( REGS* regs, int pcode )
 bool    filt;                   /* true == filter the interrupt      */
 int     txclass;                /* Transactional Execution Class     */
 int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
-int     ilc;                    /* Instruction Length Code           */
 
     PTT_TXF( "TXF filt?", pcode, regs->txf_contran, regs->txf_tnd );
 
@@ -1759,22 +1761,6 @@ int     ilc;                    /* Instruction Length Code           */
     /*---------------------------------------------*/
     /*  TAC_UPGM: unfilterable Program Interrupt   */
     /*---------------------------------------------*/
-    /* We must report the program interrupt BEFORE */
-    /* abort_transaction gets called as it updates */
-    /* the PSW to the Transaction Abort PSW and we */
-    /* want to report the actual TRUE location of  */
-    /* where the program interrupt truly occurred. */
-    /*---------------------------------------------*/
-
-    /* Fix PSW and get instruction length (ilc) */
-    ilc = ARCH_DEP( fix_program_interrupt_PSW )( regs );
-
-    /* Trace program checks other than PER event */
-    regs->psw.IA -= ilc;
-    {
-        ARCH_DEP( trace_program_interrupt )( regs, pcode, ilc );
-    }
-    regs->psw.IA += ilc;
 
     /* Abort the transaction and return to the caller */
     regs->psw.cc = ucc;
