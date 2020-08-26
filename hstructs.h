@@ -116,7 +116,7 @@ struct REGS {                           /* Processor registers       */
 /*218*/ DW      aiv;                    /* Virtual page address      */
 
 /*220*/ U64     bear;                   /* Breaking event address reg*/
-/*228*/ BYTE   *bear_ip;                /* Breaking event inst ptr   */
+/*228*/ U64     bear_ex;                /* (same, but for EX/EXRL)   */
 
 /*230-27F*/                             /* Available...              */
 

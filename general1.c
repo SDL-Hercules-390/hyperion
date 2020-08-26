@@ -4505,6 +4505,12 @@ BYTE   *ip;                             /* -> executed instruction   */
     /* Or 2nd byte of instruction with low-order byte of R1 */
     regs->exinst[1] |= r1 ? regs->GR_LHLCL(r1) : 0;
 
+    /* Save the address of the instruction in case the instruction
+       being executed causes a break in sequential instruction flow.
+       Note: we MUST do this BEFORE setting the regs->execflag flag.
+    */
+    SET_BEAR_EX_REG( regs, regs->ip - 4 );
+
     /*
      * Turn execflag on indicating this instruction is EXecuted.
      * psw.ip is backed up by the EXecuted instruction length to
@@ -4602,6 +4608,12 @@ DEF_INST(execute_relative_long)
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
     regs->exinst[1] |= r1 ? regs->GR_LHLCL( r1 ) : 0;
+
+    /* Save the address of the instruction in case the instruction
+       being executed causes a break in sequential instruction flow.
+       Note: we MUST do this BEFORE setting the regs->execflag flag.
+    */
+    SET_BEAR_EX_REG( regs, regs->ip - 6 );
 
     /*
      * Turn execflag on indicating this instruction is EXecuted.

@@ -946,7 +946,7 @@ struct PSA_900
 /*0100*/ DBLWRD cao;                    /* Enh Mon Counter Array Orig*/
 /*0108*/ FWORD  cal;                    /* Enh Mon Counter Array Len */
 /*010C*/ FWORD  ec;                     /* Enh Mon Exception Count   */
-/*0110*/ DBLWRD bea;                    /* Breaking event address @Z9*/
+/*0110*/ DBLWRD bea;                    /* Breaking event address    */
 /*0118*/ DBLWRD resv0118;               /* Reserved                  */
 /*0120*/ QWORD  rstold;                 /* Restart old PSW           */
 /*0130*/ QWORD  extold;                 /* External old PSW          */

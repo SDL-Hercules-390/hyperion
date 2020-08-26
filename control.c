@@ -818,10 +818,10 @@ VADR    n = 0;                          /* Work area                 */
         regs->CR(12) = n;
 #endif
 
-    /* Execute the branch unless R2 specifies register 0 */
-    if (r2 != 0)
+    /* Execute the branch as long as R2 is non-zero */
+    if (r2)
     {
-        SET_BEAR_IP( regs, -4 );
+        SET_BEAR_REG( regs, regs->ip - 4 );
         UPD_PSW_IA( regs, regs->GR(r2) );
         PER_SB( regs, regs->psw.IA );
     }

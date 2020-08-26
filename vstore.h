@@ -622,8 +622,6 @@ int     pagesz;                         /* Effective page size       */
 int     offset;                         /* Address offset into page  */
 int     len;                            /* Length for page crossing  */
 
-    SET_BEAR_REG( regs, regs->bear_ip );
-
     addr = exec ? regs->ET
          : likely( !regs->aie ) ? regs->psw.IA : PSW_IA( regs, 0 );
 

@@ -331,15 +331,19 @@ int  i;
     SET_PSW_IA(regs);
 
     /* Set the Breaking Event Address Register */
-    SET_BEAR_REG(regs, regs->ip -
-      (trap_is_trap4 ? 4 : likely(!regs->execflag) ? 2 : regs->exrl ? 6 : 4));
+    if (trap_is_trap4)
+        SET_BEAR_REG( regs, regs->ip - 4 );
+    else
+        SET_BEAR_REG( regs, regs->ip - 2 );
+
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     UPD_PSW_IA(regs, trap_ia);
     /* set PSW to primary space */
     regs->psw.asc = 0;
     SET_AEA_MODE(regs);
-}
+
+} /* end function ARCH_DEP(trap_x) */
 
 
 /*-------------------------------------------------------------------*/

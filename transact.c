@@ -225,11 +225,11 @@ int         txf_tnd, txf_tac;
     {
         /* Not currently in transactional-execution mode.
            Set CC 2 and treat as no-op (i.e. just return
-           since there is no active transaction to end!)
+           since there is no active transaction to end)
         */
         PTT_TXF( "*TXF end", 0, 0, 0 );
-        regs->psw.cc = 2;   /* CPU wasn't in transaction mode! */
-        return;             /* Nothing to do! Just return! */
+        regs->psw.cc = 2;   /* CPU wasn't in transaction mode */
+        return;             /* Nothing to do. Just return. */
     }
 
     /* CPU was in transaction-execution mode at start of operation */
@@ -383,7 +383,7 @@ int         txf_tnd, txf_tac;
                     continue;
 
                 /*--------------------------------------*/
-                /*          TRANSACTION FAILURE!        */
+                /*          TRANSACTION FAILURE         */
                 /*--------------------------------------*/
 
                 if (pmap->virtpageaddr)
@@ -411,7 +411,7 @@ int         txf_tnd, txf_tac;
         }
 
         /*---------------------------------------------------------*/
-        /*                 TRANSACTION SUCCESS!                    */
+        /*                 TRANSACTION SUCCESS                     */
         /*---------------------------------------------------------*/
         /*  We have now validated all of the cache lines that we   */
         /*  touched, and all other CPUs are dormant.  Now update   */
@@ -461,7 +461,7 @@ int         txf_tnd, txf_tac;
         regs->txf_pgcnt = 0;
 
         /*------------------------------------------*/
-        /*  We are done! Release INTLOCK and exit.  */
+        /*  We are done. Release INTLOCK and exit.  */
         /*------------------------------------------*/
 
         PTT_TXF( "TXF end", 0, 0, 0 );
@@ -695,7 +695,7 @@ VADR    effective_addr1;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /*       process_tbegin  --  common TBEGIN/TBEGINC logic             */
 /*-------------------------------------------------------------------*/
-/*    The interrupt lock (INTLOCK) *MUST* be held upon entry!        */
+/*    The interrupt lock (INTLOCK) *MUST* be held upon entry         */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( process_tbegin )( bool txf_contran, REGS* regs, S16 i2,
                                  U64 tdba, int b1 )
@@ -883,7 +883,7 @@ TPAGEMAP   *pmap;
                the CPU is already in the unconstrained TX mode),
                then execution simply proceeds as if this were a
                unconstrained transaction. (The TX mode does NOT
-               switch to constrained mode!)
+               switch to constrained mode)
 
                In this case, the effective F control is zeroed,
                and the effective PIFC remains unchanged. This
@@ -1025,7 +1025,7 @@ void ARCH_DEP( abort_transaction )( REGS* regs, int raw_retry, int txf_tac, cons
     UNREFERENCED( txf_tac   );
     UNREFERENCED( loc       );
 
-    CRASH();   /* Should NEVER be called for S/370 or S/390! */
+    CRASH();   /* Should NEVER be called for S/370 or S/390 */
 
 #else /* only Z900 supports Transactional-Execution Facility */
 
@@ -1059,7 +1059,7 @@ int        retry;           /* Actual retry code                     */
         // "TXF: %s%02X: %sabort_transaction called from %s"
         WRMSG( HHC17722, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), TRIMLOC( loc ));
 
-    // LOGIC ERROR if CPU not in transactional-execution mode!
+    // LOGIC ERROR if CPU not in transactional-execution mode
     if (!regs->txf_tnd)
         CRASH();
 
@@ -1238,7 +1238,7 @@ int        retry;           /* Actual retry code                     */
     ARCH_DEP( reset_txf_aie )( regs );
 
     /*-----------------------------------------------------*/
-    /*    Trace program interrupt before updating PSW      */
+    /*    Trace program interrupt BEFORE updating PSW      */
     /*-----------------------------------------------------*/
     /*  If the retry code is ABORT_RETRY_PGMCHK, then we   */
     /*  will eventually be calling the program_interrupt   */
@@ -1246,7 +1246,7 @@ int        retry;           /* Actual retry code                     */
     /*  so we MUST trace the program interrupt here. We    */
     /*  CANNOT let the program_interrupt function do that  */
     /*  for us like it normally does since it would report */
-    /*  the wrong PSW! Thus we MUST do it ourselves here.  */
+    /*  the wrong PSW. Thus we MUST do it ourselves here.  */
     /*-----------------------------------------------------*/
 
     if (retry == ABORT_RETRY_PGMCHK)
@@ -1554,7 +1554,7 @@ int     ilc;                    /* Instruction Length Code           */
 
     PTT_TXF( "TXF filt?", pcode, regs->txf_contran, regs->txf_tnd );
 
-    /* We shouldn't even be called if no transaction is active! */
+    /* We shouldn't even be called if no transaction is active */
     if (!regs->txf_tnd)
         CRASH();
 
@@ -1717,7 +1717,7 @@ int     ilc;                    /* Instruction Length Code           */
     /*   Can interrupt ABSOLUTELY be filtered?   */
     /*-------------------------------------------*/
 
-    if (filt)  /* NOW we can rely this flag! */
+    if (filt)  /* NOW we can rely this flag */
     {
         /*--------------------------------------*/
         /* TAC_FPGM: filtered Program Interrupt */
@@ -1879,7 +1879,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
                 regs->txf_who   =  cpuad;
                 regs->txf_loc   =  TRIMLOC( location );
 
-                PTT_TXF( "*TXF h CSP/G", regs->cpuad, regs->txf_contran, regs->txf_tnd );
+                PTT_TXF( "*TXF h delay", regs->cpuad, regs->txf_contran, regs->txf_tnd );
             }
 
             /* (check guestregs too just to be sure) */
@@ -1895,7 +1895,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
                 GUESTREGS->txf_who   =  cpuad;
                 GUESTREGS->txf_loc   =  TRIMLOC( location );
 
-                PTT_TXF( "*TXF g CSP/G", GUESTREGS->cpuad, GUESTREGS->txf_contran, GUESTREGS->txf_tnd );
+                PTT_TXF( "*TXF g delay", GUESTREGS->cpuad, GUESTREGS->txf_contran, GUESTREGS->txf_tnd );
             }
         }
         RELEASE_TXFLOCK( regs );
@@ -1914,7 +1914,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
 /* currently executing a transaction. If it does, then that CPU's    */
 /* transaction is scheduled for an eventual abort by setting its     */
 /* abort code. This is called a DELAYED ABORT since the other CPU's  */
-/* transaction is not being directly aborted (since it can't be!)    */
+/* transaction is not being directly aborted (since it can't be)     */
 /* but rather is simply being scheduled (triggered) for an EVENTUAL  */
 /* abort which won't occur until it reaches its TEND instruction.    */
 /*                                                                   */
@@ -2019,7 +2019,7 @@ static inline void txf_fetch_conflict_scan
 }
 
 //---------------------------------------------------------------------
-//                   Keep Otimization Enabled!
+//                   Keep Otimization Enabled
 //---------------------------------------------------------------------
 // PROGRAMMING NOTE: because the 'txf_maddr_l' function is an integral
 // part of address translation its performance is absolutely critical.
@@ -2421,14 +2421,14 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
 
         case CM_STORED:
 
-            /* Cache lines marked CM_STORED must stay that way! */
+            /* Cache lines marked CM_STORED must stay that way */
             break;
 
         } /* switch (pmap->cachemap[cacheidx]) */
 
     } /* for (; cacheidx <= cacheidxe; cacheidx++) */
 
-    /* Done! Return alternate address */
+    /* Done. Return alternate address */
     PTT_TXF( "TXF maddr_l", maddr, len, regs->txf_tnd );
     return maddr;
 

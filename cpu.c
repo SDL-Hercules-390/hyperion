@@ -102,7 +102,6 @@ void ARCH_DEP(checkstop_config)(void)
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
-
     /* Ensure psw.IA is set */
     if (!regs->psw.zeroilc)
         SET_PSW_IA(regs);
@@ -326,6 +325,56 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 
     return 0;
 } /* end function ARCH_DEP(load_psw) */
+
+#if defined( FEATURE_PER3 )
+/*-------------------------------------------------------------------*/
+/*            Set the Breaking-Event-Address Register                */
+/*-------------------------------------------------------------------*/
+DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
+{
+    /* "If the instruction causing the breaking event is the
+        target of an execute-type instruction (EXECUTE or
+        EXECUTE RELATIVE LONG), then the instruction address
+        used to fetch the execute-type instruction is placed
+        in the breaking-event-address register."
+    */
+    if (1
+        && bear != &regs->bear_ex   /* NOT saving EX/EXRL address?   */
+        && regs->execflag           /* EX/EXRL target caused event?  */
+    )
+    {
+        regs->bear = regs->bear_ex; /* BEAR = EX/EXRL instr address  */
+    }
+    else if (ip)
+    {
+        /* BEAR = Address of the beginning of virtual ('AIV') page
+           plus same displacement from begin of mainstor ('ip') page.
+        */
+        BYTE* aip = regs->aip;      /* Begin of mainstor page */
+        U64   aiv = regs->AIV;      /* Begin of virtual page  */
+
+        if (ip < regs->aip)         /* pointing to prev page? */  
+        {
+            /* The instruction pointer that was passed to us
+               points somewhere in the PREVIOUS mainstor page */
+
+            aip -= PAGEFRAME_PAGESIZE;
+            aiv -= PAGEFRAME_PAGESIZE;
+        }
+        else if (ip >= (regs->aip + PAGEFRAME_PAGESIZE))
+        {
+            /* The instruction pointer that was passed to us
+               points somewhere in the NEXT mainstor page */
+
+            aip += PAGEFRAME_PAGESIZE;
+            aiv += PAGEFRAME_PAGESIZE;
+        }
+
+        *bear = aiv + (ip - aip);           /* Save virtual address  */
+        *bear &= ADDRESS_MAXWRAP( regs );   /* of the breaking event */
+    }
+}
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                    trace_program_interrupt_ip                     */
@@ -1104,7 +1153,6 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
 
 #if defined( FEATURE_PER3 )
         /* Store the breaking event address register in the PSA */
-        SET_BEAR_REG( regs, regs->bear_ip );
         STORE_W( psa->bea, regs->bear );
 #endif
 

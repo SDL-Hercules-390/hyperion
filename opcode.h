@@ -936,8 +936,11 @@ do {                                                                  \
 do {                                                                  \
   VADR _newia = (_addr) & ADDRESS_MAXWRAP( (_regs) );                 \
                                                                       \
-  /* Point bear_ip at the branch instruction itself */                \
-  SET_BEAR_IP( (_regs), 0 ); /* (point bear_ip at branch instr) */    \
+  /* Set BEAR to branch instruction. Note: for branch instructions    \
+     regs->ip is not updated to point to the next instruction and     \
+     thus is still pointing to the branch instruction itself.         \
+  */                                                                  \
+  SET_BEAR_REG( (_regs), regs->ip );                                  \
                                                                       \
   /* Branch target still within same page as branch instruction? */   \
   if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
@@ -951,10 +954,6 @@ do {                                                                  \
   }                                                                   \
   /* Branch target is in another page... */                           \
                                                                       \
-  /* Point bear_ip at the branch instruction itself */                \
-  if (unlikely( (_regs)->execflag ))                                  \
-    SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
-                                                                      \
   /* Set new ip by forcing full instruction fetch from target */      \
   (_regs)->psw.IA = _newia;     /* (point PSW to target instr) */     \
   (_regs)->aie = NULL;          /* (force a fresh 'instfetch') */     \
@@ -966,8 +965,11 @@ do {                                                                  \
 #undef  SUCCESSFUL_RELATIVE_BRANCH
 #define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset, _len )            \
 do {                                                                  \
-  /* Point bear_ip at the branch instruction itself */                \
-  SET_BEAR_IP( (_regs), 0 );                                          \
+  /* Set BEAR to branch instruction. Note: for branch instructions    \
+     regs->ip is not updated to point to the next instruction and     \
+     thus is still pointing to the branch instruction itself.         \
+  */                                                                  \
+  SET_BEAR_REG( (_regs), regs->ip );                                  \
                                                                       \
   /* Branch target still within same page as branch instruction? */   \
   if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
@@ -982,13 +984,11 @@ do {                                                                  \
   }                                                                   \
   /* Branch target is in another page... */                           \
                                                                       \
-  /* Branch target in another page: calculate new ip */               \
+  /* Point PSW to target instruction */                               \
   if (likely(!(_regs)->execflag))                                     \
     (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
   else                                                                \
   {                                                                   \
-    /* Point bear_ip at the branch instruction itself */              \
-    SET_BEAR_IP( (_regs), (_len) - ((_regs)->exrl ? 6 : 4) );         \
     (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
     (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
   }                                                                   \
@@ -1005,8 +1005,11 @@ do {                                                                  \
 #undef  SUCCESSFUL_RELATIVE_BRANCH_LONG
 #define SUCCESSFUL_RELATIVE_BRANCH_LONG( _regs, _offset )             \
 do {                                                                  \
-  /* Point bear_ip at the branch instruction itself */                \
-  SET_BEAR_IP( (_regs), 0 );                                          \
+  /* Set BEAR to branch instruction. Note: for branch instructions    \
+     regs->ip is not updated to point to the next instruction and     \
+     thus is still pointing to the branch instruction itself.         \
+  */                                                                  \
+  SET_BEAR_REG( (_regs), regs->ip );                                  \
                                                                       \
   /* Branch target still within same page as branch instruction? */   \
   if (likely(!(_regs)->permode && !(_regs)->execflag  )               \
@@ -1023,12 +1026,11 @@ do {                                                                  \
   }                                                                   \
   /* Branch target is in another page... */                           \
                                                                       \
+  /* Point PSW to target instruction */                               \
   if (likely(!(_regs)->execflag))                                     \
     (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
   else                                                                \
   {                                                                   \
-    /* Point bear_ip at the branch instruction itself */              \
-    SET_BEAR_IP( (_regs), 6 - ((_regs)->exrl ? 6 : 4) );              \
     (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
     (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
   }                                                                   \
@@ -1073,38 +1075,25 @@ do {                                                                  \
 #endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
 
 /*-------------------------------------------------------------------*/
-/*          PER3 Breaking Event Address Recording (BEAR)             */
+/*          PER3 Breaking-Event-Address Register (BEAR)              */
 /*-------------------------------------------------------------------*/
 
-#undef SET_BEAR_IP
 #undef SET_BEAR_REG
+#undef SET_BEAR_EX_REG
 
 #if defined( FEATURE_PER3 )
 
-  #define SET_BEAR_IP(  _regs, _n  )                                  \
-                                                                      \
-    (_regs)->bear_ip = (_regs)->ip + (_n)
-
-
   #define SET_BEAR_REG( _regs, _ip )                                  \
-    do                                                                \
-    {                                                                 \
-      if ((_ip))                                                      \
-      {                                                               \
-        /* BEAR = address of the begin of virtual ('AIV') page        \
-           + same displacement from begin of mainstore ('ip') page    \
-        */                                                            \
-        (_regs)->bear = (_regs)->AIV + (intptr_t)                     \
-                        ((_ip) - (_regs)->aip);                       \
-        (_regs)->bear &= ADDRESS_MAXWRAP( (_regs) );                  \
-        (_regs)->bear_ip = NULL;                                      \
-      }                                                               \
-    } while (0)
+    ARCH_DEP( Set_BEAR_Reg )( &(_regs)->bear,    (_regs), (_ip) )
 
+  #define SET_BEAR_EX_REG( _regs, _ip )                               \
+    ARCH_DEP( Set_BEAR_Reg )( &(_regs)->bear_ex, (_regs), (_ip) )
 
 #else
-  #define SET_BEAR_IP(  _regs, _n  )    do{}while(0)
-  #define SET_BEAR_REG( _regs, _ip )    do{}while(0)
+
+  #define SET_BEAR_REG(    _regs, _ip )
+  #define SET_BEAR_EX_REG( _regs, _ip )
+
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -1717,6 +1706,10 @@ void z900_process_trace (REGS *regs);
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP( perform_io_interrupt ) (REGS *regs);
 void ARCH_DEP( checkstop_config )(void);
+
+#if defined( FEATURE_PER3 )
+CPU_DLL_IMPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip );
+#endif
 
 #if defined( _FEATURE_SIE )
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);

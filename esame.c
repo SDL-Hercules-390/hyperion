@@ -4648,8 +4648,6 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
     UNREFERENCED( inst );
 
 #if !defined( FEATURE_370_EXTENSION )
-    /* Set the bear register */
-    SET_BEAR_REG( regs, regs->bear_ip );
 
     /* Program check if instruction is located above 16MB */
     if (ia > 0xFFFFFFULL)
@@ -4687,8 +4685,6 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
     UNREFERENCED( inst );
 
 #if !defined( FEATURE_370_EXTENSION )
-    /* Set the bear register */
-    SET_BEAR_REG( regs, regs->bear_ip );
 
     /* Program check if instruction is located above 2GB */
     if (ia > 0x7FFFFFFFULL)
@@ -4719,9 +4715,6 @@ DEF_INST(set_addressing_mode_64)
     CONTRAN_INSTR_CHECK( regs );
     TRAN_SET_ADDRESSING_MODE_CHECK( regs );
     UNREFERENCED(inst);
-
-    /* Set the bear register */
-    SET_BEAR_REG(regs, regs->bear_ip);
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
