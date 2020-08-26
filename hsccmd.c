@@ -337,6 +337,7 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
 //              TXF_BUCKET(8);
                 count = sysblk.txf_caborts[8];
                 LOGMSG("+++ 8+retries =%12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[8], (count/total) * 100.0 );
+                LOGMSG("+++ *MAXIMUM* =%12"PRIu64"\n", sysblk.txf_caborts_hwm );
             }
         }
 #endif /* defined( FISHTEST_TXF_STATS ) */

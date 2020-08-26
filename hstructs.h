@@ -1022,6 +1022,7 @@ struct SYSBLK {
         U64  acc_none;          // !(ACC_READ | ACC_WRITE | ACC_CHECK)
         U64  txf_ctrans;        // Total CONSTRAINED transactions
         U64  txf_caborts[9];    // CONSTRAINED aborted counts
+        U64  txf_caborts_hwm;   // CONSTRAINED aborts high watermark
 #endif
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 

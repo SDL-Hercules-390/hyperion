@@ -492,9 +492,26 @@ int         txf_tnd, txf_tac;
 
 #if defined( FISHTEST_TXF_STATS )
         {
-            int n = regs->txf_caborts < 9 ? regs->txf_caborts : 9-1;
-            atomic_update64( &sysblk.txf_ctrans,       +1 );
-            atomic_update64( &sysblk.txf_caborts[ n ], +1 );
+            int n;
+
+            // Count constrained transactions
+            atomic_update64( &sysblk.txf_ctrans, +1 );
+
+            // Consectutive aborts count within buckets limit?
+            if ((n = regs->txf_caborts) < 9)
+            {
+                // Yes, update bucket count
+                atomic_update64( &sysblk.txf_caborts[ n ], +1 );
+            }
+            else // No, use maximum bucket
+            {
+                n = 9 - 1;
+                atomic_update64( &sysblk.txf_caborts[ n ], +1 );
+            }
+
+            // Track high watermark too
+            if (regs->txf_caborts > sysblk.txf_caborts_hwm)
+                sysblk.txf_caborts_hwm = regs->txf_caborts;
         }
 #endif
         /* Transaction suceeded. Reset abort count */
