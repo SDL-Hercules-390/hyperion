@@ -320,7 +320,7 @@ int     cc;                             /* Condition Code            */
 /*-------------------------------------------------------------------*/
 /* ECF6 CRB   - Compare and Branch Register                    [RRS] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_and_branch_register)
+DEF_INST( compare_and_branch_register )
 {
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
@@ -328,7 +328,7 @@ int     b4;                             /* Base of effective addr    */
 VADR    effective_addr4;                /* Effective address         */
 int     cc;                             /* Comparison result         */
 
-    RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
+    RRS_B( inst, regs, r1, r2, m3, b4, effective_addr4 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -406,7 +406,7 @@ int     cc;                             /* Comparison result         */
 /*-------------------------------------------------------------------*/
 /* EC64 CGRJ  - Compare and Branch Relative Long Register    [RIE-b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_and_branch_relative_long_register)
+DEF_INST( compare_and_branch_relative_long_register )
 {
 int     r1, r2;                         /* Register numbers          */
 int     m3;                             /* Mask bits                 */
@@ -427,7 +427,7 @@ int     cc;                             /* Comparison result         */
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(compare_and_branch_relative_long_register) */
+} /* end DEF_INST( compare_and_branch_relative_long_register ) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
@@ -680,7 +680,7 @@ BYTE    i2;                             /* Immediate value           */
 /*-------------------------------------------------------------------*/
 /* EC7E CIJ   - Compare Immediate and Branch Relative        [RIE-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_immediate_and_branch_relative)
+DEF_INST( compare_immediate_and_branch_relative )
 {
 int     r1;                             /* Register numbers          */
 int     m3;                             /* Mask bits                 */
@@ -702,14 +702,14 @@ int     cc;                             /* Comparison result         */
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(compare_immediate_and_branch_relative) */
+} /* end DEF_INST( compare_immediate_and_branch_relative ) */
 
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EC7C CGIJ  - Compare Immediate and Branch Relative Long   [RIE-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_immediate_and_branch_relative_long)
+DEF_INST( compare_immediate_and_branch_relative_long )
 {
 int     r1;                             /* Register numbers          */
 int     m3;                             /* Mask bits                 */
@@ -731,7 +731,7 @@ int     cc;                             /* Comparison result         */
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(compare_immediate_and_branch_relative_long) */
+} /* end DEF_INST( compare_immediate_and_branch_relative_long ) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
@@ -1018,7 +1018,7 @@ BYTE    i2;                             /* Immediate value           */
 /*-------------------------------------------------------------------*/
 /* EC7F CLIJ  - Compare Logical Immediate and Branch Rel.    [RIE-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_immediate_and_branch_relative)
+DEF_INST( compare_logical_immediate_and_branch_relative )
 {
 int     r1;                             /* Register number           */
 int     m3;                             /* Mask bits                 */
@@ -1040,14 +1040,14 @@ int     cc;                             /* Comparison result         */
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(compare_logical_immediate_and_branch_relative) */
+} /* end DEF_INST( compare_logical_immediate_and_branch_relative ) */
 
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 /*-------------------------------------------------------------------*/
 /* EC7D CLGIJ - Compare Logical Immed and Branch Rel. Long   [RIE-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical_immediate_and_branch_relative_long)
+DEF_INST( compare_logical_immediate_and_branch_relative_long )
 {
 int     r1;                             /* Register number           */
 int     m3;                             /* Mask bits                 */
@@ -1069,7 +1069,7 @@ int     cc;                             /* Comparison result         */
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(compare_logical_immediate_and_branch_relative_long) */
+} /* end DEF_INST( compare_logical_immediate_and_branch_relative_long ) */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
@@ -2293,7 +2293,7 @@ U32     i2;                             /* 32-bit operand value      */
 /*-------------------------------------------------------------------*/
 /* CCx6 BRCTH - Branch Relative on Count High                [RIL-b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_count_high)
+DEF_INST( branch_relative_on_count_high )
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2309,7 +2309,7 @@ S32     i2;                             /* 32-bit operand value      */
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(branch_relative_on_count_high) */
+} /* end DEF_INST( branch_relative_on_count_high ) */
 
 
 /*-------------------------------------------------------------------*/

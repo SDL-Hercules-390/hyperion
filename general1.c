@@ -715,7 +715,7 @@ VADR    newia;                          /* New instruction address   */
 /*-------------------------------------------------------------------*/
 /* 07   BCR   - Branch on Condition Register                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_condition_register)
+DEF_INST( branch_on_condition_register )
 {
 //int   r1, r2;                         /* Values of R fields        */
 
@@ -731,13 +731,13 @@ DEF_INST(branch_on_condition_register)
         INST_UPDATE_PSW(regs, 2, 2);
         /* Perform serialization and checkpoint synchronization if
            the mask is all ones and R2 is register 0 */
-        if ( inst[1] == 0xF0 )
+        if (inst[1] == 0xF0)
         {
 #if defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
             HARDWARE_SYNC();
 #else
-            PERFORM_SERIALIZATION (regs);
-            PERFORM_CHKPT_SYNC (regs);
+            PERFORM_SERIALIZATION( regs );
+            PERFORM_CHKPT_SYNC( regs );
 #endif
         }
 #if defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY )
@@ -748,13 +748,13 @@ DEF_INST(branch_on_condition_register)
 #if defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
             HARDWARE_SYNC();
 #else
-            PERFORM_SERIALIZATION (regs);
+            PERFORM_SERIALIZATION( regs );
 #endif
         }
 #endif /* defined( FEATURE_045_FAST_BCR_SERIAL_FACILITY ) */
     }
 
-} /* end DEF_INST(branch_on_condition_register) */
+} /* end DEF_INST( branch_on_condition_register ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -773,11 +773,11 @@ VADR    effective_addr2;                /* Effective address         */
 }
 
 
-#ifdef OPTION_OPTINST
+#if defined( OPTION_OPTINST )
 /*-------------------------------------------------------------------*/
 /* 47_0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47_0)
+DEF_INST( 47_0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -793,23 +793,23 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 2);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 47_0 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4700 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(nop4)
+DEF_INST( nop4 )
 {
     CONTRAN_INSTR_CHECK( regs );
     UNREFERENCED(inst);
     INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( nop4 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4710 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4710)
+DEF_INST( 4710 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -825,12 +825,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4710 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4720 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4720)
+DEF_INST( 4720 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -846,12 +846,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4720 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4730 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4730)
+DEF_INST( 4730 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -867,12 +867,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4730 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4740 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4740)
+DEF_INST( 4740 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -888,12 +888,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4740 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4750 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4750)
+DEF_INST( 4750 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -909,12 +909,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4750 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4770 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4770)
+DEF_INST( 4770 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -930,12 +930,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4770 ) */
 
 /*-------------------------------------------------------------------*/
 /* 4780 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(4780)
+DEF_INST( 4780 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -951,12 +951,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 4780 ) */
 
 /*-------------------------------------------------------------------*/
 /* 47A0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47A0)
+DEF_INST( 47A0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -972,12 +972,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 47A0 ) */
 
 /*-------------------------------------------------------------------*/
 /* 47B0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47B0)
+DEF_INST( 47B0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -993,12 +993,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 47B0 ) */
 
 /*-------------------------------------------------------------------*/
 /* 47C0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47C0)
+DEF_INST( 47C0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -1014,12 +1014,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 47C0 ) */
 
 /*-------------------------------------------------------------------*/
 /* 47D0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47D0)
+DEF_INST( 47D0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -1035,12 +1035,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 47D0 ) */
 
 /*-------------------------------------------------------------------*/
 /* 47E0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47E0)
+DEF_INST( 47E0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -1056,12 +1056,12 @@ VADR    effective_addr2;                /* Effective address         */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( 47E0 ) */
 
 /*-------------------------------------------------------------------*/
 /* 47F0 BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(47F0)
+DEF_INST( 47F0 )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -1070,14 +1070,14 @@ VADR    effective_addr2;                /* Effective address         */
     RXX_BC(inst, regs, b2, effective_addr2);
     SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
 
-} /* end DEF_INST(branch_on_condition) */
-#endif /* OPTION_OPTINST */
+} /* end DEF_INST( 47F0 ) */
+#endif /* defined( OPTION_OPTINST ) */
 
 
 /*-------------------------------------------------------------------*/
 /* 47   BC    - Branch on Condition                           [RX_b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_condition)
+DEF_INST( branch_on_condition )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
@@ -1087,17 +1087,17 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-#ifdef OPTION_OPTINST
-        RXXx_BC(inst, regs, b2, effective_addr2);
+#if defined( OPTION_OPTINST )
+        RXXx_BC( inst, regs, b2, effective_addr2 );
 #else
-        RX_BC(inst, regs, b2, effective_addr2);
+        RX_BC( inst, regs, b2, effective_addr2 );
 #endif
         SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
     }
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_on_condition) */
+} /* end DEF_INST( branch_on_condition ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1384,7 +1384,7 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* A7x4 BRC   - Branch Relative on Condition                  [RI-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition)
+DEF_INST( branch_relative_on_condition )
 {
 U16   i2;                               /* 16-bit operand values     */
 
@@ -1399,13 +1399,13 @@ U16   i2;                               /* 16-bit operand values     */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_relative_on_condition) */
+} /* end DEF_INST( branch_relative_on_condition ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 /*-------------------------------------------------------------------*/
 /* 06   BCTR  - Branch on Count Register                        [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_on_count_register)
+DEF_INST( branch_on_count_register )
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
@@ -1419,12 +1419,12 @@ VADR    newia;                          /* New instruction address   */
 
     /* Subtract 1 from the R1 operand and branch if result
            is non-zero and R2 operand is not register zero */
-    if ( --(regs->GR_L(r1)) && r2 != 0 )
+    if (--(regs->GR_L( r1 )) && r2)
         SUCCESSFUL_BRANCH(regs, newia, 2);
     else
-        INST_UPDATE_PSW(regs, 2, 2);
+        INST_UPDATE_PSW( regs, 2, 2 );
 
-} /* end DEF_INST(branch_on_count_register) */
+} /* end DEF_INST( branch_on_count_register ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -1517,7 +1517,7 @@ S32     i, j;                           /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 /* A7x5 BRAS  - Branch Relative And Save                      [RI-b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_and_save)
+DEF_INST( branch_relative_and_save )
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -1529,18 +1529,18 @@ U16     i2;                             /* 16-bit operand values     */
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    if ( regs->psw.amode64 )
-        regs->GR_G(r1) = PSW_IA64(regs, 4);
+    if (regs->psw.amode64)
+        regs->GR_G(r1) = PSW_IA64( regs, 4 );
     else
 #endif
-    if ( regs->psw.amode )
-        regs->GR_L(r1) = 0x80000000 | PSW_IA31(regs, 4);
+    if (regs->psw.amode)
+        regs->GR_L(r1) = 0x80000000 | PSW_IA31( regs, 4 );
     else
-        regs->GR_L(r1) = PSW_IA24(regs, 4);
+        regs->GR_L(r1) = 0x00000000 | PSW_IA24( regs, 4 );
 
     SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
 
-} /* end DEF_INST(branch_relative_and_save) */
+} /* end DEF_INST( branch_relative_and_save ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
@@ -1548,7 +1548,7 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* A7x6 BRCT  - Branch Relative on Count                      [RI-b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_count)
+DEF_INST( branch_relative_on_count )
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -1564,7 +1564,7 @@ U16     i2;                             /* 16-bit operand values     */
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_relative_on_count) */
+} /* end DEF_INST( branch_relative_on_count ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
@@ -1572,7 +1572,7 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* 84   BRXH  - Branch Relative on Index High                  [RSI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_index_high)
+DEF_INST( branch_relative_on_index_high )
 {
 int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
@@ -1583,21 +1583,21 @@ S32     i,j;                            /* Integer workareas         */
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load the increment value from the R3 register */
-    i = (S32)regs->GR_L(r3);
+    i = (S32)regs->GR_L( r3 );
 
     /* Load compare value from R3 (if R3 odd), or R3+1 (if even) */
-    j = (r3 & 1) ? (S32)regs->GR_L(r3) : (S32)regs->GR_L(r3+1);
+    j = (r3 & 1) ? (S32)regs->GR_L( r3 ) : (S32)regs->GR_L( r3+1 );
 
     /* Add the increment value to the R1 register */
-    regs->GR_L(r1) = (S32)regs->GR_L(r1) + i;
+    regs->GR_L( r1 ) = (S32)regs->GR_L( r1 ) + i;
 
     /* Branch if result compares high */
-    if ( (S32)regs->GR_L(r1) > j )
+    if ((S32) regs->GR_L( r1 ) > j)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_relative_on_index_high) */
+} /* end DEF_INST( branch_relative_on_index_high ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
@@ -1605,7 +1605,7 @@ S32     i,j;                            /* Integer workareas         */
 /*-------------------------------------------------------------------*/
 /* 85   BRXLE - Branch Relative on Index Low or Equal          [RSI] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_index_low_or_equal)
+DEF_INST( branch_relative_on_index_low_or_equal )
 {
 int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
@@ -1616,21 +1616,21 @@ S32     i,j;                            /* Integer workareas         */
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load the increment value from the R3 register */
-    i = (S32)regs->GR_L(r3);
+    i = (S32)regs->GR_L( r3 );
 
     /* Load compare value from R3 (if R3 odd), or R3+1 (if even) */
-    j = (r3 & 1) ? (S32)regs->GR_L(r3) : (S32)regs->GR_L(r3+1);
+    j = (r3 & 1) ? (S32)regs->GR_L( r3 ) : (S32)regs->GR_L( r3+1 );
 
     /* Add the increment value to the R1 register */
-    regs->GR_L(r1) = (S32)regs->GR_L(r1) + i;
+    regs->GR_L( r1 ) = (S32)regs->GR_L( r1 ) + i;
 
     /* Branch if result compares low or equal */
-    if ( (S32)regs->GR_L(r1) <= j )
+    if ((S32) regs->GR_L( r1 ) <= j)
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
-} /* end DEF_INST(branch_relative_on_index_low_or_equal) */
+} /* end DEF_INST( branch_relative_on_index_low_or_equal ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
 
@@ -5526,7 +5526,8 @@ int     orglen1;                        /* Original dest length      */
     /* If len1 is non-zero then we were interrupted */
     if (len1)
         RETURN_INTCHECK( regs );
-}
+
+} /* end DEF_INST( move_long ) */
 
 
 #if defined( FEATURE_COMPARE_AND_MOVE_EXTENDED )

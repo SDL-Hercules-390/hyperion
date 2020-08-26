@@ -1266,7 +1266,7 @@
 /*-------------------------------------------------------------------*/
 /*  RIL - register and longer immediate with extended 4 bit op code  */
 /*-------------------------------------------------------------------*/
-// This is z/Arch RIL-a format.
+// This is z/Arch RIL-a format or RIL-b/c format for branches.
 
 #define RIL(   _inst, _regs, _r1, _op, _i2 )  RIL_DECODER( _inst, _regs, _r1, _op, _i2, 6, 6 )
 #define RIL_B( _inst, _regs, _r1, _op, _i2 )  RIL_DECODER( _inst, _regs, _r1, _op, _i2, 0, 6 )

@@ -95,6 +95,7 @@ struct  PSW
 
     BYTE     zerobyte;          /* Zeroes                  (24 - 31) */
                                 /* or (esame)              (24 - 30) */
+    BYTE     unused1;           /* (struct alignment)                */
 
     u_int                       /* Addressing mode         (31 - 32) */
              amode64:1,         /* 64-bit addressing       (31)      */
@@ -108,7 +109,7 @@ struct  PSW
     DW       amask;             /* Address wraparound mask           */
     U16      intcode;           /* Interruption code                 */
     BYTE     ilc;               /* Instruction length count          */
-    BYTE     unused;
+    BYTE     unused2[5];        /* (struct alignment)                */
 };
 typedef struct PSW  PSW;
 

@@ -2081,7 +2081,7 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* C0x4 BRCL  - Branch Relative on Condition Long            [RIL-c] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_condition_long)
+DEF_INST( branch_relative_on_condition_long )
 {
     CONTRAN_RELATIVE_BRANCH_CHECK( regs );
 
@@ -2091,7 +2091,7 @@ DEF_INST(branch_relative_on_condition_long)
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
-} /* end DEF_INST(branch_relative_on_condition_long) */
+} /* end DEF_INST( branch_relative_on_condition_long ) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
@@ -2099,7 +2099,7 @@ DEF_INST(branch_relative_on_condition_long)
 /*-------------------------------------------------------------------*/
 /* C0x5 BRASL - Branch Relative And Save Long                [RIL-b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_and_save_long)
+DEF_INST( branch_relative_and_save_long )
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -2114,14 +2114,14 @@ U32     i2;                             /* 32-bit operand values     */
         regs->GR_G(r1) = PSW_IA64(regs, 6);
     else
 #endif
-    if ( regs->psw.amode )
-        regs->GR_L(r1) = 0x80000000 | PSW_IA31(regs, 6);
+    if (regs->psw.amode)
+        regs->GR_L(r1) = 0x80000000 | PSW_IA31( regs, 6 );
     else
-        regs->GR_L(r1) = PSW_IA24(regs, 6);
+        regs->GR_L(r1) = 0x00000000 | PSW_IA24( regs, 6 );
 
     SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*(S32)fetch_fw(inst+2));
 
-} /* end DEF_INST(branch_relative_and_save_long) */
+} /* end DEF_INST( branch_relative_and_save_long ) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
 
 
@@ -3317,7 +3317,7 @@ U16     h2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* A7x7 BRCTG - Branch Relative on Count Long                 [RI-b] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_relative_on_count_long)
+DEF_INST( branch_relative_on_count_long )
 {
 int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
@@ -3328,11 +3328,11 @@ U16     i2;                             /* 16-bit operand values     */
     CONTRAN_INSTR_CHECK( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
-    if ( --(regs->GR_G(r1)) )
+    if (--(regs->GR_G( r1 )) )
         SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
     else
         INST_UPDATE_PSW(regs, 4, 4);
-} /* end DEF_INST(branch_relative_on_count_long) */
+} /* end DEF_INST( branch_relative_on_count_long ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 

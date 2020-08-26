@@ -1047,6 +1047,8 @@ TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
 VADR       txf_atia;        /* Aborted Transaction Instruction Addr. */
 int        retry;           /* Actual retry code                     */
 
+    PTT_TXF( "*TXF abort", raw_retry, txf_tac, regs->txf_contran );
+
     /* Set the initial Transaction Abort Code */
     if (!regs->txf_tac)
         regs->txf_tac = txf_tac;
@@ -1079,12 +1081,14 @@ int        retry;           /* Actual retry code                     */
         /* Normal instruction abort: the PREVIOUS instruction
            is the one where the abort actually occurred at. */
         txf_atia = PSW_IA( regs, -REAL_ILC( regs ));
+        PTT_TXF( "TXF ATIA", txf_atia, 0, -REAL_ILC( regs ) );
     }
     else // (raw_retry < 0)
     {
         /* Instruction dispatch abort: the CURRENT instruction
            address is where the abort actually occurred at. */
         txf_atia = PSW_IA( regs, 0 );
+        PTT_TXF( "TXF ATIA", txf_atia, 0, 0 );
     }
 
     /* Obtain the interrupt lock if we don't already have it */
@@ -1097,8 +1101,6 @@ int        retry;           /* Actual retry code                     */
     }
 
     PERFORM_SERIALIZATION( regs );
-
-    PTT_TXF( "TXF abort", 0, regs->txf_contran, regs->txf_tnd );
 
     /*---------------------------------------------*/
     /*  Failure of CONSTRAINED transaction retry?  */
@@ -1861,6 +1863,8 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
     int    cpu;
     REGS*  regs;
 
+    why |= TXF_WHY_DELAYED_ABORT;
+
     for (cpu=0, regs = sysblk.regs[ 0 ];
         cpu < sysblk.maxcpu; regs = sysblk.regs[ ++cpu ])
     {
@@ -1882,7 +1886,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
             )
             {
                 regs->txf_tac   =  TAC_MISC;
-                regs->txf_why  |=  why | TXF_WHY_DELAYED_ABORT;
+                regs->txf_why  |=  why;
                 regs->txf_who   =  cpuad;
                 regs->txf_loc   =  TRIMLOC( location );
 
@@ -1898,7 +1902,7 @@ void txf_abort_all( U16 cpuad, int why, const char* location )
             )
             {
                 GUESTREGS->txf_tac   =  TAC_MISC;
-                GUESTREGS->txf_why  |=  why | TXF_WHY_DELAYED_ABORT;
+                GUESTREGS->txf_why  |=  why;
                 GUESTREGS->txf_who   =  cpuad;
                 GUESTREGS->txf_loc   =  TRIMLOC( location );
 

@@ -333,10 +333,9 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
 {
     /* "If the instruction causing the breaking event is the
-        target of an execute-type instruction (EXECUTE or
-        EXECUTE RELATIVE LONG), then the instruction address
-        used to fetch the execute-type instruction is placed
-        in the breaking-event-address register."
+        target of an execute-type instruction (EX or EXRL),
+        then the instruction address used to fetch the EX/EXRL
+        instruction is placed in the BEAR."
     */
     if (1
         && bear != &regs->bear_ex   /* NOT saving EX/EXRL address?   */
@@ -344,11 +343,23 @@ DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
     )
     {
         regs->bear = regs->bear_ex; /* BEAR = EX/EXRL instr address  */
+        PTT_INF( "bear = ex", regs->bear_ex, 0, 0 );
     }
     else if (ip)
     {
-        /* BEAR = Address of the beginning of virtual ('AIV') page
-           plus same displacement from begin of mainstor ('ip') page.
+        /* BEAR = Address of the beginning of virtual ('aiv') page
+           plus same displacement from begin of mainstor ('ip') page
+           also know as 'aip'.
+           
+           HOWEVER, since the 'ip' value passed to us might not match
+           regs->ip (it might have been passed to us as "regs->ip - 4"),
+           we cannot blindly rely on the 'ip' value passed to us being
+           on the same mainstor page as regs->aip. It could be pointing
+           before where regs->aip is currently pointing if regs->ip
+           was pointing to the first instruction on the page and thus
+           after backing up 4 bytes would cause it to point before
+           where regs->aip points. The below logic takes situations
+           such as that into consideration.
         */
         BYTE* aip = regs->aip;      /* Begin of mainstor page */
         U64   aiv = regs->AIV;      /* Begin of virtual page  */
@@ -358,6 +369,8 @@ DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
             /* The instruction pointer that was passed to us
                points somewhere in the PREVIOUS mainstor page */
 
+            PTT_INF( "ip < aip", ip, aip, aiv );
+
             aip -= PAGEFRAME_PAGESIZE;
             aiv -= PAGEFRAME_PAGESIZE;
         }
@@ -366,12 +379,20 @@ DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
             /* The instruction pointer that was passed to us
                points somewhere in the NEXT mainstor page */
 
+            PTT_INF( "ip >= aip+page", ip, aip, aiv );
+
             aip += PAGEFRAME_PAGESIZE;
             aiv += PAGEFRAME_PAGESIZE;
         }
 
+        /* Calculate and set BEAR appropriately */
         *bear = aiv + (ip - aip);           /* Save virtual address  */
         *bear &= ADDRESS_MAXWRAP( regs );   /* of the breaking event */
+
+        if (bear == &regs->bear)
+            PTT_INF( "bear =", *bear, 0, 0 );
+        else
+            PTT_INF( "bear_ex =", *bear, 0, 0 );
     }
 }
 #endif
@@ -472,21 +493,55 @@ DLL_EXPORT void (ATTR_REGPARM(2) ARCH_DEP( trace_program_interrupt ))( REGS* reg
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int ARCH_DEP( fix_program_interrupt_PSW )( REGS* regs )
 {
-    /* Get instruction length (ilc) */
-    int ilc = regs->psw.zeroilc ? 0 : REAL_ILC( regs );
+    /* Determine the instruction length code (ilc).
 
+       The 'zeroilc' flag is set when the Instruction Length Code
+       should be reported as zero (such as when instruction-fetching
+       nullification PER option is set in CR9 or when the load PSW
+       instruction results in an invalid PSW being loaded).
+
+       The PSW 'ilc' value can also be specifically set to '0' when
+       a BALR, BASR or BASSM program checks during 'trace_br' call.
+    */
+    int ilc =
+    (
+        /* If zeroilc flag is set, then we MUST use zero for the ilc */
+        regs->psw.zeroilc ? 0
+
+        /* Otherwise use either the ilc value set in the PSW or the
+           length of the EX/EXRL instruction is the instruction is
+           being executed.
+        */
+        : REAL_ILC( regs )
+    );
+    PTT_PGM( "fxpiPSW ilc", 0, 0, ilc );
+
+    /* If our resulting ilc is still 0 but the zeroilc flag is NOT set,
+       then we're left with no choice but to GUESS the 'ilc' value
+       based on whether the instruction was being executed or not.
+    */
     if (regs->psw.ilc == 0 && !regs->psw.zeroilc)
     {
-        /* This can happen if BALR, BASR, BASSM or BSM
-           program checks during trace
-        */
-        ilc = likely( !regs->execflag ) ? 2 : regs->exrl ? 6 : 4;
+        ilc = (!regs->execflag ? 2 : (regs->exrl ? 6 : 4));
 
-        regs->ip      += ilc;
-        regs->psw.IA  += ilc;
-        regs->psw.ilc  = ilc;
+        PTT_PGM( "fxpiPSW ilc", regs->ip, regs->psw.IA, ilc );
+
+        /* Now ADVANCE the 'ip' mainstor instruction pointer and
+           psw 'IA' instruction address by that ilc amount so that
+           the 'trace_program_interrupt' can then back them both up
+           by the same amount to point to the actual instruction
+           that actually program checked.
+        */
+        regs->psw.ilc  = ilc;  // (guessed value)
+        regs->ip      += ilc;  // (so trace_program_interrupt can undo)
+        regs->psw.IA  += ilc;  // (so trace_program_interrupt can undo)
+
+        PTT_PGM( "fxpiPSW ilc", regs->ip, regs->psw.IA, ilc );
     }
 
+    /* Return ilc value to be passed to 'trace_program_interrupt' */
+
+    PTT_PGM( "fxpiPSW ret", 0, 0, ilc );
     return ilc;
 }
 
@@ -559,6 +614,7 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     if (sysblk.intowner == realregs->cpuad)
         RELEASE_INTLOCK( realregs );
 
+    /* Unlock the main storage lock if held */
     if (sysblk.mainowner == realregs->cpuad)
         RELEASE_MAINLOCK_UNCONDITIONAL( realregs );
 
@@ -573,6 +629,8 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     /* Fix PSW and get instruction length (ilc) */
     ilc = ARCH_DEP( fix_program_interrupt_PSW )( realregs );
 
+    PTT_PGM( "PGM ilc", 0, 0, ilc );
+
 #if defined( FEATURE_INTERPRETIVE_EXECUTION )
     if (realregs->sie_active)
     {
@@ -583,6 +641,8 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
             GUEST( realregs )->psw.IA  += sie_ilc; /* IanWorthington regression restored from 20081205 */
             GUEST( realregs )->psw.ilc  = sie_ilc;
         }
+    
+        PTT_PGM( "PGM sie_ilc", 0, 0, sie_ilc );
     }
 #endif
 
@@ -714,6 +774,7 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     /* Back up the PSW for exceptions which cause nullification,
        unless the exception occurred during instruction fetch
     */
+    PTT_PGM( "PGM psw.IA", realregs->psw.IA, realregs->instinvalid, ilc );
     if (1
         && !realregs->instinvalid
         && (0
@@ -754,6 +815,8 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
         realregs->psw.IA -= ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
 
+        PTT_PGM( "PGM IA-ilc", realregs->psw.IA, realregs->instinvalid, ilc );
+
 #if defined( FEATURE_INTERPRETIVE_EXECUTION )
         /* When in SIE mode the guest instruction
            causing this host exception must also be nullified
@@ -762,6 +825,8 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
         {
             GUEST( realregs )->psw.IA -= sie_ilc;
             GUEST( realregs )->psw.IA &= ADDRESS_MAXWRAP( GUEST( realregs ));
+
+            PTT_PGM( "PGM IA-sie", GUEST( realregs )->psw.IA, GUEST( realregs )->instinvalid, sie_ilc );
         }
 #endif
     }
@@ -781,6 +846,8 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     {
         realregs->psw.IA += ilc;
         realregs->psw.IA &= ADDRESS_MAXWRAP( realregs );
+
+        PTT_PGM( "PGM IA+ilc", realregs->psw.IA, realregs->instinvalid, ilc );
     }
 
     /* Store the interrupt code in the PSW */
@@ -803,6 +870,7 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
     }
 
     realregs->instinvalid = 0;
+    PTT_PGM( "PGM inval=0", 0, 0, 0 );
 
 #if defined( FEATURE_INTERPRETIVE_EXECUTION )
 
@@ -1154,6 +1222,7 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
 #if defined( FEATURE_PER3 )
         /* Store the breaking event address register in the PSA */
         STORE_W( psa->bea, regs->bear );
+        PTT_PGM( "PGM bear", regs->bear, 0, 0 );
 #endif
 
     } /* end if(ECMODE) */
@@ -1181,7 +1250,6 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
             pgmold.cc      = 0;
             pgmold.intcode = 0;
             pgmold.ilc     = 0;
-            pgmold.unused  = 0;
         }
 
         /* Load new PSW from PSA+X'68' or PSA+X'1D0' for ESAME */
@@ -1209,7 +1277,6 @@ bool    txf_traced_pgmint = false;      /* true = TXF already traced */
             pgmnew.cc      = 0;
             pgmnew.intcode = 0;
             pgmnew.ilc     = 0;
-            pgmnew.unused  = 0;
 
             /* Adjust pgmold instruction address */
             pgmold.ia.D -= ilc;

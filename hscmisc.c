@@ -825,6 +825,8 @@ char    op1_stor_msg[128]   = {0};
 char    op2_stor_msg[128]   = {0};
 char    regs_msg_buf[4*512] = {0};
 
+    PTT_PGM( "dinst", inst, 0, pgmint );
+
     /* Ensure storage exists to attempt the display */
     if (iregs->mainlim == 0)
     {
@@ -835,6 +837,7 @@ char    regs_msg_buf[4*512] = {0};
     n = 0;
     buf[0] = '\0';
 
+    /* Get a working copy of the REGS */
     if (iregs->ghostregs)
         regs = iregs;
     else if (!(regs = copy_regs( iregs )))
@@ -923,9 +926,9 @@ char    regs_msg_buf[4*512] = {0};
         /* Apply indexing for RX/RXE/RXF instructions */
         if (0
             || (opcode >= 0x40 && opcode <= 0x7F)
-            || opcode == 0xB1   // LRA
-            || opcode == 0xE3   // RXY-x
-            || opcode == 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
+            ||  opcode == 0xB1   // LRA
+            ||  opcode == 0xE3   // RXY-x
+            ||  opcode == 0xED   // RXE-x, RXF-x, RXY-x, RSL-x
         )
         {
             x1 = inst[1] & 0x0F;
@@ -1045,11 +1048,11 @@ char    regs_msg_buf[4*512] = {0};
                                       USE_REAL_ADDR, ACCTYPE_READ, "", &xcode );
         else
             ARCH_DEP( display_virt )( regs, addr1, buf2+n, sizeof( buf2 )-n-1,
-                                      b1, (opcode == 0x44
+                                      b1, (opcode == 0x44                 // EX?
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
-                                 || (opcode == 0xc6 && !(inst[1] & 0x0f))
+                                 || (opcode == 0xc6 && !(inst[1] & 0x0f)) // EXRL?
 #endif
-                                                ? ACCTYPE_INSTFETCH :
+                                                ? ACCTYPE_INSTFETCH :     // EX/EXRL
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ ), "", &xcode );
 

@@ -695,89 +695,209 @@ do { \
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/*             PSW Instruction Address manipulation                  */
+/*               PSW Instruction Address macros                      */
 /*-------------------------------------------------------------------*/
+// The _PSW_IA primrary helper macro returns a raw virtual PSW 'IA'
+// value corresponding to where an offset mainstor 'ip' points (i.e.
+// ia <== ip + offset)
 
 #undef  _PSW_IA
-#define _PSW_IA(_regs, _n) \
- (VADR)((_regs)->AIV + ((intptr_t)(_regs)->ip - (intptr_t)(_regs)->aip) + (_n))
+#define _PSW_IA( _aiv, _regs, _offset )                               \
+  (                                                                   \
+    (_regs)->_aiv                                                     \
+    + ((uintptr_t)(_regs)->ip - (uintptr_t)(_regs)->aip)              \
+    + (_offset)                                                       \
+  )
+
+//---------------------------------------------------------------------
+// The generic PSW_IA macro returns a PSW 'IA' as VADR value matching
+// where regs 'ip' is pointing plus a passed offset, with the result
+// masked with ADDRESS_MAXWRAP (i.e. (VADR)((ia <== ip + n) & mask))
+
 
 #undef  PSW_IA
-#define PSW_IA(_regs, _n) \
- (_PSW_IA((_regs), (_n)) & ADDRESS_MAXWRAP((_regs)))
+#define PSW_IA( _regs, _offset )                                      \
+                                                                      \
+ ((VADR)(_PSW_IA( AIV, (_regs), (_offset)) & ADDRESS_MAXWRAP( _regs )))
 
-#undef  SET_PSW_IA
-#define SET_PSW_IA(_regs) \
-do { \
-  if ((_regs)->aie) (_regs)->psw.IA = PSW_IA((_regs), 0); \
-} while (0)
+//---------------------------------------------------------------------
+// The next three macros are minor architectural variations of the
+// above PSW_IA macro that return a PSW 'IA' value matching where
+// 'ip' plus a passed offset is pointing. The only difference is each
+// are specific to the implied architecture, none of them cast the
+// result to VADR, and only the 24-bit one applies an addressing mask.
 
-#undef  INST_UPDATE_PSW
-#define INST_UPDATE_PSW(_regs, _len, _ilc) \
-     do { \
-            if (_len) (_regs)->ip += (_len); \
-            if (_ilc) (_regs)->psw.ilc = (_ilc); \
-        } while(0)
-
-#undef  UPD_PSW_IA
-#define UPD_PSW_IA(_regs, _addr) \
-do { \
-  (_regs)->psw.IA = (_addr) & ADDRESS_MAXWRAP(_regs); \
-  if (likely((_regs)->aie != NULL)) { \
-    if (likely((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1)))) \
-      (_regs)->ip = _PSW_IA_MAIN((_regs), (_regs)->psw.IA); \
-    else \
-      (_regs)->aie = NULL; \
-  } \
-} while (0)
-
-/*
- * The next three macros are used by branch-and-link type instructions
- * where the addressing mode is known.
- * Note that wrap is not performed for PSW_IA64 and for PSW_IA31.
- * For the latter, we expect branch-and-link code to `or' the hi bit
- * on so there is no need to `and' it off.
- */
 #undef  PSW_IA64
-#define PSW_IA64(_regs, _n) \
-  ((_regs)->AIV \
-   + (((uintptr_t)(_regs)->ip + (unsigned int)(_n)) - (uintptr_t)(_regs)->aip))
+#define PSW_IA64( _regs, _offset )                                    \
+                                                                      \
+      (_PSW_IA( AIV_G, (_regs), (_offset)))
 
 #undef  PSW_IA31
-#define PSW_IA31(_regs, _n) \
-  ((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
-   - (uintptr_t)(_regs)->aip)
+#define PSW_IA31( _regs, _offset )                                    \
+                                                                      \
+      (_PSW_IA( AIV_L, (_regs), (_offset)))
 
 #undef  PSW_IA24
-#define PSW_IA24(_regs, _n) \
- (((_regs)->AIV_L + ((uintptr_t)(_regs)->ip + (unsigned int)(_n)) \
-   - (uintptr_t)(_regs)->aip) & AMASK24)
+#define PSW_IA24( _regs, _offset )                                    \
+                                                                      \
+      (_PSW_IA( AIV_L, (_regs), (_offset)) & AMASK24)
+
+//---------------------------------------------------------------------
+// The SET_PSW_IA macro (notice the 'SET' in its name) SETS the virtual
+// psw 'IA' value to point to the same corresponding place as where
+// the current mainstor 'ip' points (without any offset), but it ONLY
+// does so if and ONLY if the 'aie' value is still valid (is non-NULL).
+// Otherwise it does absolutely nothing.
+
+#undef  SET_PSW_IA
+#define SET_PSW_IA( _regs )                                           \
+  do                                                                  \
+  {                                                                   \
+    if ((_regs)->aie)                                                 \
+      (_regs)->psw.IA  =  PSW_IA( (_regs), 0 );                       \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The UPD_PSW_IA macro performs the opposite of the above SET_PSW_IA
+// macro: it sets the mainstor 'ip' to the same corresponding place
+// as where a passed virtual psw 'IA' value points to. It first sets
+// the PSW IA to the passed value and then TRIES to set the 'ip' to
+// the same corresponding place, but only does so if the updated 'ia'
+// value still points somewhere within the same virtual page. If it
+// doesn't, then 'aie' is set to NULL to force a full 'instfetch' to
+// occur which is what then sets a new 'ip', 'aie' and 'aip' value
+// the next time the INSTRUCTION_FETCH macro is called.
+
+#undef  UPD_PSW_IA
+#define UPD_PSW_IA( _regs, _ia )                                      \
+  do                                                                  \
+  {                                                                   \
+    (_regs)->psw.IA  =  (_ia) & ADDRESS_MAXWRAP( _regs );             \
+                                                                      \
+    if ((_regs)->aie)                                                 \
+    {                                                                 \
+      if ((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1))) \
+        (_regs)->ip = _PSW_IA_MAIN( (_regs), (_regs)->psw.IA );       \
+      else                                                            \
+        (_regs)->aie = NULL;                                          \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The INST_UPDATE_PSW macro sets the psw ILC to the passed value and
+// bumps the regs->ip instruction pointer by the passed _len value,
+// BUT ONLY IF the passed value is non-zero.
+//
+// It is typically used by the instruction decoder macros to set the
+// ilc for the instruction just decoded and to then bump the 'ip' to
+// the next sequential instruction.
+//
+// Normally '_len' and '_ilc' are the same value (being the length
+// of the instruction being decoded). The reason they are passed as
+// separate values however is to allow for branch instructions to
+// set the ilc value while at the same time NOT bumping the 'ip'
+// since they don't know yet if the branch will be taken or not.
+// If it is, they call the SUCCESSFUL_BRANCH macro. If not, they
+// call the INST_UPDATE_PSW to go on to the next instruction.
+
+#undef  INST_UPDATE_PSW
+#define INST_UPDATE_PSW( _regs, _len, _ilc )                          \
+  do                                                                  \
+  {                                                                   \
+    if (_len) (_regs)->ip       +=  (_len);                           \
+    if (_ilc) (_regs)->psw.ilc   =  (_ilc);                           \
+  }                                                                   \
+  while(0)
 
 /*-------------------------------------------------------------------*/
-/*             Accelerator for instruction addresses                 */
+/*             Accelerator for Instruction Addresses                 */
 /*-------------------------------------------------------------------*/
+/* The AIA is a term used to refer to the set of REGS fields that    */
+/* together control instruction execution. It consists if the 'ip',  */
+/* 'aip', 'aie' and 'aiv' fields. The 'ip' field of course is the    */
+/* mainstor instruction pointer. The 'aip' is the page address of    */
+/* the mainstor page associated with the 'ip'. The 'aiv' field is    */
+/* the guest virtual address of the page corresponding to the aip.   */
+/* The 'aie' is the "logical end" of the 'aip'. It is the highest    */
+/* mainstor 'ip' address that we can safely DIRECTLY fetch the next  */
+/* instruction from. Once the 'ip' reaches the 'aie', instruction    */
+/* fetching is forced to do a call to the "instfetch" function to    */
+/* perform full translation of the address of the next instruction,  */
+/* recalculating new 'ip', 'aip', 'aiv' and 'aie' values which can   */
+/* then be used again for DIRECT instruction fetching. This allows   */
+/* us to "accelerate" instruction fetching since we don't have to    */
+/* go through full address translation for each instruction fetch.   */
+/* We only need to do so when the instruction being fetched crosses  */
+/* over into a new page. That's the 'aie'. It is set to the end of   */
+/* the 'aip' page minus 5 bytes. As long as 'ip' is LESS than aie,   */
+/* we know we can safely fetch the next instruction from that same   */
+/* mainstor page. Otherwise we need to do a full instfetch.          */
+/*-------------------------------------------------------------------*/
+
+// The INVALIDATE_AIA macro essentially renders all AIA fields as
+// being invalid, thereby forcing a full instfetch to be performed.
+// It first ensures that the IA (address of the next instruction)
+// in the guest PSW structure matches where the current regs 'ip'
+// instruction pointer is pointing, and then "invalidates" all AIA
+// fields by setting the 'aie' value to NULL, thereby forcing the
+// next instruction fetch to call the 'instfetch' function. The
+// invalidation is UNCONDITIONAL.
 
 #undef  INVALIDATE_AIA
-#define INVALIDATE_AIA(_regs) \
-do { \
-  if ((_regs)->aie) { \
-    (_regs)->psw.IA = PSW_IA((_regs), 0); \
-    (_regs)->aie = NULL; \
-  } \
-} while (0)
+#define INVALIDATE_AIA( _regs )                                       \
+  do                                                                  \
+  {                                                                   \
+    if ((_regs)->aie)                                                 \
+    {                                                                 \
+      (_regs)->psw.IA = PSW_IA( (_regs), 0 );                         \
+      (_regs)->aie = NULL;                                            \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The INVALIDATE_AIA_MAIN macro performs a conditional invalidation
+// of the AIA, but if and ONLY if the passed mainstor address matches
+// the 'aip'. It is used (e.g. the "invalidate_tlbe" function called
+// by the STORKEY_INVALIDATE macro) to invalidate the AIA whenever a
+// DAT page table entry is invalidated that happens to correspond to
+// the mainstor page we're currently fetching instructions from. It
+// first updates the psw IA to match the current instruction address
+// and then sets the 'aie' to NULL to force a full instruction fetch.
 
 #undef  INVALIDATE_AIA_MAIN
-#define INVALIDATE_AIA_MAIN(_regs, _main) \
-do { \
-  if ((_main) == (_regs)->aip && (_regs)->aie) { \
-    (_regs)->psw.IA = PSW_IA((_regs), 0); \
-    (_regs)->aie = NULL; \
-  } \
-} while (0)
+#define INVALIDATE_AIA_MAIN( _regs, _main )                           \
+  do                                                                  \
+  {                                                                   \
+    if ((_regs)->aie &&                                               \
+        (((uintptr_t)(_main)) & PAGEFRAME_PAGEMASK) ==                \
+         ((uintptr_t)(_regs)->aip)                                    \
+    )                                                                 \
+    {                                                                 \
+      (_regs)->psw.IA = PSW_IA( (_regs), 0 );                         \
+      (_regs)->aie = NULL;                                            \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
+//---------------------------------------------------------------------
+// The _PSW_IA_MAIN helper macro returns the mainstor address
+// corresponding to a given guest virtual address. NOTE CAREFULLY
+// that it PRESUMES the virtual address that is passed is within the
+// same mainstor page as we're currently fetching instructions from!
 
 #undef  _PSW_IA_MAIN
-#define _PSW_IA_MAIN(_regs, _addr) \
- ((BYTE *)((uintptr_t)(_regs)->aip | (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)))
+#define _PSW_IA_MAIN( _regs, _addr )                                  \
+  (                                                                   \
+    (BYTE*)                                                           \
+    (                                                                 \
+        (uintptr_t)(_regs)->aip                                       \
+        |                                                             \
+        (uintptr_t)((_addr) & PAGEFRAME_BYTEMASK)                     \
+    )                                                                 \
+  )
 
 /*-------------------------------------------------------------------*/
 /*                     Instruction fetching                          */
@@ -785,34 +905,36 @@ do { \
 
 #undef  _VALID_IP
 #define _VALID_IP( _regs, _exec )                                     \
-(                                                                     \
-      /* Instr NOT being EXecuted and instr ptr < aie */              \
+  (                                                                   \
+      /* Instr NOT being EXecuted and instr ptr in same page */       \
       (1                                                              \
         && !(_exec)                                                   \
         &&  (_regs)->ip < (_regs)->aie                                \
       )                                                               \
   ||                                                                  \
-      /* Instr IS being EXecuted but target instr ptr < aie */        \
+      /* Instr IS being EXecuted and instr ptr in same page */        \
       (1                                                              \
         && (_exec)                                                    \
+        /* Execute target in same virtual page? */                    \
         && ((_regs)->ET & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV  \
+        /* Execute target in same mainstor page? */                   \
         && _PSW_IA_MAIN( (_regs), (_regs)->ET ) < (_regs)->aie        \
       )                                                               \
 )
 
 #undef  INSTRUCTION_FETCH
 #define INSTRUCTION_FETCH( _regs, _exec )                             \
+                                                                      \
+  /* If ip still valid, use current ip or target of executed instr */ \
   likely( _VALID_IP( (_regs), (_exec) )) ?                            \
   (                                                                   \
-    /* If AIA valid use target of EXecuted instr or current ip */     \
     (_exec) ?                                                         \
       _PSW_IA_MAIN( (_regs), (_regs)->ET )                            \
       :                                                               \
       (_regs)->ip                                                     \
   )                                                                   \
-  :                                                                   \
-  /* Else do a full instruction fetch which updates the AIA too */    \
-  ARCH_DEP( instfetch )( (_regs), (_exec) )
+  /* Else do a full instruction fetch (which updates the AIA too) */  \
+  : ARCH_DEP( instfetch )( (_regs), (_exec) )
 
 /*-------------------------------------------------------------------*/
 /*                   Instruction execution                           */
