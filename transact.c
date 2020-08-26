@@ -510,8 +510,8 @@ int         txf_tnd, txf_tac;
             }
 
             // Track high watermark too
-            if (regs->txf_caborts > sysblk.txf_caborts_hwm)
-                sysblk.txf_caborts_hwm = regs->txf_caborts;
+            if ((U64)regs->txf_caborts > sysblk.txf_caborts_hwm)
+                sysblk.txf_caborts_hwm = (U64)regs->txf_caborts;
         }
 #endif
         /* Transaction suceeded. Reset abort count */
@@ -1133,7 +1133,11 @@ int        retry;           /* Actual retry code                     */
             regs->txf_caborts );
     }
 
-    regs->txf_caborts = regs->txf_contran ? ++regs->txf_caborts : 0;
+    /* Update constrained transaction aborts counter */
+    if (regs->txf_contran)
+        regs->txf_caborts++;
+    else
+        regs->txf_caborts = 0;
 
     /*---------------------------------------------*/
     /*  Clean up the transaction flags             */
