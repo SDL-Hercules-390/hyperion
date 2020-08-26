@@ -398,6 +398,93 @@ DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
 #endif
 
 /*-------------------------------------------------------------------*/
+/*                      SuccessfulBranch                             */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( SuccessfulBranch )( REGS* regs, VADR vaddr )
+{
+    vaddr &= ADDRESS_MAXWRAP( regs );
+
+    /* Set BEAR to branch instruction. Note: for branch instructions
+       regs->ip is not updated to point to the next instruction and
+       thus is still pointing to the branch instruction itself.
+    */
+    SET_BEAR_REG( regs, regs->ip );
+
+    /* Branch target still within same page as branch instruction? */
+    if (1
+        && !regs->permode
+        && !regs->execflag
+        && (vaddr & (PAGEFRAME_PAGEMASK | 0x01)) == regs->AIV
+    )
+    {
+        /* Check for constraint BEFORE actually updating to new ip */
+        BYTE* ip = (BYTE*)((uintptr_t)regs->aim ^ (uintptr_t)vaddr);
+        PTT_INF( "branch", vaddr, regs->AIV, ip );
+        TXF_INSTRADDR_CONSTRAINT( ip, regs );
+        regs->ip = ip;   /* (branch to the new instruction) */
+        return;
+    }
+
+    /* Branch target is in another page: point the PSW to the target
+       instruction and set a new 'ip' by forcing a full instruction
+       fetch from the new target.
+    */
+    regs->psw.IA = vaddr;           /* Point PSW to target instr */
+    regs->aie = NULL;               /* Force a fresh 'instfetch' */
+
+    PTT_INF( "branch", vaddr, regs->AIV, 0 );
+    PER_SB( regs, regs->psw.IA );
+}
+
+/*-------------------------------------------------------------------*/
+/*                   SuccessfulRelativeBranch                        */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( SuccessfulRelativeBranch )( REGS* regs, S64 offset )
+{
+    /* Set BEAR to branch instruction. Note: for branch instructions
+       regs->ip is not updated to point to the next instruction and
+       thus is still pointing to the branch instruction itself.
+    */
+    SET_BEAR_REG( regs, regs->ip );
+
+    /* Branch target still within same page as branch instruction? */
+    if (1
+        && !regs->permode
+        && !regs->execflag
+        &&  offset > -4096
+        &&  offset < +4096
+        && (regs->ip + offset) >= regs->aip
+        && (regs->ip + offset) <  regs->aie
+    )
+    {
+        /* Check for constraint BEFORE actually updating to new ip */
+        BYTE* ip = regs->ip + offset;
+        PTT_INF( "rbranch <", regs->ip, offset, regs->aip );
+        TXF_INSTRADDR_CONSTRAINT( ip, regs );
+        regs->ip = ip;
+        return;
+    }
+
+    /* Branch target is in another page: point the PSW to the target
+       instruction and set a new 'ip' by forcing a full instruction
+       fetch from the new target.
+    */
+    PTT_INF( "rbranch >", regs->psw.IA, offset, regs->execflag );
+
+    if (!regs->execflag)
+        regs->psw.IA = PSW_IA( regs, offset );
+    else
+    {
+        regs->psw.IA = regs->ET + offset;
+        regs->psw.IA &= ADDRESS_MAXWRAP( regs );
+    }
+    regs->aie = NULL;               /* Force a fresh 'instfetch' */
+
+    PTT_INF( "rbranch >", regs->psw.IA, offset, regs->execflag );
+    PER_SB( regs, regs->psw.IA );
+}
+
+/*-------------------------------------------------------------------*/
 /*                    trace_program_interrupt_ip                     */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT void ARCH_DEP( trace_program_interrupt_ip )( REGS* regs, BYTE* ip, int pcode, int ilc )

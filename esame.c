@@ -2083,13 +2083,22 @@ U16     i2;                             /* 16-bit operand values     */
 /*-------------------------------------------------------------------*/
 DEF_INST( branch_relative_on_condition_long )
 {
-    CONTRAN_RELATIVE_BRANCH_CHECK( regs );
+int     m1;                             /* Condition mask            */
+U8      xop;                            /* Extended opcode           */
+S32     ri2;                            /* 32-bit relative operand   */
+
+    RIL_B( inst, regs, m1, xop, ri2 );
+
+    CONTRAN_RELATIVE_BRANCH_CHECK_IP( regs );
 
     /* Branch if R1 mask bit is set */
-    if (inst[1] & (0x80 >> regs->psw.cc))
-        SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*(S32)fetch_fw(inst+2));
+    if (m1 & (0x08 >> regs->psw.cc))
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
     else
-        INST_UPDATE_PSW(regs, 6, 6);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
 
 } /* end DEF_INST( branch_relative_on_condition_long ) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
@@ -2102,16 +2111,16 @@ DEF_INST( branch_relative_on_condition_long )
 DEF_INST( branch_relative_and_save_long )
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U32     i2;                             /* 32-bit operand values     */
+U8      xop;                            /* Extended opcode           */
+S32     ri2;                            /* 32-bit relative operand   */
 
-    RIL_B(inst, regs, r1, opcd, i2);
+    RIL_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    if(regs->psw.amode64)
-        regs->GR_G(r1) = PSW_IA64(regs, 6);
+    if (regs->psw.amode64)
+        regs->GR_G(r1) = PSW_IA64( regs, 6 );
     else
 #endif
     if (regs->psw.amode)
@@ -2119,7 +2128,7 @@ U32     i2;                             /* 32-bit operand values     */
     else
         regs->GR_L(r1) = 0x00000000 | PSW_IA24( regs, 6 );
 
-    SUCCESSFUL_RELATIVE_BRANCH_LONG(regs, 2LL*(S32)fetch_fw(inst+2));
+    SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
 
 } /* end DEF_INST( branch_relative_and_save_long ) */
 #endif /* defined( FEATURE_000_N3_INSTR_FACILITY ) */
@@ -2370,7 +2379,7 @@ S64     i,j;                            /* Integer workareas         */
 
     RIE_B(inst, regs, r1, r3, i2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2383,7 +2392,7 @@ S64     i,j;                            /* Integer workareas         */
 
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i2, 6);
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*i2 );
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
@@ -2403,7 +2412,7 @@ S64     i,j;                            /* Integer workareas         */
 
     RIE_B(inst, regs, r1, r3, i2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2416,7 +2425,7 @@ S64     i,j;                            /* Integer workareas         */
 
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*i2, 6);
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*i2 );
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
@@ -2437,7 +2446,7 @@ S64     i, j;                           /* Integer work areas        */
 
     RSY_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2450,7 +2459,7 @@ S64     i, j;                           /* Integer work areas        */
 
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 6);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
@@ -2471,7 +2480,7 @@ S64     i, j;                           /* Integer work areas        */
 
     RSY_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = regs->GR_G(r3);
@@ -2484,7 +2493,7 @@ S64     i, j;                           /* Integer work areas        */
 
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 6);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
@@ -2627,11 +2636,11 @@ VADR    effective_addr2;                /* Effective address         */
 
     RXY_B(inst, regs, r1, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 6);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
         INST_UPDATE_PSW(regs, 6, 6);
 
@@ -2650,7 +2659,7 @@ VADR    newia;                          /* New instruction address   */
 
     RRE_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR_G(r2);
@@ -2658,7 +2667,7 @@ VADR    newia;                          /* New instruction address   */
     /* Subtract 1 from the R1 operand and branch if result
            is non-zero and R2 operand is not register zero */
     if ( --(regs->GR_G(r1)) && r2 != 0 )
-        SUCCESSFUL_BRANCH(regs, newia, 2);
+        SUCCESSFUL_BRANCH( regs, newia );
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
@@ -3320,18 +3329,21 @@ U16     h2;                             /* 16-bit operand values     */
 DEF_INST( branch_relative_on_count_long )
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U16     i2;                             /* 16-bit operand values     */
+int     xop;                            /* Extended opcode           */
+S16     ri2;                            /* 16-bit relative operand   */
 
-    RI_B(inst, regs, r1, opcd, i2);
+    RI_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if (--(regs->GR_G( r1 )) )
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 } /* end DEF_INST( branch_relative_on_count_long ) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 

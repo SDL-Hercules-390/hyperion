@@ -427,8 +427,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
+    CONTRAN_INSTR_CHECK_IP( regs );
+    TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
 
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
@@ -458,7 +458,7 @@ VADR    newia;                          /* New instruction address   */
 
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
-        SUCCESSFUL_BRANCH(regs, newia, 2);
+        SUCCESSFUL_BRANCH( regs, newia );
     else
         INST_UPDATE_PSW(regs, 2, 2);
 
@@ -476,7 +476,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -490,7 +490,7 @@ VADR    effective_addr2;                /* Effective address         */
           : ((4 << 29)                  | (regs->psw.cc << 28)
           |  (regs->psw.progmask << 24) | PSW_IA24(regs, 4));
 
-    SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    SUCCESSFUL_BRANCH( regs, effective_addr2 );
 
 } /* end DEF_INST(branch_and_link) */
 
@@ -505,8 +505,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
+    CONTRAN_INSTR_CHECK_IP( regs );
+    TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
 
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
@@ -534,7 +534,7 @@ VADR    newia;                          /* New instruction address   */
 
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
-        SUCCESSFUL_BRANCH(regs, newia, 2);
+        SUCCESSFUL_BRANCH( regs, newia );
     else
         INST_UPDATE_PSW(regs, 2, 2);
 
@@ -552,7 +552,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Save the link information in the R1 register */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -565,7 +565,7 @@ VADR    effective_addr2;                /* Effective address         */
     else
         regs->GR_L(r1) = PSW_IA24(regs, 4);
 
-    SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    SUCCESSFUL_BRANCH( regs, effective_addr2 );
 
 } /* end DEF_INST(branch_and_save) */
 
@@ -587,9 +587,9 @@ BYTE    *ipsav;                         /* save for ip               */
 
     RR_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_NONRELATIVE_BRANCH_CHECK( regs, r2 );
-    TRAN_BRANCH_SET_MODE_CHECK( regs, r2 );
+    CONTRAN_INSTR_CHECK_IP( regs );
+    TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
+    TRAN_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -641,7 +641,7 @@ BYTE    *ipsav;                         /* save for ip               */
 #if !defined( FEATURE_370_EXTENSION )
         SET_ADDRESSING_MODE(regs, newia);
 #endif
-        SUCCESSFUL_BRANCH(regs, newia, 2);
+        SUCCESSFUL_BRANCH( regs, newia );
     }
     else
         INST_UPDATE_PSW(regs, 2, 2);
@@ -661,8 +661,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_BRANCH_SET_MODE_CHECK( regs, r2 );
+    CONTRAN_INSTR_CHECK_IP( regs );
+    TRAN_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -703,7 +703,7 @@ VADR    newia;                          /* New instruction address   */
 #if !defined( FEATURE_370_EXTENSION )
         SET_ADDRESSING_MODE(regs, newia);
 #endif
-        SUCCESSFUL_BRANCH(regs, newia, 2);
+        SUCCESSFUL_BRANCH( regs, newia );
     }
     else
         INST_UPDATE_PSW(regs, 2, 2);
@@ -721,14 +721,19 @@ DEF_INST( branch_on_condition_register )
 
 //  RR( inst, regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 2;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (inst[1] & (0x80 >> regs->psw.cc)))
-        SUCCESSFUL_BRANCH(regs, regs->GR(inst[1] & 0x0F), 2);
+        SUCCESSFUL_BRANCH( regs, regs->GR( inst[1] & 0x0F ));
     else
     {
-        INST_UPDATE_PSW(regs, 2, 2);
+        /* Bump ip to next sequential instruction */
+        regs->ip += 2;
+
         /* Perform serialization and checkpoint synchronization if
            the mask is all ones and R2 is register 0 */
         if (inst[1] == 0xF0)
@@ -782,16 +787,22 @@ DEF_INST( 47_0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 2);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 47_0 ) */
 
@@ -800,9 +811,15 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST( nop4 )
 {
-    CONTRAN_INSTR_CHECK( regs );
-    UNREFERENCED(inst);
-    INST_UPDATE_PSW(regs, 4, 4);
+    UNREFERENCED( inst );
+
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
+
+    /* Bump ip to next sequential instruction */
+    regs->ip += 4;
 
 } /* end DEF_INST( nop4 ) */
 
@@ -814,16 +831,22 @@ DEF_INST( 4710 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc == 3)
+    if (regs->psw.cc == 3)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4710 ) */
 
@@ -835,16 +858,22 @@ DEF_INST( 4720 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc == 2)
+    if (regs->psw.cc == 2)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4720 ) */
 
@@ -856,16 +885,22 @@ DEF_INST( 4730 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc > 1)
+    if (regs->psw.cc > 1)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4730 ) */
 
@@ -877,16 +912,22 @@ DEF_INST( 4740 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc == 1)
+    if (regs->psw.cc == 1)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4740 ) */
 
@@ -898,16 +939,22 @@ DEF_INST( 4750 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc & 0x01)
+    if (regs->psw.cc & 0x01)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4750 ) */
 
@@ -919,16 +966,22 @@ DEF_INST( 4770 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc)
+    if (regs->psw.cc)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4770 ) */
 
@@ -940,16 +993,22 @@ DEF_INST( 4780 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(!regs->psw.cc)
+    if (!regs->psw.cc)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 4780 ) */
 
@@ -961,16 +1020,22 @@ DEF_INST( 47A0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(!(regs->psw.cc & 0x01))
+    if (!(regs->psw.cc & 0x01))
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 47A0 ) */
 
@@ -982,16 +1047,22 @@ DEF_INST( 47B0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc != 1)
+    if (regs->psw.cc != 1)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 47B0 ) */
 
@@ -1003,16 +1074,22 @@ DEF_INST( 47C0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc < 2)
+    if (regs->psw.cc < 2)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 47C0 ) */
 
@@ -1024,16 +1101,22 @@ DEF_INST( 47D0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc != 2)
+    if (regs->psw.cc != 2)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 47D0 ) */
 
@@ -1045,16 +1128,22 @@ DEF_INST( 47E0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
-    if(regs->psw.cc != 3)
+    if (regs->psw.cc != 3)
     {
-        RXX_BC(inst, regs, b2, effective_addr2);
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        RXX_BC( inst, regs, b2, effective_addr2 );
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( 47E0 ) */
 
@@ -1066,9 +1155,13 @@ DEF_INST( 47F0 )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
-    RXX_BC(inst, regs, b2, effective_addr2);
-    SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
+
+    RXX_BC( inst, regs, b2, effective_addr2 );
+    SUCCESSFUL_BRANCH( regs, effective_addr2 );
 
 } /* end DEF_INST( 47F0 ) */
 #endif /* defined( OPTION_OPTINST ) */
@@ -1082,7 +1175,10 @@ DEF_INST( branch_on_condition )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    CONTRAN_INSTR_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
@@ -1092,10 +1188,13 @@ VADR    effective_addr2;                /* Effective address         */
 #else
         RX_BC( inst, regs, b2, effective_addr2 );
 #endif
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( branch_on_condition ) */
 
@@ -1386,18 +1485,24 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST( branch_relative_on_condition )
 {
-U16   i2;                               /* 16-bit operand values     */
+S16  ri2;                               /* 16-bit relative operand   */
 
-    CONTRAN_RELATIVE_BRANCH_CHECK( regs );
+    /* Ensure ilc is always accurate */
+    regs->psw.ilc = 4;
+
+    CONTRAN_RELATIVE_BRANCH_CHECK_IP( regs );
 
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
     {
-        i2 = fetch_fw(inst) & 0xFFFF;
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+        ri2 = fetch_hw( &inst[2] );
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
     }
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( branch_relative_on_condition ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1410,9 +1515,9 @@ DEF_INST( branch_on_count_register )
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR_B(inst, regs, r1, r2);
+    RR_B( inst, regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -1420,7 +1525,7 @@ VADR    newia;                          /* New instruction address   */
     /* Subtract 1 from the R1 operand and branch if result
            is non-zero and R2 operand is not register zero */
     if (--(regs->GR_L( r1 )) && r2)
-        SUCCESSFUL_BRANCH(regs, newia, 2);
+        SUCCESSFUL_BRANCH( regs, newia );
     else
         INST_UPDATE_PSW( regs, 2, 2 );
 
@@ -1438,11 +1543,11 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
@@ -1461,7 +1566,7 @@ S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1474,7 +1579,7 @@ S32     i, j;                           /* Integer work areas        */
 
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
@@ -1493,7 +1598,7 @@ S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = regs->GR_L(r3);
@@ -1506,7 +1611,7 @@ S32     i, j;                           /* Integer work areas        */
 
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
-        SUCCESSFUL_BRANCH(regs, effective_addr2, 4);
+        SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
         INST_UPDATE_PSW(regs, 4, 4);
 
@@ -1520,12 +1625,12 @@ S32     i, j;                           /* Integer work areas        */
 DEF_INST( branch_relative_and_save )
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U16     i2;                             /* 16-bit operand values     */
+int     xop;                            /* Extended opcode           */
+S16     ri2;                            /* 16-bit relative operand   */
 
-    RI_B(inst, regs, r1, opcd, i2);
+    RI_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -1538,7 +1643,7 @@ U16     i2;                             /* 16-bit operand values     */
     else
         regs->GR_L(r1) = 0x00000000 | PSW_IA24( regs, 4 );
 
-    SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
 
 } /* end DEF_INST( branch_relative_and_save ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1551,18 +1656,21 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST( branch_relative_on_count )
 {
 int     r1;                             /* Register number           */
-int     opcd;                           /* Opcode                    */
-U16     i2;                             /* 16-bit operand values     */
+int     xop;                            /* Extended opcode           */
+S16     ri2;                            /* 16-bit relative operand   */
 
-    RI_B(inst, regs, r1, opcd, i2);
+    RI_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
-    if ( --(regs->GR_L(r1)) )
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+    if (--(regs->GR_L( r1 )))
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( branch_relative_on_count ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1575,12 +1683,12 @@ U16     i2;                             /* 16-bit operand values     */
 DEF_INST( branch_relative_on_index_high )
 {
 int     r1, r3;                         /* Register numbers          */
-U16     i2;                             /* 16-bit operand            */
+S16     ri2;                            /* 16-bit relative operand   */
 S32     i,j;                            /* Integer workareas         */
 
-    RI_B(inst, regs, r1, r3, i2);
+    RI_B( inst, regs, r1, r3, ri2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L( r3 );
@@ -1593,9 +1701,12 @@ S32     i,j;                            /* Integer workareas         */
 
     /* Branch if result compares high */
     if ((S32) regs->GR_L( r1 ) > j)
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( branch_relative_on_index_high ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -1608,12 +1719,12 @@ S32     i,j;                            /* Integer workareas         */
 DEF_INST( branch_relative_on_index_low_or_equal )
 {
 int     r1, r3;                         /* Register numbers          */
-U16     i2;                             /* 16-bit operand            */
+S16     ri2;                            /* 16-bit relative operand   */
 S32     i,j;                            /* Integer workareas         */
 
-    RI_B(inst, regs, r1, r3, i2);
+    RI_B( inst, regs, r1, r3, ri2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L( r3 );
@@ -1626,9 +1737,12 @@ S32     i,j;                            /* Integer workareas         */
 
     /* Branch if result compares low or equal */
     if ((S32) regs->GR_L( r1 ) <= j)
-        SUCCESSFUL_RELATIVE_BRANCH(regs, 2*(S16)i2, 4);
+        SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*ri2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST( branch_relative_on_index_low_or_equal ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
@@ -4541,7 +4655,7 @@ DEF_INST(execute_relative_long)
 
     RIL_A( inst, regs, r1, regs->ET );
 
-    TRAN_INSTR_CHECK( regs );
+    CONTRAN_INSTR_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
     /* Ensure that the instruction field is zero, such that

@@ -920,7 +920,7 @@ do { \
         /* Execute target in same mainstor page? */                   \
         && _PSW_IA_MAIN( (_regs), (_regs)->ET ) < (_regs)->aie        \
       )                                                               \
-)
+  )
 
 #undef  INSTRUCTION_FETCH
 #define INSTRUCTION_FETCH( _regs, _exec )                             \
@@ -1054,113 +1054,14 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 
 #undef  SUCCESSFUL_BRANCH
-#define SUCCESSFUL_BRANCH( _regs, _addr, _len )                       \
-do {                                                                  \
-  VADR _newia = (_addr) & ADDRESS_MAXWRAP( (_regs) );                 \
+#define SUCCESSFUL_BRANCH( _regs, _addr )                             \
                                                                       \
-  /* Set BEAR to branch instruction. Note: for branch instructions    \
-     regs->ip is not updated to point to the next instruction and     \
-     thus is still pointing to the branch instruction itself.         \
-  */                                                                  \
-  SET_BEAR_REG( (_regs), regs->ip );                                  \
-                                                                      \
-  /* Branch target still within same page as branch instruction? */   \
-  if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
-   && likely((_newia & (PAGEFRAME_PAGEMASK|0x01)) == (_regs)->AIV))   \
-  {                                                                   \
-    /* Check for constraint BEFORE actually updating to new ip */     \
-    BYTE* _new_ip = (BYTE*)((uintptr_t)(_regs)->aim ^ (uintptr_t)_newia); \
-    TXF_INSTRADDR_CONSTRAINT( (_new_ip), (_regs) );                   \
-    (_regs)->ip = (_new_ip);   /* (branch to the new instruction) */  \
-    return;                                                           \
-  }                                                                   \
-  /* Branch target is in another page... */                           \
-                                                                      \
-  /* Set new ip by forcing full instruction fetch from target */      \
-  (_regs)->psw.IA = _newia;     /* (point PSW to target instr) */     \
-  (_regs)->aie = NULL;          /* (force a fresh 'instfetch') */     \
-  PER_SB( (_regs), (_regs)->psw.IA );                                 \
-} while (0)
-
-//---------------------------------------------------------------------
+    ARCH_DEP( SuccessfulBranch )( (_regs), (_addr) )
 
 #undef  SUCCESSFUL_RELATIVE_BRANCH
-#define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset, _len )            \
-do {                                                                  \
-  /* Set BEAR to branch instruction. Note: for branch instructions    \
-     regs->ip is not updated to point to the next instruction and     \
-     thus is still pointing to the branch instruction itself.         \
-  */                                                                  \
-  SET_BEAR_REG( (_regs), regs->ip );                                  \
+#define SUCCESSFUL_RELATIVE_BRANCH( _regs, _offset )                  \
                                                                       \
-  /* Branch target still within same page as branch instruction? */   \
-  if (likely(!(_regs)->permode && !(_regs)->execflag)                 \
-   && likely( (_regs)->ip + (_offset) >= (_regs)->aip)                \
-   && likely( (_regs)->ip + (_offset) <  (_regs)->aie) )              \
-  {                                                                   \
-    /* Check for constraint BEFORE actually updating to new ip */     \
-    BYTE* _new_ip = (_regs)->ip + (_offset);                          \
-    TXF_INSTRADDR_CONSTRAINT( (_new_ip), (_regs) );                   \
-    (_regs)->ip = (_new_ip);                                          \
-    return;                                                           \
-  }                                                                   \
-  /* Branch target is in another page... */                           \
-                                                                      \
-  /* Point PSW to target instruction */                               \
-  if (likely(!(_regs)->execflag))                                     \
-    (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
-  else                                                                \
-  {                                                                   \
-    (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
-    (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
-  }                                                                   \
-                                                                      \
-  /* Set new ip by forcing full instruction fetch from target */      \
-  (_regs)->aie = NULL;            /* (force a fresh 'instfetch') */   \
-  PER_SB( (_regs), (_regs)->psw.IA );                                 \
-} while (0)
-
-//---------------------------------------------------------------------
-//          BRCL, BRASL can branch +/- 4G.
-//          This is problematic on a 32 bit host.
-
-#undef  SUCCESSFUL_RELATIVE_BRANCH_LONG
-#define SUCCESSFUL_RELATIVE_BRANCH_LONG( _regs, _offset )             \
-do {                                                                  \
-  /* Set BEAR to branch instruction. Note: for branch instructions    \
-     regs->ip is not updated to point to the next instruction and     \
-     thus is still pointing to the branch instruction itself.         \
-  */                                                                  \
-  SET_BEAR_REG( (_regs), regs->ip );                                  \
-                                                                      \
-  /* Branch target still within same page as branch instruction? */   \
-  if (likely(!(_regs)->permode && !(_regs)->execflag  )               \
-   && likely(               (_offset) >      -4096    )               \
-   && likely(               (_offset) <       4096    )               \
-   && likely( (_regs)->ip + (_offset) >= (_regs)->aip )               \
-   && likely( (_regs)->ip + (_offset) <  (_regs)->aie ))              \
-  {                                                                   \
-    /* Check for constraint BEFORE actually updating to new ip */     \
-    BYTE* _new_ip = (_regs)->ip + (_offset);                          \
-    TXF_INSTRADDR_CONSTRAINT( (_new_ip), (_regs) );                   \
-    (_regs)->ip = (_new_ip);                                          \
-    return;                                                           \
-  }                                                                   \
-  /* Branch target is in another page... */                           \
-                                                                      \
-  /* Point PSW to target instruction */                               \
-  if (likely(!(_regs)->execflag))                                     \
-    (_regs)->psw.IA = PSW_IA( (_regs), (_offset) );                   \
-  else                                                                \
-  {                                                                   \
-    (_regs)->psw.IA = (_regs)->ET + (_offset);                        \
-    (_regs)->psw.IA &= ADDRESS_MAXWRAP( (_regs) );                    \
-  }                                                                   \
-                                                                      \
-  /* Set new ip by forcing full instruction fetch from target */      \
-  (_regs)->aie = NULL;            /* (force a fresh 'instfetch') */   \
-  PER_SB( (_regs), (_regs)->psw.IA );                                 \
-} while (0)
+    ARCH_DEP( SuccessfulRelativeBranch )( (_regs), (_offset) )
 
 /*-------------------------------------------------------------------*/
 /*                         (other)                                   */
@@ -1480,13 +1381,14 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 
 #undef CONTRAN_INSTR_CHECK
-#undef CONTRAN_BRANCH_CHECK
-#undef CONTRAN_RELATIVE_BRANCH_CHECK
+#undef CONTRAN_INSTR_CHECK_IP
+#undef CONTRAN_BRANCH_CHECK_IP
+#undef CONTRAN_RELATIVE_BRANCH_CHECK_IP
 #undef TRAN_INSTR_CHECK
 #undef TRAN_FLOAT_INSTR_CHECK
 #undef TRAN_ACCESS_INSTR_CHECK
-#undef TRAN_NONRELATIVE_BRANCH_CHECK
-#undef TRAN_BRANCH_SET_MODE_CHECK
+#undef TRAN_NONRELATIVE_BRANCH_CHECK_IP
+#undef TRAN_BRANCH_SET_MODE_CHECK_IP
 #undef TRAN_SET_ADDRESSING_MODE_CHECK
 #undef TRAN_MISC_INSTR_CHECK
 #undef TRAN_EXECUTE_INSTR_CHECK
@@ -1499,14 +1401,15 @@ do {                                                                  \
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
   #define CONTRAN_INSTR_CHECK( _regs )
-  #define CONTRAN_BRANCH_CHECK( _regs, _m3, _i4 )
-  #define CONTRAN_RELATIVE_BRANCH_CHECK( _regs )
+  #define CONTRAN_INSTR_CHECK_IP( _regs )
+  #define CONTRAN_BRANCH_CHECK_IP( _regs, _m3, _i4 )
+  #define CONTRAN_RELATIVE_BRANCH_CHECK_IP( _regs )
   #define TRAN_INSTR_CHECK( _regs )
   #define TRAN_FLOAT_INSTR_CHECK( _regs )
   #define TRAN_ACCESS_INSTR_CHECK( _regs )
   #define TRAN_MISC_INSTR_CHECK( _regs )
-  #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )
-  #define TRAN_BRANCH_SET_MODE_CHECK( _regs, _r2 )
+  #define TRAN_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )
+  #define TRAN_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )
   #define TRAN_SET_ADDRESSING_MODE_CHECK( _regs )
   #define TRAN_EXECUTE_INSTR_CHECK( _regs )
   #define ALLOC_TXFMAP( _regs )
@@ -1529,7 +1432,21 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define CONTRAN_BRANCH_CHECK( _regs, _m3, _i4 )                                       \
+  #define CONTRAN_INSTR_CHECK_IP( _regs )                                               \
+    /* Restricted instruction in CONSTRAINED transaction mode */                        \
+    do {                                                                                \
+      if ((_regs)->txf_contran)                                                         \
+      {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
+        (_regs)->txf_why |= TXF_WHY_CONTRAN_INSTR;                                      \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
+      }                                                                                 \
+    } while (0)
+
+  #define CONTRAN_BRANCH_CHECK_IP( _regs, _m3, _i4 )                                    \
     /* Branches restricted in CONSTRAINED mode if mask zero or offset negative */       \
     do {                                                                                \
       if ((_regs)->txf_contran &&                                                       \
@@ -1538,12 +1455,16 @@ do {                                                                  \
         || (_i4) < 0                /* backward branches not allowed */                 \
       ))                                                                                \
       {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_BRANCH;                                     \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
       }                                                                                 \
     } while (0)
 
-  #define CONTRAN_RELATIVE_BRANCH_CHECK( _regs )                                        \
+  #define CONTRAN_RELATIVE_BRANCH_CHECK_IP( _regs )                                     \
     /* Relative branches restricted in CONSTRAINED mode */                              \
     /* if the mask is zero or the offset is negative    */                              \
     do {                                                                                \
@@ -1553,8 +1474,12 @@ do {                                                                  \
         || (inst[2] & 0x80)                                                             \
       ))                                                                                \
       {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
         (_regs)->txf_why |= TXF_WHY_CONTRAN_RELATIVE_BRANCH;                            \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
       }                                                                                 \
     } while (0)
 
@@ -1597,7 +1522,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_NONRELATIVE_BRANCH_CHECK( _regs, _r )                                    \
+  #define TRAN_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )                                 \
     /* BALR/BASR/BASSM are restricted when the branch     */                            \
     /* register is non-zero and BRANCH tracing is enabled */                            \
     do {                                                                                \
@@ -1606,12 +1531,16 @@ do {                                                                  \
           && ((_r) != 0 && ((_regs)->CR(12) & CR12_BRTRACE))                            \
       )                                                                                 \
       {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
         (_regs)->txf_why |= TXF_WHY_TRAN_NONRELATIVE_BRANCH;                            \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_BRANCH_SET_MODE_CHECK( _regs, _r2 )                                      \
+  #define TRAN_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )                                   \
     /* BASSM/BSM are restricted if the r2 field */                                      \
     /* is non-zero and MODE tracing is enabled. */                                      \
     do {                                                                                \
@@ -1620,8 +1549,12 @@ do {                                                                  \
           && ((_r2) != 0 && ((_regs)->CR(12) & CR12_MTRACE))                            \
       )                                                                                 \
       {                                                                                 \
+        /* Since the instruction hasn't been decoded yet, regs->ip is still             \
+           pointing to the instruction so we use NEGATIVE "ABORT_RETRY_PGMCHK".         \
+           See the comments in the "abort_transaction" function in transact.c           \
+        */                                                                              \
         (_regs)->txf_why |= TXF_WHY_TRAN_BRANCH_SET_MODE;                               \
-        ABORT_TRANS( (_regs), ABORT_RETRY_PGMCHK, TAC_INSTR );                          \
+        ABORT_TRANS( (_regs), -ABORT_RETRY_PGMCHK, TAC_INSTR );                         \
       }                                                                                 \
     } while (0)
 
@@ -1832,6 +1765,9 @@ void ARCH_DEP( checkstop_config )(void);
 #if defined( FEATURE_PER3 )
 CPU_DLL_IMPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip );
 #endif
+
+CPU_DLL_IMPORT void ARCH_DEP( SuccessfulBranch )        ( REGS* regs, VADR vaddr );
+CPU_DLL_IMPORT void ARCH_DEP( SuccessfulRelativeBranch )( REGS* regs, S64 offset );
 
 #if defined( _FEATURE_SIE )
 CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
