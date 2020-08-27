@@ -1596,25 +1596,11 @@ static REGS *my_copy_regs(int cpu)
 
 DLL_EXPORT void set_panel_colors()
 {
-    if (sysblk.pan_colors)
+    switch (sysblk.pan_colors)
     {
-        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
-        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+    default:
+    case PANC_NONE:   // No colors: use defaults
 
-        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
-        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
-
-        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
-        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
-
-        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
-        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
-
-        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_BLUE;
-        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
-    }
-    else // no colors: use default
-    {
         sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
         sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
         sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_DEFAULT_FG;
@@ -1626,6 +1612,46 @@ DLL_EXPORT void set_panel_colors()
         sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
         sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
         sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        break;
+
+    case PANC_DARK:   // Dark scheme: light text on dark background
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
+
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_BLUE;
+
+        break;
+
+    case PANC_LIGHT:  // Light scheme: dark text on light background
+
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_FG_IDX ] = COLOR_DARK_GREY;
+        sysblk.pan_color[ PANC_X_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_FG_IDX ] = COLOR_BLACK;
+        sysblk.pan_color[ PANC_I_IDX ][ PANC_BG_IDX ] = COLOR_DEFAULT_BG;
+
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_FG_IDX ] = COLOR_WHITE;
+        sysblk.pan_color[ PANC_E_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_RED;
+
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
+
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_BLUE;
+
+        break;
     }
 }
 
@@ -1651,7 +1677,7 @@ static regmatch_t  regmatch;
 static void init_HHC_regexp()
 {
     // "HHC99999S"
-    have_regexp = (0 == regcomp( &regex, "(HHC\\d\\d\\d\\d\\d\\S)", REG_EXTENDED ))
+    have_regexp = (0 == regcomp( &regex, "(HHC[0-9][0-9][0-9][0-9][0-9]\\S)", REG_EXTENDED ))
         ? true : false;
 }
 #endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
@@ -1675,8 +1701,8 @@ static int msg_sev( const char* msg )
 }
 
 /*-------------------------------------------------------------------*/
-/* Panel display thread                                              */
-/*                                                                   */
+/*                    Panel display thread                           */
+/*-------------------------------------------------------------------*/
 /* This function runs on the main thread.  It receives messages      */
 /* from the log task and displays them on the screen.  It accepts    */
 /* panel commands from the keyboard and executes them.  It samples   */

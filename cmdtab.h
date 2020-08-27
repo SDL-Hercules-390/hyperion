@@ -966,13 +966,14 @@
 #define panopt_cmd_desc         "Display or set panel options"
 #define panopt_cmd_help         \
                                 \
-  "Format: \"panopt [MSGCOLOR=NO|YES] [FULLPATH|NAMEONLY]\" sets or displays\n"     \
-  "panel options. MSGCOLOR=YES displays colorized panel messages. NO (default)\n"   \
-  "displays normal uncolorized panel messages. NAMEONLY requests the extended\n"    \
-  "panel screen (that displays the list of devices and is reached by pressing\n"    \
-  "the ESC key) to display only the emulated device's base filename. FULLPATH\n"    \
-  "displays the file's full path filename. Enter the command with no arguments\n"   \
-  "to display the current settings.\n"
+  "Format: \"panopt [MSGCOLOR=NO|DARK|LIGHT] [FULLPATH|NAMEONLY]\" sets or\n"       \
+  "displays panel options. MSGCOLOR=DARK displays colorized panel messages\n"       \
+  "meant for 'dark' panels (e.g. white text on black background) whereas\n"         \
+  "MSGCOLOR=LIGHT is meant for panels using black text on white backgrounds.\n"     \
+  "NAMEONLY requests the extended panel screen (that displays the list of\n"        \
+  "devices and is reached by pressing the ESC key) to display the emulated\n"       \
+  "device's base filename only, whereas FULLPATH (the default) displays the\n"      \
+  "file's full path filename. No arguments at all displays current settings.\n"
 
 #define panrate_cmd_desc        "Display or set rate at which console refreshes"
 #define panrate_cmd_help        \

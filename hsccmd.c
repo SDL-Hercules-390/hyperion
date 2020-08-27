@@ -3989,7 +3989,7 @@ int panopt_cmd( int argc, char* argv[], char* cmdline)
     UNREFERENCED( cmdline );
     UPPER_ARGV_0(  argv   );
 
-    // panopt [MSGCOLOR=NO|YES] [FULLPATH|NAMEONLY]
+    // panopt [MSGCOLOR=NO|DARK|LIGHT] [FULLPATH|NAMEONLY]
 
     if (argc <= 1)
     {
@@ -4007,10 +4007,11 @@ int panopt_cmd( int argc, char* argv[], char* cmdline)
         int  i;
         for (i=1; i < argc; i++)
         {
-            if      (CMD( argv[i], NAMEONLY,      4 )) sysblk.devnameonly = 1;
-            else if (CMD( argv[i], FULLPATH,      4 )) sysblk.devnameonly = 0;
-            else if (CMD( argv[i], MSGCOLOR=NO,  11 )) sysblk.pan_colors = false;
-            else if (CMD( argv[i], MSGCOLOR=YES, 12 )) sysblk.pan_colors = true;
+            if      (CMD( argv[i], NAMEONLY,        4 )) sysblk.devnameonly = 1;
+            else if (CMD( argv[i], FULLPATH,        4 )) sysblk.devnameonly = 0;
+            else if (CMD( argv[i], MSGCOLOR=NO,    11 )) sysblk.pan_colors  = PANC_NONE;
+            else if (CMD( argv[i], MSGCOLOR=DARK,  13 )) sysblk.pan_colors  = PANC_DARK;
+            else if (CMD( argv[i], MSGCOLOR=LIGHT, 14 )) sysblk.pan_colors  = PANC_LIGHT;
             else // error
             {
                 // "Invalid argument %s%s"
@@ -4024,7 +4025,9 @@ int panopt_cmd( int argc, char* argv[], char* cmdline)
         if (MLVL( VERBOSE ))
         {
             MSGBUF( buf, "MSGCOLOR=%s %s",
-                sysblk.pan_colors  ? "YES"      : "NO",
+                sysblk.pan_colors == PANC_NONE  ? "NO"  :
+                sysblk.pan_colors == PANC_DARK  ? "DARK"  :
+                sysblk.pan_colors == PANC_LIGHT ? "LIGHT" : "(err!)",
                 sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
             );
 
