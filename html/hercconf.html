@@ -84,7 +84,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CCKD">CCKD</a>       NOSFD=1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
-    <a href="#PANOPT">PANOPT</a>     MSGCOLOR=YES NAMEONLY
+    <a href="#PANOPT">PANOPT</a>     NAMEONLY MSGCOLOR=DARK
     <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
 
@@ -1265,19 +1265,26 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="PANOPT"></a>
-<dt><code>PANOPT &nbsp; MSGCOLOR=<u>NO</u>&#124;YES &nbsp; <u>FULLPATH</u>&#124;NAMEONLY </code>
+<dt><code>PANOPT &nbsp; <u>FULLPATH</u>&#124;NAMEONLY &nbsp; MSGCOLOR=<u>NO</u>&#124;DARK&#124;LIGHT</code>
 <dd><p>
     Defines panel display options.
     <p>
-    <code>MSGCOLOR=YES</code> displays colorized panel messages.
-    <code>NO</code> displays normal uncolorized panel messages.
-    The default is <code><u>NO</u></code>, but <code>YES</code> is encouraged
-    as it makes important warning and error messages more noticeable.
+    <code>NAMEONLY</code> requests the extended panel screen (that displays
+    the list of devices and is reached by pressing the ESC key) to display only
+    the emulated device's base filename. <code>FULLPATH</code> displays the
+    file's full path filename. The default is <code><u>FULLPATH</u></code>.
     <p>
-    <code>NAMEONLY</code> requests the extended panel screen (that displays the list of
-    devices and is reached by pressing the ESC key) to display only the emulated device's
-    base filename. <code>FULLPATH</code> displays the file's full path filename. The
-    default is <code><u>FULLPATH</u></code>.
+    <code>MSGCOLOR=DARK</code> displays colorized panel messages meant for
+    'dark' panels (such as white text on black background) whereas
+    <code>MSGCOLOR=LIGHT</code> is obviously meant for panels using dark
+    text on light backgrounds. Only 'E' (error), 'W' (warning), 'D' (debug)
+    and 'I' (informational) messages are colorized. Any message not detected
+    as a Hercules "HHCnnnnnX" format message are not colorized. The colors
+    are currently hard coded.
+    <p>
+    <code><u>NO</u></code> is the default but <code>DARK&#124;LIGHT</code>
+    (as appropriate for your system) is encouraged as it makes error and
+    warning messages more noticeable and less likely to be missed.
     <p>
 
 <a name="PANRATE"></a>
