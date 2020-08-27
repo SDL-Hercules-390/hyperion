@@ -771,7 +771,7 @@ struct SYSBLK {
 #define SHCMDOPT_DIAG8    0x02          /* Allow for DIAG8 as well   */
         int     panrate;                /* Panel refresh rate        */
 
-        bool pan_colors;                /* panel colors option       */
+        int     pan_colors;             /* Panel colors option:      */
 
 #define PANC_NONE   0                   /* No colors (default)       */
 #define PANC_DARK   1                   /* Dark background scheme    */
