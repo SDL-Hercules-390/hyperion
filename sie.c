@@ -300,9 +300,10 @@ U64     dreg;
 
     S( inst, regs, b2, effective_addr2 );
 
-    SIE_INTERCEPT( regs );
-
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
+
+    SIE_INTERCEPT( regs );
 
     PTT_SIE( "SIE", regs->GR(14), regs->GR(15), effective_addr2);
 
@@ -1588,6 +1589,7 @@ int     zone;                           /* Zone number               */
 
     S(inst, regs, b2, effective_addr2);
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -1632,6 +1634,7 @@ RADR    mso,                            /* Main Storage Origin       */
 
     S(inst, regs, b2, effective_addr2);
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -1690,6 +1693,7 @@ int     zone;                           /* Zone number               */
 
     S(inst, regs, b2, effective_addr2);
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);

@@ -39,6 +39,7 @@ DEVBLK *dev;                            /* -> device block           */
     S(inst, regs, b2, effective_addr2);
 
 //  ARCH_DEP(display_inst) (regs, inst);
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -184,6 +185,7 @@ U64     slsba;                 /* Storage list state block address   */
 
 //  ARCH_DEP(display_inst) (regs, inst);
     FACILITY_CHECK( HERC_QEBSM, regs );
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -277,6 +279,7 @@ U64     slsba;                /* Storage list state block address    */
 
 //  ARCH_DEP(display_inst) (regs, inst);
     FACILITY_CHECK( HERC_QEBSM, regs );
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -370,6 +373,7 @@ DEF_INST(set_vector_summary)
 int     r1, r2;                /* Register numbers                   */
 
     RRE(inst, regs, r1, r2);
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
     SIE_INTERCEPT(regs);
     ODD_CHECK(r1, regs);

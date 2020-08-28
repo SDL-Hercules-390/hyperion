@@ -38,6 +38,7 @@ size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     if(SIE_STATE_BIT_ON(regs, IC3, PGX))
@@ -103,6 +104,7 @@ size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     if(SIE_STATE_BIT_ON(regs, IC3, PGX))
@@ -164,6 +166,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
@@ -216,6 +219,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
     RRE(inst, regs, r1, r2);
+    TRAN_INSTR_CHECK( regs );
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATE_BIT_OFF(regs, EC0, MVPG))

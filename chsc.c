@@ -585,6 +585,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     ARCH_DEP(display_inst) (regs, inst);
     #endif
 
+    TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);

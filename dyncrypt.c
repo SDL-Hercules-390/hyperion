@@ -3996,14 +3996,13 @@ DEF_INST(dyn_compute_intermediate_message_digest)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 0)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KIMD_DEBUG
   WRMSG(HHC90100, "D", "KIMD: compute intermediate message digest");
@@ -4101,14 +4100,13 @@ DEF_INST(dyn_compute_last_message_digest)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 0)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KLMD_DEBUG
   WRMSG(HHC90100, "D", "KLMD: compute last message digest");
@@ -4194,14 +4192,13 @@ DEF_INST(dyn_cipher_message)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 0)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KM_DEBUG
   WRMSG(HHC90100, "D", "KM: cipher message");
@@ -4331,14 +4328,13 @@ DEF_INST(dyn_compute_message_authentication_code)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 0)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KMAC_DEBUG
   WRMSG(HHC90100, "D", "KMAC: compute message authentication code");
@@ -4432,14 +4428,13 @@ DEF_INST(dyn_cipher_message_with_chaining)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 0)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KMC_DEBUG
   WRMSG(HHC90100, "D", "KMC: cipher message with chaining");
@@ -4568,14 +4563,13 @@ DEF_INST(dyn_cipher_message_with_counter)
   int r2;
   int r3;
 
+  RRF_M(inst, regs, r1, r2, r3);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRF_M(inst, regs, r1, r2, r3);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KMCTR_DEBUG
   WRMSG(HHC90100, "D", "KMCTR: cipher message with counter");
@@ -4661,14 +4655,13 @@ DEF_INST(dyn_cipher_message_with_cipher_feedback)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KMF_DEBUG
   WRMSG(HHC90100, "D", "KMF: cipher message with cipher feedback");
@@ -4755,14 +4748,13 @@ DEF_INST(dyn_cipher_message_with_output_feedback)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
-
-  TRAN_INSTR_CHECK( regs );
 
 #ifdef OPTION_KMO_DEBUG
   WRMSG(HHC90100, "D", "KMO: cipher message with output feedback");
@@ -4840,16 +4832,14 @@ DEF_INST(dyn_perform_cryptographic_computation)
     { 0xf0, 0x70, 0x38, 0x38, 0x00, 0x00, 0x28, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
   };
 
-  TRAN_INSTR_CHECK( regs );
-
   UNREFERENCED(inst);              /* This operation has no operands */
+  INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
+  TRAN_INSTR_CHECK( regs );
 
   /* The following is the same as doing a FACILITY_CHECK */
   if(msa < 4)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
   else if (msa > 4) msa = 4;
-
-  INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
 
 #ifdef OPTION_PCC_DEBUG
   WRMSG(HHC90100, "D", "PCC: perform cryptographic computation");
@@ -4919,12 +4909,13 @@ DEF_INST(dyn_perform_cryptographic_key_management_operation)
   int r1;
   int r2;
 
+  RRE(inst, regs, r1, r2);
+  TRAN_INSTR_CHECK( regs );
+
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
   if(msa < 3)
     ARCH_DEP(program_interrupt)(regs, PGM_OPERATION_EXCEPTION);
-
-  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_PCKMO_DEBUG
   WRMSG(HHC90100, "D", "PCKMO: perform cryptographic key management operation");
