@@ -1126,7 +1126,7 @@ char    regs_msg_buf[4*512] = {0};
     if (!iregs->ghostregs)
         free_aligned( regs );
 
-} /* end function display_inst */
+} /* end function display_inst_adj */
 
 /*-------------------------------------------------------------------*/
 /*                    display_inst                                   */

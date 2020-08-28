@@ -405,14 +405,13 @@ do { \
       )                                                               \
   )
 
-#define CPU_STEPPING(_regs, _ilc)                                     \
-  (                                                                   \
-      sysblk.inststep                                                 \
-   && (0                                                              \
+#define _CPU_STEP_OR_TRACE(_regs, _ilc)                               \
+   (0                                                                 \
        || !TXF_INSTR_TRACING()                                        \
        ||  TXF_TRACE_THIS_INSTR( _regs )                              \
-      )                                                               \
-   && (                                                               \
+   )                                                                  \
+   &&                                                                 \
+   (                                                                  \
         (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)          \
      || (sysblk.stepaddr[0] <= sysblk.stepaddr[1]                     \
          && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0]            \
@@ -422,28 +421,15 @@ do { \
          && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1]            \
          && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0]            \
         )                                                             \
-      )                                                               \
-  )
+   )                                                                  \
+
+#define CPU_STEPPING(_regs, _ilc)                                     \
+                                                                      \
+  (sysblk.inststep  && _CPU_STEP_OR_TRACE((_regs),(_ilc)))
 
 #define CPU_TRACING(_regs, _ilc)                                      \
-  (                                                                   \
-      sysblk.insttrace                                                \
-   && (0                                                              \
-       || !TXF_INSTR_TRACING()                                        \
-       ||  TXF_TRACE_THIS_INSTR( _regs )                              \
-      )                                                               \
-   && (                                                               \
-        (sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)        \
-     || (sysblk.traceaddr[0] <= sysblk.traceaddr[1]                   \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[0]           \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[1]           \
-        )                                                             \
-     || (sysblk.traceaddr[0] > sysblk.traceaddr[1]                    \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.traceaddr[1]           \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.traceaddr[0]           \
-        )                                                             \
-      )                                                               \
-  )
+                                                                      \
+  (sysblk.insttrace && _CPU_STEP_OR_TRACE((_regs),(_ilc)))
 
 #define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
   ( unlikely((_regs)->tracing) && \
@@ -458,7 +444,6 @@ do { \
 
 #define CPU_STEPPING_OR_TRACING_ALL \
   ( CPU_TRACING_ALL || CPU_STEPPING_ALL )
-
 
 #define RETURN_INTCHECK(_regs) \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
