@@ -2421,6 +2421,7 @@ static void*  CTCE_ListenThread( void* argp )
                             // then we must re-initiate the CTCE_ConnectThread.
                             if ( ( dev->fd != -1 ) && ( ! ( pSokBuf->ctce_herc & CTCE_HERC_RECV ) ) )
                             {
+                                dev->reinit = 1;
                                 CTCE_Start_ConnectThread( dev ) ;
                             }
 
