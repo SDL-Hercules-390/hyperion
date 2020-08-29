@@ -215,11 +215,23 @@ const BYTE map_valid_m3_values_nofpef[8] = {1,     /* M3 0: Use FPC BFP Rounding
 #define SCALE_FACTOR_LOADR_UFLOW_LONG   512
 #define SCALE_FACTOR_LOADR_UFLOW_EXTD   8192
 
+/* In addition to extFloat80M (in softfloat_type.h), also the type float128_t is        */
+/* dependent on the endian-ness of the host.  The indexes of op.v[ ] can therefore not  */
+/* be hardcoded [1] and [0], but must use the following macros.  This was verified on   */
+/* a s390x SLES 12 SP5 system running on IBM system z15 hardware.                       */
+
+#ifdef LITTLEENDIAN
+  #define FLOAT128_HI 1
+  #define FLOAT128_LO 0
+#else
+  #define FLOAT128_HI 0
+  #define FLOAT128_LO 1
+#endif
 
   /* Identify NaNs  */
 
-#define FLOAT128_ISNAN( _op )   ( ((_op.v[1] & 0x7FFF000000000000ULL) == 0x7FFF000000000000ULL) &&     \
-                                   (_op.v[1] & 0x0000FFFFFFFFFFFFULL || _op.v[0] ) )
+#define FLOAT128_ISNAN( _op )   ( ((_op.v[FLOAT128_HI] & 0x7FFF000000000000ULL) == 0x7FFF000000000000ULL) &&     \
+                                   (_op.v[FLOAT128_HI] & 0x0000FFFFFFFFFFFFULL || _op.v[FLOAT128_LO] ) )
 
 #define FLOAT64_ISNAN( _op )    ( ((_op.v    & 0x7FF0000000000000ULL) == 0x7FF0000000000000ULL) &&     \
                                    (_op.v    & 0x000FFFFFFFFFFFFFULL) )
@@ -229,7 +241,7 @@ const BYTE map_valid_m3_values_nofpef[8] = {1,     /* M3 0: Use FPC BFP Rounding
 
   /* Make SNaNs into QNaNs  */
 
-#define FLOAT128_MAKE_QNAN( _op )  _op.v[1] |= 0x0000800000000000ULL
+#define FLOAT128_MAKE_QNAN( _op )  _op.v[FLOAT128_HI] |= 0x0000800000000000ULL
 #define FLOAT64_MAKE_QNAN( _op )   _op.v    |= 0x0008000000000000ULL
 #define FLOAT32_MAKE_QNAN( _op )   _op.v    |= 0x00400000
 
@@ -237,8 +249,8 @@ const BYTE map_valid_m3_values_nofpef[8] = {1,     /* M3 0: Use FPC BFP Rounding
 
 #define FLOAT128_CC( _op1 ) /* Determine cc from float132 value */                         \
                             FLOAT128_ISNAN( _op1 ) ? 3 :                                       \
-                            !( (_op1.v[1] & 0x7FFFFFFFFFFFFFFFULL) | _op1.v[0]) ? 0 :  \
-                            _op1.v[1] & 0x8000000000000000ULL ? 1 : 2
+                            !( (_op1.v[FLOAT128_HI] & 0x7FFFFFFFFFFFFFFFULL) | _op1.v[FLOAT128_LO]) ? 0 :  \
+                            _op1.v[FLOAT128_HI] & 0x8000000000000000ULL ? 1 : 2
 
 #define FLOAT64_CC( _op1 )  /* Determine cc from float64 value */                          \
                             FLOAT64_ISNAN( _op1 ) ? 3 :                                        \
@@ -321,13 +333,13 @@ enum {
 static INLINE U32 float128_class( float128_t op )
 {
     int neg =
-       (  op.v[1] & 0x8000000000000000ULL ) ? 1 : 0;
+       (  op.v[FLOAT128_HI] & 0x8000000000000000ULL ) ? 1 : 0;
     if (f128_isSignalingNaN( op ))                         {return float_class_pos_signaling_nan >> neg;}
     if (FLOAT128_ISNAN( op ))                              {return float_class_pos_quiet_nan     >> neg;}
-    if (!(op.v[1] & 0x7FFFFFFFFFFFFFFFULL ) && !op.v[0])   {return float_class_pos_zero          >> neg;}
-    if ( (op.v[1] & 0x7FFFFFFFFFFFFFFFULL )
-                 == 0x7FFF000000000000ULL   && !op.v[0])   {return float_class_pos_infinity      >> neg;}
-    if (  op.v[1] & 0x7FFF000000000000ULL )                {return float_class_pos_normal        >> neg;}
+    if (!(op.v[FLOAT128_HI] & 0x7FFFFFFFFFFFFFFFULL ) && !op.v[FLOAT128_LO])   {return float_class_pos_zero          >> neg;}
+    if ( (op.v[FLOAT128_HI] & 0x7FFFFFFFFFFFFFFFULL )
+                           == 0x7FFF000000000000ULL   && !op.v[FLOAT128_LO])   {return float_class_pos_infinity      >> neg;}
+    if (  op.v[FLOAT128_HI] & 0x7FFF000000000000ULL )                          {return float_class_pos_normal        >> neg;}
                                                             return float_class_pos_subnormal     >> neg;
 }
 
@@ -470,16 +482,16 @@ struct sbfp {
 static INLINE void ARCH_DEP(get_float128)( float128_t *op, U32 *fpr )
 {
                                                       /* high order bits in v[1], low order in v[0]  */
-    op->v[1] = ((U64)fpr[0]     << 32) | fpr[1];               /* *****  Possible endian concern  ******* */
-    op->v[0]  = ((U64)fpr[FPREX] << 32) | fpr[FPREX+1];
+    op->v[FLOAT128_HI] = ((U64)fpr[0]     << 32) | fpr[1];               /* *****  Possible endian concern  ******* */
+    op->v[FLOAT128_LO] = ((U64)fpr[FPREX] << 32) | fpr[FPREX+1];
 }
 
 static INLINE void ARCH_DEP(put_float128)( float128_t *op, U32 *fpr )
 {
-    fpr[0]       = (U32) (op->v[1] >> 32);
-    fpr[1]       = (U32) (op->v[1] & 0xFFFFFFFF);
-    fpr[FPREX]   = (U32) (op->v[0]  >> 32);
-    fpr[FPREX+1] = (U32) (op->v[0] & 0xFFFFFFFF);
+    fpr[0]       = (U32) (op->v[FLOAT128_HI] >> 32);
+    fpr[1]       = (U32) (op->v[FLOAT128_HI] & 0xFFFFFFFF);
+    fpr[FPREX]   = (U32) (op->v[FLOAT128_LO]  >> 32);
+    fpr[FPREX+1] = (U32) (op->v[FLOAT128_LO] & 0xFFFFFFFF);
 }
 
 static INLINE void ARCH_DEP(get_float64)( float64_t *op, U32 *fpr )
@@ -1832,7 +1844,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     }
     else
     {
-        newcc = (op2.v[1] & 0x8000000000000000ULL) ? 1 : 2;
+        newcc = (op2.v[FLOAT128_HI] & 0x8000000000000000ULL) ? 1 : 2;
         if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
             op1 = 0;
         else
@@ -2038,7 +2050,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     }
     else
     {
-        newcc = (op2.v[1] & 0x8000000000000000ULL) ? 1 : 2;
+        newcc = (op2.v[FLOAT128_HI] & 0x8000000000000000ULL) ? 1 : 2;
         if (op2_dataclass & (float_class_neg_subnormal | float_class_pos_subnormal))
             op1 = 0;
         else
@@ -3364,7 +3376,7 @@ DEF_INST(load_negative_bfp_ext_reg)
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
     GET_FLOAT128_OP( op, r2, regs );
-    op.v[1] |= 0x8000000000000000ULL;
+    op.v[FLOAT128_HI] |= 0x8000000000000000ULL;
     PUT_FLOAT128_CC( op, r1, regs );
 }
 
@@ -3419,7 +3431,7 @@ DEF_INST(load_complement_bfp_ext_reg)
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
     GET_FLOAT128_OP( op, r2, regs );
-    op.v[1] ^= 0x8000000000000000ULL;
+    op.v[FLOAT128_HI] ^= 0x8000000000000000ULL;
     PUT_FLOAT128_CC( op, r1, regs );
 }
 
@@ -3474,7 +3486,7 @@ DEF_INST(load_positive_bfp_ext_reg)
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
     GET_FLOAT128_OP( op, r2, regs );
-    op.v[1] &= ~0x8000000000000000ULL;
+    op.v[FLOAT128_HI] &= ~0x8000000000000000ULL;
     PUT_FLOAT128_CC( op, r1, regs );
 }
 
@@ -4895,11 +4907,11 @@ DEF_INST(divide_integer_bfp_long_reg)
                 op2128 = f64_to_f128(op2);
                 softfloat_roundingMode = softfloat_round_minMag;
                 quo128 = f128_div(op1128, op2128);
-                quo128.v[0] &= 0xf000000000000000ULL;                   /* truncate to long precision with extended exponent    */
+                quo128.v[FLOAT128_LO] &= 0xf000000000000000ULL;     /* truncate to long precision with extended exponent*/
                 intquo128 = f128_roundToInt(quo128, softfloat_round_minMag, FALSE);
-                intquo128.v[1] ^= 0x8000000000000000ULL;                    /* flip sign of dividend for fused multiply-add */
+                intquo128.v[FLOAT128_HI] ^= 0x8000000000000000ULL;      /* flip sign of dividend for fused multiply-add */
                 rem128 = f128_mulAdd(intquo128, op2128, op1128);             /* rem = (-intquo * divisor) + dividend        */
-                intquo128.v[1] ^= 0x8000000000000000ULL;                    /* Restore sign of dividend                     */
+                intquo128.v[FLOAT128_HI] ^= 0x8000000000000000ULL;      /* Restore sign of dividend                     */
                 softfloat_exceptionFlags = 0;                           /* clear any prior Softfloat flags              */
                 softfloat_roundingMode = softfloat_round_minMag;        /* round remainder toward zero (but remainder   */
                 rem = f128_to_f64(rem128);                              /* should be exact!?)                           */
