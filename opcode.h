@@ -405,31 +405,31 @@ do { \
       )                                                               \
   )
 
-#define _CPU_STEP_OR_TRACE(_regs, _ilc)                               \
+#define _CPU_STEP_OR_TRACE(_steptrace, _regs, _ilc)                   \
    (0                                                                 \
        || !TXF_INSTR_TRACING()                                        \
        ||  TXF_TRACE_THIS_INSTR( _regs )                              \
    )                                                                  \
    &&                                                                 \
    (                                                                  \
-        (sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)          \
-     || (sysblk.stepaddr[0] <= sysblk.stepaddr[1]                     \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[0]            \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[1]            \
+        (sysblk._steptrace[0] == 0 && sysblk._steptrace[1] == 0)      \
+     || (sysblk._steptrace[0] <= sysblk._steptrace[1]                 \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk._steptrace[0]          \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk._steptrace[1]          \
         )                                                             \
-     || (sysblk.stepaddr[0] > sysblk.stepaddr[1]                      \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk.stepaddr[1]            \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk.stepaddr[0]            \
+     || (sysblk._steptrace[0] > sysblk._steptrace[1]                  \
+         && PSW_IA((_regs), -(_ilc)) >= sysblk._steptrace[1]          \
+         && PSW_IA((_regs), -(_ilc)) <= sysblk._steptrace[0]          \
         )                                                             \
    )                                                                  \
 
 #define CPU_STEPPING(_regs, _ilc)                                     \
                                                                       \
-  (sysblk.inststep  && _CPU_STEP_OR_TRACE((_regs),(_ilc)))
+  (sysblk.inststep  && _CPU_STEP_OR_TRACE(stepaddr,(_regs),(_ilc)))
 
 #define CPU_TRACING(_regs, _ilc)                                      \
                                                                       \
-  (sysblk.insttrace && _CPU_STEP_OR_TRACE((_regs),(_ilc)))
+  (sysblk.insttrace && _CPU_STEP_OR_TRACE(traceaddr,(_regs),(_ilc)))
 
 #define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
   ( unlikely((_regs)->tracing) && \
