@@ -1552,45 +1552,54 @@ DLL_EXPORT void update_maxrates_hwm()       // (update high-water-mark values)
 }
 
 ///////////////////////////////////////////////////////////////////////
+// Get a working copy of the active REGS struct(s) for specified CPU
 
-static REGS *my_copy_regs(int cpu)
+static REGS* panel_copy_regs( int cpu )
 {
-    REGS *regs;
+    REGS* regs; /* (pointer to REGS struct that we'll be returning) */
 
+    /* Default to CPU #0 if invalid CPU number is passed */
     if (cpu < 0 || cpu >= sysblk.maxcpu)
         cpu = 0;
 
-    obtain_lock (&sysblk.cpulock[cpu]);
-
-    if ((regs = sysblk.regs[cpu]) == NULL)
+    /* Use the standardized REGS copy function to make the copy */
+    obtain_lock( &sysblk.cpulock[ cpu ]);
     {
-        release_lock(&sysblk.cpulock[cpu]);
-        return &sysblk.dummyregs;
+        if (!sysblk.regs[ cpu ])
+        {
+            /* Specified CPU does not exist. Use dummyregs instead */
+            release_lock( &sysblk.cpulock[ cpu ]);
+            return &sysblk.dummyregs;
+        }
+
+        /* Make a working copy of this CPU's REGS structs */
+        regs = copy_regs( sysblk.regs[ cpu ] );
     }
+    release_lock( &sysblk.cpulock[ cpu ]);
 
-    memcpy (&copyregs, regs, sysblk.regs_copy_len);
+    /* Copy the working copy to our static work variables */
+    memcpy( &copyregs, regs, sysblk.regs_copy_len );
 
-    if (copyregs.hostregs == NULL)
-    {
-        release_lock(&sysblk.cpulock[cpu]);
-        return &sysblk.dummyregs;
-    }
+    /* Free the original working copy */
+    free_aligned( regs );
 
-#if defined(_FEATURE_SIE)
+    /* Point to our static copy */
+    regs = &copyregs;
+
+    /* Make a separate copy of the guest REGS, if they exist */
+    if (GUESTREGS)
+        memcpy( &copysieregs, GUESTREGS, sysblk.regs_copy_len );
+
+    /* Switch to using the guest REGS instead, if SIE is active */
+#if defined( _FEATURE_SIE )
     if (regs->sie_active)
-    {
-        memcpy (&copysieregs, GUESTREGS, sysblk.regs_copy_len);
-        copyregs.guestregs = &copysieregs;
-        copysieregs.hostregs = &copyregs;
         regs = &copysieregs;
-    }
-    else
-#endif // defined(_FEATURE_SIE)
-        regs = &copyregs;
+#endif
 
-    MAYBE_SET_PSW_IA_FROM_IP(regs);
+    /* Ensure PSW accurately reflects the current instruction */
+    MAYBE_SET_PSW_IA_FROM_IP( regs );
 
-    release_lock(&sysblk.cpulock[cpu]);
+    /* Return pointer to static copy of active CPU's REGS struct */
     return regs;
 }
 
@@ -1961,7 +1970,7 @@ size_t  loopcount;                      /* Number of iterations done */
                         case 'o':
                             if (!sysblk.hicpu)
                               break;
-                            regs = my_copy_regs(sysblk.pcpu);
+                            regs = panel_copy_regs(sysblk.pcpu);
                             aaddr = APPLY_PREFIXING (NPaddress, regs->PX);
                             if (aaddr > regs->mainlim)
                                 break;
@@ -2955,7 +2964,7 @@ FinishShutdown:
         /* =END= */
 
         /* Obtain the PSW for target CPU */
-        regs = my_copy_regs( sysblk.pcpu );
+        regs = panel_copy_regs( sysblk.pcpu );
         memset( curr_psw, 0, sizeof( curr_psw ));
         copy_psw( regs, curr_psw );
 
