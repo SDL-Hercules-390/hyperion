@@ -109,8 +109,13 @@ struct REGS {                           /* Processor registers       */
      /* AIA - Instruction fetch accelerator                          */
 /*200*/ ALIGN_128
         BYTE   *aip;                    /* Mainstor page address     */
+
+#if !defined( OPTION_DEPRECATE_AIM )
 /*208*/ ALIGN_8
         uintptr_t aim;                  /* Mainstor xor address      */
+#else
+        uintptr_t unused;               /* Available                 */
+#endif
 /*210*/ ALIGN_8
         BYTE   *aie;                    /* Mainstor page end address */
 /*218*/ DW      aiv;                    /* Virtual page address      */

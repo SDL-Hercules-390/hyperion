@@ -418,10 +418,14 @@ void ARCH_DEP( SuccessfulBranch )( REGS* regs, VADR vaddr )
     )
     {
         /* Check for constraint BEFORE actually updating to new ip */
+#if !defined( OPTION_DEPRECATE_AIM )
         BYTE* ip = (BYTE*)((uintptr_t)regs->aim ^ (uintptr_t)vaddr);
+#else
+        BYTE* ip = regs->aip + (vaddr - regs->AIV);
+#endif
         PTT_INF( "branch", vaddr, regs->AIV, ip );
         TXF_INSTRADDR_CONSTRAINT( ip, regs );
-        regs->ip = ip;   /* (branch to the new instruction) */
+        regs->ip = ip;              /* branch to the new instruction */
         return;
     }
 

@@ -742,8 +742,9 @@ int     len;                            /* Length for page crossing  */
         /* Update the AIA values */
         regs->AIV = addr & PAGEFRAME_PAGEMASK;
         regs->aip = (BYTE*)((uintptr_t)ip & ~PAGEFRAME_BYTEMASK);
+#if !defined( OPTION_DEPRECATE_AIM )
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
-
+#endif
         if (likely( !regs->breakortrace && !regs->permode ))
             regs->aie = regs->aip + pagesz - 5;
         else

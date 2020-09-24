@@ -797,7 +797,9 @@ TPAGEMAP   *pmap;
                 memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
                 regs->txf_ip  = regs->ip;
                 regs->txf_aip = regs->aip;
+#if !defined( OPTION_DEPRECATE_AIM )
                 regs->txf_aim = regs->aim;
+#endif
                 regs->txf_aiv = regs->aiv;
             }
             memcpy( &regs->psw, &origpsw, sizeof( PSW ));
@@ -1302,7 +1304,9 @@ int        retry;           /* Actual retry code                     */
     memcpy( &regs->psw, &regs->txf_tapsw, sizeof( PSW ));
     regs->ip  = regs->txf_ip;
     regs->aip = regs->txf_aip;
+#if !defined( OPTION_DEPRECATE_AIM )
     regs->aim = regs->txf_aim;
+#endif
     regs->aiv = regs->txf_aiv;
     INVALIDATE_AIA( regs );
 
@@ -1984,7 +1988,7 @@ static inline void txf_fetch_conflict_scan
                    cache line.
                 */
                 regs->txf_tac   =  TAC_FETCH_CNF;
-                regs->txf_why  |=  TXF_WHY_CONFLICT;
+                regs->txf_why  |= (TXF_WHY_CONFLICT | TXF_WHY_DELAYED_ABORT);
                 regs->txf_who   =  cpuad;
                 regs->txf_loc   =  TRIMLOC( location );
 

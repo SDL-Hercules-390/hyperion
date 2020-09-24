@@ -351,6 +351,16 @@ DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
 
         regs = sysblk.regs[ sysblk.pcpu ];
 
+#if defined( OPTION_DEPRECATE_AIM )
+
+        MSGBUF( buf, "AIV %16.16"PRIx64" aip %p ip %p aie %p",
+
+                regs->AIV_G,
+                regs->aip,
+                regs->ip,
+                regs->aie
+        );
+#else
         MSGBUF( buf, "AIV %16.16"PRIx64" aip %p ip %p aie %p aim %p",
 
                 regs->AIV_G,
@@ -359,6 +369,8 @@ DLL_EXPORT int aia_cmd( int argc, char* argv[], char* cmdline )
                 regs->aie,
                 (BYTE*) regs->aim
         );
+
+#endif // defined( OPTION_DEPRECATE_AIM )
 
         // "%s" (aia_cmd)
         WRMSG( HHC02283, "I", buf );
