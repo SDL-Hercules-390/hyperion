@@ -132,7 +132,6 @@
 #undef STORE_W
 #undef FETCH_W
 #undef AIV
-#undef AIE
 #undef VIE
 #undef SIEBK
 #undef ZPB
@@ -230,7 +229,6 @@
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
-#define AIE     AIE_L
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
 #define TLB_REAL_ASD  TLB_REAL_ASD_L
@@ -362,7 +360,6 @@
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
-#define AIE     AIE_L
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
 #define TLB_REAL_ASD  TLB_REAL_ASD_L
@@ -511,7 +508,6 @@
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
 #define AIV     AIV_G
-#define AIE     AIE_G
 #define SIEBK                   SIE2BK
 #define ZPB                     ZPB2
 #define TLB_REAL_ASD  TLB_REAL_ASD_G
