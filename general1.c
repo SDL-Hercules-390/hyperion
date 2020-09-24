@@ -580,72 +580,75 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 /* 0C   BASSM - Branch and Save and Set Mode                    [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_and_save_and_set_mode)
+DEF_INST( branch_and_save_and_set_mode )
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 #if !defined( FEATURE_370_EXTENSION )
 int     xmode;                          /* 64 or 31 mode of target   */
 #endif
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-BYTE    *ipsav;                         /* save for ip               */
-#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-    RR_B(inst, regs, r1, r2);
+    RR_B( inst, regs, r1, r2 );
 
     CONTRAN_INSTR_CHECK_IP( regs );
     TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
     TRAN_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
-    newia = regs->GR(r2);
+    newia = regs->GR( r2 );
 
 #if defined( FEATURE_TRACING )
+
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
-    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
+    if (1
+        && regs->CR(12) & CR12_MTRACE
+        && r2
+        && regs->psw.amode64 != (newia & 1)
+    )
     {
         /* save ip and update it for mode switch trace */
-        ipsav = regs->ip;
-        INST_UPDATE_PSW(regs, 2, 2);
-        regs->psw.ilc = 2;
+        BYTE* ipsav = regs->ip;
+        regs->ip += 2;
         regs->CR(12) = ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE ? 1 : 0,
                                            newia & ~0x01, regs);
         regs->ip = ipsav;
     }
     else
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
     {
         regs->psw.ilc = 0; // indicates regs->ip not updated
-     #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (newia & 0x01)
             xmode = 1;
         else
-     #endif
+#endif
         xmode = newia & 0x80000000 ? 1 : 0;
-        regs->CR(12) = ARCH_DEP(trace_br) (xmode, newia & ~0x01, regs);
+        regs->CR(12) = ARCH_DEP( trace_br )( xmode, newia & ~0x01, regs );
         regs->psw.ilc = 2; // reset if trace didn't pgm check
     }
+
 #endif /* defined( FEATURE_TRACING ) */
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    if ( regs->psw.amode64 )
-        regs->GR_G(r1) = PSW_IA64(regs, 3); // low bit on
+    if (regs->psw.amode64)
+        regs->GR_G( r1 ) = PSW_IA64( regs, 3 ); // low bit on
     else
 #endif
-    if ( regs->psw.amode )
-        regs->GR_L(r1) = 0x80000000 | PSW_IA31(regs, 2);
+    if (regs->psw.amode)
+        regs->GR_L( r1 ) = 0x80000000 | PSW_IA31( regs, 2 );
     else
-        regs->GR_L(r1) = PSW_IA24(regs, 2);
+        regs->GR_L( r1 ) = 0x00000000 | PSW_IA24( regs, 2 );
 
     /* Set mode and branch to address specified by R2 operand */
-    if ( r2 != 0 )
+    if (r2)
     {
 #if !defined( FEATURE_370_EXTENSION )
-        SET_ADDRESSING_MODE(regs, newia);
+        SET_ADDRESSING_MODE( regs, newia );
 #endif
         SUCCESSFUL_BRANCH( regs, newia );
     }
@@ -655,7 +658,7 @@ BYTE    *ipsav;                         /* save for ip               */
         regs->ip += 2;
     }
 
-} /* end DEF_INST(branch_and_save_and_set_mode) */
+} /* end DEF_INST( branch_and_save_and_set_mode ) */
 #endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
 
 
@@ -663,43 +666,62 @@ BYTE    *ipsav;                         /* save for ip               */
 /*-------------------------------------------------------------------*/
 /* 0B   BSM   - Branch and Set Mode                             [RR] */
 /*-------------------------------------------------------------------*/
-DEF_INST(branch_and_set_mode)
+DEF_INST( branch_and_set_mode )
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR_B(inst, regs, r1, r2);
+    RR_B( inst, regs, r1, r2 );
 
     CONTRAN_INSTR_CHECK_IP( regs );
     TRAN_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
-    newia = regs->GR(r2);
+    newia = regs->GR( r2 );
 
 #if defined( FEATURE_TRACING )
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Add a mode trace entry when switching in/out of 64 bit mode */
-    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && (regs->psw.amode64 != (newia & 1)))
+    if (1
+        && regs->CR(12) & CR12_MTRACE
+        && r2
+        && regs->psw.amode64 != (newia & 1)
+    )
     {
-        INST_UPDATE_PSW(regs, 2, 2);
-        regs->psw.ilc = 2;
-        regs->CR(12) = ARCH_DEP(trace_ms) (0, 0, regs);
+        /* save ip and update it for mode switch trace */
+        BYTE* ipsav = regs->ip;
+        regs->ip += 2;
+        regs->CR(12) = ARCH_DEP( trace_ms )( 0, 0, regs );
+        regs->ip = ipsav;
     }
 #endif
 #endif
 
     /* Insert addressing mode into bit 0 of R1 operand */
-    if ( r1 != 0 )
+    if (r1)
     {
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-        /* Z/Pops seems to be in error about this */
-//      regs->GR_LHLCL(r1) &= 0xFE;
-        if ( regs->psw.amode64 )
+        /* PROGRAMMING NOTE: The original zArchitecture Principles of
+           Operation manual (SA22-7832-00 December 2000 First Edition)
+           contained an error regarding the functionality of the BSM
+           (Branch and Set Mode) instruction. It incorrectly said in
+           the 24-bit or 31-bit addressing mode, bit 32 of the current
+           PSW was inserted into bit 32 of the first operand register,
+           and a zero was inserted into bit position 63 and bits 0-31
+           and 33-62 of the operand remained unchanged. This is wrong.
+           The October 2001 Second Edition of zArchitecture Principles
+           of Operation manual (SA22-7832-01) corrected this error to
+           state bit 63 of the operand-1 register remained unchanged
+           in the 24-bit and 31-bit addressing modes (i.e. the bit is
+           NOT set to zero).
+        */
+//      regs->GR_LHLCL(r1) &= 0xFE;     // (see PROGRAMMING NOTE)
+        if (regs->psw.amode64)
             regs->GR_LHLCL(r1) |= 0x01;
         else
 #endif
         {
-            if ( regs->psw.amode )
+            if (regs->psw.amode)
                 regs->GR_L(r1) |= 0x80000000;
             else
                 regs->GR_L(r1) &= 0x7FFFFFFF;
@@ -707,10 +729,10 @@ VADR    newia;                          /* New instruction address   */
     }
 
     /* Set mode and branch to address specified by R2 operand */
-    if ( r2 != 0 )
+    if (r2)
     {
 #if !defined( FEATURE_370_EXTENSION )
-        SET_ADDRESSING_MODE(regs, newia);
+        SET_ADDRESSING_MODE( regs, newia );
 #endif
         SUCCESSFUL_BRANCH( regs, newia );
     }
