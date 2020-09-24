@@ -997,30 +997,32 @@ int start_cmd_cpu( int argc, char* argv[], char* cmdline )
     UNREFERENCED(cmdline);
 
     OBTAIN_INTLOCK(NULL);
-
-    if (IS_CPU_ONLINE(sysblk.pcpu))
     {
-        REGS *regs = sysblk.regs[sysblk.pcpu];
-        if ( regs->cpustate == CPUSTATE_STARTED )
+        // Start just the target CPU...
+
+        if (IS_CPU_ONLINE(sysblk.pcpu))
         {
-            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "stopped");
-            rc = 1;
+            REGS *regs = sysblk.regs[sysblk.pcpu];
+            if ( regs->cpustate == CPUSTATE_STARTED )
+            {
+                WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "stopped");
+                rc = 1;
+            }
+            else
+            {
+                regs->opinterv = 0;
+                regs->cpustate = CPUSTATE_STARTED;
+                regs->checkstop = 0;
+                WAKEUP_CPU(regs);
+                WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "running state selected" );
+            }
         }
         else
         {
-            regs->opinterv = 0;
-            regs->cpustate = CPUSTATE_STARTED;
-            regs->checkstop = 0;
-            WAKEUP_CPU(regs);
-            WRMSG( HHC00834, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "running state selected" );
+            WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+            rc = 1;
         }
     }
-    else
-    {
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
-        rc = 1;
-    }
-
     RELEASE_INTLOCK(NULL);
 
     return rc;
