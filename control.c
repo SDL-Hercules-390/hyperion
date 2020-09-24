@@ -278,12 +278,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
         {
-            duct_reta = PSW_IA( regs, 0 );
+            duct_reta = PSW_IA_FROM_IP( regs, 0 );
         }
         else
 #endif
         {
-            duct_reta = PSW_IA( regs, 0 ) & DUCT_IA31;
+            duct_reta = PSW_IA_FROM_IP( regs, 0 ) & DUCT_IA31;
             if (regs->psw.amode) duct_reta |= DUCT_AM31;
         }
 
@@ -322,7 +322,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
         {
-            UPD_PSW_IA( regs, regs->GR_G(r2) );
+            SET_PSW_IA_AND_MAYBE_IP( regs, regs->GR_G(r2) );
         }
         else
 #endif
@@ -333,7 +333,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif
             regs->psw.amode = 1;
             regs->psw.AMASK = AMASK31;
-            UPD_PSW_IA( regs, regs->GR_L(r2) );
+            SET_PSW_IA_AND_MAYBE_IP( regs, regs->GR_L(r2) );
         }
         else
         {
@@ -342,7 +342,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif
             regs->psw.amode = 0;
             regs->psw.AMASK = AMASK24;
-            UPD_PSW_IA( regs, regs->GR_L(r2) );
+            SET_PSW_IA_AND_MAYBE_IP( regs, regs->GR_L(r2) );
         }
 
     } /* end if (BSA-ba) */
@@ -370,12 +370,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             if (regs->psw.amode64)
             {
-                regs->GR_G(r1) = PSW_IA( regs, 0 );
+                regs->GR_G(r1) = PSW_IA_FROM_IP( regs, 0 );
             }
             else
 #endif
             {
-                regs->GR_L(r1) = PSW_IA( regs, 0 );
+                regs->GR_L(r1) = PSW_IA_FROM_IP( regs, 0 );
                 if (regs->psw.amode) regs->GR_L(r1) |= 0x80000000;
             }
         }
@@ -384,14 +384,14 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
         {
-            UPD_PSW_IA( regs, duct_reta );
+            SET_PSW_IA_AND_MAYBE_IP( regs, duct_reta );
         }
         else
 #endif
         {
             regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-            UPD_PSW_IA( regs, duct_reta & DUCT_IA31 );
+            SET_PSW_IA_AND_MAYBE_IP( regs, duct_reta & DUCT_IA31 );
         }
 
         /* Restore the PSW key mask from the DUCT */
@@ -646,10 +646,10 @@ CREG    inst_cr;                        /* Instruction CR            */
     {
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
-            regs->GR_G(r1) = PSW_IA( regs, 0 );
+            regs->GR_G(r1) = PSW_IA_FROM_IP( regs, 0 );
         else
 #endif
-            regs->GR_L(r1) = PSW_IA( regs, 0 ) |
+            regs->GR_L(r1) = PSW_IA_FROM_IP( regs, 0 ) |
                                 (regs->psw.amode ? 0x80000000 : 0);
     }
 
@@ -672,7 +672,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     }
 
     /* Set mode and branch to address specified by R2 operand */
-    UPD_PSW_IA( regs, newia );
+    SET_PSW_IA_AND_MAYBE_IP( regs, newia );
 
     /* Set the SSTD (or SASCE) equal to PSTD (or PASCE) */
     regs->CR(7) = regs->CR(1);
@@ -779,7 +779,7 @@ VADR    n = 0;                          /* Work area                 */
     }
     else
     {
-        n1 = PSW_IA( regs, 0 );
+        n1 = PSW_IA_FROM_IP( regs, 0 );
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             n1 |= 0x01;
@@ -791,7 +791,7 @@ VADR    n = 0;                          /* Work area                 */
 
     /* Obtain the branch address from the R2 register, or use
        the updated PSW instruction address if R2 is zero */
-    n2 = (r2 != 0) ? regs->GR(r2) : PSW_IA( regs, 0 );
+    n2 = (r2 != 0) ? regs->GR(r2) : PSW_IA_FROM_IP( regs, 0 );
     n2 &= ADDRESS_MAXWRAP( regs );
 
     /* Set the addressing mode bit in the branch address */
@@ -822,7 +822,7 @@ VADR    n = 0;                          /* Work area                 */
     if (r2)
     {
         SET_BEAR_REG( regs, regs->ip - 4 );
-        UPD_PSW_IA( regs, regs->GR(r2) );
+        SET_PSW_IA_AND_MAYBE_IP( regs, regs->GR(r2) );
         PER_SB( regs, regs->psw.IA );
     }
 
@@ -3277,11 +3277,11 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         /* For basic PC, load linkage info into general register 14 */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
-            regs->GR_G(14) = PSW_IA( regs, 0 ) | PROBSTATE( &regs->psw );
+            regs->GR_G(14) = PSW_IA_FROM_IP( regs, 0 ) | PROBSTATE( &regs->psw );
         else
 #endif
             regs->GR_L(14) = (regs->psw.amode ? 0x80000000 : 0)
-                            | PSW_IA( regs, 0 ) | PROBSTATE( &regs->psw );
+                            | PSW_IA_FROM_IP( regs, 0 ) | PROBSTATE( &regs->psw );
 
         /* Set the breaking event address register */
         SET_BEAR_REG( regs, regs->ip - 4 );
@@ -3289,18 +3289,18 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
         /* Update the PSW from the entry table */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
-            UPD_PSW_IA( regs, ((U64)(ete[0]) << 32)
+            SET_PSW_IA_AND_MAYBE_IP( regs, ((U64)(ete[0]) << 32)
                              | (U64)(ete[1] & 0xFFFFFFFE) );
         else
         {
             regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-            UPD_PSW_IA( regs, ete[1] & ETE1_EIA );
+            SET_PSW_IA_AND_MAYBE_IP( regs, ete[1] & ETE1_EIA );
         }
 #else
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-        UPD_PSW_IA( regs, ete[1] & ETE1_EIA );
+        SET_PSW_IA_AND_MAYBE_IP( regs, ete[1] & ETE1_EIA );
 #endif
         if (ete[1] & ETE1_PROB)
             regs->psw.states |=  BIT( PSW_PROB_BIT );
@@ -3358,7 +3358,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             csi = pasn << 16 | (aste[5] & 0x0000FFFF);
 
         /* Set the addressing mode bits in the return address */
-        retn = PSW_IA( regs, 0 );
+        retn = PSW_IA_FROM_IP( regs, 0 );
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         if (regs->psw.amode64)
             retn |= 0x01;
@@ -3387,7 +3387,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.amode64 = 1;
             regs->psw.amode = 1;
             regs->psw.AMASK = AMASK64;
-            UPD_PSW_IA( regs, ((U64)(ete[0]) << 32)
+            SET_PSW_IA_AND_MAYBE_IP( regs, ((U64)(ete[0]) << 32)
                                 | (U64)(ete[1] & 0xFFFFFFFE) );
         }
         else
@@ -3395,12 +3395,12 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
             regs->psw.amode64 = 0;
             regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-            UPD_PSW_IA( regs, ete[1] & ETE1_EIA );
+            SET_PSW_IA_AND_MAYBE_IP( regs, ete[1] & ETE1_EIA );
         }
 #else
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-        UPD_PSW_IA( regs, ete[1] & ETE1_EIA );
+        SET_PSW_IA_AND_MAYBE_IP( regs, ete[1] & ETE1_EIA );
 #endif
         if (ete[1] & ETE1_PROB)
             regs->psw.states |=  BIT( PSW_PROB_BIT );
@@ -4062,7 +4062,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Replace PSW amode, instruction address, and problem state bit */
     regs->psw.amode = amode;
-    UPD_PSW_IA( regs, ia );
+    SET_PSW_IA_AND_MAYBE_IP( regs, ia );
     if (prob)
         regs->psw.states |= BIT( PSW_PROB_BIT );
     else
@@ -5972,7 +5972,7 @@ static char *ordername[] = {
             {
                 U16 check_asn = (parm & 0xFFFF);
 
-                SET_PSW_IA( tregs );
+                MAYBE_SET_PSW_IA_FROM_IP( tregs );
 
                 if (0
 
@@ -6523,8 +6523,7 @@ U64     dreg;                           /* Clock value               */
             if (OPEN_IC_CLKC( regs ))
             {
                 RELEASE_INTLOCK( regs );
-                UPD_PSW_IA( regs, PSW_IA( regs, -4 ));
-
+                SET_PSW_IA_AND_MAYBE_IP( regs, PSW_IA_FROM_IP( regs, -4 ));
                 RETURN_INTCHECK( regs );
             }
         }
@@ -6677,8 +6676,7 @@ S64     dreg;                           /* Double word workarea      */
             if (OPEN_IC_PTIMER( regs ))
             {
                 RELEASE_INTLOCK( regs );
-                UPD_PSW_IA( regs, PSW_IA( regs, -4 ));
-
+                SET_PSW_IA_AND_MAYBE_IP( regs, PSW_IA_FROM_IP( regs, -4 ));
                 RETURN_INTCHECK( regs );
             }
         }
@@ -6906,7 +6904,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
             (regs->GR_L(0) & STSI_GPR0_FC_MASK) >> 28,
             regs->GR_L(0) & STSI_GPR0_SEL1_MASK,
             regs->GR_L(1) & STSI_GPR1_SEL2_MASK,
-            PSW_IA( regs,-4 ),
+            PSW_IA_FROM_IP( regs,-4 ),
             effective_addr2 );
 #endif
 

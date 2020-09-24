@@ -570,7 +570,7 @@ static void* watchdog_thread( void* arg )
                     {
                         /* Backup to actual instruction being executed */
                         regs = sysblk.regs[ cpu ];
-                        UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+                        SET_PSW_IA_AND_MAYBE_IP( regs, PSW_IA_FROM_IP( regs, -REAL_ILC( regs )));
 
                         /* Display instruction that appears to be hung */
                         ip = regs->ip < regs->aip ? regs->inst : regs->ip;

@@ -1588,7 +1588,7 @@ static REGS *my_copy_regs(int cpu)
 #endif // defined(_FEATURE_SIE)
         regs = &copyregs;
 
-    SET_PSW_IA(regs);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
 
     release_lock(&sysblk.cpulock[cpu]);
     return regs;

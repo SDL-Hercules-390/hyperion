@@ -623,7 +623,7 @@ int     offset;                         /* Address offset into page  */
 int     len;                            /* Length for page crossing  */
 
     addr = exec ? regs->ET
-         : likely( !regs->aie ) ? regs->psw.IA : PSW_IA( regs, 0 );
+         : likely( !VALID_AIE( regs ) ) ? regs->psw.IA : PSW_IA_FROM_IP( regs, 0 );
 
     offset = (int)(addr & PAGEFRAME_BYTEMASK);
 
@@ -682,8 +682,8 @@ int     len;                            /* Length for page crossing  */
         if (1
             && !exec
             && !regs->tracing
-            &&  regs->aie
-            &&  regs->ip < regs->aip + pagesz - 5
+            &&  VALID_AIE( regs )
+            &&  regs->ip < (regs->aip + pagesz - 5)
         )
         {
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -739,16 +739,17 @@ int     len;                            /* Length for page crossing  */
         /* Instr addr now known to be valid so reset instinvalid flag */
         regs->instinvalid = 0;
 
-        /* Update the AIA */
+        /* Update the AIA values */
         regs->AIV = addr & PAGEFRAME_PAGEMASK;
-        regs->aip = (BYTE *)((uintptr_t)ip & ~PAGEFRAME_BYTEMASK);
+        regs->aip = (BYTE*)((uintptr_t)ip & ~PAGEFRAME_BYTEMASK);
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
 
         if (likely( !regs->tracing && !regs->permode ))
             regs->aie = regs->aip + pagesz - 5;
         else
         {
-            regs->aie = (BYTE*) 1;
+            /* Force instfetch to be called again on next inst. */
+            regs->aie = PSEUDO_INVALID_AIE;
 
             if (regs->tracing)
                 ARCH_DEP( process_trace )( regs );

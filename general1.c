@@ -460,7 +460,10 @@ VADR    newia;                          /* New instruction address   */
     if ( r2 != 0 )
         SUCCESSFUL_BRANCH( regs, newia );
     else
-        INST_UPDATE_PSW(regs, 2, 2);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 2;
+    }
 
 } /* end DEF_INST(branch_and_link_register) */
 
@@ -536,7 +539,10 @@ VADR    newia;                          /* New instruction address   */
     if ( r2 != 0 )
         SUCCESSFUL_BRANCH( regs, newia );
     else
-        INST_UPDATE_PSW(regs, 2, 2);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 2;
+    }
 
 } /* end DEF_INST(branch_and_save_register) */
 
@@ -644,7 +650,10 @@ BYTE    *ipsav;                         /* save for ip               */
         SUCCESSFUL_BRANCH( regs, newia );
     }
     else
-        INST_UPDATE_PSW(regs, 2, 2);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 2;
+    }
 
 } /* end DEF_INST(branch_and_save_and_set_mode) */
 #endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
@@ -706,7 +715,10 @@ VADR    newia;                          /* New instruction address   */
         SUCCESSFUL_BRANCH( regs, newia );
     }
     else
-        INST_UPDATE_PSW(regs, 2, 2);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 2;
+    }
 
 } /* end DEF_INST(branch_and_set_mode) */
 #endif /* defined( FEATURE_BIMODAL_ADDRESSING ) || defined( FEATURE_370_EXTENSION )*/
@@ -1527,7 +1539,10 @@ VADR    newia;                          /* New instruction address   */
     if (--(regs->GR_L( r1 )) && r2)
         SUCCESSFUL_BRANCH( regs, newia );
     else
-        INST_UPDATE_PSW( regs, 2, 2 );
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 2;
+    }
 
 } /* end DEF_INST( branch_on_count_register ) */
 
@@ -1549,7 +1564,10 @@ VADR    effective_addr2;                /* Effective address         */
     if ( --(regs->GR_L(r1)) )
         SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST(branch_on_count) */
 
@@ -1581,7 +1599,10 @@ S32     i, j;                           /* Integer work areas        */
     if ( (S32)regs->GR_L(r1) > j )
         SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST(branch_on_index_high) */
 
@@ -1613,7 +1634,10 @@ S32     i, j;                           /* Integer work areas        */
     if ( (S32)regs->GR_L(r1) <= j )
         SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST(branch_on_index_low_or_equal) */
 
@@ -3277,7 +3301,7 @@ DEF_INST(compare_logical_character_long)
     if (rc == 0 && total < (unpadded_len + padded_len))
     {
         ASSERT( total >= MAX_CPU_AMT );   // (sanity check)
-        UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+        SET_PSW_IA_AND_MAYBE_IP( regs, PSW_IA_FROM_IP( regs, -REAL_ILC( regs )));
     }
 
     // Set the condition code and return
@@ -5613,7 +5637,8 @@ int     orglen1;                        /* Original dest length      */
                )
         )
         {
-            UPD_PSW_IA( regs, PSW_IA( regs, -REAL_ILC( regs )));
+            // Backup the PSW for re-execution since instruction was interrupted
+            SET_PSW_IA_AND_MAYBE_IP( regs, PSW_IA_FROM_IP( regs, -REAL_ILC( regs )));
             break;
         }
 

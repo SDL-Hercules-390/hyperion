@@ -1357,7 +1357,7 @@ U32     n;                              /* 32-bit operand values     */
   DEF_INST(1F ## r1 ## r2) \
   { \
     UNREFERENCED(inst); \
-    INST_UPDATE_PSW(regs, 2, 0); \
+    INST_UPDATE_PSW(regs, 2, 2); \
     regs->psw.cc = sub_logical(&(regs->GR_L(0x ## r1)), regs->GR_L(0x ## r1), regs->GR_L(0x ## r2)); \
   }
 #define SLRgenr2(r1) \

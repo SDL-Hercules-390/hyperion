@@ -328,7 +328,7 @@ int  i;
         regs->GR_L(15) = duct11 & DUCT11_TCBA;
 
     /* Ensure psw.IA is set */
-    SET_PSW_IA(regs);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
 
     /* Set the Breaking Event Address Register */
     if (trap_is_trap4)
@@ -338,7 +338,7 @@ int  i;
 
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
-    UPD_PSW_IA(regs, trap_ia);
+    SET_PSW_IA_AND_MAYBE_IP(regs, trap_ia);
     /* set PSW to primary space */
     regs->psw.asc = 0;
     SET_AEA_MODE(regs);

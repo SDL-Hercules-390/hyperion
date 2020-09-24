@@ -104,7 +104,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
     /* Ensure psw.IA is set */
     if (!regs->psw.zeroilc)
-        SET_PSW_IA(regs);
+        MAYBE_SET_PSW_IA_FROM_IP(regs);
 
 #if defined( FEATURE_BCMODE )
     if ( ECMODE(&regs->psw) ) {
@@ -429,8 +429,8 @@ void ARCH_DEP( SuccessfulBranch )( REGS* regs, VADR vaddr )
        instruction and set a new 'ip' by forcing a full instruction
        fetch from the new target.
     */
-    regs->psw.IA = vaddr;           /* Point PSW to target instr */
-    regs->aie = NULL;               /* Force a fresh 'instfetch' */
+    regs->psw.IA = vaddr;               /* Point PSW to target instr */
+    regs->aie = INVALID_AIE;            /* Force a fresh 'instfetch' */
 
     PTT_INF( "branch", vaddr, regs->AIV, 0 );
     PER_SB( regs, regs->psw.IA );
@@ -472,13 +472,13 @@ void ARCH_DEP( SuccessfulRelativeBranch )( REGS* regs, S64 offset )
     PTT_INF( "rbranch >", regs->psw.IA, offset, regs->execflag );
 
     if (!regs->execflag)
-        regs->psw.IA = PSW_IA( regs, offset );
+        regs->psw.IA = PSW_IA_FROM_IP( regs, offset );
     else
     {
         regs->psw.IA = regs->ET + offset;
         regs->psw.IA &= ADDRESS_MAXWRAP( regs );
     }
-    regs->aie = NULL;               /* Force a fresh 'instfetch' */
+    regs->aie = INVALID_AIE;            /* Force a fresh 'instfetch' */
 
     PTT_INF( "rbranch >", regs->psw.IA, offset, regs->execflag );
     PER_SB( regs, regs->psw.IA );
@@ -1873,7 +1873,6 @@ cpustate_stopping:
 
     /* Release the interrupt lock */
     RELEASE_INTLOCK(regs);
-    return;
 
 } /* process_interrupt */
 

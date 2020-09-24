@@ -414,12 +414,12 @@ do { \
    (                                                                  \
         (sysblk._steptrace[0] == 0 && sysblk._steptrace[1] == 0)      \
      || (sysblk._steptrace[0] <= sysblk._steptrace[1]                 \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk._steptrace[0]          \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk._steptrace[1]          \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) >= sysblk._steptrace[0]  \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) <= sysblk._steptrace[1]  \
         )                                                             \
      || (sysblk._steptrace[0] > sysblk._steptrace[1]                  \
-         && PSW_IA((_regs), -(_ilc)) >= sysblk._steptrace[1]          \
-         && PSW_IA((_regs), -(_ilc)) <= sysblk._steptrace[0]          \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) >= sysblk._steptrace[1]  \
+         && PSW_IA_FROM_IP((_regs), -(_ilc)) <= sysblk._steptrace[0]  \
         )                                                             \
    )                                                                  \
 
@@ -442,10 +442,14 @@ do { \
 #define CPU_STEPPING_ALL \
   (sysblk.inststep && sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)
 
-#define CPU_STEPPING_OR_TRACING_ALL \
-  ( CPU_TRACING_ALL || CPU_STEPPING_ALL )
+#define CPU_STEPPING_OR_TRACING_ALL     (CPU_TRACING_ALL || CPU_STEPPING_ALL)
 
-#define RETURN_INTCHECK(_regs) \
+/*-------------------------------------------------------------------*/
+/*         Simple helper macro that instructions can use             */
+/*         to force an immediate check for interrupts.               */
+/*-------------------------------------------------------------------*/
+
+#define RETURN_INTCHECK(_regs)                                        \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
 
 /*-------------------------------------------------------------------*/
@@ -682,12 +686,12 @@ do { \
 /*-------------------------------------------------------------------*/
 /*               PSW Instruction Address macros                      */
 /*-------------------------------------------------------------------*/
-// The _PSW_IA primrary helper macro returns a raw virtual PSW 'IA'
-// value corresponding to where an offset mainstor 'ip' points (i.e.
-// ia <== ip + offset)
+// The _IA_FROM_IP primary helper macro returns a raw virtual PSW
+// 'IA' value corresponding to where an offset mainstor 'ip' points,
+// i.e. psw.ia <== aiv + ((ip + offset) - aip).
 
-#undef  _PSW_IA
-#define _PSW_IA( _aiv, _regs, _offset )                               \
+#undef  _IA_FROM_IP
+#define _IA_FROM_IP( _aiv, _regs, _offset )                           \
   (                                                                   \
     (_regs)->_aiv                                                     \
     + ((uintptr_t)(_regs)->ip - (uintptr_t)(_regs)->aip)              \
@@ -695,77 +699,98 @@ do { \
   )
 
 //---------------------------------------------------------------------
-// The generic PSW_IA macro returns a PSW 'IA' as VADR value matching
-// where regs 'ip' is pointing plus a passed offset, with the result
-// masked with ADDRESS_MAXWRAP (i.e. (VADR)((ia <== ip + n) & mask))
+// The generic PSW_IA_FROM_IP macro returns a PSW 'IA' as VADR value
+// corresponding to where regs 'ip' is pointing plus a passed offset,
+// with the resulting PSW 'IA' value masked with ADDRESS_MAXWRAP.
 
-
-#undef  PSW_IA
-#define PSW_IA( _regs, _offset )                                      \
+#undef  PSW_IA_FROM_IP
+#define PSW_IA_FROM_IP( _regs, _offset )                              \
                                                                       \
- ((VADR)(_PSW_IA( AIV, (_regs), (_offset)) & ADDRESS_MAXWRAP( _regs )))
+ ((VADR)(_IA_FROM_IP( AIV, (_regs), (_offset)) & ADDRESS_MAXWRAP( _regs )))
 
 //---------------------------------------------------------------------
 // The next three macros are minor architectural variations of the
-// above PSW_IA macro that return a PSW 'IA' value matching where
-// 'ip' plus a passed offset is pointing. The only difference is each
-// are specific to the implied architecture, none of them cast the
-// result to VADR, and only the 24-bit one applies an addressing mask.
+// above PSW_IA_FROM_IP macro that return a PSW 'IA' value matching
+// where 'ip' plus a passed offset is pointing. The only difference is
+// each are specific to the implied architecture, none of them cast
+// the result to VADR, and only PSW_IA24 applies an addressing mask.
 
 #undef  PSW_IA64
 #define PSW_IA64( _regs, _offset )                                    \
                                                                       \
-      (_PSW_IA( AIV_G, (_regs), (_offset)))
+      (_IA_FROM_IP( AIV_G, (_regs), (_offset)))
 
 #undef  PSW_IA31
 #define PSW_IA31( _regs, _offset )                                    \
                                                                       \
-      (_PSW_IA( AIV_L, (_regs), (_offset)))
+      (_IA_FROM_IP( AIV_L, (_regs), (_offset)))
 
 #undef  PSW_IA24
 #define PSW_IA24( _regs, _offset )                                    \
                                                                       \
-      (_PSW_IA( AIV_L, (_regs), (_offset)) & AMASK24)
+      (_IA_FROM_IP( AIV_L, (_regs), (_offset)) & AMASK24)
 
 //---------------------------------------------------------------------
-// The SET_PSW_IA macro (notice the 'SET' in its name) SETS the virtual
-// psw 'IA' value to point to the same corresponding place as where
-// the current mainstor 'ip' points (without any offset), but it ONLY
-// does so if and ONLY if the 'aie' value is still valid (is non-NULL).
-// Otherwise it does absolutely nothing.
+// The PSEUDO_INVALID_AIE value is used whenever you wish to force
+// a break in normal instruction processing and cause the 'instfetch'
+// function to be called to perform a full address translation and
+// fetch of the next instruction. It is mostly used by instruction
+// stepping and tracing logic as well as by the SUCCESS_BRANCH macro
+// when the target of the branch is in a different mainstor page.
+// The "INVALID_AIE" value is used only by the INVALIDATE_AIA and
+// INVALIDATE_AIA_MAIN macros to ALSO to prevent any unwanted PSW
+// updating by short circuiting both the MAYBE_SET_PSW_IA_FROM_IP and
+// SET_PSW_IA_AND_MAYBE_IP macros. The "PSEUDO_INVALID_AIE" value
+// also forces instfetch to be called but additionally allows both
+// the MAYBE_SET_PSW_IA_FROM_IP and SET_PSW_IA_AND_MAYBE_IP macros
+// to continue behaving normally.
 
-#undef  SET_PSW_IA
-#define SET_PSW_IA( _regs )                                           \
+#define INVALID_AIE             (NULL)
+#define PSEUDO_INVALID_AIE      ((BYTE*) 1)
+
+#undef  VALID_AIE
+#define VALID_AIE( _regs )      ((_regs)->aie != INVALID_AIE)
+
+//---------------------------------------------------------------------
+// The MAYBE_SET_PSW_IA_FROM_IP macro (notice the 'MAYBE' and 'SET'
+// in its name) CONDITIONALLY sets the virtual psw 'IA' value to point
+// to the same corresponding place as where the current mainstor 'ip'
+// currently points (with no offset), but does so IF AND ONLY IF the
+// 'aie' value is still valid. Otherwise it does absolutely nothing.
+
+#undef  MAYBE_SET_PSW_IA_FROM_IP
+#define MAYBE_SET_PSW_IA_FROM_IP( _regs )                             \
   do                                                                  \
   {                                                                   \
-    if ((_regs)->aie)                                                 \
-      (_regs)->psw.IA  =  PSW_IA( (_regs), 0 );                       \
+    if (VALID_AIE( _regs ))                                           \
+      (_regs)->psw.IA = PSW_IA_FROM_IP( (_regs), 0 );                 \
   }                                                                   \
   while (0)
 
 //---------------------------------------------------------------------
-// The UPD_PSW_IA macro performs the opposite of the above SET_PSW_IA
-// macro: it sets the mainstor 'ip' to the same corresponding place
-// as where a passed virtual psw 'IA' value points to. It first sets
-// the PSW IA to the passed value and then TRIES to set the 'ip' to
-// the same corresponding place, but only does so if the updated 'ia'
-// value still points somewhere within the same virtual page. If it
-// doesn't, then 'aie' is set to NULL to force a full 'instfetch' to
-// occur which is what then sets a new 'ip', 'aie' and 'aip' value
-// the next time the INSTRUCTION_FETCH macro is called.
+// The SET_PSW_IA_AND_MAYBE_IP macro (notice the 'MAYBE' in its name)
+// performs the opposite of the above MAYBE_SET_PSW_IA_FROM_IP macro:
+// it sets the mainstor 'ip' to the same corresponding place as where
+// the passed virtual psw 'IA' value points. It first UNCONDITIONALLY
+// SETS the PSW IA to the passed value and then MAYBE also sets the
+// 'ip' to the same corresponding place in mainstor, but it ONLY does
+// so IF AND ONLY IF the updated 'ia' value still points within the
+// same virtual page. If it doesn't, then the 'aie' value is set to
+// NULL to force a full 'instfetch' which then calculates a new 'ip',
+// 'aie' and 'aip' value on the next instruction fetch.
 
-#undef  UPD_PSW_IA
-#define UPD_PSW_IA( _regs, _ia )                                      \
+#undef  SET_PSW_IA_AND_MAYBE_IP
+#define SET_PSW_IA_AND_MAYBE_IP( _regs, _ia )                         \
   do                                                                  \
   {                                                                   \
-    (_regs)->psw.IA  =  (_ia) & ADDRESS_MAXWRAP( _regs );             \
+    (_regs)->psw.IA = (_ia) & ADDRESS_MAXWRAP( _regs );               \
                                                                       \
-    if ((_regs)->aie)                                                 \
+    if (VALID_AIE( _regs ))                                           \
     {                                                                 \
       if ((_regs)->AIV == ((_regs)->psw.IA & (PAGEFRAME_PAGEMASK|1))) \
         (_regs)->ip = _PSW_IA_MAIN( (_regs), (_regs)->psw.IA );       \
       else                                                            \
-        (_regs)->aie = NULL;                                          \
+        (_regs)->aie = INVALID_AIE;                                   \
     }                                                                 \
   }                                                                   \
   while (0)
@@ -791,8 +816,9 @@ do { \
 #define INST_UPDATE_PSW( _regs, _len, _ilc )                          \
   do                                                                  \
   {                                                                   \
-    if (_len) (_regs)->ip       +=  (_len);                           \
-    if (_ilc) (_regs)->psw.ilc   =  (_ilc);                           \
+    (_regs)->ip += (_len);                                            \
+    if (_ilc)                                                         \
+      (_regs)->psw.ilc = (_ilc);                                      \
   }                                                                   \
   while(0)
 
@@ -827,17 +853,16 @@ do { \
 // in the guest PSW structure matches where the current regs 'ip'
 // instruction pointer is pointing, and then "invalidates" all AIA
 // fields by setting the 'aie' value to NULL, thereby forcing the
-// next instruction fetch to call the 'instfetch' function. The
-// invalidation is UNCONDITIONAL.
+// next instruction fetch to call the 'instfetch' function.
 
 #undef  INVALIDATE_AIA
 #define INVALIDATE_AIA( _regs )                                       \
   do                                                                  \
   {                                                                   \
-    if ((_regs)->aie)                                                 \
+    if (VALID_AIE( _regs ))                                           \
     {                                                                 \
-      (_regs)->psw.IA = PSW_IA( (_regs), 0 );                         \
-      (_regs)->aie = NULL;                                            \
+      (_regs)->psw.IA = PSW_IA_FROM_IP( (_regs), 0 );                 \
+      (_regs)->aie = INVALID_AIE;                                     \
     }                                                                 \
   }                                                                   \
   while (0)
@@ -856,13 +881,13 @@ do { \
 #define INVALIDATE_AIA_MAIN( _regs, _main )                           \
   do                                                                  \
   {                                                                   \
-    if ((_regs)->aie &&                                               \
+    if (VALID_AIE( _regs ) &&                                         \
         (((uintptr_t)(_main)) & PAGEFRAME_PAGEMASK) ==                \
          ((uintptr_t)(_regs)->aip)                                    \
     )                                                                 \
     {                                                                 \
-      (_regs)->psw.IA = PSW_IA( (_regs), 0 );                         \
-      (_regs)->aie = NULL;                                            \
+      (_regs)->psw.IA = PSW_IA_FROM_IP( (_regs), 0 );                 \
+      (_regs)->aie = INVALID_AIE;                                     \
     }                                                                 \
   }                                                                   \
   while (0)
@@ -888,6 +913,16 @@ do { \
 /*                     Instruction fetching                          */
 /*-------------------------------------------------------------------*/
 
+// The _VALID_IP helper macro is used only by the INSTRUCTION_FETCH
+// macro and returns either true/false indicating whether the current
+// instruction pointer is still valid or not (so INSTRUCTION_FETCH
+// can know whether to call the instfetch' function or not). It does
+// this by verifying regs->ip is either still less than regs->aie,
+// or for the 'exec' case, that the mainstor address corresponding
+// to regs->ET (the target of the execute instruction) is still less
+// than regs->aie. It determines the mainstor address of regs->ET
+// via the _PSW_IA_MAIN helper macro.
+
 #undef  _VALID_IP
 #define _VALID_IP( _regs, _exec )                                     \
   (                                                                   \
@@ -906,6 +941,14 @@ do { \
         && _PSW_IA_MAIN( (_regs), (_regs)->ET ) < (_regs)->aie        \
       )                                                               \
   )
+
+//---------------------------------------------------------------------
+// The INSTRUCTION_FETCH macro returns a mainstor 'ip' pointer
+// pointing to the next instruction to be executed. It either
+// returns regs->ip directly (or for the 'exec' case, the
+// corresponding mainstor address of the instruction being
+// executed), or else calls the 'instfetch' function to calculate
+// a new set of AIA values (ip, aie, aip and aiv).
 
 #undef  INSTRUCTION_FETCH
 #define INSTRUCTION_FETCH( _regs, _exec )                             \

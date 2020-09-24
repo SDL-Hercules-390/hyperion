@@ -167,7 +167,7 @@ REGS* CopyREGS( int cpu )               // (same logic as in panel.c)
 #endif
         regs = &copyregs;
 
-    SET_PSW_IA( regs );
+    MAYBE_SET_PSW_IA_FROM_IP( regs );
 
     release_lock( &sysblk.cpulock[cpu] );
     return regs;

@@ -1307,8 +1307,8 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
         */
         case SIE_HOST_INT_PEND:
 
-            SET_PSW_IA( regs );
-            UPD_PSW_IA( regs, regs->psw.IA -REAL_ILC( regs ));
+            MAYBE_SET_PSW_IA_FROM_IP( regs );
+            SET_PSW_IA_AND_MAYBE_IP( regs, regs->psw.IA - REAL_ILC( regs ));
             break;
 
         case SIE_HOST_PGM_INT:         /* do nothing */             break;

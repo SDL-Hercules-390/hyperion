@@ -865,7 +865,7 @@ char    regs_msg_buf[4*512] = {0};
     if (pgmint)
     {
         regs->ip -= ilc;
-        regs->psw.IA = PSW_IA( regs, 0 );
+        regs->psw.IA = PSW_IA_FROM_IP( regs, 0 );
     }
     PTT_PGM( "dinst ip,IA", regs->ip, regs->psw.IA, pgmint );
 
@@ -1034,7 +1034,7 @@ char    regs_msg_buf[4*512] = {0};
         S64 offset;
         S32 relative_long_operand = fetch_fw( inst+2 );
         offset = 2LL * relative_long_operand;
-        addr1 = PSW_IA( regs, 0 );  // (current instruction address)
+        addr1 = PSW_IA_FROM_IP( regs, 0 );  // (current instruction address)
 
         PTT_PGM( "dinst rel1:", addr1, offset, relative_long_operand );
 
@@ -2022,8 +2022,8 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 }
 
 /*-------------------------------------------------------------------*/
-/*  Return the address of a regs structure to be used for address    */
-/*  translation.  This address should be freed by the caller.        */
+/*  Return the address of a REGS structure to be used for address    */
+/*  translation.  Use "free_aligned" to free the returned pointer.   */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT REGS* copy_regs( REGS* regs )
 {
@@ -2046,7 +2046,7 @@ DLL_EXPORT REGS* copy_regs( REGS* regs )
     memset( &newregs->tlb.vaddr, 0, TLBN * sizeof( DW ));
 
     newregs->tlbID      = 1;
-    newregs->ghostregs  = 1;
+    newregs->ghostregs  = 1;      /* indicate these aren't real regs */
     HOST(  newregs )    = newregs;
     GUEST( newregs )    = NULL;
     newregs->sie_active = 0;
@@ -2060,7 +2060,7 @@ DLL_EXPORT REGS* copy_regs( REGS* regs )
         memset( &hostregs->tlb.vaddr, 0, TLBN * sizeof( DW ));
 
         hostregs->tlbID     = 1;
-        hostregs->ghostregs = 1;
+        hostregs->ghostregs = 1;  /* indicate these aren't real regs */
 
         HOST(  hostregs )   = hostregs;
         GUEST( hostregs )   = newregs;

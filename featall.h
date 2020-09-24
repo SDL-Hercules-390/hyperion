@@ -40,28 +40,32 @@
 /* problem and wish to test a possible permanent fix for it.         */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-// Fishtest...
 
-#define FISHTEST_TXF_STATS              // gather/track TXF metrics
 
-//#define OPTION_TXF_SINGLE_THREAD        // one transaction at a time
+#define OPTION_DEPRECATE_AIM            // Deprecate regs->aim usage
 
-/*-------------------------------------------------------------------*/
 
+//#define OPTION_TXF_SINGLE_THREAD        // One transaction at a time
 #define OPTION_DEPRECATE_TXF_LASTACC    // Deprecate 'txf_lastacc'
-#define OPTION_FIX_SIE_ICODE_BUG        // fix possible SIE icode bug
 #define OPTION_NO_TXF_MADDR_L_ABORT     // Don't call abort_transaction directly from txf_maddr_l
+#define OPTION_FIX_SIE_ICODE_BUG        // Fix possible SIE icode bug
+
 #define OPTION_HARDWARE_SYNC_ALL        // All PERFORM_SERIALIZATION
 //#define OPTION_HARDWARE_SYNC_BCR_ONLY   // ONLY the BCR instructions
 #if defined( OPTION_HARDWARE_SYNC_ALL ) && defined( OPTION_HARDWARE_SYNC_BCR_ONLY )
   #error OPTION_HARDWARE_SYNC_ALL and OPTION_HARDWARE_SYNC_BCR_ONLY are mutually exclusive!
 #endif
+
 #define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
-#define OPTION_NO_E3_OPTINST            // (temporary?)
 #define OPTION_GH275_PIC12_FIX          // GitHub #275 PIC 12 fix
 #define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT
-                                        // ALWAYS at entry to SIE
+                                        // ALWAYS at start SIE mode
+//#define NO_OPTINST                      // Doesn't really help much!
+#define OPTION_NO_E3_OPTINST            // Problematic!
+
+/*-------------------------------------------------------------------*/
+/*              Normal default OPTIONs and FEATUREs                  */
 /*-------------------------------------------------------------------*/
 
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */

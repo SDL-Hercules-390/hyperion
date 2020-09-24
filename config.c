@@ -392,7 +392,7 @@ int configure_storage( U64 mainsize /* number of 4K pages */ )
 
 #endif
 
-#if 1 // The below is a kludge that will need to be cleaned up at some point in time
+#if 1 // FIXME: The below is a kludge that will need to be cleaned up at some point in time
 
     /* Initialize dummy regs.
      * Dummy regs are used by the panel or gui when the target cpu

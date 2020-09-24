@@ -791,7 +791,7 @@ char  buf[512];
     if (modflag)
     {
         regs->psw.IA_G &= regs->psw.AMASK_G;
-        regs->aie = NULL;
+        regs->aie = INVALID_AIE;
     }
 
     /* Display the PSW and PSW field by field */

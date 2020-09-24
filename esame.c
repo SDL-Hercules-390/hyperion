@@ -264,7 +264,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     TRAN_INSTR_CHECK( regs );
 
     /* Determine the address of the parameter list */
-    pl_addr = likely(!regs->execflag) ? PSW_IA(regs, 0) :
+    pl_addr = likely(!regs->execflag) ? PSW_IA_FROM_IP(regs, 0) :
                regs->exrl ? (regs->ET + 6) : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
@@ -1758,7 +1758,7 @@ U32     i2;                             /* 32-bit operand values     */
     RIL(inst, regs, r1, opcd, i2);
 
     SET_GR_A(r1, regs, likely(!regs->execflag)
-                     ? PSW_IA(regs, -6 + 2LL*(S32)i2)
+                     ? PSW_IA_FROM_IP(regs, -6 + 2LL*(S32)i2)
                      : (regs->ET + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs));
 
 } /* end DEF_INST(load_address_relative_long) */
@@ -2277,8 +2277,9 @@ U64     gr0, gr1;                       /* Result register workareas */
         if( OPEN_IC_PTIMER(regs) )
         {
             RELEASE_INTLOCK(regs);
-            UPD_PSW_IA(regs, PSW_IA(regs, likely(!regs->execflag) ? -6 :
-                                                regs->exrl ? -6 : -4));
+            SET_PSW_IA_AND_MAYBE_IP(regs,
+                PSW_IA_FROM_IP(regs, likely(!regs->execflag) ? -6 :
+                                             regs->exrl      ? -6 : -4));
             RETURN_INTCHECK(regs);
         }
     }
@@ -2394,7 +2395,10 @@ S64     i,j;                            /* Integer workareas         */
     if ( (S64)regs->GR_G(r1) > j )
         SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*i2 );
     else
-        INST_UPDATE_PSW(regs, 6, 6);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
 
 } /* end DEF_INST(branch_relative_on_index_high_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2427,7 +2431,10 @@ S64     i,j;                            /* Integer workareas         */
     if ( (S64)regs->GR_G(r1) <= j )
         SUCCESSFUL_RELATIVE_BRANCH( regs, 2LL*i2 );
     else
-        INST_UPDATE_PSW(regs, 6, 6);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2461,7 +2468,10 @@ S64     i, j;                           /* Integer work areas        */
     if ( (S64)regs->GR_G(r1) > j )
         SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
-        INST_UPDATE_PSW(regs, 6, 6);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
 
 } /* end DEF_INST(branch_on_index_high_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2495,7 +2505,10 @@ S64     i, j;                           /* Integer work areas        */
     if ( (S64)regs->GR_G(r1) <= j )
         SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
-        INST_UPDATE_PSW(regs, 6, 6);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
 
 } /* end DEF_INST(branch_on_index_low_or_equal_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2642,7 +2655,10 @@ VADR    effective_addr2;                /* Effective address         */
     if ( --(regs->GR_G(r1)) )
         SUCCESSFUL_BRANCH( regs, effective_addr2 );
     else
-        INST_UPDATE_PSW(regs, 6, 6);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
 
 } /* end DEF_INST(branch_on_count_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -2669,7 +2685,10 @@ VADR    newia;                          /* New instruction address   */
     if ( --(regs->GR_G(r1)) && r2 != 0 )
         SUCCESSFUL_BRANCH( regs, newia );
     else
-        INST_UPDATE_PSW(regs, 4, 4);
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 4;
+    }
 
 } /* end DEF_INST(branch_on_count_long_register) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
@@ -4650,7 +4669,7 @@ DEF_INST(test_addressing_mode)
 DEF_INST( set_addressing_mode_24 )
 {
 #if !defined( FEATURE_370_EXTENSION )
-VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
+VADR    ia = PSW_IA_FROM_IP( regs, 0 ); /* Unupdated instruction addr*/
 #endif
 
     E( inst, regs );
@@ -4687,7 +4706,7 @@ VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
 DEF_INST( set_addressing_mode_31 )
 {
 #if !defined( FEATURE_370_EXTENSION )
-VADR    ia = PSW_IA( regs, 0 );         /* Unupdated instruction addr*/
+VADR    ia = PSW_IA_FROM_IP( regs, 0 ); /* Unupdated instruction addr*/
 #endif
 
     E( inst, regs );

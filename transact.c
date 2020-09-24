@@ -178,10 +178,10 @@ void ARCH_DEP( set_txf_aie )( REGS* regs )
     regs->txf_aie      = regs->ip - 6 + 256; // (minus-6 for TBEGINC)
     regs->txf_aie_aiv  = regs->AIV;
 
-    /* Is AIE in next page? */
+    /* Is aie in next page? */
     if (regs->txf_aie >= (regs->aip + ZPAGEFRAME_PAGESIZE))
     {
-        /* Define AIE offset into next page for vstore.h */
+        /* Define aie offset into next page for vstore.h */
         regs->txf_aie_aiv2 = regs->txf_aie_aiv + ZPAGEFRAME_PAGESIZE;
         regs->txf_aie_off2 = regs->txf_aie - (regs->aip + ZPAGEFRAME_PAGESIZE);
     }
@@ -817,7 +817,7 @@ TPAGEMAP   *pmap;
             memcpy( &origpsw, &regs->psw, sizeof( PSW ));
             {
                 n = txf_contran ? -6 : 0;
-                regs->psw.IA = PSW_IA( regs, n );
+                regs->psw.IA = PSW_IA_FROM_IP( regs, n );
                 memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
                 regs->txf_ip  = regs->ip;
                 regs->txf_aip = regs->aip;
@@ -1097,14 +1097,14 @@ int        retry;           /* Actual retry code                     */
     {
         /* Normal instruction abort: the PREVIOUS instruction
            is the one where the abort actually occurred at. */
-        txf_atia = PSW_IA( regs, -REAL_ILC( regs ));
+        txf_atia = PSW_IA_FROM_IP( regs, -REAL_ILC( regs ));
         PTT_TXF( "TXF ATIA", txf_atia, 0, -REAL_ILC( regs ) );
     }
     else // (raw_retry < 0)
     {
         /* Instruction dispatch abort: the CURRENT instruction
            address is where the abort actually occurred at. */
-        txf_atia = PSW_IA( regs, 0 );
+        txf_atia = PSW_IA_FROM_IP( regs, 0 );
         PTT_TXF( "TXF ATIA", txf_atia, 0, 0 );
     }
 
@@ -2675,7 +2675,7 @@ void dump_tdb( REGS* regs, TDB* tdb )
             RADR   real_atia;
 
             /* Point the PSW to the aborted instruction */
-            UPD_PSW_IA( tregs, atia );
+            SET_PSW_IA_AND_MAYBE_IP( tregs, atia );
 
             /* Get absolute mainstor addr of that instruction */
             if ((xcode = ARCH_DEP( virt_to_real )( &real_atia,

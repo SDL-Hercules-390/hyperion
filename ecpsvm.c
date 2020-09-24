@@ -321,7 +321,7 @@ struct _ECPSVM_SASTATS
 
 #define EVM_MVC( x, y, z )  ARCH_DEP( vfetchc )( (x), (z), (y), USE_REAL_ADDR, regs )
 
-#define BR14 UPD_PSW_IA(regs, regs->GR_L(14))
+#define BR14 SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(14))
 
 #define INITPSEUDOIP(_regs) \
     do {    \
@@ -340,8 +340,8 @@ struct _ECPSVM_SASTATS
 
 #define SASSIST_LPSW(_regs) \
     do { \
-        SET_PSW_IA(&(_regs)); \
-        UPD_PSW_IA(regs, _regs.psw.IA); \
+        MAYBE_SET_PSW_IA_FROM_IP(&(_regs)); \
+        SET_PSW_IA_AND_MAYBE_IP(regs, _regs.psw.IA); \
         regs->psw.cc=_regs.psw.cc; \
         regs->psw.pkey=_regs.psw.pkey; \
         regs->psw.progmask=_regs.psw.progmask; \
@@ -746,7 +746,7 @@ BYTE prevccwop;
         {
             DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit CCWTIC1"));
             EVM_STC(CDTIC,regs->GR_L(6));
-            UPD_PSW_IA(regs,EVM_L(el+8));           /* TIC follows chain data (CD), exit to CCWTIC1 */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+8));           /* TIC follows chain data (CD), exit to CCWTIC1 */
             return(1);
         }
         else
@@ -777,7 +777,7 @@ BYTE prevccwop;
     if (cc==1)
     {
         DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit ADDRINVAL"));
-        UPD_PSW_IA(regs,EVM_L(el+12));          /* Invalid user data addr, exit to ADDRINVL */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+12));          /* Invalid user data addr, exit to ADDRINVL */
         return(1);
     }
 
@@ -793,14 +793,14 @@ BYTE prevccwop;
         {
             DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit CCWBAD"));
             regs->GR_L(1)=regs->GR_L(9);
-            UPD_PSW_IA(regs,EVM_L(el+0));           /* CCW count is 0; exit to CCWBAD */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+0));           /* CCW count is 0; exit to CCWBAD */
             return(1);
         }
         else
         {
             DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DFCCW - Exit CCWTIC"));
             regs->GR_L(4)--;
-            UPD_PSW_IA(regs,EVM_L(el+16));          /* CCW count is 0, but CCW was a TIC; its ok.  Exit to CCWTIC */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+16));          /* CCW count is 0, but CCW was a TIC; its ok.  Exit to CCWTIC */
             return(1);
         }
     }
@@ -808,7 +808,7 @@ BYTE prevccwop;
     regs->GR_L(4)--;
     devtable=EVM_L(savearea+DEVTABLE);
     devrtn=regs->GR_L(12) + EVM_LH(devtable+ccwop);
-    UPD_PSW_IA(regs,devrtn);                    /* Success.  Exit to indexed device handler code */
+    SET_PSW_IA_AND_MAYBE_IP(regs,devrtn);                    /* Success.  Exit to indexed device handler code */
     CPASSIST_HIT(DFCCW);
     return(0);
 }
@@ -863,7 +863,7 @@ VADR vaddr;
     if(regs->GR_L(6)+8 > regs->GR_L(7))
     {
         DEBUG_CPASSISTX(DFCCW,WRMSG(HHC90000, "D", "DNCCW - Exit CCWNROOM"));
-        UPD_PSW_IA(regs,EVM_L(el+4));           /* Not enough room in RCWTASK; exit to CCWNROOM */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+4));           /* Not enough room in RCWTASK; exit to CCWNROOM */
         return;
     }
     /* Go directly into "decode first CCW" assist, and count a call to it */
@@ -975,7 +975,7 @@ BYTE B_IOBSPEC2;
 
                     if(B_RCWCTL & (RCWHMR | RCW2311))
                     {
-                        UPD_PSW_IA(regs,EVM_L(el+0));   /* Must do un-relocate.  Exit to UNREL */
+                        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+0));   /* Must do un-relocate.  Exit to UNREL */
                         return;
                     }
 
@@ -988,14 +988,14 @@ BYTE B_IOBSPEC2;
                         {
                             if(!(B_RCWCTL & RCWIO))
                             {
-                                UPD_PSW_IA(regs,EVM_L(el+16));      /* No exit point provided for this condition, so */
+                                SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+16));      /* No exit point provided for this condition, so */
                                 return;                             /* let's exit NXTCCW and let CP re-do this.      */
                             }
                             else
                             {
                                 if(ecpsvm_unlockpage1(regs,ptr_pl,regs->GR_L(2))!=0)
                                 {
-                                    UPD_PSW_IA(regs,EVM_L(el+8));   /* Something wrong; exit to PTRUL2 */
+                                    SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+8));   /* Something wrong; exit to PTRUL2 */
                                     return;
                                 }
                             }
@@ -1015,14 +1015,14 @@ BYTE B_IOBSPEC2;
                     regs->GR_L(2)=regs->GR_L(5);
                     if(!(B_RCWCTL & RCWIO))
                     {
-                        UPD_PSW_IA(regs,EVM_L(el+16));      /* No exit point provided for this condition, so */
+                        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+16));      /* No exit point provided for this condition, so */
                         return;                             /* let's exit NXTCCW and let CP re-do this.      */
                     }
                     else
                     {
                         if(ecpsvm_unlockpage1(regs,ptr_pl,regs->GR_L(2))!=0)
                         {
-                            UPD_PSW_IA(regs,EVM_L(el+20));  /* Something wrong; exit to PTRUL1 */
+                            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+20));  /* Something wrong; exit to PTRUL1 */
                             return;
                         }
                     }
@@ -1042,7 +1042,7 @@ BYTE B_IOBSPEC2;
         regs->GR_L(4)=rcw;
         if(ecpsvm_do_fretx(regs,regs->GR_L(1),regs->GR_L(0),EVM_L(dl+4),EVM_L(dl+8))!=0)
         {
-            UPD_PSW_IA(regs,EVM_L(el+4));       /* Cant do FRETX, exit to UNTFRET */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+4));       /* Cant do FRETX, exit to UNTFRET */
             return;
         }
     }
@@ -1054,11 +1054,11 @@ BYTE B_IOBSPEC2;
     {
         if(!(B_IOBSPEC2 & IOBCLN))
         {
-            UPD_PSW_IA(regs,EVM_L(el+24));      /* MDISK with reserve/release, exit to ITSAREL */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+24));      /* MDISK with reserve/release, exit to ITSAREL */
             return;
         }
     }
-    UPD_PSW_IA(regs,EVM_L(el+12));      /* Success.  Exit to UNTFRXIT */
+    SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+12));      /* Success.  Exit to UNTFRXIT */
     CPASSIST_HIT(FCCWS);
     return;
 }
@@ -1182,7 +1182,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     if(!(B_VMOSTAT & VMKILL))
     {
         DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 Call SCHEDULE because VMKILL not set"));
-        UPD_PSW_IA(regs, SCHDL);
+        SET_PSW_IA_AND_MAYBE_IP(regs, SCHDL);
         return(0);
     }
     B_VMQSTAT=EVM_IC(vmb+VMQSTAT);
@@ -1191,7 +1191,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
         if(B_VMOSTAT & VMCF)
         {
             DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 Call SCHEDULE because VMKILL & VMCF & !VMCFREAD set"));
-            UPD_PSW_IA(regs, SCHDL);
+            SET_PSW_IA_AND_MAYBE_IP(regs, SCHDL);
             return(0);
         }
     }
@@ -1208,7 +1208,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     }
     B_VMRSTAT |= VMLOGOFF;
     EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
-    UPD_PSW_IA(regs, EVM_L(el+0));
+    SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+0));
     DEBUG_CPASSISTX(DISP1,WRMSG(HHC90000, "D", "DISP1 : Call USOFF"));
     return(0);
 }
@@ -1252,14 +1252,14 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     {
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 Exit 8 : System extending"));
         /* System in Extend process */
-        UPD_PSW_IA(regs, EVM_L(el+8));
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+8));
         return(0);
     }
     if(EVM_IC(APSTAT2) & CPMCHLK)
     {
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 Exit 8 : MCH Recovery"));
         /* Machine Check recovery in progress */
-        UPD_PSW_IA(regs, EVM_L(el+8));
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+8));
         return(0);
     }
     svmb=EVM_L(ASYSVM);
@@ -1288,7 +1288,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         regs->GR_L(10)=F_TRQB;
         regs->GR_L(11)=vmb;
         regs->GR_L(12)=EVM_L(F_TRQB+0x1C);
-        UPD_PSW_IA(regs, regs->GR_L(12));
+        SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(12));
         DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 TRQ/IOB @ %6.6X IA = %6.6X",F_TRQB,regs->GR_L(12)));
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(0);
@@ -1339,7 +1339,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             /* End of 2017-01-27 */
 
             /* Upon taking this exit, GPRS 12-15 are same as entry */
-            UPD_PSW_IA(regs, EVM_L(el+12));
+            SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+12));
             return(0);
         }
         for(i=0;i<15;i++)
@@ -1347,7 +1347,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             regs->GR_L(i)=CPEXBKUP[i];
         }
         regs->GR_L(15)=F_CPEXADD;
-        UPD_PSW_IA(regs, F_CPEXADD);
+        SET_PSW_IA_AND_MAYBE_IP(regs, F_CPEXADD);
         DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 CPEXBLOK CPEX=%6.6X IA=%6.6X",F_CPEXB,F_CPEXADD));
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         return(0);  /* CPEXBLOCK Branch taken */
@@ -1357,7 +1357,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     if(EVM_IC(CPSTAT2) & CPSHRLK)
     {
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 Exit 24 : CPSHRLK Set in CPSTAT2"));
-        UPD_PSW_IA(regs, EVM_L(el+24));  /* IDLEECPS */
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+24));  /* IDLEECPS */
         return(0);
     }
     /* Scan Scheduler IN-Q */
@@ -1392,7 +1392,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
             regs->GR_L(1)=vmb;
             regs->GR_L(11)=EVM_L(ASYSVM);
-            UPD_PSW_IA(regs, EVM_L(el+20));  /* FREELOCK */
+            SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+20));  /* FREELOCK */
             return(0);
         }
         DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 : VMB @ %6.6X Will now be dispatched",vmb));
@@ -1420,7 +1420,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                     /* LCSHRPG not implemented yet */
                     regs->GR_L(10)=vmb;
                     regs->GR_L(11)=lastu;
-                    UPD_PSW_IA(regs, EVM_L(el+16));
+                    SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+16));
                     return(0);
                     /* A CHARGE_STOP(runu) is due when LCSHRPG is implemented */
                 }
@@ -1468,12 +1468,12 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         INITPSEUDOREGS(wregs);
         work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
         ARCH_DEP(load_psw) (&wregs,work_p);    /* Load user's Virtual PSW in work structure */
-        SET_PSW_IA(&wregs);
+        MAYBE_SET_PSW_IA_FROM_IP(&wregs);
 
         /* Build REAL PSW */
         INITPSEUDOREGS(rregs);
         /* Copy IAR */
-        UPD_PSW_IA(&rregs, wregs.psw.IA);
+        SET_PSW_IA_AND_MAYBE_IP(&rregs, wregs.psw.IA);
         /* Copy CC, PSW KEYs and PGM Mask */
         rregs.psw.cc=wregs.psw.cc;
         rregs.psw.pkey=wregs.psw.pkey;
@@ -1509,7 +1509,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                     /* CP Say this is NOT good */
                     /* Take exit 28 */
                     WRMSG(HHC01700,"W");
-                    UPD_PSW_IA(regs, EVM_L(el+28));
+                    SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+28));
                     return(0);
                 }
                 /* Check 3rd level translation */
@@ -1715,7 +1715,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_IC_MASK(regs);
         SET_AEA_MODE(regs);
         SET_AEA_COMMON(regs);
-        SET_PSW_IA(regs);
+        MAYBE_SET_PSW_IA_FROM_IP(regs);
         /* Dispatch..... */
         DEBUG_CPASSISTX(DISP2,MSGBUF(buf, "DISP2 - Dispatch...\n"));
         DEBUG_CPASSISTX(DISP2,display_gregs(regs, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf), "HHC90000D "));
@@ -1726,7 +1726,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     }
     /* Nothing else to do - wait state */
     DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", "DISP2 : Nothing to dispatch - IDLEECPS"));
-    UPD_PSW_IA(regs, EVM_L(el+24));      /* IDLEECPS */
+    SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(el+24));      /* IDLEECPS */
     return(0);
 }
 
@@ -1854,7 +1854,7 @@ DEF_INST(ecpsvm_tpage)
     }
     regs->psw.cc=0;
     regs->GR_L(2)=raddr;
-    UPD_PSW_IA(regs, effective_addr2);
+    SET_PSW_IA_AND_MAYBE_IP(regs, effective_addr2);
     CPASSIST_HIT(TRBRG);
     return;
 }
@@ -1883,7 +1883,7 @@ DEF_INST(ecpsvm_tpage_lock)
     ecpsvm_lockpage1(regs,effective_addr1,raddr);
     regs->psw.cc=0;
     regs->GR_L(2)=raddr;
-    UPD_PSW_IA(regs, effective_addr2);
+    SET_PSW_IA_AND_MAYBE_IP(regs, effective_addr2);
     CPASSIST_HIT(TRLOK);
     return;
 }
@@ -1962,7 +1962,7 @@ DEF_INST(ecpsvm_inval_segtab)
 
     /* Indicate Purge TLB required and return via GR8 */
     EVM_STC(EVM_IC(APSTAT2) | CPPTLBR,APSTAT2);
-    UPD_PSW_IA(regs, regs->GR_L(8));
+    SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(8));
     CPASSIST_HIT(VIST);
     return;
 }
@@ -2129,7 +2129,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     {
         /* Abend condition detected during virtual time update - exit at +32 */
         DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Bad ITIMER - Taking Exit #32"));
-        UPD_PSW_IA(regs, EVM_L(exitlist+32));
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(exitlist+32));
         return(0);
     }
     /* Load CR1 with the vmblock's VMSEG */
@@ -2162,7 +2162,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
         EVM_STC(B_VMDSTAT,vmb+VMDSTAT);
         /* end of 2017-03-27 */
 
-        UPD_PSW_IA(regs, EVM_L(exitlist+8));
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(exitlist+8));
         DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "RUNTIME : Complete - Taking exit #8"));
         return(0);
     }
@@ -2239,7 +2239,7 @@ DEF_INST(ecpsvm_dispatch_main)
                 DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : VMDSP on in VMBLOK - Clean status (Exit #36)"));
                 /* Clean status - Do exit 36 */
                 regs->GR_L(11)=vmb;
-                UPD_PSW_IA(regs, EVM_L(elist+36));
+                SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+36));
                 EVM_ST(DISPCNT,dlist);
                 CPASSIST_HIT(DISP0);
                 return;
@@ -2257,7 +2257,7 @@ DEF_INST(ecpsvm_dispatch_main)
             /* DMKDSPC3 */
             /* No need to update R11 */
             CPASSIST_HIT(DISP0);
-            UPD_PSW_IA(regs, EVM_L(elist+4));
+            SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+4));
             EVM_ST(DISPCNT,dlist);
             return;
         }
@@ -2273,7 +2273,7 @@ DEF_INST(ecpsvm_dispatch_main)
         DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", buf));
         /* Take Exit 12 */
         regs->GR_L(11)=vmb;
-        UPD_PSW_IA(regs, EVM_L(elist+12));
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+12));
         CPASSIST_HIT(DISP0);
         EVM_ST(DISPCNT,dlist);
         return;
@@ -2285,7 +2285,7 @@ DEF_INST(ecpsvm_dispatch_main)
         DEBUG_CPASSISTX(DISP0,WRMSG(HHC90000, "D", "DISP0 : PER/PPF Pending - Taking exit #16"));
         /* Take Exit 16 */
         regs->GR_L(11)=vmb;
-        UPD_PSW_IA(regs, EVM_L(elist+16));
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+16));
         CPASSIST_HIT(DISP0);
         EVM_ST(DISPCNT,dlist);
         return;
@@ -2333,7 +2333,7 @@ DEF_INST(ecpsvm_dispatch_main)
                     regs->GR_L(5)=OXINT;                 /* XINTBLOK Back pointer (or VMPXINT) */
                     regs->GR_L(6)=F_VMPXINT;             /* Current XINTBLOK */
                     regs->GR_L(11)=vmb;                  /* RUNUSER */
-                    UPD_PSW_IA(regs, EVM_L(elist+20));   /* Exit +20 */
+                    SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+20));   /* Exit +20 */
                     EVM_ST(DISPCNT,dlist);
                     CPASSIST_HIT(DISP0);
                     return;
@@ -2394,7 +2394,7 @@ DEF_INST(ecpsvm_dispatch_main)
                 /* Take Exit 24 */
                 regs->GR_L(7)=F_VMIOINT;
                 regs->GR_L(11)=vmb;
-                UPD_PSW_IA(regs, EVM_L(elist+24));   /* Exit +24 */
+                SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+24));   /* Exit +24 */
                 EVM_ST(DISPCNT,dlist);
                 CPASSIST_HIT(DISP0);
                 return;
@@ -2414,7 +2414,7 @@ DEF_INST(ecpsvm_dispatch_main)
         EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
         /* end of 2017-03-27 */
         regs->GR_L(11)=vmb;
-        UPD_PSW_IA(regs, EVM_L(elist+28));   /* Exit +28 */
+        SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+28));   /* Exit +28 */
         CPASSIST_HIT(DISP0);
         EVM_ST(DISPCNT,dlist);
         return;
@@ -2425,7 +2425,7 @@ DEF_INST(ecpsvm_dispatch_main)
     EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
     /* end of 2017-03-27 */
     regs->GR_L(11)=vmb;
-    UPD_PSW_IA(regs, EVM_L(elist+0));   /* Exit +0 */
+    SET_PSW_IA_AND_MAYBE_IP(regs, EVM_L(elist+0));   /* Exit +0 */
     CPASSIST_HIT(DISP0);
     EVM_ST(DISPCNT,dlist);
     return;
@@ -2547,7 +2547,7 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->GR_L(6)=~0;
         regs->GR_L(7)=~0;
         regs->GR_L(8)=~0;
-        UPD_PSW_IA(regs, regs->GR_L(14));
+        SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(14));
         regs->psw.cc=1;
         */
         /* Right now, let CP handle the case */
@@ -2573,7 +2573,7 @@ DEF_INST(ecpsvm_locate_rblock)
             regs->GR_L(6)=rchblk;
             regs->GR_L(7)=~0;
             regs->GR_L(8)=~0;
-            UPD_PSW_IA(regs, regs->GR_L(14));
+            SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(14));
             regs->psw.cc=2;
             */
             return;
@@ -2595,7 +2595,7 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->GR_L(6)=rchblk;
         regs->GR_L(7)=rcublk;
         regs->GR_L(8)=~0;
-        UPD_PSW_IA(regs, regs->GR_L(14));
+        SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(14));
         regs->psw.cc=3;
         */
         return;
@@ -2677,7 +2677,7 @@ BYTE B_VDEVTYPC;
     if(EVM_IC(regs->GR_L(6)+RCWFLAG) & IDA)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit DWDIDAL"));
-        UPD_PSW_IA(regs,EVM_L(el+0));           /* IDA bit is set in CCW, exit to FWDIDAL */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+0));           /* IDA bit is set in CCW, exit to FWDIDAL */
         return;
     }
 
@@ -2686,7 +2686,7 @@ BYTE B_VDEVTYPC;
     if(vstart_page != vlast_page)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWMANYF"));
-        UPD_PSW_IA(regs,EVM_L(el+4));           /* CCW data area crosses page boundary, exit CCWMANYF */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+4));           /* CCW data area crosses page boundary, exit CCWMANYF */
         return;
     }
 
@@ -2731,7 +2731,7 @@ BYTE B_VDEVTYPC;
         if(EVM_IC(cortable+CORFLAG) & CORSHARE)
         {
             DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit SHRDPAGE"));
-            UPD_PSW_IA(regs,EVM_L(el+12));      /* exit; CCW data area is in shared page  (SHRDPAGE) */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+12));      /* exit; CCW data area is in shared page  (SHRDPAGE) */
         }
     }
 
@@ -2748,7 +2748,7 @@ BYTE B_VDEVTYPC;
     if(EVM_IC(vdev+VDEVFLAG) & VDEVUC)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNXT10"));
-        UPD_PSW_IA(regs,EVM_L(el+16));          /* exit to CCWNXT10 in CP; sense bytes are present */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+16));          /* exit to CCWNXT10 in CP; sense bytes are present */
         return;
     }
 
@@ -2756,7 +2756,7 @@ BYTE B_VDEVTYPC;
     if(B_VMOSTAT & VMSHR)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNXT12"));
-        UPD_PSW_IA(regs,EVM_L(el+44));          /* exit to CCWNXT12 in CP; running with shared segments */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+44));          /* exit to CCWNXT12 in CP; running with shared segments */
         CPASSIST_HIT(CCWGN);                    /* partial translation was assisted */
         return;
     }
@@ -2765,7 +2765,7 @@ BYTE B_VDEVTYPC;
     if((EVM_IC(savearea+VIRFLAG) & (CD+CC)))
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNEXT"));
-        UPD_PSW_IA(regs,EVM_L(el+20));          /* exit to CCWNEXT; CD or CC flag set in CCW, get next CCW */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+20));          /* exit to CCWNEXT; CD or CC flag set in CCW, get next CCW */
         CPASSIST_HIT(CCWGN);
         return;
     }
@@ -2774,7 +2774,7 @@ BYTE B_VDEVTYPC;
     if(EVM_IC(savearea+PRVFLAG) & (SMCOM+FWDTIC))
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNEXT(2)"));
-        UPD_PSW_IA(regs,EVM_L(el+20));          /* exit to CCWNEXT; previous CCW status modifier or fwd TIC */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+20));          /* exit to CCWNEXT; previous CCW status modifier or fwd TIC */
         CPASSIST_HIT(CCWGN);
         return;
     }
@@ -2793,14 +2793,14 @@ BYTE B_VDEVTYPC;
     if(EVM_IC(savearea+MEMO2) & STRTNEW)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWNEWV2"));
-        UPD_PSW_IA(regs,EVM_L(el+24));          /* exit to CCWNEWV2; start new CCW string */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+24));          /* exit to CCWNEWV2; start new CCW string */
         CPASSIST_HIT(CCWGN);
         return;
     }
     if(EVM_IC(savearea+MEMO1) & HADUTIC)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit TICSCAN"));
-        UPD_PSW_IA(regs,EVM_L(el+28));          /* exit to TICSCAN; unprocessed TICs remain */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+28));          /* exit to TICSCAN; unprocessed TICs remain */
         CPASSIST_HIT(CCWGN);
         return;
     }
@@ -2815,7 +2815,7 @@ BYTE B_VDEVTYPC;
     if(EVM_L(savearea+DEVTABLE) == EVM_L(dl+4))
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWDIAL"));
-        UPD_PSW_IA(regs,EVM_L(el+32));          /* exit to CCWDIAL if dialed line */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+32));          /* exit to CCWDIAL if dialed line */
         CPASSIST_HIT(CCWGN);
         return;
     }
@@ -2826,14 +2826,14 @@ BYTE B_VDEVTYPC;
         if(!(EVM_IC(vdev+VDEVTYPE) & (TYP3277|TYP3278)))
         {
             DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWEXIT"));
-            UPD_PSW_IA(regs,EVM_L(el+40));      /* Not 3270 device; exit to CCWEXIT; we're done */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+40));      /* Not 3270 device; exit to CCWEXIT; we're done */
             CPASSIST_HIT(CCWGN);
             return;
         }
         if(!(EVM_IC(vdev+VDEVSTAT) & VDEVDED))
         {
             DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWDIAL(2)"));
-            UPD_PSW_IA(regs,EVM_L(el+32));      /* exit to CCWDIAL if i/o to non-dialed 3270 */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+32));      /* exit to CCWDIAL if i/o to non-dialed 3270 */
             CPASSIST_HIT(CCWGN);
             return;
         }
@@ -2843,14 +2843,14 @@ BYTE B_VDEVTYPC;
     if(!(B_VDEVTYPC & CLASDASD))
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CCWEXIT(2)"));
-        UPD_PSW_IA(regs,EVM_L(el+40));          /* Not DASD; exit to CCWEXIT; we're done */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+40));          /* Not DASD; exit to CCWEXIT; we're done */
         CPASSIST_HIT(CCWGN);
         return;
     }
     if(EVM_IC(vdev+VDEVFLG2) & VDEVRRF)
     {
         DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit ITSAREL"));
-        UPD_PSW_IA(regs,EVM_L(el+48));          /* DASD w/reserve-release; exit to ITSAREL */
+        SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+48));          /* DASD w/reserve-release; exit to ITSAREL */
         CPASSIST_HIT(CCWGN);
         return;
     }
@@ -2861,20 +2861,20 @@ BYTE B_VDEVTYPC;
         if(EVM_IC(vdev+VDEVSTAT) & VDEVDED)
         {
             DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CALLISM"));
-            UPD_PSW_IA(regs,EVM_L(el+36));      /* ISAM ok to dedicated DASD; exit to CALLISM */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+36));      /* ISAM ok to dedicated DASD; exit to CALLISM */
             CPASSIST_HIT(CCWGN);
             return;
         }
         if(EVM_LH(vdev+VDEVRELN)==0)
         {
             DEBUG_CPASSISTX(CCWGN,WRMSG(HHC90000, "D", "CCWGN - Exit CALLISM(2)"));
-            UPD_PSW_IA(regs,EVM_L(el+36));      /* ISAM ok on full-volume MDISK; exit to CALLISM */
+            SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+36));      /* ISAM ok on full-volume MDISK; exit to CALLISM */
             CPASSIST_HIT(CCWGN);
             return;
         }
     }
 
-    UPD_PSW_IA(regs,EVM_L(el+40));          /* Exit to CCWEXIT; we're done */
+    SET_PSW_IA_AND_MAYBE_IP(regs,EVM_L(el+40));          /* Exit to CCWEXIT; we're done */
     CPASSIST_HIT(CCWGN);
     return;
 }
@@ -2986,7 +2986,7 @@ DEF_INST(ecpsvm_store_level)
        to a re-assembly of DMKCPI.  If we don't find what we expect at any time, just
        exit from this function and allow CP to NO-OP the assist functions as usual.
     */
-    ia=PSW_IA(regs,0);
+    ia=PSW_IA_FROM_IP(regs,0);
     if(EVM_L(ia) != 0x960C034A)         /*  OI    CPSTAT2,CPASTAVL+CPASTON  */
         return;
     ia+=4;
@@ -3053,7 +3053,7 @@ DEF_INST(ecpsvm_store_level)
     */
     DEBUG_CPASSISTX(STEVL,WRMSG(HHC90000, "D", "CP FREE/FRET trap detected; assist operational with trap in effect"));
     sysblk.ecpsvm.freetrap=1;
-    UPD_PSW_IA(regs, ia);
+    SET_PSW_IA_AND_MAYBE_IP(regs, ia);
     return;
 }
 
@@ -3418,8 +3418,8 @@ int ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, REGS
     UNREFERENCED(micblok);
     UNREFERENCED(regs);
 
-    SET_PSW_IA(newr);
-    SET_PSW_IA(oldr);
+    MAYBE_SET_PSW_IA_FROM_IP(newr);
+    MAYBE_SET_PSW_IA_FROM_IP(oldr);
 
     /* Check for a switch from BC->EC or EC->BC */
     if(ECMODE(&oldr->psw)!=ECMODE(&newr->psw))
@@ -3525,8 +3525,8 @@ int ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     }
 
     /* While we are at it, set the IA in the V PSW */
-    SET_PSW_IA(regs);
-    UPD_PSW_IA(&npregs, regs->psw.IA);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
+    SET_PSW_IA_AND_MAYBE_IP(&npregs, regs->psw.IA);
 
     /* Set the change bit */
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
@@ -3592,7 +3592,7 @@ BYTE *work_p;
     EVM_ST(EVM_L(regs->GR_L(13)+SAVENEXT),svclist+NEXTSAVE);
     EVM_ST(svcR12,regs->GR_L(13)+SAVER12);
     EVM_ST(svcR13,regs->GR_L(13)+SAVER13);
-    regs->GR_L(14)=PSW_IA(regs,0);
+    regs->GR_L(14)=PSW_IA_FROM_IP(regs,0);
     EVM_ST(regs->GR_L(14),regs->GR_L(13)+SAVERETN);
     regs->GR_L(12)=regs->GR_L(15);
 
@@ -3607,7 +3607,7 @@ BYTE *work_p;
     }
 
     CPASSIST_HIT(LINK);
-    UPD_PSW_IA(regs,regs->GR_L(12));
+    SET_PSW_IA_AND_MAYBE_IP(regs,regs->GR_L(12));
     return(0);
 }
 
@@ -3688,7 +3688,7 @@ BYTE *work_p;
     }
 
     CPASSIST_HIT(RETRN);
-    UPD_PSW_IA(regs,retaddr);
+    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
     return(0);
 }
 
@@ -3716,8 +3716,8 @@ int     ecpsvm_doassistsvc(REGS *regs,int svccode)
     DEBUG_SASSISTX(SVC,display_psw(&newr, &buf[strlen(buf)], sizeof(buf)-(int)strlen(buf)));
     DEBUG_SASSISTX(SVC,WRMSG(HHC90000, "D", buf));
     /* Get some stuff from the REAL Running PSW to put in OLD SVC PSW */
-    SET_PSW_IA(regs);
-    UPD_PSW_IA(&vpregs, regs->psw.IA);            /* Instruction Address */
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
+    SET_PSW_IA_AND_MAYBE_IP(&vpregs, regs->psw.IA);            /* Instruction Address */
     vpregs.psw.cc=regs->psw.cc;                   /* Condition Code      */
     vpregs.psw.pkey=regs->psw.pkey;               /* Protection Key      */
     vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */
@@ -3880,7 +3880,7 @@ VADR ia;
 BYTE work;
 
     /* Store the current PSW in pgmold in order to simulate a privileged operation exception.    */
-    SET_PSW_IA(regs);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
     psa=(PSA_3XX *)MADDR((VADR)0 , USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
     ARCH_DEP(store_psw) (regs, (BYTE *)&psa->pgmold);
 
@@ -4003,7 +4003,7 @@ BYTE work;
     */
     vmalist=EVM_L(AVMALIST);
     retaddr=EVM_L(vmalist+VSIEX);
-    UPD_PSW_IA(regs,retaddr);
+    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
 
     /* Load CP's registers with the values required by DMKVSIEX.  R12=base reg. */
     regs->CR_L(0)=EVM_L(CPCREG0);
@@ -4111,7 +4111,7 @@ BYTE work;
     regs->GR_L(13)=e2;
     retaddr=EVM_L(vmalist+VSIVS);
     SASSIST_HIT(SIO);
-    UPD_PSW_IA(regs,retaddr);
+    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
     return(0);
 }
 
@@ -4150,8 +4150,8 @@ int ecpsvm_dostnsm(REGS *regs,int b1,VADR effective_addr1,int imm2)
     ARCH_DEP(vstoreb) (oldmask,effective_addr1,b1,regs);
 
     /* While we are at it, set the IA in the V PSW */
-    SET_PSW_IA(regs);
-    UPD_PSW_IA(&npregs, regs->psw.IA);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
+    SET_PSW_IA_AND_MAYBE_IP(&npregs, regs->psw.IA);
 
     /* Set the change bit for the V PSW */
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
@@ -4204,8 +4204,8 @@ int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
     ARCH_DEP(vstoreb) (oldmask,effective_addr1,b1,regs);
 
     /* While we are at it, set the IA in the V PSW */
-    SET_PSW_IA(regs);
-    UPD_PSW_IA(&npregs, regs->psw.IA);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
+    SET_PSW_IA_AND_MAYBE_IP(&npregs, regs->psw.IA);
 
     /* Set the change bit for the V PSW */
     MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
@@ -4557,7 +4557,7 @@ U32  F_VMINST;
     regs->GR_L(12)=retaddr;
 
     SASSIST_HIT(DIAG);
-    UPD_PSW_IA(regs,retaddr);
+    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
     return(0);
 }
 

@@ -604,7 +604,7 @@ int  size;
 int  eamode;
 #endif
 
-    SET_PSW_IA(regs);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
@@ -742,8 +742,8 @@ RADR raddr;
 RADR ag;
 int  size;
 
-    SET_PSW_IA(regs);
-    SET_PSW_IA(newregs);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
+    MAYBE_SET_PSW_IA_FROM_IP(newregs);
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
     if(!regs->psw.amode64 && !newregs->psw.amode64)
@@ -963,7 +963,7 @@ RADR raddr;
 RADR ag;
 int  size;
 
-    SET_PSW_IA(regs);
+    MAYBE_SET_PSW_IA_FROM_IP(regs);
 
     if(!br)
     {
