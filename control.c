@@ -415,19 +415,35 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP( store_fullword_absolute )( duct_pkrp, ducto+36, regs );
 #endif
 
-        /* Specification exception if the PSW is now invalid. */
-        /* (Since UPD_PSW_IA used above masks off inval bits  */
-        /* in psw.IA, test duct_reta for invalid bits).       */
-        if ((duct_reta & 1)
+        /* Specification exception if the PSW is now invalid...
+
+           Since the SET_PSW_IA_AND_MAYBE_IP macro used above
+           masks off invalid bits in the psw.IA, the only way to
+           know if the PSW is now invalid is to test the duct_reta
+           itself for any invalid bits.
+        */
+        if (0
+            || (duct_reta & 1)
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-            || (regs->psw.amode64 == 0 && regs->psw.amode == 0
-                && (duct_reta & 0x7F000000)))
+            || (1
+                && !regs->psw.amode64
+                && !regs->psw.amode
+                && (duct_reta & 0x7F000000)
+               )
 #else
-            || (regs->psw.amode == 0 && duct_reta > 0x00FFFFFF))
+            || (1
+                && !regs->psw.amode
+                && duct_reta > 0x00FFFFFF
+               )
 #endif
+        )
         {
-            /* program_interrupt will invoke INVALIDATE_AIA which */
-            /* will apply address mask to psw.IA if aie valid. */
+            /* The program_interrupt routine invokes INVALIDATE_AIA
+               which applies the addressing mask to the psw.IA when
+               the aie is still valid, which we don't want it to do.
+               Thus we deliberately set the aie to an invalid value
+               to prevent it from doing that.
+            */
             regs->aie = INVALID_AIE;
             regs->psw.IA = duct_reta;
             regs->psw.zeroilc = 1;
