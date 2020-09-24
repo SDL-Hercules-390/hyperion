@@ -151,7 +151,7 @@ static void sigint_handler( int signo )
     sysblk.sigintreq = 1;
 
     /* Activate instruction stepping */
-    sysblk.inststep = 1;
+    sysblk.instbreak = 1;
     SET_IC_TRACE;
 }
 

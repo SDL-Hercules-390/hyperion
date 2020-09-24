@@ -428,7 +428,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         {
             /* program_interrupt will invoke INVALIDATE_AIA which */
             /* will apply address mask to psw.IA if aie valid. */
-            regs->aie = NULL;
+            regs->aie = INVALID_AIE;
             regs->psw.IA = duct_reta;
             regs->psw.zeroilc = 1;
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );

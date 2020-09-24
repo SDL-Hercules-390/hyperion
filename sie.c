@@ -723,7 +723,7 @@ U64     dreg;
     SET_AEA_COMMON( GUESTREGS );
     INVALIDATE_AIA( GUESTREGS );
 
-    GUESTREGS->tracing = regs->tracing;
+    GUESTREGS->breakortrace = regs->breakortrace;
 
     /* Must do setjmp(progjmp) here since the 'translate_addr' further
        below may result in longjmp(progjmp) for addressing exceptions.

@@ -817,7 +817,7 @@ char  buf[512];
         if ( !IS_IC_DISABLED_WAIT_PSW( regs ) )     rc = 1; /* Enabled Wait */
         else                                        rc = 2; /* Disabled Wait */
     }
-    else if ( sysblk.inststep )                     rc = 3; /* Instruction Step */
+    else if ( sysblk.instbreak )                    rc = 3; /* Instruction Step */
     else if ( regs->cpustate == CPUSTATE_STOPPED )  rc = 4; /* Manual Mode */
     else                                            rc = 0; /* Running Normal */
 
@@ -918,7 +918,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
 {
     U64   addr[2]         =  {0};       /* Parsed address range      */
     BYTE  c[2]            =  {0};       /* [0]=range sep, [1]=sscanf */
-    U16   stepasid        =   0;        /* Optional asid argument    */
+    U16   breakasid       =   0;        /* Optional asid argument    */
 
     char  rangemsg [128]  =  {0};       /* MSGBUF work buffer        */
     char  asidmsg  [128]  =  {0};       /* MSGBUF work buffer        */
@@ -930,6 +930,8 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     bool  off     =  false;             /* Whether - was specified   */
     bool  query   =  false;             /* Whether ? was specified   */
     bool  update  =  false;             /* Whether parms were given  */
+
+    cmdline[0] = tolower( cmdline[0] );
 
     trace  = (cmdline[0] == 't');       // trace command
     step   = (cmdline[0] == 's');       // stepping command
@@ -1054,7 +1056,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 return -1;
             }
 
-            stepasid = (U16) (asid & 0xFFFF);
+            breakasid = (U16) (asid & 0xFFFF);
         }
     }
     else
@@ -1082,7 +1084,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
                 {
                     sysblk.traceaddr[0] = addr[0];
                     sysblk.traceaddr[1] = addr[1];
-                    sysblk.stepasid     = 0;
+                    sysblk.breakasid    = 0;
                 }
 
                 if (on || off)
@@ -1092,13 +1094,13 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             {
                 if (update)
                 {
-                    sysblk.stepaddr[0] = addr[0];
-                    sysblk.stepaddr[1] = addr[1];
-                    sysblk.stepasid    = stepasid;
+                    sysblk.breakaddr[0] = addr[0];
+                    sysblk.breakaddr[1] = addr[1];
+                    sysblk.breakasid    = breakasid;
                 }
 
                 if (on || off)
-                    sysblk.inststep = on;
+                    sysblk.instbreak = on;
             }
 
             SET_IC_TRACE;
@@ -1113,17 +1115,17 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         /* Save (possibly updated) settings for user feedback */
         if (trace)
         {
-            addr[0]  = sysblk.traceaddr[0];
-            addr[1]  = sysblk.traceaddr[1];
-            stepasid = 0;
-            on       = sysblk.insttrace;
+            addr[0]   = sysblk.traceaddr[0];
+            addr[1]   = sysblk.traceaddr[1];
+            breakasid = 0;
+            on        = sysblk.insttrace;
         }
         else // (step || breakp)
         {
-            addr[0]  = sysblk.stepaddr[0];
-            addr[1]  = sysblk.stepaddr[1];
-            stepasid = sysblk.stepasid;
-            on       = sysblk.inststep;
+            addr[0]   = sysblk.breakaddr[0];
+            addr[1]   = sysblk.breakaddr[1];
+            breakasid = sysblk.breakasid;
+            on        = sysblk.instbreak;
         }
     }
     RELEASE_INTLOCK( NULL );
@@ -1139,8 +1141,8 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         );
     }
 
-    if (stepasid)
-        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"'", stepasid );
+    if (breakasid)
+        MSGBUF( asidmsg, " asid x'%4.4"PRIx16"'", breakasid );
 
     /* Display (current or new) settings */
 

@@ -249,7 +249,7 @@ BYTE    isdiag;
         || !argv[0][0]      /* (empty cmd)  */
     )
     {
-        if (sysblk.inststep)
+        if (sysblk.instbreak)
             rc = start_cmd( 0, NULL, NULL );
         else
             rc = 0;         /* ignore [ENTER] */

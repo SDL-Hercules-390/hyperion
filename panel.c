@@ -1065,7 +1065,7 @@ static void NP_update(REGS *regs)
                       regs->psw.amode64                  ? 64  :
                       regs->psw.amode                    ? 31  : 24,
                       regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
-                      sysblk.inststep                    ? 'T' : '.',
+                      sysblk.instbreak                   ? 'T' : '.',
                       WAITSTATE (&regs->psw)             ? 'W' : '.',
                       regs->loadstate                    ? 'L' : '.',
                       regs->checkstop                    ? 'C' : '.',
@@ -1594,6 +1594,9 @@ static REGS *my_copy_regs(int cpu)
     return regs;
 }
 
+///////////////////////////////////////////////////////////////////////
+// Set panel colors
+
 DLL_EXPORT void set_panel_colors()
 {
     switch (sysblk.pan_colors)
@@ -1655,6 +1658,9 @@ DLL_EXPORT void set_panel_colors()
     }
 }
 
+///////////////////////////////////////////////////////////////////////
+// Return panel message FG/BG color for given message severity code
+
 static int msgcolor( int sev, int fgbg )
 {
     switch (sev) {
@@ -1681,6 +1687,9 @@ static void init_HHC_regexp()
         ? true : false;
 }
 #endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
+
+///////////////////////////////////////////////////////////////////////
+// Return panel message severity code
 
 static int msg_sev( const char* msg )
 {
@@ -2692,7 +2701,7 @@ size_t  loopcount;                      /* Number of iterations done */
                     if (1
                         && cmdlen == 0
                         && NPDup == 0
-                        && !sysblk.inststep
+                        && !sysblk.instbreak
                     ) {
                         history_show();
                     } else {
@@ -3137,13 +3146,13 @@ FinishShutdown:
                            regs->psw.amode64                  ? 64 :
                            regs->psw.amode                    ? 31 : 24,
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
-                           sysblk.inststep                    ? 'T' : '.',
+                           sysblk.instbreak                   ? 'T' : '.',
                            WAITSTATE(&regs->psw)              ? 'W' : '.',
                            regs->loadstate                    ? 'L' : '.',
                            regs->checkstop                    ? 'C' : '.',
                            PROBSTATE(&regs->psw)              ? 'P' : '.',
                            SIE_MODE(regs)                     ? 'S' : '.',
-                           regs->arch_mode == ARCH_900_IDX        ? 'Z' : '.');
+                           regs->arch_mode == ARCH_900_IDX    ? 'Z' : '.');
                 }
                 else
                     len += sprintf (buf+len,"%s", "Offline");

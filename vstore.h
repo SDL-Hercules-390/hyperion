@@ -681,7 +681,7 @@ int     len;                            /* Length for page crossing  */
         /* Quick exit if AIA is still valid */
         if (1
             && !exec
-            && !regs->tracing
+            && !regs->breakortrace
             &&  VALID_AIE( regs )
             &&  regs->ip < (regs->aip + pagesz - 5)
         )
@@ -744,14 +744,14 @@ int     len;                            /* Length for page crossing  */
         regs->aip = (BYTE*)((uintptr_t)ip & ~PAGEFRAME_BYTEMASK);
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
 
-        if (likely( !regs->tracing && !regs->permode ))
+        if (likely( !regs->breakortrace && !regs->permode ))
             regs->aie = regs->aip + pagesz - 5;
         else
         {
             /* Force instfetch to be called again on next inst. */
             regs->aie = PSEUDO_INVALID_AIE;
 
-            if (regs->tracing)
+            if (regs->breakortrace)
                 ARCH_DEP( process_trace )( regs );
         }
     }

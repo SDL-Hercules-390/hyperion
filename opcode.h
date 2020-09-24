@@ -424,24 +424,21 @@ do { \
    )                                                                  \
 
 #define CPU_STEPPING(_regs, _ilc)                                     \
-                                                                      \
-  (sysblk.inststep  && _CPU_STEP_OR_TRACE(stepaddr,(_regs),(_ilc)))
+  (sysblk.instbreak  && _CPU_STEP_OR_TRACE(breakaddr,(_regs),(_ilc)))
 
 #define CPU_TRACING(_regs, _ilc)                                      \
-                                                                      \
   (sysblk.insttrace && _CPU_STEP_OR_TRACE(traceaddr,(_regs),(_ilc)))
 
 #define CPU_STEPPING_OR_TRACING(_regs, _ilc) \
-  ( unlikely((_regs)->tracing) && \
-    (CPU_STEPPING((_regs), (_ilc)) || CPU_TRACING((_regs), (_ilc))) \
+  ( unlikely((_regs)->breakortrace) && \
+    (CPU_STEPPING((_regs), (_ilc)) || CPU_TRACING((_regs), (_ilc)))   \
   )
 
-#define CPU_TRACING_ALL \
-  (sysblk.insttrace && sysblk.traceaddr[0] == 0 && sysblk.traceaddr[1] == 0)
+#define _CPU_TRACESTEP_ALL(_steptrace,_addr)                          \
+  (sysblk._steptrace && sysblk._addr[0] == 0 && sysblk._addr[1] == 0)
 
-#define CPU_STEPPING_ALL \
-  (sysblk.inststep && sysblk.stepaddr[0] == 0 && sysblk.stepaddr[1] == 0)
-
+#define CPU_TRACING_ALL                 _CPU_TRACESTEP_ALL( insttrace, traceaddr )
+#define CPU_STEPPING_ALL                _CPU_TRACESTEP_ALL( instbreak, breakaddr )
 #define CPU_STEPPING_OR_TRACING_ALL     (CPU_TRACING_ALL || CPU_STEPPING_ALL)
 
 /*-------------------------------------------------------------------*/

@@ -546,7 +546,7 @@ DLL_EXPORT void ARCH_DEP( trace_program_interrupt )( REGS* regs, int pcode, int 
     PTT_PGM( "tr PGM int", ip, regs->aip, ilc );
 
 #if defined( OPTION_FOOTPRINT_BUFFER )
-    if (!(sysblk.insttrace || sysblk.inststep))
+    if (!(sysblk.insttrace || sysblk.instbreak))
     {
         U32  n;
         for (n = sysblk.footprptr[ regs->cpuad ] + 1;
@@ -1692,7 +1692,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
     /* Obtain the interrupt lock */
     OBTAIN_INTLOCK(regs);
     OFF_IC_INTERRUPT(regs);
-    regs->tracing = (sysblk.inststep || sysblk.insttrace);
+    regs->breakortrace = (sysblk.instbreak || sysblk.insttrace);
 
     /* Ensure psw.IA is set and invalidate the aia */
     INVALIDATE_AIA(regs);
@@ -1927,7 +1927,7 @@ int     aswitch;
 
     regs->program_interrupt = &ARCH_DEP(program_interrupt);
 
-    regs->tracing = (sysblk.inststep || sysblk.insttrace);
+    regs->breakortrace = (sysblk.instbreak || sysblk.insttrace);
     regs->ints_state |= sysblk.ints_state;
 
     /* Establish longjmp destination for cpu thread exit */
@@ -2134,8 +2134,8 @@ void ARCH_DEP(process_trace)(REGS *regs)
 
     /* Test for step */
     if (CPU_STEPPING( regs, 0 ))
-        shouldstep = !sysblk.stepasid
-            || regs->CR_LHL(4) == sysblk.stepasid;
+        shouldstep = !sysblk.breakasid
+            || regs->CR_LHL(4) == sysblk.breakasid;
 
     /* Display the instruction */
     if (shouldtrace || shouldstep)

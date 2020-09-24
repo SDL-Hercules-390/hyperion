@@ -1455,7 +1455,7 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
     int i;
     int rpl;
     int len=0;
-    if(numcpus>1 && !(sysblk.insttrace || sysblk.inststep) )
+    if(numcpus>1 && !(sysblk.insttrace || sysblk.instbreak) )
     {
         rpl=2;
     }

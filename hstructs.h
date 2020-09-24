@@ -158,7 +158,7 @@ struct REGS {                           /* Processor registers       */
                 loadstate:1,            /* 1=CPU is in load state    */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
-                tracing:1,              /* 1=Trace is active         */
+                breakortrace:1,         /* 1=Inst break/trace active */
                 stepwait:1,             /* 1=Wait in inst stepping   */
                 sigp_reset:1,           /* 1=SIGP cpu reset received */
                 sigp_ini_reset:1;       /* 1=SIGP initial cpu reset  */
@@ -872,8 +872,8 @@ struct SYSBLK {
                 scpimply:1,             /* scp imply mode indicator  */
 #endif
                 sigintreq:1,            /* 1 = SIGINT request pending*/
-                insttrace:1,            /* 1 = Instruction trace     */
-                inststep:1,             /* 1 = Instruction step      */
+                insttrace:1,            /* 1 = Inst trace enabled    */
+                instbreak:1,            /* 1 = Inst break enabled    */
                 shutdown:1,             /* 1 = shutdown requested    */
                 shutfini:1,             /* 1 = shutdown complete     */
                 shutimmed:1,            /* 1 = shutdown req immed    */
@@ -901,8 +901,8 @@ struct SYSBLK {
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */
         CPU_BITMAP waiting_mask;        /* Waiting CPUs              */
-        U16     stepasid;               /* Stepping ASID             */
-        U64     stepaddr[2];            /* Stepping address range    */
+        U16     breakasid;              /* Break ASID                */
+        U64     breakaddr[2];           /* Break address range       */
         U64     traceaddr[2];           /* Tracing address range     */
         U64     auto_trace_beg;         /* Automatic t+ instcount    */
         U64     auto_trace_amt;         /* Automatic tracing amount  */

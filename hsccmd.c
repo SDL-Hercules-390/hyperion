@@ -1112,7 +1112,7 @@ int g_cmd(int argc, char *argv[], char *cmdline)
     if ( argc == 1 )
     {
         OBTAIN_INTLOCK(NULL);
-        sysblk.inststep = 0;
+        sysblk.instbreak = 0;
         SET_IC_TRACE;
         for (i = 0; i < sysblk.hicpu; i++)
         {

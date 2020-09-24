@@ -803,7 +803,7 @@ void  UpdateCPUStatus ()
             ,psw[8], psw[9], psw[10], psw[11], psw[12], psw[13], psw[14], psw[15]
 
             ,CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate ? 'M' : '.'
-            ,sysblk.inststep                               ? 'T' : '.'
+            ,sysblk.instbreak                              ? 'T' : '.'
             ,wait_bit                                      ? 'W' : '.'
             ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
             ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'

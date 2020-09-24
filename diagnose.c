@@ -449,7 +449,7 @@ U32   code;
         if(!(sysblk.diag8opt & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-        sysblk.inststep = 0;
+        sysblk.instbreak = 0;
         SET_IC_TRACE;
         break;
 
@@ -463,7 +463,7 @@ U32   code;
         if(!(sysblk.diag8opt & DIAG8CMD_ENABLE))
             ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-        sysblk.inststep = 1;
+        sysblk.instbreak = 1;
         SET_IC_TRACE;
         break;
 
