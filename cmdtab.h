@@ -1524,6 +1524,7 @@
   "asking for confirmation.\n"
 
 #define start_cmd_desc          "Start CPU (or printer/punch device if argument given)"
+#define startall_cmd_desc       "Start all CPU's"
 #define start_cmd_help          \
                                 \
   "Entering the 'start' command by itself starts the target cpu if it\n"        \
@@ -1531,8 +1532,8 @@
   "the specified printer or punch device's virtual start button. Use the\n"     \
   "'cpu' command beforehand to choose which processor you wish to start.\n"
 
-#define startall_cmd_desc       "Start all CPU's"
 #define stop_cmd_desc           "Stop CPU (or printer/punch device if argument given)"
+#define stopall_cmd_desc        "Stop all CPU's"
 #define stop_cmd_help           \
                                 \
   "Entering the 'stop' command by itself stops the target cpu if it is\n"       \
@@ -1541,7 +1542,6 @@
   "an INTREQ (Intervention Required) status. Use the 'cpu' command before\n"    \
   "issuing the stop command to choose which processor you wish to stop.\n"
 
-#define stopall_cmd_desc        "Stop all CPU's"
 #define store_cmd_desc          "Store CPU status at absolute zero"
 #define suspend_cmd_desc        "Suspend hercules"
 #define symptom_cmd_desc        "Alias for traceopt"

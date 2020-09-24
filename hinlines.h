@@ -496,21 +496,46 @@ static inline void stop_all_cpus_intlock_held()
 {
     CPU_BITMAP  mask;
     REGS*       regs;
-    int         i;
+    int         cpu;
 
-    for (i=0, mask = sysblk.started_mask; mask; i++, mask >>= 1)
+    mask = sysblk.started_mask & sysblk.config_mask;
+
+    for (cpu=0; mask; cpu++)
     {
-        if (mask & 1)
+        if (mask & 1)   // (configured and started?)
         {
-            regs = sysblk.regs[i];
-
+            regs = sysblk.regs[ cpu ];
             regs->opinterv = 1;
             regs->cpustate = CPUSTATE_STOPPING;
-
             ON_IC_INTERRUPT( regs );
-
             signal_condition( &regs->intcond );
         }
+         mask >>= 1;
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Start ALL CPUs                                     (INTLOCK held) */
+/*-------------------------------------------------------------------*/
+static inline void start_all_cpus_intlock_held()
+{
+    CPU_BITMAP  mask;
+    REGS*       regs;
+    int         cpu;
+
+    mask = (~sysblk.started_mask) & sysblk.config_mask;
+
+    for (cpu=0; mask; cpu++)
+    {
+        if (mask & 1)   // (configured but not started?)
+        {
+            regs = sysblk.regs[ cpu ];
+            regs->opinterv = 0;
+            regs->cpustate = CPUSTATE_STARTED;
+            ON_IC_INTERRUPT( regs );
+            signal_condition( &regs->intcond );
+        }
+        mask >>= 1;
     }
 }
 
@@ -582,6 +607,18 @@ static inline void stop_all_cpus()
     OBTAIN_INTLOCK( NULL );
     {
         stop_all_cpus_intlock_held();
+    }
+    RELEASE_INTLOCK( NULL );
+}
+
+/*-------------------------------------------------------------------*/
+/* Start ALL CPUs                                 (INTLOCK not held) */
+/*-------------------------------------------------------------------*/
+static inline void start_all_cpus()
+{
+    OBTAIN_INTLOCK( NULL );
+    {
+        start_all_cpus_intlock_held();
     }
     RELEASE_INTLOCK( NULL );
 }
