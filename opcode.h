@@ -441,6 +441,32 @@ do { \
 #define CPU_STEPPING_ALL                _CPU_TRACESTEP_ALL( instbreak, breakaddr )
 #define CPU_STEPPING_OR_TRACING_ALL     (CPU_TRACING_ALL || CPU_STEPPING_ALL)
 
+#define PROCESS_TRACE( _regs, _ip, _goto )                            \
+  do                                                                  \
+  {                                                                   \
+    /* If stepping or tracing, trace this instruction */              \
+    if ((_regs)->breakortrace)                                        \
+    {                                                                 \
+      ARCH_DEP( process_trace )( (_regs), (_ip) );                    \
+                                                                      \
+      /* If the aie was invalidated, re-fetch the instruction.        \
+         Another CPU executing e.g. a IPTE instruction during         \
+         instruction stepping while process_trace was waiting         \
+         for the user to press the enter key can allow this to        \
+         occur. Otherwise it is impossible to occur. */               \
+      if (1                                                           \
+          && (_regs)->stepping                                        \
+          && !VALID_AIE( _regs )                                      \
+      )                                                               \
+      {                                                               \
+        /* "Processor %s%02X: aie invalidated; instruction refetched" */    \
+        WRMSG( HHC00835, "W", PTYPSTR( (_regs)->cpuad ), (_regs)->cpuad );  \
+        goto _goto;                                                   \
+      }                                                               \
+    }                                                                 \
+  }                                                                   \
+  while (0)
+
 /*-------------------------------------------------------------------*/
 /*         Simple helper macro that instructions can use             */
 /*         to force an immediate check for interrupts.               */
@@ -1768,19 +1794,19 @@ void channelset_reset(REGS *regs);
 #if defined( _370 )
 void s370_store_psw (REGS *regs, BYTE *addr);
 int  s370_load_psw (REGS *regs, BYTE *addr);
-void s370_process_trace (REGS *regs);
+void s370_process_trace( REGS* regs, BYTE* dest );
 #endif
 
 #if defined( _390 )
 int  s390_load_psw (REGS *regs, BYTE *addr);
 void s390_store_psw (REGS *regs, BYTE *addr);
-void s390_process_trace (REGS *regs);
+void s390_process_trace( REGS* regs, BYTE* dest );
 #endif
 
 #if defined( _900 )
 int  z900_load_psw (REGS *regs, BYTE *addr);
 void z900_store_psw (REGS *regs, BYTE *addr);
-void z900_process_trace (REGS *regs);
+void z900_process_trace( REGS* regs, BYTE* dest );
 #endif
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);

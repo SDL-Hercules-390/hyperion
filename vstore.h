@@ -599,8 +599,7 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
 /*                                                                   */
 /*      If the exec flag is 0 and tracing or PER is not active then  */
 /*      the AIA is updated.  This forces interrupts to be checked    */
-/*      instfetch to be call for each instruction.  Note that        */
-/*      process_trace() is called from here if tracing is active.    */
+/*      and instfetch to be call for each instruction.               */
 /*                                                                   */
 /*      A program check may be generated if the instruction address  */
 /*      is odd, or causes an addressing or translation exception,    */
@@ -617,13 +616,17 @@ _VFETCH_C_STATIC BYTE* ARCH_DEP( instfetch )( REGS* regs, int exec )
 {
 VADR    addr;                           /* Instruction address       */
 BYTE*   ip;                             /* Instruction pointer       */
-BYTE*   dest;                           /* Copied instruction        */
+BYTE*   dest;                           /* Fetched Instruction       */
 int     pagesz;                         /* Effective page size       */
 int     offset;                         /* Address offset into page  */
 int     len;                            /* Length for page crossing  */
 
-    addr = exec ? regs->ET
-         : likely( !VALID_AIE( regs ) ) ? regs->psw.IA : PSW_IA_FROM_IP( regs, 0 );
+    addr = exec ? regs->ET : VALID_AIE( regs ) ?
+        PSW_IA_FROM_IP( regs, 0 ) : regs->psw.IA;
+
+    /* Ensure PSW IA matches the instruction we're fetching */
+    if (!exec)
+        MAYBE_SET_PSW_IA_FROM_IP( regs );
 
     offset = (int)(addr & PAGEFRAME_BYTEMASK);
 
@@ -745,15 +748,18 @@ int     len;                            /* Length for page crossing  */
 #if !defined( OPTION_DEPRECATE_AIM )
         regs->aim = (uintptr_t)regs->aip ^ (uintptr_t)regs->AIV;
 #endif
-        if (likely( !regs->breakortrace && !regs->permode ))
-            regs->aie = regs->aip + pagesz - 5;
-        else
+        /* If tracing, stepping or PER is still active,
+           force another instfetch after this instruction.
+        */
+        if (regs->breakortrace || regs->permode)
         {
             /* Force instfetch to be called again on next inst. */
             regs->aie = PSEUDO_INVALID_AIE;
-
-            if (regs->breakortrace)
-                ARCH_DEP( process_trace )( regs );
+        }
+        else /* (stepping/tracing/PER is NOT active) */
+        {
+            /* Call instfetch again ONLY when truly needed */
+            regs->aie = regs->aip + pagesz - 5;
         }
     }
 

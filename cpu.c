@@ -2038,16 +2038,21 @@ fastest_no_txf_loop:
     if (INTERRUPT_PENDING( regs ))
         ARCH_DEP( process_interrupt )( regs );
 
+enter_fastest_no_txf_loop:
+
     ip = INSTRUCTION_FETCH( regs, 0 );
+    PROCESS_TRACE( regs, ip, enter_fastest_no_txf_loop );
     EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
+    regs->instcount++;
+    UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     for (i=0; i < MAX_CPU_LOOPS/2; i++)
     {
         UNROLLED_EXECUTE( current_opcode_table, regs );
         UNROLLED_EXECUTE( current_opcode_table, regs );
     }
-    regs->instcount   +=     1 + (i * 2);
-    UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+    regs->instcount   +=     (i * 2);
+    UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
     /* Perform automatic instruction tracing if it's enabled */
     do_automatic_tracing();
@@ -2066,7 +2071,10 @@ txf_facility_loop:
 enter_txf_faster_loop:
 
     ip = INSTRUCTION_FETCH( regs, 0 );
+    PROCESS_TRACE( regs, ip, enter_txf_faster_loop );
     EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
+    regs->instcount++;
+    UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     for (i=0; i < MAX_CPU_LOOPS/2; i++)
     {
@@ -2080,8 +2088,8 @@ enter_txf_faster_loop:
 
         UNROLLED_EXECUTE( current_opcode_table, regs );
     }
-    regs->instcount   +=     1 + (i * 2);
-    UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+    regs->instcount   +=     (i * 2);
+    UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
     /* Perform automatic instruction tracing if it's enabled */
     do_automatic_tracing();
@@ -2097,7 +2105,10 @@ enter_txf_faster_loop:
 enter_txf_slower_loop:
 
     ip = INSTRUCTION_FETCH( regs, 0 );
+    PROCESS_TRACE( regs, ip, enter_txf_slower_loop );
     TXF_EXECUTE_INSTRUCTION( current_opcode_table, ip, regs );
+    regs->instcount++;
+    UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     for (i=0; i < MAX_CPU_LOOPS/2; i++)
     {
@@ -2111,8 +2122,8 @@ enter_txf_slower_loop:
 
         TXF_UNROLLED_EXECUTE( current_opcode_table, regs );
     }
-    regs->instcount   +=     1 + (i * 2);
-    UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+    regs->instcount   +=     (i * 2);
+    UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
     /* Perform automatic instruction tracing if it's enabled */
     do_automatic_tracing();
@@ -2127,29 +2138,31 @@ enter_txf_slower_loop:
 /*-------------------------------------------------------------------*/
 /* Process Trace                                                     */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(process_trace)(REGS *regs)
+void ARCH_DEP( process_trace )( REGS* regs, BYTE* dest )
 {
     bool shouldtrace = false;           /* true == Trace instruction */
-    bool shouldstep  = false;           /* true == Wait for 'start'  */
 
     /* Test for trace */
-    if (CPU_TRACING( regs, 0 ))
-        shouldtrace = true;
+    shouldtrace = CPU_TRACING( regs, 0 );
 
     /* Test for step */
-    if (CPU_STEPPING( regs, 0 ))
-        shouldstep = !sysblk.breakasid
-            || regs->CR_LHL(4) == sysblk.breakasid;
+    regs->stepping = CPU_STEPPING( regs, 0 );
 
-    /* Display the instruction */
-    if (shouldtrace || shouldstep)
+    if (regs->stepping)
     {
-        BYTE *ip = regs->ip < regs->aip ? regs->inst : regs->ip;
-        ARCH_DEP(display_inst) (regs, ip);
+        if (sysblk.breakasid)
+        {
+            if (regs->CR_LHL(4) != sysblk.breakasid)
+                regs->stepping = false;
+        }
     }
 
-    /* Stop the CPU */
-    if (shouldstep)
+    /* Display the instruction */
+    if (shouldtrace || regs->stepping)
+        ARCH_DEP( display_inst )( regs, dest );
+
+    /* Stop the CPU if instruction stepping */
+    if (regs->stepping)
     {
         REGS* hostregs = HOSTREGS;
         S64 saved_timer[2] = {0};

@@ -692,7 +692,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC00832 (available)
 //efine HHC00833 (available)
 #define HHC00834 "Processor %s%02X: %s"
-//efine HHC00835 (available)
+#define HHC00835 "Processor %s%02X: aie invalidated; instruction being refetched"
 //efine HHC00836 (available)
 //efine HHC00837 (available)
 //efine HHC00838 (available)

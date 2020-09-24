@@ -1040,6 +1040,8 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                 if (SIE_I_WAIT( GUESTREGS ))
                     break;
 
+sie_fetch_instruction:
+
                 ip = INSTRUCTION_FETCH( GUESTREGS, 0 );
                 current_opcode_table = GUESTREGS->ARCH_DEP( runtime_opcode_xxxx );
 
@@ -1081,10 +1083,10 @@ static int ARCH_DEP( run_sie )( REGS* regs )
 
                 SIE_PERFMON( SIE_PERF_EXEC );
 
+                PROCESS_TRACE( GUESTREGS, ip, sie_fetch_instruction );
                 EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
                 GUESTREGS->instcount++;
                 UPDATE_SYSBLK_INSTCOUNT( 1 );
-
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
                 for (i=0; i < MAX_CPU_LOOPS/2; i++)
@@ -1092,8 +1094,8 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                GUESTREGS->instcount +=  1 + (i * 2);
-                UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+                GUESTREGS->instcount +=  (i * 2);
+                UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
                 do_automatic_tracing();
@@ -1108,10 +1110,10 @@ txf_facility_loop:
                 if (GUESTREGS->txf_tnd)
                     goto txf_slower_loop;
 
+                PROCESS_TRACE( GUESTREGS, ip, sie_fetch_instruction );
                 EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
                 GUESTREGS->instcount++;
                 UPDATE_SYSBLK_INSTCOUNT( 1 );
-
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
                 for (i=0; i < MAX_CPU_LOOPS/2; i++)
@@ -1126,8 +1128,8 @@ txf_facility_loop:
 
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                GUESTREGS->instcount +=  1 + (i * 2);
-                UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+                GUESTREGS->instcount +=  (i * 2);
+                UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
                 do_automatic_tracing();
@@ -1135,10 +1137,10 @@ txf_facility_loop:
 
 txf_slower_loop:
 
+                PROCESS_TRACE( GUESTREGS, ip, sie_fetch_instruction );
                 TXF_EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
                 GUESTREGS->instcount++;
                 UPDATE_SYSBLK_INSTCOUNT( 1 );
-
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
                 for (i=0; i < MAX_CPU_LOOPS/2; i++)
@@ -1153,8 +1155,8 @@ txf_slower_loop:
 
                     TXF_UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                GUESTREGS->instcount +=  1 + (i * 2);
-                UPDATE_SYSBLK_INSTCOUNT( 1 + (i * 2) );
+                GUESTREGS->instcount +=  (i * 2);
+                UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
                 do_automatic_tracing();

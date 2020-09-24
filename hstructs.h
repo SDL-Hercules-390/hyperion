@@ -164,6 +164,7 @@ struct REGS {                           /* Processor registers       */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
                 breakortrace:1,         /* 1=Inst break/trace active */
+                stepping:1,             /* 1=Inst stepping is active */
                 stepwait:1,             /* 1=Wait in inst stepping   */
                 sigp_reset:1,           /* 1=SIGP cpu reset received */
                 sigp_ini_reset:1;       /* 1=SIGP initial cpu reset  */
