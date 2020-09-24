@@ -27,7 +27,7 @@
   echo.
   echo     OPTIONS
   echo.
-  echo         /?         Display this help information
+  echo         (NONE)
   echo.
   echo     NOTES
   echo.
