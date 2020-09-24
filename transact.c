@@ -490,30 +490,6 @@ int         txf_tnd, txf_tac;
                 regs->txf_caborts );
         }
 
-#if defined( FISHTEST_TXF_STATS )
-        {
-            int n;
-
-            // Count constrained transactions
-            atomic_update64( &sysblk.txf_ctrans, +1 );
-
-            // Consectutive aborts count within buckets limit?
-            if ((n = regs->txf_caborts) < 9)
-            {
-                // Yes, update bucket count
-                atomic_update64( &sysblk.txf_caborts[ n ], +1 );
-            }
-            else // No, use maximum bucket
-            {
-                n = 9 - 1;
-                atomic_update64( &sysblk.txf_caborts[ n ], +1 );
-            }
-
-            // Track high watermark too
-            if ((U64)regs->txf_caborts > sysblk.txf_caborts_hwm)
-                sysblk.txf_caborts_hwm = (U64)regs->txf_caborts;
-        }
-#endif
         /* Transaction suceeded. Reset abort count */
         regs->txf_caborts = 0;
 
@@ -2141,14 +2117,6 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     BYTE cmtype;                /* Cache Map access type             */
 
     TPAGEMAP*  pmap;            /* Pointer to Transaction Page Map   */
-
-#if defined( FISHTEST_TXF_STATS )
-    if ( (acctype & (ACC_READ                        ))) atomic_update64( &sysblk.acc_read,  +1 );
-    if ( (acctype & (ACC_WRITE                       ))) atomic_update64( &sysblk.acc_write, +1 );
-    if ( (acctype & (ACC_CHECK                       ))) atomic_update64( &sysblk.acc_check, +1 );
-    if (!(acctype & (ACC_READ | ACC_WRITE            ))) atomic_update64( &sysblk.acc_notrw, +1 );
-    if (!(acctype & (ACC_READ | ACC_WRITE | ACC_CHECK))) atomic_update64( &sysblk.acc_none,  +1 );
-#endif
 
     /* Quick exit if no CPUs executing any transactions.
 

@@ -66,6 +66,36 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "qeth.h"
 #include "cckddasd.h"
 
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+
+//      (we have no ARCH_DEP commands/functions at this time)
+
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "hsccmd.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "hsccmd.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+
 // (forward references, etc)
 
 #if defined( SIZEOF_INT_P ) && SIZEOF_INT_P >= 8
@@ -308,42 +338,11 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
         else if (CMD( argv[1], SIGUSR1, 7 )) raise( SIGUSR1 );
         else if (CMD( argv[1], SIGUSR2, 7 )) raise( SIGUSR2 );
 #endif
-#if defined( FISHTEST_TXF_STATS )
-        else if (CMD( argv[1], TXF, 3 ))
-        {
-            LOGMSG("+++ acc_read  =%12"PRIu64"\n", sysblk.acc_read   );
-            LOGMSG("+++ acc_write =%12"PRIu64"\n", sysblk.acc_write  );
-            LOGMSG("+++ acc_check =%12"PRIu64"\n", sysblk.acc_check  );
-            LOGMSG("+++ acc_notrw =%12"PRIu64"\n", sysblk.acc_notrw  );
-            LOGMSG("+++ acc_none  =%12"PRIu64"\n", sysblk.acc_none   );
-            LOGMSG("+++ ctrans    =%12"PRIu64"\n", sysblk.txf_ctrans );
-
-            if (sysblk.txf_ctrans)
-            {
-                double count, total = sysblk.txf_ctrans;
-
-#define         TXF_BUCKET(n) \
-                count = sysblk.txf_caborts[n]; \
-                LOGMSG("+++ " #n " retries =%12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[n], (count/total) * 100.0 )
-
-                TXF_BUCKET(0);
-                TXF_BUCKET(1);
-                TXF_BUCKET(2);
-                TXF_BUCKET(3);
-                TXF_BUCKET(4);
-                TXF_BUCKET(5);
-                TXF_BUCKET(6);
-                TXF_BUCKET(7);
-//              TXF_BUCKET(8);
-                count = sysblk.txf_caborts[8];
-                LOGMSG("+++ 8+retries =%12"PRIu64"  (%4.1f%%)\n", sysblk.txf_caborts[8], (count/total) * 100.0 );
-                LOGMSG("+++ *MAXIMUM* =%12"PRIu64"\n", sysblk.txf_caborts_hwm );
-            }
-        }
-#endif /* defined( FISHTEST_TXF_STATS ) */
         else
+        {
             // "%s%s"
             WRMSG( HHC00001, "E", argv[1], ": unknown test");
+        }
         return 0;
     }
 
@@ -8661,3 +8660,5 @@ int cmdlvl_cmd( int argc, char* argv[], char* cmdline )
 }
 
 /* HSCCMD.C End-of-text */
+
+#endif // !defined(_GEN_ARCH)

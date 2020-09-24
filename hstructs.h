@@ -1020,16 +1020,7 @@ struct SYSBLK {
         U64     instcount;              /* Instruction counter       */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
-#if defined( FISHTEST_TXF_STATS )
-        U64  acc_read;          // ACC_READ
-        U64  acc_write;         // ACC_WRITE
-        U64  acc_check;         // ACC_CHECK
-        U64  acc_notrw;         // !(ACC_READ | ACC_WRITE)
-        U64  acc_none;          // !(ACC_READ | ACC_WRITE | ACC_CHECK)
-        U64  txf_ctrans;        // Total CONSTRAINED transactions
-        U64  txf_caborts[9];    // CONSTRAINED aborted counts
-        U64  txf_caborts_hwm;   // CONSTRAINED aborts high watermark
-#endif
+
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 
         // PROGRAMMING NOTE: we purposely define the below count
