@@ -1002,7 +1002,7 @@ static void ARCH_DEP(kimd_sha)(int r1, int r2, REGS *regs, int klmd)
 #endif /* #ifdef OPTION_KIMD_DEBUG */
 
     /* check for end of data */
-    if(unlikely(GR_A(r2 + 1, regs) < 64))
+    if(unlikely(GR_A(r2 + 1, regs) < message_blocklen))
     {
       if(unlikely(klmd))
         return;
