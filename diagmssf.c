@@ -322,7 +322,7 @@ DEVBLK            *dev;                /* Device block pointer       */
         return 2;   /* Service Processor Busy */
     }
 
-    if( spccb_absolute_addr & 0x7ffff800 ) {
+    if( spccb_absolute_addr & 0x000007FF ) {
         spccb->resp[0] = SPCCB_REAS_NOT2KALIGN;
         spccb->resp[1] = SPCCB_RESP_NOT2KALIGN;
     } else

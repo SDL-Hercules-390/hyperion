@@ -67,14 +67,22 @@ DEF_INST(fix_page)
 int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
+RADR    mplp;
+
+#define MPLPFAL  0x34
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
-    PTT_ERR("*E502 PGFIX",effective_addr1,effective_addr2,regs->psw.IA_L);
-    /*INCOMPLETE*/
-
+    /* The Page Fix assist cannot return via the PTT_ERR( ) method as used in most of the 
+       other assists here.  Per GA22-7079-1 IBM System/370 Assists for MVS, this assist must
+       NOT exit to the next sequential instruction.  Instead, we follow the 'simplified
+       execution path' described on page 3 of that documentation for Fix Page. */
+    regs->GR_L(14) = PSW_IA_FROM_IP(regs, 0);
+    mplp = ARCH_DEP( vfetch4 )( (effective_addr2 & ADDRESS_MAXWRAP( regs )), USE_REAL_ADDR, regs );
+    regs->GR_L(15) = ARCH_DEP( vfetch4 )( (( mplp+MPLPFAL ) & ADDRESS_MAXWRAP( regs )), USE_REAL_ADDR, regs );
+    SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(15));
 }
 #endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 

@@ -193,6 +193,10 @@ EXTRA_DIST =                    \
      exrl.txt                   \
      fiebr.txt                  \
      fixtr.txt                  \
+     fix-page.asm               \
+     fix-page.core              \
+     fix-page.list              \
+     fix-page.tst               \
      hetbsf.het                 \
      hetbsf.tst                 \
      iedtr.txt                  \

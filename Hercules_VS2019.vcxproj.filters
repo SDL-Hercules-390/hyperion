@@ -1703,6 +1703,18 @@
     <None Include="tests\FAC53.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\fix-page.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\fix-page.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\fix-page.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\fix-page.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\pfpo.core">
       <Filter>Other Files\tests\core</Filter>
     </None>

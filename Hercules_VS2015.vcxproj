@@ -884,6 +884,10 @@
     <None Include="tests\FAC53.list" />
     <None Include="tests\FAC53.pdf" />
     <None Include="tests\FAC53.tst" />
+    <None Include="tests\fix-page.asm" />
+    <None Include="tests\fix-page.core" />
+    <None Include="tests\fix-page.list" />
+    <None Include="tests\fix-page.tst" />
     <None Include="tests\csxtr.assemble" />
     <None Include="tests\csxtr.listing" />
     <None Include="tests\csxtr.tst" />

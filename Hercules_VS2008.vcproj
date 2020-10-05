@@ -3402,7 +3402,11 @@
 						RelativePath=".\tests\FAC53.core"
 						>
 					</File>
-					<File
+          <File
+						RelativePath=".\tests\fix-page.core"
+						>
+          </File>
+          <File
 						RelativePath=".\tests\mhi.core"
 						>
 					</File>
@@ -4353,7 +4357,11 @@
 							RelativePath=".\tests\FAC53.tst"
 							>
 						</File>
-						<File
+            <File
+							RelativePath=".\tests\fix-page.tst"
+							>
+            </File>
+            <File
 							RelativePath=".\tests\hetbsf.tst"
 							>
 						</File>
@@ -4701,7 +4709,11 @@
 							RelativePath=".\tests\FAC53.asm"
 							>
 						</File>
-						<File
+            <File
+							RelativePath=".\tests\fix-page.asm"
+							>
+            </File>
+            <File
 							RelativePath=".\tests\mhi.asm"
 							>
 						</File>
@@ -4908,7 +4920,11 @@
 								RelativePath=".\tests\FAC53.pdf"
 								>
 							</File>
-							<File
+              <File
+								RelativePath=".\tests\fix-page.list"
+								>
+              </File>
+              <File
 								RelativePath=".\tests\mhi.list"
 								>
 							</File>
