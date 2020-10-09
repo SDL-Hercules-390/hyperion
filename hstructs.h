@@ -655,8 +655,9 @@ struct SYSBLK {
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
         LOCK    txf_tran_lock;
-#define OBTAIN_TXF_TRANLOCK()     obtain_lock ( &sysblk.txf_tran_lock )
-#define RELEASE_TXF_TRANLOCK()    release_lock( &sysblk.txf_tran_lock )
+#define OBTAIN_TXF_TRANLOCK()       obtain_lock     ( &sysblk.txf_tran_lock )
+#define RELEASE_TXF_TRANLOCK()      release_lock    ( &sysblk.txf_tran_lock )
+#define TRY_OBTAIN_TXF_TRANLOCK()   try_obtain_lock ( &sysblk.txf_tran_lock )
 #endif
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */

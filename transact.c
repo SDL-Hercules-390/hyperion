@@ -677,9 +677,38 @@ VADR    effective_addr1;                /* Effective address         */
 #if defined( OPTION_TXF_SINGLE_THREAD )
     /* Obtain transaction lock */
     if (!regs->txf_tnd)
-        OBTAIN_TXF_TRANLOCK();
+    {
+        /* PROGRAMMING NOTE: in order to be "synchronized broadast
+           compatible" (i.e. SYNCHRONIZE_CPUS), we must be sure to
+           try to obtain the interrupt lock (OBTAIN_INTLOCK) between
+           each attempt to obtain our transaction lock. This is to
+           prevent a possible "soft deadlock" situation that occurs
+           when another CPU is attempting to do a SYNCHRONIZE_CPUS
+           while another CPU is holding the transaction lock: the
+           other CPU holding the transaction lock would prevent us
+           from acquiring it thus preventing us from ever obtaining
+           the interrupt lock, thereby leading to the deadlock: the
+           CPU doing SYNCHRONIZE_CPUS would end up waiting forever
+           for us to enter the OBTAIN_INTLOCK synchronized broadcast
+           logic due to our being stuck waiting for the transaction
+           lock! Thus, between each attempt to obtain the transaction
+           lock, we obtain then release the interrupt lock to allow
+           the synchronized broadcast (SYNCHRONIZE_CPUS) to proceed
+           normally, and then afterwards try to obtain our transaction
+           lock again. Doing this ensures we are always holding the
+           transaction lock BEFORE attempting to obtain INTLOCK thus
+           preventing the potential deadlock from occurring.
+        */
+        while (TRY_OBTAIN_TXF_TRANLOCK() != 0)
+        {
+            sched_yield();            // (let other CPU maybe release it)
+            OBTAIN_INTLOCK( regs );   // (allow SYNCHRONIZE_CPUS to occur)
+            RELEASE_INTLOCK( regs );  // (we obtain it for real further below)
+        }
+    }
 #endif
 
+    /* Obtain interrupt lock so "process_tbegin" can do SYNCHRONIZE_CPUS */
     OBTAIN_INTLOCK( regs );
     {
         /* Let our helper function do all the grunt work */
