@@ -26,6 +26,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "ecpsvm.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -57,8 +58,25 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 
 #endif /*!defined(_ASSIST_C)*/
 
+/* The macro below allows each assist instruction to execute in a virtual machine. Per
+   GA22-7072-0, these assist instructions must co-exist with ECPS:VM if present (whether 
+   enabled or disabled), so that MVS running as a guest of VM can use these assists.  
+   This is the Virtual Machine Extended Facility Assist feature, also known as "370E" 
+   in VM. The macro will allow execution of these privileged assist instructions when 
+   the real PSW is in the problem state - if and only if the guest virtual machine PSW 
+   is in the virtual supervisor state (ECPSVM_CR6_VIRTPROB=0) and the 370E feature is 
+   enabled (ECPS_CR6_VMMVSAS=1). Otherwise, PRIV_CHECK is invoked to cause a 
+   privileged operation exception.
+*/
+#define GUEST_CHECK( ) \
+    if(PROBSTATE(&regs->psw)) \
+    { \
+        if ((regs->CR_L(6) & (ECPSVM_CR6_VIRTPROB + ECPSVM_CR6_VMMVSAS)) != ECPSVM_CR6_VMMVSAS) \
+           PRIV_CHECK(regs); \
+    } 
 
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+
 /*-------------------------------------------------------------------*/
 /* E502       - Page Fix                                       [SSE] */
 /*-------------------------------------------------------------------*/
@@ -73,15 +91,15 @@ RADR    mplp;
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* The Page Fix assist cannot return via the PTT_ERR( ) method as used in most of the 
        other assists here.  Per GA22-7079-1 IBM System/370 Assists for MVS, this assist must
        NOT exit to the next sequential instruction.  Instead, we follow the 'simplified
        execution path' described on page 3 of that documentation for Fix Page. */
     regs->GR_L(14) = PSW_IA_FROM_IP(regs, 0);
-    mplp = ARCH_DEP( vfetch4 )( (effective_addr2 & ADDRESS_MAXWRAP( regs )), USE_REAL_ADDR, regs );
-    regs->GR_L(15) = ARCH_DEP( vfetch4 )( (( mplp+MPLPFAL ) & ADDRESS_MAXWRAP( regs )), USE_REAL_ADDR, regs );
+    mplp = ARCH_DEP( vfetch4 )( (effective_addr2 & ADDRESS_MAXWRAP( regs )), USE_INST_SPACE, regs );
+    regs->GR_L(15) = ARCH_DEP( vfetch4 )( (( mplp+MPLPFAL ) & ADDRESS_MAXWRAP( regs )), USE_INST_SPACE, regs );
     SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(15));
 }
 #endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -98,7 +116,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     PTT_ERR("*E503 SVCA",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO ACTION IS TAKEN, THE SVC IS UNASSISTED
@@ -127,7 +145,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -222,7 +240,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -314,7 +332,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -408,7 +426,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -491,7 +509,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -514,7 +532,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -537,7 +555,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -560,7 +578,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -583,7 +601,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
@@ -606,7 +624,7 @@ VADR    effective_addr1,
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
-    PRIV_CHECK(regs);
+    GUEST_CHECK( );
 
     /* Specification exception if operands are not on word boundary */
     if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
