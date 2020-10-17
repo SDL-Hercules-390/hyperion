@@ -2289,8 +2289,6 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     if (!regs || !regs->txf_tnd)
         return maddr;
 
-#if !defined( OPTION_NO_TXF_MADDR_L_ABORT )
-
     /* Otherwise check if our own CPU's transaction was aborted */
     if (regs->txf_tac)
     {
@@ -2304,7 +2302,6 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         ABORT_TRANS( regs, ABORT_RETRY_CC, regs->txf_tac );
         UNREACHABLE_CODE( return maddr );
     }
-#endif // OPTION_NO_TXF_MADDR_L_ABORT
 
     /*-----------------------------------------------------------*/
     /*                  TXF Translation Call                     */
