@@ -983,6 +983,30 @@ char    msgbuf[133];
 
 
 /*-------------------------------------------------------------------*/
+/* CHANNEL TXF SUPPORT MACROS                                        */
+/*-------------------------------------------------------------------*/
+#undef TXF_FETCHREF
+#undef TXF_STOREREF
+
+#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+
+  #define TXF_FETCHREF( _maddr, _len )
+  #define TXF_STOREREF( _maddr, _len )
+
+#else
+
+  static void chann_txf_ref( int acc, BYTE* maddr, size_t len, const char* location );
+
+  #define TXF_FETCHREF( _maddr, _len ) \
+    chann_txf_ref( ACC_READ, (_maddr), (_len), PTTLOC )
+
+  #define TXF_STOREREF( _maddr, _len ) \
+    chann_txf_ref( ACC_WRITE, (_maddr), (_len), PTTLOC )
+
+#endif
+
+
+/*-------------------------------------------------------------------*/
 /* STORE CHANNEL ID                                                  */
 /*-------------------------------------------------------------------*/
 int
@@ -6396,5 +6420,28 @@ DLL_EXPORT void Update_IC_IOPENDING_QLocked()
         ON_IC_IOPENDING;
     }
 }
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+/*-------------------------------------------------------------------*/
+/* Channel TXF Storage Reference                                     */
+/*-------------------------------------------------------------------*/
+static void chann_txf_ref( int acc, BYTE* maddr, size_t len, const char* location )
+{
+    if (FACILITY_ENABLED_DEV( 073_TRANSACT_EXEC ))
+    {
+       /* Obtaining INTLOCK before calling TXF_MADDRL prevents the
+           channel from accessing main storage during SYNCHRONIZE_CPUS
+           during e.g. a TXF commit (TEND instruction).
+        */
+        OBTAIN_INTLOCK( NULL );
+        {
+            while (sysblk.syncing)
+                hthread_wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock, location );
+            TXF_MADDRL( 0, len, 0, NULL, acc, maddr );
+        }
+        RELEASE_INTLOCK( NULL );
+    }
+}
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 #endif /*!defined(_GEN_ARCH)*/

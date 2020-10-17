@@ -1445,8 +1445,6 @@ do {                                                                  \
 #undef TRAN_EXECUTE_INSTR_CHECK
 #undef ALLOC_TXFMAP
 #undef FREE_TXFMAP
-#undef TXF_FETCHREF
-#undef TXF_STOREREF
 #undef TXF_MADDRL
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
@@ -1465,8 +1463,6 @@ do {                                                                  \
   #define TRAN_EXECUTE_INSTR_CHECK( _regs )
   #define ALLOC_TXFMAP( _regs )
   #define FREE_TXFMAP( _regs )
-  #define TXF_FETCHREF( _maddr, _len )
-  #define TXF_STOREREF( _maddr, _len )
 
   #define TXF_MADDRL( _vaddr, _len, _arn, _regs, _acctype, _maddr ) \
     /* Return the very same address as what was passed */ (_maddr)
@@ -1643,12 +1639,6 @@ do {                                                                  \
 
   #define TXF_MADDRL(   _vaddr,   _len,   _arn,   _regs,   _acctype,   _maddr  ) \
           txf_maddr_l( (_vaddr), (_len), (_arn), (_regs), (_acctype), (_maddr) )
-
-  #define TXF_FETCHREF( _maddr, _len ) \
-          TXF_MADDRL( 0, (_len), 0, NULL, ACC_READ, (_maddr) )
-
-  #define TXF_STOREREF( _maddr, _len ) \
-          TXF_MADDRL( 0, (_len), 0, NULL, ACC_WRITE, (_maddr) )
 
   #define ALLOC_TXFMAP( _regs )     alloc_txfmap( _regs )
   #define FREE_TXFMAP( _regs )      free_txfmap( _regs )
