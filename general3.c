@@ -3170,17 +3170,20 @@ int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+U32     data;
 
     RSY(inst, regs, r1, m3, b2, effective_addr2);
+
+    /* TXF requires storage reference regardless of cc */
+    data = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Test M3 mask bit corresponding to condition code */
     if (m3 & (0x08 >> regs->psw.cc))
     {
         /* Load R1 register bits 32-63 from second operand */
-        regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+        regs->GR_L(r1) = data;
     }
-
-} /* end DEF_INST(load_on_condition) */
+}
 
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -3193,17 +3196,20 @@ int     r1;                             /* Value of R field          */
 int     m3;                             /* Value of M field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+U64     data;
 
     RSY(inst, regs, r1, m3, b2, effective_addr2);
+
+    /* TXF requires storage reference regardless of cc */
+    data = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* Test M3 mask bit corresponding to condition code */
     if (m3 & (0x08 >> regs->psw.cc))
     {
         /* Load R1 register bits 0-63 from second operand */
-        regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
+        regs->GR_G(r1) = data;
     }
-
-} /* end DEF_INST(load_on_condition_long) */
+}
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
@@ -3225,8 +3231,12 @@ VADR    effective_addr2;                /* Effective address         */
         /* Store R1 register bits 32-63 at operand address */
         ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
     }
-
-} /* end DEF_INST(store_on_condition) */
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    else
+        /* TXF requires storage reference regardless of cc */
+        MADDRL( effective_addr2, 4, b2, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+#endif
+}
 
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -3248,8 +3258,12 @@ VADR    effective_addr2;                /* Effective address         */
         /* Store R1 register bits 0-63 at operand address */
         ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
     }
-
-} /* end DEF_INST(store_on_condition_long) */
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    else
+        /* TXF requires storage reference regardless of cc */
+        MADDRL( effective_addr2, 8, b2, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+#endif
+}
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 #endif /* defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )*/
@@ -4143,15 +4157,19 @@ DEF_INST( load_high_on_condition)
 int     r1, m3;                         /* Register number, mask     */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+U32     data;
 
     /* Decode instruction */
     RSY( inst, regs, r1, m3, b2, effective_addr2 );
+
+    /* TXF requires storage reference regardless of cc */
+    data = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
 
     /* Test M3 mask bit corresponding to condition code */
     if (m3 & (0x08 >> regs->psw.cc))
     {
         /* Load R1 register bits 0-31 from second operand */
-        regs->GR_H( r1 ) = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
+        regs->GR_H( r1 ) = data;
     }
 }
 
@@ -4174,6 +4192,11 @@ VADR    effective_addr2;                /* Effective address         */
         /* Store R1 register bits 0-31 at second operand address */
         ARCH_DEP( vstore4 )( regs->GR_H( r1 ), effective_addr2, b2, regs );
     }
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    else
+        /* TXF requires storage reference regardless of cc */
+        MADDRL( effective_addr2, 4, b2, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+#endif
 }
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 #endif /* defined( FEATURE_053_LOAD_STORE_ON_COND_FACILITY_2 ) */

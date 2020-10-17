@@ -32,6 +32,7 @@
 #define  ZCACHE_LINE_SHIFT        8   /* Cache line size shift value */
 #define  ZCACHE_LINE_PAGE           (ZPAGEFRAME_PAGESIZE/ZCACHE_LINE_SIZE)
                                       /* Cache lines per 4K page     */
+#define  ZOCTOWORD_SIZE       (8*4)   /* IBM z "octoword" size       */
 
 /*-------------------------------------------------------------------*/
 /*        Transactional-Execution Facility Condition Codes           */
@@ -298,7 +299,7 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 #define TXF_WHY_CAPTURE_FAIL                0x00000010    // 28
 #define TXF_WHY_IPTE_INSTR                  0x00000008    // 29
 #define TXF_WHY_IDTE_INSTR                  0x00000004    // 30
-//efine TXF_WHY_XXXXXXXXXX                  0x00000002    // 31
+#define TXF_WHY_CONSTRAINT_4                0x00000002    // 31
 //efine TXF_WHY_XXXXXXXXXX                  0x00000001    // 32
 
 #endif // _TRANSACT_H_

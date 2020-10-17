@@ -2303,6 +2303,21 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         UNREACHABLE_CODE( return maddr );
     }
 
+    /*  "The transaction’s storage operands access no more than four
+         octowords. Note: LOAD ON CONDITION and STORE ON CONDITION are
+         considered to reference storage regardless of the condition
+         code." (SA22-7832-12, page 5-109)
+    */
+    if (len > (4 * ZOCTOWORD_SIZE))
+    {
+        int txf_tac = TXF_IS_FETCH_ACCTYPE() ? TAC_FETCH_OVF
+                                             : TAC_STORE_OVF;
+        regs->txf_why |= TXF_WHY_CONSTRAINT_4;
+        PTT_TXF( "*TXF mad len", txf_tac, regs->txf_contran, regs->txf_tnd );
+        ABORT_TRANS( regs, ABORT_RETRY_CC, txf_tac );
+        UNREACHABLE_CODE( return maddr );
+    }
+
     /*-----------------------------------------------------------*/
     /*                  TXF Translation Call                     */
     /*-----------------------------------------------------------*/
