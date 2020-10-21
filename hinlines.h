@@ -286,14 +286,15 @@ static inline void synchronize_cpus( REGS* regs, const char* location )
     {
         sysblk.sync_mask = mask;
         sysblk.syncing   = true;
+
         sysblk.intowner  = LOCK_OWNER_NONE;
-
-        hthread_wait_condition( &sysblk.sync_cond, &sysblk.intlock, location );
-
+        {
+            hthread_wait_condition( &sysblk.all_synced_cond, &sysblk.intlock, location );
+        }
         sysblk.intowner  = HOSTREGS->cpuad;
-        sysblk.syncing   = false;
 
-        hthread_broadcast_condition( &sysblk.sync_bc_cond, location );
+        sysblk.syncing   = false;
+        hthread_broadcast_condition( &sysblk.sync_done_cond, location );
     }
     /* All active processors other than self, are now waiting at their
      * respective sync point. We may now safely proceed doing whatever
@@ -389,14 +390,23 @@ static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
 {
     if (regs)
     {
+        /* Wait for any SYNCHRONIZE_CPUS to finish before proceeding */
         while (sysblk.syncing)
         {
+            /* Indicate we have reached the sync point */
             sysblk.sync_mask &= ~HOSTREGS->cpubit;
 
+            /* If we're the last CPU to reach this sync point,
+               signal the CPU that requested the sync that it
+               may now safely proceed with its exclusive logic.
+            */
             if (!sysblk.sync_mask)
-                hthread_signal_condition( &sysblk.sync_cond, location );
+                hthread_signal_condition( &sysblk.all_synced_cond, location );
 
-            hthread_wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock, location );
+            /* Wait for CPU that requested the sync to indicate
+               it's done and thus is now safe for us to proceed.
+            */
+            hthread_wait_condition( &sysblk.sync_done_cond, &sysblk.intlock, location );
         }
 
         HOSTREGS->intwait = false;

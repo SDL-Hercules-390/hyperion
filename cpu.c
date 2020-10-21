@@ -2551,8 +2551,8 @@ static void CPU_Wait( REGS* regs )
     {
         sysblk.sync_mask &= ~HOSTREGS->cpubit;
         if (!sysblk.sync_mask)
-            signal_condition(&sysblk.sync_cond);
-        wait_condition (&sysblk.sync_bc_cond, &sysblk.intlock);
+            signal_condition(&sysblk.all_synced_cond);
+        wait_condition (&sysblk.sync_done_cond, &sysblk.intlock);
     }
 
     /*

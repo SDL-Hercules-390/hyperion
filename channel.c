@@ -6436,7 +6436,7 @@ static void chann_txf_ref( int acc, BYTE* maddr, size_t len, const char* locatio
         OBTAIN_INTLOCK( NULL );
         {
             while (sysblk.syncing)
-                hthread_wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock, location );
+                hthread_wait_condition( &sysblk.sync_done_cond, &sysblk.intlock, location );
             TXF_MADDRL( 0, len, 0, NULL, acc, maddr );
         }
         RELEASE_INTLOCK( NULL );

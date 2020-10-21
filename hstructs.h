@@ -942,8 +942,8 @@ struct SYSBLK {
      /* Fields used by SYNCHRONIZE_CPUS */
         bool    syncing;                /* 1=Sync in progress        */
         CPU_BITMAP sync_mask;           /* CPU mask for syncing CPUs */
-        COND    sync_cond;              /* COND for syncing CPU      */
-        COND    sync_bc_cond;           /* COND for other CPUs       */
+        COND    all_synced_cond;        /* Sync in progress COND     */
+        COND    sync_done_cond;         /* Synchronization done COND */
 
 #if defined( OPTION_SHARED_DEVICES )
         LOCK    shrdlock;               /* shrdport LOCK             */

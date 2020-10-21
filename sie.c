@@ -1018,7 +1018,7 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                                 timed_wait_condition( &regs->intcond, &sysblk.intlock, &waittime );
 
                                 while (sysblk.syncing)
-                                     wait_condition( &sysblk.sync_bc_cond, &sysblk.intlock );
+                                     wait_condition( &sysblk.sync_done_cond, &sysblk.intlock );
                             }
                             sysblk.intowner       =   regs->cpuad;
                             sysblk.waiting_mask  &=  ~regs->cpubit;

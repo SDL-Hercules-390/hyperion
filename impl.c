@@ -900,8 +900,8 @@ int     rc;
 #endif
         }
     }
-    initialize_condition( &sysblk.sync_cond );
-    initialize_condition( &sysblk.sync_bc_cond );
+    initialize_condition( &sysblk.all_synced_cond );
+    initialize_condition( &sysblk.sync_done_cond );
 
     /* Copy length for regs */
     sysblk.regs_copy_len = (int)((uintptr_t)&sysblk.dummyregs.regs_copy_end
