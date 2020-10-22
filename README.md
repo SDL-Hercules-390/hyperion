@@ -69,6 +69,7 @@ to our **bug report tracking system** by adding/creating a new
 [Hercules REXX Support](readme/README.REXX.md)  
 [Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
+[Runtest Low-level Test Cases](tests/README.md)  
 [S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
 [VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
 
