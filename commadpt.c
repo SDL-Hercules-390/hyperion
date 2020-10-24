@@ -452,9 +452,9 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
                 WRMSG(HHC01050,"D",LCSS_DEVNUM,txt,buf);
                 buf[0] = 0;
             }
-            MSGBUF(buf, ": %04X", (unsigned) i);
+            MSGBUF(buf, "%04X:", (unsigned) i);
         }
-        if( i%4 == 0 && i)
+        if( i%4 == 0 )
         {
             STRLCAT( buf, " " );
         }
