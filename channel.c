@@ -5427,7 +5427,7 @@ breakchain:
 
                 /* Loop through prefetch table for CCW/IDAW display */
                 for (ts = 0, prevccwaddr = 1;
-                     ts <= ps && ts < prefetch.seq;
+                     ts < ps && ts < prefetch.seq;
                      ts++)
                 {
                     if (prevccwaddr != prefetch.ccwaddr[ts])
