@@ -184,7 +184,7 @@ archlvl z/Arch
   mainsize 3g
 
   archlvl s/370
-  *Info 1 HHC17006W MAINSIZE decreased to 2G architectural maximim
+  *Info 1 HHC17006W MAINSIZE decreased to 2G architectural maximum
 
 *Fi
 
@@ -196,7 +196,7 @@ mainsize 64k
 * Test 25
 
 archlvl z/Arch
-*Info 2 HHC17006W MAINSIZE increased to 1M architectural minimim
+*Info 2 HHC17006W MAINSIZE increased to 1M architectural minimum
 
 *Done nowait
 
