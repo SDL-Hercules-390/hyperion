@@ -848,6 +848,23 @@ char    regs_msg_buf[4*512] = {0};
         n += snprintf( buf + n, sizeof( buf )-n, "SIE: " );
 #endif
 
+    /* Exit if instruction is not valid */
+    if (!inst)
+    {
+        size_t len;
+        MSGBUF( psw_inst_msg, "%s Instruction fetch error\n", buf );
+        display_gregs( regs, regs_msg_buf, sizeof(regs_msg_buf)-1, "HHC02269I " );
+        /* Remove unwanted extra trailing newline from regs_msg_buf */
+        len = strlen( regs_msg_buf );
+        if (len)
+            regs_msg_buf[ len-1 ] = 0;
+        // "%s%s" // (instruction fetch error + regs)
+        WRMSG( HHC02325, "E", psw_inst_msg, regs_msg_buf );
+        if (!iregs->ghostregs)
+            free_aligned( regs );
+        return;
+    }
+
     /* Save the opcode and determine the instruction length */
     opcode = inst[0];
     ilc = ILC( opcode );
@@ -887,23 +904,6 @@ char    regs_msg_buf[4*512] = {0};
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
 #endif
-
-    /* Exit if instruction is not valid */
-    if (!inst)
-    {
-        size_t len;
-        MSGBUF( psw_inst_msg, "%s Instruction fetch error\n", buf );
-        display_gregs( regs, regs_msg_buf, sizeof(regs_msg_buf)-1, "HHC02269I " );
-        /* Remove unwanted extra trailing newline from regs_msg_buf */
-        len = strlen( regs_msg_buf );
-        if (len)
-            regs_msg_buf[ len-1 ] = 0;
-        // "%s%s" // (instruction fetch error + regs)
-        WRMSG( HHC02325, "E", psw_inst_msg, regs_msg_buf );
-        if (!iregs->ghostregs)
-            free_aligned( regs );
-        return;
-    }
 
     /* Format instruction line */
                  n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
