@@ -46,14 +46,21 @@ Hercules: Installation and Operation
 <h2>Building and Installing</h2>
 
 <a name="instsource"></a>
+
 <h3>Building from source - Windows</h3>
+
 <ol>
+
 <li>Download the
 <a href="https://github.com/sdl-hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
-from Github, or even better, <a href="https://github.com/sdl-hercules-390/hyperion">clone the repository</a>.
+from Github, or even better, <b><a href="https://github.com/sdl-hercules-390/hyperion">clone the repository</a>.</b>
+(Note: building from the source code .zip file is <i><u>strongly discouraged</u></i>. Instead,
+it is <i><u>highly recommended</u></i> that you clone the git repository and build from that instead.)
+
 <p>
-<em>Note:</em> By downloading this file (or cloning the repostiory) you agree to the terms
-    of the <a href="herclic.html">Q Public Licence</a>.
+
+<em><b>Note:</b> By downloading the .zip file (or cloning the repostiory) you agree to the terms
+    of the <a href="herclic.html">Q Public Licence</a>.</em>
 <br />
 
 <li>
@@ -118,11 +125,14 @@ compiler and other software levels.<br />
 
 <li>Download the
 <a href="https://github.com/sdl-hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
-from Github, or even better, <a href="https://github.com/sdl-hercules-390/hyperion">clone the repository</a>.
+from Github, or even better, <b><a href="https://github.com/sdl-hercules-390/hyperion">clone the repository</a>.</b>
+(Note: building from the source code .zip file is <i><u>strongly discouraged</u></i>. Instead,
+it is <i><u>highly recommended</u></i> that you clone the git repository and build from that instead.)
+
 <p>
-<em>Note:</em> By downloading this file (or cloning the repostiory) you agree to the terms
-    of the <a href="herclic.html">Q Public Licence</a>.
-<br />
+
+<em><b>Note:</b> By downloading the .zip file (or cloning the repostiory) you agree to the terms
+    of the <a href="herclic.html">Q Public Licence</a>.</em>
 <br />
 
 <li>Use these commands to unzip the distribution file:
@@ -141,7 +151,17 @@ required packages installed:
 
 <p>
 
-<li>Download and build all <b>External Packages</b> if needed:
+Please note that SDL Hyperion comes pre-delivered with an already pre-generated
+<code>./configure</code> script, so doing a <code>./autogen.sh</code> is
+not necessary and is in fact now strongly discouraged.
+
+An autogen would only be necessary if you were to manually make some changes
+to the Hercules default <code>Makefile.am</code> and/or <code>configure.ac</code>
+files (which under normal circumstances you should never need to do).
+
+<p>
+
+<li>Download and build all <b>External Packages</b>, if needed:
 
 <br /><br />
 
@@ -167,10 +187,10 @@ will never hurt to build all of the external packages anyway just to be safe.
 <br /><br />
 
 If you wish to modify or debug any of the external packages themselves (or need
-to build a non-Intel x86/x64 architecture build of Hercules such as arm, mips,
-ppc, sparc, xscale, etc) however, then you will need to manually build each of
-external packages first to create the static link libraries Hercules will need
-to link with, before you can then build Hercules.
+to build a non-Intel x86/x64 architecture build of Hercules however, such as arm, mips,
+ppc, sparc, xscale, etc), then you will need to manually build each of the
+external packages first in order to create the static link libraries that Hercules
+will need to link with, before you can then build Hercules.
 
 <br /><br />
 
