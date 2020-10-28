@@ -44,6 +44,11 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated)
     <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
 
+    <a href="#HERCPRIO">##HERCPRIO</a>   0                                        (deprecated)
+    <a href="#HERCPRIO">##TODPRIO</a>    -20                                      (deprecated)
+    <a href="#HERCPRIO">##DEVPRIO</a>    8                                        (deprecated)
+    <a href="#HERCPRIO">##CPUPRIO</a>    0                                        (deprecated)
+
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
     <a href="#FACILITY">FACILITY</a>   ENABLE 044_PFPO
 
@@ -863,6 +868,17 @@ a real System/390.  The configuration file is an ASCII text file.
     the value that was set by a preceding <a href="#ARCHLVL">ARCHLVL</a> statement
     or the default mode if there was no preceding ARCHLVL statement.
    <p>
+
+<a name="HERCPRIO"></a>
+<dt><code>HERCPRIO &nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>TODPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>DEVPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>CPUPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dd><p>
+    The ability to define process and thread priorities has been
+    <a href="hercrnot.html#4.1">removed</a> from SDL Hyperion as of version <a href="hercrnot.html#4.1">4.1</a>.
+    You should remove all such statements from your configuration file.
+    <p>
 
 <a name="HTTPPORT"></a>
 <dt><code>HTTP &nbsp; PORT &nbsp; <em>nnnn</em> [[NOAUTH] &#124; [AUTH <em>userid password</em>]]</code>
