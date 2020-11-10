@@ -1196,16 +1196,25 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
     int  txf_cfails   = sysblk.txf_cfails;
     int  rc           = 0;
     char c;
+    bool stats = false;
 
     UNREFERENCED( cmdline );
 
-    // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
+    // txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
     //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]
 
     if (argc > 1)  // (define new settings?)
     {
+        // Display statistics?
+        if (str_caseless_eq( argv[1], "STATS" ))
+        {
+            if (argc > 2)
+                rc = -1;
+            else
+                stats = true;
+        }
         // Disable all TXF tracing?
-        if (str_caseless_eq( argv[1], "0"))
+        else if (str_caseless_eq( argv[1], "0"))
         {
             if (argc > 2)
                 rc = -1;
@@ -1392,11 +1401,11 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
         // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
     }
-    else // Display new/current settings
+    else if (!stats) // Display new/current settings
     {
         char buf[1024] = {0};
 
-        // txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
+        // txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
         //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]
 
         if (txf_tracing)
@@ -1444,6 +1453,72 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
         {
             // "%-14s: %s"
             WRMSG( HHC02203, "I", argv[0], buf );
+        }
+    }
+    else // (stats)
+    {
+        if (sysblk.txf_ctrans)
+        {
+            double total, count;
+            int i;
+
+            // "Total Constrained Transactions =%12"PRIu64
+            WRMSG( HHC17730, "I", sysblk.txf_ctrans );
+            total = sysblk.txf_ctrans;
+
+            // "  Retries for ANY/ALL reason(s):"
+            WRMSG( HHC17731, "I" );
+
+            /* Print buckets up until just BEFORE the last bucket */
+            for (i=0; i < (TXF_STATS_RETRY_SLOTS-1); i++)
+            {
+                count = sysblk.txf_retries[ i ];
+
+                // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
+                WRMSG( HHC17732, "I",
+                    i, ' ',
+                    sysblk.txf_retries[ i ],
+                    (count/total) * 100.0 );
+            }
+
+            /* Now print the LAST bucket */
+            count = sysblk.txf_retries[ i ];
+
+            // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
+            WRMSG( HHC17732, "I",
+                i, '+',
+                sysblk.txf_retries[ i ],
+                (count/total) * 100.0 );
+
+            // "    MAXIMUM   =%12"PRIu64
+            WRMSG( HHC17733, "I", sysblk.txf_retries_hwm );
+
+            /* Report how often a transaction was aborted by TAC */
+            for (i = 2; i < TXF_STATS_TAC_SLOTS; i++)
+            {
+                /* (TAC 3 == undefined/unassigned; skip) */
+                if (i == 3)
+                {
+                    // (sanity check: total for this slot should be zero)
+                    ASSERT( 0 == sysblk.txf_caborts_by_tac[ i ] );
+                    continue; // (skip TAC slot 3 == unassigned)
+                }
+
+                // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
+                count = sysblk.txf_caborts_by_tac[ i ];
+                WRMSG( HHC17734, "I", sysblk.txf_caborts_by_tac[ i ],
+                    (count/total) * 100.0, i, tac2long( i ) );
+            }
+
+            // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
+            count = sysblk.txf_caborts_by_tac_misc;
+            WRMSG( HHC17734, "I", sysblk.txf_caborts_by_tac_misc,
+                (count/total) * 100.0, TAC_MISC, tac2long( TAC_MISC ) );
+
+            // "  %12"PRIu64"  (%4.1f%%)  Retries due to other TAC"
+            count = sysblk.txf_caborts_by_tac[ 0 ];
+            WRMSG( HHC17735, "I", sysblk.txf_caborts_by_tac[ 0 ],
+                (count/total) * 100.0 );
         }
     }
 

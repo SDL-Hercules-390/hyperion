@@ -368,7 +368,7 @@ struct REGS {                           /* Processor registers       */
         bool    txf_cfail;              /* true == CONSTRAINED failed*/
         bool    txf_UPGM_abort;         /* true == transaction was
                                            aborted due to TAC_UPGM   */
-        int     txf_caborts;            /* CONSTRAINED aborted count */
+        int     txf_caborts;            /* CONSTRAINED retries count */
         BYTE    txf_tnd;                /* Transaction nesting depth.
                                            Use txf_lock to access!   */
 
@@ -648,17 +648,71 @@ struct SYSBLK {
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 
+        /* Transactional-Execution Facility locks                    */
+
         LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock for
                                              txf_tnd/txf_tac access  */
-#define OBTAIN_TXFLOCK( regs )    obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
-#define RELEASE_TXFLOCK( regs )   release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
+  #define OBTAIN_TXFLOCK( regs )    obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
+  #define RELEASE_TXFLOCK( regs )   release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
-        LOCK    txf_tran_lock;
-#define OBTAIN_TXF_TRANLOCK()       obtain_lock     ( &sysblk.txf_tran_lock )
-#define RELEASE_TXF_TRANLOCK()      release_lock    ( &sysblk.txf_tran_lock )
-#define TRY_OBTAIN_TXF_TRANLOCK()   try_obtain_lock ( &sysblk.txf_tran_lock )
+
+        LOCK    txf_tran_lock;          /* Single-threading lock     */
+
+  #define OBTAIN_TXF_TRANLOCK()       obtain_lock     ( &sysblk.txf_tran_lock )
+  #define RELEASE_TXF_TRANLOCK()      release_lock    ( &sysblk.txf_tran_lock )
+  #define TRY_OBTAIN_TXF_TRANLOCK()   try_obtain_lock ( &sysblk.txf_tran_lock )
+
 #endif
+        // PROGRAMMING NOTE: we purposely define the below count
+        // as a signed value (rather than unsigned) so that we can
+        // detect if, due to a bug, it ever goes negative (which
+        // would indicate a serious logic error!). This is checked
+        // by the UPDATE_SYSBLK_TRANSCPUS macro, which should be
+        // the only way this field is ever updated.
+
+        S32     txf_transcpus;          /* Counts transacting CPUs   */
+
+        /* Transactional-Execution Facility debugging flags          */
+
+        U32     txf_tracing;            /* TXF tracing control;      */
+                                        /* see #defines below.       */
+        U32     txf_why_mask;           /* (only when TXF_TR_WHY)    */
+        int     txf_tac;                /* (only when TXF_TR_TAC)    */
+        int     txf_tnd;                /* (only when TXF_TR_TND)    */
+        int     txf_cfails;             /* (only when TXF_TR_CFAILS) */
+        int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
+
+#define TXF_TR_INSTR    0x80000000      // instructions
+#define TXF_TR_C        0x08000000      // constrained
+#define TXF_TR_U        0x04000000      // unconstrained
+#define TXF_TR_SUCCESS  0x00800000      // success
+#define TXF_TR_FAILURE  0x00400000      // failure
+#define TXF_TR_WHY      0x00200000      // why mask
+#define TXF_TR_TAC      0x00100000      // TAC
+#define TXF_TR_TND      0x00080000      // TND
+#define TXF_TR_CPU      0x00040000      // specific CPU
+#define TXF_TR_CFAILS   0x00020000      // aborted count
+#define TXF_TR_TDB      0x00000800      // tdb
+#define TXF_TR_PAGES    0x00000080      // page information
+#define TXF_TR_LINES    0x00000040      // cache lines too
+
+        /* Transactional-Execution Facility statistics               */
+
+        U64  txf_ctrans;                /* CONSTRAINED transactions  */
+
+#define TXF_STATS_TAC_SLOTS     (TAC_CACHE_OTH+1)
+#define TXF_STATS_RETRY_SLOTS   (9)
+
+        U64  txf_caborts_by_tac         /* Abort counts by TAC       */
+             [ TXF_STATS_TAC_SLOTS ];   /* Slot 0 = "other" counts;
+                                           tac > TXF_STATS_TAC_SLOTS */
+        U64  txf_caborts_by_tac_misc;   /* Abort counts for TAC_MISC */
+
+        U64  txf_retries                /* Total retries counts      */
+             [ TXF_STATS_RETRY_SLOTS ]; /* (Slot 0 = no retry)       */
+
+        U64  txf_retries_hwm;           /* Retries high watermark    */
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
@@ -1027,39 +1081,6 @@ struct SYSBLK {
         U64     instcount;              /* Instruction counter       */
         U32     mipsrate;               /* Instructions per second   */
         U32     siosrate;               /* IOs per second            */
-
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-
-        // PROGRAMMING NOTE: we purposely define the below count
-        // as a signed value (rather than unsigned) so that we can
-        // detect if, due to a bug, it ever goes negative (which
-        // would indicate a serious logic error!). This is checked
-        // by the UPDATE_SYSBLK_TRANSCPUS macro, which should be
-        // the only way this field is ever updated.
-
-        S32     txf_transcpus;          /* counts transacting CPUs   */
-#endif
-        U32     txf_tracing;            /* TXF tracing control;      */
-                                        /* see #defines below.       */
-        U32     txf_why_mask;           /* (only when TXF_TR_WHY)    */
-        int     txf_tac;                /* (only when TXF_TR_TAC)    */
-        int     txf_tnd;                /* (only when TXF_TR_TND)    */
-        int     txf_cfails;             /* (only when TXF_TR_CFAILS) */
-        int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
-
-#define TXF_TR_INSTR    0x80000000      // instructions
-#define TXF_TR_C        0x08000000      // constrained
-#define TXF_TR_U        0x04000000      // unconstrained
-#define TXF_TR_SUCCESS  0x00800000      // success
-#define TXF_TR_FAILURE  0x00400000      // failure
-#define TXF_TR_WHY      0x00200000      // why mask
-#define TXF_TR_TAC      0x00100000      // TAC
-#define TXF_TR_TND      0x00080000      // TND
-#define TXF_TR_CPU      0x00040000      // specific CPU
-#define TXF_TR_CFAILS   0x00020000      // aborted count
-#define TXF_TR_TDB      0x00000800      // tdb
-#define TXF_TR_PAGES    0x00000080      // page information
-#define TXF_TR_LINES    0x00000040      // cache lines too
 
         int     regs_copy_len;          /* Length to copy for REGS   */
 

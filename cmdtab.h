@@ -1631,12 +1631,14 @@
                                 \
   "Format:\n"                                                                   \
   "\n"                                                                          \
-  "   txf  [0 | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [Pages|Lines]\n"             \
+  "   txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [Pages|Lines]\n"     \
   "        [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]\n"         \
   "\n"                                                                          \
   "Where:\n"                                                                    \
   "\n"                                                                          \
   "   0       Disables all txf tracing.\n"                                      \
+  "\n"                                                                          \
+  "   STATS   Display statistics.\n"                                            \
   "\n"                                                                          \
   "   INSTR   Enables instruction tracing of ONLY transactions.\n"              \
   "           Either 'U' or 'C' or both must also be specified.\n"              \

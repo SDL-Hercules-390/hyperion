@@ -490,7 +490,24 @@ int         txf_tnd, txf_tac;
                 regs->txf_caborts );
         }
 
-        /* Transaction suceeded. Reset abort count */
+        /* Track TXF statistics */
+        if (txf_contran)
+        {
+            /* Track how many retries this transaction took */
+            int retries_slot = regs->txf_caborts < TXF_STATS_RETRY_SLOTS ?
+                               regs->txf_caborts : TXF_STATS_RETRY_SLOTS - 1;
+
+            atomic_update64( &sysblk.txf_retries[ retries_slot ], +1 );
+
+            /* Track number of retries high watermark */
+            if ((U64)regs->txf_caborts > sysblk.txf_retries_hwm)
+                sysblk.txf_retries_hwm = (U64)regs->txf_caborts;
+
+            /* Count total constrained transactions */
+            atomic_update64( &sysblk.txf_ctrans, +1 );
+        }
+
+        /* Transaction succeeded. Reset abort count */
         regs->txf_caborts = 0;
 
 #if defined( OPTION_TXF_SINGLE_THREAD )
@@ -1140,9 +1157,27 @@ int        retry;           /* Actual retry code                     */
             regs->txf_caborts );
     }
 
-    /* Update constrained transaction aborts counter */
+    /*---------------------------------------------*/
+    /*      Count the constrained abort/retry      */
+    /*---------------------------------------------*/
     if (regs->txf_contran)
+    {
+        /* Count total retries for this transaction */
         regs->txf_caborts++;
+
+        /* Track total aborts by cause (TAC) */
+        if (regs->txf_tac == TAC_MISC)
+        {
+            atomic_update64( &sysblk.txf_caborts_by_tac_misc, +1 );
+        }
+        else
+        {
+            int tac_slot = regs->txf_tac < TXF_STATS_TAC_SLOTS ?
+                           regs->txf_tac : 0; // (0 == "other")
+
+            atomic_update64( &sysblk.txf_caborts_by_tac[ tac_slot ], +1 );
+        }
+    }
     else
         regs->txf_caborts = 0;
 
@@ -2478,10 +2513,12 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
 /*-------------------------------------------------------------------*/
 static const char* tac_names[] =
 {
-    /*   0 */   "0",                "0",
-    /*   1 */   "1",                "1",
+    //          Short name          Long name
+
+    /*   0 */   "TAC 0",            "(undefined Abort Code)",
+    /*   1 */   "TAC 1",            "(undefined Abort Code)",
     /*   2 */   "TAC_EXT",          "External interruption",
-    /*   3 */   "3",                "3",
+    /*   3 */   "TAC 3",            "(undefined Abort Code)",
     /*   4 */   "TAC_UPGM",         "PGM Interruption (Unfiltered)",
     /*   5 */   "TAC_MCK",          "Machine-check Interruption",
     /*   6 */   "TAC_IO",           "I/O Interruption",
@@ -2495,8 +2532,8 @@ static const char* tac_names[] =
     /*  14 */   "TAC_FETCH_OTH",    "Cache (fetch related)",
     /*  15 */   "TAC_STORE_OTH",    "Cache (store related)",
     /*  16 */   "TAC_CACHE_OTH",    "Cache (other)",
-    /*  17 */   "17",               "17",
-    /*  18 */   "18",               "18",
+    /*  17 */   "TAC 17",           "(undefined Abort Code)",
+    /*  18 */   "TAC 18",           "(undefined Abort Code)",
     /*  19 */   "TAC_GUARDED",      "Guarded-Storage Event related",
 
 //  /*  20 */   "TAC_?????",        "Some future TAC code...",
