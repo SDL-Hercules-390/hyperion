@@ -41,11 +41,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-
-#define OPTION_DEPRECATE_AIM            // Deprecate regs->aim usage
-//#define OPTION_TXF_SINGLE_THREAD        // One transaction at a time
-#define OPTION_DEPRECATE_TXF_LASTACC    // Deprecate 'txf_lastacc'
-#define OPTION_FIX_SIE_ICODE_BUG        // Fix possible SIE icode bug
 #define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
 #define OPTION_GH275_PIC12_FIX          // GitHub #275 PIC 12 fix

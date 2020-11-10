@@ -861,9 +861,6 @@ int     rc;
     initialize_lock( &sysblk.crwlock  );
     initialize_lock( &sysblk.ioqlock  );
     initialize_lock( &sysblk.dasdcache_lock );
-#if defined( OPTION_TXF_SINGLE_THREAD )
-    initialize_lock( &sysblk.txf_tran_lock );
-#endif
 
     initialize_condition( &sysblk.scrcond );
     initialize_condition( &sysblk.ioqcond );

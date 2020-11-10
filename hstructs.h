@@ -110,12 +110,8 @@ struct REGS {                           /* Processor registers       */
 /*200*/ ALIGN_128
         BYTE   *aip;                    /* Mainstor page address     */
 
-#if !defined( OPTION_DEPRECATE_AIM )
-/*208*/ ALIGN_8
-        uintptr_t aim;                  /* Mainstor xor address      */
-#else
         uintptr_t unused;               /* Available                 */
-#endif
+
 /*210*/ ALIGN_8
         BYTE   *aie;                    /* Mainstor page end address */
 /*218*/ DW      aiv;                    /* Virtual page address      */
@@ -459,9 +455,6 @@ struct REGS {                           /* Processor registers       */
 
         U32     txf_why;                /* why transaction aborted   */
                                         /* see transact.h for codes  */
-#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
-        int     txf_lastacc;            /* Last access type          */
-#endif
         int     txf_lastarn;            /* Last access arn           */
 
         U16     txf_pifctab[ MAX_TXF_TND ];   /* PIFC control table  */
@@ -652,18 +645,10 @@ struct SYSBLK {
 
         LOCK    txf_lock[ MAX_CPU_ENGS ]; /* CPU transaction lock for
                                              txf_tnd/txf_tac access  */
-  #define OBTAIN_TXFLOCK( regs )    obtain_lock ( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
-  #define RELEASE_TXFLOCK( regs )   release_lock( &(regs)->sysblk->txf_lock[ (regs)->cpuad ])
 
-#if defined( OPTION_TXF_SINGLE_THREAD )
+#define OBTAIN_TXFLOCK( regs )    obtain_lock ( &sysblk.txf_lock[ (regs)->cpuad ])
+#define RELEASE_TXFLOCK( regs )   release_lock( &sysblk.txf_lock[ (regs)->cpuad ])
 
-        LOCK    txf_tran_lock;          /* Single-threading lock     */
-
-  #define OBTAIN_TXF_TRANLOCK()       obtain_lock     ( &sysblk.txf_tran_lock )
-  #define RELEASE_TXF_TRANLOCK()      release_lock    ( &sysblk.txf_tran_lock )
-  #define TRY_OBTAIN_TXF_TRANLOCK()   try_obtain_lock ( &sysblk.txf_tran_lock )
-
-#endif
         // PROGRAMMING NOTE: we purposely define the below count
         // as a signed value (rather than unsigned) so that we can
         // detect if, due to a bug, it ever goes negative (which

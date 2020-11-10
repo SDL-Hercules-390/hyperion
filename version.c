@@ -701,16 +701,6 @@ static const char *build_info[] = {
 #else
     "Without \"Optimized\" instructions",
 #endif
-#if defined( OPTION_DEPRECATE_AIM )             // Deprecate regs->aim usage
-    "With    OPTION_DEPRECATE_AIM",
-#else
-    "Without OPTION_DEPRECATE_AIM",
-#endif
-#if defined( OPTION_TXF_SINGLE_THREAD )         // One transaction at a time
-    "With    OPTION_TXF_SINGLE_THREAD",
-#else
-    "Without OPTION_TXF_SINGLE_THREAD",
-#endif
 
 //---------------------------------------------------------------------
 

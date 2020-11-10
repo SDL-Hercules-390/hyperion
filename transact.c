@@ -510,12 +510,6 @@ int         txf_tnd, txf_tac;
         /* Transaction succeeded. Reset abort count */
         regs->txf_caborts = 0;
 
-#if defined( OPTION_TXF_SINGLE_THREAD )
-        /* Release transaction lock */
-        if (txf_contran)
-            RELEASE_TXF_TRANLOCK();
-#endif
-
         PERFORM_SERIALIZATION( regs );
     }
     RELEASE_INTLOCK( regs );
@@ -691,40 +685,6 @@ VADR    effective_addr1;                /* Effective address         */
     /* CONSTRAINED: ignore some i2 bits */
     i2 &= ~(TXF_CTL_FLOAT | TXF_CTL_PIFC);
 
-#if defined( OPTION_TXF_SINGLE_THREAD )
-    /* Obtain transaction lock */
-    if (!regs->txf_tnd)
-    {
-        /* PROGRAMMING NOTE: in order to be "synchronized broadast
-           compatible" (i.e. SYNCHRONIZE_CPUS), we must be sure to
-           try to obtain the interrupt lock (OBTAIN_INTLOCK) between
-           each attempt to obtain our transaction lock. This is to
-           prevent a possible "soft deadlock" situation that occurs
-           when another CPU is attempting to do a SYNCHRONIZE_CPUS
-           while another CPU is holding the transaction lock: the
-           other CPU holding the transaction lock would prevent us
-           from acquiring it thus preventing us from ever obtaining
-           the interrupt lock, thereby leading to the deadlock: the
-           CPU doing SYNCHRONIZE_CPUS would end up waiting forever
-           for us to enter the OBTAIN_INTLOCK synchronized broadcast
-           logic due to our being stuck waiting for the transaction
-           lock! Thus, between each attempt to obtain the transaction
-           lock, we obtain then release the interrupt lock to allow
-           the synchronized broadcast (SYNCHRONIZE_CPUS) to proceed
-           normally, and then afterwards try to obtain our transaction
-           lock again. Doing this ensures we are always holding the
-           transaction lock BEFORE attempting to obtain INTLOCK thus
-           preventing the potential deadlock from occurring.
-        */
-        while (TRY_OBTAIN_TXF_TRANLOCK() != 0)
-        {
-            sched_yield();            // (let other CPU maybe release it)
-            OBTAIN_INTLOCK( regs );   // (allow SYNCHRONIZE_CPUS to occur)
-            RELEASE_INTLOCK( regs );  // (we obtain it for real further below)
-        }
-    }
-#endif
-
     /* Obtain interrupt lock so "process_tbegin" can do SYNCHRONIZE_CPUS */
     OBTAIN_INTLOCK( regs );
     {
@@ -810,9 +770,6 @@ TPAGEMAP   *pmap;
         regs->txf_tac        = 0;          /* clear the abort code   */
         regs->txf_conflict   = 0;          /* clear conflict address */
         regs->txf_piid       = 0;          /* program interrupt id   */
-#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
-        regs->txf_lastacc    = 0;          /* last access type       */
-#endif
         regs->txf_lastarn    = 0;          /* last access arn        */
         regs->txf_why        = 0;          /* no abort cause (yet)   */
 
@@ -843,9 +800,6 @@ TPAGEMAP   *pmap;
                 memcpy( &regs->txf_tapsw, &regs->psw, sizeof( PSW ));
                 regs->txf_ip  = regs->ip;
                 regs->txf_aip = regs->aip;
-#if !defined( OPTION_DEPRECATE_AIM )
-                regs->txf_aim = regs->aim;
-#endif
                 regs->txf_aiv = regs->aiv;
             }
             memcpy( &regs->psw, &origpsw, sizeof( PSW ));
@@ -1368,9 +1322,6 @@ int        retry;           /* Actual retry code                     */
     memcpy( &regs->psw, &regs->txf_tapsw, sizeof( PSW ));
     regs->ip  = regs->txf_ip;
     regs->aip = regs->txf_aip;
-#if !defined( OPTION_DEPRECATE_AIM )
-    regs->aim = regs->txf_aim;
-#endif
     regs->aiv = regs->txf_aiv;
     INVALIDATE_AIA( regs );
 
@@ -1530,12 +1481,6 @@ int        retry;           /* Actual retry code                     */
         RELEASE_INTLOCK( regs );
     }
 
-#if defined( OPTION_TXF_SINGLE_THREAD )
-    /* Release transaction lock */
-    if (txf_contran)
-        RELEASE_TXF_TRANLOCK();
-#endif
-
     /*----------------------------------------------------*/
     /*       RETURN TO CALLER OR JUMP AS REQUESTED        */
     /*----------------------------------------------------*/
@@ -1662,12 +1607,7 @@ int     fcc, ucc;               /* Filtered/Unfiltered conditon code */
     case PGM_REGION_THIRD_TRANSLATION_EXCEPTION:
 
         /* Did interrupt occur during instruction fetch? */
-        if (1
-#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
-            && regs->txf_lastacc == ACCTYPE_INSTFETCH
-#endif
-            && regs->txf_lastarn == USE_INST_SPACE
-        )
+        if (regs->txf_lastarn == USE_INST_SPACE)
         {
             txclass = 1;        /* Class 1 can't be filtered */
             filt = false;
@@ -2220,14 +2160,9 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
             return maddr;   /* (no TXF translation needed) */
     }
 
-    /* Save last translation access type and arn */
+    /* Save last translation arn */
     if (regs && regs->txf_tnd)
-    {
-#if !defined( OPTION_DEPRECATE_TXF_LASTACC )
-        regs->txf_lastacc = txf_acctype;
-#endif
         regs->txf_lastarn = arn;
-    }
 
     /* Calculate range of cache lines for this storage access */
 
