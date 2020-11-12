@@ -2434,7 +2434,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17003 "%-8s storage is %s (%ssize); storage is %slocked"
 #define HHC17004 "%-6s: CPUID  = %16.16"PRIX64
 #define HHC17005 "%-6s: CPC SI = %4.4X.%s.%s.%s.%s"
-#define HHC17006 "MAINSIZE %screased to %s architectural %simim"
+#define HHC17006 "MAINSIZE %screased to %s architectural %simum"
 #define HHC17007 "NumCPU = %2.2d, NumVEC = %2.2d, ReservedCPU = %2.2d, MaxCPU = %2.2d"
 #define HHC17008 "Avgproc  %2.2d %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
 #define HHC17009 "PROC %s%2.2X %c %3.3d%%; MIPS[%4d.%2.2d]; SIOS[%6d]%s"
@@ -2508,8 +2508,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17708 "TXF: %s%02X: %sError in function %s: %s"
 #define HHC17709 "TXF: %s%02X: %s%s dump of TDB:"
 #define HHC17710 "TXF: %s%02X: %s+"
-#define HHC17711 "TXF: %s%02X: %sUnable to obtain clean capture of page"
-#define HHC17712 "TXF: %s%02X: %sUnable to cleanly refresh cache line"
+//efine HHC17711 (available)
+//efine HHC17712 (available)
 #define HHC17713 "TXF: %s%02X: %sTranslation exception %4.4hX (%s) for TBEGIN tdba 0x%16.16"PRIx64
 #define HHC17714 "TXF: %s%02X: SIE: Populating Interception TDB at 0x%16.16"PRIx64
 #define HHC17715 "TXF: %s%02X: SIE: Intercepting %s instruction"

@@ -2065,13 +2065,7 @@ static inline void txf_fetch_conflict_scan
 /*  captured from the real page.  When a cache line or page is       */
 /*  captured, two copies are made.  One copy is presented to the     */
 /*  caller, and one is a save copy which will be used to see if the  */
-/*  cache line has changed.  In order to make sure that the capture  */
-/*  is clean, the two copies must match.  If they do not match,      */
-/*  the copy is retried up to MAX_CAPTURE_TRIES times.  If a copy    */
-/*  cannot be made in that many tries, the transaction is aborted    */
-/*  with a fetch conflict.  Note: it is OK to use real addresses     */
-/*  here because the transaction will be aborted if the real page    */
-/*  is invalidated.                                                  */
+/*  cache line has changed.
 /*                                                                   */
 /*  If the CPU is not executing any transaction, then only 'maddr'   */
 /*  is checked to see if it conflicts with any transactions that     */
@@ -2343,26 +2337,9 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         altpage  = pmap->altpageaddr;
         savepage = altpage + ZPAGEFRAME_PAGESIZE;
 
-        /* Try to capture a clean copy of this page */
-        for (i=0; i < MAX_CAPTURE_TRIES; i++)
-        {
-            memcpy( altpage,  pageaddr, ZPAGEFRAME_PAGESIZE );
-            memcpy( savepage, pageaddr, ZPAGEFRAME_PAGESIZE );
-
-            if (memcmp( altpage, savepage, ZPAGEFRAME_PAGESIZE ) == 0)
-                break;
-        }
-
-        /* Abort if unable to obtain clean capture of this page */
-        if (i >= MAX_CAPTURE_TRIES)
-        {
-            // "TXF: %s%02X: %sUnable to obtain clean capture of page"
-            WRMSG( HHC17711, "E", TXF_CPUAD( regs ), TXF_QSIE( regs ));
-            PTT_TXF( "*TXF mad cap", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
-            regs->txf_why |= TXF_WHY_CAPTURE_FAIL;
-            ABORT_TRANS( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
-            UNREACHABLE_CODE( return maddr );
-        }
+        /* Capture a copy of this page */
+        memcpy( altpage,  pageaddr, ZPAGEFRAME_PAGESIZE );
+        memcpy( savepage, altpage,  ZPAGEFRAME_PAGESIZE );
 
         /* Finish mapping this page */
         pmap->mainpageaddr = (BYTE*) addrpage;
@@ -2390,25 +2367,8 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
             altpagec  = pmap->altpageaddr  + (cacheidx << ZCACHE_LINE_SHIFT);
             savepagec = altpagec + ZPAGEFRAME_PAGESIZE;
 
-            for (i=0; i < MAX_CAPTURE_TRIES; i++)
-            {
-                memcpy( altpagec,  pageaddrc, ZCACHE_LINE_SIZE );
-                memcpy( savepagec, pageaddrc, ZCACHE_LINE_SIZE );
-
-                if (memcmp( altpagec, savepagec, ZCACHE_LINE_SIZE ) == 0)
-                    break;
-            }
-
-            /* Abort if unable to cleanly refresh this cache line */
-            if (i >= MAX_CAPTURE_TRIES)
-            {
-                // "TXF: %s%02X: %sUnable to cleanly refresh cache line"
-                WRMSG( HHC17712, "E", TXF_CPUAD( regs ), TXF_QSIE( regs ));
-                PTT_TXF( "*TXF mad cac", TAC_FETCH_CNF, regs->txf_contran, regs->txf_tnd );
-                regs->txf_why |= TXF_WHY_CAPTURE_FAIL;
-                ABORT_TRANS( regs, ABORT_RETRY_CC, TAC_FETCH_CNF );
-                UNREACHABLE_CODE( return maddr );
-            }
+            memcpy( altpagec,  pageaddrc, ZCACHE_LINE_SIZE );
+            memcpy( savepagec, altpagec,  ZCACHE_LINE_SIZE );
 
             /* Remember how we accessed this cache line */
             pmap->cachemap[ cacheidx ] = cmtype;
