@@ -347,7 +347,7 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
             bool increased = (new_mainsize > old_mainsize);
             fmt_memsize_KB( sysblk.mainsize >> SHIFT_KIBIBYTE, memsize, sizeof( memsize ));
 
-            // "MAINSIZE %screased to %s architectural %simim"
+            // "MAINSIZE %screased to %s architectural %simum"
             WRMSG( HHC17006, "W", increased ? "in" : "de", memsize,
                 increased ? "min" : "max" );
         }
