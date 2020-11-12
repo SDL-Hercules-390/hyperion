@@ -22,7 +22,6 @@
 #define  MAX_TXF_TND             15   /* Max nesting depth           */
 #define  MAX_TXF_CONTRAN_INSTR   32   /* Max CONSTRAINED instr.      */
 #define  MAX_TXF_PAGES           64   /* Max num of modified pages   */
-#define  MAX_CAPTURE_TRIES      128   /* Max clean copy attempts     */
 
 #define  ZPAGEFRAME_PAGESIZE   4096   /* IBM z page size (4K)        */
 #define  ZPAGEFRAME_BYTEMASK   0x00000FFF
