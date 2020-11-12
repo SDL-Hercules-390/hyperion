@@ -29,7 +29,17 @@
 #ifndef COMPILE_THIS_ONLY_ONCE
 #define COMPILE_THIS_ONLY_ONCE
 
+#undef ATTRIBUTE_PACKED
+#if defined(_MSVC_)
+ #pragma pack(push)
+ #pragma pack(1)
+ #define ATTRIBUTE_PACKED
+#else
+ #define ATTRIBUTE_PACKED __attribute__((packed))
+#endif
+
 /* Start of headers and defines copied from S390-tools-2.14.0 include/boot/ipl.h */
+/* The copied headers have been modified */
 
 /* IPL Parameter List header */
 struct ipl_pl_hdr {
@@ -37,7 +47,7 @@ struct ipl_pl_hdr {
   uint8_t  flags;
   uint8_t  reserved1[2];
   uint8_t  version;
-};  /* __packed */
+} ATTRIBUTE_PACKED;
 #define IPL_FLAG_SECURE    0x40
 #define IPL_MAX_SUPPORTED_VERSION 0
 
@@ -45,7 +55,7 @@ struct ipl_pl_hdr {
 //  struct ipl_pb_hdr {
 //    uint32_t len;
 //    uint8_t  pbt;
-//  };  /* __packed */
+//  } ATTRIBUTE_PACKED;
 
 /* IPL Parameter Block 0 with common fields */
 struct ipl_pb0_common {
@@ -55,7 +65,7 @@ struct ipl_pb0_common {
   uint8_t  reserved1[2];
   uint8_t  loadparm[8];
   uint8_t  reserved2[84];
-};  /* __packed */
+} ATTRIBUTE_PACKED;
 #define IPL_RB_COMPONENT_FLAG_SIGNED  0x80
 #define IPL_RB_COMPONENT_FLAG_VERIFIED  0x40
 /* Following define values copied from linux-5.8.17 arch/s390/include/uapi/asmi/ipl.h */
@@ -76,8 +86,9 @@ struct ipl_pb0_ccw {
   uint8_t  reserved1[2];
   uint8_t  loadparm[8];
   uint8_t  reserved2[84];
-  uint16_t reserved3 : 13;
-  uint8_t  ssid : 3;
+  uint8_t  reserved3[1];
+  uint8_t  reserved6 : 5,
+           ssid : 3;
   uint16_t devno;
   uint8_t  vm_flags;
   uint8_t  reserved4[3];
@@ -85,7 +96,7 @@ struct ipl_pb0_ccw {
   uint8_t  nss_name[8];
   uint8_t  vm_parm[64];
   uint8_t  reserved5[8];
-};  /* __packed */
+} ATTRIBUTE_PACKED;
 
 //  /* IPL Parameter Block 0 for FCP */
 //  struct ipl_pb0_fcp {
@@ -108,7 +119,7 @@ struct ipl_pb0_ccw {
 //    uint32_t scp_data_len;
 //    uint8_t  reserved7[260];
 //    uint8_t  scp_data[];
-//  };  /* __packed */
+//  } ATTRIBUTE_PACKED;
 
 //  /* Structure must not have any padding */
 //  struct ipl_pb0_pv_comp {
@@ -132,7 +143,7 @@ struct ipl_pb0_ccw {
 //    uint64_t pv_hdr_addr;
 //    uint64_t pv_hdr_size;
 //    struct ipl_pb0_pv_comp components[];
-//  };  /* __packed */
+//  } ATTRIBUTE_PACKED;
 //  #define IPL_PARM_BLOCK_VERSION    0x1
 
 struct ipl_parameter_block {
@@ -145,9 +156,13 @@ struct ipl_parameter_block {
 //      struct ipl_pb0_pv pv;
 //      char raw[PAGE_SIZE - sizeof(struct ipl_pl_hdr)];
   };
-};  /* __packed */
+} ATTRIBUTE_PACKED;
 
 /* End of headers and defines copied from S390-tools-2.14.0 include/boot/ipl.h */
+
+#if defined(_MSVC_)
+ #pragma pack(pop)
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                                                                   */
