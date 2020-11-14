@@ -28,10 +28,12 @@ use strict;
 my @req = qw(
      autoconf    2.64   0  http://www.gnu.org/directory/autoconf.html
      automake    1.9    0  http://www.gnu.org/directory/automake.html
+     cmake       3.2    0  https://cmake.org
      flex        2.5    0  http://www.gnu.org/directory/flex.html
      gawk        3.0    0  http://www.gnu.org/directory/gawk.html
-     gcc         3      0  http://www.gnu.org/directory/gcc.html
+     gcc         4.6.2  0  http://www.gnu.org/directory/gcc.html
      grep        1      0  http://www.gnu.org/directory/grep.html
+     ld          2.22   0  http://www.gnu.org/directory/binutils.html
      m4          1.4.6  0  http://www.gnu.org/directory/GNU/gnum4.html
      make        3.79   0  http://www.gnu.org/directory/make.html
      perl        5.6    1  http://www.gnu.org/directory/perl/html
