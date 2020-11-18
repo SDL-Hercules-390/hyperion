@@ -47,7 +47,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Store register contents at operand address */
@@ -69,7 +68,6 @@ U32     tmp_fpc;
 
     S(inst, regs, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Load FPC register from operand address */
@@ -95,7 +93,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Program check if reserved bits are non-zero */
@@ -118,7 +115,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Load R1 register bits 32-63 from FPC register */
@@ -139,7 +135,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Set FPC register BFP rounding mode bits from operand address */
@@ -166,7 +161,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Program check if operand address bits 56-60 are non-zero */
