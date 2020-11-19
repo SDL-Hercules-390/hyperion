@@ -2065,7 +2065,7 @@ static inline void txf_fetch_conflict_scan
 /*  captured from the real page.  When a cache line or page is       */
 /*  captured, two copies are made.  One copy is presented to the     */
 /*  caller, and one is a save copy which will be used to see if the  */
-/*  cache line has changed.
+/*  cache line has changed.                                          */
 /*                                                                   */
 /*  If the CPU is not executing any transaction, then only 'maddr'   */
 /*  is checked to see if it conflicts with any transactions that     */
