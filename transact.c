@@ -204,7 +204,7 @@ BYTE       *altaddr;
 BYTE       *saveaddr;
 BYTE       *mainaddr;
 TPAGEMAP   *pmap;
-int         txf_tnd, txf_tac;
+int         txf_tnd, txf_tac, slot;
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -477,38 +477,30 @@ int         txf_tnd, txf_tac;
         UPDATE_SYSBLK_TRANSCPUS( -1 );
 
         /*---------------------------------------------*/
-        /*  Trace CONSTRAINED failure retry success    */
+        /*          Trace failure retry success        */
         /*---------------------------------------------*/
         if (1
             && MLVL( VERBOSE )
-            && regs->txf_caborts
+            && regs->txf_aborts
             && TXF_TRACE( regs, FAILURE, txf_contran )
         )
         {
-            // "TXF: %s%02X: %sCONSTRAINED transaction succeeded after %d retries"
+            // "TXF: %s%02X: %s%s transaction succeeded after %d retries"
             WRMSG( HHC17718, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-                regs->txf_caborts );
+                TXF_CONSTRAINED( txf_contran ), regs->txf_aborts );
         }
 
         /* Track TXF statistics */
-        if (txf_contran)
-        {
-            /* Track how many retries this transaction took */
-            int retries_slot = regs->txf_caborts < TXF_STATS_RETRY_SLOTS ?
-                               regs->txf_caborts : TXF_STATS_RETRY_SLOTS - 1;
+        slot = regs->txf_aborts < TXF_STATS_RETRY_SLOTS ?
+               regs->txf_aborts : TXF_STATS_RETRY_SLOTS - 1;
+        TXF_STATS( retries[ slot ], txf_contran );
 
-            atomic_update64( &sysblk.txf_retries[ retries_slot ], +1 );
+        /* Track retries high watermark */
+        if ((U64)regs->txf_aborts > sysblk.txf_stats[ txf_contran ].txf_retries_hwm)
+            sysblk.txf_stats[ txf_contran ].txf_retries_hwm = (U64)regs->txf_aborts;
 
-            /* Track number of retries high watermark */
-            if ((U64)regs->txf_caborts > sysblk.txf_retries_hwm)
-                sysblk.txf_retries_hwm = (U64)regs->txf_caborts;
-
-            /* Count total constrained transactions */
-            atomic_update64( &sysblk.txf_ctrans, +1 );
-        }
-
-        /* Transaction succeeded. Reset abort count */
-        regs->txf_caborts = 0;
+        /* Reset abort count */
+        regs->txf_aborts = 0;
 
         PERFORM_SERIALIZATION( regs );
     }
@@ -747,6 +739,10 @@ TPAGEMAP   *pmap;
 
         UPDATE_SYSBLK_TRANSCPUS( +1 );  /* bump transacting CPUs ctr */
 
+        /* Count total transactions */
+        if (!regs->txf_aborts)
+            TXF_STATS( trans, txf_contran );
+
         /* Set internal TDB to invalid until it's actually populated */
         memset( &regs->txf_tdb, 0, sizeof( TDB ));
 
@@ -938,13 +934,13 @@ TPAGEMAP   *pmap;
     /*--------------------------------------------------------------*/
     if (1
         && MLVL( VERBOSE )
-        && regs->txf_caborts
+        && regs->txf_aborts
         && TXF_TRACE( regs, FAILURE, regs->txf_contran )
     )
     {
-        // "TXF: %s%02X: %sCONSTRAINED transaction retry #%d..."
+        // "TXF: %s%02X: %s%s transaction retry #%d..."
         WRMSG( HHC17717, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-            regs->txf_caborts );
+            TXF_CONSTRAINED( regs->txf_contran ), regs->txf_aborts );
     }
 
 } /* end ARCH_DEP( process_tbegin ) */
@@ -1058,7 +1054,7 @@ int        retry;           /* Actual retry code                     */
         && TXF_TRACE_TND( regs )
         && TXF_TRACE_WHY( regs )
         && TXF_TRACE_TAC( regs )
-        && TXF_TRACE_CFAILS( regs )
+        && TXF_TRACE_FAILS( regs )
     )
         // "TXF: %s%02X: %sabort_transaction called from %s"
         WRMSG( HHC17722, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), TRIMLOC( loc ));
@@ -1098,42 +1094,35 @@ int        retry;           /* Actual retry code                     */
     PERFORM_SERIALIZATION( regs );
 
     /*---------------------------------------------*/
-    /*  Failure of CONSTRAINED transaction retry?  */
+    /*       Failure of transaction retry?         */
     /*---------------------------------------------*/
     if (1
         && MLVL( VERBOSE )
-        && regs->txf_caborts
+        && regs->txf_aborts
         && TXF_TRACE( regs, FAILURE, regs->txf_contran )
     )
     {
-        // "TXF: %s%02X: %sCONSTRAINED transaction retry #%d FAILED!"
+        // "TXF: %s%02X: %s%s transaction retry #%d FAILED!"
         WRMSG( HHC17719, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-            regs->txf_caborts );
+            TXF_CONSTRAINED( regs->txf_contran ), regs->txf_aborts );
     }
 
     /*---------------------------------------------*/
-    /*      Count the constrained abort/retry      */
+    /*          Count the abort/retry              */
     /*---------------------------------------------*/
-    if (regs->txf_contran)
-    {
-        /* Count total retries for this transaction */
-        regs->txf_caborts++;
 
-        /* Track total aborts by cause (TAC) */
-        if (regs->txf_tac == TAC_MISC)
-        {
-            atomic_update64( &sysblk.txf_caborts_by_tac_misc, +1 );
-        }
-        else
-        {
-            int tac_slot = regs->txf_tac < TXF_STATS_TAC_SLOTS ?
-                           regs->txf_tac : 0; // (0 == "other")
+    /* Count total retries for this transaction */
+    regs->txf_aborts++;
 
-            atomic_update64( &sysblk.txf_caborts_by_tac[ tac_slot ], +1 );
-        }
-    }
+    /* Track total aborts by cause (TAC) */
+    if (regs->txf_tac == TAC_MISC)
+        TXF_STATS( aborts_by_tac_misc, regs->txf_contran );
     else
-        regs->txf_caborts = 0;
+    {
+        int slot = regs->txf_tac < TXF_STATS_TAC_SLOTS ?
+                   regs->txf_tac : 0; // (0 == "other")
+        TXF_STATS( aborts_by_tac[ slot ], regs->txf_contran );
+    }
 
     /*---------------------------------------------*/
     /*  Clean up the transaction flags             */
@@ -2486,10 +2475,10 @@ const char* txf_why_str( char* buffer, int buffsize, int why )
         , TXF_WHY_FORMAT( TXF_WHY_TRAN_SET_ADDRESSING_MODE ) // 25
         , TXF_WHY_FORMAT( TXF_WHY_TRAN_MISC_INSTR          ) // 26
         , TXF_WHY_FORMAT( TXF_WHY_NESTING                  ) // 27
-        , TXF_WHY_FORMAT( TXF_WHY_CAPTURE_FAIL             ) // 28
-        , ""                                                 // 29
-        , ""                                                 // 30
-        , ""                                                 // 31
+        , ""                                                 // 28
+        , TXF_WHY_FORMAT( TXF_WHY_IPTE_INSTR               ) // 29
+        , TXF_WHY_FORMAT( TXF_WHY_IDTE_INSTR               ) // 30
+        , TXF_WHY_FORMAT( TXF_WHY_CONSTRAINT_4             ) // 31
         , ""                                                 // 32
     );
     return buffer;

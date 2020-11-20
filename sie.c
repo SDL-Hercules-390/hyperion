@@ -1345,7 +1345,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     }
     else if (GUESTREGS->txf_UPGM_abort)
     {
-        PTT_TXF( "TXF upgm", GUESTREGS->txf_UPGM_abort, GUESTREGS->txf_caborts, 0 );
+        PTT_TXF( "TXF upgm", GUESTREGS->txf_UPGM_abort, GUESTREGS->txf_aborts, 0 );
         itdb = &GUESTREGS->txf_tdb;
     }
 

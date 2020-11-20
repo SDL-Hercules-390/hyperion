@@ -624,7 +624,7 @@ int i, rc = 0;                          /* Array subscript           */
     PTT_TXF( "TXF CPURES", 0, 0, regs->txf_tnd );
     /* EXIT SILENTLY from transactional execution mode */
     regs->txf_tnd = 0;
-    regs->txf_caborts = 0;
+    regs->txf_aborts = 0;
     regs->txf_contran = false;
     regs->txf_UPGM_abort = false;
 #endif
@@ -712,7 +712,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     PTT_TXF( "TXF ICPURES", 0, 0, regs->txf_tnd );
     /* EXIT SILENTLY from transactional execution mode */
     regs->txf_tnd = 0;
-    regs->txf_caborts = 0;
+    regs->txf_aborts = 0;
     regs->txf_contran = false;
     regs->txf_UPGM_abort = false;
 #endif

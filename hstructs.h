@@ -361,10 +361,9 @@ struct REGS {                           /* Processor registers       */
 
         bool    txf_NTSTG;              /* true == NTSTG instruction */
         bool    txf_contran;            /* true == CONSTRAINED mode  */
-        bool    txf_cfail;              /* true == CONSTRAINED failed*/
         bool    txf_UPGM_abort;         /* true == transaction was
                                            aborted due to TAC_UPGM   */
-        int     txf_caborts;            /* CONSTRAINED retries count */
+        int     txf_aborts;             /* Abort count               */
         BYTE    txf_tnd;                /* Transaction nesting depth.
                                            Use txf_lock to access!   */
 
@@ -665,7 +664,7 @@ struct SYSBLK {
         U32     txf_why_mask;           /* (only when TXF_TR_WHY)    */
         int     txf_tac;                /* (only when TXF_TR_TAC)    */
         int     txf_tnd;                /* (only when TXF_TR_TND)    */
-        int     txf_cfails;             /* (only when TXF_TR_CFAILS) */
+        int     txf_fails;              /* (only when TXF_TR_FAILS)  */
         int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
 
 #define TXF_TR_INSTR    0x80000000      // instructions
@@ -677,34 +676,25 @@ struct SYSBLK {
 #define TXF_TR_TAC      0x00100000      // TAC
 #define TXF_TR_TND      0x00080000      // TND
 #define TXF_TR_CPU      0x00040000      // specific CPU
-#define TXF_TR_CFAILS   0x00020000      // aborted count
+#define TXF_TR_FAILS    0x00020000      // aborted count
 #define TXF_TR_TDB      0x00000800      // tdb
 #define TXF_TR_PAGES    0x00000080      // page information
 #define TXF_TR_LINES    0x00000040      // cache lines too
 
-        /* Transactional-Execution Facility statistics               */
+        TXFSTATS  txf_stats[2];         /* Transactional statistics
+                                           (slot 0 = unconstrained)  */
+#define TXF_STATS( ctr, contran )       \
+                                        \
+atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 
-        U64  txf_ctrans;                /* CONSTRAINED transactions  */
-
-#define TXF_STATS_TAC_SLOTS     (TAC_CACHE_OTH+1)
-#define TXF_STATS_RETRY_SLOTS   (9)
-
-        U64  txf_caborts_by_tac         /* Abort counts by TAC       */
-             [ TXF_STATS_TAC_SLOTS ];   /* Slot 0 = "other" counts;
-                                           tac > TXF_STATS_TAC_SLOTS */
-        U64  txf_caborts_by_tac_misc;   /* Abort counts for TAC_MISC */
-
-        U64  txf_retries                /* Total retries counts      */
-             [ TXF_STATS_RETRY_SLOTS ]; /* (Slot 0 = no retry)       */
-
-        U64  txf_retries_hwm;           /* Retries high watermark    */
+#define TXF_CONSTRAINED( contran ) (contran ? "CONSTRAINED" : "UNconstrained" )
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
-        TOD     cpucreateTOD[ MAX_CPU_ENGS ];  /* CPU creation time */
-        TID     cputid[ MAX_CPU_ENGS ];        /* CPU thread ids    */
-        clockid_t                              /* CPU clock         */
-                cpuclockid[ MAX_CPU_ENGS ];    /* identifiers       */
+        TOD     cpucreateTOD[ MAX_CPU_ENGS ];   /* CPU creation time */
+        TID     cputid[ MAX_CPU_ENGS ];         /* CPU thread ids    */
+        clockid_t                               /* CPU clock         */
+                cpuclockid[ MAX_CPU_ENGS ];     /* identifiers       */
 
         BYTE    ptyp[ MAX_CPU_ENGS ];   /* SCCB ptyp for each engine */
         LOCK    todlock;                /* TOD clock update lock     */

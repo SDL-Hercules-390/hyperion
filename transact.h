@@ -136,6 +136,25 @@ typedef struct TDB  TDB;             // Transaction Dianostic Block
 CASSERT( sizeof( TDB ) == 256, transact_h );
 
 /*-------------------------------------------------------------------*/
+/*                  Transactional Statistics                         */
+/*-------------------------------------------------------------------*/
+struct TXFSTATS
+{
+#define TXF_STATS_TAC_SLOTS     (TAC_CACHE_OTH+1)
+#define TXF_STATS_RETRY_SLOTS   (9)
+
+        U64  txf_trans;                 /* Transactions count        */
+        U64  txf_aborts_by_tac          /* Abort counts by TAC       */
+             [ TXF_STATS_TAC_SLOTS ];   /* Slot 0 = "other" counts;
+                                           tac > TXF_STATS_TAC_SLOTS */
+        U64  txf_aborts_by_tac_misc;    /* Abort counts for TAC_MISC */
+        U64  txf_retries                /* Retries counts            */
+             [ TXF_STATS_RETRY_SLOTS ]; /* (Slot 0 = no retry)       */
+        U64  txf_retries_hwm;           /* Retries high watermark    */
+};
+typedef struct TXFSTATS  TXFSTATS;  // TXF Statisics
+
+/*-------------------------------------------------------------------*/
 /*               TXF tracing macros and functions                    */
 /*-------------------------------------------------------------------*/
 
@@ -168,10 +187,10 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
      ||  ((_regs)->txf_tac == sysblk.txf_tac )                      \
     )
 
-#define TXF_TRACE_CFAILS( _regs )                                   \
+#define TXF_TRACE_FAILS( _regs )                                    \
     (0                                                              \
-     || !(sysblk.txf_tracing & TXF_TR_CFAILS)                       \
-     ||  ((_regs)->txf_caborts >= sysblk.txf_cfails )               \
+     || !(sysblk.txf_tracing & TXF_TR_FAILS)                        \
+     ||  ((_regs)->txf_aborts >= sysblk.txf_fails )                 \
     )
 
 //--------------------------------------------------------------------
@@ -201,7 +220,7 @@ CASSERT( sizeof( TDB ) == 256, transact_h );
          || (1                                                      \
              && TXF_TRACE_WHY( _regs )                              \
              && TXF_TRACE_TAC( _regs )                              \
-             && TXF_TRACE_CFAILS( _regs )                           \
+             && TXF_TRACE_FAILS( _regs )                            \
             )                                                       \
         )                                                           \
     )
@@ -295,10 +314,16 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 #define TXF_WHY_TRAN_SET_ADDRESSING_MODE    0x00000080    // 25
 #define TXF_WHY_TRAN_MISC_INSTR             0x00000040    // 26
 #define TXF_WHY_NESTING                     0x00000020    // 27
-#define TXF_WHY_CAPTURE_FAIL                0x00000010    // 28
+//efine TXF_WHY_XXXXXXXXXX                  0x00000010    // 28
 #define TXF_WHY_IPTE_INSTR                  0x00000008    // 29
 #define TXF_WHY_IDTE_INSTR                  0x00000004    // 30
 #define TXF_WHY_CONSTRAINT_4                0x00000002    // 31
 //efine TXF_WHY_XXXXXXXXXX                  0x00000001    // 32
+
+//  PROGRAMMING NOTE: If you add/remove any of the above codes,
+//  don't forget to update the "txf_why_str" function too!
+
+//  PROGRAMMING NOTE: If you CHANGE any of the above codes,
+//  be sure to update the "txf_cmd_help" #define in cmdtab.h!
 
 #endif // _TRANSACT_H_

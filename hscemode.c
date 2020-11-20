@@ -1180,7 +1180,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
     int  txf_tac      = sysblk.txf_tac;
     int  txf_tnd      = sysblk.txf_tnd;
     int  txf_cpuad    = sysblk.txf_cpuad;
-    int  txf_cfails   = sysblk.txf_cfails;
+    int  txf_fails    = sysblk.txf_fails;
     int  rc           = 0;
     char c;
     bool stats = false;
@@ -1188,7 +1188,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
     UNREFERENCED( cmdline );
 
     // txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
-    //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]
+    //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [FAILS nn] ]
 
     if (argc > 1)  // (define new settings?)
     {
@@ -1217,7 +1217,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
             txf_tac      = 0;
             txf_tnd      = 0;    
             txf_cpuad    = -1;
-            txf_cfails   = 0;
+            txf_fails    = 0;
 
             for (i=1; i < argc; ++i)
             {
@@ -1269,12 +1269,12 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
                     ++i;
                 }
                 else if (1
-                    && str_caseless_eq(    argv[i+0], "CFAILS" )
-                    &&                     argv[i+1]
-                    && (txf_cfails = atoi( argv[i+1] )) > 0
+                    && str_caseless_eq(   argv[i+0], "FAILS" )
+                    &&                    argv[i+1]
+                    && (txf_fails = atoi( argv[i+1] )) > 0
                 )
                 {
-                    txf_tracing |= TXF_TR_CFAILS;
+                    txf_tracing |= TXF_TR_FAILS;
                     ++i;
                 }
                 else
@@ -1303,17 +1303,17 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
                 }
 
                 //------------------------------------------------
-                //   If WHY, TAC or CFAILS specified, set BAD.
+                //   If WHY, TAC or FAILS specified, set BAD.
                 //------------------------------------------------
-                if (txf_tracing & (TXF_TR_WHY | TXF_TR_TAC | TXF_TR_CFAILS))
+                if (txf_tracing & (TXF_TR_WHY | TXF_TR_TAC | TXF_TR_FAILS))
                 {
                     txf_tracing |= TXF_TR_FAILURE;
                 }
 
                 //------------------------------------------------
-                //   If CFAILS specified, set C BAD.
+                //   If FAILS specified, set C BAD.
                 //------------------------------------------------
-                if (txf_tracing & TXF_TR_CFAILS)
+                if (txf_tracing & TXF_TR_FAILS)
                 {
                     txf_tracing |= (TXF_TR_C | TXF_TR_FAILURE);
                 }
@@ -1353,21 +1353,21 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
                 }
 
                 //------------------------------------------------
-                //     Ignore CFAILS unless BAD also specified.
+                //     Ignore FAILS unless BAD also specified.
                 //------------------------------------------------
                 if (!(txf_tracing & TXF_TR_FAILURE))
                 {
-                    txf_tracing &= ~TXF_TR_CFAILS;
-                    txf_cfails = 0;
+                    txf_tracing &= ~TXF_TR_FAILS;
+                    txf_fails = 0;
                 }
 
                 //------------------------------------------------
-                //     Ignore CFAILS unless C also specified.
+                //     Ignore FAILS unless C also specified.
                 //------------------------------------------------
                 if (!(txf_tracing & TXF_TR_C))
                 {
-                    txf_tracing &= ~TXF_TR_CFAILS;
-                    txf_cfails = 0;
+                    txf_tracing &= ~TXF_TR_FAILS;
+                    txf_fails = 0;
                 }
             }
         }
@@ -1379,7 +1379,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
             sysblk.txf_tac      = txf_tac;
             sysblk.txf_tnd      = txf_tnd;
             sysblk.txf_cpuad    = txf_cpuad;
-            sysblk.txf_cfails   = txf_cfails;
+            sysblk.txf_fails    = txf_fails;
         }
     }
 
@@ -1393,7 +1393,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
         char buf[1024] = {0};
 
         // txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [PAGES|LINES]
-        //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]
+        //      [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [FAILS nn] ]
 
         if (txf_tracing)
         {
@@ -1407,7 +1407,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
             if (txf_tac    >  0) MSGBUF( tac, "TAC %d ",              txf_tac      );
             if (txf_tnd    >  0) MSGBUF( tnd, "TND %d ",              txf_tnd      );
             if (txf_cpuad  >= 0) MSGBUF( cpu, "CPU %d ",              txf_cpuad    );
-            if (txf_cfails >  0) MSGBUF( cfl, "CFAILS %d ",           txf_cfails   );
+            if (txf_fails  >  0) MSGBUF( cfl, "FAILS %d ",            txf_fails    );
 
             MSGBUF( buf, "%s%s%s%s%s%s%s%s" "%s%s%s%s%s"
 
@@ -1444,68 +1444,73 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
     }
     else // (stats)
     {
-        if (sysblk.txf_ctrans)
+        int  contran;
+        for (contran=0; contran <= 1; contran++)
         {
-            double total, count;
-            int i;
-
-            // "Total Constrained Transactions =%12"PRIu64
-            WRMSG( HHC17730, "I", sysblk.txf_ctrans );
-            total = sysblk.txf_ctrans;
-
-            // "  Retries for ANY/ALL reason(s):"
-            WRMSG( HHC17731, "I" );
-
-            /* Print buckets up until just BEFORE the last bucket */
-            for (i=0; i < (TXF_STATS_RETRY_SLOTS-1); i++)
+            if (sysblk.txf_stats[ contran ].txf_trans)
             {
-                count = sysblk.txf_retries[ i ];
+                double total, count;
+                int i;
+
+                // "Total %s Transactions =%12"PRIu64
+                WRMSG( HHC17730, "I", TXF_CONSTRAINED( contran ),
+                        sysblk.txf_stats[ contran ].txf_trans );
+                total = sysblk.txf_stats[ contran ].txf_trans;
+
+                // "  Retries for ANY/ALL reason(s):"
+                WRMSG( HHC17731, "I" );
+
+                /* Print buckets up until just BEFORE the last bucket */
+                for (i=0; i < (TXF_STATS_RETRY_SLOTS-1); i++)
+                {
+                    count = sysblk.txf_stats[ contran ].txf_retries[ i ];
+
+                    // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
+                    WRMSG( HHC17732, "I",
+                        i, ' ',
+                        sysblk.txf_stats[ contran ].txf_retries[ i ],
+                        (count/total) * 100.0 );
+                }
+
+                /* Now print the LAST bucket */
+                count = sysblk.txf_stats[ contran ].txf_retries[ i ];
 
                 // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
                 WRMSG( HHC17732, "I",
-                    i, ' ',
-                    sysblk.txf_retries[ i ],
+                    i, '+',
+                    sysblk.txf_stats[ contran ].txf_retries[ i ],
                     (count/total) * 100.0 );
-            }
 
-            /* Now print the LAST bucket */
-            count = sysblk.txf_retries[ i ];
+                // "    MAXIMUM   =%12"PRIu64
+                WRMSG( HHC17733, "I", sysblk.txf_stats[ contran ].txf_retries_hwm );
 
-            // "    %1d%cretries =%12"PRIu64"  (%4.1f%%)"
-            WRMSG( HHC17732, "I",
-                i, '+',
-                sysblk.txf_retries[ i ],
-                (count/total) * 100.0 );
-
-            // "    MAXIMUM   =%12"PRIu64
-            WRMSG( HHC17733, "I", sysblk.txf_retries_hwm );
-
-            /* Report how often a transaction was aborted by TAC */
-            for (i = 2; i < TXF_STATS_TAC_SLOTS; i++)
-            {
-                /* (TAC 3 == undefined/unassigned; skip) */
-                if (i == 3)
+                /* Report how often a transaction was aborted by TAC */
+                for (i = 2; i < TXF_STATS_TAC_SLOTS; i++)
                 {
-                    // (sanity check: total for this slot should be zero)
-                    ASSERT( 0 == sysblk.txf_caborts_by_tac[ i ] );
-                    continue; // (skip TAC slot 3 == unassigned)
+                    /* (TAC 3 == undefined/unassigned; skip) */
+                    if (i == 3)
+                    {
+                        // (sanity check: total for this slot should be zero)
+                        ASSERT( 0 == sysblk.txf_stats[ contran ].txf_aborts_by_tac[ i ] );
+                        continue; // (skip TAC slot 3 == unassigned)
+                    }
+
+                    // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
+                    count =               sysblk.txf_stats[ contran ].txf_aborts_by_tac[ i ];
+                    WRMSG( HHC17734, "I", sysblk.txf_stats[ contran ].txf_aborts_by_tac[ i ],
+                        (count/total) * 100.0, i, tac2long( i ) );
                 }
 
                 // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
-                count = sysblk.txf_caborts_by_tac[ i ];
-                WRMSG( HHC17734, "I", sysblk.txf_caborts_by_tac[ i ],
-                    (count/total) * 100.0, i, tac2long( i ) );
+                count =               sysblk.txf_stats[ contran ].txf_aborts_by_tac_misc;
+                WRMSG( HHC17734, "I", sysblk.txf_stats[ contran ].txf_aborts_by_tac_misc,
+                    (count/total) * 100.0, TAC_MISC, tac2long( TAC_MISC ) );
+
+                // "  %12"PRIu64"  (%4.1f%%)  Retries due to other TAC"
+                count =               sysblk.txf_stats[ contran ].txf_aborts_by_tac[ 0 ];
+                WRMSG( HHC17735, "I", sysblk.txf_stats[ contran ].txf_aborts_by_tac[ 0 ],
+                    (count/total) * 100.0 );
             }
-
-            // "  %12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
-            count = sysblk.txf_caborts_by_tac_misc;
-            WRMSG( HHC17734, "I", sysblk.txf_caborts_by_tac_misc,
-                (count/total) * 100.0, TAC_MISC, tac2long( TAC_MISC ) );
-
-            // "  %12"PRIu64"  (%4.1f%%)  Retries due to other TAC"
-            count = sysblk.txf_caborts_by_tac[ 0 ];
-            WRMSG( HHC17735, "I", sysblk.txf_caborts_by_tac[ 0 ],
-                (count/total) * 100.0 );
         }
     }
 

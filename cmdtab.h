@@ -1632,7 +1632,7 @@
   "Format:\n"                                                                   \
   "\n"                                                                          \
   "   txf  [0 | STATS | [INSTR] [U] [C] [GOOD] [BAD] [TDB] [Pages|Lines]\n"     \
-  "        [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [CFAILS nn] ]\n"         \
+  "        [WHY hhhhhhhh] [TAC nnn] [TND nn] [CPU nnn] [FAILS nn] ]\n"          \
   "\n"                                                                          \
   "Where:\n"                                                                    \
   "\n"                                                                          \
@@ -1661,7 +1661,7 @@
   "   TAC     Trace only when abort code = nnn.\n"                              \
   "   TND     Trace only when nesting depth >= nn.\n"                           \
   "   CPU     Trace only when transaction executes on CPU nnn.\n"               \
-  "   CFAILS  Trace only when constrained cabort count >= nn.\n"                \
+  "   FAILS   Trace only when abort count >= nn.\n"                             \
   "\n"                                                                          \
   "Enter 'txf' by itself to display the current options. Use 'txf 0'\n"         \
   "to disable all txf tracing. If 'INSTR' is not specified then only\n"         \
