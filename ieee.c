@@ -994,6 +994,7 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
 
     RRE(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     //logmsg("THDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -1020,6 +1021,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
 
     RRE(inst, regs, r1, r2);
 
+    CONTRAN_INSTR_CHECK( regs );
     //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -1049,6 +1051,7 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
 
     RRF_M(inst, regs, r1, r2, m3);
 
+    CONTRAN_INSTR_CHECK( regs );
     //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -1073,6 +1076,7 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
 
     RRF_M(inst, regs, r1, r2, m3);
 
+    CONTRAN_INSTR_CHECK( regs );
     //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
