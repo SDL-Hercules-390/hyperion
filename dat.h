@@ -127,23 +127,21 @@ static inline  BYTE* ARCH_DEP( maddr_l )
               table fetches follow the non-transactional rules."
         */
         if (0
+            || !regs
+            || !regs->txf_tnd
             || arn == USE_INST_SPACE    /* Instruction fetching */
             || arn == USE_REAL_ADDR     /* Address translation  */
         )
-            return maddr;               /* return ACTUAL address */
-
-        /* Quick exit if no CPUs executing any transactions */
-        if (!sysblk.txf_transcpus)
             return maddr;
 
         /* Quick exit if NTSTG call */
-        if (regs && regs->txf_NTSTG)
+        if (regs->txf_NTSTG)
         {
             regs->txf_NTSTG = false;
             return maddr;
         }
 
-        /* Translate to alternate TXF address if appropriate */
+        /* Translate to alternate TXF address */
         maddr = TXF_MADDRL( addr, len, arn, regs, acctype, maddr );
     }
 #endif

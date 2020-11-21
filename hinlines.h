@@ -485,21 +485,6 @@ static inline void atomic_update64( volatile S64* p, S64 count )
         atomic_update64( &sysblk.instcount, (_count) )
 
 /*-------------------------------------------------------------------*/
-/*  Atomically update SYSBLK count of CPUs executing a transaction   */
-/*-------------------------------------------------------------------*/
-
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-#define UPDATE_SYSBLK_TRANSCPUS( _count )                           \
-  do                                                                \
-  {                                                                 \
-    atomic_update32( &sysblk.txf_transcpus, (_count) );             \
-    if (sysblk.txf_transcpus < 0)                                   \
-      CRASH();                                                      \
-  }                                                                 \
-  while (0)
-#endif
-
-/*-------------------------------------------------------------------*/
 /* Stop ALL CPUs                                      (INTLOCK held) */
 /*-------------------------------------------------------------------*/
 static inline void stop_all_cpus_intlock_held()

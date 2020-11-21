@@ -983,30 +983,6 @@ char    msgbuf[133];
 
 
 /*-------------------------------------------------------------------*/
-/* CHANNEL TXF SUPPORT MACROS                                        */
-/*-------------------------------------------------------------------*/
-#undef TXF_FETCHREF
-#undef TXF_STOREREF
-
-#if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-
-  #define TXF_FETCHREF( _maddr, _len )
-  #define TXF_STOREREF( _maddr, _len )
-
-#else
-
-  static void chann_txf_ref( int acc, BYTE* maddr, size_t len, const char* location );
-
-  #define TXF_FETCHREF( _maddr, _len ) \
-    chann_txf_ref( ACC_READ, (_maddr), (_len), PTTLOC )
-
-  #define TXF_STOREREF( _maddr, _len ) \
-    chann_txf_ref( ACC_WRITE, (_maddr), (_len), PTTLOC )
-
-#endif
-
-
-/*-------------------------------------------------------------------*/
 /* STORE CHANNEL ID                                                  */
 /*-------------------------------------------------------------------*/
 int
@@ -1071,7 +1047,6 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
 
     /* Store the channel id word at PSA+X'A8' */
     psa = (PSA_3XX*)(regs->mainstor + regs->PX);
-    TXF_STOREREF( ((BYTE*)(psa)) + offsetof( PSA_3XX, chanid ), 4 );
     STORE_FW(psa->chanid, chanid);
 
     /* Exit with condition code 0 indicating channel id stored */
@@ -2918,7 +2893,6 @@ BYTE   *ccw;                            /* CCW pointer               */
 
     /* Point to the CCW in main storage */
     ccw = dev->mainstor + ccwaddr;
-    TXF_FETCHREF( ccw, 8 );
 
     /* Extract CCW opcode, flags, byte count, and data address */
     if (ccwfmt == 0)
@@ -2995,7 +2969,6 @@ BYTE    storkey;                        /* Storage key               */
     if (idawfmt == 2)
     {
         /* Fetch format-2 IDAW */
-        TXF_FETCHREF( dev->mainstor + idawaddr, 8 );
         FETCH_DW(idaw2, dev->mainstor + idawaddr);
 
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -3013,7 +2986,6 @@ BYTE    storkey;                        /* Storage key               */
     else
     {
         /* Fetch format-1 IDAW */
-        TXF_FETCHREF( dev->mainstor + idawaddr, 4 );
         FETCH_FW(idaw1, dev->mainstor + idawaddr);
 
         /* Channel program check if bit 0 of
@@ -3128,7 +3100,6 @@ U16     maxlen;                         /* Maximum allowable length  */
 
     /* Fetch MIDAW from main storage (MIDAW is quadword
        aligned and so cannot cross a page boundary) */
-    TXF_FETCHREF( dev->mainstor + midawadr, 8+8 );
     FETCH_DW(mword1, dev->mainstor + midawadr);
     FETCH_DW(mword2, dev->mainstor + midawadr + 8);
 
@@ -3409,7 +3380,6 @@ do {                                                                   \
                     if (readbackwards)
                     {
                         midawdat = (midawdat - midawlen) + 1;
-                        TXF_STOREREF( dev->mainstor + midawdat, midawlen );
                         memcpy_backwards (dev->mainstor + midawdat,
                                           iobufptr,
                                           midawlen);
@@ -3421,7 +3391,6 @@ do {                                                                   \
                     {
                         if (to_iobuf)
                         {
-                            TXF_FETCHREF( dev->mainstor + midawdat, midawlen );
                             memcpy (iobuf,
                                     dev->mainstor + midawdat,
                                     midawlen);
@@ -3431,7 +3400,6 @@ do {                                                                   \
                         }
                         else
                         {
-                            TXF_STOREREF( dev->mainstor + midawdat, midawlen );
                             memcpy (dev->mainstor + midawdat,
                                     iobuf,
                                     midawlen);
@@ -3617,7 +3585,6 @@ do {                                                                   \
                 if (readbackwards)
                 {
                     idadata = (idadata - idalen) + 1;
-                    TXF_STOREREF( dev->mainstor + idadata, idalen );
                     memcpy_backwards( dev->mainstor + idadata,
                                       iobuf + dev->curblkrem + idacount - idalen,
                                       idalen );
@@ -3629,12 +3596,10 @@ do {                                                                   \
                 {
                     if (to_iobuf)
                     {
-                        TXF_FETCHREF( dev->mainstor + idadata, idalen );
                         memcpy( iobuf, dev->mainstor + idadata, idalen );
                     }
                     else
                     {
-                        TXF_STOREREF( dev->mainstor + idadata, idalen );
                         memcpy( dev->mainstor + idadata, iobuf, idalen );
                     }
 
@@ -3788,7 +3753,6 @@ do {                                                                   \
                 else
                 {
                     /* read backward  - use END of buffer */
-                    TXF_STOREREF( dev->mainstor + addr, count );
                     memcpy_backwards( dev->mainstor + addr,
                         iobufptr, count );
                 }
@@ -3805,7 +3769,6 @@ do {                                                                   \
             /* Handle Write and Control transfer to I/O buffer */
             else if (to_iobuf)
             {
-                TXF_FETCHREF( dev->mainstor + addr, count );
                 memcpy( iobuf, dev->mainstor + addr, count );
 
                 prefetch->pos += count;
@@ -3818,7 +3781,6 @@ do {                                                                   \
             /* Handle Read transfer from I/O buffer */
             else
             {
-                TXF_STOREREF( dev->mainstor + addr, count );
                 memcpy( dev->mainstor + addr, iobuf, count );
             }
 
@@ -4389,10 +4351,8 @@ resume_suspend:
         {
             STORAGE_KEY(mbaddr, dev) |= (STORKEY_REF | STORKEY_CHANGE);
             mbk = (MBK*)&dev->mainstor[mbaddr];
-            TXF_FETCHREF( ((BYTE*)(mbk)) + offsetof( MBK, srcount ), 2 );
             FETCH_HW(mbcount,mbk->srcount);
             mbcount++;
-            TXF_STOREREF( ((BYTE*)(mbk)) + offsetof( MBK, srcount ), 2 );
             STORE_HW(mbk->srcount,mbcount);
         } else {
             /* Generate subchannel logout indicating program
@@ -6420,28 +6380,5 @@ DLL_EXPORT void Update_IC_IOPENDING_QLocked()
         ON_IC_IOPENDING;
     }
 }
-
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-/*-------------------------------------------------------------------*/
-/* Channel TXF Storage Reference                                     */
-/*-------------------------------------------------------------------*/
-static void chann_txf_ref( int acc, BYTE* maddr, size_t len, const char* location )
-{
-    if (FACILITY_ENABLED_DEV( 073_TRANSACT_EXEC ))
-    {
-       /* Obtaining INTLOCK before calling TXF_MADDRL prevents the
-           channel from accessing main storage during SYNCHRONIZE_CPUS
-           during e.g. a TXF commit (TEND instruction).
-        */
-        OBTAIN_INTLOCK( NULL );
-        {
-            while (sysblk.syncing)
-                hthread_wait_condition( &sysblk.sync_done_cond, &sysblk.intlock, location );
-            TXF_MADDRL( 0, len, 0, NULL, acc, maddr );
-        }
-        RELEASE_INTLOCK( NULL );
-    }
-}
-#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 #endif /*!defined(_GEN_ARCH)*/
