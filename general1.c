@@ -3849,7 +3849,10 @@ bool    wfc;                            /* Well-Formedness-Checking  */
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
@@ -4003,7 +4006,10 @@ bool    wfc;                            /* WellFormednessChecking    */
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )

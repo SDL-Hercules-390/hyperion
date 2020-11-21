@@ -1074,7 +1074,10 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 
     S( inst, regs, b2, effective_addr2 );
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
 #if defined( _FEATURE_SIE )
 
@@ -1133,7 +1136,10 @@ ETOD    ETOD;                           /* Extended clock work area  */
 
     S(inst, regs, b2, effective_addr2);
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
 #if defined( _FEATURE_SIE )
     if(SIE_STATE_BIT_ON(regs, IC2, STCK))
@@ -2186,7 +2192,10 @@ DEF_INST(convert_utf8_to_utf32)
 
   RRF_M(inst, regs, r1, r2, m3);
 
-  TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2429,7 +2438,10 @@ DEF_INST(convert_utf16_to_utf32)
 
   RRF_M(inst, regs, r1, r2, m3);
 
-  TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2539,7 +2551,10 @@ DEF_INST(convert_utf32_to_utf8)
 
   RRE(inst, regs, r1, r2);
 
-  TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */
@@ -2678,7 +2693,10 @@ DEF_INST(convert_utf32_to_utf16)
 
   RRE(inst, regs, r1, r2);
 
-  TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
   ODD2_CHECK(r1, r2, regs);
 
   /* Get paramaters */

@@ -3997,7 +3997,11 @@ DEF_INST(dyn_compute_intermediate_message_digest)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4101,7 +4105,11 @@ DEF_INST(dyn_compute_last_message_digest)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4193,7 +4201,11 @@ DEF_INST(dyn_cipher_message)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4329,7 +4341,11 @@ DEF_INST(dyn_compute_message_authentication_code)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4429,7 +4445,11 @@ DEF_INST(dyn_cipher_message_with_chaining)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4564,7 +4584,11 @@ DEF_INST(dyn_cipher_message_with_counter)
   int r3;
 
   RRF_M(inst, regs, r1, r2, r3);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4656,7 +4680,11 @@ DEF_INST(dyn_cipher_message_with_cipher_feedback)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4749,7 +4777,11 @@ DEF_INST(dyn_cipher_message_with_output_feedback)
   int r2;
 
   RRE(inst, regs, r1, r2);
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   msa = get_msa(regs);
@@ -4834,7 +4866,11 @@ DEF_INST(dyn_perform_cryptographic_computation)
 
   UNREFERENCED(inst);              /* This operation has no operands */
   INST_UPDATE_PSW(regs, 4, 4);        /* All operands implied        */
-  TRAN_INSTR_CHECK( regs );
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
   /* The following is the same as doing a FACILITY_CHECK */
   if(msa < 4)

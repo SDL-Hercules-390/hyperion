@@ -1922,13 +1922,12 @@ VADR    effective_addr2;                /* Effective address         */
 
     RIL_A(inst, regs, m1, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
-
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    /* This instruction is restricted in transaction execution
-       mode when the m1 field is either 6 or 7. */
-    if (m1 == 6 || m1 == 7)
-        TRAN_INSTR_CHECK( regs );
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_2, regs ))
+    {
+        if (m1 == 6 || m1 == 7)
+            TRAN_INSTR_CHECK( regs );
+    }
 #endif
 
     /* On Hercules the Prefetch Data instruction acts as a no-op */

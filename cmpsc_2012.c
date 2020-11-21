@@ -1198,7 +1198,10 @@ DEF_INST( cmpsc_2012 )
     int  r1, r2;                        /* Operand register numbers          */
     RRE( inst, regs, r1, r2 );          /* Decode the instruction...         */
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
     /* Build our internal Compression Call parameters block */
 

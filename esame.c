@@ -1694,7 +1694,10 @@ QWORD   currpsw;                        /* Work area for PSW         */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
 #if defined( _FEATURE_ZSIE )
     if (SIE_STATE_BIT_ON( regs, IC1, LPSW ))
@@ -2191,16 +2194,9 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     RSY(inst, regs, r1, m3, b2, effective_addr2);
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    /* This instruction is restricted in unconstrained transaction
-       mode when the m3 field is zero and the code in r1 is either
-       6 or 7, as well as in the CONSTRAINED transaction mode when
-       the m3 field is zero.
-    */
-    if (!m3)
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_2, regs ))
     {
-        CONTRAN_INSTR_CHECK( regs );
-
-        if (r1 == 6 || r1 == 7)
+        if (m3 == 0 && (r1 == 6 || r1 == 7))
             TRAN_INSTR_CHECK( regs );
     }
 #endif
@@ -2254,7 +2250,10 @@ U64     gr0, gr1;                       /* Result register workareas */
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
 
-    TRAN_INSTR_CHECK( regs );
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
+        TRAN_INSTR_CHECK( regs );
+#endif
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATE_BIT_ON(regs, IC3, SPT))
