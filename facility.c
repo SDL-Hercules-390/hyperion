@@ -891,6 +891,9 @@ FT2( NULL,      hercsvs,   HERC_SVS,                   "Hercules SVS Set Vector 
 FT2( NULL,      NULL,      HERC_VIRTUAL_MACHINE,       "Hercules Emulate Virtual Machine Support" )
 FT2( modtcp,    herctcp,   HERC_TCPIP_EXTENSION,       "Hercules Access Host TCP/IP Stack Through X'75' Instruction" )
 FT2( modtcp,    NULL,      HERC_TCPIP_PROB_STATE,      "Hercules Enable X'75' As Problem State Instruction" )
+FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_1,        "Hercules TXF restrict 1CIPHER/CONVERT/et al. instructions" )
+FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_2,        "Hercules TXF restrict PFDRL/STCMH instructions" )
+FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_3,        "Hercules TXF restrict EXTRACT/CLOCK instructions" )
 };
 
 /*-------------------------------------------------------------------*/
@@ -1614,6 +1617,15 @@ FAC_MOD_OK_FUNC           ( modtrans )
             if (!FACILITY_ENABLED_ARCH( 049_EXECUTION_HINT, archnum ))
                 return HHC00890E(  STFL_049_EXECUTION_HINT );
         }
+        else if (0
+            || bitno == STFL_HERC_TXF_RESTRICT_1
+            || bitno == STFL_HERC_TXF_RESTRICT_2
+            || bitno == STFL_HERC_TXF_RESTRICT_3
+        )
+        {
+            if (!FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
+                return HHC00890E(  STFL_073_TRANSACT_EXEC );
+        }
     }
     else // disabling
     {
@@ -1626,6 +1638,15 @@ FAC_MOD_OK_FUNC           ( modtrans )
         {
             if (FACILITY_ENABLED_ARCH( 050_CONSTR_TRANSACT, archnum ))
                 return HHC00890E( STFL_050_CONSTR_TRANSACT );
+
+            if (FACILITY_ENABLED_ARCH( HERC_TXF_RESTRICT_1, archnum ))
+                return HHC00890E( STFL_HERC_TXF_RESTRICT_1 );
+
+            if (FACILITY_ENABLED_ARCH( HERC_TXF_RESTRICT_2, archnum ))
+                return HHC00890E( STFL_HERC_TXF_RESTRICT_2 );
+
+            if (FACILITY_ENABLED_ARCH( HERC_TXF_RESTRICT_3, archnum ))
+                return HHC00890E( STFL_HERC_TXF_RESTRICT_3 );
         }
     }
 
