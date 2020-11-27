@@ -14,10 +14,9 @@ Hercules: What's new
 <!-- ---------------------------------------------------------------------------- -->
 
 <h2>What's new in release 4.3
-&nbsp; &nbsp; <small><i>(in development)</i></small>
 </h2>
 
-<p>Release date: <i><b>(in development)</b></i>
+<p>Release date: 28 November 2020
 
 <br>Official Source and Binaries:
 <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.3">Release_4.3</a>
@@ -32,10 +31,14 @@ Hercules: What's new
 <li> Fix driver code incompatibility with other Herculeses (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/251">#251</a>)
 <li> Fix issue where thread names are incorrectly set (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/254">#254</a>)
 <li> Fix missing timestamp in daemon mode; add DATESTAMP option (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/259">#259</a>), (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/260">#260</a>)
+<li> Fix CNSLPORT to honor new updated setting (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/318">#318</a>)
 <li> <a href="hercrnot.html#4.3">Watchdog monitoring</a> reinstated.
+<li> New <a href="https://sdl-hercules-390.github.io/html/hercconf.html#PANOPT">PANOPT</a> option MSGCOLOR=DARK/LIGHT
 <li> Fix hang/deadlock in device-attention function (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/277">#277</a>)
 <li> Improved CTCE driver functionality (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/269">#269</a>), (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/273">#273</a>)
 <li> TCPNJE device support. Refer to the <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPNJE.md">README.TCPNJE</a> document for details (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/280">#280</a>)
+<li> TCPNJE Connectivity And Stability Enhancements
+<li> Fix RARP (Reverse ARP) Ethernet frame type constant
 <li> Fix Linux panel high CPU usage (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/289">#289</a>)
 <li> Fix z/VM guest architecture switching (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/295">#295</a>)
 <li> Fix for IPL command without a LOADPARM (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/296">#296</a>)
@@ -43,8 +46,13 @@ Hercules: What's new
 <li> Fix crash if incomplete network device group defined.
 <li> Fix ooRexx v5.0.0. load failure on Apple Mac (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/301">#301</a>)
 <li> Fix crash in CCKD dasd termination logic (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/303">#303</a>)
-<li> Preliminary (Experimental) Transactional-Execution Facility (TXF) support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/263">#263</a>)
-<li> Various other internal fixes and improvements.
+<li> Fix KIMD instruction
+<li> Fix VM FixPage assist
+<li> Fix channel prefetch buffer overrun crash (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/319">#319</a>)
+<li> Fix instruction stepping invalidation/refetch bug (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/321">#321</a>)
+<li> New z15 Secure Boot (Secure IPL) Diagnose 0x308 support
+<li> Preliminary <i>(Experimental)</i> Transactional-Execution Facility (TXF) support (<a href="https://github.com/SDL-Hercules-390/hyperion/issues/263">#263</a>)
+<li> MANY other internal fixes and improvements
 
 </ul>
 

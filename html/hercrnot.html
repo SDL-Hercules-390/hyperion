@@ -16,11 +16,34 @@ Hercules: Release Notes
 <hr noshade>
 
 <h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.3">SDL Hyperion 4.3</a>
-&nbsp;&nbsp; <i>(in development)</i>
 </h2>
 
 <p>
 <dl>
+
+
+  <dt>Improved CTCE driver functionality.
+  <dd>
+  <p>
+    The CTCE device driver has been enhanced and improved, including changes to
+    the syntax of the device statement parameters, Please refer to the
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.NETWORKING.md">Hercules
+    Networking README</a> as well as to the actual
+    <a href="https://sdl-hercules-390.github.io/html/hercconf.html#CTCE">Hercules
+    Configuration File</a> web page itself for more information.
+  </p>
+
+
+  <dt>New "MSGCOLOR=DARK/LIGHT" panel option
+  <dd>
+  <p>
+    A new <code>MSGCOLOR</code> option has been added to the existing
+    <a href="https://sdl-hercules-390.github.io/html/hercconf.html#PANOPT"><code>PANOPT</code></a>
+    configuration file statement
+    that will colorize non-informational Error, Warning and Debug panel messages to make them more
+    noticable to the user (less likely to be missed). Users are <i>strongly encouraged</i> to enable
+    this new option in their configuration files.
+  </p>
 
 
   <dt>Watchdog monitoring has been reinstated.
@@ -51,39 +74,36 @@ Hercules: Release Notes
   </p>
 
 
-  <dt>Improved CTCE driver functionality.
-  <dd>
-  <p>
-    The CTCE device driver has been enhanced and improved, including changes to
-    the syntax of the device statement parameters, Please refer to the
-    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.NETWORKING.md">Hercules
-    Networking README</a> as well as to the actual
-    <a href="https://sdl-hercules-390.github.io/html/hercconf.html#CTCE">Hercules
-    Configuration File</a> web page itself for more information.
-  </p>
-
-
-  <dt>Preliminary Transactional-Execution Facility (TXF) support
+  <dt>EXPERIMENTAL Transactional-Execution Facility (TXF) support
   <dd>
   <p>
     This release of SDL Hyperion includes preliminary <i><u>experimental</u></i>
     support for the z/Architecture "Transactional-Execution Facility" (bits 73
     and 50).
   </p><p>
-    This support is known to be <i>incomplete</i> and not fully functional yet (nor
-    has it been thoroughly tested either) so it is still considered at this stage
-    to be <i><u>highly experimental</u></i>. It does however work well enough
-    to allow certain guest operating systems requiring it (such as z/OS 2.4 for example)
-    to successfully IPL.
+    This support is known to be incomplete and not 100% functional yet (it still
+    has some problems, especially under SIE), so it is still considered to be
+    <i><u>highly experimental</u></i> at this stage. It seems to work well enough
+    to allow certain guest operating systems requiring it (such
+    as z/OS 2.4 for example) to successfully IPL and run though.
   </p><p>
-    Because it is still incomplete and in the experimental stage however, it is
-    not enabled by default, so those users wishing to take advantage of it must
-    first manually enable it in their Hercules configuration file via the
-    <a href="https://sdl-hercules-390.github.io/html/hercconf.html#FACILITY"><code>FACILITY</code></a>
-    configuration file statement:
+    Because it is still considered to be experimental and under active development
+    however, it is not enabled by default. Therefore users wishing to take advantage
+    of it must first manually enable it in their Hercules configuration file via the
+    following two <a href="https://sdl-hercules-390.github.io/html/hercconf.html#FACILITY"><code>FACILITY</code></a>
+    configuration file statements:
   </p><p><pre>
     FACILITY  ENABLE  073_TRANSACT_EXEC
     FACILITY  ENABLE  050_CONSTR_TRANSACT</pre>
+  </p><p>
+    Only when the feature has been fully completed and thoroughly test however,
+    will it then be enabled by default. For the time being however, since it is
+    still under active development and considered to be experimental, it must be
+    manually enabled as described above.
+  </p><p>
+    Should you decide to use, Bug Reports would be <i>greatly appreciated</i>
+    by creating a NEW <a href="https://github.com/SDL-Hercules-390/hyperion/issues">GitHub Issue</a>
+    describing the problem along with all supporting documentation. Thank you!
   </p>
 
 
