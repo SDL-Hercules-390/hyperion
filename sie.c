@@ -1058,7 +1058,7 @@ sie_fetch_instruction:
 
                 PROCESS_TRACE( GUESTREGS, ip, sie_fetch_instruction );
                 EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
-                GUESTREGS->instcount++;
+                regs->instcount++;
                 UPDATE_SYSBLK_INSTCOUNT( 1 );
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
@@ -1067,7 +1067,7 @@ sie_fetch_instruction:
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                GUESTREGS->instcount +=  (i * 2);
+                regs->instcount +=  (i * 2);
                 UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
@@ -1085,7 +1085,7 @@ txf_facility_loop:
 
                 PROCESS_TRACE( GUESTREGS, ip, sie_fetch_instruction );
                 EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
-                GUESTREGS->instcount++;
+                regs->instcount++;
                 UPDATE_SYSBLK_INSTCOUNT( 1 );
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
@@ -1101,7 +1101,7 @@ txf_facility_loop:
 
                     UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                GUESTREGS->instcount +=  (i * 2);
+                regs->instcount +=  (i * 2);
                 UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
@@ -1112,7 +1112,7 @@ txf_slower_loop:
 
                 PROCESS_TRACE( GUESTREGS, ip, sie_fetch_instruction );
                 TXF_EXECUTE_INSTRUCTION( current_opcode_table, ip, GUESTREGS );
-                GUESTREGS->instcount++;
+                regs->instcount++;
                 UPDATE_SYSBLK_INSTCOUNT( 1 );
                 SIE_PERFMON( SIE_PERF_EXEC_U );
 
@@ -1128,7 +1128,7 @@ txf_slower_loop:
 
                     TXF_UNROLLED_EXECUTE( current_opcode_table, GUESTREGS );
                 }
-                GUESTREGS->instcount +=  (i * 2);
+                regs->instcount +=  (i * 2);
                 UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
                 /* Perform automatic instruction tracing if it's enabled */
