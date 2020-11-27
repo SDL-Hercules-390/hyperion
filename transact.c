@@ -14,6 +14,25 @@
 /* description of the "Transactional-Execution Facility".            */
 /*-------------------------------------------------------------------*/
 
+/*-------------------------------------------------------------------*/
+/*                  Credit where credit is due                       */
+/*-------------------------------------------------------------------*/
+/* The overall design of Hercules's Transactional-Execution Facility */
+/* was originally designed by Bob Wood so he gets most of the credit */
+/* for what you see. Fish only gets credit for minor corrections and */
+/* enhancements to Bob's design. I just wanted to make that clear.   */
+/* It was only Fish which then -- along with LOTS of help from MANY  */
+/* other fellow Hercules developers -- that made various minor fixes */
+/* and enhancements to Bob's original design to reach the point of   */
+/* what you see here. But it is Bob Wood that is the TRUE HERCULEAN  */
+/* that should get the bulk of the credit for Hercules's overall TXF */
+/* (Transactional Execution Facility) implementation. THANKS BOB!    */
+/* And a special THANK YOU to Peter J. and Jürgen W. too for all of  */
+/* the MANY long hours each of you put in testing and bug hunting!   */
+/* Thank you all! You're the greatest! The Hercules project is truly */
+/* indebted to each and every one of you! Thank you! :`)             */
+/*-------------------------------------------------------------------*/
+
 #include "hstdinc.h"
 
 #define _TRANSACT_C_
@@ -266,6 +285,8 @@ int         txf_tnd, txf_tac, slot;
         }
         RELEASE_TXFLOCK( regs );
 
+        TXF_TRACE_INIT( regs );
+
         /* Still in transaction-execution mode? */
         if (txf_tnd)
         {
@@ -288,7 +309,7 @@ int         txf_tnd, txf_tac, slot;
             {
                 // "TXF: %s%02X: %sSuccessful %s Nested TEND for TND %d => %d"
                 WRMSG( HHC17700, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-                    regs->txf_contran ? "Cons" : "Uncons", txf_tnd + 1, txf_tnd );
+                    TXF_CONSTRAINED( regs->txf_contran ), txf_tnd + 1, txf_tnd );
             }
 
             /* If we're now at or below the highest nesting level
@@ -426,7 +447,7 @@ int         txf_tnd, txf_tac, slot;
         {
             // "TXF: %s%02X: %sSuccessful Outermost %s TEND"
             WRMSG( HHC17701, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
-                txf_contran ? "Cons" : "Uncons" );
+                TXF_CONSTRAINED( txf_contran ));
         }
 
         /* Commit all of our transactional changes */
@@ -724,6 +745,8 @@ TPAGEMAP   *pmap;
     /* set cc=0 at transaction start */
     regs->psw.cc = TXF_CC_SUCCESS;
 
+    TXF_TRACE_INIT( regs );
+
     /* first/outermost transaction? */
     if (regs->txf_tnd == 1)
     {
@@ -922,7 +945,7 @@ TPAGEMAP   *pmap;
     }
 
     /*--------------------------------------------------------------*/
-    /* Report failed CONSTRAINED transaction retries                */
+    /*           Report failed transaction retries                  */
     /*--------------------------------------------------------------*/
     if (1
         && MLVL( VERBOSE )
@@ -971,7 +994,6 @@ static const int tac2cc[20] =
     TXF_CC_TRANSIENT        //  19  TAC_GUARDED
 };
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
-
 
 /*-------------------------------------------------------------------*/
 /*                      abort_transaction                            */
@@ -1036,20 +1058,7 @@ int        retry;           /* Actual retry code                     */
     if (!regs->txf_tac)
         regs->txf_tac = txf_tac;
 
-    /* Identify who called us (if appropriate) */
-    if (1
-        && TXF_TRACING()            // (debug tracing enabled?)
-        && MLVL( VERBOSE )          // (verbose debug messages?)
-                                    // (non-specific tracing or
-                                    // tracing matches specifics...)
-        && TXF_TRACE_CPU( regs )
-        && TXF_TRACE_TND( regs )
-        && TXF_TRACE_WHY( regs )
-        && TXF_TRACE_TAC( regs )
-        && TXF_TRACE_FAILS( regs )
-    )
-        // "TXF: %s%02X: %sabort_transaction called from %s"
-        WRMSG( HHC17722, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ), TRIMLOC( loc ));
+    TXF_TRACE_INIT( regs );
 
     // LOGIC ERROR if CPU not in transactional-execution mode
     if (!regs->txf_tnd)
@@ -1144,7 +1153,7 @@ int        retry;           /* Actual retry code                     */
         // "TXF: %s%02X: %sFailed %s %s Transaction for TND %d: %s = %s, why =%s"
         WRMSG( HHC17703, "D", TXF_CPUAD( regs ), TXF_QSIE( regs ),
             txf_tnd > 1 ? "Nested" : "Outermost",
-            txf_contran ? "Cons" : "Uncons", txf_tnd,
+            TXF_CONSTRAINED( txf_contran ), txf_tnd,
             tac2short( txf_tac ), tac2long( txf_tac ), why );
 
         /* If this is a delayed abort, log who detected/requested it */
@@ -2044,7 +2053,6 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
             regs->txf_why |= TXF_WHY_MAX_PAGES;
 
             PTT_TXF( "*TXF mad max", txf_tac, regs->txf_contran, regs->txf_tnd );
-            regs->txf_why |= TXF_WHY_MAX_PAGES;
             ABORT_TRANS( regs, ABORT_RETRY_CC, txf_tac );
             UNREACHABLE_CODE( return maddr );
         }

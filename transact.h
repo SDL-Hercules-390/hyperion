@@ -156,8 +156,29 @@ struct TXFSTATS
 typedef struct TXFSTATS  TXFSTATS;  // TXF Statisics
 
 /*-------------------------------------------------------------------*/
-/*               TXF tracing macros and functions                    */
+/*                   TXF debug tracing                               */
 /*-------------------------------------------------------------------*/
+
+struct TXFTRACE
+{
+    U32  txf_why;
+    int  cpuad;
+    int  txf_tnd;
+    int  txf_tac;
+    int  txf_aborts;
+};
+typedef struct TXFTRACE  TXFTRACE;  // TXF Tracing
+
+#define TXF_TRACE_INIT( _regs )                                     \
+  do                                                                \
+  {                                                                 \
+    (_regs)->txf_trace.txf_why    =           (_regs)->txf_why;     \
+    (_regs)->txf_trace.cpuad      = (int)(S16)(_regs)->cpuad;       \
+    (_regs)->txf_trace.txf_tnd    =           (_regs)->txf_tnd;     \
+    (_regs)->txf_trace.txf_tac    =           (_regs)->txf_tac;     \
+    (_regs)->txf_trace.txf_aborts =           (_regs)->txf_aborts;  \
+  }                                                                 \
+  while (0)
 
 #define TXF_TRACING()   (sysblk.txf_tracing)
 
@@ -167,31 +188,31 @@ typedef struct TXFSTATS  TXFSTATS;  // TXF Statisics
 #define TXF_TRACE_CPU( _regs )                                      \
     (0                                                              \
      || !(sysblk.txf_tracing & TXF_TR_CPU)                          \
-     ||  ((_regs)->cpuad == sysblk.txf_cpuad )                      \
+     ||  ((_regs)->txf_trace.cpuad == sysblk.txf_cpuad )            \
     )
 
 #define TXF_TRACE_TND( _regs )                                      \
     (0                                                              \
      || !(sysblk.txf_tracing & TXF_TR_TND)                          \
-     ||  ((_regs)->txf_tnd >= sysblk.txf_tnd )                      \
+     ||  ((_regs)->txf_trace.txf_tnd >= sysblk.txf_tnd )            \
     )
 
 #define TXF_TRACE_WHY( _regs )                                      \
     (0                                                              \
      || !(sysblk.txf_tracing & TXF_TR_WHY)                          \
-     ||  ((_regs)->txf_why & sysblk.txf_why_mask )                  \
+     ||  ((_regs)->txf_trace.txf_why & sysblk.txf_why_mask )        \
     )
 
 #define TXF_TRACE_TAC( _regs )                                      \
     (0                                                              \
      || !(sysblk.txf_tracing & TXF_TR_TAC)                          \
-     ||  ((_regs)->txf_tac == sysblk.txf_tac )                      \
+     ||  ((_regs)->txf_trace.txf_tac == sysblk.txf_tac )            \
     )
 
 #define TXF_TRACE_FAILS( _regs )                                    \
     (0                                                              \
      || !(sysblk.txf_tracing & TXF_TR_FAILS)                        \
-     ||  ((_regs)->txf_aborts >= sysblk.txf_fails )                 \
+     ||  ((_regs)->txf_trace.txf_aborts >= sysblk.txf_fails )       \
     )
 
 //--------------------------------------------------------------------

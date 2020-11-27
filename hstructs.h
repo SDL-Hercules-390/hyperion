@@ -458,6 +458,8 @@ struct REGS {                           /* Processor registers       */
 
         U16     txf_pifctab[ MAX_TXF_TND ];   /* PIFC control table  */
 
+        TXFTRACE  txf_trace;            /* Saved values for tracing  */
+
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
      /* ------------------------------------------------------------ */
