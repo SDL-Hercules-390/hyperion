@@ -894,6 +894,9 @@ static int ARCH_DEP( run_sie )( REGS* regs )
 
         PTT_SIE( "run_sie setjmp", 0, 0, 0 );
 
+        /* Establish longjmp destination for program check or
+           RETURN_INTCHECK, or SIE_INTERCEPT, or longjmp, etc.
+        */
         if (!(icode = setjmp( GUESTREGS->progjmp )))
         {
             PTT_SIE( "run_sie run...", 0, 0, 0 );
@@ -1153,6 +1156,19 @@ endloop:        ; // (nop to make compiler happy)
                 && !SIE_I_IO              ( GUESTREGS )
                 && !SIE_INTERRUPT_PENDING ( GUESTREGS )
             ));
+        }
+        else
+        {
+            /* Our above instruction execution loop didn't finish due
+               to a longjmp(progjmp) having been done, bringing us to
+               here, thereby causing the instruction counter to not be
+               properly updated. Thus, we must update it here instead.
+           */
+            regs->instcount += MAX_CPU_LOOPS/2;
+            UPDATE_SYSBLK_INSTCOUNT( MAX_CPU_LOOPS/2 );
+
+            /* Perform automatic instruction tracing if it's enabled */
+            do_automatic_tracing();
         }
 
         PTT_SIE( "run_sie !run", icode, 0, 0 );
