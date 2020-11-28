@@ -1052,6 +1052,8 @@ TDB*       tb_tdb   = NULL; /* TBEGIN-specified TDB @ operand-1 addr */
 VADR       txf_atia;        /* Aborted Transaction Instruction Addr. */
 int        retry;           /* Actual retry code                     */
 
+    UNREFERENCED( loc );
+
     PTT_TXF( "*TXF abort", raw_retry, txf_tac, regs->txf_contran );
 
     /* Set the initial Transaction Abort Code */
