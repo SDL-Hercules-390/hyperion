@@ -119,13 +119,14 @@ typedef struct _SCCB_HWL_BK
 /*007*/ BYTE    file;
 
 #define SCCB_HWL_FILE_SCSIBOOT  0x02    /* SCSI Boot Loader          */
+#define SCCB_HWL_FILE_CONFIG    0x03    /* Config                    */
 
 /*008*/ FWORD   resv1[2];
 /*010*/ FWORD   hwl;                    /* Pointer to HWL BK         */
 /*014*/ HWORD   resv2;
 /*016*/ BYTE    asa;                    /* Archmode                  */
 /*017*/ BYTE    resv3;
-/*018*/ DBLWRD  sto;                    /* Segment Table Origin      */
+/*018*/ DBLWRD  asce;                   /* asce                      */
 /*020*/ FWORD   resv4[3];
 /*02C*/ FWORD   size;                   /* Length in 4K pages        */
 }
@@ -141,6 +142,7 @@ struct name2file
 
 struct name2file  n2flist[]  =
 {
+    { "config", SCCB_HWL_FILE_CONFIG },
     { "scsiboot", SCCB_HWL_FILE_SCSIBOOT },
 
 #if 0
@@ -179,58 +181,10 @@ static char*  hwl_fn [HWL_MAXFILETYPE]; /* Files by type             */
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
-#if defined( FEATURE_HARDWARE_LOADER )
-/*-------------------------------------------------------------------*/
-/* Funtion to load file to main storage                              */
-/*-------------------------------------------------------------------*/
-static void      s390_hwl_loadfile  ( SCCB_HWL_BK* hwl_bk ); // (fwd ref)
-static void ARCH_DEP(hwl_loadfile)(SCCB_HWL_BK *hwl_bk)
+static void ARCH_DEP(base_page_walk)(CREG pto, int fd, U32 size)
 {
-CREG sto;
-U32  size;
-int fd;
+CREG pti;
 
-    fd = open (hwl_fn[hwl_bk->file], O_RDONLY|O_BINARY);
-    if (fd < 0)
-    {
-        // "%s open error: %s"
-        WRMSG( HHC00650, "E", hwl_fn[ hwl_bk->file ], strerror( errno ));
-        return;
-    }
-    else
-        // "Loading %s"
-        WRMSG( HHC00651, "I", hwl_fn[ hwl_bk->file ]);
-
-    FETCH_FW(size,hwl_bk->size);
-
-    /* Segment Table Origin */
-    FETCH_DW(sto,hwl_bk->sto);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-    sto &= ASCE_TO;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    sto &= STD_STO;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-
-    for( ; ; sto += sizeof(sto))
-    {
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-    DBLWRD *ste;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    FWORD *ste;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    CREG pto, pti;
-
-        /* Fetch segment table entry and calculate Page Table Origin */
-        if( sto >= sysblk.mainsize)
-            goto eof;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-        ste = (DBLWRD*)(sysblk.mainstor + sto);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        ste = (FWORD*)(sysblk.mainstor + sto);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        FETCH_W(pto, ste);
-        if( pto & SEGTAB_INVALID )
-            goto eof;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
         pto &= ZSEGTAB_PTO;
 #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -249,7 +203,7 @@ int fd;
 
             /* Fetch Page Table Entry to get page origin */
             if( pto >= sysblk.mainsize)
-                goto eof;
+                return;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             pte = (DBLWRD*)(sysblk.mainstor + pto);
 #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -257,7 +211,7 @@ int fd;
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FETCH_W(pgo, pte);
             if( pgo & PAGETAB_INVALID )
-                goto eof;
+                continue;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
             pgo &= ZPGETAB_PFRA;
 #else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
@@ -266,13 +220,190 @@ int fd;
 
             /* Read page into main storage */
             if( pgo >= sysblk.mainsize)
-                goto eof;
+                return;
             page = sysblk.mainstor + pgo;
             if( !(size--) || !read(fd, page, STORAGE_KEY_PAGESIZE) )
-                goto eof;
+                return;
             STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF|STORKEY_CHANGE);
         }
+}
+
+static void ARCH_DEP(base_segment_walk)(CREG sto, int fd, U32 size)
+{
+   /* we want to find valid page table origins */
+   CREG pto;
+   /* segment tables have 2048 entries max */
+   /* tablelength 0 means 512 entries, 1 means 1024, etc. */
+   unsigned int entries = ((sto & REGTAB_TL) + 1) * 512;
+   /* remove bit definitions to form table origin */
+
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+   sto &= REGTAB_TO;
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+   sto &= STD_STO;
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+    DBLWRD *ste;
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+    FWORD *ste;
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+
+   /* walk trough all table entries to find valid items */
+   for(unsigned int i = 0 ; i < entries  ; i++)
+   {
+      ste = (DBLWRD*)(sysblk.mainstor + sto);
+      FETCH_W(pto, ste);
+      /* is it a valid entry? */
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+      if(!( pto & ZSEGTAB_I ))
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      if(!( pto & SEGTAB_INVALID ))
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      {
+        /* yes, valid entry lets walk this table */
+        ARCH_DEP(base_page_walk)(pto, fd, size);
+      }
+      sto += sizeof(sto);
+   }
+}
+
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+
+static void base_region3_walk(CREG r3to, int fd, U32 size)
+{
+   /* we want to find valid segment table origins */
+   CREG sto;
+   /* region tables have 2048 entries max */
+   /* tablelength 0 means 512 entries, 1 means 1024, etc. */
+   unsigned int entries = ((r3to & REGTAB_TL) + 1) * 512;
+   /* remove bit definitions to form table origin */
+   r3to &= REGTAB_TO;
+
+   /* prepare table entry pointer */
+   DBLWRD *r3te;
+
+   /* walk trough all table entries to find valid items */
+   for(unsigned int i = 0 ; i < entries  ; i++)
+   {
+      r3te = (DBLWRD*)(sysblk.mainstor + r3to);
+      FETCH_DW(sto, r3te);
+      /* is it a valid entry? */
+      if(!( sto & REGTAB_I ))
+      {
+        /* yes, valid entry lets walk this table */
+        ARCH_DEP(base_segment_walk)(sto, fd, size);
+      }
+      r3to += sizeof(r3to);
+   }
+}
+
+static void base_region2_walk(CREG r2to, int fd, U32 size)
+{
+   /* we want to find valid region third table origins */
+   CREG r3to;
+   /* region tables have 2048 entries max */
+   /* tablelength 0 means 512 entries, 1 means 1024, etc. */
+   unsigned int entries = ((r2to & REGTAB_TL) + 1) * 512;
+   /* remove bit definitions to form table origin */
+   r2to &= REGTAB_TO;
+
+   /* prepare table entry pointer */
+   DBLWRD *r2te;
+
+   /* walk trough all table entries to find valid items */
+   for(unsigned int i = 0 ; i < entries  ; i++)
+   {
+      r2te = (DBLWRD*)(sysblk.mainstor + r2to);
+      FETCH_DW(r3to, r2te);
+      /* is it a valid entry? */
+      if(!( r3to & REGTAB_I ))
+      {
+        /* yes, valid entry lets walk this table */
+        base_region3_walk(r3to, fd, size);
+      }
+      r2to += sizeof(r2to);
+   }
+}
+
+static void base_region1_walk(CREG r1to, int fd, U32 size)
+{
+   /* we want to find valid region second table origins */
+   CREG r2to;
+   /* region tables have 2048 entries max */
+   /* tablelength 0 means 512 entries, 1 means 1024, etc. */
+   unsigned int entries = ((r1to & REGTAB_TL) + 1) * 512;
+   /* remove bit definitions to form table origin */
+   r1to &= REGTAB_TO;
+
+   /* prepare table entry pointer */
+   DBLWRD *r1te;
+
+   /* walk trough all table entries to find valid items */
+   for(unsigned int i = 0 ; i < entries  ; i++)
+   {
+      r1te = (DBLWRD*)(sysblk.mainstor + r1to);
+      FETCH_DW(r2to, r1te);
+      /* is it a valid entry? */
+      if(!( r2to & REGTAB_I ))
+      {
+	/* yes, valid entry lets walk this table */
+        base_region2_walk(r2to, fd, size);
+      }
+      r1to += sizeof(r1to);
+   }
+}
+
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+
+#if defined( FEATURE_HARDWARE_LOADER )
+/*-------------------------------------------------------------------*/
+/* Funtion to load file to main storage                              */
+/*-------------------------------------------------------------------*/
+static void      s390_hwl_loadfile  ( SCCB_HWL_BK* hwl_bk ); // (fwd ref)
+static void ARCH_DEP(hwl_loadfile)(SCCB_HWL_BK *hwl_bk)
+{
+U32  size;
+CREG asce;
+int fd;
+
+    fd = open (hwl_fn[hwl_bk->file], O_RDONLY|O_BINARY);
+    if (fd < 0)
+    {
+        // "%s open error: %s"
+        WRMSG( HHC00650, "E", hwl_fn[ hwl_bk->file ], strerror( errno ));
+        return;
     }
+    else
+        // "Loading %s"
+        WRMSG( HHC00651, "I", hwl_fn[ hwl_bk->file ]);
+
+    FETCH_FW(size,hwl_bk->size);
+
+    /* asce */
+    FETCH_DW(asce,hwl_bk->asce);
+
+    if( asce >= sysblk.mainsize)
+            goto eof;
+
+    switch(asce & ASCE_DT)
+    {
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+	case TT_R1TABL:
+          base_region1_walk(asce, fd, size);
+          break;
+	case TT_R2TABL:
+          base_region2_walk(asce, fd, size);
+          break;
+	case TT_R3TABL:
+          base_region3_walk(asce, fd, size);
+          break;
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+	case TT_SEGTAB:
+          ARCH_DEP(base_segment_walk)(asce, fd, size);
+          break;
+      }
+
     eof:
     close(fd);
 }
