@@ -250,9 +250,14 @@ static void ARCH_DEP(base_segment_walk)(CREG sto, int fd, U32 size)
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
 
    /* walk trough all table entries to find valid items */
-   for(unsigned int i = 0 ; i < entries  ; i++)
+   unsigned int i;
+   for(i = 0 ; i < entries  ; i++)
    {
+#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
       ste = (DBLWRD*)(sysblk.mainstor + sto);
+#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+      ste = (FWORD*)(sysblk.mainstor + sto);
+#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
       FETCH_W(pto, ste);
       /* is it a valid entry? */
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -284,7 +289,8 @@ static void base_region3_walk(CREG r3to, int fd, U32 size)
    DBLWRD *r3te;
 
    /* walk trough all table entries to find valid items */
-   for(unsigned int i = 0 ; i < entries  ; i++)
+   unsigned int i;
+   for(i = 0 ; i < entries  ; i++)
    {
       r3te = (DBLWRD*)(sysblk.mainstor + r3to);
       FETCH_DW(sto, r3te);
@@ -312,7 +318,8 @@ static void base_region2_walk(CREG r2to, int fd, U32 size)
    DBLWRD *r2te;
 
    /* walk trough all table entries to find valid items */
-   for(unsigned int i = 0 ; i < entries  ; i++)
+   unsigned int i;
+   for(i = 0 ; i < entries  ; i++)
    {
       r2te = (DBLWRD*)(sysblk.mainstor + r2to);
       FETCH_DW(r3to, r2te);
@@ -340,7 +347,8 @@ static void base_region1_walk(CREG r1to, int fd, U32 size)
    DBLWRD *r1te;
 
    /* walk trough all table entries to find valid items */
-   for(unsigned int i = 0 ; i < entries  ; i++)
+   unsigned int i;
+   for(i = 0 ; i < entries  ; i++)
    {
       r1te = (DBLWRD*)(sysblk.mainstor + r1to);
       FETCH_DW(r2to, r1te);
