@@ -33,7 +33,7 @@
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* Translate ASN to produce address-space control parameters         */
 /*                                                                   */
@@ -89,7 +89,7 @@ int     i;                              /* Array subscript           */
     if (afte & AFTE_INVALID)
         goto asn_afx_tran_excp;
 
-  #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* ASN translation specification exception if reserved bits set */
     if (!ASF_ENABLED(regs)) {
         if (afte & AFTE_RESV_0)
@@ -98,7 +98,7 @@ int     i;                              /* Array subscript           */
         if (afte & AFTE_RESV_1)
               goto asn_asn_tran_spec_excp;
     }
-  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     /* [3.9.3.2] Use AFTE and ASX to obtain real address of ASTE */
     if (!ASF_ENABLED(regs)) {
@@ -139,16 +139,16 @@ int     i;                              /* Array subscript           */
     if (aste[0] & ASTE0_INVALID)
         goto asn_asx_tran_excp;
 
-  #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* Check the reserved bits in first two words of ASTE */
     if ((aste[0] & ASTE0_RESV) || (aste[1] & ASTE1_RESV)
         || ((aste[0] & ASTE0_BASE)
-          #ifdef FEATURE_SUBSPACE_GROUP
+#ifdef FEATURE_SUBSPACE_GROUP
             && !ASF_ENABLED(regs)
-          #endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
             ))
         goto asn_asn_tran_spec_excp;
-  #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
     return 0;
 
@@ -157,11 +157,11 @@ asn_addr_excp:
     code = PGM_ADDRESSING_EXCEPTION;
     goto asn_prog_check;
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 asn_asn_tran_spec_excp:
     code = PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto asn_prog_check;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
 asn_prog_check:
     regs->program_interrupt (regs, code);
@@ -178,10 +178,10 @@ asn_asx_tran_excp:
     return code;
 
 } /* end function translate_asn */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* Perform ASN authorization process                                 */
 /*                                                                   */
@@ -265,10 +265,10 @@ auth_addr_excp:
     return 1;
 
 } /* end function authorize_asn */
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* Translate an ALET to produce the corresponding ASTE               */
 /*                                                                   */
@@ -294,18 +294,8 @@ auth_addr_excp:
 /*      If successful, the ASTE is copied into the 16-word area,     */
 /*      the real address of the ASTE is stored into the word pointed */
 /*      word pointed to by asteop, and the return value is zero;     */
-#if defined( OPTION_GH275_PIC12_FIX )
-/*                                                                   */
-/*      regs->dat.pvtaddr is set to 1 if the private address space   */
-/*      bit in the ALE is set, otherwise it is set to zero.          */
-/*                                                                   */
-/*      regs->dat.protect is set to 2 if the fetch-only bit in the   */
-/*      ALE is set and acctype specifies write access, otherwise     */
-/*      it is set to zero.                                           */
-#else
 /*      regs->dat.protect is set to 2 if the fetch-only bit          */
 /*      in the ALE is set, otherwise it is set to zero.              */
-#endif
 /*                                                                   */
 /*      If unsuccessful, the return value is a non-zero exception    */
 /*      code in the range X'0028' through X'002D' (this is to allow  */
@@ -330,11 +320,7 @@ U32     abs;                            /* Absolute address          */
 BYTE   *mn;                             /* Mainstor address          */
 int     i;                              /* Array subscript           */
 
-#if defined( OPTION_GH275_PIC12_FIX )
-    regs->dat.pvtaddr = regs->dat.protect = 0;
-#else // (original code)
     regs->dat.protect = 0;
-#endif
 
     /* [5.8.4.3] Check the reserved bits in the ALET */
     if ( alet & ALET_RESV )
@@ -434,16 +420,16 @@ int     i;                              /* Array subscript           */
         if ((ale[0] & ALE0_PRIVATE)
                 && (ale[0] & ALE0_ALEAX) != eax)
         {
-          #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             /* Check the reserved bits in first two words of ASTE */
             if ((aste[0] & ASTE0_RESV) || (aste[1] & ASTE1_RESV)
                 || ((aste[0] & ASTE0_BASE)
-                      #ifdef FEATURE_SUBSPACE_GROUP
+#ifdef FEATURE_SUBSPACE_GROUP
                         && !ASF_ENABLED(regs)
-                      #endif /*FEATURE_SUBSPACE_GROUP*/
+#endif
                    ))
                 goto alet_asn_tran_spec_excp;
-          #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
             /* Perform extended authorization */
             if (ARCH_DEP(authorize_asn)(eax, aste, ATE_SECONDARY, regs) != 0)
@@ -452,25 +438,12 @@ int     i;                              /* Array subscript           */
 
     } /* end if(!ACC_SPECIAL_ART) */
 
-#if defined( OPTION_GH275_PIC12_FIX )
-
-    /* Check for private space */
-    if (ale[0] & ALE0_PRIVATE)
-        regs->dat.pvtaddr = 1;
-
     /* [5.8.4.8] Check for access-list controlled protection */
     if (ale[0] & ALE0_FETCHONLY)
     {
         if (acctype & (ACC_WRITE|ACC_CHECK))
             regs->dat.protect = 2;
     }
-
-#else // (original code)
-
-    /* [5.8.4.8] Check for access-list controlled protection */
-    if (ale[0] & ALE0_FETCHONLY)
-        regs->dat.protect = 2;
-#endif
 
     /* Return the ASTE origin address */
     *asteo = aste_addr;
@@ -482,11 +455,11 @@ alet_addr_excp:
     regs->dat.xcode = PGM_ADDRESSING_EXCEPTION;
     goto alet_prog_check;
 
-#if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 alet_asn_tran_spec_excp:
     regs->dat.xcode = PGM_ASN_TRANSLATION_SPECIFICATION_EXCEPTION;
     goto alet_prog_check;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
 
 alet_prog_check:
     regs->program_interrupt (regs, regs->dat.xcode);
@@ -517,10 +490,10 @@ ext_auth_excp:
     return regs->dat.xcode;
 
 } /* end function translate_alet */
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 /*-------------------------------------------------------------------*/
 /* Purge the ART lookaside buffer                                    */
 /*-------------------------------------------------------------------*/
@@ -552,7 +525,7 @@ int i;
             ARCH_DEP(purge_alb) (sysblk.regs[i]);
 
 } /* end function purge_alb_all */
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -602,14 +575,14 @@ int i;
 U16 ARCH_DEP(load_address_space_designator) (int arn,
            REGS *regs, int acctype)
 {
-#if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
 U32     alet;                           /* Access list entry token   */
 U32     asteo;                          /* Real address of ASTE      */
 U32     aste[16];                       /* ASN second table entry    */
 U16     eax;                            /* Authorization index       */
 #else
     UNREFERENCED(acctype);
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif
 
     switch(arn) {
 
@@ -619,11 +592,11 @@ U16     eax;                            /* Authorization index       */
         case 1:
             regs->dat.stid = TEA_ST_PRIMARY;
             break;
-    #if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
         case 13:
             regs->dat.stid = TEA_ST_HOME;
             break;
-    #endif
+#endif
         default:
             regs->dat.stid = 0;
         } /* end switch(regs->AEA_AR(USE_INST_SPACE)) */
@@ -653,7 +626,7 @@ U16     eax;                            /* Authorization index       */
 
     default:
 
-    #if defined(FEATURE_ACCESS_REGISTERS)
+#if defined( FEATURE_ACCESS_REGISTERS )
         if (ACCESS_REGISTER_MODE(&regs->psw)
          || (SIE_ACTIVE(regs) && MULTIPLE_CONTROLLED_DATA_SPACE(GUESTREGS))
          || (arn >= USE_ARMODE)
@@ -710,22 +683,15 @@ U16     eax;                            /* Authorization index       */
                     regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
                     regs->dat.stid = TEA_ST_ARMODE;
 
-#if defined( OPTION_GH275_PIC12_FIX )
-
-                    if (regs->dat.pvtaddr)
-
-#else // (original code)
-
                     if (regs->dat.protect & 2)
-#endif
                     {
-                #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                        regs->dat.asd ^= ASCE_RESV;
                        regs->dat.asd |= ASCE_P;
-                #else
+#else
                        regs->dat.asd ^= STD_RESV;
                        regs->dat.asd |= STD_PRIVATE;
-                #endif
+#endif
                     }
 
                     /* Update ALB */
@@ -733,7 +699,6 @@ U16     eax;                            /* Authorization index       */
                     regs->AEA_AR(arn) = CR_ALB_OFFSET + arn;
                     regs->AEA_COMMON(CR_ALB_OFFSET + arn) = (regs->dat.asd & ASD_PRIVATE) == 0;
                     regs->aea_aleprot[arn] = regs->dat.protect & 2;
-
                 }
 
             } /* end switch(alet) */
@@ -741,25 +706,25 @@ U16     eax;                            /* Authorization index       */
             break;
 
         } /* end if(ACCESS_REGISTER_MODE) */
-    #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
-    #if defined(FEATURE_DUAL_ADDRESS_SPACE)
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
         if (SECONDARY_SPACE_MODE(&regs->psw))
         {
             regs->dat.stid = TEA_ST_SECNDRY;
             regs->dat.asd = regs->CR(7);
             break;
         }
-    #endif /* defined(FEATURE_DUAL_ADDRESS_SPACE) */
+#endif
 
-    #if defined(FEATURE_LINKAGE_STACK)
+#if defined( FEATURE_LINKAGE_STACK )
         if (HOME_SPACE_MODE(&regs->psw))
         {
             regs->dat.stid = TEA_ST_HOME;
             regs->dat.asd = regs->CR(13);
             break;
         }
-    #endif /* defined(FEATURE_LINKAGE_STACK) */
+#endif
 
         /* Primary space mode */
         regs->dat.stid = TEA_ST_PRIMARY;
@@ -900,11 +865,11 @@ U32     ptl;                            /* Page table length         */
     {
         pte = regs->tlb.TLB_PTE(tlbix);
 
-        #ifdef FEATURE_SEGMENT_PROTECTION
+#if defined( FEATURE_SEGMENT_PROTECTION )
         /* Set the protection indicator if segment is protected */
         if (regs->tlb.protect[tlbix])
             regs->dat.protect = regs->tlb.protect[tlbix];
-        #endif /*FEATURE_SEGMENT_PROTECTION*/
+#endif
     }
     else
     {
@@ -982,11 +947,11 @@ U32     ptl;                            /* Page table length         */
             (pte & PAGETAB_RSV_2K))
             goto tran_spec_excp;
 
-        #ifdef FEATURE_SEGMENT_PROTECTION
+#if defined( FEATURE_SEGMENT_PROTECTION )
         /* Set the protection indicator if segment is protected */
         if (ste & SEGTAB_370_PROT)
             regs->dat.protect |= 1;
-        #endif /*FEATURE_SEGMENT_PROTECTION*/
+#endif
 
         /* Place the translated address in the TLB */
         if (!(acctype & ACC_NOTLB))
@@ -1710,7 +1675,7 @@ reg_third_excp:
     regs->dat.xcode = PGM_REGION_THIRD_TRANSLATION_EXCEPTION;
     cc = 4;
     goto tran_excp_addr;
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 tran_excp_addr:
     /* For LPTEA instruction, return xcode with cc = 3 */
@@ -1789,7 +1754,7 @@ void ARCH_DEP(purge_tlb) (REGS *regs)
         regs->tlbID = 1;
     }
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Also clear the guest registers in the SIE copy */
     if(regs->host && GUESTREGS)
     {
@@ -1801,7 +1766,7 @@ void ARCH_DEP(purge_tlb) (REGS *regs)
             GUESTREGS->tlbID = 1;
         }
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 } /* end function purge_tlb */
 
 
@@ -1829,21 +1794,21 @@ int  i;
 RADR pte;
 RADR ptemask;
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     ptemask = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
               PAGETAB_PFRA_4K : PAGETAB_PFRA_2K;
     pte = ((pfra & 0xFFFFFF) >> 8) & ptemask;
 #endif
 
-#if defined(FEATURE_S390_DAT)
+#if defined( FEATURE_S390_DAT )
     ptemask = PAGETAB_PFRA;
     pte = pfra & ptemask;
-#endif /* defined(FEATURE_S390_DAT) */
+#endif
 
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     ptemask = (RADR)ZPGETAB_PFRA;
     pte = pfra & ptemask;
-#endif /* defined(FEATURE_001_ZARCH_INSTALLED_FACILITY) */
+#endif
 
     INVALIDATE_AIA(regs);
 
@@ -1851,7 +1816,7 @@ RADR ptemask;
         if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)
             regs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Also clear the guest registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
@@ -1884,7 +1849,7 @@ RADR ptemask;
             if ((HOSTREGS->tlb.TLB_PTE(i) & ptemask) == pte)
                 HOSTREGS->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
     }
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
 } /* end function purge_tlbe */
 
@@ -1919,7 +1884,7 @@ int  i;
             if ((regs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->tlbID)
                 regs->tlb.acc[i] &= mask;
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Also invalidate the guest registers in the SIE copy */
     if(regs->host && GUESTREGS)
     {
@@ -1944,7 +1909,7 @@ int  i;
                     HOSTREGS->tlb.acc[i] &= mask;
     }
 
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 } /* end function invalidate_tlb */
 
 
@@ -1990,13 +1955,13 @@ void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
                      == mainwid)
         {
             regs->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                 regs->tlb.acc[i^1] = 0;
 #endif
         }
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
     /* Also clear the guest registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
@@ -2008,7 +1973,7 @@ void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
                          == mainwid)
             {
                 GUESTREGS->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                 if ((GUESTREGS->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                     GUESTREGS->tlb.acc[i^1] = 0;
 #endif
@@ -2026,14 +1991,14 @@ void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
                          == mainwid)
             {
                 HOSTREGS->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
                 if ((HOSTREGS->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                     HOSTREGS->tlb.acc[i^1] = 0;
 #endif
             }
     }
 
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
 
 } /* end function invalidate_tlbe */
 
@@ -2067,7 +2032,7 @@ RADR    pfra;
 
     UNREFERENCED_370(ibyte);
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     {
         /* Program check if translation format is invalid */
         if ((((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_2K) &&
@@ -2105,13 +2070,13 @@ RADR    pfra;
             pte |= PAGETAB_INV_4K;
         ARCH_DEP(vstore2) ( pte, raddr, USE_REAL_ADDR, regs );
         pfra = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-#if defined(FEATURE_S370E_EXTENDED_ADDRESSING)
+#if defined( FEATURE_S370E_EXTENDED_ADDRESSING )
             (((U32)pte & PAGETAB_EA_4K) << 23) |
 #endif
             (((U32)pte & PAGETAB_PFRA_4K) << 8) :
             (((U32)pte & PAGETAB_PFRA_2K) << 8);
     }
-#elif defined(FEATURE_S390_DAT)
+#elif defined( FEATURE_S390_DAT )
     {
         /* Program check if translation format is invalid */
         if ((regs->CR(0) & CR0_TRAN_FMT) != CR0_TRAN_ESA390)
@@ -2131,16 +2096,16 @@ RADR    pfra;
 
         /* Set the page invalid bit in the page table entry,
            again subject to storage protection mechansims */
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
+#if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && defined( FEATURE_EXPANDED_STORAGE )
         if(ibyte == 0x59)
             pte &= ~PAGETAB_ESVALID;
         else
-#endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
+#endif
             pte |= PAGETAB_INVALID;
         ARCH_DEP(vstore4) ( pte, raddr, USE_REAL_ADDR, regs );
         pfra = pte & PAGETAB_PFRA;
     }
-#else /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#else /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     {
         /* Combine the page table origin in the R1 register with
            the page index in the R2 register, ignoring carry, to
@@ -2148,9 +2113,9 @@ RADR    pfra;
         raddr = (op1 & ZSEGTAB_PTO)
                     + ((op2 & 0x000FF000) >> 9);
 
-#if defined(MODEL_DEPENDENT)
+#if defined( MODEL_DEPENDENT )
         raddr = APPLY_PREFIXING (raddr, regs->PX);
-#endif /*defined(MODEL_DEPENDENT)*/
+#endif
 
         /* Fetch the page table entry from real storage, subject
            to normal storage protection mechanisms */
@@ -2158,16 +2123,16 @@ RADR    pfra;
 
         /* Set the page invalid bit in the page table entry,
            again subject to storage protection mechansims */
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
+#if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && defined( FEATURE_EXPANDED_STORAGE )
         if(ibyte == 0x59)
             pte &= ~ZPGETAB_ESVALID;
         else
-#endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
+#endif
             pte |= ZPGETAB_I;
         ARCH_DEP(vstore8) ( pte, raddr, USE_REAL_ADDR, regs );
         pfra = pte & ZPGETAB_PFRA;
     }
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     /* Invalidate TLB entries */
     ARCH_DEP(purge_tlbe_all) (pfra);
@@ -2175,7 +2140,7 @@ RADR    pfra;
 } /* end function invalidate_pte */
 
 
-#if defined(FEATURE_PER2)
+#if defined( FEATURE_PER2 )
 /*-------------------------------------------------------------------*/
 /* Check for a storage alteration PER2 event                         */
 /* Returns 1 if true, 0 if false                                     */
@@ -2191,7 +2156,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
     }
     return 0;
 } /* end function check_sa_per2 */
-#endif /*defined(FEATURE_PER2)*/
+#endif /* defined( FEATURE_PER2 ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2488,4 +2453,4 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
 
 // (we have no non-ARCH_DEP code to place here -- yet!)
 
-#endif /* !defined( _GEN_ARCH )*/
+#endif /* !defined( _GEN_ARCH ) */

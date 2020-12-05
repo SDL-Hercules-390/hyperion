@@ -43,7 +43,6 @@
 
 #define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
-#define OPTION_GH275_PIC12_FIX          // GitHub #275 PIC 12 fix
 #define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT
                                         // ALWAYS at start SIE mode
 //#define NO_OPTINST                      // Doesn't really help much?
