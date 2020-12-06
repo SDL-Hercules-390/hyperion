@@ -1215,7 +1215,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
             txf_tracing  = 0;
             txf_why_mask = 0;
             txf_tac      = 0;
-            txf_tnd      = 0;    
+            txf_tnd      = 0;
             txf_cpuad    = -1;
             txf_fails    = 0;
 
@@ -1402,7 +1402,7 @@ int txf_cmd( int argc, char* argv[], char* cmdline )
             char tnd[32]  = {0};
             char cpu[32]  = {0};
             char cfl[32]  = {0};
-  
+
             if (txf_why_mask)    MSGBUF( why, "WHY 0x%8.8"PRIX32" ",  txf_why_mask );
             if (txf_tac    >  0) MSGBUF( tac, "TAC %d ",              txf_tac      );
             if (txf_tnd    >  0) MSGBUF( tnd, "TND %d ",              txf_tnd      );

@@ -1325,8 +1325,8 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
     /* US 8,880,959 B2, Greiner et al, 17.20:
-    
-       "Interception TDB: The 256-byte host real location 
+
+       "Interception TDB: The 256-byte host real location
         specified by locations 488-495 (x'1E8') of the state
         description."
     */

@@ -59,13 +59,13 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 #endif /*!defined(_ASSIST_C)*/
 
 /* The macro below allows each assist instruction to execute in a virtual machine. Per
-   GA22-7072-0, these assist instructions must co-exist with ECPS:VM if present (whether 
-   enabled or disabled), so that MVS running as a guest of VM can use these assists.  
-   This is the Virtual Machine Extended Facility Assist feature, also known as "370E" 
-   in VM. The macro will allow execution of these privileged assist instructions when 
-   the real PSW is in the problem state - if and only if the guest virtual machine PSW 
-   is in the virtual supervisor state (ECPSVM_CR6_VIRTPROB=0) and the 370E feature is 
-   enabled (ECPS_CR6_VMMVSAS=1). Otherwise, PRIV_CHECK is invoked to cause a 
+   GA22-7072-0, these assist instructions must co-exist with ECPS:VM if present (whether
+   enabled or disabled), so that MVS running as a guest of VM can use these assists.
+   This is the Virtual Machine Extended Facility Assist feature, also known as "370E"
+   in VM. The macro will allow execution of these privileged assist instructions when
+   the real PSW is in the problem state - if and only if the guest virtual machine PSW
+   is in the virtual supervisor state (ECPSVM_CR6_VIRTPROB=0) and the 370E feature is
+   enabled (ECPS_CR6_VMMVSAS=1). Otherwise, PRIV_CHECK is invoked to cause a
    privileged operation exception.
 */
 #define GUEST_CHECK( ) \
@@ -73,7 +73,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
     { \
         if ((regs->CR_L(6) & (ECPSVM_CR6_VIRTPROB + ECPSVM_CR6_VMMVSAS)) != ECPSVM_CR6_VMMVSAS) \
            PRIV_CHECK(regs); \
-    } 
+    }
 
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
 
@@ -93,7 +93,7 @@ RADR    mplp;
 
     GUEST_CHECK( );
 
-    /* The Page Fix assist cannot return via the PTT_ERR( ) method as used in most of the 
+    /* The Page Fix assist cannot return via the PTT_ERR( ) method as used in most of the
        other assists here.  Per GA22-7079-1 IBM System/370 Assists for MVS, this assist must
        NOT exit to the next sequential instruction.  Instead, we follow the 'simplified
        execution path' described on page 3 of that documentation for Fix Page. */

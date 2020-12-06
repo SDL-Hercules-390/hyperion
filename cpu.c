@@ -350,7 +350,7 @@ DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
         /* BEAR = Address of the beginning of virtual ('aiv') page
            plus same displacement from begin of mainstor ('ip') page
            also know as 'aip'.
-           
+
            HOWEVER, since the 'ip' value passed to us might not match
            regs->ip (it might have been passed to us as "regs->ip - 4"),
            we cannot blindly rely on the 'ip' value passed to us being
@@ -364,7 +364,7 @@ DLL_EXPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip )
         BYTE* aip = regs->aip;      /* Begin of mainstor page */
         U64   aiv = regs->AIV;      /* Begin of virtual page  */
 
-        if (ip < regs->aip)         /* pointing to prev page? */  
+        if (ip < regs->aip)         /* pointing to prev page? */
         {
             /* The instruction pointer that was passed to us
                points somewhere in the PREVIOUS mainstor page */
@@ -756,7 +756,7 @@ bool    intercept;                      /* False for virtual pgmint  */
             GUEST( realregs )->psw.IA  += sie_ilc; /* IanWorthington regression restored from 20081205 */
             GUEST( realregs )->psw.ilc  = sie_ilc;
         }
-    
+
         PTT_PGM( "PGM sie_ilc", 0, 0, sie_ilc );
     }
 #endif
