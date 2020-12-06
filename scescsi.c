@@ -119,13 +119,14 @@ typedef struct _SCCB_HWL_BK
 /*007*/ BYTE    file;
 
 #define SCCB_HWL_FILE_SCSIBOOT  0x02    /* SCSI Boot Loader          */
+#define SCCB_HWL_FILE_CONFIG    0x03    /* Config                    */
 
 /*008*/ FWORD   resv1[2];
 /*010*/ FWORD   hwl;                    /* Pointer to HWL BK         */
 /*014*/ HWORD   resv2;
 /*016*/ BYTE    asa;                    /* Archmode                  */
 /*017*/ BYTE    resv3;
-/*018*/ DBLWRD  sto;                    /* Segment Table Origin      */
+/*018*/ DBLWRD  asce;                   /* ASCE                      */
 /*020*/ FWORD   resv4[3];
 /*02C*/ FWORD   size;                   /* Length in 4K pages        */
 }
@@ -141,6 +142,7 @@ struct name2file
 
 struct name2file  n2flist[]  =
 {
+    { "config",   SCCB_HWL_FILE_CONFIG   },
     { "scsiboot", SCCB_HWL_FILE_SCSIBOOT },
 
 #if 0
@@ -179,19 +181,155 @@ static char*  hwl_fn [HWL_MAXFILETYPE]; /* Files by type             */
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
+#undef TBLTYP
+#undef PTO_MASK
+#undef PFRA_MASK
+#undef TBLTO_MASK
+#undef REGSEG_INV
+
+#if __GEN_ARCH == 900 // (z/Arch)
+
+#define TBLTYP       DBLWRD          /* Width of DAT table entry     */
+#define PTO_MASK     ZSEGTAB_PTO     /* Page Table Origin            */
+#define PFRA_MASK    ZPGETAB_PFRA    /* Page Frame Real Address Mask */
+#define TBLTO_MASK   REGTAB_TO       /* Reg/Seg Table Origin Mask    */
+#define REGSEG_INV   ZSEGTAB_I       /* Invalid region/segment bit   */
+
+// Region Tables are basically higher level Segment tables, so the
+// Region Invalid bit should be the same as the Segment Invalid bit.
+CASSERT( REGTAB_I == ZSEGTAB_I, scescsi_c );
+
+#else // (ESA/390) S/370 doesn't support FEATURE_HARDWARE_LOADER
+
+#define TBLTYP       FWORD           /* Width of DAT table entry     */
+#define PTO_MASK     SEGTAB_PTO      /* Page Table Origin            */
+#define PFRA_MASK    PAGETAB_PFRA    /* Page Frame Real Address Mask */
+#define TBLTO_MASK   STD_STO         /* Segment Table Origin Mask    */
+#define REGSEG_INV   SEGTAB_INVALID  /* Invalid segment bit          */
+
+#endif // __GEN_ARCH
+
+static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 pages )
+{
+    TBLTYP*  pte;                   /* Page Table Entry              */
+    CREG     pti;                   /* Page Table Entry iterator     */
+    CREG     pgo;                   /* Page Origin (i.e. PFRA)       */
+    BYTE*    page;                  /* Pointer to page in mainstor   */
+    int      rc;                    /* Return code from read()       */
+
+    /* Remove bit definitions to form table origin */
+    pto &= PTO_MASK;
+
+    /* Keep loading file data into this page table's valid pages
+       until either the entire file has been loaded, or we run out
+       of page table entries or an abortive condition is detected.
+    */
+    for (pti=0; pages && pti < 256; pti++, pto += sizeof( pto ))
+    {
+        /* Abort if table entry is outside of main storage */
+        if (pto >= sysblk.mainsize)
+        {
+            // "%s is outside of main storage"
+            WRMSG( HHC00659, "E", "table" );
+            return false; // abort!
+        }
+
+        /* Point to table entry in main storage */
+        pte = (TBLTYP*)(sysblk.mainstor + pto);
+
+        /* Fetch this Page Table Entry */
+        FETCH_W( pgo, pte );
+
+        /* Process this entry if it's not invalid */
+        if (!(pgo & PAGETAB_INVALID))
+        {
+            /* Get Page Frame Real Address */
+            pgo &= PFRA_MASK;
+
+            /* Abort if page is outside of main storage */
+            if (pgo >= sysblk.mainsize)
+            {
+                // "%s is outside of main storage"
+                WRMSG( HHC00659, "E", "page" );
+                return false; // abort!
+            }
+
+            /* Get mainstor address of this page */
+            page = sysblk.mainstor + pgo;
+
+            /* Load one page's worth of file data into this page */
+            if ((rc = read( fd, page, STORAGE_KEY_PAGESIZE )) < 0)
+            {
+                // "I/O error on read(): rc=%d: \"%s\""
+                WRMSG( HHC00658, "E", rc, strerror( errno ));
+                return false; // abort!
+            }
+
+            /* Page successfully loaded; Decrement pages remaining */
+            pages--;
+
+            /* Update page's referenced and changed Storage Key bits */
+            STORAGE_KEY( pgo, &sysblk ) |= (STORKEY_REF | STORKEY_CHANGE);
+        }
+    }
+
+    /* Keep going if there are still pages remaining to be loaded */
+    return (pages > 0) ? true : false;
+}
+
+static bool ARCH_DEP( walk_table )( CREG rto, int fd, U32 pages, int tables )
+{
+    TBLTYP*  te;                        /* Pointer to Table Entry    */
+    CREG     to;                        /* Next Table's Origin       */
+    U32      entries;                   /* Number of Table Entries   */
+    U32      i;                         /* Table Entry Iterator      */
+    bool     keep_walking = true;
+
+    /* Tables have 2048 entries max. A table length
+       of 0 means 512 entries, 1 means 1024, etc. */
+    entries = ((rto & REGTAB_TL) + 1) * 512;
+
+    /* Remove bit definitions to form table origin */
+    rto &= TBLTO_MASK;
+
+    /* Walk trough all table entries to find valid entries */
+    for (i=0; keep_walking && i < entries; i++, rto += sizeof( rto ))
+    {
+        /* Point to table entry in main storage */
+        te = (TBLTYP*)(sysblk.mainstor + rto);
+
+        /* Fetch this Table Entry */
+        FETCH_W( to, te );
+
+        /* Process this entry if it's not invalid */
+        if (!(to & REGSEG_INV))
+        {
+            /* Walk the next level table if there's one to be walked.
+               Otherwise load next part of file into this table's pages.
+            */
+            if (tables)
+                keep_walking = ARCH_DEP( walk_table )( to, fd, pages, --tables );
+            else
+                keep_walking = ARCH_DEP( load_pages )( to, fd, pages );
+        }
+    }
+
+    return keep_walking;
+}
+
 #if defined( FEATURE_HARDWARE_LOADER )
 /*-------------------------------------------------------------------*/
 /* Funtion to load file to main storage                              */
 /*-------------------------------------------------------------------*/
 static void      s390_hwl_loadfile  ( SCCB_HWL_BK* hwl_bk ); // (fwd ref)
-static void ARCH_DEP(hwl_loadfile)(SCCB_HWL_BK *hwl_bk)
+static void ARCH_DEP( hwl_loadfile )( SCCB_HWL_BK *hwl_bk )
 {
-CREG sto;
-U32  size;
-int fd;
+    U32   pages;                        /* Num pages to be loaded    */
+    CREG  asce;                         /* DAT Addr Space Ctl Elem   */
+    int   fd;                           /* fd of file to be loaded   */
 
-    fd = open (hwl_fn[hwl_bk->file], O_RDONLY|O_BINARY);
-    if (fd < 0)
+    /* Open the file to be loaded */
+    if ((fd = open( hwl_fn[ hwl_bk->file ], O_RDONLY | O_BINARY )) < 0)
     {
         // "%s open error: %s"
         WRMSG( HHC00650, "E", hwl_fn[ hwl_bk->file ], strerror( errno ));
@@ -201,80 +339,35 @@ int fd;
         // "Loading %s"
         WRMSG( HHC00651, "I", hwl_fn[ hwl_bk->file ]);
 
-    FETCH_FW(size,hwl_bk->size);
+    /* Retrieve number of pages to be loaded */
+    FETCH_FW( pages, hwl_bk->size );
 
-    /* Segment Table Origin */
-    FETCH_DW(sto,hwl_bk->sto);
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-    sto &= ASCE_TO;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    sto &= STD_STO;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+    /* Retrieve the ASCE to determine where in guest
+       storage that the file should be loaded into. */
+    FETCH_DW( asce, hwl_bk->asce );
 
-    for( ; ; sto += sizeof(sto))
+    /* Abort if ASCE points outside of main storage */
+    if (asce >= sysblk.mainsize)
     {
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-    DBLWRD *ste;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    FWORD *ste;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-    CREG pto, pti;
-
-        /* Fetch segment table entry and calculate Page Table Origin */
-        if( sto >= sysblk.mainsize)
-            goto eof;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-        ste = (DBLWRD*)(sysblk.mainstor + sto);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        ste = (FWORD*)(sysblk.mainstor + sto);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        FETCH_W(pto, ste);
-        if( pto & SEGTAB_INVALID )
-            goto eof;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-        pto &= ZSEGTAB_PTO;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        pto &= SEGTAB_PTO;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-
-        for(pti = 0; pti < 256 ; pti++, pto += sizeof(pto))
-        {
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-        DBLWRD *pte;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        FWORD *pte;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-        CREG pgo;
-        BYTE *page;
-
-            /* Fetch Page Table Entry to get page origin */
-            if( pto >= sysblk.mainsize)
-                goto eof;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-            pte = (DBLWRD*)(sysblk.mainstor + pto);
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-            pte = (FWORD*)(sysblk.mainstor + pto);
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-            FETCH_W(pgo, pte);
-            if( pgo & PAGETAB_INVALID )
-                goto eof;
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
-            pgo &= ZPGETAB_PFRA;
-#else /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-            pgo &= PAGETAB_PFRA;
-#endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
-
-            /* Read page into main storage */
-            if( pgo >= sysblk.mainsize)
-                goto eof;
-            page = sysblk.mainstor + pgo;
-            if( !(size--) || !read(fd, page, STORAGE_KEY_PAGESIZE) )
-                goto eof;
-            STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF|STORKEY_CHANGE);
-        }
+        // "%s is outside of main storage"
+        WRMSG( HHC00659, "E", "asce" );
+        close( fd );
+        return;
     }
-    eof:
-    close(fd);
+
+    /* Load the file into guest storage */
+    switch (asce & ASCE_DT)
+    {
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+    case TT_R1TABL: ARCH_DEP( walk_table )( asce, fd, pages, 3 ); break;
+    case TT_R2TABL: ARCH_DEP( walk_table )( asce, fd, pages, 2 ); break;
+    case TT_R3TABL: ARCH_DEP( walk_table )( asce, fd, pages, 1 ); break;
+#endif
+    case TT_SEGTAB: ARCH_DEP( walk_table )( asce, fd, pages, 0 ); break;
+    }
+
+    /* We're done. Close input file and return */
+    close( fd );
 }
 
 

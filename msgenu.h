@@ -595,8 +595,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00655 "Store Status save to HSA failed"
 #define HHC00656 "Cannot load bootstrap loader %s: %s"
 #define HHC00657 "Invalid file %s"
-//efine HHC00658 (available)
-//efine HHC00659 (available)
+#define HHC00658 "I/O error on read(): rc=%d: \"%s\""
+#define HHC00659 "%s is outside of main storage"
 #define HHC00660 "%-8s %s"
 //efine HHC00661 - HHC00669 (available)
 #define HHC00670 "Invalid %s"
