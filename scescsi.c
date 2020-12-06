@@ -314,16 +314,14 @@ SCCB_HWL_BK *hwl_bk = (SCCB_HWL_BK*) arg;
         /* Load request will load the image into fixed virtual storage
            the Segment Table Origin is listed in the hwl_bk */
         case SCCB_HWL_TYPE_LOAD:
-#if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             if(!hwl_bk->asa)
                 s390_hwl_loadfile(hwl_bk);
             else
-#endif /*defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif
                 ARCH_DEP(hwl_loadfile)(hwl_bk);
             break;
-
         }
-
     }
     else
         // "Hardware loader file type %d not not supported"
@@ -365,7 +363,6 @@ static int hwl_pending;
 
         /* Return true if a request was pending */
         return pending_req;
-
     }
 
     switch(hwl_bk->type) {
@@ -423,7 +420,6 @@ SCCB_EVD_HDR    *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
 
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
-
 }
 
 
@@ -461,7 +457,6 @@ U16 evd_len;
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_COMPLETE;
     }
-
 }
 
 
@@ -607,6 +602,7 @@ int scp_len;
     STORE_DW(sb_bk->lun,scsi_lddev_lun[ldind]);
     STORE_FW(sb_bk->prog,scsi_lddev_prog[ldind]);
     STORE_DW(sb_bk->brlba,scsi_lddev_brlba[ldind]);
+
     if(scsi_lddev_scpdata[ldind])
     {
         scp_len = strlen((char*)scsi_lddev_scpdata[ldind]);
@@ -904,7 +900,6 @@ U32 dt, ct;
     dt = dev->devid[4] << 16 | dev->devid[5] << 8 | dev->devid[6];
 
     switch(ct) {
-
 #if 0
         case 0x173101:
             switch(dt) {
@@ -913,14 +908,12 @@ U32 dt, ct;
             }
             break;
 #endif
-
         case 0x173103:
             switch(dt) {
                 case 0x173203: // FCP
                     return validate_boot(SCCB_HWL_FILE_SCSIBOOT);
             }
             break;
-
     }
 
     return -1;
@@ -933,15 +926,15 @@ U32 dt, ct;
 int load_boot (DEVBLK *dev, int cpu, int clear, int ldind)
 {
     switch(sysblk.arch_mode) {
-#if defined(_370)
+#if defined( _370 )
         case ARCH_370_IDX:
             return s370_load_boot (dev, cpu, clear, ldind);
 #endif
-#if defined(_390)
+#if defined( _390 )
         case ARCH_390_IDX:
             return s390_load_boot (dev, cpu, clear, ldind);
 #endif
-#if defined(_900)
+#if defined( _900 )
         case ARCH_900_IDX:
             /* z/Arch always starts out in ESA390 mode */
             return s390_load_boot (dev, cpu, clear, ldind);
