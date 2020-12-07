@@ -204,7 +204,20 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define MSGBUF( _buf, ... )     snprintf(_buf, sizeof(_buf),      ## __VA_ARGS__ )
+/* NOTE : Go through a separate function to prevent GCC warnings */
+/*        Also force C string termination to prevent runaway C   */
+/*        string if output is truncated                          */
+
+static INLINE size_t __msgbuf(char *buf,size_t sz,char *fmt,...)
+{
+    size_t  rsz;
+    va_list ap;
+    va_start(ap,fmt);
+    rsz=vsnprintf(buf,sz,fmt,ap);
+    buf[sz-1]=0;
+    return rsz;
+}
+#define MSGBUF( _buf, ... )     __msgbuf(_buf, sizeof(_buf),      ## __VA_ARGS__ )
 #define MSG( id, sev, ... )     #id "%s " id "\n", sev,           ## __VA_ARGS__
 #define MSG_C( id, sev, ... )   #id "%s " id "",   sev,           ## __VA_ARGS__
 #define EXTGUIMSG( ... )        do { if (extgui) fprintf( stderr, ## __VA_ARGS__ ); } while (0)
