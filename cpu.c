@@ -2557,18 +2557,14 @@ static void CPU_Wait( REGS* regs )
     ** an ENABLED wait PSW such as when it wishes to simply wait
     ** for an I/O, External or other type of interrupt.
     **
-    ** NOTE: we can't rely on just sysblk.started_mask since there
-    ** is no guarantee the last CPU to have its sysblk.started_mask
-    ** cleared will actually be the last CPU to reach this point.
+    ** NOTE: The script will check that every CPU is in the STOPPED
+    **       state upon wakeup
     */
-    if (WAITSTATE( &regs->psw ) && !IS_IC_DISABLED_WAIT_PSW( regs ))
-        ;   /* enabled wait: do nothing */
-    else
+    if (IS_IC_DISABLED_WAIT_PSW( regs ) || regs->cpustate==CPUSTATE_STOPPED)
     {
         obtain_lock( &sysblk.scrlock );
         if (sysblk.scrtest)
         {
-            sysblk.scrtest++;
             broadcast_condition( &sysblk.scrcond );
         }
         release_lock( &sysblk.scrlock );
