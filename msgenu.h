@@ -214,7 +214,7 @@ static INLINE size_t __msgbuf(char *buf,size_t sz,char *fmt,...)
     va_list ap;
     va_start(ap,fmt);
     rsz=vsnprintf(buf,sz,fmt,ap);
-    buf[sz]=0;
+    buf[sz-1]=0;
     return rsz;
 }
 #define MSGBUF( _buf, ... )     __msgbuf(_buf, sizeof(_buf),      ## __VA_ARGS__ )
