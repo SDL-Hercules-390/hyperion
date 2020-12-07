@@ -24,8 +24,6 @@
 *  This test attempts to detect any discrepancy in this area.
 *
 ***********************************************************************
-                                                                SPACE
-***********************************************************************
 *
 *                       Example test scripts
 *
@@ -41,6 +39,7 @@
 * script      "$(testpath)/CBUC.subtst"  &     # ('&' = async thread!)
 * runtest     300                              # (subtst will stop it)
 * *Done
+* numcpu 1
 *
 *                          (CBUC.subtst)
 *
@@ -165,23 +164,23 @@ BEGIN2   LA    R2,1                     Second CPU number
                                                                 SPACE 6
 READER   L     R0,RDCOUNT               R0 <== loop count
 READLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
-         BNE   GOODEOJ                  Yes, then do so.
+         BNE   STOPTEST                 Yes, then do so.
                                                                 SPACE
          MVC   WORK,READDEST            Grab copy of test value
                                                                 SPACE
          CLC   WORK,PATTERN1            Is it all the first pattern?
          BNE   READ2                    No, check if second pattern
          BCT   R0,READLOOP              Otherwise keep looping...
-         B     GOODEOJ                  Done!
+         B     STOPTEST                 Done!
                                                                 SPACE
 READ2    CLC   WORK,PATTERN2            Is it all the second pattern?
-         BNE   FAILEOJ                  No?! Then *FAIL* immediately!
+         BNE   FAILTEST                 No?! Then *FAIL* immediately!
          BCT   R0,READLOOP              Otherwise keep looping...
-         B     GOODEOJ                  Done!
+         B     STOPTEST                 Done!
                                                                 EJECT
 WRITER   L     R0,WRCOUNT               R0 <== loop count
 WRITLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
-         BNE   GOODEOJ                  Yes, then do so.
+         BNE   STOPTEST                 Yes, then do so.
 
          TM    OPTFLAG,OPTMVC
          BZ             NOMVC1
@@ -230,16 +229,22 @@ NOMVCL2  EQU   *
 NOMVCLE2 EQU   *
                                                                 SPACE
          BCT   R0,WRITLOOP              Otherwise keep looping...
-         B     GOODEOJ                  Done.
+         B     STOPTEST                 Done.
                                                                 EJECT
 ***********************************************************************
 *                            PSWs
 ***********************************************************************
                                                                 SPACE 3
-GOODEOJ  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+FAILFLAG DC       X'00'                 X'FF' == test has failed
+                                                                SPACE
+STOPTEST CLI      FAILFLAG,X'00'        Should test end normally?
+         BNE      FAILTEST              No! Test has failed!
+                                                                SPACE
+         MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
          DWAITEND LOAD=YES              Normal completion
                                                                 SPACE 4
-FAILEOJ  MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+FAILTEST MVI      FAILFLAG,X'FF'        Indicate test has failed!
+         MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
          DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
                                                                 SPACE 4
 SIG1FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
@@ -272,7 +277,7 @@ PATTERN1 DC    CL16'AAAAAAAAAAAAAAAA'   Should be unaligned
          DC    XL2'0000'
 PATTERN2 DC    CL16'BBBBBBBBBBBBBBBB'   Should also be unaligned
                                                                 SPACE 4
-         ORG   CBUC+X'600'              Fixed address of 'stop' flag
+         ORG   CBUC+X'600'              Fixed address of 'option' flag
                                                                 SPACE
 OPTMVC   EQU   X'80'                    Use 'MVC'   in write loop
 OPTMVCL  EQU   X'40'                    Use 'MVCL'  in write loop
