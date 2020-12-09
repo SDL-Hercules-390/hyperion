@@ -1831,6 +1831,9 @@ cpustate_stopping:
             /* Don't log the disabled wait when OSTAILOR VM is active
                unless it is the very last CPU in the configuration. */
             if (0
+#if defined( OPTION_TEMP_GH340_FIX )
+                || sysblk.scrtest // TEMPORARY!
+#endif
                 || ((sysblk.pgminttr & OS_VM) != OS_VM)   // not VM
                 || !(sysblk.started_mask ^ regs->cpubit)  // is last
             )
