@@ -27,7 +27,7 @@
 DISABLE_GCC_UNUSED_SET_WARNING;
 
 /*-------------------------------------------------------------------*/
-/* CKD dasd initialization                                           */
+/* Compressed CKD dasd initialization                                */
 /*-------------------------------------------------------------------*/
 int cckd64_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
@@ -222,7 +222,12 @@ int             rc, i;                  /* Return code, Loop index   */
         cckd64_sf_stats (dev);
     release_lock (&cckd->filelock);
 
-    /* free the cckd extension */
+    /* Destroy the cckd extension's locks and conditions */
+    destroy_lock( &cckd->cckdiolock );
+    destroy_lock( &cckd->filelock );
+    destroy_condition( &cckd->cckdiocond );
+
+    /* free the cckd extension itself */
     dev->cckd_ext= cckd_free (dev, "ext", cckd);
 
     if (dev->dasdsfn) free (dev->dasdsfn);

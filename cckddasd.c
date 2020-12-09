@@ -160,8 +160,6 @@ void cckd_dasd_term_if_appropriate()
         }
     }
     release_lock( &cckdblk.ralock );
-    destroy_lock( &cckdblk.ralock );
-    destroy_condition( &cckdblk.racond );
 
     /* Terminate all garbage collection threads... */
     obtain_lock( &cckdblk.gclock );
@@ -174,8 +172,6 @@ void cckd_dasd_term_if_appropriate()
         }
     }
     release_lock( &cckdblk.gclock );
-    destroy_lock( &cckdblk.gclock );
-    destroy_condition( &cckdblk.gccond );
 
     /* Terminate all writer threads... */
     obtain_lock( &cckdblk.wrlock );
@@ -188,19 +184,11 @@ void cckd_dasd_term_if_appropriate()
         }
     }
     release_lock( &cckdblk.wrlock );
-    destroy_lock( &cckdblk.wrlock );
-    destroy_condition( &cckdblk.wrcond );
-
-    /* Finish global termination... */
-    destroy_lock( &cckdblk.devlock  );
-    destroy_condition( &cckdblk.devcond );
-    destroy_condition( &cckdblk.termcond );
-    memset( &cckdblk, 0, sizeof( CCKDBLK ));
 
 } /* end function cckd_dasd_term */
 
 /*-------------------------------------------------------------------*/
-/* CKD dasd initialization                                           */
+/* Compressed CKD dasd initialization                                */
 /*-------------------------------------------------------------------*/
 int cckd_dasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
@@ -395,7 +383,12 @@ int             rc, i;                  /* Return code, Loop index   */
         cckd_sf_stats (dev);
     release_lock (&cckd->filelock);
 
-    /* free the cckd extension */
+    /* Destroy the cckd extension's locks and conditions */
+    destroy_lock( &cckd->cckdiolock );
+    destroy_lock( &cckd->filelock );
+    destroy_condition( &cckd->cckdiocond );
+
+    /* free the cckd extension itself */
     dev->cckd_ext= cckd_free (dev, "ext", cckd);
 
     if (dev->dasdsfn) free (dev->dasdsfn);
