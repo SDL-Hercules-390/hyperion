@@ -1830,7 +1830,7 @@ cpustate_stopping:
         {
             /* Don't log the disabled wait when OSTAILOR VM is active
                unless it is the very last CPU in the configuration. */
-            if (1
+            if (0
                 || ((sysblk.pgminttr & OS_VM) != OS_VM)   // not VM
                 || !(sysblk.started_mask ^ regs->cpubit)  // is last
             )
