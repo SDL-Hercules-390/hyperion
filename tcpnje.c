@@ -1420,7 +1420,7 @@ static void *tcpnje_thread(void *vtn)
     int maxfd;                  /* highest FD for select             */
     int tn_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
-    int TTBlength;              /* Length of TTB in host byte order  */
+    int TTBlength = 0;          /* Length of TTB in host byte order  */
     int eintrcount = 0;         /* Number of times EINTR occured     */
     int errorcount067 = 0;      /* Number of times HHCTN067E issued  */
     int errorcount100 = 0;      /* Number of times HHCTN100E issued  */

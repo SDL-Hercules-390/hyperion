@@ -2069,7 +2069,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                 redraw_status = 1;
                                 break;
                             }
-                            sprintf (cmdline, "ipl %4.4x", NPdevnum[i]);
+                            snprintf (cmdline, sizeof(cmdline), "ipl %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
                             memset(NPprompt2,0,sizeof(NPprompt2));
                             redraw_status = 1;
@@ -2762,7 +2762,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                         STRLCPY(cmdline, NPdevnam[NPasgn]);
                                     }
                                     STRLCPY(NPdevnam[NPasgn], "");
-                                    sprintf (NPentered, "devinit %4.4x %s",
+                                    snprintf (NPentered, sizeof(NPentered), "devinit %4.4x %s",
                                              NPdevnum[NPasgn], cmdline);
                                     do_panel_command(NPentered);
                                     STRLCPY(NPprompt2, "");
@@ -3133,14 +3133,14 @@ FinishShutdown:
                 saved_cons_col = cur_cons_col;
 
                 memset (buf, ' ', cons_cols);
-                len = sprintf ( buf, "%s%02X ",
+                len = snprintf ( buf, sizeof(buf), "%s%02X ",
                     PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
-                    len += sprintf(buf+len, "PSW=%8.8X%8.8X ",
+                    len += snprintf(buf+len, sizeof(buf)-len, "PSW=%8.8X%8.8X ",
                                    fetch_fw( curr_psw ), fetch_fw( curr_psw + 4 ));
                     if (regs->arch_mode == ARCH_900_IDX)
-                        len += sprintf (buf+len, "%16.16"PRIX64" ",
+                        len += snprintf (buf+len, sizeof(buf)-len, "%16.16"PRIX64" ",
                                         fetch_dw( curr_psw + 8 ));
 #if defined(_FEATURE_SIE)
                     else
@@ -3151,7 +3151,7 @@ FinishShutdown:
                             buf[len++] = ' ';
                         }
 #endif /*defined(_FEATURE_SIE)*/
-                    len += sprintf (buf+len, "%2d%c%c%c%c%c%c%c%c",
+                    len += snprintf (buf+len, sizeof(buf)-len, "%2d%c%c%c%c%c%c%c%c",
                            regs->psw.amode64                  ? 64 :
                            regs->psw.amode                    ? 31 : 24,
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
@@ -3164,7 +3164,7 @@ FinishShutdown:
                            regs->arch_mode == ARCH_900_IDX    ? 'Z' : '.');
                 }
                 else
-                    len += sprintf (buf+len,"%s", "Offline");
+                    len += snprintf (buf+len, sizeof(buf)-len, "%s", "Offline");
                 buf[len++] = ' ';
 
                 /* Bottom line right corner can be when there is space:

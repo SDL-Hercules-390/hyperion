@@ -2186,7 +2186,7 @@ static int  CTCE_Start_Listen_Connect_Threads( DEVBLK* dev )
     // fill in some details for the panel.
     strcpy( address, inet_ntoa( dev->ctce_ipaddr ) );
     remaddr = address;
-    sprintf( rccuu_addr_rport, "%1d:%04X=%s:%d/*",
+    snprintf( rccuu_addr_rport, sizeof(rccuu_addr_rport), "%1d:%04X=%s:%d/*",
         SSID_TO_LCSS( dev->ssid ), dev->ctce_rccuu, remaddr, dev->ctce_rport );
     strcpy(  dev->filename, rccuu_addr_rport );
 
@@ -2364,7 +2364,7 @@ static void*  CTCE_ListenThread( void* argp )
                             // Show the actual remote listening and connecting ports in filename.
                             strcpy( address, inet_ntoa( dev->ctce_ipaddr ) );
                             remaddr = address;
-                            sprintf( dev->filename, "%1d:%04X=%s:%d/%d", CTCE_DEVNUM( pSokBuf ),
+                            snprintf( dev->filename, sizeof(dev->filename),"%1d:%04X=%s:%d/%d", CTCE_DEVNUM( pSokBuf ),
                                 remaddr, pSokBuf->ctce_lport, ntohs( parm_listen.addr.sin_port ) );
 
                             // In case our side believed we were already connected, the other
@@ -3828,7 +3828,7 @@ static int    CTCE_Recovery( DEVBLK* dev )
     char     *argv[] = { "DEVINIT", ( char* )&devnum };    // to be passed to  devinit_cmd
     int       rc;                                          // Return Code from devinit_cmd
 
-    sprintf( devnum, "%1d:%04X", CTCE_DEVNUM( dev ) );
+    snprintf( devnum,sizeof(devnum), "%1d:%04X", CTCE_DEVNUM( dev ) );
     WRMSG( HHC05086, "I",  // CTCE: Recovery is about to issue Hercules command: %s %s"
         CTCX_DEVNUM( dev ), argv[0], argv[1] );
     release_lock( &dev->lock );
