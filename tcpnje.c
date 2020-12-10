@@ -4236,6 +4236,7 @@ BYTE    signoff[] =    {0x10, 0x02, 0x90, 0x8f, 0xcf,
                 /* I don't understand at all and can't test.             */
                 DBGMSG(1, "HHCTN098E %4.4X:TCPNJE - POLL operation is not supported by TCPNJE\n",
                         dev->devnum);
+                /* FALLTHRU */
 
         default:
         /*---------------------------------------------------------------*/

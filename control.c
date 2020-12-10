@@ -6131,6 +6131,7 @@ static char *ordername[] = {
             channelset_reset( tregs );
             /* fallthrough*/
 #endif
+            /* FALLTHRU */
         case SIGP_RESET:
             /* Signal CPU reset function */
             tregs->sigp_reset = 1;

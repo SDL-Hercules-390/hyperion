@@ -1951,6 +1951,7 @@ static void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         }
 
         /* PURPOSELY FALL THROUGH to case 0x05: */
+        /* FALLTHRU */
 
     /*---------------------------------------------------------------*/
     /* DIAGNOSTIC WRITE                                              */
