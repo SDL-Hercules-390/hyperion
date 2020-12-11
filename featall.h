@@ -41,7 +41,6 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define OPTION_TEMP_GH340_FIX           // TEMPORARY!
 #define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
 #define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT

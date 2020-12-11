@@ -816,8 +816,9 @@ int     rc;
 
     sysblk.panrate = PANEL_REFRESH_RATE_SLOW;
 
-    /* set default Program Interrupt Trace to NONE */
+    /* set default Program Interrupt Trace */
     sysblk.pgminttr = OS_DEFAULT;
+    sysblk.ostailor = OSTAILOR_DEFAULT;
 
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
 

@@ -499,9 +499,12 @@
 /*-------------------------------------------------------------------*/
 #define PGMBIT( pgm_code )   (1ULL << (pgm_code-1)) /* helper macro  */
 
-#define    OS_QUIET         (0x0000000000000000ULL) /* Trace none    */
-#define    OS_NULL          (0xFFFFFFFFFFFFFFFFULL) /* Trace all     */
-#define    OS_DEFAULT       (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_QUIET          0x80000000
+#define       OS_QUIET         (0x0000000000000000ULL) /* Trace none */
+#define OSTAILOR_NULL           0x40000000
+#define       OS_NULL          (0xFFFFFFFFFFFFFFFFULL) /* Trace all  */
+#define OSTAILOR_DEFAULT        0x20000000
+#define       OS_DEFAULT       (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
         | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
@@ -509,7 +512,8 @@
         | PGMBIT(  PGM_SPACE_SWITCH_EVENT                    )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_OS390         (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_OS390          0x10000000
+#define       OS_OS390         (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PRIVILEGED_OPERATION_EXCEPTION        )        \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
@@ -523,7 +527,8 @@
         | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_ZOS           (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_ZOS            0x08000000
+#define       OS_ZOS           (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
         | PGMBIT(  PGM_DATA_EXCEPTION                        )        \
@@ -540,7 +545,8 @@
         | PGMBIT(  PGM_REGION_THIRD_TRANSLATION_EXCEPTION    )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_VSE           (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_VSE            0x04000000
+#define       OS_VSE           (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
         | PGMBIT(  PGM_PAGE_TRANSLATION_EXCEPTION            )        \
@@ -553,7 +559,8 @@
         | PGMBIT(  PGM_STACK_OPERATION_EXCEPTION             )        \
         | PGMBIT(  PGM_MONITOR_EVENT                         )        \
      ))
-#define    OS_VM            (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_VM             0x02000000
+#define       OS_VM            (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_OPERATION_EXCEPTION                   )        \
         | PGMBIT(  PGM_PRIVILEGED_OPERATION_EXCEPTION        )        \
@@ -565,7 +572,8 @@
      ))
 #if !defined( NO_IEEE_SUPPORT )
 
-#define    OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_LINUX          0x01000000
+#define       OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
@@ -580,7 +588,8 @@
 
 #else // defined( NO_IEEE_SUPPORT )
 
-#define    OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_LINUX          0x01000000
+#define       OS_LINUX         (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_OPERATION_EXCEPTION                   )        \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
@@ -596,7 +605,8 @@
      ))
 
 #endif
-#define    OS_OPENSOLARIS   (0xFFFFFFFFFFFFFFFFULL &                  \
+#define OSTAILOR_OPENSOLARIS    0x00800000
+#define       OS_OPENSOLARIS   (0xFFFFFFFFFFFFFFFFULL &               \
     ~(0ULL                                                            \
         | PGMBIT(  PGM_PROTECTION_EXCEPTION                  )        \
         | PGMBIT(  PGM_SEGMENT_TRANSLATION_EXCEPTION         )        \
