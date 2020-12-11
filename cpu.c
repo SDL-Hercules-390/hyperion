@@ -1831,8 +1831,8 @@ cpustate_stopping:
             /* Don't log the disabled wait when OSTAILOR VM is active
                unless it is the very last CPU in the configuration. */
             if (0
-                || ((sysblk.pgminttr & OS_VM) != OS_VM)   // not VM
-                || !(sysblk.started_mask ^ regs->cpubit)  // is last
+                || !(sysblk.ostailor & OSTAILOR_VM)
+                || !(sysblk.started_mask ^ regs->cpubit)
             )
             {
                 char buf[40];
@@ -2557,14 +2557,18 @@ static void CPU_Wait( REGS* regs )
     ** an ENABLED wait PSW such as when it wishes to simply wait
     ** for an I/O, External or other type of interrupt.
     **
-    ** NOTE: The script will check that every CPU is in the STOPPED
-    **       state upon wakeup
+    ** NOTE: we can't rely on just sysblk.started_mask since there
+    ** is no guarantee the last CPU to have its sysblk.started_mask
+    ** cleared will actually be the last CPU to reach this point.
     */
-    if (IS_IC_DISABLED_WAIT_PSW( regs ) || regs->cpustate==CPUSTATE_STOPPED)
+    if (WAITSTATE( &regs->psw ) && !IS_IC_DISABLED_WAIT_PSW( regs ))
+        ;   /* enabled wait: do nothing */
+    else
     {
         obtain_lock( &sysblk.scrlock );
         if (sysblk.scrtest)
         {
+            sysblk.scrtest++;
             broadcast_condition( &sysblk.scrcond );
         }
         release_lock( &sysblk.scrlock );

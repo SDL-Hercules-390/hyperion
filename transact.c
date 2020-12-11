@@ -840,6 +840,7 @@ TPAGEMAP   *pmap;
                     break;
 
                 /* Fall through to choose when to randomly abort */
+                /* FALLTHRU */
 
             case TDC_ALWAYS_RANDOM:         /* ALWAYS randomly abort */
             {

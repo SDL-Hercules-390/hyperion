@@ -5951,6 +5951,8 @@ int rc;
 /*-------------------------------------------------------------------*/
 int pgmtrace_cmd( int argc, char* argv[], char* cmdline )
 {
+    U64   rupt_mask;
+    U64   prev_sysblk_pgminttr;
     int   abs_rupt_num;
     int       rupt_num;
     BYTE  c;
@@ -6004,11 +6006,21 @@ int pgmtrace_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-    /* Add or remove interruption code from mask */
+    /* Save current sysblk.pgminttr setting */
+    prev_sysblk_pgminttr = sysblk.pgminttr;
+
+    /* Build mask for interruption code to be turned on or off */
+    rupt_mask = (1ULL << (abs_rupt_num - 1));
+
+    /* Add or remove interruption code from program interrupt mask */
     if (rupt_num < 0)
-        sysblk.pgminttr &= ~(1ULL << (abs_rupt_num - 1));
+        sysblk.pgminttr &= ~rupt_mask;
     else
-        sysblk.pgminttr |=  (1ULL << (abs_rupt_num - 1));
+        sysblk.pgminttr |=  rupt_mask;
+
+    /* Clear the ostailor settings flag if it's now inaccurate */
+    if (sysblk.pgminttr != prev_sysblk_pgminttr)
+        sysblk.ostailor = 0;
 
     return 0;
 }
@@ -6018,12 +6030,13 @@ int pgmtrace_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int ostailor_cmd( int argc, char* argv[], char* cmdline )
 {
-    char*  ostailor  = NULL;
-    U64    mask      = 0;
-    bool   b_on      = false;
-    bool   b_off     = false;
-    bool   nolrasoe  = false;
-
+    char*  ostailor  = NULL;        /* (work variable)              */
+    U64    mask      = 0;           /* OS_xxx... pgminttr bits      */
+    U32    ost       = 0;           /* OSTAILOR_xxx... setting flag */
+    bool   b_on      = false;       /* "+ostailor" specified        */
+    bool   b_off     = false;       /* "-ostailor" specified        */
+    bool   nolrasoe  = false;       /* true == No trace LRA Special */
+                                    /*         Operation Exceptions */
     UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
 
@@ -6038,20 +6051,76 @@ int ostailor_cmd( int argc, char* argv[], char* cmdline )
     /* If no arguments, display the current setting */
     if (argc < 2)
     {
-        char   msgbuf[64];
+        char   msgbuf [64] = {0};
+        char   msgbuf2[64] = {0};
+
+        if (sysblk.pgminttr == OS_VM          ) ostailor = "VM";
 
         if (sysblk.pgminttr == OS_DEFAULT     ) ostailor = "DEFAULT";
         if (sysblk.pgminttr == OS_QUIET       ) ostailor = "QUIET";
         if (sysblk.pgminttr == OS_NULL        ) ostailor = "NULL";
+
+        if (sysblk.pgminttr == OS_OS390       ) ostailor = "OS/390";
+        if (sysblk.pgminttr == OS_ZOS         ) ostailor = "z/OS";
+        if (sysblk.pgminttr == OS_LINUX       ) ostailor = "LINUX";
+        if (sysblk.pgminttr == OS_OPENSOLARIS ) ostailor = "OpenSolaris";
+
         if (sysblk.pgminttr == OS_VSE
                           && !sysblk.nolrasoe ) ostailor = "VSE";
         if (sysblk.pgminttr == OS_VSE
                           &&  sysblk.nolrasoe ) ostailor = "z/VSE";
-        if (sysblk.pgminttr == OS_ZOS         ) ostailor = "z/OS";
-        if (sysblk.pgminttr == OS_LINUX       ) ostailor = "LINUX";
-        if (sysblk.pgminttr == OS_OPENSOLARIS ) ostailor = "OpenSolaris";
-        if (sysblk.pgminttr == OS_OS390       ) ostailor = "OS/390";
-        if (sysblk.pgminttr == OS_VM          ) ostailor = "VM";
+
+        /* If no exact OSTAILOR match, check if maybe sysblk.ostailor
+           identifies a verifiable previous "+OSTAILOR" setting. */
+        if (!ostailor)
+        {
+            /* Is existing OSTAILOR value still valid? */
+            if (sysblk.ostailor)
+            {
+                /* Yes, verify that it's still accurate */
+
+                U64 test_pgminttr = OS_NULL; // (0xFFFFFFFFFFFFFFFFULL)
+
+                if (sysblk.ostailor & OSTAILOR_VM         ) test_pgminttr &= OS_VM;
+
+                if (sysblk.ostailor & OSTAILOR_DEFAULT    ) test_pgminttr &= OS_DEFAULT;
+                if (sysblk.ostailor & OSTAILOR_QUIET      ) test_pgminttr &= OS_QUIET;
+                if (sysblk.ostailor & OSTAILOR_NULL       ) test_pgminttr &= OS_NULL;
+
+                if (sysblk.ostailor & OSTAILOR_OS390      ) test_pgminttr &= OS_OS390;
+                if (sysblk.ostailor & OSTAILOR_ZOS        ) test_pgminttr &= OS_ZOS;
+                if (sysblk.ostailor & OSTAILOR_LINUX      ) test_pgminttr &= OS_LINUX;
+                if (sysblk.ostailor & OSTAILOR_OPENSOLARIS) test_pgminttr &= OS_OPENSOLARIS;
+
+                if (sysblk.ostailor & OSTAILOR_VSE        ) test_pgminttr &= OS_VSE;
+
+                /* Is sysblk.ostailor still accurate? */
+                if (sysblk.pgminttr == test_pgminttr)
+                {
+                    /* Yep! Format current "xxx+yyy" OSTAILOR setting */
+            
+                    if (sysblk.ostailor & OSTAILOR_VM         ) STRLCAT( msgbuf2, "VM"          "+" );
+
+                    if (sysblk.ostailor & OSTAILOR_DEFAULT    ) STRLCAT( msgbuf2, "DEFAULT"     "+" );
+                    if (sysblk.ostailor & OSTAILOR_QUIET      ) STRLCAT( msgbuf2, "QUIET"       "+" );
+                    if (sysblk.ostailor & OSTAILOR_NULL       ) STRLCAT( msgbuf2, "NULL"        "+" );
+
+                    if (sysblk.ostailor & OSTAILOR_OS390      ) STRLCAT( msgbuf2, "OS390"       "+" );
+                    if (sysblk.ostailor & OSTAILOR_ZOS        ) STRLCAT( msgbuf2, "ZOS"         "+" );
+                    if (sysblk.ostailor & OSTAILOR_LINUX      ) STRLCAT( msgbuf2, "LINUX"       "+" );
+                    if (sysblk.ostailor & OSTAILOR_OPENSOLARIS) STRLCAT( msgbuf2, "OPENSOLARIS" "+" );
+
+                    if (sysblk.ostailor & OSTAILOR_VSE        )
+                    {
+                        char* vse = !sysblk.nolrasoe ? "VSE+" : "z/VSE+";
+                        STRLCAT( msgbuf2, vse );
+                    }
+
+                    /* (remove trailing "+") */
+                    ostailor = rtrim( msgbuf2, "+" );
+                }
+            }
+        }
 
         if (!ostailor)
             MSGBUF( msgbuf, "Custom(0x%16.16"PRIX64")", sysblk.pgminttr );
@@ -6075,8 +6144,8 @@ int ostailor_cmd( int argc, char* argv[], char* cmdline )
     }
     else if (ostailor[0] == '-')
     {
-        b_off = true;
         b_on  = false;
+        b_off = true;
         ostailor++;
     }
     else
@@ -6085,20 +6154,23 @@ int ostailor_cmd( int argc, char* argv[], char* cmdline )
         b_off = false;
     }
 
-    nolrasoe = false;
+    nolrasoe = sysblk.nolrasoe;
 
-         if (CMD( ostailor, NONE,    4 )) {   mask = OS_DEFAULT; b_on = false; b_off = false; }
-    else if (CMD( ostailor, DEFAULT, 3 )) {   mask = OS_DEFAULT; b_on = false; b_off = false; }
-    else if (CMD( ostailor, QUIET,   5 )) {   mask = OS_QUIET;   b_on = false; b_off = false; }
-    else if (CMD( ostailor, NULL,    4 )) {   mask = OS_NULL;    b_on = false; b_off = false; }
-    else if (CMD( ostailor, VSE,     2 )) {   mask = OS_VSE;     nolrasoe = false; }
-    else if (CMD( ostailor, Z/VSE,   4 )) {   mask = OS_VSE;     nolrasoe = true;  }
-    else if (CMD( ostailor, Z/VM,    4 ))     mask = OS_VM;
-    else if (CMD( ostailor, Z/OS,    4 ))     mask = OS_ZOS;
-    else if (CMD( ostailor, OpenSolaris, 4 )) mask = OS_OPENSOLARIS;
-    else if (CMD( ostailor, LINUX,   2 ))     mask = OS_LINUX;
-    else if (CMD( ostailor, OS/390,  2 ))     mask = OS_OS390;
-    else if (CMD( ostailor, VM,      2 ))     mask = OS_VM;
+         if (CMD( ostailor, VM,      2 ))     { ost = OSTAILOR_VM;          mask = OS_VM;          }
+    else if (CMD( ostailor, Z/VM,    4 ))     { ost = OSTAILOR_VM;          mask = OS_VM;          }
+
+    else if (CMD( ostailor, NONE,    4 ))     { ost = OSTAILOR_DEFAULT;     mask = OS_DEFAULT; b_on = false; b_off = false; }
+    else if (CMD( ostailor, DEFAULT, 3 ))     { ost = OSTAILOR_DEFAULT;     mask = OS_DEFAULT; b_on = false; b_off = false; }
+    else if (CMD( ostailor, QUIET,   5 ))     { ost = OSTAILOR_QUIET;       mask = OS_QUIET;   b_on = false; b_off = false; }
+    else if (CMD( ostailor, NULL,    4 ))     { ost = OSTAILOR_NULL;        mask = OS_NULL;    b_on = false; b_off = false; }
+
+    else if (CMD( ostailor, Z/OS,    4 ))     { ost = OSTAILOR_ZOS;         mask = OS_ZOS;         }
+    else if (CMD( ostailor, OpenSolaris, 4 )) { ost = OSTAILOR_OPENSOLARIS; mask = OS_OPENSOLARIS; }
+    else if (CMD( ostailor, LINUX,   2 ))     { ost = OSTAILOR_LINUX;       mask = OS_LINUX;       }
+    else if (CMD( ostailor, OS/390,  2 ))     { ost = OSTAILOR_OS390;       mask = OS_OS390;       }
+
+    else if (CMD( ostailor, VSE,     2 ))     { ost = OSTAILOR_VSE;         mask = OS_VSE;     nolrasoe = false; }
+    else if (CMD( ostailor, Z/VSE,   4 ))     { ost = OSTAILOR_VSE;         mask = OS_VSE;     nolrasoe = true;  }
     else
     {
         // "Invalid argument %s%s"
@@ -6106,9 +6178,21 @@ int ostailor_cmd( int argc, char* argv[], char* cmdline )
         return -1;
     }
 
-         if (b_off) sysblk.pgminttr |= ~mask;
-    else if (b_on)  sysblk.pgminttr &=  mask;
-    else            sysblk.pgminttr  =  mask;
+    if (b_on)
+    {
+        sysblk.ostailor |= ost;
+        sysblk.pgminttr &= mask;
+    }
+    else if (b_off)
+    {
+        sysblk.ostailor &= ~ost;
+        sysblk.pgminttr |= ~mask;
+    }
+    else
+    {
+        sysblk.ostailor = ost;
+        sysblk.pgminttr = mask;
+    }
 
     sysblk.nolrasoe = nolrasoe;
 

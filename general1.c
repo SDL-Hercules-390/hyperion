@@ -3095,6 +3095,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
                     regs->psw.cc = (v1 == v2 ? 0 : (v1 < v2 ? 1 : 2));
                     return;
                 }
+                /* FALLTHRU */
 
             default:
                 /* (1d) - other compare */

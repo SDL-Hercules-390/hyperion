@@ -1152,29 +1152,19 @@ int runtest( SCRCTL *pCtl, char *cmdline, char *args )
 
         /*           Has the test completed yet?
         **
-        ** Check that all Online CPUs are in the STOPPED state.
-        ** If this is the case, the test is complete.
+        ** Before test scripts are started the sysblk.scrtest
+        ** counter is always reset to '1' to indicate testing
+        ** mode is active (see further above). When each CPU
+        ** completes its test (by either stopping or loading
+        ** a disabled wait PSW) code in cpu.c then increments
+        ** sysblk.scrtest. Only when sysblk.scrtest has been
+        ** incremented past the number of configured CPUs is
+        ** the test then considered to be complete.
         */
-        if (!sysblk.started_mask)
+        if (sysblk.scrtest > sysblk.cpus)
         {
-            int i;
-            int all_stopped=1;
-            for(i=0;i<sysblk.maxcpu && all_stopped;i++)
-            {
-                if(IS_CPU_ONLINE(i))
-                {
-                    if(sysblk.regs[i]->cpustate!=CPUSTATE_STOPPED)
-                    {
-                        all_stopped=0;
-                        break;
-                    }
-                }
-            }
-            if(all_stopped)
-            {
-                    rc = 0;
-                    break;
-            }
+            rc = 0;
+            break;
         }
 
         /* Calculate how long to continue waiting  */

@@ -959,6 +959,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 //
 #endif
         U64     pgminttr;               /* Program int trace mask    */
+        U32     ostailor;               /* Current OSTAILOR setting  */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
         int     hercnice;               /* Herc. process NICE value  */
         int     minprio;                /* pthread minimum priority  */
