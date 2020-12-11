@@ -61,9 +61,6 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 /*-------------------------------------------------------------------*/
 /* CCW Tracing helper macros                                         */
 /*-------------------------------------------------------------------*/
-#ifndef OSTAILOR_QUIET
-#define OSTAILOR_QUIET()            (!sysblk.pgminttr)
-#endif
 
 #ifndef CCW_TRACE_OR_STEP
 #define CCW_TRACE_OR_STEP( dev )    ((dev)->ccwtrace || (dev)->ccwstep)
@@ -5326,7 +5323,7 @@ breakchain:
 
             BYTE  tracing_active  = CCW_TRACING_ACTIVE( dev, tracethis );
             BYTE  cpu_tracing     = CPU_STEPPING_OR_TRACING_ALL;
-            BYTE  ostailor_quiet  = OSTAILOR_QUIET();
+            BYTE  ostailor_quiet  = (sysblk.pgminttr == 0);
             BYTE  ccw_tracing     = CCW_TRACE_OR_STEP( dev );
             BYTE  skip_ch9uc      = SKIP_CH9UC( dev, chanstat, unitstat );
 
