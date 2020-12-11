@@ -1,4 +1,4 @@
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     1
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     1
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -53,7 +53,7 @@ ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test 
                                                     50 *
                                                     51 *
                                                     52 ***********************************************************************
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     2
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     2
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -109,7 +109,7 @@ ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test 
                                                    102 *     MVCLE  DEST(8),SRC2
                                                    103 *
                                                    104 ***********************************************************************
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     3
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     3
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -165,7 +165,7 @@ ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test 
                                                   3536+$BL      OPSYN JL
                                                   3537+$BM      OPSYN JM
                                                   3538+$BNE     OPSYN JNE
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     4
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     4
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -200,7 +200,7 @@ ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test 
                                                   3567+$ST      OPSYN STG
                                                   3568+$STM     OPSYN STMG
                                                   3569+$X       OPSYN XG
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     5
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     5
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -250,7 +250,7 @@ ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test 
 00000000  00080000 00000200                       3613+         PSWE390 0,0,0,0,BEGIN,24
 00000008                      00000008  00000200  3614+         ORG   CBUC+512         Reset CSECT to end of assigned storage area
                               00000000  00000807  3615+CBUC     CSECT
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     6
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     6
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
@@ -271,279 +271,294 @@ ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test 
 00000214  4140 0224                     00000224  3631          LA    R4,BEGIN2                Our restart entry point
 00000218  4040 01AE                     000001AE  3632          STH   R4,X'1AE'                Update restart PSW
 0000021C  AE02 0006                     00000006  3633          SIGP  R0,R2,X'06'              Restart our CPU
-00000220  47F0 0338                     00000338  3634          B     SIG1FAIL                 WTF?! How did we get here?!
+00000220  47F0 0358                     00000358  3634          B     SIG1FAIL                 WTF?! How did we get here?!
 
 00000224  4120 0001                     00000001  3636 BEGIN2   LA    R2,1                     Second CPU number
-00000228  4140 026E                     0000026E  3637          LA    R4,WRITER                Point to its entry point
+00000228  4140 028C                     0000028C  3637          LA    R4,WRITER                Point to its entry point
 0000022C  4040 01AE                     000001AE  3638          STH   R4,X'1AE'                Update restart PSW
 00000230  AE02 0006                     00000006  3639          SIGP  R0,R2,X'06'              Restart second CPU
-00000234  4770 0348                     00000348  3640          BNZ   SIG2FAIL                 WTF?! (SIGP failed!)
-                                                  3641 *        B     READER                   Enter our own work loop
+00000234  4770 0368                     00000368  3640          BNZ   SIG2FAIL                 WTF?! (SIGP failed!)
+
+00000238  B27C 0410                     00000410  3642          STCKF BEGCLOCK                 Get entry TOD
+0000023C  D407 0410 0380      00000410  00000380  3643          NC    BEGCLOCK,=X'FFFFFFFFC0000000'  (0.25 seconds)
+
+00000242  B27C 0418                     00000418  3645 WAITLOOP STCKF NOWCLOCK                 Get current TOD
+00000246  D407 0418 0380      00000418  00000380  3646          NC    NOWCLOCK,=X'FFFFFFFFC0000000'  (0.25 seconds)
+0000024C  D507 0418 0410      00000418  00000410  3647          CLC   NOWCLOCK,BEGCLOCK        Has 0.25 seconds passed yet?
+00000252  4780 0242                     00000242  3648          BE    WAITLOOP                 Not yet. Keep waiting.
 
 
 
 
 
+00000256  5800 0378                     00000378  3650 READER   L     R0,RDCOUNT               R0 <== loop count
+0000025A  9500 0500                     00000500  3651 READLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
+0000025E  4770 0322                     00000322  3652          BNE   STOPTEST                 Yes, then do so.
 
-00000238  5800 0358                     00000358  3643 READER   L     R0,RDCOUNT               R0 <== loop count
-0000023C  9500 0500                     00000500  3644 READLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
-00000240  4770 0304                     00000304  3645          BNE   STOPTEST                 Yes, then do so.
+00000262  D207 0800 0400      00000800  00000400  3654          MVC   WORK,READDEST            Grab copy of test value
 
-00000244  D207 0800 0400      00000800  00000400  3647          MVC   WORK,READDEST            Grab copy of test value
+00000268  D507 0800 0501      00000800  00000501  3656          CLC   WORK,PATTERN1            Is it all the first pattern?
+0000026E  4770 027A                     0000027A  3657          BNE   READ2                    No, check if second pattern
+00000272  4600 025A                     0000025A  3658          BCT   R0,READLOOP              Otherwise keep looping...
+00000276  47F0 0322                     00000322  3659          B     STOPTEST                 Done!
 
-0000024A  D507 0800 0501      00000800  00000501  3649          CLC   WORK,PATTERN1            Is it all the first pattern?
-00000250  4770 025C                     0000025C  3650          BNE   READ2                    No, check if second pattern
-00000254  4600 023C                     0000023C  3651          BCT   R0,READLOOP              Otherwise keep looping...
-00000258  47F0 0304                     00000304  3652          B     STOPTEST                 Done!
-
-0000025C  D507 0800 0513      00000800  00000513  3654 READ2    CLC   WORK,PATTERN2            Is it all the second pattern?
-00000262  4770 0320                     00000320  3655          BNE   FAILTEST                 No?! Then *FAIL* immediately!
-00000266  4600 023C                     0000023C  3656          BCT   R0,READLOOP              Otherwise keep looping...
-0000026A  47F0 0304                     00000304  3657          B     STOPTEST                 Done!
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     7
-
-  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
-
-0000026E  5800 035C                     0000035C  3659 WRITER   L     R0,WRCOUNT               R0 <== loop count
-00000272  9500 0500                     00000500  3660 WRITLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
-00000276  4770 0304                     00000304  3661          BNE   STOPTEST                 Yes, then do so.
-                                                  3662
-0000027A  9180 0600                     00000600  3663          TM    OPTFLAG,OPTMVC
-0000027E  4780 0288                     00000288  3664          BZ             NOMVC1
-00000282  D20F 03FD 0501      000003FD  00000501  3665          MVC   WRITDEST,PATTERN1        Move 1st pattern to target
-                              00000288  00000001  3666 NOMVC1   EQU   *
-
-00000288  9140 0600                     00000600  3668          TM    OPTFLAG,OPTMVCL
-0000028C  4780 02A0                     000002A0  3669          BZ             NOMVCL1
-00000290  4160 03FD                     000003FD  3670          LA    R6,WRITDEST              R6 --> destination
-00000294  4170 0010                     00000010  3671          LA    R7,L'WRITDEST            R7 <== destination length
-00000298  4180 0513                     00000513  3672          LA    R8,PATTERN2              R8 --> source
-0000029C  1897                                    3673          LR    R9,R7                    R9 <== source length
-0000029E  0E68                                    3674          MVCL  R6,R8                    move source to destination
-                              000002A0  00000001  3675 NOMVCL1  EQU   *
-
-000002A0  9120 0600                     00000600  3677          TM    OPTFLAG,OPTMVCLE
-000002A4  4780 02BA                     000002BA  3678          BZ             NOMVCLE1
-000002A8  4160 03FD                     000003FD  3679          LA    R6,WRITDEST              R6 --> destination
-000002AC  4170 0010                     00000010  3680          LA    R7,L'WRITDEST            R7 <== destination length
-000002B0  4180 0501                     00000501  3681          LA    R8,PATTERN1              R8 --> source
-000002B4  1897                                    3682          LR    R9,R7                    R9 <== source length
-000002B6  A868 0000                     00000000  3683          MVCLE R6,R8,0                  move source to destination
-                              000002BA  00000001  3684 NOMVCLE1 EQU   *
-
-000002BA  9180 0600                     00000600  3686          TM    OPTFLAG,OPTMVC
-000002BE  4780 02C8                     000002C8  3687          BZ             NOMVC2
-000002C2  D20F 03FD 0513      000003FD  00000513  3688          MVC   WRITDEST,PATTERN2        Move 1st pattern to target
-                              000002C8  00000001  3689 NOMVC2   EQU   *
-
-000002C8  9140 0600                     00000600  3691          TM    OPTFLAG,OPTMVCL
-000002CC  4780 02E0                     000002E0  3692          BZ             NOMVCL2
-000002D0  4160 03FD                     000003FD  3693          LA    R6,WRITDEST              R6 --> destination
-000002D4  4170 0010                     00000010  3694          LA    R7,L'WRITDEST            R7 <== destination length
-000002D8  4180 0501                     00000501  3695          LA    R8,PATTERN1              R8 --> source
-000002DC  1897                                    3696          LR    R9,R7                    R9 <== source length
-000002DE  0E68                                    3697          MVCL  R6,R8                    move source to destination
-                              000002E0  00000001  3698 NOMVCL2  EQU   *
-
-000002E0  9120 0600                     00000600  3700          TM    OPTFLAG,OPTMVCLE
-000002E4  4780 02FA                     000002FA  3701          BZ             NOMVCLE2
-000002E8  4160 03FD                     000003FD  3702          LA    R6,WRITDEST              R6 --> destination
-000002EC  4170 0010                     00000010  3703          LA    R7,L'WRITDEST            R7 <== destination length
-000002F0  4180 0513                     00000513  3704          LA    R8,PATTERN2              R8 --> source
-000002F4  1897                                    3705          LR    R9,R7                    R9 <== source length
-000002F6  A868 0000                     00000000  3706          MVCLE R6,R8,0                  move source to destination
-                              000002FA  00000001  3707 NOMVCLE2 EQU   *
-
-000002FA  4600 0272                     00000272  3709          BCT   R0,WRITLOOP              Otherwise keep looping...
-000002FE  47F0 0304                     00000304  3710          B     STOPTEST                 Done.
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     8
+0000027A  D507 0800 0513      00000800  00000513  3661 READ2    CLC   WORK,PATTERN2            Is it all the second pattern?
+00000280  4770 0340                     00000340  3662          BNE   FAILTEST                 No?! Then *FAIL* immediately!
+00000284  4600 025A                     0000025A  3663          BCT   R0,READLOOP              Otherwise keep looping...
+00000288  47F0 0322                     00000322  3664          B     STOPTEST                 Done!
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     7
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
-                                                  3712 ***********************************************************************
-                                                  3713 *                            PSWs
-                                                  3714 ***********************************************************************
+0000028C  5800 037C                     0000037C  3666 WRITER   L     R0,WRCOUNT               R0 <== loop count
+00000290  9500 0500                     00000500  3667 WRITLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
+00000294  4770 0322                     00000322  3668          BNE   STOPTEST                 Yes, then do so.
+                                                  3669
+00000298  9180 0600                     00000600  3670          TM    OPTFLAG,OPTMVC
+0000029C  4780 02A6                     000002A6  3671          BZ             NOMVC1
+000002A0  D20F 03FD 0501      000003FD  00000501  3672          MVC   WRITDEST,PATTERN1        Move 1st pattern to target
+                              000002A6  00000001  3673 NOMVC1   EQU   *
 
+000002A6  9140 0600                     00000600  3675          TM    OPTFLAG,OPTMVCL
+000002AA  4780 02BE                     000002BE  3676          BZ             NOMVCL1
+000002AE  4160 03FD                     000003FD  3677          LA    R6,WRITDEST              R6 --> destination
+000002B2  4170 0010                     00000010  3678          LA    R7,L'WRITDEST            R7 <== destination length
+000002B6  4180 0513                     00000513  3679          LA    R8,PATTERN2              R8 --> source
+000002BA  1897                                    3680          LR    R9,R7                    R9 <== source length
+000002BC  0E68                                    3681          MVCL  R6,R8                    move source to destination
+                              000002BE  00000001  3682 NOMVCL1  EQU   *
 
+000002BE  9120 0600                     00000600  3684          TM    OPTFLAG,OPTMVCLE
+000002C2  4780 02D8                     000002D8  3685          BZ             NOMVCLE1
+000002C6  4160 03FD                     000003FD  3686          LA    R6,WRITDEST              R6 --> destination
+000002CA  4170 0010                     00000010  3687          LA    R7,L'WRITDEST            R7 <== destination length
+000002CE  4180 0501                     00000501  3688          LA    R8,PATTERN1              R8 --> source
+000002D2  1897                                    3689          LR    R9,R7                    R9 <== source length
+000002D4  A868 0000                     00000000  3690          MVCLE R6,R8,0                  move source to destination
+                              000002D8  00000001  3691 NOMVCLE1 EQU   *
 
-00000302  00                                      3716 FAILFLAG DC       X'00'                 X'FF' == test has failed
+000002D8  9180 0600                     00000600  3693          TM    OPTFLAG,OPTMVC
+000002DC  4780 02E6                     000002E6  3694          BZ             NOMVC2
+000002E0  D20F 03FD 0513      000003FD  00000513  3695          MVC   WRITDEST,PATTERN2        Move 1st pattern to target
+                              000002E6  00000001  3696 NOMVC2   EQU   *
 
-00000304  9500 0302                     00000302  3718 STOPTEST CLI      FAILFLAG,X'00'        Should test end normally?
-00000308  4770 0320                     00000320  3719          BNE      FAILTEST              No! Test has failed!
+000002E6  9140 0600                     00000600  3698          TM    OPTFLAG,OPTMVCL
+000002EA  4780 02FE                     000002FE  3699          BZ             NOMVCL2
+000002EE  4160 03FD                     000003FD  3700          LA    R6,WRITDEST              R6 --> destination
+000002F2  4170 0010                     00000010  3701          LA    R7,L'WRITDEST            R7 <== destination length
+000002F6  4180 0501                     00000501  3702          LA    R8,PATTERN1              R8 --> source
+000002FA  1897                                    3703          LR    R9,R7                    R9 <== source length
+000002FC  0E68                                    3704          MVCL  R6,R8                    move source to destination
+                              000002FE  00000001  3705 NOMVCL2  EQU   *
 
-0000030C  92FF 0500                     00000500  3721          MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-                                                  3722          DWAITEND LOAD=YES              Normal completion
-00000310  8200 0318                     00000318  3724+         LPSW  DWAT0009
-00000318  000A0000 00000000                       3725+DWAT0009 PSWE390 0,0,2,0,X'000000'
+000002FE  9120 0600                     00000600  3707          TM    OPTFLAG,OPTMVCLE
+00000302  4780 0318                     00000318  3708          BZ             NOMVCLE2
+00000306  4160 03FD                     000003FD  3709          LA    R6,WRITDEST              R6 --> destination
+0000030A  4170 0010                     00000010  3710          LA    R7,L'WRITDEST            R7 <== destination length
+0000030E  4180 0513                     00000513  3711          LA    R8,PATTERN2              R8 --> source
+00000312  1897                                    3712          LR    R9,R7                    R9 <== source length
+00000314  A868 0000                     00000000  3713          MVCLE R6,R8,0                  move source to destination
+                              00000318  00000001  3714 NOMVCLE2 EQU   *
 
-
-
-
-00000320  92FF 0302                     00000302  3727 FAILTEST MVI      FAILFLAG,X'FF'        Indicate test has failed!
-00000324  92FF 0500                     00000500  3728          MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-                                                  3729          DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
-00000328  8200 0330                     00000330  3730+         LPSW  DWAT0010
-00000330  000A0000 00010BAD                       3731+DWAT0010 PSWE390 0,0,2,0,X'010BAD'
-
-
-
-
-00000338  92FF 0500                     00000500  3733 SIG1FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-                                                  3734          DWAIT    LOAD=YES,CODE=111     First SIGP failed
-0000033C  8200 0340                     00000340  3735+         LPSW  DWAT0011
-00000340  000A0000 00010111                       3736+DWAT0011 PSWE390 0,0,2,0,X'010111'
-
-
-
-
-00000348  92FF 0500                     00000500  3738 SIG2FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
-                                                  3739          DWAIT    LOAD=YES,CODE=222     Second SIGP failed
-0000034C  8200 0350                     00000350  3740+         LPSW  DWAT0012
-00000350  000A0000 00010222                       3741+DWAT0012 PSWE390 0,0,2,0,X'010222'
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page     9
-
-  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
-
-                                                  3743 ***********************************************************************
-                                                  3744 *                       Working Storage
-                                                  3745 ***********************************************************************
-
-00000358  00000000                                3747 RDCOUNT  DC    A(RDLOOPS)               Number of reader thread loops
-0000035C  00000000                                3748 WRCOUNT  DC    A(WRLOOPS)               Number of writer thread loops
-
-00000360                                          3750          LTORG ,                        Literals pool
-
-
-
-
-00000360                      00000360  000003F8  3752          ORG   CBUC+X'400'-8
-
-000003F8  00000000 00                             3754          DC    XL5'0000000000'          Unaligned writer destination
-000003FD                                          3755 WRITDEST DS    0CL16                    Writer thread destination
-000003FD  C1C1C1                                  3756          DC    CL3'AAA'
-00000400  C2C2C2C2 C2C2C2C2                       3757 READDEST DC    CL8'BBBBBBBB'            MUST be doubleword ALIGNED!
-00000408  C1C1C1C1 C1                             3758          DC    CL5'AAAAA'
-
-
-
-
-0000040D                      0000040D  00000500  3760          ORG   CBUC+X'500'              Fixed address of 'stop' flag
-
-00000500  00                                      3762 STOPFLAG DC    X'00'                    Set to non-zero to stop test
-00000501  C1C1C1C1 C1C1C1C1                       3763 PATTERN1 DC    CL16'AAAAAAAAAAAAAAAA'   Should be unaligned
-00000511  0000                                    3764          DC    XL2'0000'
-00000513  C2C2C2C2 C2C2C2C2                       3765 PATTERN2 DC    CL16'BBBBBBBBBBBBBBBB'   Should also be unaligned
-
-
-
-
-00000523                      00000523  00000600  3767          ORG   CBUC+X'600'              Fixed address of 'option' flag
-
-                              00000080  00000001  3769 OPTMVC   EQU   X'80'                    Use 'MVC'   in write loop
-                              00000040  00000001  3770 OPTMVCL  EQU   X'40'                    Use 'MVCL'  in write loop
-                              00000020  00000001  3771 OPTMVCLE EQU   X'20'                    Use 'MVCLE' in write loop
-
-00000600  E0                                      3773 OPTFLAG  DC    AL1(OPTMVC+OPTMVCL+OPTMVCLE)   Test options flag
-
-
-
-
-00000601                      00000601  00000800  3775          ORG   CBUC+X'800'
-
-00000800  40404040 40404040                       3777 WORK     DC    CL8' '                   MUST be doubleword ALIGNED!
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page    10
+00000318  4600 0290                     00000290  3716          BCT   R0,WRITLOOP              Otherwise keep looping...
+0000031C  47F0 0322                     00000322  3717          B     STOPTEST                 Done.
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     8
 
   LOC        OBJECT CODE       ADDR1     ADDR2    STMT
 
+                                                  3719 ***********************************************************************
+                                                  3720 *                            PSWs
+                                                  3721 ***********************************************************************
 
 
 
-                              00000000  00000001  3780 R0       EQU   0
-                              00000001  00000001  3781 R1       EQU   1
-                              00000002  00000001  3782 R2       EQU   2
-                              00000003  00000001  3783 R3       EQU   3
-                              00000004  00000001  3784 R4       EQU   4
-                              00000005  00000001  3785 R5       EQU   5
-                              00000006  00000001  3786 R6       EQU   6
-                              00000007  00000001  3787 R7       EQU   7
-                              00000008  00000001  3788 R8       EQU   8
-                              00000009  00000001  3789 R9       EQU   9
-                              0000000A  00000001  3790 R10      EQU   10
-                              0000000B  00000001  3791 R11      EQU   11
-                              0000000C  00000001  3792 R12      EQU   12
-                              0000000D  00000001  3793 R13      EQU   13
-                              0000000E  00000001  3794 R14      EQU   14
-                              0000000F  00000001  3795 R15      EQU   15
+00000320  00                                      3723 FAILFLAG DC       X'00'                 X'FF' == test has failed
+
+00000322  9500 0320                     00000320  3725 STOPTEST CLI      FAILFLAG,X'00'        Should test end normally?
+00000326  4770 0340                     00000340  3726          BNE      FAILTEST              No! Test has failed!
+
+0000032A  92FF 0500                     00000500  3728          MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                                  3729          DWAITEND LOAD=YES              Normal completion
+0000032E  8200 0338                     00000338  3731+         LPSW  DWAT0009
+00000338  000A0000 00000000                       3732+DWAT0009 PSWE390 0,0,2,0,X'000000'
 
 
 
 
-                                                  3797          END
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page    11
+00000340  92FF 0320                     00000320  3734 FAILTEST MVI      FAILFLAG,X'FF'        Indicate test has failed!
+00000344  92FF 0500                     00000500  3735          MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                                  3736          DWAIT    LOAD=YES,CODE=BAD     Abnormal termination
+00000348  8200 0350                     00000350  3737+         LPSW  DWAT0010
+00000350  000A0000 00010BAD                       3738+DWAT0010 PSWE390 0,0,2,0,X'010BAD'
+
+
+
+
+00000358  92FF 0500                     00000500  3740 SIG1FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                                  3741          DWAIT    LOAD=YES,CODE=111     First SIGP failed
+0000035C  8200 0360                     00000360  3742+         LPSW  DWAT0011
+00000360  000A0000 00010111                       3743+DWAT0011 PSWE390 0,0,2,0,X'010111'
+
+
+
+
+00000368  92FF 0500                     00000500  3745 SIG2FAIL MVI      STOPFLAG,X'FF'        Tell the other CPU to stop
+                                                  3746          DWAIT    LOAD=YES,CODE=222     Second SIGP failed
+0000036C  8200 0370                     00000370  3747+         LPSW  DWAT0012
+00000370  000A0000 00010222                       3748+DWAT0012 PSWE390 0,0,2,0,X'010222'
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3750 ***********************************************************************
+                                                  3751 *                       Working Storage
+                                                  3752 ***********************************************************************
+
+00000378  00000000                                3754 RDCOUNT  DC    A(RDLOOPS)               Number of reader thread loops
+0000037C  00000000                                3755 WRCOUNT  DC    A(WRLOOPS)               Number of writer thread loops
+
+00000380                                          3757          LTORG ,                        Literals pool
+00000380  FFFFFFFF C0000000                       3758                =X'FFFFFFFFC0000000'
+
+
+
+
+00000388                      00000388  000003F8  3760          ORG   CBUC+X'400'-8
+
+000003F8  00000000 00                             3762          DC    XL5'0000000000'          Unaligned writer destination
+000003FD                                          3763 WRITDEST DS    0CL16                    Writer thread destination
+000003FD  C1C1C1                                  3764          DC    CL3'AAA'
+00000400  C2C2C2C2 C2C2C2C2                       3765 READDEST DC    CL8'BBBBBBBB'            MUST be doubleword ALIGNED!
+00000408  C1C1C1C1 C1                             3766          DC    CL5'AAAAA'
+
+00000410  00000000 00000000                       3768 BEGCLOCK DC    D'0'                     CPU 0 entry TOD
+00000418  00000000 00000000                       3769 NOWCLOCK DC    D'0'                     CPU 0 start TOD
+
+
+
+
+00000420                      00000420  00000500  3771          ORG   CBUC+X'500'              Fixed address of 'stop' flag
+
+00000500  00                                      3773 STOPFLAG DC    X'00'                    Set to non-zero to stop test
+00000501  C1C1C1C1 C1C1C1C1                       3774 PATTERN1 DC    CL16'AAAAAAAAAAAAAAAA'   Should be unaligned
+00000511  0000                                    3775          DC    XL2'0000'
+00000513  C2C2C2C2 C2C2C2C2                       3776 PATTERN2 DC    CL16'BBBBBBBBBBBBBBBB'   Should also be unaligned
+
+
+
+
+00000523                      00000523  00000600  3778          ORG   CBUC+X'600'              Fixed address of 'option' flag
+
+                              00000080  00000001  3780 OPTMVC   EQU   X'80'                    Use 'MVC'   in write loop
+                              00000040  00000001  3781 OPTMVCL  EQU   X'40'                    Use 'MVCL'  in write loop
+                              00000020  00000001  3782 OPTMVCLE EQU   X'20'                    Use 'MVCLE' in write loop
+
+00000600  E0                                      3784 OPTFLAG  DC    AL1(OPTMVC+OPTMVCL+OPTMVCLE)   Test options flag
+
+
+
+
+00000601                      00000601  00000800  3786          ORG   CBUC+X'800'
+
+00000800  40404040 40404040                       3788 WORK     DC    CL8' '                   MUST be doubleword ALIGNED!
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+
+
+
+                              00000000  00000001  3791 R0       EQU   0
+                              00000001  00000001  3792 R1       EQU   1
+                              00000002  00000001  3793 R2       EQU   2
+                              00000003  00000001  3794 R3       EQU   3
+                              00000004  00000001  3795 R4       EQU   4
+                              00000005  00000001  3796 R5       EQU   5
+                              00000006  00000001  3797 R6       EQU   6
+                              00000007  00000001  3798 R7       EQU   7
+                              00000008  00000001  3799 R8       EQU   8
+                              00000009  00000001  3800 R9       EQU   9
+                              0000000A  00000001  3801 R10      EQU   10
+                              0000000B  00000001  3802 R11      EQU   11
+                              0000000C  00000001  3803 R12      EQU   12
+                              0000000D  00000001  3804 R13      EQU   13
+                              0000000E  00000001  3805 R14      EQU   14
+                              0000000F  00000001  3806 R15      EQU   15
+
+
+
+
+                                                  3808          END
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page    11
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
+BEGCLOCK            D    000410       8  3768  3642  3643  3647
 BEGIN               I    000200       2  3623  3613
 BEGIN2              I    000224       4  3636  3631
-CBUC                J    000000    2056  3577  3580  3587  3601  3612  3614  3752  3760  3767  3775  3621
+CBUC                J    000000    2056  3577  3580  3587  3601  3612  3614  3760  3771  3778  3786  3621
 CODE                2    000000    2056  3577
-DWAT0009            3    000318       8  3725  3724
-DWAT0010            3    000330       8  3731  3730
-DWAT0011            3    000340       8  3736  3735
-DWAT0012            3    000350       8  3741  3740
-FAILFLAG            X    000302       1  3716  3718  3727
-FAILTEST            I    000320       4  3727  3655  3719
+DWAT0009            3    000338       8  3732  3731
+DWAT0010            3    000350       8  3738  3737
+DWAT0011            3    000360       8  3743  3742
+DWAT0012            3    000370       8  3748  3747
+FAILFLAG            X    000320       1  3723  3725  3734
+FAILTEST            I    000340       4  3734  3662  3726
 IMAGE               1    000000    2056     0
-NOMVC1              U    000288       1  3666  3664
-NOMVC2              U    0002C8       1  3689  3687
-NOMVCL1             U    0002A0       1  3675  3669
-NOMVCL2             U    0002E0       1  3698  3692
-NOMVCLE1            U    0002BA       1  3684  3678
-NOMVCLE2            U    0002FA       1  3707  3701
-OPTFLAG             R    000600       1  3773  3663  3668  3677  3686  3691  3700
-OPTMVC              U    000080       1  3769  3663  3686  3773
-OPTMVCL             U    000040       1  3770  3668  3691  3773
-OPTMVCLE            U    000020       1  3771  3677  3700  3773
-PATTERN1            C    000501      16  3763  3649  3665  3681  3695
-PATTERN2            C    000513      16  3765  3654  3672  3688  3704
+NOMVC1              U    0002A6       1  3673  3671
+NOMVC2              U    0002E6       1  3696  3694
+NOMVCL1             U    0002BE       1  3682  3676
+NOMVCL2             U    0002FE       1  3705  3699
+NOMVCLE1            U    0002D8       1  3691  3685
+NOMVCLE2            U    000318       1  3714  3708
+NOWCLOCK            D    000418       8  3769  3645  3646  3647
+OPTFLAG             R    000600       1  3784  3670  3675  3684  3693  3698  3707
+OPTMVC              U    000080       1  3780  3670  3693  3784
+OPTMVCL             U    000040       1  3781  3675  3698  3784
+OPTMVCLE            U    000020       1  3782  3684  3707  3784
+PATTERN1            C    000501      16  3774  3656  3672  3688  3702
+PATTERN2            C    000513      16  3776  3661  3679  3695  3711
 PREVORG             U    000200       1  3600  3604
-R0                  U    000000       1  3780  3621  3623  3627  3633  3639  3643  3651  3656  3659  3709
-R1                  U    000001       1  3781  3624  3629
-R10                 U    00000A       1  3790
-R11                 U    00000B       1  3791
-R12                 U    00000C       1  3792
-R13                 U    00000D       1  3793
-R14                 U    00000E       1  3794
-R15                 U    00000F       1  3795
-R2                  U    000002       1  3782  3625  3627  3630  3633  3636  3639
-R3                  U    000003       1  3783  3626
-R4                  U    000004       1  3784  3631  3632  3637  3638
-R5                  U    000005       1  3785
-R6                  U    000006       1  3786  3670  3674  3679  3683  3693  3697  3702  3706
-R7                  U    000007       1  3787  3671  3673  3680  3682  3694  3696  3703  3705
-R8                  U    000008       1  3788  3672  3674  3681  3683  3695  3697  3704  3706
-R9                  U    000009       1  3789  3673  3682  3696  3705
-RDCOUNT             A    000358       4  3747  3643
-RDLOOPS             U    000000       1    68  3747
-READ2               I    00025C       6  3654  3650
-READDEST            C    000400       8  3757  3647
-READER              I    000238       4  3643
-READLOOP            I    00023C       4  3644  3651  3656
-SIG1FAIL            I    000338       4  3733  3634
-SIG2FAIL            I    000348       4  3738  3640
-STOPFLAG            X    000500       1  3762  3644  3660  3721  3728  3733  3738
-STOPTEST            I    000304       4  3718  3645  3652  3657  3661  3710
-WORK                C    000800       8  3777  3647  3649  3654
-WRCOUNT             A    00035C       4  3748  3659
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page    12
+R0                  U    000000       1  3791  3621  3623  3627  3633  3639  3650  3658  3663  3666  3716
+R1                  U    000001       1  3792  3624  3629
+R10                 U    00000A       1  3801
+R11                 U    00000B       1  3802
+R12                 U    00000C       1  3803
+R13                 U    00000D       1  3804
+R14                 U    00000E       1  3805
+R15                 U    00000F       1  3806
+R2                  U    000002       1  3793  3625  3627  3630  3633  3636  3639
+R3                  U    000003       1  3794  3626
+R4                  U    000004       1  3795  3631  3632  3637  3638
+R5                  U    000005       1  3796
+R6                  U    000006       1  3797  3677  3681  3686  3690  3700  3704  3709  3713
+R7                  U    000007       1  3798  3678  3680  3687  3689  3701  3703  3710  3712
+R8                  U    000008       1  3799  3679  3681  3688  3690  3702  3704  3711  3713
+R9                  U    000009       1  3800  3680  3689  3703  3712
+RDCOUNT             A    000378       4  3754  3650
+RDLOOPS             U    000000       1    68  3754
+READ2               I    00027A       6  3661  3657
+READDEST            C    000400       8  3765  3654
+READER              I    000256       4  3650
+READLOOP            I    00025A       4  3651  3658  3663
+SIG1FAIL            I    000358       4  3740  3634
+SIG2FAIL            I    000368       4  3745  3640
+STOPFLAG            X    000500       1  3773  3651  3667  3728  3735  3740  3745
+STOPTEST            I    000322       4  3725  3652  3659  3664  3668  3717
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page    12
 
      SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
 
-WRITDEST            C    0003FD      16  3755  3665  3670  3671  3679  3680  3688  3693  3694  3702  3703
-WRITER              I    00026E       4  3659  3637
-WRITLOOP            I    000272       4  3660  3709
-WRLOOPS             U    000000       1    67  3748
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page    13
+WAITLOOP            I    000242       4  3645  3648
+WORK                C    000800       8  3788  3654  3656  3661
+WRCOUNT             A    00037C       4  3755  3666
+WRITDEST            C    0003FD      16  3763  3672  3677  3678  3686  3687  3695  3700  3701  3709  3710
+WRITER              I    00028C       4  3666  3637
+WRITLOOP            I    000290       4  3667  3716
+WRLOOPS             U    000000       1    67  3755
+=X'FFFFFFFFC0000000'
+                    X    000380       8  3758  3643  3646
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page    13
 
  MACRO     DEFN  REFERENCES
 
@@ -557,8 +572,8 @@ ASAREA      866
 ASAZAREA   1051
 CPUWAIT    1134
 DSECTS     1460
-DWAIT      1663   3723   3729   3734   3739
-DWAITEND   1720   3722
+DWAIT      1663   3730   3736   3741   3746
+DWAITEND   1720   3729
 ENADEV     1728
 ESA390     1828
 IOCB       1839
@@ -582,7 +597,7 @@ ZEROH      3387
 ZEROL      3415
 ZEROLH     3443
 ZEROLL     3466
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page    14
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page    14
 
    DESC    SYMBOL  SIZE    POS      ADDR
 
@@ -591,7 +606,7 @@ Entry: 0
 Image      IMAGE   2056  000-807  000-807
   Region   CODE    2056  000-807  000-807
     CSECT  CBUC    2056  000-807  000-807
-ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     07 Dec 2020 13:33:19  Page    15
+ASMA Ver. 0.2.1                 Concurrent Block Update Consistency (CBUC) test                     10 Dec 2020 14:45:09  Page    15
 
    STMT                                             FILE NAME
 

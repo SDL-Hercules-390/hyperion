@@ -160,8 +160,15 @@ BEGIN2   LA    R2,1                     Second CPU number
          STH   R4,X'1AE'                Update restart PSW
          SIGP  R0,R2,X'06'              Restart second CPU
          BNZ   SIG2FAIL                 WTF?! (SIGP failed!)
-*        B     READER                   Enter our own work loop
-                                                                SPACE 6
+                                                                SPACE
+         STCKF BEGCLOCK                 Get entry TOD
+         NC    BEGCLOCK,=X'FFFFFFFFC0000000'  (0.25 seconds)
+                                                                SPACE
+WAITLOOP STCKF NOWCLOCK                 Get current TOD
+         NC    NOWCLOCK,=X'FFFFFFFFC0000000'  (0.25 seconds)
+         CLC   NOWCLOCK,BEGCLOCK        Has 0.25 seconds passed yet?
+         BE    WAITLOOP                 Not yet. Keep waiting.
+                                                                SPACE 5
 READER   L     R0,RDCOUNT               R0 <== loop count
 READLOOP CLI   STOPFLAG,X'00'           Are we being asked to stop?
          BNE   STOPTEST                 Yes, then do so.
@@ -269,6 +276,9 @@ WRITDEST DS    0CL16                    Writer thread destination
          DC    CL3'AAA'
 READDEST DC    CL8'BBBBBBBB'            MUST be doubleword ALIGNED!
          DC    CL5'AAAAA'
+                                                                SPACE
+BEGCLOCK DC    D'0'                     CPU 0 entry TOD
+NOWCLOCK DC    D'0'                     CPU 0 start TOD
                                                                 SPACE 4
          ORG   CBUC+X'500'              Fixed address of 'stop' flag
                                                                 SPACE
