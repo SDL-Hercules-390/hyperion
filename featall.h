@@ -57,6 +57,8 @@
 
 #define CKD_MAXFILES                 27 /* Max files per CKD volume  */
 
+#define PANEL_REFRESH_RATE_MIN    (1000 / CLK_TCK)  /* (likely 1ms!) */
+#define PANEL_REFRESH_RATE_MAX     5000 /* Arbitrary, but reasonable */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate (msecs) */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate (msecs) */
 

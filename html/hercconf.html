@@ -41,13 +41,16 @@ a real System/390.  The configuration file is an ASCII text file.
     #                       <a href="#system_parameters">SYSTEM PARAMETERS</a>
     #------------------------------------------------------------------
 
-    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated)
-    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated)
+    <a href="#HERCPRIO">##HERCPRIO</a>   0                                        (deprecated; unsupported)
+    <a href="#HERCPRIO">##TODPRIO</a>    -20                                      (deprecated; unsupported)
+    <a href="#HERCPRIO">##DEVPRIO</a>    8                                        (deprecated; unsupported)
+    <a href="#HERCPRIO">##CPUPRIO</a>    0                                        (deprecated; unsupported)
 
-    <a href="#HERCPRIO">##HERCPRIO</a>   0                                        (deprecated)
-    <a href="#HERCPRIO">##TODPRIO</a>    -20                                      (deprecated)
-    <a href="#HERCPRIO">##DEVPRIO</a>    8                                        (deprecated)
-    <a href="#HERCPRIO">##CPUPRIO</a>    0                                        (deprecated)
+    <a href="#ARCHLVL">##ARCHMODE</a>   ESA/390                                  (deprecated; use ARCHLVL)
+    <a href="#ASN_AND_LX_REUSE">##ASN_AND_LX_REUSE</a>  disable                           (deprecated; use FACILITY)
+
+    <a href="#PANRATE">##PANRATE</a>    FAST                                     (deprecated; use PANOPT)
+    <a href="#PANTITLE">##PANTITLE</a>   "My own private MAINFRAME!"              (deprecated; use PANOPT)
 
     <a href="#ARCHLVL">ARCHLVL</a>    ESA/390
     <a href="#FACILITY">FACILITY</a>   ENABLE 044_PFPO
@@ -89,11 +92,9 @@ a real System/390.  The configuration file is an ASCII text file.
     <a href="#CCKD">CCKD</a>       NOSFD=1
     <a href="#SHRDPORT">SHRDPORT</a>   3990
 
-    <a href="#PANOPT">PANOPT</a>     NAMEONLY MSGCOLOR=DARK
-    <a href="#PANRATE">PANRATE</a>    FAST
-    <a href="#PANTITLE">PANTITLE</a>   "My own private MAINFRAME!"
+    <a href="#PANOPT">PANOPT</a>     NAMEONLY RATE=FAST MSGCOLOR=DARK "TITLE=My own private MAINFRAME!"
+    <a href="#LOGOPT">LOGOPT</a>     TIMESTAMP NODATESTAMP
 
-    <a href="#LOGOPT">LOGOPT</a>     NODATESTAMP TIMESTAMP
     <a href="#CODEPAGE">CODEPAGE</a>   819/1047
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#CONKPALV">CONKPALV</a>   (3,1,10)
@@ -231,7 +232,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="ASN_AND_LX_REUSE"></a>
-<dt><code>ASN_AND_LX_REUSE &nbsp; <u>ENABLE</u> &#124; DISABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>ASN_AND_LX_REUSE &nbsp; <u>ENABLE</u> &#124; DISABLE</code> &nbsp; &nbsp; &nbsp; <i>(deprecated; use FACILITY)</i>
 <dd><p>
     Specifies whether the ASN-and-LX-Reuse Facility (ALRF) should be enabled
     or disabled. The default is enabled. This is a z/Architecture-only feature
@@ -871,14 +872,15 @@ a real System/390.  The configuration file is an ASCII text file.
    <p>
 
 <a name="HERCPRIO"></a>
-<dt><code>HERCPRIO &nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
-<dt><code>TODPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
-<dt><code>DEVPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
-<dt><code>CPUPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated)</i>
+<dt><code>HERCPRIO &nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; supported)</i>
+<dt><code>TODPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; supported)</i>
+<dt><code>DEVPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; supported)</i>
+<dt><code>CPUPRIO &nbsp;&nbsp;<em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; supported)</i>
 <dd><p>
     The ability to define process and thread priorities has been
-    <a href="hercrnot.html#4.1">removed</a> from SDL Hyperion as of version <a href="hercrnot.html#4.1">4.1</a>.
-    You should remove all such statements from your configuration file.
+    <a href="hercrnot.html#4.1">removed</a> from SDL Hyperion as of version
+    <a href="hercrnot.html#4.1">4.1</a>. You should remove all such statements
+    from your configuration file.
     <p>
 
 <a name="HTTPPORT"></a>
@@ -1282,14 +1284,18 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="PANOPT"></a>
-<dt><code>PANOPT &nbsp; <u>FULLPATH</u>&#124;NAMEONLY &nbsp; MSGCOLOR=<u>NO</u>&#124;DARK&#124;LIGHT</code>
+<dt><code>PANOPT &nbsp; <u>FULLPATH</u>&#124;NAMEONLY RATE=<u>SLOW</u>&#124;FAST&#124;<em>nnn</em> MSGCOLOR=<u>NO</u>&#124;DARK&#124;LIGHT TITLE=xxx</code>
 <dd><p>
     Defines panel display options.
-    <p>
     <code>NAMEONLY</code> requests the extended panel screen (that displays
     the list of devices and is reached by pressing the ESC key) to display only
-    the emulated device's base filename. <code>FULLPATH</code> displays the
-    file's full path filename. The default is <code><u>FULLPATH</u></code>.
+    the emulated device's base filename. The default is <code><u>FULLPATH</u></code>
+    which displays the file's full path filename.
+    <p>
+    <code>RATE=<em>nnn</em></code> specifies the panel refresh rate in
+    milliseconds between screen refreshes. <code>RATE=SLOW</code> is the same as 500.
+    <code>RATE=FAST</code> is the same as 50. A value less than the system clock
+    tick interval or greater than 5000 will be rejected. <code><u>SLOW</u></code> is the default.
     <p>
     <code>MSGCOLOR=DARK</code> displays colorized panel messages meant for
     'dark' panels (such as white text on black background) whereas
@@ -1297,39 +1303,44 @@ a real System/390.  The configuration file is an ASCII text file.
     text on light backgrounds. Only 'E' (error), 'W' (warning), 'D' (debug)
     and 'I' (informational) messages are colorized. Any message not detected
     as a Hercules "HHCnnnnnX" format message are not colorized. The colors
-    are currently hard coded.
+    are currently hard coded and cannot be changed. <code><u>NO</u></code> is the
+    default but <code>DARK</code> or <code>LIGHT</code> (as appropriate for your system)
+    is encouraged as it makes error and warning messages more noticeable
+    and less likely to be missed.
     <p>
-    <code><u>NO</u></code> is the default but <code>DARK&#124;LIGHT</code>
-    (as appropriate for your system) is encouraged as it makes error and
-    warning messages more noticeable and less likely to be missed.
+    <code>TITLE=xxx</code> defines an optional console window title-bar string
+    to be used in place of the default supplied by the windowing system, and allows
+    you to distinguish between different Hercules sessions (instances) running 
+    on the same machine. If the value contains any blanks, the entire option
+    specification should be enclosed within double-quotes (e.g. <code>"TITLE=my title"</code>,
+    <i>not</i> &nbsp;<code>TITLE="my title"</code> which is an error).
+    <p>
+    The <code>TITLE=</code> option takes effect only when the Hercules console
+    is displayed on either an xterm terminal (commonly used on Unix systems)
+    or in a Command Prompt window on Windows systems.
+    <p>
+    <b>Note:</b> neither the <code>MSGCOLOR=</code> nor the <code>TITLE=</code> option
+    has any effect when Hercules is run under the control of an external GUI since
+    since Hercules's console window is hidden in favor of using the external GUI's
+    window instead (and the GUI is in control of its own colors). The <code>RATE=</code>
+    option however, controls how often the external GUI will refresh its own window
+    and other user-interface controls. Similarly, the <code>FULLPATH</code> and
+    <code>NAMEONLY</code> option controls how the external GUI displays your list
+    of emulated devices.
     <p>
 
 <a name="PANRATE"></a>
-<dt><code>PANRATE &nbsp; <u>SLOW</u> &#124; FAST &#124; <em>nn</em></code>
+<dt><code>PANRATE &nbsp; <u>SLOW</u> &#124; FAST &#124; <em>nn</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; use PANOPT instead)</i>
 <dd><p>
-    Specifies the panel refresh rate, in milliseconds between refreshes. SLOW
-    is the same as 500, and FAST is the same as 50. A value less than the
-    Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
-    5000, will be rejected. SLOW is the default.
+    This statement has been deprecated in favor of the
+    <code><a href="#PANOPT">PANOPT</a></code> statement instead.
     <p>
 
 <a name="PANTITLE"></a>
-<dt><code>PANTITLE &nbsp; <em>"title-string"</em></code>
+<dt><code>PANTITLE &nbsp; <em>"title-string"</em></code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <i>(deprecated; use PANOPT instead)</i>
 <dd><p>
-    Specifies an optional console window title-bar string to be used
-    in place of the default supplied by the windowing system. If the value
-    contains any blanks it must be enclosed within double-quotes.
-    <p>
-    This option allows one to distinguish between different Hercules
-    sessions when running more than one instance of Hercules on the same
-    machine.
-    <p>
-    This option takes effect only when the Hercules console is displayed
-    on an xterm terminal (commonly used on Unix systems), or
-    in a Windows command prompt window.
-    Note that this option has no effect when Hercules is run under control
-    of the Hercules GUI since Hercules's console window is hidden in favor
-    of using the GUI's window instead.
+    This statement has been deprecated in favor of the
+    <code><a href="#PANOPT">PANOPT</a></code> statement instead.
     <p>
 
 <a name="PGMPRDOS"></a>

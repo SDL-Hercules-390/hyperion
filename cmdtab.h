@@ -963,52 +963,48 @@
   "them. SEE ALSO the 'pgmtrace' command which allows you to further fine\n"    \
   "tune the tracing of program interrupt exceptions.\n"
 
-#define panopt_cmd_desc         "Display or set panel options"
+#define panopt_cmd_desc         "Set or display panel options"
 #define panopt_cmd_help         \
                                 \
-  "Format: \"panopt [MSGCOLOR=NO|DARK|LIGHT] [FULLPATH|NAMEONLY]\" sets or\n"       \
-  "displays panel options. MSGCOLOR=DARK displays colorized panel messages\n"       \
-  "meant for 'dark' panels (e.g. white text on black background) whereas\n"         \
-  "MSGCOLOR=LIGHT is meant for panels using black text on white backgrounds.\n"     \
+  "Format:\n"                                                                       \
+  "\n"                                                                              \
+  "  panopt [FULLpath|NAMEonly] [RATE=n] [MSGCOLOR=NO|DARK|LIGHT] [TITLE=xxx]\n"    \
+  "\n"                                                                              \
   "NAMEONLY requests the extended panel screen (that displays the list of\n"        \
   "devices and is reached by pressing the ESC key) to display the emulated\n"       \
   "device's base filename only, whereas FULLPATH (the default) displays the\n"      \
-  "file's full path filename. No arguments at all displays current settings.\n"
+  "file's full path filename.\n"                                                    \
+  "\n"                                                                              \
+  "RATE=nnn sets the panel refresh rate to nnn milliseconds. RATE=FAST sets\n"      \
+  "the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds. RATE=SLOW sets the refresh rate to\n" \
+  QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"                                  \
+  "\n"                                                                              \
+  "MSGCOLOR=DARK displays colorized panel messages meant for dark colored\n"        \
+  "panels (e.g. white text on black background) whereas MSGCOLOR=LIGHT is\n"        \
+  "meant for light colored panels (e.g. black text on white background).\n"         \
+  "\n"                                                                              \
+  "TITLE=xxx sets an optional console window title-bar string to be used in\n"      \
+  "place of the default supplied by the windowing system. The entire TITLE=\n"      \
+  "argument should be enclosed within double quotes if it contains any blanks\n"    \
+  "(e.g. use \"TITLE=my title\" and not TITLE=\"my title\" which is an error).\n"   \
+  "An empty string (\"TITLE=\") will remove the existing console title. The\n"      \
+  "default console title is the string consisting of:\n"                            \
+  "\n"                                                                              \
+  "     LPARNAME - SYSTYPE * SYSNAME * SYSPLEX - System Status: color\n"            \
+  "\n"                                                                              \
+  "SYSTYPE, SYSNAME, and SYSPLEX are populated by the system call SCLP Control\n"   \
+  "Program Identification. If a value is blank then that field is not shown.\n"     \
+  "\n"                                                                              \
+  "System Status colors are:\n"                                                     \
+  "\n"                                                                              \
+  "     GREEN       everything is working correctly\n"                              \
+  "     YELLOW      one or more CPUs are not running\n"                             \
+  "     RED         one or more CPUs are in a disabled wait state\n"                \
+  "\n"                                                                              \
+  "Enter PANOPT without any arguments at all to display the current settings.\n"
 
-#define panrate_cmd_desc        "Display or set rate at which console refreshes"
-#define panrate_cmd_help        \
-                                \
-  "Format: \"panrate [nnn | fast | slow]\".\n"                                               \
-  "Sets or displays the panel refresh rate.\n"                                               \
-  "panrate nnn sets the refresh rate to nnn milliseconds.\n"                                 \
-  "panrate fast sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_FAST) " milliseconds.\n"  \
-  "panrate slow sets the refresh rate to " QSTR(PANEL_REFRESH_RATE_SLOW) " milliseconds.\n"  \
-  "If no operand is specified, panrate displays the current refresh rate.\n"
-
-#define pantitle_cmd_desc       "Display or set console title"
-#define pantitle_cmd_help       \
-                                \
-  "Format: pantitle [\"title string\"]\n"                                       \
-  "        pantitle \"\"\n"                                                     \
-  "\n"                                                                          \
-  "Sets or displays the optional console window title-bar\n"                    \
-  "string to be used in place of the default supplied by\n"                     \
-  "the windowing system. The value should be enclosed within\n"                 \
-  "double quotes if there are embedded blanks.\n"                               \
-  "\n"                                                                          \
-  "An empty string (\"\") will remove the existing console title.\n"            \
-  "\n"                                                                          \
-  "The default console title will be a string consisting of\n"                  \
-  "LPARNAME - SYSTYPE * SYSNAME * SYSPLEX - System Status: color\n"             \
-  "\n"                                                                          \
-  "SYSTYPE, SYSNAME, and SYSPLEX are populated by the system call\n"            \
-  "SCLP Control Program Identification. If a value is blank, then\n"            \
-  "that field is not presented.\n"                                              \
-  "\n"                                                                          \
-  "System Status colors: GREEN  - is every thing working correctly\n"           \
-  "                      YELLOW - one or more CPUs are not running\n"           \
-  "                      RED    - one or more CPUs are in a disabled\n"         \
-  "                               wait state\n"
+#define panrate_cmd_desc        "(deprecated; use PANOPT RATE=nnn instead)"
+#define pantitle_cmd_desc       "(deprecated; use PANOPT TITLE=xxx instead)"
 
 #define pgmprdos_cmd_desc       "Set LPP license setting"
 #define pgmprdos_cmd_help       \
@@ -1810,8 +1806,8 @@ COMMAND( "log",                     log_cmd,                SYSCMD,             
 COMMAND( "logopt",                  logopt_cmd,             SYSCMD,             logopt_cmd_desc,        logopt_cmd_help     )
 COMMAND( "mt",                      mt_cmd,                 SYSCMD,             mt_cmd_desc,            mt_cmd_help         )
 COMMAND( "panopt",                  panopt_cmd,             SYSCMD,             panopt_cmd_desc,        panopt_cmd_help     )
-COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       panrate_cmd_help    )
-COMMAND( "pantitle",                pantitle_cmd,           SYSCMD,             pantitle_cmd_desc,      pantitle_cmd_help   )
+COMMAND( "panrate",                 panrate_cmd,            SYSCMD,             panrate_cmd_desc,       NULL                )
+COMMAND( "pantitle",                pantitle_cmd,           SYSCMD,             pantitle_cmd_desc,      NULL                )
 CMDABBR( "qcpuid",          5,      qcpuid_cmd,             SYSCMD,             qcpuid_cmd_desc,        qcpuid_cmd_help     )
 COMMAND( "qpid",                    qpid_cmd,               SYSCMD,             qpid_cmd_desc,          NULL                )
 CMDABBR( "qports",          5,      qports_cmd,             SYSCMD,             qports_cmd_desc,        NULL                )
