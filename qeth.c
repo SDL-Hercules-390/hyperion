@@ -499,7 +499,7 @@ char charmac[24];
         {
             memcpy(grp->mac[i].addr, mac, IFHWADDRLEN);
             grp->mac[i].type = type;
-            snprintf( charmac, sizeof(charmac),
+            MSGBUF( charmac,
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03801 "%1d:%04X %s: %s: Register guest MAC address %s"
@@ -509,7 +509,7 @@ char charmac[24];
         }
     }
     /* Oh dear, the MAC address table is full. */
-    snprintf( charmac, sizeof(charmac),
+    MSGBUF( charmac,
               "%02x:%02x:%02x:%02x:%02x:%02x",
               mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
     // HHC03802 "%1d:%04X %s: %s: Cannot register guest MAC address %s"
@@ -537,7 +537,7 @@ UNREFERENCED(type);
         {
             grp->mac[i].type = MAC_TYPE_NONE;
             memset(grp->mac[i].addr, 0, IFHWADDRLEN);
-            snprintf( charmac, sizeof(charmac),
+            MSGBUF( charmac,
                       "%02x:%02x:%02x:%02x:%02x:%02x",
                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
             // HHC03803 "%1d:%04X %s: %s: Unregistered guest MAC address %s"
@@ -549,7 +549,7 @@ UNREFERENCED(type);
     /* Oh dear, the MAC address wasn't registered. */
     if (warnmsg)
     {
-        snprintf( charmac, sizeof(charmac),
+        MSGBUF( charmac,
                   "%02x:%02x:%02x:%02x:%02x:%02x",
                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5] );
         // HHC03804 "%1d:%04X %s: %s: Cannot unregister guest MAC address %s"
@@ -1852,7 +1852,7 @@ U16 offph;
                     FETCH_FW(ano,ipa_sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,ipa_sas->hdr.cmd);    /* Command code */
                     FETCH_HW(len,ipa_sas->hdr.len);    /* Length */
-                    snprintf(anoc, sizeof(anoc), " 0x%08X", ano);
+                    MSGBUF(anoc, " 0x%08X", ano);
 
                     strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );                   /* Prepare the contentstring */
@@ -1884,7 +1884,7 @@ U16 offph;
                     default:
                         {
                         char not_supp[12];
-                            snprintf( not_supp, sizeof(not_supp), " (0x%04X)", cmd );
+                            MSGBUF( not_supp, " (0x%04X)", cmd );
                             strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                             strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                         }
@@ -2092,7 +2092,7 @@ U16 offph;
                             default:
                                 {
                                 char not_supp[16];
-                                    snprintf( not_supp, sizeof(not_supp), " (0x%08X)", cmd );
+                                    MSGBUF( not_supp, " (0x%08X)", cmd );
                                     strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                                     strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                                 }
@@ -2138,7 +2138,7 @@ U16 offph;
                     default:
                         {
                         char not_supp[16];
-                            snprintf( not_supp, sizeof(not_supp), " (0x%08X)", cmd );
+                            MSGBUF( not_supp, " (0x%08X)", cmd );
                             strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                             strcat( dev->dev_data, not_supp );           /* Prepare the contentstring */
                         }
@@ -2279,7 +2279,7 @@ U16 offph;
                 {
                 char cmd_not_supp[10];
 
-                    snprintf( cmd_not_supp, sizeof(cmd_not_supp), " (0x%02X)", ipa->cmd );
+                    MSGBUF( cmd_not_supp, " (0x%02X)", ipa->cmd );
                     strcat( dev->dev_data, ": NOT SUPPORTED" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, cmd_not_supp );       /* Prepare the contentstring */
                     rsp_bhr->content = strdup( dev->dev_data );
@@ -4372,7 +4372,7 @@ OSA_GRP *grp;
         if (grp->debugmask & DBGQETHDROP)
             MSGBUF( dropped, " dr[%u]", dev->qdio.dropcnt );
 
-        snprintf( qdiostat, sizeof(qdiostat), "%stx[%u] rx[%u]%s "
+        MSGBUF( qdiostat, "%stx[%u] rx[%u]%s "
             , ttifname
             , dev->qdio.txcnt
             , dev->qdio.rxcnt
@@ -6423,7 +6423,7 @@ static void InitMACAddr( DEVBLK* dev, OSA_GRP* grp )
         iMAC[0] &= 0xFE;  /* Clear multicast bit. */
         iMAC[0] |= 0x02;  /* Set local assignment bit. */
         memcpy( grp->iaDriveMACAddr, iMAC, IFHWADDRLEN );
-        snprintf( grp->szDriveMACAddr, sizeof(grp->szDriveMACAddr),
+        MSGBUF( grp->szDriveMACAddr,
                   "%02x:%02x:%02x:%02x:%02x:%02x",
                   iMAC[0], iMAC[1], iMAC[2], iMAC[3], iMAC[4], iMAC[5] );
         /* Create a Driver Link Local address from the Driver MAC address */

@@ -122,7 +122,7 @@
   // (this warning is usually issued for most all uses of our MSGBUF macro)
   DISABLE_GCC_WARNING( "-Wformat-truncation" )
   #endif
-  #if defined( GCC_VERSION ) && GCC_VERSION >= 80100 /* gcc >= 8.1.0 */
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 80000 /* gcc >= 8.0.0 */
   /* Too many false positives on this one */
   DISABLE_GCC_WARNING( "-Wstringop-truncation" )
   #endif

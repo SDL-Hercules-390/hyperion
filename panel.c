@@ -526,14 +526,14 @@ static void draw_char (int c)
 static void draw_fw (U32 fw)
 {
     char buf[9];
-    snprintf (buf, sizeof(buf), "%8.8X", fw);
+    MSGBUF (buf, "%8.8X", fw);
     draw_text (buf);
 }
 
 static void draw_dw (U64 dw)
 {
     char buf[17];
-    snprintf (buf, sizeof(buf), "%16.16"PRIX64, dw);
+    MSGBUF (buf, "%16.16"PRIX64, dw);
     draw_text (buf);
 }
 
@@ -699,7 +699,7 @@ static void NP_screen_redraw (REGS *regs)
 #if defined( OPTION_SHARED_DEVICES )
 
     /* Center "Peripherals" on the right-hand-side */
-    i = 40 + snprintf(buf, sizeof(buf),
+    i = 40 + MSGBUF(buf,
                       "Peripherals [Shared Port %u]",
                       sysblk.shrdport);
     if ((cons_cols < i) || !sysblk.shrdport)
@@ -867,7 +867,7 @@ static void NP_screen_redraw (REGS *regs)
         NPcpugraph_valid = 0;
         for (i = 0; i < NPcpugraph_ncpu; i++)
         {
-            snprintf (buf, sizeof(buf), "%s%02X ", PTYPSTR(i), i);
+            MSGBUF (buf, "%s%02X ", PTYPSTR(i), i);
             set_pos (line++, 1);
             draw_text (buf);
         }
@@ -910,13 +910,11 @@ static char *format_int(uint64_t ic)
         ic/=1000;
         if(ic==0)
         {
-            snprintf(grps[maxg],sizeof(grps[maxg]),"%u",grp);
-            grps[maxg][sizeof(grps[maxg])-1] = '\0';
+            MSGBUF(grps[maxg],"%u",grp);
         }
         else
         {
-            snprintf(grps[maxg],sizeof(grps[maxg]),"%3.3u",grp);
-            grps[maxg][sizeof(grps[maxg])-1] = '\0';
+            MSGBUF(grps[maxg],"%3.3u",grp);
         }
         maxg++;
     }
@@ -996,7 +994,7 @@ static void NP_update(REGS *regs)
                 }
         set_color (COLOR_WHITE, COLOR_BLUE);
         set_pos (1, 22);
-        snprintf(buf, sizeof(buf), "%3d", (n > 0 ? cpupct_total/n : 0));
+        MSGBUF(buf, "%3d", (n > 0 ? cpupct_total/n : 0));
         draw_text (buf);
     }
 
@@ -1061,7 +1059,7 @@ static void NP_update(REGS *regs)
         }
 
         /* Display psw state */
-        snprintf (buf, sizeof(buf), "%2d%c%c%c%c%c%c%c%c",
+        MSGBUF (buf, "%2d%c%c%c%c%c%c%c%c",
                       regs->psw.amode64                  ? 64  :
                       regs->psw.amode                    ? 31  : 24,
                       regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
@@ -1288,13 +1286,13 @@ static void NP_update(REGS *regs)
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 1);
         if((sysblk.mipsrate / 1000000) > 999)
-          snprintf(buf, sizeof(buf), "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
+          MSGBUF(buf, "%2d,%03d", sysblk.mipsrate / 1000000000, sysblk.mipsrate % 1000000000 / 1000000);
         else if((sysblk.mipsrate / 1000000) > 99)
-          snprintf(buf, sizeof(buf), "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
+          MSGBUF(buf, "%4d.%01d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 100000);
         else if((sysblk.mipsrate / 1000000) > 9)
-          snprintf(buf, sizeof(buf), "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
+          MSGBUF(buf, "%3d.%02d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 10000);
         else
-          snprintf(buf, sizeof(buf), "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
+          MSGBUF(buf, "%2d.%03d", sysblk.mipsrate / 1000000, sysblk.mipsrate % 1000000 / 1000);
         draw_text (buf);
         NPmips = sysblk.mipsrate;
         NPmips_valid = 1;
@@ -1310,7 +1308,7 @@ static void NP_update(REGS *regs)
     {
         set_color (COLOR_LIGHT_YELLOW, COLOR_BLACK);
         set_pos (BUTTONS_LINE, 8);
-        snprintf(buf, sizeof(buf), "%6.6s", format_int(sysblk.siosrate));
+        MSGBUF(buf, "%6.6s", format_int(sysblk.siosrate));
         draw_text (buf);
         NPsios = sysblk.siosrate;
         NPsios_valid = 1;
@@ -1386,7 +1384,7 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 43);
             set_color (busy ? COLOR_LIGHT_YELLOW : COLOR_LIGHT_GREY, COLOR_BLACK);
-            snprintf (buf, sizeof(buf), "%4.4X", dev->devnum);
+            MSGBUF (buf, "%4.4X", dev->devnum);
             draw_text (buf);
             NPdevnum[i] = dev->devnum;
             NPbusy[i] = busy;
@@ -1397,7 +1395,7 @@ static void NP_update(REGS *regs)
         {
             set_pos (DEV_LINE+i, 48);
             set_color (open ? COLOR_LIGHT_GREEN : COLOR_LIGHT_GREY, COLOR_BLACK);
-            snprintf (buf, sizeof(buf), "%4.4X", dev->devtype);
+            MSGBUF (buf, "%4.4X", dev->devtype);
             draw_text (buf);
             NPdevtype[i] = dev->devtype;
             NPopen[i] = open;
@@ -1409,7 +1407,7 @@ static void NP_update(REGS *regs)
         {
             set_color (COLOR_LIGHT_GREY, COLOR_BLACK);
             set_pos (DEV_LINE+i, 53);
-            snprintf (buf, sizeof(buf), "%-4.4s", devclass);
+            MSGBUF (buf, "%-4.4s", devclass);
             draw_text (buf);
             /* Draw device name only if they're NOT assigning a new one */
             if (0
@@ -2069,7 +2067,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                 redraw_status = 1;
                                 break;
                             }
-                            snprintf (cmdline, sizeof(cmdline), "ipl %4.4x", NPdevnum[i]);
+                            MSGBUF (cmdline, "ipl %4.4x", NPdevnum[i]);
                             do_panel_command(cmdline);
                             memset(NPprompt2,0,sizeof(NPprompt2));
                             redraw_status = 1;
@@ -2762,7 +2760,7 @@ size_t  loopcount;                      /* Number of iterations done */
                                         STRLCPY(cmdline, NPdevnam[NPasgn]);
                                     }
                                     STRLCPY(NPdevnam[NPasgn], "");
-                                    snprintf (NPentered, sizeof(NPentered), "devinit %4.4x %s",
+                                    MSGBUF (NPentered, "devinit %4.4x %s",
                                              NPdevnum[NPasgn], cmdline);
                                     do_panel_command(NPentered);
                                     STRLCPY(NPprompt2, "");
@@ -3133,7 +3131,7 @@ FinishShutdown:
                 saved_cons_col = cur_cons_col;
 
                 memset (buf, ' ', cons_cols);
-                len = snprintf ( buf, sizeof(buf), "%s%02X ",
+                len = MSGBUF ( buf, "%s%02X ",
                     PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
@@ -3181,7 +3179,7 @@ FinishShutdown:
                     U32 mipsrate = prev_mipsrate / 1000000;
 
                     /* Format instruction count */
-                    i = snprintf(ibuf, sizeof(ibuf),
+                    i = MSGBUF(ibuf,
                                  "instcnt %s",
                                  format_int( prev_instcount ));
 

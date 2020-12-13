@@ -1594,7 +1594,7 @@ static int iprint_ ## _asmfmt( BYTE inst[], char mnemonic[], char* prtbuf )   \
     while (*iname++);       /* Find start of instruction's name   */          \
                                                                               \
     /* Format the instruction's assembler operands */                         \
-    snprintf( opers, sizeof( opers ), ## __VA_ARGS__ );                       \
+    MSGBUF (opers, ## __VA_ARGS__ );                                          \
                                                                               \
     /* Print assembler mnemonic + operands and full name of instruction */    \
     return sprintf( prtbuf, "%-5s %-19s    %s", mnemonic, opers, iname );     \

@@ -78,7 +78,7 @@ int  resolve_host( PHRB pHRB )
     // If the getaddrinfo was not successful, let the caller know why.
     if( pHRB->rv != 0 )
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "getaddrinfo fail: %d, %s",
                   pHRB->rv, gai_strerror(pHRB->rv) );
         return rv;
@@ -116,7 +116,7 @@ int  resolve_host( PHRB pHRB )
     // else. This scenario is extremely unlikely I know, but...
     if( rv != 0 )
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "resolve fail: host does not resolve to inet or inet6" );
     }
 
@@ -181,7 +181,7 @@ int  resolve_ipaddr( PHRB pHRB )
     // If the getaddrinfo was not successful, let the caller know why.
     if( pHRB->rv != 0 )
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "getaddrinfo fail: %d, %s",
                   pHRB->rv, gai_strerror(pHRB->rv) );
         return -1;
@@ -204,7 +204,7 @@ int  resolve_ipaddr( PHRB pHRB )
     }
     else
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "resolve fail: IP address not inet or inet6" );
         freeaddrinfo( result );
         return -1;
@@ -221,7 +221,7 @@ int  resolve_ipaddr( PHRB pHRB )
     // If the getnameinfo was not successful, let the caller know why.
     if( pHRB->rv != 0 )
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "getnameinfo fail: %d, %s",
                   pHRB->rv, gai_strerror(pHRB->rv) );
         return -1;
@@ -283,7 +283,7 @@ int  resolve_sa( PHRB pHRB )
     }
     else
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "resolve fail: address family not inet or inet6" );
         return -1;
     }
@@ -296,7 +296,7 @@ int  resolve_sa( PHRB pHRB )
     // If the getnameinfo was not successful, let the caller know why.
     if( pHRB->rv != 0 )
     {
-        snprintf( pHRB->em, sizeof(pHRB->em),
+        MSGBUF( pHRB->em,
                   "getnameinfo fail: %d, %s",
                   pHRB->rv, gai_strerror(pHRB->rv) );
         return -1;

@@ -2838,7 +2838,7 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         /* Start the async worker thread */
 
         /* Set thread-name for debugging purposes */
-        snprintf(thread_name, sizeof(thread_name),
+        MSGBUF(thread_name,
                  "tcpnje %4.4X thread", dev->devnum);
         thread_name[sizeof(thread_name) - 1] = 0;
 
