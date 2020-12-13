@@ -347,6 +347,7 @@ fet_write_header ( FETB *fetb, off_t blkpos,
 {
 int             rc;                     /* Return code               */
 FAKETAPE_BLKHDR fakehdr;                /* FAKETAPE block header     */
+char    temp[5];
 
     /* Position file to where block header is to go */
     rc = fseek( fetb->fh, blkpos, SEEK_SET );
@@ -356,9 +357,12 @@ FAKETAPE_BLKHDR fakehdr;                /* FAKETAPE block header     */
     }
 
     /* Build the 12-ASCII-hex-character block header */
-    MSGBUF( fakehdr.sprvblkl, "%4.4X", prvblkl );
-    MSGBUF( fakehdr.scurblkl, "%4.4X", curblkl );
-    MSGBUF( fakehdr.sxorblkl, "%4.4X", prvblkl ^ curblkl );
+    MSGBUF( temp, "%4.4X", prvblkl );
+    memcpy( fakehdr.sprvblkl, temp, sizeof(fakehdr.sprvblkl));
+    MSGBUF( temp, "%4.4X", curblkl );
+    memcpy( fakehdr.scurblkl, temp, sizeof(fakehdr.scurblkl));
+    MSGBUF( temp, "%4.4X", prvblkl ^ curblkl );
+    memcpy( fakehdr.sxorblkl, temp, sizeof(fakehdr.sxorblkl));
 
     /* Write the block header */
     rc = (int)fwrite( &fakehdr, 1, sizeof(FAKETAPE_BLKHDR), fetb->fh );
