@@ -332,9 +332,13 @@ int  i;
 
     /* Set the Breaking Event Address Register */
     if (trap_is_trap4)
+    {
         SET_BEAR_REG( regs, regs->ip - 4 );
+    }
     else
+    {
         SET_BEAR_REG( regs, regs->ip - 2 );
+    }
 
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;

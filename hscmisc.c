@@ -907,8 +907,8 @@ char    regs_msg_buf[4*512] = {0};
 
     /* Format instruction line */
                  n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
-    if (ilc > 2) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );
-    if (ilc > 4) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );
+    if (ilc > 2){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );}
+    if (ilc > 4){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );}
                  n += snprintf( buf + n, sizeof( buf )-n, " %s", (ilc < 4) ? "        " :
                                                                  (ilc < 6) ? "    " : "" );
     n += PRINT_INST( inst, buf + n );

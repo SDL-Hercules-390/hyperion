@@ -2658,7 +2658,7 @@ int qeth_cmd( int argc, char *argv[], char *cmdline )
                   {
                     if (grp->mac[i].type)
                     {
-                      snprintf( charaddr, sizeof(charaddr),
+                      MSGBUF( charaddr,
                                 "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
                                 grp->mac[i].addr[0],
                                 grp->mac[i].addr[1],
@@ -4061,7 +4061,8 @@ int panopt_cmd( int argc, char* argv[], char* cmdline)
                 {
                     MSGBUF( buf, "%d", rate );
                     MSGBUF( buf2, "; not within range %d to %d inclusive",
-                        PANEL_REFRESH_RATE_MIN, PANEL_REFRESH_RATE_MAX );
+                        (int)PANEL_REFRESH_RATE_MIN,
+                        PANEL_REFRESH_RATE_MAX );
                 }
 
                 // "Invalid argument %s%s"

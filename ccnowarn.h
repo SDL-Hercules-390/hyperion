@@ -114,6 +114,10 @@
   DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
   #endif
 
+  #if defined( __clang__ ) && __clang_major__ >= 5 /* clang >= 5.0.0 */
+  DISABLE_GCC_WARNING( "-Wunused-local-typedef" )
+  #endif
+
   // "converts between pointers to integer types with different sign"
   DISABLE_GCC_WARNING( "-Wpointer-sign" )
 
@@ -121,6 +125,10 @@
   // "output may be truncated writing up to x bytes into a region of size y"
   // (this warning is usually issued for most all uses of our MSGBUF macro)
   DISABLE_GCC_WARNING( "-Wformat-truncation" )
+  #endif
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 80000 /* gcc >= 8.0.0 */
+  /* Too many false positives on this one */
+  DISABLE_GCC_WARNING( "-Wstringop-truncation" )
   #endif
 
   /*-----------------------------------------------------------------*/

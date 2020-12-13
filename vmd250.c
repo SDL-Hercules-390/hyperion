@@ -1271,7 +1271,7 @@ int     rc2;
        memcpy(asyncp,&ioctl,sizeof(IOCTL32));
 
        /* Launch the asynchronous request on a separate thread */
-       snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
+       MSGBUF(tname,"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
        rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async32),
                asyncp, tname);
@@ -1881,7 +1881,7 @@ int     rc2;
        memcpy(asyncp,&ioctl,sizeof(IOCTL64));
 
        /* Launch the asynchronous request on a separate thread */
-       snprintf(tname,sizeof(tname),"d250_async %4.4X",dev->devnum);
+       MSGBUF(tname,"d250_async %4.4X",dev->devnum);
        tname[sizeof(tname)-1]=0;
        rc2 = create_thread (&tid, DETACHED, ARCH_DEP(d250_async64),
                asyncp, tname);

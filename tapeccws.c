@@ -1044,7 +1044,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         {
             TID dummy_tid;
             char thread_name[64];
-            snprintf(thread_name,sizeof(thread_name),
+            MSGBUF(thread_name,
                 "autoload wait for %4.4X tapemount thread",
                 dev->devnum);
             thread_name[sizeof(thread_name)-1] = 0;

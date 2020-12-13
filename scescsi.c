@@ -821,7 +821,7 @@ static char name[8];
     if(ntf->name)
         return ntf->name;
 
-    snprintf(name,sizeof(name),"type%u",file);
+    MSGBUF(name,"type%u",file);
 
     return name;
 }

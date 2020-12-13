@@ -474,7 +474,7 @@ REGS *regs;
         for(i = 0; i < 16; i++)
         {
         char regname[16];
-            sprintf(regname,"alter_gr%d",i);
+            MSGBUF(regname,"alter_gr%d",i);
             if((value = cgi_variable(webblk,regname)))
             {
                 if(regs->arch_mode != ARCH_900_IDX)
@@ -490,7 +490,7 @@ REGS *regs;
         for(i = 0; i < 16; i++)
         {
         char regname[16];
-            sprintf(regname,"alter_cr%d",i);
+            MSGBUF(regname,"alter_cr%d",i);
             if((value = cgi_variable(webblk,regname)))
             {
                 if(regs->arch_mode != ARCH_900_IDX)
@@ -506,7 +506,7 @@ REGS *regs;
         for(i = 0; i < 16; i++)
         {
         char regname[16];
-            sprintf(regname,"alter_ar%d",i);
+            MSGBUF(regname,"alter_ar%d",i);
             if((value = cgi_variable(webblk,regname)))
                 sscanf(value,"%x",&(regs->AR(i)));
         }
@@ -1123,7 +1123,7 @@ int i,j;
     char cpuname[8], *cpustate;
     int  cpuonline = -1;
 
-        sprintf(cpuname,"cpu%d",i);
+        MSGBUF(cpuname,"cpu%d",i);
         if((cpustate = cgi_variable(webblk,cpuname)))
             sscanf(cpustate,"%d",&cpuonline);
 
