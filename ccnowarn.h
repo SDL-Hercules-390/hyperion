@@ -114,6 +114,10 @@
   DISABLE_GCC_WARNING( "-Wunused-local-typedefs" )
   #endif
 
+  #if defined( __clang__ ) && __clang_major__ >= 6 /* clang >= 5.0.0 */
+  DISABLE_GCC_WARNING( "-Wunused-local-typedef" )
+  #endif
+
   // "converts between pointers to integer types with different sign"
   DISABLE_GCC_WARNING( "-Wpointer-sign" )
 
