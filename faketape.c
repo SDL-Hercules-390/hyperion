@@ -377,11 +377,11 @@ char            sblklen[8];             /* work buffer               */
 
     /* Build the 12-ASCII-hex-character block header */
     MSGBUF( sblklen, "%4.4X", prvblkl );
-    strncpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
+    memcpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
     MSGBUF( sblklen, "%4.4X", curblkl );
-    strncpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
+    memcpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
     MSGBUF( sblklen, "%4.4X", prvblkl ^ curblkl );
-    strncpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
+    memcpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
 
     /* Write the block header */
     rc = write (dev->fd, &fakehdr, sizeof(FAKETAPE_BLKHDR));
