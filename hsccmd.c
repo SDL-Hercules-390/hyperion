@@ -3983,63 +3983,137 @@ int toddrag_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 int panopt_cmd( int argc, char* argv[], char* cmdline)
 {
-    char buf[64];
+    char*  pantitle     = NULL;
+    int    panrate      = sysblk.panrate;
+    int    pan_colors   = sysblk.pan_colors;
+    bool   devnameonly  = sysblk.devnameonly ? true : false;
+    char   buf[256];
+    int    i;
 
     UNREFERENCED( cmdline );
     UPPER_ARGV_0(  argv   );
 
-    // panopt [MSGCOLOR=NO|DARK|LIGHT] [FULLPATH|NAMEONLY]
+    // panopt [FULLPATH|NAMEONLY] [RATE=nnn] [MSGCOLOR=NO|DARK|LIGHT] [TITLE=xxx]
 
     if (argc <= 1)
     {
-        MSGBUF( buf, "MSGCOLOR=%s %s",
-            sysblk.pan_colors  ? "YES"      : "NO",
-            sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
+        /* Display current settings */
+
+        char* quote = sysblk.pantitle ?
+            strpbrk( sysblk.pantitle, WHITESPACE ) ? "\"" : "" : "";
+
+        MSGBUF( buf, "%s RATE=%d MSGCOLOR=%s %sTITLE=%s%s"
+            , sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
+            , sysblk.panrate
+            , sysblk.pan_colors == PANC_NONE  ? "NO"    :
+              sysblk.pan_colors == PANC_DARK  ? "DARK"  :
+              sysblk.pan_colors == PANC_LIGHT ? "LIGHT" : "(err!)"
+            , quote , sysblk.pantitle ? sysblk.pantitle : "(default)" , quote
         );
 
         // "%-14s: %s"
         WRMSG( HHC02203, "I", argv[0], buf );
         return 0;
     }
-    else if (argc <= 3)
+
+    /* Too many arguments? */
+    if (argc > 5)
     {
-        int  i;
-        for (i=1; i < argc; i++)
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    /* Examine each argument in turn */
+    for (i=1; i < argc; i++)
+    {
+        if      (CMD( argv[i], NAMEONLY,        4 )) devnameonly = true;
+        else if (CMD( argv[i], FULLPATH,        4 )) devnameonly = false;
+        else if (CMD( argv[i], MSGCOLOR=NO,    11 )) pan_colors  = PANC_NONE;
+        else if (CMD( argv[i], MSGCOLOR=DARK,  13 )) pan_colors  = PANC_DARK;
+        else if (CMD( argv[i], MSGCOLOR=LIGHT, 14 )) pan_colors  = PANC_LIGHT;
+        else if (CMD( argv[i], RATE=FAST,       9 )) panrate = PANEL_REFRESH_RATE_FAST;
+        else if (CMD( argv[i], RATE=SLOW,       9 )) panrate = PANEL_REFRESH_RATE_SLOW;
+        else if (strncasecmp( argv[i], "RATE=", 5 ) == 0)
         {
-            if      (CMD( argv[i], NAMEONLY,        4 )) sysblk.devnameonly = 1;
-            else if (CMD( argv[i], FULLPATH,        4 )) sysblk.devnameonly = 0;
-            else if (CMD( argv[i], MSGCOLOR=NO,    11 )) sysblk.pan_colors  = PANC_NONE;
-            else if (CMD( argv[i], MSGCOLOR=DARK,  13 )) sysblk.pan_colors  = PANC_DARK;
-            else if (CMD( argv[i], MSGCOLOR=LIGHT, 14 )) sysblk.pan_colors  = PANC_LIGHT;
-            else // error
+            int rate = 0;
+            int rc = sscanf( argv[i]+5, "%d", &rate );
+
+            if (1
+                && rc > 0
+                && rate >= PANEL_REFRESH_RATE_MIN
+                && rate <= PANEL_REFRESH_RATE_MAX
+            )
             {
+                panrate = rate;
+            }
+            else
+            {
+                char buf[20];
+                char buf2[64];
+
+                if (rc == 0)
+                {
+                    MSGBUF( buf, "%s", argv[i]+5 );
+                    MSGBUF( buf2, "; not numeric value" );
+                }
+                else
+                {
+                    MSGBUF( buf, "%d", rate );
+                    MSGBUF( buf2, "; not within range %d to %d inclusive",
+                        PANEL_REFRESH_RATE_MIN, PANEL_REFRESH_RATE_MAX );
+                }
+
                 // "Invalid argument %s%s"
-                WRMSG( HHC02205, "E", argv[i], "" );
+                WRMSG( HHC02205, "E", buf, buf2 );
                 return -1;
             }
         }
-
-        set_panel_colors();
-
-        if (MLVL( VERBOSE ))
+        else if (strncasecmp( argv[i], "TITLE=", 6 ) == 0)
         {
-            MSGBUF( buf, "MSGCOLOR=%s %s",
-                sysblk.pan_colors == PANC_NONE  ? "NO"  :
-                sysblk.pan_colors == PANC_DARK  ? "DARK"  :
-                sysblk.pan_colors == PANC_LIGHT ? "LIGHT" : "(err!)",
-                sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
-            );
-
-            // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], buf );
+            pantitle = argv[i]+6;
         }
-
-        return 0;
+        else
+        {
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", argv[i], "" );
+            return -1;
+        }
     }
 
-    // "Invalid command usage. Type 'help %s' for assistance."
-    WRMSG( HHC02299, "E", argv[0] );
-    return -1;
+    /* Update setting(s) */
+
+    sysblk.panrate     = panrate;
+    sysblk.pan_colors  = pan_colors;
+    sysblk.devnameonly = devnameonly;
+
+    if (pantitle)
+    {
+        free( sysblk.pantitle );
+        sysblk.pantitle = (strlen( pantitle ) > 0) ? strdup( pantitle ) : NULL;
+        set_console_title( NULL );
+    }
+    set_panel_colors();
+
+    if (MLVL( VERBOSE ))
+    {
+        char* quote = sysblk.pantitle ?
+            strpbrk( sysblk.pantitle, WHITESPACE ) ? "\"" : "" : "";
+
+        MSGBUF( buf, "%s RATE=%d MSGCOLOR=%s %sTITLE=%s%s"
+            , sysblk.devnameonly ? "NAMEONLY" : "FULLPATH"
+            , sysblk.panrate
+            , sysblk.pan_colors == PANC_NONE  ? "NO"    :
+              sysblk.pan_colors == PANC_DARK  ? "DARK"  :
+              sysblk.pan_colors == PANC_LIGHT ? "LIGHT" : "(err!)"
+            , quote , sysblk.pantitle ? sysblk.pantitle : "(default)" , quote
+        );
+
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], buf );
+    }
+
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -4051,6 +4125,9 @@ int panrate_cmd( int argc, char* argv[], char* cmdline )
 
     UNREFERENCED( cmdline );
     UPPER_ARGV_0(  argv   );
+
+    // "Command '%s' is deprecated%s"
+    WRMSG( HHC02256, "W", argv[0], "; use PANOPT RATE=xxx instead" );
 
     if (argc > 2)
     {
@@ -4070,7 +4147,7 @@ int panrate_cmd( int argc, char* argv[], char* cmdline )
 
             rc = sscanf( argv[1], "%d", &trate );
 
-            if (rc > 0 && trate >= (1000 / CLK_TCK) && trate < 5001)
+            if (rc > 0 && trate >= (1000 / CLK_TCK) && trate <= 5000)
                 sysblk.panrate = trate;
             else // error
             {
@@ -4116,6 +4193,9 @@ int pantitle_cmd( int argc, char* argv[], char* cmdline )
 {
     UNREFERENCED( cmdline );
     UPPER_ARGV_0(  argv   );
+
+    // "Command '%s' is deprecated%s"
+    WRMSG( HHC02256, "W", argv[0], "; use PANOPT TITLE=xxx instead" );
 
     if (argc > 2)
     {

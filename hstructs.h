@@ -808,7 +808,6 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 #define SHCMDOPT_ENABLE   0x01          /* Allow host shell access   */
 #define SHCMDOPT_DIAG8    0x02          /* Allow for DIAG8 as well   */
         int     panrate;                /* Panel refresh rate        */
-
         int     pan_colors;             /* Panel colors option:      */
 
 #define PANC_NONE   0                   /* No colors (default)       */
