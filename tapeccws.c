@@ -518,6 +518,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         default:    /* Should NOT occur! */
 
             ASSERT(0);  // (fall thru to case 0 = unsupported)
+            /* FALLTHRU */
 
         case 0:     /* Unsupported CCW code for given device-type */
 
