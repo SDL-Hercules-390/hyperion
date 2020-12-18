@@ -1164,11 +1164,14 @@ endloop:        ; // (nop to make compiler happy)
                here, thereby causing the instruction counter to not be
                properly updated. Thus, we must update it here instead.
            */
-            regs->instcount += MAX_CPU_LOOPS/2;
-            UPDATE_SYSBLK_INSTCOUNT( MAX_CPU_LOOPS/2 );
+            if (sysblk.ipled)
+            {
+                regs->instcount += MAX_CPU_LOOPS/2;
+                UPDATE_SYSBLK_INSTCOUNT( MAX_CPU_LOOPS/2 );
 
-            /* Perform automatic instruction tracing if it's enabled */
-            do_automatic_tracing();
+                /* Perform automatic instruction tracing if it's enabled */
+                do_automatic_tracing();
+            }
         }
 
         PTT_SIE( "run_sie !run", icode, 0, 0 );

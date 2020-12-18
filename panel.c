@@ -3163,7 +3163,10 @@ FinishShutdown:
                 }
                 else
                     len += snprintf (buf+len, sizeof(buf)-len, "%s", "Offline");
-                buf[len++] = ' ';
+
+                memset( buf+len, ' ', sizeof( buf ) - len - 1 );
+                buf[ sizeof( buf ) - 1 ] = 0;
+                len++;
 
                 /* Bottom line right corner can be when there is space:
                  * ""
