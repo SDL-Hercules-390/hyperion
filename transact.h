@@ -299,6 +299,10 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 #define TXF_QSIE( _regs )     SIE_MODE( _regs ) ? "SIE: " : ""
 #define TXF_DUMP_PFX( _msg )  #_msg "D " _msg
 
+/* Miscellaneous helper functions (see implementation for details) */
+bool is_TXF_model( U16 cpumodel );
+void defsym_TXF_models();
+
 /*-------------------------------------------------------------------*/
 /*               Why transaction was aborted codes                   */
 /*-------------------------------------------------------------------*/

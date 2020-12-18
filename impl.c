@@ -844,6 +844,10 @@ int     rc;
 
         MSGBUF( buf, "%04X", sysblk.cpumodel );
         set_symbol( "CPUMODEL", buf );
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+        defsym_TXF_models();
+#endif
     }
 
 #if defined( _FEATURE_047_CMPSC_ENH_FACILITY )
