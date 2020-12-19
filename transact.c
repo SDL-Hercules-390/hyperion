@@ -2465,7 +2465,7 @@ static const TXFMODELS txf_models[] =
 /*-------------------------------------------------------------------*/
 bool is_TXF_model( U16 cpumodel )
 {
-    int  i;
+    size_t i;
     for (i=0; i < _countof( txf_models ); i++)
         if (cpumodel == txf_models[i].cpumodel)
             return true;
@@ -2477,7 +2477,7 @@ bool is_TXF_model( U16 cpumodel )
 /*-------------------------------------------------------------------*/
 void defsym_TXF_models()
 {
-    int  i;
+    size_t i;
     for (i=0; i < _countof( txf_models ); i++)
         // e.g. "CPUMODEL $(z13s)"  ==>  "CPUMODEL 2965"
         set_symbol( txf_models[i].pszSymbol, txf_models[i].pszModel );
