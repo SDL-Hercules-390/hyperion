@@ -2379,8 +2379,8 @@ void dump_tdb( REGS* regs, TDB* tdb )
 
                                      n += snprintf( buf + n, sizeof( buf )-n, "%16.16"PRIX64" ", atia );
                                      n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
-                        if (ilc > 2) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );
-                        if (ilc > 4) n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );
+                        if (ilc > 2){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );}
+                        if (ilc > 4){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );}
                                      n += snprintf( buf + n, sizeof( buf )-n, " %s", (ilc < 4) ? "        "
                                                                                    : (ilc < 6) ? "    "
                                                                                    :             "" );
@@ -2429,6 +2429,58 @@ void dump_tdb( REGS* regs, TDB* tdb )
         GRPAIR_FMT( 12 );
         GRPAIR_FMT( 14 );
     }
+}
+
+/*-------------------------------------------------------------------*/
+/*                    TXF capable model numbers                      */
+/*-------------------------------------------------------------------*/
+
+struct TXFMODELS
+{
+    const U16    cpumodel;      // hex model number
+    const char*  pszModel;      // (same things as char string)
+    const char*  pszSymbol;     // DEFSYM symbol name
+};
+typedef struct TXFMODELS  TXFMODELS;
+
+#define TXF_MODEL( model, name )    { 0x ## model, #model, #name }
+
+static const TXFMODELS txf_models[] =
+{
+    // REF: https://www-01.ibm.com/servers/resourcelink/lib03060.nsf/pages/lsprITRzOSv2r3?OpenDocument#ibm-top
+
+    TXF_MODEL( 1090, zPDT   ),
+    TXF_MODEL( 2827, EC12   ),
+    TXF_MODEL( 2828, BC12   ),
+    TXF_MODEL( 2964, z13    ),
+    TXF_MODEL( 2965, z13s   ),
+    TXF_MODEL( 3906, z14    ),
+    TXF_MODEL( 3907, z14ZR1 ),
+    TXF_MODEL( 8561, z15    ),
+    TXF_MODEL( 8562, z15T02 ),
+};
+
+/*-------------------------------------------------------------------*/
+/* Boolean helper to return whether cpu model is TXF capable or not  */
+/*-------------------------------------------------------------------*/
+bool is_TXF_model( U16 cpumodel )
+{
+    size_t i;
+    for (i=0; i < _countof( txf_models ); i++)
+        if (cpumodel == txf_models[i].cpumodel)
+            return true;
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+/* Helper function to define DEFSYM symbols for TXF models by name   */
+/*-------------------------------------------------------------------*/
+void defsym_TXF_models()
+{
+    size_t i;
+    for (i=0; i < _countof( txf_models ); i++)
+        // e.g. "CPUMODEL $(z13s)"  ==>  "CPUMODEL 2965"
+        set_symbol( txf_models[i].pszSymbol, txf_models[i].pszModel );
 }
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */

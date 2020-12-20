@@ -361,7 +361,7 @@ int  writehdr_faketape (DEVBLK *dev, off_t blkpos,
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* Return code from lseek()  */
 FAKETAPE_BLKHDR fakehdr;                /* FAKETAPE block header     */
-char            sblklen[8];             /* work buffer               */
+char            sblklen[5];             /* work buffer               */
 
     /* Position file to where block header is to go */
     rcoff = lseek (dev->fd, blkpos, SEEK_SET);
@@ -376,12 +376,14 @@ char            sblklen[8];             /* work buffer               */
     }
 
     /* Build the 12-ASCII-hex-character block header */
+    /* Note : strings are not NULL terminated in the faketape header */
+    /*        hence the use of an intermediate buffer                */
     MSGBUF( sblklen, "%4.4X", prvblkl );
-    strncpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
+    memcpy( fakehdr.sprvblkl, sblklen, sizeof(fakehdr.sprvblkl) );
     MSGBUF( sblklen, "%4.4X", curblkl );
-    strncpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
+    memcpy( fakehdr.scurblkl, sblklen, sizeof(fakehdr.scurblkl) );
     MSGBUF( sblklen, "%4.4X", prvblkl ^ curblkl );
-    strncpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
+    memcpy( fakehdr.sxorblkl, sblklen, sizeof(fakehdr.sxorblkl) );
 
     /* Write the block header */
     rc = write (dev->fd, &fakehdr, sizeof(FAKETAPE_BLKHDR));

@@ -830,7 +830,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
   int rx;
   int rbit;
   int ndigit;
-  int maxdigit;
+  int maxdigit = 0;
   int maxbits;
   int numbits;
   int expword2 = 0;

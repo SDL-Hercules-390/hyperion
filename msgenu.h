@@ -1476,7 +1476,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 //efine HHC02382 (available)
 //efine HHC02383 (available)
 //efine HHC02384 (available)
-//efine HHC02385 (available)
+#define HHC02385 "CPUMODEL %04X does not technically support TXF"
 #define HHC02386 "Configure CPU error %d"
 #define HHC02387 "Configure expanded storage error %d"
 #define HHC02388 "Configure storage error %d"

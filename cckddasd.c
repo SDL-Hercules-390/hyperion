@@ -6520,7 +6520,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
         STRLCPY( todwrk, ctime( &todsecs ));// "Day Mon dd hh:mm:ss yyyy\n"
         todwrk[19] = 0;                     // "Day Mon dd hh:mm:ss"
 
-        snprintf( trcpfx, sizeof( trcpfx ),
+        MSGBUF( trcpfx,
 
             "%s.%6.6ld %1d:%04X ",          // "hh:mm:ss.uuuuuu n:CCUU "
             todwrk + 11,                    // "hh:mm:ss" (%s)

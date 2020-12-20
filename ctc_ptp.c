@@ -3091,7 +3091,7 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
                 // Hmm... the Guest IPv4 address was specified with a prefix size.
                 {
                   char    tmp[256];
-                  snprintf( (char*)tmp, 256, "Prefix size specification moved from guest to drive" );
+                  MSGBUF( tmp, "Prefix size specification moved from guest to drive" );
                   WRMSG(HHC03991, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
                 }
                 // HHC00916 "%1d:%04X %s: option %s value %s invalid"
@@ -3294,9 +3294,9 @@ int  parse_conf_stmt( DEVBLK* pDEVBLK, PTPBLK* pPTPBLK,
         mac[0] &= 0xFE;  /* Clear multicast bit. */
         mac[0] |= 0x02;  /* Set local assignment bit. */
 
-        snprintf
+        MSGBUF
         (
-            pPTPBLK->szMACAddress,  sizeof(pPTPBLK->szMACAddress),
+            pPTPBLK->szMACAddress,
             "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]
         );

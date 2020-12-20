@@ -338,11 +338,11 @@ U64     slsba;                /* Storage list state block address    */
         if (autoack)
             switch(nextstate) {
 
+#if 0
                 case SLSBE_INPUT_COMPLETED:
                     ARCH_DEP(wstoreb)
                         (SLSBE_INPUT_ACKED, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);
                     break;
-#if 0
                 case SLSBE_OUTPUT_COMPLETED:
                     ARCH_DEP(wstoreb)
                         (SLSBE_OUTPUT_PRIMED, (VADR)(slsba+bidx), USE_REAL_ADDR, regs);

@@ -165,8 +165,7 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
         print_ebcdic[sizeof(print_ebcdic)-1] = '\0';          /* with null termination */
         memset( print_line, 0, sizeof( print_line ) );
 
-        snprintf( (char*)print_line, sizeof(print_line), "+%4.4X%c ", offset, bDir );
-        print_line[sizeof(print_line)-1] = '\0';              /* force null termination */
+        MSGBUF( print_line, "+%4.4X%c ", offset, bDir );
 
         for( i = 0; i < 16; i++ )
         {
@@ -174,7 +173,7 @@ DLL_EXPORT void  mpc_display_stuff( DEVBLK* pDEVBLK, char* cWhat, BYTE* pAddr, i
 
             if( offset < iLen )
             {
-                snprintf((char *) tmp, 32, "%2.2X", c );
+                MSGBUF(tmp, "%2.2X", c );
                 tmp[sizeof(tmp)-1] = '\0';
                 STRLCAT( print_line, tmp );
 

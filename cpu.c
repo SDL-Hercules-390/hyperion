@@ -1981,7 +1981,7 @@ int     aswitch;
     /* Establish longjmp destination for program check or
        RETURN_INTCHECK, or SIE_INTERCEPT, or longjmp, etc.
     */
-    if (setjmp( regs->progjmp ))
+    if (setjmp( regs->progjmp ) && sysblk.ipled)
     {
         /* Our instruction execution loop further below didn't finish
            due to a longjmp(progjmp) having been executed bringing us
