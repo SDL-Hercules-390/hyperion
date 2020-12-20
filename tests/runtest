@@ -335,7 +335,9 @@ else
         # to never exit. (If the last line is "# last line" without any line-
         # ending, the last line of our file would then become "# last lineexit")
 
-        echo -en '\n' >>$wfn.testin
+        # echo -en is not supported on all systems, or newer bash
+#       echo -en '\n' >>$wfn.testin
+        echo  >>$wfn.testin  # echo just a newline
         echo exit >>$wfn.testin
         $cmd -d >$wfn.out 2>&1
         rv=$?
