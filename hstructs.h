@@ -151,13 +151,10 @@ struct REGS {                           /* Processor registers       */
 #define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H /* Character, bits 48-55   */
 
 #define AR(_r)       ar[(_r)]
-        DW          cr_struct[1+16+16];   /* Control registers       */
-#define XR(_crn)    cr_struct[1+(_crn)]
 
-#define CR_ASD_REAL    -1
-#define CR_ALB_OFFSET  16
-#define ARN(_arn)      ((_arn) >= USE_ARMODE ? ((_arn) & 0xF) : (_arn))
-
+        ALIGN_128
+        DW           cr_struct[1+16+16];  /* Control registers       */
+#define XR(_crn)     cr_struct[1+(_crn)]
 #define CR_G(_r)     XR((_r)).D           /* Bits 0-63               */
 #define CR_H(_r)     XR((_r)).F.H.F       /* Fullword bits 0-31      */
 #define CR_HHH(_r)   XR((_r)).F.H.H.H.H   /* Halfword bits 0-15      */
@@ -166,6 +163,10 @@ struct REGS {                           /* Processor registers       */
 #define CR_LHH(_r)   XR((_r)).F.L.H.H.H   /* Halfword bits 32-47     */
 #define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H /* Character, bits 32-39   */
 #define CR_LHL(_r)   XR((_r)).F.L.H.L.H   /* Halfword low, bits 48-63*/
+
+#define CR_ASD_REAL    -1
+#define CR_ALB_OFFSET  16
+#define ARN(_arn)      ((_arn) >= USE_ARMODE ? ((_arn) & 0xF) : (_arn))
 
         U32     dxc;                    /* Data exception code       */
 
