@@ -102,6 +102,9 @@ struct REGS {                           /* Processor registers       */
         BYTE   *ip;                     /* Mainstor inst address     */
 
         DW      px;                     /* Prefix register           */
+#define PX_G    px.D
+#define PX_L    px.F.L.F
+
         PSW     psw;                    /* Program status word       */
 
         ALIGN_128
@@ -121,6 +124,8 @@ struct REGS {                           /* Processor registers       */
         BYTE   *aie;                    /* Mainstor page end address */
 
         DW      aiv;                    /* Virtual page address      */
+#define AIV_G   aiv.D
+#define AIV_L   aiv.F.L.F
 
         U64     bear;                   /* Breaking event address reg*/
         U64     bear_ex;                /* (same, but for EX/EXRL)   */
@@ -131,17 +136,50 @@ struct REGS {                           /* Processor registers       */
         U32     fpr[32];                /* FP registers              */
         U32     fpc;                    /* FP Control register       */
 
-#define CR_ASD_REAL     -1
-#define CR_ALB_OFFSET   16
+#define GR_G(_r)     gr[(_r)].D
+#define GR_H(_r)     gr[(_r)].F.H.F       /* Fullword bits 0-31      */
+#define GR_HHH(_r)   gr[(_r)].F.H.H.H.H   /* Halfword bits 0-15      */
+#define GR_HHL(_r)   gr[(_r)].F.H.H.L.H   /* Halfword low, bits 16-31*/
+#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L /* Character, bits 24-31   */
+#define GR_L(_r)     gr[(_r)].F.L.F       /* Fullword low, bits 32-63*/
+#define GR_LHH(_r)   gr[(_r)].F.L.H.H.H   /* Halfword bits 32-47     */
+#define GR_LHL(_r)   gr[(_r)].F.L.H.L.H   /* Halfword low, bits 48-63*/
+#define GR_LHHCH(_r) gr[(_r)].F.L.H.H.B.H /* Character, bits 32-39   */
+#define GR_LA24(_r)  gr[(_r)].F.L.A.A     /* 24 bit addr, bits 40-63 */
+#define GR_LA8(_r)   gr[(_r)].F.L.A.B     /* 24 bit addr, unused bits*/
+#define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L /* Character, bits 56-63   */
+#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H /* Character, bits 48-55   */
 
+#define AR(_r)       ar[(_r)]
         DW          cr_struct[1+16+16];   /* Control registers       */
 #define XR(_crn)    cr_struct[1+(_crn)]
+
+#define CR_ASD_REAL    -1
+#define CR_ALB_OFFSET  16
+#define ARN(_arn)      ((_arn) >= USE_ARMODE ? ((_arn) & 0xF) : (_arn))
+
+#define CR_G(_r)     XR((_r)).D           /* Bits 0-63               */
+#define CR_H(_r)     XR((_r)).F.H.F       /* Fullword bits 0-31      */
+#define CR_HHH(_r)   XR((_r)).F.H.H.H.H   /* Halfword bits 0-15      */
+#define CR_HHL(_r)   XR((_r)).F.H.H.L.H   /* Halfword low, bits 16-31*/
+#define CR_L(_r)     XR((_r)).F.L.F       /* Fullword low, bits 32-63*/
+#define CR_LHH(_r)   XR((_r)).F.L.H.H.H   /* Halfword bits 32-47     */
+#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H /* Character, bits 32-39   */
+#define CR_LHL(_r)   XR((_r)).F.L.H.L.H   /* Halfword low, bits 48-63*/
 
         U32     dxc;                    /* Data exception code       */
 
         DW      mc;                     /* Monitor Code              */
+#define MC_G    mc.D
+#define MC_L    mc.F.L.F
+
         DW      ea;                     /* Exception address         */
+#define EA_G    ea.D
+#define EA_L    ea.F.L.F
+
         DW      et;                     /* Execute Target address    */
+#define ET_G    et.D
+#define ET_L    et.F.L.F
 
         unsigned int                    /* Flags (cpu thread only)   */
                 execflag:1,             /* 1=EXecuted instruction    */
@@ -196,39 +234,6 @@ struct REGS {                           /* Processor registers       */
 
         CACHE_ALIGN
         DAT     dat;                    /* Fields for DAT use        */
-
-#define GR_G(_r) gr[(_r)].D
-#define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
-#define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
-#define GR_HHL(_r) gr[(_r)].F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L   /* Character, bits 24-31 */
-#define GR_L(_r) gr[(_r)].F.L.F          /* Fullword low, bits 32-63 */
-#define GR_LHH(_r) gr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
-#define GR_LHL(_r) gr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define GR_LHHCH(_r) gr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
-#define GR_LA24(_r) gr[(_r)].F.L.A.A     /* 24 bit addr, bits 40-63  */
-#define GR_LA8(_r) gr[(_r)].F.L.A.B      /* 24 bit addr, unused bits */
-#define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L   /* Character, bits 56-63 */
-#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H   /* Character, bits 48-55 */
-#define CR_G(_r)   XR((_r)).D            /* Bits 0-63                */
-#define CR_H(_r)   XR((_r)).F.H.F        /* Fullword bits 0-31       */
-#define CR_HHH(_r) XR((_r)).F.H.H.H.H    /* Halfword bits 0-15       */
-#define CR_HHL(_r) XR((_r)).F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define CR_L(_r)   XR((_r)).F.L.F        /* Fullword low, bits 32-63 */
-#define CR_LHH(_r) XR((_r)).F.L.H.H.H    /* Halfword bits 32-47      */
-#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H   /* Character, bits 32-39 */
-#define CR_LHL(_r) XR((_r)).F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define MC_G      mc.D
-#define MC_L      mc.F.L.F
-#define EA_G      ea.D
-#define EA_L      ea.F.L.F
-#define ET_G      et.D
-#define ET_L      et.F.L.F
-#define PX_G      px.D
-#define PX_L      px.F.L.F
-#define AIV_G     aiv.D
-#define AIV_L     aiv.F.L.F
-#define AR(_r)    ar[(_r)]
 
         U16     chanset;                /* Connected channel set     */
         U16     monclass;               /* Monitor event class       */
