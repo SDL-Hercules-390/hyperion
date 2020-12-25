@@ -40,8 +40,16 @@
 /* Input:                                                            */
 /*      addr    Logical address to be translated                     */
 /*      len     Length of data access for PER SA purpose             */
-/*      arn     Access register number (or USE_REAL_ADDR,            */
-/*              USE_PRIMARY_SPACE, USE_SECONDARY_SPACE)              */
+/*      arn     Access register number or the special value:         */
+/*                 USE_INST_SPACE                                    */
+/*                 USE_REAL_ADDR                                     */
+/*                 USE_PRIMARY_SPACE                                 */
+/*                 USE_SECONDARY_SPACE                               */
+/*                 USE_HOME_SPACE                                    */
+/*                 USE_ARMODE + access register number               */
+/*              An access register number ORed with the special      */
+/*              value USE_ARMODE forces this routine to use ARMODE   */
+/*              regardless of the PSW address-space control setting. */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
 /*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
@@ -66,7 +74,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
        (which is many, many instructions)
     */
 
-    int  aea_arn  = regs->AEA_AR( arn );
+    int  aea_arn  = regs->AEA_AR( arn >= USE_ARMODE ? arn & 0xF : arn );
     U16  tlbix    = TLBIX( addr );
     BYTE *maddr = NULL;
 
