@@ -118,6 +118,7 @@ typedef struct _SCCB_HWL_BK
 
 /*007*/ BYTE    file;
 
+#define SCCB_HWL_FILE_TYPE_1    0x01    /* Type 1                    */
 #define SCCB_HWL_FILE_SCSIBOOT  0x02    /* SCSI Boot Loader          */
 #define SCCB_HWL_FILE_CONFIG    0x03    /* Config                    */
 
@@ -144,6 +145,7 @@ struct name2file  n2flist[]  =
 {
     { "config",   SCCB_HWL_FILE_CONFIG   },
     { "scsiboot", SCCB_HWL_FILE_SCSIBOOT },
+    { "type_1",   SCCB_HWL_FILE_TYPE_1   },
 
 #if 0
     { "netboot",  7 }, // Hercules implementation of PXE style netboot for OSA
@@ -209,10 +211,10 @@ CASSERT( REGTAB_I == ZSEGTAB_I, scescsi_c );
 
 #endif // __GEN_ARCH
 
-static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 pages )
+static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 *pages )
 {
     TBLTYP*  pte;                   /* Page Table Entry              */
-    CREG     pti;                   /* Page Table Entry iterator     */
+    int      pti;                   /* Page Table Entry iterator     */
     CREG     pgo;                   /* Page Origin (i.e. PFRA)       */
     BYTE*    page;                  /* Pointer to page in mainstor   */
     int      rc;                    /* Return code from read()       */
@@ -224,7 +226,7 @@ static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 pages )
        until either the entire file has been loaded, or we run out
        of page table entries or an abortive condition is detected.
     */
-    for (pti=0; pages && pti < 256; pti++, pto += sizeof( pto ))
+    for (pti=0; *pages && pti < 256; pti++, pto += sizeof( pto ))
     {
         /* Abort if table entry is outside of main storage */
         if (pto >= sysblk.mainsize)
@@ -266,7 +268,7 @@ static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 pages )
             }
 
             /* Page successfully loaded; Decrement pages remaining */
-            pages--;
+            (*pages)--;
 
             /* Update page's referenced and changed Storage Key bits */
             STORAGE_KEY( pgo, &sysblk ) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -274,10 +276,10 @@ static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 pages )
     }
 
     /* Keep going if there are still pages remaining to be loaded */
-    return (pages > 0) ? true : false;
+    return (*pages > 0) ? true : false;
 }
 
-static bool ARCH_DEP( walk_table )( CREG rto, int fd, U32 pages, int tables )
+static bool ARCH_DEP( walk_table )( CREG rto, int fd, U32 *pages, int tables )
 {
     TBLTYP*  te;                        /* Pointer to Table Entry    */
     CREG     to;                        /* Next Table's Origin       */
@@ -307,7 +309,7 @@ static bool ARCH_DEP( walk_table )( CREG rto, int fd, U32 pages, int tables )
             /* Walk the next level table if there's one to be walked.
                Otherwise load next part of file into this table's pages.
             */
-            if (tables)
+            if ( ( to & REGTAB_TT ) != TT_SEGTAB )
                 keep_walking = ARCH_DEP( walk_table )( to, fd, pages, --tables );
             else
                 keep_walking = ARCH_DEP( load_pages )( to, fd, pages );
@@ -359,11 +361,11 @@ static void ARCH_DEP( hwl_loadfile )( SCCB_HWL_BK *hwl_bk )
     switch (asce & ASCE_DT)
     {
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    case TT_R1TABL: ARCH_DEP( walk_table )( asce, fd, pages, 3 ); break;
-    case TT_R2TABL: ARCH_DEP( walk_table )( asce, fd, pages, 2 ); break;
-    case TT_R3TABL: ARCH_DEP( walk_table )( asce, fd, pages, 1 ); break;
+    case TT_R1TABL: ARCH_DEP( walk_table )( asce, fd, &pages, 3 ); break;
+    case TT_R2TABL: ARCH_DEP( walk_table )( asce, fd, &pages, 2 ); break;
+    case TT_R3TABL: ARCH_DEP( walk_table )( asce, fd, &pages, 1 ); break;
 #endif
-    case TT_SEGTAB: ARCH_DEP( walk_table )( asce, fd, pages, 0 ); break;
+    case TT_SEGTAB: ARCH_DEP( walk_table )( asce, fd, &pages, 0 ); break;
     }
 
     /* We're done. Close input file and return */
@@ -498,6 +500,8 @@ void ARCH_DEP(sclp_hwl_request) (SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR    *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
 
+    // "Hardware loader SCCB = 0x%"PRIX64
+    WRMSG( HHC00661, "I", (BYTE *)sccb - (BYTE *)sysblk.mainstor );
     if( ARCH_DEP(hwl_request)(SCLP_WRITE_EVENT_DATA, evd_hdr) )
     {
         /* Set response code X'0040' in SCCB header */
