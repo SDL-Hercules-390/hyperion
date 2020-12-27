@@ -441,7 +441,6 @@ struct REGS {                           /* Processor registers       */
         PSW        txf_tapsw;           /* Transaction abort PSW     */
         BYTE*      txf_ip;              /* AIA Mainstor inst address */
         BYTE*      txf_aip;             /* AIA Mainstor page address */
-        uintptr_t  txf_aim;             /* AIA Mainstor xor address  */
         DW         txf_aiv;             /* AIA Virtual page address  */
 
         /*-----------------------------------------------------------*/
