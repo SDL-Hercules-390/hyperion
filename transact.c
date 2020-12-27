@@ -1307,11 +1307,16 @@ int        retry;           /* Actual retry code                     */
     /*  Set the current PSW to the Transaction Abort PSW  */
     /*----------------------------------------------------*/
 
+    /* PROGRAMMING NOTE: it's CRITICAL to invalidate the aia BEFORE
+       setting the current PSW to the Transaction Abort PSW, since
+       INVALIDATE_AIA *might* update the PSW's instruction address
+       to a value different from what txf_tapsw says it should be!
+    */
+    INVALIDATE_AIA( regs ); // (do *before* PSW memcpy!)
     memcpy( &regs->psw, &regs->txf_tapsw, sizeof( PSW ));
     regs->ip  = regs->txf_ip;
     regs->aip = regs->txf_aip;
     regs->aiv = regs->txf_aiv;
-    INVALIDATE_AIA( regs );
 
     /*---------------------------------------------*/
     /*     Set the condition code in the PSW       */
