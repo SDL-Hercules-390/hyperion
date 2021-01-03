@@ -499,9 +499,14 @@ static int hwl_pending;
 void ARCH_DEP(sclp_hwl_request) (SCCB_HEADER *sccb)
 {
 SCCB_EVD_HDR    *evd_hdr = (SCCB_EVD_HDR*)(sccb + 1);
+SCCB_HWL_BK     *hwl_bk  = (SCCB_HWL_BK*)(evd_hdr + 1);
 
-    // "Hardware loader SCCB = 0x%"PRIX64
-    WRMSG( HHC00661, "I", (BYTE *)sccb - (BYTE *)sysblk.mainstor );
+    // "Hardware loader: %s request: SCCB = 0x%"PRIX64
+    WRMSG( HHC00661, "I",
+        SCCB_HWL_TYPE_INFO == hwl_bk->type ? "INFO" :
+        SCCB_HWL_TYPE_LOAD == hwl_bk->type ? "LOAD" : "unknown",
+        (BYTE*)sccb - (BYTE*)sysblk.mainstor );
+
     if( ARCH_DEP(hwl_request)(SCLP_WRITE_EVENT_DATA, evd_hdr) )
     {
         /* Set response code X'0040' in SCCB header */
