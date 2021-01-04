@@ -133,7 +133,8 @@ sub weird {
 
   if ($facility eq 'gcc') {
     if (present($facility, $url)) {
-      my @resp = `$facility --version`;
+    # my @resp = `$facility --version`;
+      my @resp = `$facility -dumpversion`;
       chomp $resp[0];
       $instversion = getvers($resp[0]);
 
