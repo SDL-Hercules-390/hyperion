@@ -528,11 +528,11 @@
   "        FACILITY  QUERY  <facility> | bit | ALL\n"                            \
   "        FACILITY  QUERY  ENABLED | DISABLED   [ LONG ]\n"                     \
   "\n"                                                                           \
+  "'facility' is the SHORT facility name to be enabled, disabled or queried.\n"  \
+  "The facility may also be specified by explicit bit number or via 'BITnnn'.\n" \
   "ALL is a synonym for SHORT. RAW displays the hex string. ENABLED displays\n"  \
   "only facilities which are enabled. DISABLED shows only disabled failities.\n" \
-  "LONG sorts the display by Long Description. SHORT is the default. <facility>\n" \
-  "is the SHORT facility name to be enabled or disabled. bit may be entered\n"   \
-  "as either a numeric bit number or 'BITnnn'.\n"
+  "LONG sorts the display by Long Description. SHORT is the default.\n"
 
 #define fcb_cmd_desc            "Display a printer's current FCB"
 #define fcb_cmd_help            "Format: \"fcb <devnum>\""
