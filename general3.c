@@ -1834,7 +1834,37 @@ S32     n;                              /* 32-bit operand values     */
 
 } /* end DEF_INST(multiply_halfword_y) */
 
+#endif /* defined( FEATURE_034_GEN_INST_EXTN_FACILITY ) */
 
+
+#if defined ( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E33C MGH   - Multiple Long Halfword  (64 <- 16)           [RXY-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_long_halfword )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S64     resulthi;                       /* high 64-bits of result    */
+S16     op2;                            /* 16-bit operand-2 value    */
+
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Load signed 16-bit operand-2 value */
+    op2 = ARCH_DEP( vfetch2 )( effective_addr2, b2, regs );
+
+    /* Multiply R1 register by n, ignore leftmost 64 bits of
+       result, and place rightmost 64 bits in R1 register */
+    mul_signed_long( &resulthi,
+                     &(regs->GR_G(r1)),
+                       regs->GR_G(r1),
+                       op2 );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
+#if defined( FEATURE_034_GEN_INST_EXTN_FACILITY )
 /*-------------------------------------------------------------------*/
 /* C2x1 MSFI  - Multiply Single Immediate Fullword           [RIL-a] */
 /*-------------------------------------------------------------------*/
@@ -1895,7 +1925,58 @@ U32     n;                              /* 32-bit operand values     */
 
 } /* end DEF_INST(multiply_y) */
 
+#endif /* defined( FEATURE_034_GEN_INST_EXTN_FACILITY ) */
 
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* B9EC MGRK  - Multiply Long Register  (128 <- 64)          [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_long_register )
+{
+int     r1, r2, r3;                     /* Value of R fields         */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    ODD_CHECK( r1, regs );
+
+    /* Multiply r2 by r3 and place result in r1 and r1+1 */
+    mul_signed_long( &(regs->GR_G(r1)),
+                     &(regs->GR_G(r1+1)),
+                       regs->GR_G(r3),
+                       regs->GR_G(r2) );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E384 MG    - Multiply Long  (128 <- 64)                   [RXY-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_long )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S64     op2;                            /* Fetched operand-2 value   */
+
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    ODD_CHECK( r1, regs );
+
+    /* Fetch 64-bit second operand value from storage */
+    op2 = ARCH_DEP( vfetch8 )( effective_addr2, b2, regs );
+
+    /* Multiply r1+1 by op2 and place result in r1 and r1+1 */
+    mul_signed_long( &(regs->GR_G(r1)),
+                     &(regs->GR_G(r1+1)),
+                       regs->GR_G(r1+1),
+                       op2 );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
+#if defined( FEATURE_034_GEN_INST_EXTN_FACILITY )
 /*-------------------------------------------------------------------*/
 /* E336 PFD   - Prefetch Data                                [RXY-b] */
 /*-------------------------------------------------------------------*/
@@ -3268,8 +3349,79 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /* defined( FEATURE_045_LOAD_STORE_ON_COND_FACILITY_1 )*/
 
 
-#if defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY )
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* B9F0 SELR  - Select Register (32)                         [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( select_register )
+{
+int     r1, r2, r3;                     /* Value of R fields         */
+BYTE    m4;                             /* Value of M field          */
 
+    RRF_RM( inst, regs, r1, r2, r3, m4 );
+
+    /* Test M4 mask bit corresponding to condition code */
+    if (m4 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 bits 32-63 with R2 bits 32-63 */
+        regs->GR_L(r1) = regs->GR_L(r2);
+    }
+    else
+    {
+        /* Load R1 bits 32-63 with R3 bits 32-63 */
+        regs->GR_L(r1) = regs->GR_L(r3);
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* B9E3 SELGR - Select Register Long (64)                    [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( select_register_long )
+{
+int     r1, r2, r3;                     /* Value of R fields         */
+BYTE    m4;                             /* Value of M field          */
+
+    RRF_RM( inst, regs, r1, r2, r3, m4 );
+
+    /* Test M4 mask bit corresponding to condition code */
+    if (m4 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 bits 0-63 with R2 bits 0-63 */
+        regs->GR_G(r1) = regs->GR_G(r2);
+    }
+    else
+    {
+        /* Load R1 bits 0-63 with R3 bits 0-63 */
+        regs->GR_G(r1) = regs->GR_G(r3);
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* B9C0 SELFHR - Select Fullword High Register (32)          [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( select_fullword_high_register )
+{
+int     r1, r2, r3;                     /* Value of R fields         */
+BYTE    m4;                             /* Value of M field          */
+
+    RRF_RM( inst, regs, r1, r2, r3, m4 );
+
+    /* Test M4 mask bit corresponding to condition code */
+    if (m4 & (0x08 >> regs->psw.cc))
+    {
+        /* Load R1 bits 0-31 with R2 bits 0-31 */
+        regs->GR_H(r1) = regs->GR_H(r2);
+    }
+    else
+    {
+        /* Load R1 bits 0-31 with R3 bits 0-31 */
+        regs->GR_H(r1) = regs->GR_H(r3);
+    }
+}
+#endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
+
+
+#if defined( FEATURE_045_DISTINCT_OPERANDS_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B9F8 ARK   - Add Distinct Register                        [RRF-a] */
 /*-------------------------------------------------------------------*/
@@ -3765,19 +3917,42 @@ int     r1, r2, r3;                     /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(population_count)
 {
+BYTE    m3;                             /* Optional m3 mask field    */
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
 U64     n;                              /* Contents of R2 register   */
-U64     result;                         /* Result counter            */
+U64     result = 0;                     /* Result counter            */
 U64     mask = 0x0101010101010101ULL;   /* Bit mask                  */
 
-    RRE(inst, regs, r1, r2);
+    RRF_M( inst, regs, r1, r2, m3 );
 
     /* Load the value to be counted from the R2 register */
     n = regs->GR_G(r2);
 
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+
+    if (FACILITY_ENABLED( 061_MISC_INSTR_EXT_3, regs ) && (m3 & 0x08))
+    {
+        /* The following algorithm works best when most bits are 0
+           and works the same for all data sizes, using 3 arithmetic
+           operations and 1 comparison/branch per "1" bit.
+        */
+        for (; n; result++)
+            n &= n - 1;
+
+        /* Load the result into the R1 register */
+        regs->GR_G(r1) = result;
+
+        /* Set condition code 0 if result is zero, or 1 if non-zero */
+        regs->psw.cc = (result == 0) ? 0 : 1;
+        return;
+    }
+
+#endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
+
     /* Count the number of 1 bits in each byte */
-    for (i = 0, result = 0; i < 8; i++) {
+    for (i=0; i < 8; i++)
+    {
         result += n & mask;
         n >>= 1;
     }

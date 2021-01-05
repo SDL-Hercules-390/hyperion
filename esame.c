@@ -3366,6 +3366,37 @@ S16     ri2;                            /* 16-bit relative operand   */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E347 BIC   - Branch Indirect on Condition                 [RXY-b] */
+/*-------------------------------------------------------------------*/
+DEF_INST( branch_indirect_on_condition )
+{
+int     m1;                             /* Operand-1 Mask value      */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+VADR    branch_address;                 /* Branch address            */
+
+    RXY_B( inst, regs, m1, b2, effective_addr2 );
+
+    CONTRAN_INSTR_CHECK_IP( regs );
+
+    /* Branch if m1 mask bit is set */
+    if (inst[1] & (0x80 >> regs->psw.cc))
+    {
+        /* Retrieve branch address from second operand address */
+        branch_address = ARCH_DEP( vfetch8 )( effective_addr2, b2, regs );
+        SUCCESSFUL_BRANCH( regs, branch_address );
+    }
+    else
+    {
+        /* Bump ip to next sequential instruction */
+        regs->ip += 6;
+    }
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E321 CLG   - Compare Logical long                         [RXY-a] */
@@ -3687,6 +3718,82 @@ U64     n;                              /* 64-bit operand values     */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E353 MSC - Multiply Single (32)                           [RXY-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_single_cc )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S32     resulthi, resultlo;             /* 64-bit result             */
+S32     op2;                            /* Operand-2 value           */
+
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Fetch 32-bit second operand value from storage */
+    op2 = ARCH_DEP( vfetch4 )( effective_addr2, b2, regs );
+
+    /* Multiply r1 by op2 and place result in r1 */
+    mul_signed( &resulthi, &resultlo,
+                regs->GR_L(r1),
+                op2 );
+
+    /* Move rightmost 32 bits of 64-bit result into register 1 */
+    regs->GR_L(r1) = resultlo;
+    
+    /* Check for overflow and set condition code */
+    regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFF && resultlo <  0)) ? 3
+                    : resulthi == 0 && resultlo == 0 ? 0
+                    : resulthi < 0 ? 1 : 2;
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK( &regs->psw ))
+        regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E383 MSGC - Multiply Single Long (64)                     [RXY-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_single_long_cc )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S64     resulthi, resultlo;             /* 128-bit result            */
+S64     op2;                            /* Operand-2 value           */
+
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Fetch 64-bit second operand value from storage */
+    op2 = ARCH_DEP( vfetch8 )( effective_addr2, b2, regs );
+
+    /* Multiply r1 by op2 and place result in r1 */
+    mul_signed_long( &resulthi, &resultlo,
+                     regs->GR_G(r1),
+                     op2 );
+
+    /* Move rightmost 64 bits of 128-bit result into register 1 */
+    regs->GR_G(r1) = resultlo;
+
+    /* Check for overflow and set condition code */
+    regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
+                    : resulthi == 0 && resultlo == 0 ? 0
+                    : resulthi < 0 ? 1 : 2;
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK( &regs->psw ))
+        regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* B91C MSGFR - Multiply Single Long Fullword Register         [RRE] */
@@ -3719,6 +3826,70 @@ int     r1, r2;                         /* Values of R fields        */
 
 } /* end DEF_INST(multiply_single_long_register) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* B9FD MSRKC - Multiply Single Register (32)                [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_single_register_cc )
+{
+int     r1, r2, r3;                     /* Value of R fields         */
+S32     resulthi, resultlo;             /* 64-bit result             */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Multiply r3 by r2 and place result in r1 */
+    mul_signed( &resulthi, &resultlo,
+                regs->GR_L(r3),
+                regs->GR_L(r2) );
+
+    /* Move rightmost 32 bits of 64-bit result into register 1 */
+    regs->GR_L(r1) = resultlo;
+    
+    /* Check for overflow and set condition code */
+    regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFF && resultlo <  0)) ? 3
+                    : resulthi == 0 && resultlo == 0 ? 0
+                    : resulthi < 0 ? 1 : 2;
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK( &regs->psw ))
+        regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
+
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* B9ED MSGRKC - Multiply Single Long Register (64)          [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( multiply_single_long_register_cc )
+{
+int     r1, r2, r3;                     /* Value of R fields         */
+S64     resulthi, resultlo;             /* 128-bit result            */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Multiply r3 by r2 and place result in r1 */
+    mul_signed_long( &resulthi, &resultlo,
+                     regs->GR_G(r3),
+                     regs->GR_G(r2) );
+
+    /* Move rightmost 64 bits of 128-bit result into register 1 */
+    regs->GR_G(r1) = resultlo;
+    
+    /* Check for overflow and set condition code */
+    regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
+                    : resulthi == 0 && resultlo == 0 ? 0
+                    : resulthi < 0 ? 1 : 2;
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK( &regs->psw ))
+        regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -3763,6 +3934,34 @@ U16     i2;                             /* 16-bit immediate op       */
 
 } /* end DEF_INST(add_long_halfword_immediate) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E338 AGH   - Add Long Halfword  (64 <- 16)                [RXY-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( add_long_halfword )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Operand effective address */
+S16     n;                              /* 16-bit operand value      */
+
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Load 2 bytes from second operand address */
+    n = (S16)ARCH_DEP( vfetch2 )( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc = add_signed_long(&(regs->GR_G(r1)),
+                                     regs->GR_G(r1),
+                                (S64)n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK( &regs->psw ))
+        regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -3854,6 +4053,149 @@ int     r1, r2;                         /* Values of R fields        */
 
 } /* end DEF_INST(exclusive_or_long_register) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+
+
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* B9F5 NCRK  - And Register With Complement (32)            [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( and_register_with_complement )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* AND R2 with COMPLEMENT of R3, placing results into R1 */
+    regs->GR_L(r1) = regs->GR_L(r2) & ~regs->GR_L(r3);
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B9E5 NCGRK - And Register Long With Complement (64)       [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( and_register_long_with_complement )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* AND R2 with COMPLEMENT of R3, placing results into R1 */
+    regs->GR_G(r1) = regs->GR_G(r2) & ~regs->GR_G(r3);
+    regs->psw.cc = regs->GR_G(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B975 OCRK - Or Register With Complement (32)              [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( or_register_with_complement )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* OR R2 with COMPLEMENT of R3, placing results into R1 */
+    regs->GR_L(r1) = regs->GR_L(r2) | ~regs->GR_L(r3);
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B965 OCGRK- Or Register Long With Complement (64)         [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( or_register_long_with_complement )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* OR R2 with COMPLEMENT of R3, placing results into R1 */
+    regs->GR_G(r1) = regs->GR_G(r2) | ~regs->GR_G(r3);
+    regs->psw.cc = regs->GR_G(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B974 NNRK  - Nand Register (32)                           [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( nand_register )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Load R1 with the COMPLEMENT of the AND of R2 and R3 */
+    regs->GR_L(r1) = ~(regs->GR_L(r2) & regs->GR_L(r3));
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B964 NNGRK - Nand Register Long (64)                      [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( nand_register_long )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Load R1 with the COMPLEMENT of the AND of R2 and R3 */
+    regs->GR_G(r1) = ~(regs->GR_G(r2) & regs->GR_G(r3));
+    regs->psw.cc = regs->GR_G(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B976 NORK  - Nor Register (32)                            [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( nor_register )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Load R1 with the COMPLEMENT of the OR of R2 and R3 */
+    regs->GR_L(r1) = ~(regs->GR_L(r2) | regs->GR_L(r3));
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B966 NOGRK - Nor Register Long (64)                       [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( nor_register_long )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Load R1 with the COMPLEMENT of the OR of R2 and R3 */
+    regs->GR_G(r1) = ~(regs->GR_G(r2) | regs->GR_G(r3));
+    regs->psw.cc = regs->GR_G(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B977 NXRK  - Not Exclusive Or Register (32)               [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( not_xor_register )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Load R1 with the COMPLEMENT of the XOR of R2 and R3 */
+    regs->GR_L(r1) = ~(regs->GR_L(r2) ^ regs->GR_L(r3));
+    regs->psw.cc = regs->GR_L(r1) ? 1 : 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* B967 NXGRK  - Not Exclusive Or Register Long (64)         [RRF-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( not_xor_register_long )
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+
+    RRR( inst, regs, r1, r2, r3 );
+
+    /* Load R1 with the COMPLEMENT of the OR of R2 and R3 */
+    regs->GR_G(r1) = ~(regs->GR_G(r2) ^ regs->GR_G(r3));
+    regs->psw.cc = regs->GR_G(r1) ? 1 : 0;
+}
+#endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -7953,6 +8295,34 @@ S32     n;                              /* 32-bit operand values     */
 
 } /* end DEF_INST(subtract_halfword_y) */
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
+
+
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+/*-------------------------------------------------------------------*/
+/* E339 SGH   - Subtract Long Halfword  (64 <- 16)           [RXY-a] */
+/*-------------------------------------------------------------------*/
+DEF_INST( subtract_long_halfword )
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+S16     n;                              /* Second operand value      */
+
+    RXY( inst, regs, r1, b2, effective_addr2 );
+
+    /* Load 2 bytes from operand address */
+    n = (S16)ARCH_DEP( vfetch2 )( effective_addr2, b2, regs );
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc = sub_signed_long (&(regs->GR_G(r1)),
+                                      regs->GR_G(r1),
+                                 (S64)n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && FOMASK( &regs->psw ))
+        regs->program_interrupt( regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION );
+}
+#endif /* defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 ) */
 
 
 #if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )

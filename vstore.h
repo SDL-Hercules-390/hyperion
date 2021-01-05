@@ -779,11 +779,11 @@ int     len;                            /* Length for page crossing  */
 } /* end function ARCH_DEP(instfetch) */
 
 
-/*-------------------------------------------------------------------*/
-/* Copy 8 bytes at a time concurrently                               */
-/*-------------------------------------------------------------------*/
 #ifndef _VSTORE_CONCPY
 #define _VSTORE_CONCPY
+/*-------------------------------------------------------------------*/
+/* Copy 8 bytes at a time concurrently   (from left to right)        */
+/*-------------------------------------------------------------------*/
 static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
 {
   BYTE *u8d = d;
@@ -833,22 +833,92 @@ static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
     n--;
   }
 }
+
+#if defined( _FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* Copy 8 bytes at a time concurrently   (from right to left)        */
+/*-------------------------------------------------------------------*/
+static __inline__ void concpy_rl( REGS* regs, void* d, void* s, int n )
+{
+    BYTE* u8d = (BYTE*)d + n;
+    BYTE* u8s = (BYTE*)s + n;
+
+    /* Copy until ready or 8 byte integral boundary */
+    while (n && ((uintptr_t) u8d & 7))
+    {
+        *--u8d = *--u8s;
+        n--;
+    }
+
+#if !((defined( SIZEOF_LONG )  && SIZEOF_LONG  > 7) || \
+      (defined( SIZEOF_INT_P ) && SIZEOF_INT_P > 7) || \
+       defined( OPTION_STRICT_ALLIGNMENT ))
+
+    /* Code for 32-bit builds... */
+
+    /* Copy full words in right condition, on enough length and (src - dst) distance */
+    if (1
+        && n
+        && regs->cpubit == regs->sysblk->started_mask
+        && abs( u8d - u8s ) > 3
+    )
+    {
+        while (n > 3)
+        {
+            store_fw_noswap( u8d-4, fetch_fw_noswap( u8s-4 ));
+            u8d -= 4;
+            u8s -= 4;
+            n   -= 4;
+        }
+    }
+    else /* copy double words... */
+#else // x64 builds
+    UNREFERENCED( regs );
+#endif /* end code for 32-bit builds */
+
+    /* Copy double words on enough length and (src - dst) distance */
+    if (n && labs(u8d - u8s) > 7)
+    {
+        while (n > 7)
+        {
+            store_dw_noswap( u8d-8, fetch_dw_noswap( u8s-8 ));
+            u8d -= 8;
+            u8s -= 8;
+            n   -= 8;
+        }
+    }
+
+    /* Copy leftovers */
+    while (n)
+    {
+        *--u8d = *--u8s;
+        n--;
+    }
+}
+#endif /* defined( _FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
 #endif /* !defined(_VSTORE_CONCPY) */
 
 /*-------------------------------------------------------------------*/
-/* Move characters using specified keys and address spaces           */
+/*                  Move characters left to right                    */
+/*              using specified keys and address spaces              */
+/*-------------------------------------------------------------------*/
 /*                                                                   */
 /* Input:                                                            */
-/*      addr1   Effective address of first operand                   */
-/*      arn1    Access register number for first operand,            */
+/*      addr1   Effective address of destination operand             */
+/*      arn1    Access register number for destination operand,      */
 /*              or USE_PRIMARY_SPACE or USE_SECONDARY_SPACE          */
 /*      key1    Bits 0-3=first operand access key, 4-7=zeroes        */
-/*      addr2   Effective address of second operand                  */
-/*      arn2    Access register number for second operand,           */
+/*                                                                   */
+/*                                                                   */
+/*      addr2   Effective address of source operand                  */
+/*      arn2    Access register number for source operand,           */
 /*              or USE_PRIMARY_SPACE or USE_SECONDARY_SPACE          */
 /*      key2    Bits 0-3=second operand access key, 4-7=zeroes       */
+/*                                                                   */
+/*                                                                   */
 /*      len     Operand length minus 1 (range 0-255)                 */
 /*      regs    Pointer to the CPU register context                  */
+/*                                                                   */
 /*                                                                   */
 /*      This function implements the MVC, MVCP, MVCS, MVCK, MVCSK,   */
 /*      and MVCDK instructions.  These instructions move up to 256   */
@@ -876,10 +946,10 @@ void ARCH_DEP( move_chars )( VADR addr1, int arn1, BYTE key1,
                              VADR addr2, int arn2, BYTE key2,
                              int len, REGS* regs )
 {
-BYTE   *dest1, *dest2;                  /* Destination addresses     */
+BYTE   *dest1,   *dest2;                /* Destination addresses     */
 BYTE   *source1, *source2;              /* Source addresses          */
-BYTE   *sk1, *sk2;                      /* Storage key addresses     */
-int     len2, len3;                     /* Lengths to copy           */
+BYTE   *sk1,     *sk2;                  /* Storage key addresses     */
+int     len1,     len2;                 /* Lengths to copy           */
 
     ITIMER_SYNC( addr2, len, regs );
 
@@ -909,7 +979,6 @@ int     len2, len3;                     /* Lengths to copy           */
      * Note: since the operand length is limited to 256 bytes,
      *       neither operand can cross more than one 2K boundary.
      */
-
     if (NOCROSSPAGE( addr1, len ))
     {
         if (NOCROSSPAGE( addr2, len ))
@@ -919,54 +988,56 @@ int     len2, len3;                     /* Lengths to copy           */
         }
         else
         {
-            /* (2) - Second operand crosses a boundary */
-            len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDRL( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
-                   len + 1 - len2, arn2, regs, ACCTYPE_READ, key2 );
-            concpy( regs, dest1,        source1,       len2     );
-            concpy( regs, dest1 + len2, source2, len - len2 + 1 );
+            /* (2) - Source operand crosses a boundary */
+            len1 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
+            source2 = MADDRL( (addr2 + len1) & ADDRESS_MAXWRAP( regs ),
+                   len + 1 - len1, arn2, regs, ACCTYPE_READ, key2 );
+
+            concpy( regs, dest1,        source1,       len1     );
+            concpy( regs, dest1 + len1, source2, len - len1 + 1 );
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
     {
-        /* First operand crosses a boundary */
-        len2 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-        dest2 = MADDRL( (addr1 + len2) & ADDRESS_MAXWRAP( regs ),
-           len + 1 - len2, arn1, regs, ACCTYPE_WRITE_SKP, key1 );
+        /* Destination operand crosses a boundary */
+        len1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
+        dest2 = MADDRL( (addr1 + len1) & ADDRESS_MAXWRAP( regs ),
+            len + 1 - len1, arn1, regs, ACCTYPE_WRITE_SKP, key1 );
         sk2 = regs->dat.storkey;
 
         if (NOCROSSPAGE( addr2, len ))
         {
-             /* (3) - First operand crosses a boundary */
-             concpy( regs, dest1, source1,              len2     );
-             concpy( regs, dest2, source1 + len2, len - len2 + 1 );
+             /* (3) - Source operand crosses a boundary */
+             concpy( regs, dest1, source1,              len1     );
+             concpy( regs, dest2, source1 + len1, len - len1 + 1 );
         }
         else
         {
             /* (4) - Both operands cross a boundary */
-            len3 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
-            source2 = MADDRL( (addr2 + len3) & ADDRESS_MAXWRAP( regs ),
-             len + 1 - len3, arn2, regs, ACCTYPE_READ, key2 );
-            if (len2 == len3)
+            len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
+            source2 = MADDRL( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+                len + 1 - len2, arn2, regs, ACCTYPE_READ, key2 );
+
+            if (len1 == len2)
             {
                 /* (4a) - Both operands cross at the same time */
-                concpy( regs, dest1, source1,       len2     );
-                concpy( regs, dest2, source2, len - len2 + 1 );
+                concpy( regs, dest1, source1,       len1     );
+                concpy( regs, dest2, source2, len - len1 + 1 );
             }
-            else if (len2 < len3)
+            else if (len1 < len2)
             {
-                /* (4b) - First operand crosses first */
-                concpy( regs, dest1,               source1,               len2     );
-                concpy( regs, dest2,               source1 + len2, len3 - len2     );
-                concpy( regs, dest2 + len3 - len2, source2,        len  - len3 + 1 );
+                /* (4b) - Destination operand crosses first */
+                concpy( regs, dest1,               source1,               len1     );
+                concpy( regs, dest2,               source1 + len1, len2 - len1     );
+                concpy( regs, dest2 + len2 - len1, source2,        len  - len2 + 1 );
             }
             else
             {
-                /* (4c) - Second operand crosses first */
-                concpy( regs, dest1,        source1,                      len3     );
-                concpy( regs, dest1 + len3, source2,               len2 - len3     );
-                concpy( regs, dest2,        source2 + len2 - len3, len -  len2 + 1 );
+                /* (4c) - Source operand crosses first */
+                concpy( regs, dest1,        source1,                      len2     );
+                concpy( regs, dest1 + len2, source2,               len1 - len2     );
+                concpy( regs, dest2,        source2 + len1 - len2, len -  len1 + 1 );
             }
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
@@ -975,6 +1046,161 @@ int     len2, len3;                     /* Lengths to copy           */
     ITIMER_UPDATE( addr1, len, regs );
 
 } /* end function ARCH_DEP(move_chars) */
+
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/*                  Move characters right to left                    */
+/*              using specified keys and address spaces              */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This function is essentially identical to the above 'move_chars'  */
+/* function except that it moves bytes in a right-to-left sequence   */
+/* beginning with the rightmost byte of each operand. Both operands  */
+/* designate the leftmost byte of their respective operands.         */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr1   Effective address of first operand                   */
+/*      arn1    Access register number for first operand,            */
+/*              or USE_PRIMARY_SPACE or USE_SECONDARY_SPACE          */
+/*      key1    Bits 0-3=first operand access key, 4-7=zeroes        */
+/*                                                                   */
+/*                                                                   */
+/*      addr2   Effective address of second operand                  */
+/*      arn2    Access register number for second operand,           */
+/*              or USE_PRIMARY_SPACE or USE_SECONDARY_SPACE          */
+/*      key2    Bits 0-3=second operand access key, 4-7=zeroes       */
+/*                                                                   */
+/*                                                                   */
+/*      len     Operand length minus 1 (range 0-255)                 */
+/*      regs    Pointer to the CPU register context                  */
+/*                                                                   */
+/*                                                                   */
+/*      This function implements the MVCRL instruction, and moves    */
+/*      up to 256 bytes using the address space and key specified    */
+/*      by the caller for each operand.  Data is moved byte by       */
+/*      byte to ensure correct processing of overlapping operands.   */
+/*                                                                   */
+/*      The arn parameter for each operand may be an access          */
+/*      register number, in which case the operand is in the         */
+/*      primary, secondary, or home space, or in the space           */
+/*      designated by the specified access register, according       */
+/*      to the current PSW addressing mode.                          */
+/*                                                                   */
+/*      Alternatively the arn parameter may be one of the special    */
+/*      values USE_PRIMARY_SPACE or USE_SECONDARY_SPACE in which     */
+/*      case the operand is in the specified space regardless of     */
+/*      the current PSW addressing mode.                             */
+/*                                                                   */
+/*      A program check may be generated if either logical address   */
+/*      causes an addressing, protection, or translation exception,  */
+/*      and in this case the function does not return.               */
+/*-------------------------------------------------------------------*/
+_VSTORE_C_STATIC
+void ARCH_DEP( move_chars_rl )( VADR addr1, int arn1, BYTE key1,
+                                VADR addr2, int arn2, BYTE key2,
+                                int len, REGS* regs )
+{
+BYTE   *dest1,   *dest2;                /* Destination addresses     */
+BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1,     *sk2;                  /* Storage key addresses     */
+int     len1,     len2;                 /* Lengths to copy           */
+
+    ITIMER_SYNC( addr2, len, regs );
+
+    /* Quick out if copying just 1 byte */
+    if (unlikely( !len ))
+    {
+        source1 = MADDR( addr2, arn2, regs, ACCTYPE_READ,  key2 );
+        dest1   = MADDR( addr1, arn1, regs, ACCTYPE_WRITE, key1 );
+        *dest1  = *source1;
+        ITIMER_UPDATE( addr1, len, regs );
+        return;
+    }
+
+    /* Translate addresses of leftmost operand bytes */
+    source1 = MADDRL( addr2, len+1, arn2, regs, ACCTYPE_READ, key2 );
+    dest1   = MADDRL( addr1, len+1, arn1, regs, ACCTYPE_WRITE_SKP, key1 );
+    sk1 = regs->dat.storkey;
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     * Note: since the operand length is limited to 256 bytes,
+     *       neither operand can cross more than one 2K boundary.
+     */
+    if (NOCROSSPAGE( addr1, len ))
+    {
+        if (NOCROSSPAGE( addr2, len ))
+        {
+            /* (1) - No boundaries are crossed */
+            concpy_rl( regs, dest1, source1, len + 1 );
+        }
+        else
+        {
+            /* (2) - Source operand crosses a boundary */
+            len1 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
+            source2 = MADDRL( (addr2 + len1) & ADDRESS_MAXWRAP( regs ),
+                   len + 1 - len1, arn2, regs, ACCTYPE_READ, key2 );
+
+            concpy_rl( regs, dest1 + len1, source2, len - len1 + 1 );
+            concpy_rl( regs, dest1,        source1,       len1     );
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    else
+    {
+        /* Destination operand crosses a boundary */
+        len1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
+        dest2 = MADDRL( (addr1 + len1) & ADDRESS_MAXWRAP( regs ),
+            len + 1 - len1, arn1, regs, ACCTYPE_WRITE_SKP, key1 );
+        sk2 = regs->dat.storkey;
+
+        if (NOCROSSPAGE( addr2, len ))
+        {
+             /* (3) - Source operand crosses a boundary */
+             concpy_rl( regs, dest2, source1 + len1, len - len1 + 1 );
+             concpy_rl( regs, dest1, source1,              len1     );
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
+            source2 = MADDRL( (addr2 + len2) & ADDRESS_MAXWRAP( regs ),
+                len + 1 - len2, arn2, regs, ACCTYPE_READ, key2 );
+
+            if (len1 == len2)
+            {
+                /* (4a) - Both operands cross at the same time */
+                concpy_rl( regs, dest2, source2, len - len1 + 1 );
+                concpy_rl( regs, dest1, source1,       len1     );
+            }
+            else if (len1 < len2)
+            {
+                /* (4b) - Destination operand crosses first */
+                concpy_rl( regs, dest2 + len2 - len1, source2,        len  - len2 + 1 );
+                concpy_rl( regs, dest2,               source1 + len1, len2 - len1     );
+                concpy_rl( regs, dest1,               source1,               len1     );
+            }
+            else
+            {
+                /* (4c) - Source operand crosses first */
+                concpy_rl( regs, dest2,        source2 + len1 - len2, len -  len1 + 1 );
+                concpy_rl( regs, dest1 + len2, source2,               len1 - len2     );
+                concpy_rl( regs, dest1,        source1,                      len2     );
+            }
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    ITIMER_UPDATE( addr1, len, regs );
+
+} /* end function ARCH_DEP( move_chars_rl ) */
+#endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
 
 
 #if defined( FEATURE_027_MVCOS_FACILITY )
