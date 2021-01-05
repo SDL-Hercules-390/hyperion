@@ -499,7 +499,7 @@ FT( NONE, NONE, NONE, 080_DFP_PACK_CONV )
 #endif
 
 #if defined(  FEATURE_081_PPA_IN_ORDER_FACILITY )
-FT( NONE, NONE, NONE, 081_PPA_IN_ORDER )
+FT( Z900, Z900, NONE, 081_PPA_IN_ORDER )
 #endif
 
 FT( Z900, NONE, NONE, 082_IBM_INTERNAL )
@@ -1872,7 +1872,7 @@ FAC_MOD_OK_FUNC           ( modlong )
 /*-------------------------------------------------------------------*/
 /*                          modtrans                                 */
 /*-------------------------------------------------------------------*/
-/*         bit 73 implies bit 49, bit 50 implies bit 73              */
+/*         bit 73/81 implies bit 49, bit 50 implies bit 73           */
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( modtrans )
 {
@@ -1897,6 +1897,11 @@ FAC_MOD_OK_FUNC           ( modtrans )
                 WRMSG( HHC02385, "W", sysblk.cpumodel );
             }
         }
+        else if (bitno == STFL_081_PPA_IN_ORDER)
+        {
+            if (!FACILITY_ENABLED_ARCH( 049_EXECUTION_HINT, archnum ))
+                return HHC00890E(  STFL_049_EXECUTION_HINT );
+        }
         else if (0
             || bitno == STFL_HERC_TXF_RESTRICT_1
             || bitno == STFL_HERC_TXF_RESTRICT_2
@@ -1913,6 +1918,9 @@ FAC_MOD_OK_FUNC           ( modtrans )
         {
             if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
                 return HHC00890E( STFL_073_TRANSACT_EXEC );
+
+            if (FACILITY_ENABLED_ARCH( 081_PPA_IN_ORDER, archnum ))
+                return HHC00890E( STFL_081_PPA_IN_ORDER );
         }
         else if (bitno == STFL_073_TRANSACT_EXEC)
         {

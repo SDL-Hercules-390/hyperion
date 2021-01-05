@@ -135,6 +135,30 @@ U32     abort_count;                    /* Transaction Abort count   */
         }
         return;
     }
+#if defined( FEATURE_081_PPA_IN_ORDER_FACILITY )
+    case 15: // In-order Execution Assist
+    {
+        /*
+           "When the function code in the M3 field is 15 and the
+            PPA-in-order facility is installed, the processor is
+            requested to complete processing all instructions prior
+            to this PPA instruction, as observed by this CPU, before
+            attempting storage-operand references for any instruction
+            after this PPA instruction."
+
+           "The R1 and R2 fields are ignored and the instruction is
+            executed as a no-operation."
+
+           "The in-order-execution assist does not necessarily perform
+            any of the steps for architectural serialization described
+            in the section "CPU Serialization" on page 5-130."
+        */
+
+        /* Hercules does not currently support this assist */
+
+        return;  /* (ignore unsupported assists) */
+    }
+#endif // defined(  FEATURE_081_PPA_IN_ORDER_FACILITY )
 
     default:     /* (unknown/unsupported assist) */
         return;  /* (ignore unsupported assists) */
