@@ -1541,6 +1541,7 @@ S16  ri2;                               /* 16-bit relative operand   */
 } /* end DEF_INST( branch_relative_on_condition ) */
 #endif /* defined( FEATURE_IMMEDIATE_AND_RELATIVE ) */
 
+
 /*-------------------------------------------------------------------*/
 /* 06   BCTR  - Branch on Count Register                        [RR] */
 /*-------------------------------------------------------------------*/
@@ -5478,6 +5479,32 @@ VADR    effective_addr1,
     ARCH_DEP(move_chars) (effective_addr1, b1, regs->psw.pkey,
                 effective_addr2, b2, regs->psw.pkey, len, regs);
 }
+
+
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+/*-------------------------------------------------------------------*/
+/* E50A MVCRL - Move Right to Left                             [SSE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( move_right_to_left )
+{
+int     len;                            /* Length byte               */
+int     b1, b2;                         /* Values of base fields     */
+VADR    effective_addr1,
+        effective_addr2;                /* Effective addresses       */
+
+    SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
+
+    CONTRAN_INSTR_CHECK( regs );
+
+    /* Load operand length-1 from general register 0 bits 56-63 */
+    len = regs->GR_LHLCL(0);
+
+    /* Move characters using current addressing mode and key */
+    ARCH_DEP( move_chars_rl )( effective_addr1, b1, regs->psw.pkey,
+                effective_addr2, b2, regs->psw.pkey, len, regs );
+
+}
+#endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
 
 
 /*-------------------------------------------------------------------*/

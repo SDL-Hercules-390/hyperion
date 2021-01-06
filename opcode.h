@@ -2606,6 +2606,36 @@ DEF_INST( load_logical_and_zero_rightmost_byte );
 DEF_INST( load_and_zero_rightmost_byte );
 #endif
 
+#if defined( FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
+DEF_INST( branch_indirect_on_condition );
+DEF_INST( add_long_halfword );
+DEF_INST( subtract_long_halfword );
+DEF_INST( multiply_long_register );
+DEF_INST( multiply_long );
+DEF_INST( multiply_long_halfword );
+DEF_INST( multiply_single_register_cc );
+DEF_INST( multiply_single_cc );
+DEF_INST( multiply_single_long_register_cc );
+DEF_INST( multiply_single_long_cc );
+#endif
+
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+DEF_INST( and_register_with_complement );
+DEF_INST( and_register_long_with_complement );
+DEF_INST( nand_register );
+DEF_INST( nand_register_long );
+DEF_INST( not_xor_register );
+DEF_INST( not_xor_register_long );
+DEF_INST( nor_register );
+DEF_INST( nor_register_long );
+DEF_INST( or_register_with_complement );
+DEF_INST( or_register_long_with_complement );
+DEF_INST( select_register );
+DEF_INST( select_register_long );
+DEF_INST( select_fullword_high_register );
+DEF_INST( move_right_to_left );
+#endif
+
 #if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
 DEF_INST( reset_reference_bits_multiple );
 #endif

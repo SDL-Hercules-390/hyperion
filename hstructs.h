@@ -73,74 +73,114 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 struct REGS {                           /* Processor registers       */
+
 #define HDL_NAME_REGS   "REGS"          /* Eye-Catch NAME            */
 #define HDL_VERS_REGS   "SDL 4.00"      /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
-/*000*/ BLOCK_HEADER;                   /* Name of block   REGS_CP00 */
-/*030*/ U64     cpuid;                  /* Formatted CPU ID          */
-/*038*/ U32     cpuserial;              /* CPU serial number         */
-/*03C*/ U16     cpumodel;               /* CPU model number          */
-/*03E*/ U8      cpuversion;             /* CPU version code          */
-/*03F*/ U8      _cpu_reserved;          /* Reserved for future use   */
+
+        BLOCK_HEADER;                   /* Name of block   REGS_CP00 */
+
+        U64     cpuid;                  /* Formatted CPU ID          */
+        U32     cpuserial;              /* CPU serial number         */
+        U16     cpumodel;               /* CPU model number          */
+        U8      cpuversion;             /* CPU version code          */
+        U8      cpu_reserved;           /* (reserved for future use) */
+
                                         /* --- 64-byte cache line -- */
-/*040*/ SYSBLK *sysblk;                 /* Pointer to sysblk         */
+        SYSBLK *sysblk;                 /* Pointer to sysblk         */
+
         ALIGN_8
-/*048*/ U32     ints_state;             /* CPU Interrupts Status     */
-/*04C*/ U32     ints_mask;              /* Respective Interrupts Mask*/
-/*050*/ CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
+        U32     ints_state;             /* CPU Interrupts Status     */
+        U32     ints_mask;              /* Respective Interrupts Mask*/
+        CPU_BITMAP cpubit;              /* Only this CPU's bit is 1  */
+
         ALIGN_16
-/*060*/ BYTE    cpustate;               /* CPU stopped/started state */
-/*061*/ BYTE    _cpu_reserved2;         /* Available...              */
-/*062*/ U16     extccpu;                /* CPU causing external call */
-/*064*/ int     arch_mode;              /* Architectural mode        */
-/*068*/ BYTE   *ip;                     /* Mainstor inst address     */
-/*070*/ DW      px;                     /* Prefix register           */
-                                        /* --- 64-byte cache line -- */
-/*080*/ PSW     psw;                    /* Program status word       */
-/*0E8-0FF*/                             /* Available...              */
+        BYTE    cpustate;               /* CPU stopped/started state */
+        BYTE    _cpu_reserved2;         /* Available...              */
+        U16     extccpu;                /* CPU causing external call */
+        int     arch_mode;              /* Architectural mode        */
+        BYTE   *ip;                     /* Mainstor inst address     */
 
-        ALIGN_128                       /* --- 64-byte cache line -- */
-/*100*/ BYTE    malfcpu                 /* Malfuction alert flags    */
-                    [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
+        DW      px;                     /* Prefix register           */
+#define PX_G    px.D
+#define PX_L    px.F.L.F
+
+        PSW     psw;                    /* Program status word       */
+
         ALIGN_128
-/*180*/ BYTE    emercpu                 /* Emergency signal flags    */
+        BYTE    malfcpu                 /* Malfuction alert flags    */
                     [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
 
-     /* AIA - Instruction fetch accelerator                          */
-/*200*/ ALIGN_128
+        ALIGN_128
+        BYTE    emercpu                 /* Emergency signal flags    */
+                    [ MAX_CPU_ENGS ];   /* for each CPU (1=pending)  */
+
+        /* AIA - Instruction fetch accelerator                       */
+
+        ALIGN_128
         BYTE   *aip;                    /* Mainstor page address     */
 
-        uintptr_t unused;               /* Available                 */
-
-/*210*/ ALIGN_8
+        ALIGN_8
         BYTE   *aie;                    /* Mainstor page end address */
-/*218*/ DW      aiv;                    /* Virtual page address      */
 
-/*220*/ U64     bear;                   /* Breaking event address reg*/
-/*228*/ U64     bear_ex;                /* (same, but for EX/EXRL)   */
+        DW      aiv;                    /* Virtual page address      */
+#define AIV_G   aiv.D
+#define AIV_L   aiv.F.L.F
 
-/*230-27F*/                             /* Available...              */
+        U64     bear;                   /* Breaking event address reg*/
+        U64     bear_ex;                /* (same, but for EX/EXRL)   */
 
-
-/*280*/ ALIGN_128
+        ALIGN_128
         DW      gr[16];                 /* General registers         */
-/*300*/ U32     ar[16];                 /* Access registers          */
-/*340*/ U32     fpr[32];                /* Floating point registers  */
-/*380*/ U32     fpc;                    /* IEEE Floating Point
-                                                    Control Register */
-/*384*/ BYTE    __reserved_space[52];   /* Available...              */
+        U32     ar[16];                 /* Access registers          */
+        U32     fpr[32];                /* FP registers              */
+        U32     fpc;                    /* FP Control register       */
 
-#define CR_ASD_REAL     -1
-#define CR_ALB_OFFSET   16
+#define GR_G(_r)     gr[(_r)].D
+#define GR_H(_r)     gr[(_r)].F.H.F       /* Fullword bits 0-31      */
+#define GR_HHH(_r)   gr[(_r)].F.H.H.H.H   /* Halfword bits 0-15      */
+#define GR_HHL(_r)   gr[(_r)].F.H.H.L.H   /* Halfword low, bits 16-31*/
+#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L /* Character, bits 24-31   */
+#define GR_L(_r)     gr[(_r)].F.L.F       /* Fullword low, bits 32-63*/
+#define GR_LHH(_r)   gr[(_r)].F.L.H.H.H   /* Halfword bits 32-47     */
+#define GR_LHL(_r)   gr[(_r)].F.L.H.L.H   /* Halfword low, bits 48-63*/
+#define GR_LHHCH(_r) gr[(_r)].F.L.H.H.B.H /* Character, bits 32-39   */
+#define GR_LA24(_r)  gr[(_r)].F.L.A.A     /* 24 bit addr, bits 40-63 */
+#define GR_LA8(_r)   gr[(_r)].F.L.A.B     /* 24 bit addr, unused bits*/
+#define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L /* Character, bits 56-63   */
+#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H /* Character, bits 48-55   */
 
-/*3B8*/ DW      cr_struct[1+16+16];
-#define XR(_crn) cr_struct[1+(_crn)]
+#define AR(_r)       ar[(_r)]
 
-/*4C0*/ U32     dxc;                    /* Data exception code       */
-/*4C4*/                                 /* Available...              */
-/*4C8*/ DW      mc;                     /* Monitor Code              */
-/*4D0*/ DW      ea;                     /* Exception address         */
-/*4D8*/ DW      et;                     /* Execute Target address    */
+        ALIGN_128
+        DW           cr_struct[1+16+16];  /* Control registers       */
+#define XR(_crn)     cr_struct[1+(_crn)]
+#define CR_G(_r)     XR((_r)).D           /* Bits 0-63               */
+#define CR_H(_r)     XR((_r)).F.H.F       /* Fullword bits 0-31      */
+#define CR_HHH(_r)   XR((_r)).F.H.H.H.H   /* Halfword bits 0-15      */
+#define CR_HHL(_r)   XR((_r)).F.H.H.L.H   /* Halfword low, bits 16-31*/
+#define CR_L(_r)     XR((_r)).F.L.F       /* Fullword low, bits 32-63*/
+#define CR_LHH(_r)   XR((_r)).F.L.H.H.H   /* Halfword bits 32-47     */
+#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H /* Character, bits 32-39   */
+#define CR_LHL(_r)   XR((_r)).F.L.H.L.H   /* Halfword low, bits 48-63*/
+
+#define CR_ASD_REAL    -1
+#define CR_ALB_OFFSET  16
+#define ARN(_arn)      ((_arn) >= USE_ARMODE ? ((_arn) & 0xF) : (_arn))
+
+        U32     dxc;                    /* Data exception code       */
+
+        DW      mc;                     /* Monitor Code              */
+#define MC_G    mc.D
+#define MC_L    mc.F.L.F
+
+        DW      ea;                     /* Exception address         */
+#define EA_G    ea.D
+#define EA_L    ea.F.L.F
+
+        DW      et;                     /* Execute Target address    */
+#define ET_G    et.D
+#define ET_L    et.F.L.F
 
         unsigned int                    /* Flags (cpu thread only)   */
                 execflag:1,             /* 1=EXecuted instruction    */
@@ -165,7 +205,7 @@ struct REGS {                           /* Processor registers       */
                 sigp_reset:1,           /* 1=SIGP cpu reset received */
                 sigp_ini_reset:1;       /* 1=SIGP initial cpu reset  */
 
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+        CACHE_ALIGN
         S64     tod_epoch;              /* TOD epoch for this CPU    */
         TOD     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
@@ -177,7 +217,6 @@ struct REGS {                           /* Processor registers       */
         S32     old_timer;              /* S/370 Interval timer int  */
         S32     ecps_oldtmr;            /* ECPS Virtual Int. tmr int */
 
-                                        /* --- 64-byte cache line -- */
         BYTE   *ecps_vtmrpt;            /* Pointer to VTMR or zero   */
 
         U64     rcputime;               /* Real CPU time used (us)   */
@@ -188,47 +227,14 @@ struct REGS {                           /* Processor registers       */
         U32     siocount;               /* SIO/SSCH counter          */
         U32     siosrate;               /* IOs per second            */
         U64     siototal;               /* Total SIO/SSCH count      */
-                                        /* --- 64-byte cache line -- */
+
         int     cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait     */
         U64     waittime;               /* Wait time in interval     */
         U64     waittime_accumulated;   /* Wait time accumulated     */
 
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+        CACHE_ALIGN
         DAT     dat;                    /* Fields for DAT use        */
-
-#define GR_G(_r) gr[(_r)].D
-#define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
-#define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
-#define GR_HHL(_r) gr[(_r)].F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define GR_HHLCL(_r) gr[(_r)].F.H.H.L.B.L   /* Character, bits 24-31 */
-#define GR_L(_r) gr[(_r)].F.L.F          /* Fullword low, bits 32-63 */
-#define GR_LHH(_r) gr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
-#define GR_LHL(_r) gr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define GR_LHHCH(_r) gr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
-#define GR_LA24(_r) gr[(_r)].F.L.A.A     /* 24 bit addr, bits 40-63  */
-#define GR_LA8(_r) gr[(_r)].F.L.A.B      /* 24 bit addr, unused bits */
-#define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L   /* Character, bits 56-63 */
-#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H   /* Character, bits 48-55 */
-#define CR_G(_r)   XR((_r)).D            /* Bits 0-63                */
-#define CR_H(_r)   XR((_r)).F.H.F        /* Fullword bits 0-31       */
-#define CR_HHH(_r) XR((_r)).F.H.H.H.H    /* Halfword bits 0-15       */
-#define CR_HHL(_r) XR((_r)).F.H.H.L.H    /* Halfword low, bits 16-31 */
-#define CR_L(_r)   XR((_r)).F.L.F        /* Fullword low, bits 32-63 */
-#define CR_LHH(_r) XR((_r)).F.L.H.H.H    /* Halfword bits 32-47      */
-#define CR_LHHCH(_r) XR((_r)).F.L.H.H.B.H   /* Character, bits 32-39 */
-#define CR_LHL(_r) XR((_r)).F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define MC_G      mc.D
-#define MC_L      mc.F.L.F
-#define EA_G      ea.D
-#define EA_L      ea.F.L.F
-#define ET_G      et.D
-#define ET_L      et.F.L.F
-#define PX_G      px.D
-#define PX_L      px.F.L.F
-#define AIV_G     aiv.D
-#define AIV_L     aiv.F.L.F
-#define AR(_r)    ar[(_r)]
 
         U16     chanset;                /* Connected channel set     */
         U16     monclass;               /* Monitor event class       */
@@ -242,8 +248,8 @@ struct REGS {                           /* Processor registers       */
                                         /* guest storage limit (SIE) */
         union
         {
-            PSA_3XX *psa;         /* -> PSA for this CPU 370 and ESA */
-            PSA_900 *zpsa;     /* -> PSA for this CPU when in z arch */
+            PSA_3XX *psa;               /* -> PSA for 370 and ESA    */
+            PSA_900 *zpsa;              /* -> PSA for z/Arch         */
         };
 
     /*---------------------------------------------------------------*/
@@ -280,7 +286,8 @@ struct REGS {                           /* Processor registers       */
                                            register context          */
 
 #if defined(_FEATURE_SIE)
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+
+        CACHE_ALIGN
         RADR    sie_state;              /* Address of the SIE state
                                            descriptor block or 0 when
                                            not running under SIE     */
@@ -298,12 +305,10 @@ struct REGS {                           /* Processor registers       */
                 sie_mode:1,             /* In SIE mode  (guest only) */
                 sie_pref:1;             /* Preferred-storage mode    */
 
-// #if defined(FEATURE_PER)
         ALIGN_16
         U16     perc;                   /* PER code                  */
         RADR    peradr;                 /* PER address               */
         BYTE    peraid;                 /* PER access id             */
-// #endif /*defined(FEATURE_PER)*/
 
      /*
       * Making the following flags 'stand-alone' (instead of bit-
@@ -317,13 +322,13 @@ struct REGS {                           /* Processor registers       */
                                            instruction crosses a page
                                            boundary                  */
         BYTE    *invalidate_main;       /* Mainstor addr to invalidat*/
-        CACHE_ALIGN                     /* --- 64-byte cache line -- */
+
+        CACHE_ALIGN
         PSW     captured_zpsw;          /* Captured-z/Arch PSW reg   */
 #if defined( _FEATURE_S370_S390_VECTOR_FACILITY )
         CACHE_ALIGN
         VFREGS *vf;                     /* Vector Facility           */
 #endif
-
         CACHE_ALIGN
         jmp_buf progjmp;                /* longjmp destination for
                                            program check return      */
@@ -334,7 +339,7 @@ struct REGS {                           /* Processor registers       */
         COND    intcond;                /* CPU interrupt condition   */
         LOCK    *cpulock;               /* CPU lock for this CPU     */
 
-     /* Mainstor address lookup accelerator                          */
+        /* Mainstor address lookup accelerator                       */
 
         BYTE    aea_mode;               /* aea addressing mode       */
 
@@ -347,7 +352,7 @@ struct REGS {                           /* Processor registers       */
         BYTE    aea_aleprot[16];        /* ale protected             */
 
      /* Function pointers */
-        pi_func program_interrupt;
+        pi_func  program_interrupt;
 
      /* Active Facility List */
         BYTE    facility_list[ STFL_HERC_BY_SIZE ];
@@ -436,7 +441,6 @@ struct REGS {                           /* Processor registers       */
         PSW        txf_tapsw;           /* Transaction abort PSW     */
         BYTE*      txf_ip;              /* AIA Mainstor inst address */
         BYTE*      txf_aip;             /* AIA Mainstor page address */
-        uintptr_t  txf_aim;             /* AIA Mainstor xor address  */
         DW         txf_aiv;             /* AIA Virtual page address  */
 
         /*-----------------------------------------------------------*/

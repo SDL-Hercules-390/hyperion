@@ -476,6 +476,9 @@ static inline void atomic_update64( volatile S64* p, S64 count )
   #endif
 #endif
 }
+#if !defined( _MSVC_ ) && !defined( HAVE_SYNC_BUILTINS )
+  WARNING( "Missing atomic 32/64 bit increment support!" )
+#endif
 
 /*-------------------------------------------------------------------*/
 /*           Atomically update SYSBLK Instruction Counter            */

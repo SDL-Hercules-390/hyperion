@@ -189,6 +189,8 @@ FT( Z900, Z900, NONE, 010_CONDITIONAL_SSKE )
 FT( Z900, Z900, NONE, 011_CONFIG_TOPOLOGY )
 #endif
 
+FT( Z900, NONE, NONE, 012_IBM_INTERNAL )
+
 #if defined(  FEATURE_013_IPTE_RANGE_FACILITY )
 FT( Z900, Z900, NONE, 013_IPTE_RANGE )
 #endif
@@ -196,6 +198,8 @@ FT( Z900, Z900, NONE, 013_IPTE_RANGE )
 #if defined(  FEATURE_014_NONQ_KEY_SET_FACILITY )
 FT( Z900, Z900, NONE, 014_NONQ_KEY_SET )
 #endif
+
+FT( Z900, NONE, NONE, 015_IBM_INTERNAL )
 
 #if defined(  FEATURE_016_EXT_TRANSL_FACILITY_2 )
 FT( Z39X, Z390, NONE, 016_EXT_TRANSL_2 )
@@ -249,6 +253,8 @@ FT( Z900, Z900, NONE, 027_MVCOS )
 FT( Z900, Z900, NONE, 028_TOD_CLOCK_STEER )
 #endif
 
+FT( Z900, NONE, NONE, 029_UNDEFINED )
+
 #if defined(  FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
 FT( Z900, Z900, NONE, 030_ETF3_ENHANCEMENT )
 #endif
@@ -284,6 +290,8 @@ FT( Z90X, Z900, NONE, 037_FP_EXTENSION )
 #if defined(  FEATURE_038_OP_CMPSC_FACILITY )
 FT( NONE, NONE, NONE, 038_OP_CMPSC )
 #endif
+
+FT( Z900, NONE, NONE, 039_IBM_INTERNAL )
 
 #if defined(  FEATURE_040_LOAD_PROG_PARAM_FACILITY )
 FT( Z900, Z900, NONE, 040_LOAD_PROG_PARAM )
@@ -355,6 +363,8 @@ FT( Z90X, Z900, NONE, 045_POPULATION_COUNT )
 
 /*-------------------------------------------------------------------*/
 
+FT( Z900, NONE, NONE, 046_IBM_INTERNAL )
+
 #if defined(  FEATURE_047_CMPSC_ENH_FACILITY )
 FT( Z900, Z900, NONE, 047_CMPSC_ENH )
 #endif
@@ -417,17 +427,29 @@ FT( Z900, Z900, NONE, 053_LOAD_ZERO_RIGHTMOST )
 FT( NONE, NONE, NONE, 054_EE_CMPSC )
 #endif
 
+FT( Z900, NONE, NONE, 055_IBM_INTERNAL )
+
+FT( Z900, NONE, NONE, 056_UNDEFINED )
+
 #if defined(  FEATURE_057_MSA_EXTENSION_FACILITY_5 )
 FT( NONE, NONE, NONE, 057_MSA_EXTENSION_5 )
 #endif
 
 #if defined(  FEATURE_058_MISC_INSTR_EXT_FACILITY_2 )
-FT( NONE, NONE, NONE, 058_MISC_INSTR_EXT_2 )
+FT( Z900, Z900, NONE, 058_MISC_INSTR_EXT_2 )
 #endif
 
+FT( Z900, NONE, NONE, 059_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 060_IBM_INTERNAL )
+
 #if defined(  FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
-FT( NONE, NONE, NONE, 061_MISC_INSTR_EXT_3 )
+FT( Z900, Z900, NONE, 061_MISC_INSTR_EXT_3 )
 #endif
+
+FT( Z900, NONE, NONE, 062_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 063_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 064_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 065_IBM_INTERNAL )
 
 #if defined(  FEATURE_066_RES_REF_BITS_MULT_FACILITY )
 FT( Z900, Z900, NONE, 066_RES_REF_BITS_MULT )
@@ -440,6 +462,11 @@ FT( Z900, Z900, NONE, 067_CPU_MEAS_COUNTER )
 #if defined(  FEATURE_068_CPU_MEAS_SAMPLNG_FACILITY )
 FT( Z900, Z900, NONE, 068_CPU_MEAS_SAMPLNG )
 #endif
+
+FT( Z900, NONE, NONE, 069_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 070_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 071_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 072_IBM_INTERNAL )
 
 #if defined(  FEATURE_073_TRANSACT_EXEC_FACILITY )
 FT( Z900, NONE, NONE, 073_TRANSACT_EXEC )
@@ -465,9 +492,65 @@ FT( Z90X, Z900, NONE, 077_MSA_EXTENSION_4 )
 FT( NONE, NONE, NONE, 078_EDAT_2 )
 #endif
 
+FT( Z900, NONE, NONE, 079_UNDEFINED )
+
 #if defined(  FEATURE_080_DFP_PACK_CONV_FACILITY )
 FT( NONE, NONE, NONE, 080_DFP_PACK_CONV )
 #endif
+
+#if defined(  FEATURE_081_PPA_IN_ORDER_FACILITY )
+FT( Z900, Z900, NONE, 081_PPA_IN_ORDER )
+#endif
+
+FT( Z900, NONE, NONE, 082_IBM_INTERNAL )
+
+FT( Z900, NONE, NONE, 083_UNDEFINED )
+FT( Z900, NONE, NONE, 084_UNDEFINED )
+FT( Z900, NONE, NONE, 085_UNDEFINED )
+FT( Z900, NONE, NONE, 086_UNDEFINED )
+FT( Z900, NONE, NONE, 087_UNDEFINED )
+FT( Z900, NONE, NONE, 088_UNDEFINED )
+FT( Z900, NONE, NONE, 089_UNDEFINED )
+FT( Z900, NONE, NONE, 090_UNDEFINED )
+FT( Z900, NONE, NONE, 091_UNDEFINED )
+FT( Z900, NONE, NONE, 092_UNDEFINED )
+FT( Z900, NONE, NONE, 093_UNDEFINED )
+FT( Z900, NONE, NONE, 094_UNDEFINED )
+FT( Z900, NONE, NONE, 095_UNDEFINED )
+FT( Z900, NONE, NONE, 096_UNDEFINED )
+FT( Z900, NONE, NONE, 097_UNDEFINED )
+FT( Z900, NONE, NONE, 098_UNDEFINED )
+FT( Z900, NONE, NONE, 099_UNDEFINED )
+FT( Z900, NONE, NONE, 100_UNDEFINED )
+FT( Z900, NONE, NONE, 101_UNDEFINED )
+FT( Z900, NONE, NONE, 102_UNDEFINED )
+FT( Z900, NONE, NONE, 103_UNDEFINED )
+FT( Z900, NONE, NONE, 104_UNDEFINED )
+FT( Z900, NONE, NONE, 105_UNDEFINED )
+FT( Z900, NONE, NONE, 106_UNDEFINED )
+FT( Z900, NONE, NONE, 107_UNDEFINED )
+FT( Z900, NONE, NONE, 108_UNDEFINED )
+FT( Z900, NONE, NONE, 109_UNDEFINED )
+FT( Z900, NONE, NONE, 110_UNDEFINED )
+FT( Z900, NONE, NONE, 111_UNDEFINED )
+FT( Z900, NONE, NONE, 112_UNDEFINED )
+FT( Z900, NONE, NONE, 113_UNDEFINED )
+FT( Z900, NONE, NONE, 114_UNDEFINED )
+FT( Z900, NONE, NONE, 115_UNDEFINED )
+FT( Z900, NONE, NONE, 116_UNDEFINED )
+FT( Z900, NONE, NONE, 117_UNDEFINED )
+FT( Z900, NONE, NONE, 118_UNDEFINED )
+FT( Z900, NONE, NONE, 119_UNDEFINED )
+FT( Z900, NONE, NONE, 120_UNDEFINED )
+FT( Z900, NONE, NONE, 121_UNDEFINED )
+FT( Z900, NONE, NONE, 122_UNDEFINED )
+FT( Z900, NONE, NONE, 123_UNDEFINED )
+FT( Z900, NONE, NONE, 124_UNDEFINED )
+FT( Z900, NONE, NONE, 125_UNDEFINED )
+FT( Z900, NONE, NONE, 126_UNDEFINED )
+FT( Z900, NONE, NONE, 127_UNDEFINED )
+
+FT( Z900, NONE, NONE, 128_IBM_INTERNAL )
 
 #if defined(  FEATURE_129_ZVECTOR_FACILITY )
 FT( NONE, NONE, NONE, 129_ZVECTOR )
@@ -481,6 +564,8 @@ FT( NONE, NONE, NONE, 130_INSTR_EXEC_PROT )
 FT( NONE, NONE, NONE, 131_SIDE_EFFECT_ACCESS )
 #endif
 
+FT( Z900, NONE, NONE, 132_UNDEFINED )
+
 #if defined(  FEATURE_133_GUARDED_STORAGE_FACILITY )
 FT( NONE, NONE, NONE, 133_GUARDED_STORAGE )
 #endif
@@ -493,6 +578,9 @@ FT( NONE, NONE, NONE, 134_ZVECTOR_PACK_DEC )
 FT( NONE, NONE, NONE, 135_ZVECTOR_ENH_1 )
 #endif
 
+FT( Z900, NONE, NONE, 136_UNDEFINED )
+FT( Z900, NONE, NONE, 137_UNDEFINED )
+
 #if defined(  FEATURE_138_CONFIG_ZARCH_MODE_FACILITY )
 FT( NONE, NONE, NONE, 138_CONFIG_ZARCH_MODE )
 #endif
@@ -501,9 +589,14 @@ FT( NONE, NONE, NONE, 138_CONFIG_ZARCH_MODE )
 FT( NONE, NONE, NONE, 139_MULTIPLE_EPOCH )
 #endif
 
+FT( Z900, NONE, NONE, 140_IBM_INTERNAL )
+FT( Z900, NONE, NONE, 141_IBM_INTERNAL )
+
 #if defined(  FEATURE_142_ST_CPU_COUNTER_MULT_FACILITY )
 FT( NONE, NONE, NONE, 142_ST_CPU_COUNTER_MULT )
 #endif
+
+FT( Z900, NONE, NONE, 143_UNDEFINED )
 
 #if defined(  FEATURE_144_TEST_PEND_EXTERNAL_FACILITY )
 FT( NONE, NONE, NONE, 144_TEST_PEND_EXTERNAL )
@@ -517,6 +610,8 @@ FT( NONE, NONE, NONE, 145_INS_REF_BITS_MULT )
 FT( NONE, NONE, NONE, 146_MSA_EXTENSION_8 )
 #endif
 
+FT( Z900, NONE, NONE, 147_IBM_RESERVED )
+
 #if defined(  FEATURE_148_VECTOR_ENH_FACILITY_2 )
 FT( NONE, NONE, NONE, 148_VECTOR_ENH_2 )
 #endif
@@ -524,6 +619,8 @@ FT( NONE, NONE, NONE, 148_VECTOR_ENH_2 )
 #if defined(  FEATURE_149_MOVEPAGE_SETKEY_FACILITY )
 FT( NONE, NONE, NONE, 149_MOVEPAGE_SETKEY )
 #endif
+
+FT( Z900, NONE, NONE, 150_UNDEFINED )
 
 #if defined(  FEATURE_151_DEFLATE_CONV_FACILITY )
 FT( NONE, NONE, NONE, 151_DEFLATE_CONV )
@@ -533,13 +630,63 @@ FT( NONE, NONE, NONE, 151_DEFLATE_CONV )
 FT( NONE, NONE, NONE, 152_VECT_PACKDEC_ENH )
 #endif
 
+FT( Z900, NONE, NONE, 153_UNDEFINED )
+FT( Z900, NONE, NONE, 154_UNDEFINED )
+
 #if defined(  FEATURE_155_MSA_EXTENSION_FACILITY_9 )
 FT( NONE, NONE, NONE, 155_MSA_EXTENSION_9 )
 #endif
 
+FT( Z900, NONE, NONE, 156_IBM_INTERNAL )
+
+FT( Z900, NONE, NONE, 157_UNDEFINED )
+FT( Z900, NONE, NONE, 158_UNDEFINED )
+FT( Z900, NONE, NONE, 159_UNDEFINED )
+FT( Z900, NONE, NONE, 160_UNDEFINED )
+FT( Z900, NONE, NONE, 161_UNDEFINED )
+FT( Z900, NONE, NONE, 162_UNDEFINED )
+FT( Z900, NONE, NONE, 163_UNDEFINED )
+FT( Z900, NONE, NONE, 164_UNDEFINED )
+FT( Z900, NONE, NONE, 165_UNDEFINED )
+FT( Z900, NONE, NONE, 166_UNDEFINED )
+FT( Z900, NONE, NONE, 167_UNDEFINED )
+
 #if defined(  FEATURE_168_ESA390_COMPAT_MODE_FACILITY )
 FT( NONE, NONE, NONE, 168_ESA390_COMPAT_MODE )
 #endif
+
+FT( Z900, NONE, NONE, 169_UNDEFINED )
+FT( Z900, NONE, NONE, 170_UNDEFINED )
+FT( Z900, NONE, NONE, 171_UNDEFINED )
+FT( Z900, NONE, NONE, 172_UNDEFINED )
+FT( Z900, NONE, NONE, 173_UNDEFINED )
+FT( Z900, NONE, NONE, 174_UNDEFINED )
+FT( Z900, NONE, NONE, 175_UNDEFINED )
+FT( Z900, NONE, NONE, 176_UNDEFINED )
+FT( Z900, NONE, NONE, 177_UNDEFINED )
+FT( Z900, NONE, NONE, 178_UNDEFINED )
+FT( Z900, NONE, NONE, 179_UNDEFINED )
+FT( Z900, NONE, NONE, 180_UNDEFINED )
+FT( Z900, NONE, NONE, 181_UNDEFINED )
+FT( Z900, NONE, NONE, 182_UNDEFINED )
+FT( Z900, NONE, NONE, 183_UNDEFINED )
+FT( Z900, NONE, NONE, 184_UNDEFINED )
+FT( Z900, NONE, NONE, 185_UNDEFINED )
+FT( Z900, NONE, NONE, 186_UNDEFINED )
+FT( Z900, NONE, NONE, 187_UNDEFINED )
+FT( Z900, NONE, NONE, 188_UNDEFINED )
+FT( Z900, NONE, NONE, 189_UNDEFINED )
+FT( Z900, NONE, NONE, 190_UNDEFINED )
+FT( Z900, NONE, NONE, 191_UNDEFINED )
+FT( Z900, NONE, NONE, 192_UNDEFINED )
+FT( Z900, NONE, NONE, 193_UNDEFINED )
+FT( Z900, NONE, NONE, 194_UNDEFINED )
+FT( Z900, NONE, NONE, 195_UNDEFINED )
+FT( Z900, NONE, NONE, 196_UNDEFINED )
+FT( Z900, NONE, NONE, 197_UNDEFINED )
+FT( Z900, NONE, NONE, 198_UNDEFINED )
+FT( Z900, NONE, NONE, 199_UNDEFINED )
+FT( Z900, NONE, NONE, 200_UNDEFINED )
 
 /*-------------------------------------------------------------------*/
 /*                      Hercules Facility bits                       */
@@ -639,7 +786,6 @@ FT( Z900, NONE, NONE, HERC_TXF_RESTRICT_1 ) // CIPHER/CMPSC/COMPUTE/CONVERT/DEFL
 FT( Z900, NONE, NONE, HERC_TXF_RESTRICT_2 ) // PFDRL/STCMH
 FT( Z900, NONE, NONE, HERC_TXF_RESTRICT_3 ) // EXTRACT/CLOCK
 #endif
-
 };
 
 /*-------------------------------------------------------------------*/
@@ -790,8 +936,10 @@ FT2( NULL,      instr8,    008_EDAT_1,                 "Enhanced-DAT Facility 1"
 FT2( NULL,      NULL,      009_SENSE_RUN_STATUS,       "Sense-Running-Status Facility" )
 FT2( NULL,      NULL,      010_CONDITIONAL_SSKE,       "Conditional-SSKE Facility" )
 FT2( NULL,      instr11,   011_CONFIG_TOPOLOGY,        "Configuration-Topology Facility" )
+FT2( NULL,      NULL,      012_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      013_IPTE_RANGE,             "IPTE-Range Facility" )
 FT2( NULL,      NULL,      014_NONQ_KEY_SET,           "Nonquiescing Key-Setting Facility" )
+FT2( NULL,      NULL,      015_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      instr16,   016_EXT_TRANSL_2,           "Extended-Translation Facility 2" )
 FT2( NULL,      instr17,   017_MSA,                    "Message-Security Assist" )
 FT2( modlong,   instr18,   018_LONG_DISPL_INST,        "Long-Displacement Facility" )
@@ -805,6 +953,7 @@ FT2( modtod,    instr25,   025_STORE_CLOCK_FAST,       "Store-Clock-Fast Facilit
 FT2( NULL,      instr26,   026_PARSING_ENHANCE,        "Parsing-Enhancement Facility" )
 FT2( NULL,      instr27,   027_MVCOS,                  "Move-with-Optional-Specifications Facility" )
 FT2( modtod,    instr28,   028_TOD_CLOCK_STEER,        "TOD-Clock-Steering Facility" )
+FT2( NULL,      NULL,      029_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      030_ETF3_ENHANCEMENT,       "ETF3-Enhancement Facility" )
 FT2( NULL,      instr31,   031_EXTRACT_CPU_TIME,       "Extract-CPU-Time Facility" )
 FT2( NULL,      instr32,   032_CSSF,                   "Compare-and-Swap-and-Store Facility 1" )
@@ -814,6 +963,7 @@ FT2( NULL,      instr35,   035_EXECUTE_EXTN,           "Execute-Extensions Facil
 FT2( NULL,      NULL,      036_ENH_MONITOR,            "Enhanced-Monitor Facility" )
 FT2( modfpx,    instr37,   037_FP_EXTENSION,           "Floating-Point-Extension Facility" )
 FT2( NULL,      NULL,      038_OP_CMPSC,               "Order-Preserving-Compression Facility" )
+FT2( NULL,      NULL,      039_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( modsamp,   instr40,   040_LOAD_PROG_PARAM,        "Load-Program-Parameter Facility" )
 FT2( NULL,      instr41,   041_FPS_ENHANCEMENT,        "Floating-Point-Support-Enhancement Facility" )
 FT2( NULL,      instr41,   041_DFP_ROUNDING,           "Decimal-Floating-Point-Rounding Facility" )
@@ -829,6 +979,7 @@ FT2( NULL,      instr45,   045_HIGH_WORD,              "High-Word Facility" )
 FT2( NULL,      instr45,   045_INTERLOCKED_ACCESS_1,   "Interlocked-Access Facility 1" )
 FT2( NULL,      instr45,   045_LOAD_STORE_ON_COND_1,   "Load/Store-on-Condition Facility 1" )
 FT2( NULL,      instr45,   045_POPULATION_COUNT,       "Population-Count Facility" )
+FT2( NULL,      NULL,      046_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      047_CMPSC_ENH,              "CMPSC-Enhancement Facility" )
 FT2( moddfp,    instr48,   048_DFP_ZONE_CONV,          "Decimal-Floating-Point-Zoned-Conversion Facility" )
 FT2( modtrans,  instr49,   049_EXECUTION_HINT,         "Execution-Hint Facility" )
@@ -841,37 +992,156 @@ FT2( NULL,      NULL,      052_INTERLOCKED_ACCESS_2,   "Interlocked-Access Facil
 FT2( NULL,      instr53,   053_LOAD_STORE_ON_COND_2,   "Load/Store-on-Condition Facility 2" )
 FT2( NULL,      instr53,   053_LOAD_ZERO_RIGHTMOST,    "Load-and-Zero-Rightmost-Byte Facility" )
 FT2( NULL,      NULL,      054_EE_CMPSC,               "Entropy-Encoding-Compression Facility" )
+FT2( NULL,      NULL,      055_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      056_UNDEFINED,              "Undefined" )
 FT2( NULL,      instr57,   057_MSA_EXTENSION_5,        "Message-Security-Assist Extension 5" )
 FT2( NULL,      instr58,   058_MISC_INSTR_EXT_2,       "Miscellaneous-Instruction-Extensions Facility 2" )
+FT2( NULL,      NULL,      059_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      060_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( modmie3,   instr61,   061_MISC_INSTR_EXT_3,       "Miscellaneous-Instruction-Extensions Facility 3" )
+FT2( NULL,      NULL,      062_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      063_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      064_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      065_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      instr66,   066_RES_REF_BITS_MULT,      "Reset-Reference-Bits-Multiple Facility" )
 FT2( modsamp,   instr67,   067_CPU_MEAS_COUNTER,       "CPU-Measurement Counter Facility" )
 FT2( modsamp,   instr68,   068_CPU_MEAS_SAMPLNG,       "CPU-Measurement Sampling Facility" )
+FT2( NULL,      NULL,      069_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      070_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      071_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      072_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( modtrans,  instr73,   073_TRANSACT_EXEC,          "Transactional-Execution Facility" )
 FT2( NULL,      NULL,      074_STORE_HYPER_INFO,       "Store-Hypervisor-Information Facility" )
 FT2( NULL,      NULL,      075_ACC_EX_FS_INDIC,        "Access-Exception-Fetch/Store-Indication Facility" )
 FT2( modmsa,    instr76,   076_MSA_EXTENSION_3,        "Message-Security-Assist Extension 3" )
 FT2( NULL,      instr77,   077_MSA_EXTENSION_4,        "Message-Security-Assist Extension 4" )
 FT2( NULL,      instr78,   078_EDAT_2,                 "Enhanced-DAT Facility 2" )
+FT2( NULL,      NULL,      079_UNDEFINED,              "Undefined" )
 FT2( moddfp,    instr80,   080_DFP_PACK_CONV,          "Decimal-Floating-Point-Packed-Conversion Facility" )
+FT2( modtrans,  NULL,      081_PPA_IN_ORDER,           "PPA-in-order Facility" )
+FT2( NULL,      NULL,      082_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      083_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      084_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      085_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      086_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      087_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      088_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      089_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      090_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      091_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      092_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      093_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      094_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      095_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      096_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      097_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      098_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      099_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      100_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      101_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      102_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      103_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      104_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      105_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      106_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      107_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      108_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      109_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      110_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      111_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      112_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      113_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      114_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      115_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      116_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      117_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      118_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      119_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      120_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      121_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      122_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      123_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      124_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      125_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      126_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      127_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      128_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( modvec,    instr129,  129_ZVECTOR,                "Vector Facility for z/Architecture" )
 FT2( NULL,      NULL,      130_INSTR_EXEC_PROT,        "Instruction-Execution-Protection Facility" )
 FT2( NULL,      NULL,      131_SIDE_EFFECT_ACCESS,     "Side-Effect-Access Facility" )
+FT2( NULL,      NULL,      132_UNDEFINED,              "Undefined" )
 FT2( NULL,      instr133,  133_GUARDED_STORAGE,        "Guarded-Storage Facility" )
 FT2( modvec,    instr134,  134_ZVECTOR_PACK_DEC,       "Vector Packed-Decimal Facility" )
 FT2( modvec,    NULL,      135_ZVECTOR_ENH_1,          "Vector-Enhancements Facility 1" )
+FT2( NULL,      NULL,      136_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      137_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      138_CONFIG_ZARCH_MODE,      "CZAM Facility (Configuration-z/Architecture-Architectural-Mode)" )
 FT2( modtod,    NULL,      139_MULTIPLE_EPOCH,         "Multiple-Epoch Facility" )
+FT2( NULL,      NULL,      140_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      141_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( modsamp,   instr142,  142_ST_CPU_COUNTER_MULT,    "Store-CPU-Counter-Multiple Facility" )
+FT2( NULL,      NULL,      143_UNDEFINED,              "Undefined" )
 FT2( NULL,      instr144,  144_TEST_PEND_EXTERNAL,     "Test-Pending-External-Interruption Facility" )
 FT2( NULL,      instr145,  145_INS_REF_BITS_MULT,      "Insert-Reference-Bits-Multiple Facility" )
 FT2( modmsa,    instr146,  146_MSA_EXTENSION_8,        "Message-Security-Assist Extension 8" )
-//FT2( modvef2,   instr148,  148_VECTOR_ENH_2,           "Vector-Enhancements Facility 2" )
-//FT2( modmpsk,   instr149,  149_MOVEPAGE_SETKEY,        "Move-Page-and-Set-Key Facility" )
+FT2( NULL,      NULL,      147_IBM_RESERVED,           "Reserved for IBM use" )
+//2( modvef2,   instr148,  148_VECTOR_ENH_2,           "Vector-Enhancements Facility 2" )
+//2( modmpsk,   instr149,  149_MOVEPAGE_SETKEY,        "Move-Page-and-Set-Key Facility" )
+FT2( NULL,      NULL,      150_UNDEFINED,              "Undefined" )
 FT2( NULL,      instr151,  151_DEFLATE_CONV,           "DEFLATE-Conversion Facility" )
-//FT2( modvpd,    instr152,  152_VECT_PACKDEC_ENH,       "Vector-Packed-Decimal-Enhancement Facility" )
+//2( modvpd,    instr152,  152_VECT_PACKDEC_ENH,       "Vector-Packed-Decimal-Enhancement Facility" )
+FT2( NULL,      NULL,      153_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      154_UNDEFINED,              "Undefined" )
 FT2( modmsa9,   instr155,  155_MSA_EXTENSION_9,        "Message-Security-Assist Extension 9" )
+FT2( NULL,      NULL,      156_IBM_INTERNAL,           "Assigned to IBM internal use" )
+FT2( NULL,      NULL,      157_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      158_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      159_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      160_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      161_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      162_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      163_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      164_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      165_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      166_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      167_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      168_ESA390_COMPAT_MODE,     "ESA/390-Compatability-Mode Facility" )
+FT2( NULL,      NULL,      169_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      170_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      171_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      172_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      173_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      174_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      175_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      176_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      177_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      178_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      179_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      180_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      181_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      182_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      183_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      184_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      185_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      186_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      187_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      188_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      189_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      190_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      191_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      192_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      193_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      194_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      195_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      196_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      197_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      198_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      199_UNDEFINED,              "Undefined" )
+FT2( NULL,      NULL,      200_UNDEFINED,              "Undefined" )
+
+/*-------------------------------------------------------------------*/
+/*                   Hercules facilities                             */
+/*-------------------------------------------------------------------*/
 
 FT2( NULL,      herc37X,   HERC_370_EXTENSION,         "Hercules S/370 Instruction Extension Facility" )
 FT2( NULL,      NULL,      HERC_DETECT_PGMINTLOOP,     "Hercules Detect-Program-Interrupt-Loop Support" )
@@ -1171,7 +1441,8 @@ static int sort_ftpp_by_long_name( const void* p1, const void* p2 )
 {
     const FACTAB* f1 = *((const FACTAB**) p1);
     const FACTAB* f2 = *((const FACTAB**) p2);
-    return strcasecmp( f1->long_name, f2->long_name );
+    int rc = strcasecmp( f1->long_name, f2->long_name );
+    return rc ? rc : (f1->bitno - f2->bitno);
 }
 
 /*-------------------------------------------------------------------*/
@@ -1601,7 +1872,7 @@ FAC_MOD_OK_FUNC           ( modlong )
 /*-------------------------------------------------------------------*/
 /*                          modtrans                                 */
 /*-------------------------------------------------------------------*/
-/*         bit 73 implies bit 49, bit 50 implies bit 73              */
+/*         bit 73/81 implies bit 49, bit 50 implies bit 73           */
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( modtrans )
 {
@@ -1626,6 +1897,11 @@ FAC_MOD_OK_FUNC           ( modtrans )
                 WRMSG( HHC02385, "W", sysblk.cpumodel );
             }
         }
+        else if (bitno == STFL_081_PPA_IN_ORDER)
+        {
+            if (!FACILITY_ENABLED_ARCH( 049_EXECUTION_HINT, archnum ))
+                return HHC00890E(  STFL_049_EXECUTION_HINT );
+        }
         else if (0
             || bitno == STFL_HERC_TXF_RESTRICT_1
             || bitno == STFL_HERC_TXF_RESTRICT_2
@@ -1642,6 +1918,9 @@ FAC_MOD_OK_FUNC           ( modtrans )
         {
             if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
                 return HHC00890E( STFL_073_TRANSACT_EXEC );
+
+            if (FACILITY_ENABLED_ARCH( 081_PPA_IN_ORDER, archnum ))
+                return HHC00890E( STFL_081_PPA_IN_ORDER );
         }
         else if (bitno == STFL_073_TRANSACT_EXEC)
         {

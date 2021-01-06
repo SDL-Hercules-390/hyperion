@@ -3264,7 +3264,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     }
     if( !IS_CTCE_RST( ctce_Cmd ) )
     {
-        MSGBUF( ctce_trace_xtra_temp, 
+        MSGBUF( ctce_trace_xtra_temp,
             " CC=%d", pDEVBLK->ctce_ccw_flags_cc );
         STRLCAT( ctce_trace_stat, ctce_trace_xtra_temp );
     }

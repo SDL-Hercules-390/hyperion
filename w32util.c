@@ -4712,6 +4712,22 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
 
     err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
 
+    // If only read-only access was requested and permission was denied,
+    // then the file is already opened with write access by someone else.
+    // Try again without requesting write access denial to others. This
+    // allows batch utilities such as "dasdls" to open and read the file
+    // even though e.g. Hercules already has it opened with write access.
+
+    if (1
+        && !(oflag & (_O_WRONLY | _O_RDWR))   // (open == read only?)
+        && EACCES == err                      // (permission denied?)
+    )
+    {
+        sh_flg = _SH_DENYNO;  // (no read or write denials this time)
+        err = _sopen_s( &fh, path, oflag, sh_flg, pmode );
+    }
+
+    // Issue an error message only if verbose debugging is enabled
     if (1
         && err != 0
         && MLVL( DEBUG )
@@ -4720,6 +4736,7 @@ DLL_EXPORT int w32_hopen( const char* path, int oflag, ... )
     {
         char msgbuf[MAX_PATH * 2];
         MSGBUF( msgbuf, "Error opening '%s'; errno(%d) %s", path, err, strerror(err) );
+        // "DBG: %s"
         WRMSG( HHC90000, "D", msgbuf );
     }
     return fh;

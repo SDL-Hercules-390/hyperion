@@ -481,7 +481,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00405 "%1d:%04X CKD file %s: only one base file is allowed"
 #define HHC00406 "%1d:%04X CKD file %s: ckd header invalid"
 #define HHC00407 "%1d:%04X CKD file %s: only 1 CCKD file allowed"
-#define HHC00408 "%1d:%04X CKD file %s: ckd file out of sequence"
+#define HHC00408 "%1d:%04X CKD file %s: ckd file out of sequence or bad size"
 #define HHC00409 "%1d:%04X CKD file %s: seq %02d cyls %6d-%-6d"
 #define HHC00410 "%1d:%04X CKD file %s: found heads %d trklen %d, expected heads %d trklen %d"
 #define HHC00411 "%1d:%04X CKD file %s: ckd header inconsistent with file size"
@@ -598,7 +598,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00658 "I/O error on read(): rc=%d: \"%s\""
 #define HHC00659 "%s is outside of main storage"
 #define HHC00660 "%-8s %s"
-//efine HHC00661 - HHC00669 (available)
+#define HHC00661 "Hardware loader: %s request: SCCB = 0x%"PRIX64
+//efine HHC00662 - HHC00669 (available)
 #define HHC00670 "Invalid %s"
 #define HHC00671 "Invalid option %s"
 //efine HHC00672 - HHC00679 (available)

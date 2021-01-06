@@ -3208,10 +3208,20 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     /* Backup to the last opened file number */
     cckd->sfn--;
 
-    /* If the last file was opened read-only then create a new one   */
+    /* If the last file was opened read-only then create a new one */
     if (cckd->open[cckd->sfn] == CCKD_OPEN_RO)
-        if (cckd64_sf_new(dev) < 0)
-            return -1;
+    {
+        /* but ONLY IF not explicit batch utility READ-ONLY open */
+        if (!(1
+              && dev->batch
+              && dev->ckdrdonly
+        ))
+        {
+            /* NOT explicit batch utility read-only open: create new shadow file */
+            if (cckd64_sf_new(dev) < 0)
+                return -1;
+        }
+    }
 
     /* Re-open previous rdwr files rdonly */
     for (i = 0; i < cckd->sfn; i++)

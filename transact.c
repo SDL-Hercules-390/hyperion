@@ -135,6 +135,30 @@ U32     abort_count;                    /* Transaction Abort count   */
         }
         return;
     }
+#if defined( FEATURE_081_PPA_IN_ORDER_FACILITY )
+    case 15: // In-order Execution Assist
+    {
+        /*
+           "When the function code in the M3 field is 15 and the
+            PPA-in-order facility is installed, the processor is
+            requested to complete processing all instructions prior
+            to this PPA instruction, as observed by this CPU, before
+            attempting storage-operand references for any instruction
+            after this PPA instruction."
+
+           "The R1 and R2 fields are ignored and the instruction is
+            executed as a no-operation."
+
+           "The in-order-execution assist does not necessarily perform
+            any of the steps for architectural serialization described
+            in the section "CPU Serialization" on page 5-130."
+        */
+
+        /* Hercules does not currently support this assist */
+
+        return;  /* (ignore unsupported assists) */
+    }
+#endif // defined(  FEATURE_081_PPA_IN_ORDER_FACILITY )
 
     default:     /* (unknown/unsupported assist) */
         return;  /* (ignore unsupported assists) */
@@ -1307,11 +1331,16 @@ int        retry;           /* Actual retry code                     */
     /*  Set the current PSW to the Transaction Abort PSW  */
     /*----------------------------------------------------*/
 
+    /* PROGRAMMING NOTE: it's CRITICAL to invalidate the aia BEFORE
+       setting the current PSW to the Transaction Abort PSW, since
+       INVALIDATE_AIA *might* update the PSW's instruction address
+       to a value different from what txf_tapsw says it should be!
+    */
+    INVALIDATE_AIA( regs ); // (do *before* PSW memcpy!)
     memcpy( &regs->psw, &regs->txf_tapsw, sizeof( PSW ));
     regs->ip  = regs->txf_ip;
     regs->aip = regs->txf_aip;
     regs->aiv = regs->txf_aiv;
-    INVALIDATE_AIA( regs );
 
     /*---------------------------------------------*/
     /*     Set the condition code in the PSW       */

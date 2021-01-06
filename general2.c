@@ -982,7 +982,6 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-    TRAN_ACCESS_INSTR_CHECK( regs );
     FW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to store */

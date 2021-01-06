@@ -6192,7 +6192,7 @@ int ostailor_cmd( int argc, char* argv[], char* cmdline )
                 if (sysblk.pgminttr == test_pgminttr)
                 {
                     /* Yep! Format current "xxx+yyy" OSTAILOR setting */
-            
+
                     if (sysblk.ostailor & OSTAILOR_VM         ) STRLCAT( msgbuf2, "VM"          "+" );
 
                     if (sysblk.ostailor & OSTAILOR_DEFAULT    ) STRLCAT( msgbuf2, "DEFAULT"     "+" );

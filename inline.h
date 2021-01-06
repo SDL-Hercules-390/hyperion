@@ -81,6 +81,10 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn,
         REGS *regs);
 _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
       BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS *regs);
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+_VSTORE_C_STATIC void ARCH_DEP( move_chars_rl )( VADR addr1, int arn1,
+      BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS* regs );
+#endif
 _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
         int len, int acctype, REGS *regs);
 _VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (REGS *regs, int exec);
@@ -181,16 +185,50 @@ static inline int sub_signed( U32* result, U32 op1, U32 op2 )
 /*-------------------------------------------------------------------*/
 /* Multiply two signed fullwords giving a signed doubleword result   */
 /*-------------------------------------------------------------------*/
-static inline void mul_signed ( U32 *resulthi, U32 *resultlo,
-                             U32 op1, U32 op2 )
+static inline void mul_signed ( U32* resulthi, U32* resultlo,
+                                U32  op1,      U32  op2 )
 {
-S64 r;
-
-    r = (S64)(S32)op1 * (S32)op2;
+    S64 r = (S64)(S32)op1 * (S32)op2;
     *resulthi = (U32)((U64)r >> 32);
     *resultlo = (U32)((U64)r & 0xFFFFFFFF);
-} /* end function mul_signed */
+}
 
+/*-------------------------------------------------------------------*/
+/* Multiply two unsigned doublewords giving unsigned 128-bit result  */
+// https://stackoverflow.com/questions/31652875/fastest-way-to-multiply-two-64-bit-ints-to-128-bit-then-to-64-bit
+/*-------------------------------------------------------------------*/
+static inline void mul_unsigned_long( U64* resulthi, U64* resultlo,
+                                      U64  op1,      U64  op2 )
+{
+    U64  a_lo  =  (U64)(U32)op1;
+    U64  a_hi  =  op1 >> 32;
+    U64  b_lo  =  (U64)(U32)op2;
+    U64  b_hi  =  op2 >> 32;
+
+    U64  p0    =  a_lo * b_lo;
+    U64  p1    =  a_lo * b_hi;
+    U64  p2    =  a_hi * b_lo;
+    U64  p3    =  a_hi * b_hi;
+
+    U32  cy    =  (U32)(((p0 >> 32) + (U32)p1 + (U32)p2) >> 32);
+
+    *resultlo  =  p0 + (p1 << 32) + (p2 << 32);
+    *resulthi  =  p3 + (p1 >> 32) + (p2 >> 32) + cy;
+}
+
+/*-------------------------------------------------------------------*/
+/* Multiply two signed doublewords giving a signed 128-bit result    */
+// https://stackoverflow.com/questions/31652875/fastest-way-to-multiply-two-64-bit-ints-to-128-bit-then-to-64-bit
+/*-------------------------------------------------------------------*/
+static inline void mul_signed_long( S64* resulthi, S64* resultlo,
+                                    S64  op1,      S64  op2 )
+{
+    mul_unsigned_long( (U64*)resulthi, (U64*)resultlo,
+                       (U64) op1,      (U64) op2 );
+
+    if (op1 < 0LL)  *resulthi  -=  op2;
+    if (op2 < 0LL)  *resulthi  -=  op1;
+}
 
 /*-------------------------------------------------------------------*/
 /* Divide a signed doubleword dividend by a signed fullword divisor  */
