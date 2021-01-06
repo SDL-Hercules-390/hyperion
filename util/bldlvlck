@@ -41,6 +41,7 @@ my @req = qw(
 );
 
 my $gcc_i686_required = "6.3.0";
+my $m4_netbsd_required = "20150116";
 
 my $msg;
 my $instversion;
@@ -52,19 +53,31 @@ print "Machine architecture is $machine\n";
 
 for (my $i = 0; $i < @req; $i += 4) {
   my $facility = $req[$i];
+  my $level = $req[$i+1];
+  my $special = $req[$i+2];
+
   if ($facility eq 'sed') {
     if ($^O eq 'darwin') {
       print "Apple/Darwin ==> sed changed to gsed!\n" ;
       $facility = 'gsed';
     }
+
+    if ($^O eq 'netbsd') {
+      print "NetBSD ==> custom version parsing!\n" ;
+      $special = 1;
+    }
   }
 
-  my $level = $req[$i+1];
-  my $special = $req[$i+2];
   if ($facility eq 'm4') {
     if ($^O eq 'darwin') {
       print "Apple/Darwin ==> custom version parsing!\n" ;
       $special = 1;
+    }
+
+    if ($^O eq 'netbsd') {
+      print "NetBSD ==> custom version parsing!\n" ;
+      $special = 1;
+      $level = $m4_netbsd_required;
     }
   }
 
@@ -114,10 +127,17 @@ sub weird {
 
   if ($facility eq 'm4') {      # m4 --version: GNU m4 1.4o
     if (present($facility, $url)) {
-      my $resp = `m4 --version`;
+      my $resp;
+      if ($^O eq 'netbsd') {
+        $resp = `m4 --version 2>&1`;
+      } else {
+        $resp = `m4 --version`;
+      }
+
       chomp $resp;
       my $msg = 'HUH?   ';
       my $instversion = "DUNNO";
+
       if ($resp =~ /GNU [mM]4 (\d+.\d+.\d+)/) {
         $instversion = '';
         $instversion = $1 if defined $1;
@@ -125,6 +145,13 @@ sub weird {
         $instversion = "$1.$2.$3" if defined $1 && defined $2 && defined $3;
         $msg = ckvers($level, $instversion);
       }
+
+      if ($^O eq 'netbsd' && $resp =~ /m4 version (\d{8})/) {
+        $instversion = '';
+        $instversion = $1 if defined $1;
+        $msg = ckvers($level, $instversion);
+      }
+
       print "$msg\t$facility requires $level, found $instversion\n";
       print "\tURL: $url\n" if $msg eq 'UPGRADE';
     }
@@ -133,7 +160,12 @@ sub weird {
 
   if ($facility eq 'gcc') {
     if (present($facility, $url)) {
-      my @resp = `$facility --version`;
+      my @resp;
+      if ($^O eq 'netbsd') {
+        @resp = `$facility -dumpversion`;
+      } else {
+        @resp = `$facility --version`;
+      }
       chomp $resp[0];
       $instversion = getvers($resp[0]);
 
@@ -147,6 +179,26 @@ sub weird {
       print "\tURL: $url\n" if $msg eq 'UPGRADE';
     }
 
+    return;
+  }
+
+  if ($facility eq 'sed') {
+    if (present($facility, $url)) {
+      if ($^O eq 'netbsd') {
+        my @resp = `sed --version 2>&1`;
+        chomp $resp[0];
+        my $msg = 'HUH?   ';
+        my $instversion = "DUNNO";
+
+        print "\t$resp[0]\n";
+        if ($resp[0] =~ /sed: unknown option/) {
+          # print "netbsd: \n";
+	}
+
+        print "$msg\t$facility requires $level, found $instversion\n";
+        print "\tURL: $url\n" if $msg eq 'UPGRADE';
+      }
+    }
     return;
   }
 
