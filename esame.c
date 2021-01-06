@@ -3744,8 +3744,8 @@ S32     op2;                            /* Operand-2 value           */
     regs->GR_L(r1) = resultlo;
     
     /* Check for overflow and set condition code */
-    regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFF && resultlo <  0)) ? 3
+    regs->psw.cc = !((resulthi == 0x00000000L && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFFL && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
@@ -3782,8 +3782,8 @@ S64     op2;                            /* Operand-2 value           */
     regs->GR_G(r1) = resultlo;
 
     /* Check for overflow and set condition code */
-    regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
+    regs->psw.cc = !((resulthi == 0x0000000000000000LL && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFFFFFFFFFFLL && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
@@ -3848,8 +3848,8 @@ S32     resulthi, resultlo;             /* 64-bit result             */
     regs->GR_L(r1) = resultlo;
     
     /* Check for overflow and set condition code */
-    regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFF && resultlo <  0)) ? 3
+    regs->psw.cc = !((resulthi == 0x00000000L && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFFL && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
@@ -3880,8 +3880,8 @@ S64     resulthi, resultlo;             /* 128-bit result            */
     regs->GR_G(r1) = resultlo;
     
     /* Check for overflow and set condition code */
-    regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
+    regs->psw.cc = !((resulthi == 0x0000000000000000LL && resultlo >= 0) ||
+                     (resulthi == 0xFFFFFFFFFFFFFFFFLL && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
