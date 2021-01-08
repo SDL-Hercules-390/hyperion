@@ -305,6 +305,7 @@ href="cckddasd.html">this page</a>.
 To start Hercules enter this command at the host's command prompt:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]           |  [ --config=<em>filename</em> ]
+              [ -o <em>logfile</em>]             |  [ --output=<em>logfile</em> ]
               [ -r <em>rcfile</em> ]             |  [ --rcfile=<em>rcfile</em> ]
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
               [ -d ]                    |  [ --daemon ]
@@ -315,6 +316,7 @@ To start Hercules enter this command at the host's command prompt:
               [ -v ]                    |  [ --verbose ]
               [ -h ]                    |  [ --help[=type] ]
               [ -t[factor]]             |  [ --test[=factor]]
+
               [ &gt; <em>logfile</em> ]
 </pre></code>
 </blockquote>
@@ -328,6 +330,14 @@ where:
             The default, if none is specified, is <b><em>hercules.cnf</em></b>.
             The default may be overridden via the <code>HERCULES_CNF</code>
             environment variable.
+        <p>
+        <dt><code><em>logfile</em></code><p><dd>
+
+            is the name of the optional <i>(but highly recommended!)</i> log file.
+            The log file receives a copy of all messages displayed on the
+            control panel and is extremely important to have for problem
+            analysis and bug reporting. This option can also be specified
+            using "--logfile=".
         <p>
         <dt><code><em>rcfile</em></code><p><dd>
 
@@ -424,8 +434,10 @@ where:
         <p>
         <dt><code><em>logfile</em></code><p><dd>
 
-            is an optional log file which will receive a copy of
-            all messages displayed on the control panel
+            is the name of the optional <i>(but highly recommended!)</i> log file.
+            The log file receives a copy of all messages displayed on the
+            control panel and is extremely important to have for problem
+            analysis and bug reporting.
         <p>
 </dl>
 </blockquote>

@@ -1022,7 +1022,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC01404 "Could not create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
+#define HHC01407 "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of dyngui.dll failed, Hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
