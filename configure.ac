@@ -464,7 +464,7 @@ AC_PROG_LIBTOOL()                       # (we build libtool for ourselves)
 #               AC_CONFIG_SUBDIRS(libltdl)
 #               ...
 #
-#           Makefile.am:
+#           Makefile.a m:
 #
 #               ...
 #               SUBDIRS = libltdl
@@ -3208,7 +3208,7 @@ END
 fi
 
 ###############################################################################
-#          Pass values to other subdirectory Makefile.am files
+#          Pass values to other subdirectory Makefile.a m files
 ###############################################################################
 
 extpkg_incdirs="-I ${crypto_incdir}     \

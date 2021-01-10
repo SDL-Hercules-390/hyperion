@@ -15,9 +15,7 @@ ldadd          = @LIBS@
 
 #------------------------------------------------------------------------------
 
-ACLOCAL_AMFLAGS =   \
-  -I autoconf       \
-  -I m4
+ACLOCAL_AMFLAGS = -I autoconf -I m4
 
 AM_CPPFLAGS =       \
   -I $(top_srcdir)  \
@@ -542,6 +540,7 @@ hercules_SOURCES = \
 hercules_LDADD =  \
   libherc.la      \
   libhercs.la     \
+  libhercu.la     \
   $(extpkg_ldadd) \
   $(ldadd)
 
