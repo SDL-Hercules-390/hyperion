@@ -302,6 +302,7 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 /* Miscellaneous helper functions (see implementation for details) */
 bool is_TXF_model( U16 cpumodel );
 void defsym_TXF_models();
+void txf_model_warning( bool txf_enabled_or_enabling_txf );
 
 /*-------------------------------------------------------------------*/
 /*               Why transaction was aborted codes                   */

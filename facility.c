@@ -1888,14 +1888,7 @@ FAC_MOD_OK_FUNC           ( modtrans )
             if (!FACILITY_ENABLED_ARCH( 049_EXECUTION_HINT, archnum ))
                 return HHC00890E(  STFL_049_EXECUTION_HINT );
 
-            if (1
-                && !is_TXF_model( sysblk.cpumodel )
-                && MLVL( VERBOSE )
-            )
-            {
-                // "CPUMODEL %04X does not technically support TXF"
-                WRMSG( HHC02385, "W", sysblk.cpumodel );
-            }
+            txf_model_warning( true );
         }
         else if (bitno == STFL_081_PPA_IN_ORDER)
         {

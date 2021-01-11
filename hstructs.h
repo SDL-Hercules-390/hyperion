@@ -937,7 +937,8 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                 nolrasoe:1,             /* 1 = No trace LRA Special  */
                                         /*     Operation Exceptions  */
                 noch9oflow:1,           /* Suppress CH9 O'Flow trace */
-                devnameonly:1;          /* Display only dev filename */
+                devnameonly:1,          /* Display only dev filename */
+                config_processed;       /* config file processed     */
         U32     ints_state;             /* Common Interrupts Status  */
         CPU_BITMAP config_mask;         /* Configured CPUs           */
         CPU_BITMAP started_mask;        /* Started CPUs              */

@@ -2512,6 +2512,23 @@ void defsym_TXF_models()
         set_symbol( txf_models[i].pszSymbol, txf_models[i].pszModel );
 }
 
+/*-------------------------------------------------------------------*/
+/* Helper function to issue HHC02385W CPU Model warning if needed    */
+/*-------------------------------------------------------------------*/
+void txf_model_warning( bool txf_enabled_or_enabling_txf )
+{
+    if (1
+        && txf_enabled_or_enabling_txf
+        && sysblk.config_processed
+        && !is_TXF_model( sysblk.cpumodel )
+        && MLVL( VERBOSE )
+    )
+    {
+        // "CPUMODEL %04X does not technically support TXF"
+        WRMSG( HHC02385, "W", sysblk.cpumodel );
+    }
+}
+
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -1328,6 +1328,12 @@ int     rc;
         return 1;
     }
 
+    sysblk.config_processed = true;
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+    txf_model_warning( FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ));
+#endif
+
     /* Process the .rc file synchronously when in daemon mode. */
     /* Otherwise Start up the RC file processing thread.       */
     if (sysblk.daemon_mode)

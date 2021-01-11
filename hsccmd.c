@@ -5103,14 +5103,7 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
             WRMSG( HHC02204, "I", argv[0], chmodel );
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-            if (1
-                && FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX )
-                && !is_TXF_model( sysblk.cpumodel )
-            )
-            {
-                // "CPUMODEL %04X does not technically support TXF"
-                WRMSG( HHC02385, "W", sysblk.cpumodel );
-            }
+            txf_model_warning( FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ));
 #endif
         }
     }
