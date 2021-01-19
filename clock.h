@@ -524,7 +524,7 @@ extern              void ARCH_DEP(query_available_functions) (REGS *);
 
 CLOCK_DLL_IMPORT    TOD  etod_clock( REGS*, ETOD*,          /* Get extended TOD clock    */
                                      ETOD_format );
-extern              TOD  get_tod_clock(REGS *);                 /* Get TOD clock non-unique  */
+extern              TOD  get_tod_clock(REGS *);             /* Get TOD clock non-unique  */
 extern              S64  get_cpu_timer(REGS *);             /* Retrieve CPU timer        */
 extern              void set_cpu_timer(REGS *, const S64);  /* Set CPU timer             */
 extern              void set_int_timer(REGS *, const S32);  /* Set interval timer        */

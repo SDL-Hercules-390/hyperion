@@ -156,12 +156,12 @@ static INLINE S64       lyear_adjust( const int epoch );
 #if defined( _FEATURE_INTERVAL_TIMER )
   #if defined( _FEATURE_ECPSVM )
 
-    static INLINE S32   ecps_vtimer( const REGS* regs );
+    static INLINE S32   get_ecps_vtimer( const REGS* regs );
     static INLINE void  set_ecps_vtimer( REGS* regs, const S32 vtimer );
 
   #endif
 
-  static INLINE S32   int_timer( const REGS* regs );
+  static INLINE S32   get_int_timer( const REGS* regs );
                 void  set_int_timer( REGS* regs, const S32 itimer );
                 int   chk_int_timer( REGS* regs );
 
@@ -287,14 +287,14 @@ void ARCH_DEP( store_int_timer_locked )( REGS* regs )
     S32 itimer;
     S32 vtimer=0;
 
-    itimer = int_timer( regs );
+    itimer = get_int_timer( regs );
     STORE_FW( regs->psa->inttimer, itimer );
 
 #if defined( FEATURE_ECPSVM )
 
     if (regs->ecps_vtmrpt)
     {
-        vtimer = ecps_vtimer( regs );
+        vtimer = get_ecps_vtimer( regs );
         STORE_FW( regs->ecps_vtmrpt, vtimer );
     }
 #endif
@@ -1070,7 +1070,7 @@ TOD update_tod_clock()
 #if defined( _FEATURE_ECPSVM )
 
 static INLINE
-S32 ecps_vtimer(const REGS *regs)
+S32 get_ecps_vtimer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
 }
@@ -1089,7 +1089,7 @@ void set_ecps_vtimer(REGS *regs, const S32 vtimer)
 /*-------------------------------------------------------------------*/
 
 static INLINE
-S32 int_timer(const REGS *regs)
+S32 get_int_timer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
@@ -1109,7 +1109,7 @@ int chk_int_timer(REGS *regs)
 S32 itimer;
 int pending = 0;
 
-    itimer = int_timer(regs);
+    itimer = get_int_timer(regs);
     if(itimer < 0 && regs->old_timer >= 0)
     {
         ON_IC_ITIMER(regs);
@@ -1119,7 +1119,7 @@ int pending = 0;
 #if defined(_FEATURE_ECPSVM)
     if(regs->ecps_vtmrpt)
     {
-        itimer = ecps_vtimer(regs);
+        itimer = get_ecps_vtimer(regs);
         if(itimer < 0 && regs->ecps_oldtmr >= 0)
         {
             ON_IC_ECPSVTIMER(regs);
