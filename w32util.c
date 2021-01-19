@@ -1017,7 +1017,7 @@ static INLINE U64 FileTime2us (const FILETIME ft)
 
 static INLINE void FileTime2timeval (const FILETIME ft, struct timeval* tv)
 {
-    us2timeval( FileTime2us( ft ), tv );    // Convert to timeval
+    usecs2timeval( FileTime2us( ft ), tv );    // Convert to timeval
 }
 
 

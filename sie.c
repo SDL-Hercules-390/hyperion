@@ -640,11 +640,11 @@ U64     dreg;
 
     /* Load the TOD clock offset for this guest */
     FETCH_DW( GUESTREGS->sie_epoch, STATEBK->epoch );
-    GUESTREGS->tod_epoch = regs->tod_epoch + tod2etod( GUESTREGS->sie_epoch );
+    GUESTREGS->tod_epoch = regs->tod_epoch + TOD_high64_to_ETOD_high56( GUESTREGS->sie_epoch );
 
     /* Load the clock comparator */
     FETCH_DW( GUESTREGS->clkc, STATEBK->clockcomp );
-    GUESTREGS->clkc = tod2etod( GUESTREGS->clkc );  /* Internal Hercules format */
+    GUESTREGS->clkc = TOD_high64_to_ETOD_high56( GUESTREGS->clkc );  /* Internal Hercules format */
 
     /* Load TOD Programmable Field */
     FETCH_HW( GUESTREGS->todpr, STATEBK->todpf );
@@ -1418,7 +1418,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     STORE_DW( STATEBK->cputimer, get_cpu_timer( GUESTREGS ));
 
     /* Save clock comparator */
-    STORE_DW( STATEBK->clockcomp, etod2tod( GUESTREGS->clkc ));
+    STORE_DW( STATEBK->clockcomp, ETOD_high64_to_TOD_high56( GUESTREGS->clkc ));
 
 #if defined( _FEATURE_INTERVAL_TIMER ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     /* If this is a S/370 guest, and the interval timer is enabled

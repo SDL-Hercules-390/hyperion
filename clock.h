@@ -80,21 +80,86 @@ typedef enum
 ETOD_format;
 
 /*-------------------------------------------------------------------*/
-/*                      clock INLINE functions                       */
+/*                  external clock.c functions                       */
 /*-------------------------------------------------------------------*/
 
-// (forward references)
+extern void   csr_reset();                     /* Reset steering regs*/
+extern void   set_tod_steering(const double);  /* Set steering rate  */
+extern double get_tod_steering();              /* Get steering rate  */
+extern U64    update_tod_clock();              /* Update TOD clock   */
+extern S64    get_tod_epoch();                 /* Get TOD epoch      */
+extern U64    hw_clock();                      /* Get hardware clock */
+extern void   set_tod_clock(const U64);        /* Set TOD clock      */
+extern int    clock_hsuspend(void *file);      /* Hercules suspend   */
+extern int    clock_hresume(void *file);       /* Hercules resume    */
+extern int    query_tzoffset();                /* Current TZOFFSET   */
 
-void   csr_reset();                     /* Reset cs registers        */
-void   set_tod_steering(const double);  /* Set steering rate         */
-double get_tod_steering();              /* Get steering rate         */
-U64    update_tod_clock();              /* Update the TOD clock      */
-S64    get_tod_epoch();                 /* Get TOD epoch             */
-U64    hw_clock();                      /* Get hardware clock        */
-void   set_tod_clock(const U64);        /* Set TOD clock             */
-int    clock_hsuspend(void *file);      /* Hercules suspend          */
-int    clock_hresume(void *file);       /* Hercules resume           */
-int    query_tzoffset();                /* Report current TzOFFSET   */
+/*-------------------------------------------------------------------*/
+/*                clock.h static INLINE functions                    */
+/*-------------------------------------------------------------------*/
+
+static INLINE void ETOD_add  (ETOD* result, const ETOD a, const ETOD b );
+static INLINE void ETOD_sub  (ETOD* result, const ETOD a, const ETOD b );
+static INLINE void ETOD_shift(ETOD* result, const ETOD a, int shift    );
+
+static INLINE TOD  host_tod();
+static INLINE TOD  ETOD2TOD                 ( const ETOD ETOD );
+static INLINE TOD  ETOD_high64_to_TOD_high56( const U64  etod );
+static INLINE TOD  TOD_high64_to_ETOD_high56( const TOD   tod );
+static INLINE S64  ETOD_high64_to_usecs     ( const S64  etod );
+
+static INLINE void usecs2timeval ( const U64 us, struct timeval* tv );
+static INLINE S64  timespec2usecs( const struct timespec* ts );
+static INLINE TOD  timespec2ETOD ( ETOD* ETOD, const struct timespec* ts );
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+TOD ETOD2TOD( const ETOD ETOD )
+{
+  return ( (ETOD.high << 8) | (ETOD.low >> 56) );
+}
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+TOD ETOD_high64_to_TOD_high56( const U64 etod )
+{
+    return (etod << 8);                 /* Adjust bit 59 to bit 51   */
+}
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+TOD TOD_high64_to_ETOD_high56( const TOD tod )
+{
+    return (tod >> 8);                  /* Adjust bit 51 to bit 59   */
+}
+
+/*-------------------------------------------------------------------*/
+
+static INLINE S64
+ETOD_high64_to_usecs( const S64 etod )
+{
+    return (etod >> 4);
+}
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+void usecs2timeval( const U64 us, struct timeval* tv )
+{
+    tv->tv_sec  = us / 1000000;
+    tv->tv_usec = us % 1000000;
+}
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+S64 timespec2usecs( const struct timespec* ts )
+{
+    return ((ts->tv_sec) * 1000000 + ((ts->tv_nsec + 500) / 1000));
+}
 
 /*-------------------------------------------------------------------*/
 
@@ -216,7 +281,7 @@ int clock_gettime ( clockid_t clk_id, struct timespec *ts )
         return ( -1 );
     }
 
-    #if defined(__APPLE__) && 0
+#if defined(__APPLE__) && 0
     {
         /* FIXME: mach/mach.h include is generating invalid storage
          *        class errors. Default to gettimeofday until resolved.
@@ -257,7 +322,7 @@ int clock_gettime ( clockid_t clk_id, struct timespec *ts )
 
 
     }
-    #else /* Convert standard gettimeofday call */
+#else /* Convert standard gettimeofday call */
     {
         struct timeval  tv;
 
@@ -300,7 +365,7 @@ int clock_gettime ( clockid_t clk_id, struct timespec *ts )
             #define TOD_MIN_PRECISION
         #endif
     }
-    #endif
+#endif /* defined(__APPLE__) && 0 */
 
     return ( result );
 }
@@ -321,32 +386,7 @@ int clock_gettime ( clockid_t clk_id, struct timespec *ts )
 /*-------------------------------------------------------------------*/
 
 static INLINE
-void us2timeval (const U64 us, struct timeval* tv)
-{
-    tv->tv_sec  = us / 1000000;
-    tv->tv_usec = us % 1000000;
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-TOD etod2tod (const U64 etod)
-{
-    return (etod << 8);
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE S64
-etod2us (const S64 etod)
-{
-    return (etod >> 4);
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-TOD timespec2ETOD (ETOD* ETOD, const struct timespec* ts)
+TOD timespec2ETOD( ETOD* ETOD, const struct timespec* ts )
 {
     /* This conversion, assuming a nanosecond host clock resolution,
      * yields a TOD clock resolution of 120-bits, 95-bits, or 64-bits,
@@ -375,11 +415,12 @@ TOD timespec2ETOD (ETOD* ETOD, const struct timespec* ts)
     ETOD->high += ETOD_1970;        /* Adjust for open source epoch of 1970   */
     ETOD->low   = ts->tv_nsec;      /* Copy nanoseconds                       */
 
-    #if defined(TOD_FULL_PRECISION)       || \
-        defined(TOD_120BIT_PRECISION)     || \
-        defined(TOD_64BIT_PRECISION)      || \
-        defined(TOD_MIN_PRECISION)        || \
-        !defined(TOD_95BIT_PRECISION)
+#if defined(TOD_FULL_PRECISION)       || \
+    defined(TOD_120BIT_PRECISION)     || \
+    defined(TOD_64BIT_PRECISION)      || \
+    defined(TOD_MIN_PRECISION)        || \
+   !defined(TOD_95BIT_PRECISION)
+
     {
         register U64    temp;
         temp        = ETOD->low;    /* Adjust nanoseconds to bit-59 for       */
@@ -402,7 +443,9 @@ TOD timespec2ETOD (ETOD* ETOD, const struct timespec* ts)
             ETOD->low <<= 8;        /* order byte                             */
         #endif
     }
-    #else /* 95-bit resolution                                                */
+
+#else /* 95-bit resolution */
+
     {
         ETOD->low <<= 32;           /* Place nanoseconds in high-order word   */
         ETOD->low  /= 125;          /* Divide by 1000 (125 * 2^3)             */
@@ -412,24 +455,10 @@ TOD timespec2ETOD (ETOD* ETOD, const struct timespec* ts)
         ETOD->low <<= 33;           /* Adjust remaining nanosecond fraction   */
                                     /* to bits 64-93                          */
     }
-    #endif
+
+#endif /* defined(TOD_FULL_PRECISION) || .... */
+
     return ( ETOD->high );          /* Return address of result               */
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-TOD tod2etod (const TOD tod)
-{
-    return (tod >> 8);                  /* Adjust bit 51 to bit 59    */
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-S64 timespec2us (const struct timespec* ts)
-{
-    return ((ts->tv_sec) * 1000000 + ((ts->tv_nsec + 500) / 1000));
 }
 
 /*-------------------------------------------------------------------*/
@@ -472,22 +501,6 @@ TOD host_tod()
   result += temp;                   /* Add seconds                   */
   result += ETOD_1970;              /* Adjust to epoch 1970          */
   return ( result );
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-TOD ETOD2tod (const ETOD ETOD)
-{
-  return ( (ETOD.high << 8) | (ETOD.low >> 56) );
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-TOD ETOD2TOD (const ETOD ETOD)
-{
-  return ETOD2tod(ETOD);
 }
 
 #endif // _CLOCK_H

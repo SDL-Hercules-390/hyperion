@@ -211,27 +211,29 @@ TOD hw_calculate_unique_tick()
     if (hw_unique_clock_tick.low  == 0 &&
         hw_unique_clock_tick.high == 0)
         hw_unique_clock_tick.high = 1;
-    #if defined(TOD_95BIT_PRECISION) || \
+
+#if defined(TOD_95BIT_PRECISION) || \
         defined(TOD_64BIT_PRECISION) || \
         defined(TOD_MIN_PRECISION)
+
     else
     {
-        static const ETOD   adj =
-        #if defined(TOD_95BIT_PRECISION)
-            ETOD_init(0,0x0000000100000000ULL);
-        #else
-            ETOD_init(0,0x8000000000000000ULL);
-        #endif
+      #if defined(TOD_95BIT_PRECISION)
+        static const ETOD adj = ETOD_init(0,0x0000000100000000ULL);
+      #else
+        static const ETOD adj = ETOD_init(0,0x8000000000000000ULL);
+      #endif
 
         ETOD_add(&hw_unique_clock_tick, hw_unique_clock_tick, adj);
 
-        #if defined(TOD_95BIT_PRECISION)
-            hw_unique_clock_tick.low &= 0xFFFFFFFE00000000ULL;
-        #else
-            hw_unique_clock_tick.low = 0;
-        #endif
+      #if defined(TOD_95BIT_PRECISION)
+        hw_unique_clock_tick.low &= 0xFFFFFFFE00000000ULL;
+      #else
+        hw_unique_clock_tick.low = 0;
+      #endif
     }
-    #endif
+
+#endif /* defined(TOD_95BIT_PRECISION) ... */
 
     return ( result );
 }
@@ -464,7 +466,7 @@ U64 thread_cputime_us(const REGS *regs)
     {
         rc = clock_gettime(sysblk.cpuclockid[regs->cpuad], &cputime);
     }
-    result = (likely(rc == 0)) ? timespec2us(&cputime) : etod2us(host_tod());
+    result = (likely(rc == 0)) ? timespec2usecs(&cputime) : ETOD_high64_to_usecs(host_tod());
 
     return (result);
 }
@@ -474,7 +476,7 @@ U64 thread_cputime_us(const REGS *regs)
 void set_cpu_timer(REGS *regs, const S64 timer)
 {
     U64 new_epoch_us = (sysblk.lparmode && !WAITSTATE( &regs->psw )) ?
-        thread_cputime_us( regs ) : (U64) etod2us( host_tod() );
+        thread_cputime_us( regs ) : (U64) ETOD_high64_to_usecs( host_tod() );
 
     if (regs->bcputime <= new_epoch_us)
     {
@@ -483,7 +485,7 @@ void set_cpu_timer(REGS *regs, const S64 timer)
         regs->bcputime  = new_epoch_us;
     }
 
-    regs->cpu_timer = tod2etod(timer) + hw_clock();
+    regs->cpu_timer = TOD_high64_to_ETOD_high56(timer) + hw_clock();
 }
 
 /*-------------------------------------------------------------------*/
@@ -491,7 +493,7 @@ void set_cpu_timer(REGS *regs, const S64 timer)
 S64 get_cpu_timer(REGS *regs)
 {
 S64 timer;
-    timer = (S64)etod2tod(regs->cpu_timer - hw_clock());
+    timer = (S64)ETOD_high64_to_TOD_high56(regs->cpu_timer - hw_clock());
     return timer;
 }
 

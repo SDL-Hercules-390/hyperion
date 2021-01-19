@@ -508,8 +508,8 @@ U64              wCPU[ MAX_CPU_ENGS ];  /* Wait CPU time    (usecs)  */
                 /* Get CPU times in microseconds */
                 if( clock_gettime(sysblk.cpuclockid[i], &cputime) == 0 )
                 {
-                    uCPU[i] = timespec2us(&cputime);
-                    tCPU[i] = uCPU[i] + etod2us(sysblk.regs[i]->waittime_accumulated
+                    uCPU[i] = timespec2usecs(&cputime);
+                    tCPU[i] = uCPU[i] + ETOD_high64_to_usecs(sysblk.regs[i]->waittime_accumulated
                                               + sysblk.regs[i]->waittime ) ;
                 }
             }
@@ -522,7 +522,7 @@ U64              wCPU[ MAX_CPU_ENGS ];  /* Wait CPU time    (usecs)  */
 #endif /*defined(FEATURE_PHYSICAL_DIAG204)*/
         STORE_HW(hdrinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrinfo->offown,sizeof(DIAG204_HDR));
-        STORE_DW(hdrinfo->diagstck,ETOD2tod(ETOD));
+        STORE_DW(hdrinfo->diagstck,ETOD2TOD(ETOD));
 
         /* hercules partition */
         partinfo = (DIAG204_PART*)(hdrinfo + 1);
@@ -610,12 +610,12 @@ U64              wCPU[ MAX_CPU_ENGS ];  /* Wait CPU time    (usecs)  */
         {
             if (IS_CPU_ONLINE(i))
             {
-                oCPU[i] = etod2us(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
+                oCPU[i] = ETOD_high64_to_usecs(ETOD.high - regs->tod_epoch - sysblk.cpucreateTOD[i]);
                 /* Get CPU times in microseconds */
                 if( clock_gettime(sysblk.cpuclockid[i], &cputime) == 0 )
                 {
-                    uCPU[i] = timespec2us(&cputime);
-                    tCPU[i] = uCPU[i] + etod2us(sysblk.regs[i]->waittime_accumulated
+                    uCPU[i] = timespec2usecs(&cputime);
+                    tCPU[i] = uCPU[i] + ETOD_high64_to_usecs(sysblk.regs[i]->waittime_accumulated
                                               + sysblk.regs[i]->waittime ) ;
                 }
                 wCPU[i] = tCPU[i] - uCPU[i];

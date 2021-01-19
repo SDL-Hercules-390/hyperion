@@ -875,12 +875,12 @@ int rc = 0;
             epoch_sign = ' ';
         }
         MSGBUF( buf, "off = %16.16"PRIX64"   %c%s",
-                etod2tod(epoch_now), epoch_sign,
+                ETOD_high64_to_TOD_high56(epoch_now), epoch_sign,
                 format_tod(clock_buf,epoch_now_abs,FALSE) );
         WRMSG(HHC02274, "I", buf);
 
         MSGBUF( buf, "ckc = %16.16"PRIX64"    %s",
-                etod2tod(clkc_now), format_tod(clock_buf,clkc_now,TRUE) );
+                ETOD_high64_to_TOD_high56(clkc_now), format_tod(clock_buf,clkc_now,TRUE) );
         WRMSG(HHC02274, "I", buf);
 
         if (regs->cpustate != CPUSTATE_STOPPED)
@@ -894,7 +894,7 @@ int rc = 0;
         {
 
             MSGBUF( buf, "vtod = %16.16"PRIX64"    %s",
-                    etod2tod(vtod_now), format_tod(clock_buf,vtod_now,TRUE) );
+                    ETOD_high64_to_TOD_high56(vtod_now), format_tod(clock_buf,vtod_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
             if (vepoch_now < 0)
@@ -908,12 +908,12 @@ int rc = 0;
                 vepoch_sign = ' ';
             }
             MSGBUF( buf, "voff = %16.16"PRIX64"   %c%s",
-                    etod2tod(vepoch_now), vepoch_sign,
+                    ETOD_high64_to_TOD_high56(vepoch_now), vepoch_sign,
                     format_tod(clock_buf,vepoch_now_abs,FALSE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vckc = %16.16"PRIX64"    %s",
-                    etod2tod(vclkc_now), format_tod(clock_buf,vclkc_now,TRUE) );
+                    ETOD_high64_to_TOD_high56(vclkc_now), format_tod(clock_buf,vclkc_now,TRUE) );
             WRMSG(HHC02274, "I", buf);
 
             MSGBUF( buf, "vcpt = %16.16"PRIX64, vcpt_now );
