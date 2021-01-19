@@ -40,7 +40,6 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
-#include "clock.h"
 
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */

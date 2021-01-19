@@ -62,15 +62,54 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "opcode.h"
 #include "inline.h"
 #include "sr.h"
-#include "clock.h"
 
 #ifndef COMPILE_THIS_ONLY_ONCE
 #define COMPILE_THIS_ONLY_ONCE
 
+/*-------------------------------------------------------------------*/
+/*                    Global clock variables                         */
+/*-------------------------------------------------------------------*/
 
-/*----------------------------------------------------------------------------*/
-/* host_ETOD - Primary high-resolution clock fetch and conversion             */
-/*----------------------------------------------------------------------------*/
+ETOD  universal_tod;
+
+ETOD  hw_tod;                   /* Hardware clock                    */
+
+S64   tod_epoch;                /* Bits 0-7 TOD clock epoch          */
+                                /* Bits 8-63 offset bits 0-55        */
+
+ETOD  tod_value;                /* Bits 0-7 TOD clock epoch          */
+                                /* Bits 8-63 TOD bits 0-55           */
+                                /* Bits 64-111 TOD bits 56-103       */
+CSR  episode_old;
+CSR  episode_new;
+CSR* episode_current     = &episode_new;
+
+/* The hercules hardware clock, based on the universal clock, but    */
+/* running at its own speed as optionally set by set_tod_steering()  */
+/* The hardware clock returns a unique value                         */
+
+double hw_steering = 0.0;       /* Current TOD clock steering rate   */
+TOD    hw_episode;              /* TOD of start of steering episode  */
+S64    hw_offset = 0;           /* Current offset between TOD - HW   */
+ETOD   hw_unique_clock_tick = {0, 0};
+
+int    default_epoch    = 1900;
+int    default_yroffset = 0;
+int    default_tzoffset = 0;
+
+/*-------------------------------------------------------------------*/
+/*                  Function forward references                      */
+/*-------------------------------------------------------------------*/
+
+void  set_tod_epoch   ( const S64 );    /* Set TOD epoch             */
+void  adjust_tod_epoch( const S64 );    /* Adjust TOD epoch          */
+void  update_cpu_timer();               /* Update the CPU timer      */
+ETOD* host_ETOD( ETOD* );               /* Retrieve extended TOD     */
+TOD   hw_adjust( TOD base_tod );
+
+/*-------------------------------------------------------------------*/
+/* host_ETOD - Primary high-resolution clock fetch and conversion    */
+/*-------------------------------------------------------------------*/
 
 ETOD* host_ETOD (ETOD* ETOD)
 {
@@ -82,15 +121,10 @@ ETOD* host_ETOD (ETOD* ETOD)
 
     clock_gettime(CLOCK_REALTIME, &time);
     timespec2ETOD(ETOD, &time);
-    return ( ETOD );                /* Return address of result               */
+    return ( ETOD );                /* Return address of result      */
 }
 
-
-// static int clock_state = CC_CLOCK_SET;
-
-static CSR episode_old;
-static CSR episode_new;
-static CSR *episode_current = &episode_new;
+/*-------------------------------------------------------------------*/
 
 void csr_reset()
 {
@@ -102,25 +136,17 @@ void csr_reset()
     episode_old = episode_new;
 }
 
-static ETOD universal_tod;
-static TOD universal_clock(void) /* really: any clock used as a base */
+/*-------------------------------------------------------------------*/
+
+static TOD universal_clock() /* really: any clock used as a base */
 {
     host_ETOD(&universal_tod);
     return (universal_tod.high);
 }
 
-/* The hercules hardware clock, based on the universal clock, but    */
-/* running at its own speed as optionally set by set_tod_steering()  */
-/* The hardware clock returns a unique value                         */
+/*-------------------------------------------------------------------*/
 
-static double hw_steering = 0.0; /* Current TOD clock steering rate  */
-static TOD hw_episode;           /* TOD of start of steering episode */
-static S64 hw_offset = 0;        /* Current offset between TOD - HW  */
-//atic ETOD hw_tod = {0, 0};     /* Globally defined in clock.h      */
-static ETOD hw_unique_clock_tick = {0, 0};
-static TOD hw_adjust(TOD base_tod);
-
-static TOD hw_calculate_unique_tick (void)
+static TOD hw_calculate_unique_tick()
 {
     static const ETOD     m1  = ETOD_init(0,65536);
 
@@ -164,6 +190,7 @@ static TOD hw_calculate_unique_tick (void)
     return ( result );
 }
 
+/*-------------------------------------------------------------------*/
 
 static TOD hw_adjust(TOD base_tod)
 {
@@ -190,15 +217,17 @@ static TOD hw_adjust(TOD base_tod)
     return ( hw_tod.high );
 }
 
+/*-------------------------------------------------------------------*/
 
-static TOD hw_clock_l(void)
+static TOD hw_clock_l()
 {
     /* Get time of day (GMT); adjust speed and ensure uniqueness */
     return ( hw_adjust(universal_clock()) );
 }
 
+/*-------------------------------------------------------------------*/
 
-TOD hw_clock(void)
+TOD hw_clock()
 {
 register TOD temp_tod;
 
@@ -212,11 +241,11 @@ register TOD temp_tod;
     return (temp_tod);
 }
 
-
-
+/*-------------------------------------------------------------------*/
 /* set_tod_steering(double) sets a new steering rate.                */
 /* When a new steering episode begins, the offset is adjusted,       */
 /* and the new steering rate takes effect                            */
+
 void set_tod_steering(const double steering)
 {
     obtain_lock(&sysblk.todlock);
@@ -230,7 +259,9 @@ void set_tod_steering(const double steering)
 }
 
 
+/*-------------------------------------------------------------------*/
 /* Start a new episode */
+
 static INLINE void start_new_episode()
 {
     hw_offset = hw_tod.high - universal_tod.high;
@@ -242,8 +273,9 @@ static INLINE void start_new_episode()
     episode_current = &episode_new;
 }
 
-
+/*-------------------------------------------------------------------*/
 /* Prepare for a new episode */
+
 static INLINE void prepare_new_episode()
 {
     if(episode_current == &episode_new)
@@ -253,8 +285,9 @@ static INLINE void prepare_new_episode()
     }
 }
 
-
+/*-------------------------------------------------------------------*/
 /* Ajust the epoch for all active cpu's in the configuration */
+
 static U64 adjust_epoch_cpu_all(const U64 epoch)
 {
 int cpu;
@@ -273,12 +306,14 @@ int cpu;
     return epoch;
 }
 
+/*-------------------------------------------------------------------*/
 
-double get_tod_steering(void)
+double get_tod_steering()
 {
     return hw_steering;
 }
 
+/*-------------------------------------------------------------------*/
 
 void set_tod_epoch(const S64 epoch)
 {
@@ -289,6 +324,7 @@ void set_tod_epoch(const S64 epoch)
     adjust_epoch_cpu_all(epoch);
 }
 
+/*-------------------------------------------------------------------*/
 
 void adjust_tod_epoch(const S64 epoch)
 {
@@ -299,18 +335,21 @@ void adjust_tod_epoch(const S64 epoch)
     adjust_epoch_cpu_all(tod_epoch);
 }
 
+/*-------------------------------------------------------------------*/
 
 void set_tod_clock(const U64 tod)
 {
     set_tod_epoch(tod - hw_clock());
 }
 
+/*-------------------------------------------------------------------*/
 
 S64 get_tod_epoch()
 {
     return tod_epoch;
 }
 
+/*-------------------------------------------------------------------*/
 
 static void set_gross_steering_rate(const S32 gsr)
 {
@@ -320,6 +359,7 @@ static void set_gross_steering_rate(const S32 gsr)
     release_lock(&sysblk.todlock);
 }
 
+/*-------------------------------------------------------------------*/
 
 static void set_fine_steering_rate(const S32 fsr)
 {
@@ -329,6 +369,7 @@ static void set_fine_steering_rate(const S32 fsr)
     release_lock(&sysblk.todlock);
 }
 
+/*-------------------------------------------------------------------*/
 
 static void set_tod_offset(const S64 offset)
 {
@@ -338,6 +379,7 @@ static void set_tod_offset(const S64 offset)
     release_lock(&sysblk.todlock);
 }
 
+/*-------------------------------------------------------------------*/
 
 static void adjust_tod_offset(const S64 offset)
 {
@@ -347,7 +389,7 @@ static void adjust_tod_offset(const S64 offset)
     release_lock(&sysblk.todlock);
 }
 
-
+/*-------------------------------------------------------------------*/
 /* The CPU timer is internally kept as an offset to the hw_clock()
  * the cpu timer counts down as the clock approaches the timer epoch
  *
@@ -372,6 +414,7 @@ U64 thread_cputime_us(const REGS *regs)
     return (result);
 }
 
+/*-------------------------------------------------------------------*/
 
 void set_cpu_timer(REGS *regs, const S64 timer)
 {
@@ -388,6 +431,7 @@ void set_cpu_timer(REGS *regs, const S64 timer)
     regs->cpu_timer = tod2etod(timer) + hw_clock();
 }
 
+/*-------------------------------------------------------------------*/
 
 S64 cpu_timer(REGS *regs)
 {
@@ -396,8 +440,10 @@ S64 timer;
     return timer;
 }
 
+/*-------------------------------------------------------------------*/
 
-DLL_EXPORT TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
+DLL_EXPORT
+TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 {
     /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
      * order for comparison. Consequently, swap delays for a subsequent
@@ -509,6 +555,7 @@ DLL_EXPORT TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
     return ( high );
 }
 
+/*-------------------------------------------------------------------*/
 
 TOD tod_clock (REGS* regs)
 {
@@ -516,29 +563,33 @@ TOD tod_clock (REGS* regs)
     return ( etod_clock(regs, &ETOD, ETOD_fast) );
 }
 
-#if defined(_FEATURE_INTERVAL_TIMER)
+/*-------------------------------------------------------------------*/
+#if defined( _FEATURE_INTERVAL_TIMER )
+#if defined( _FEATURE_ECPSVM )
 
-
-#if defined(_FEATURE_ECPSVM)
 static INLINE S32 ecps_vtimer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
 }
 
+/*-------------------------------------------------------------------*/
 
 static INLINE void set_ecps_vtimer(REGS *regs, const S32 vtimer)
 {
     regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
     regs->ecps_oldtmr = vtimer;
 }
-#endif /*defined(_FEATURE_ECPSVM)*/
 
+#endif /* defined( _FEATURE_ECPSVM ) */
+
+/*-------------------------------------------------------------------*/
 
 static INLINE S32 int_timer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
 
+/*-------------------------------------------------------------------*/
 
 void set_int_timer(REGS *regs, const S32 itimer)
 {
@@ -546,6 +597,7 @@ void set_int_timer(REGS *regs, const S32 itimer)
     regs->old_timer = itimer;
 }
 
+/*-------------------------------------------------------------------*/
 
 int chk_int_timer(REGS *regs)
 {
@@ -569,12 +621,13 @@ int pending = 0;
             pending += 2;
         }
     }
-#endif /*defined(_FEATURE_ECPSVM)*/
+#endif /* defined( _FEATURE_ECPSVM ) */
 
     return pending;
 }
-#endif /*defined(_FEATURE_INTERVAL_TIMER)*/
+#endif /* defined( _FEATURE_INTERVAL_TIMER ) */
 
+/*-------------------------------------------------------------------*/
 /*
  *  is_leapyear ( year )
  *
@@ -630,13 +683,16 @@ int pending = 0;
  *  http://tools.ietf.org/html/rfc3339
  *
  */
-
-static INLINE unsigned int is_leapyear ( const unsigned int year )
+static INLINE
+unsigned int is_leapyear ( const unsigned int year )
 {
     return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
 }
 
-static INLINE S64 lyear_adjust(const int epoch)
+/*-------------------------------------------------------------------*/
+
+static INLINE
+S64 lyear_adjust(const int epoch)
 {
 int year, leapyear;
 TOD tod = hw_clock();
@@ -659,13 +715,10 @@ TOD tod = hw_clock();
         return ( ((is_leapyear(year) && (-epoch % 4) != 0) || ((year % 4) + (-epoch % 4) > 4)) ? TOD_DAY : 0 );
 }
 
+/*-------------------------------------------------------------------*/
 
-int default_epoch = 1900;
-int default_yroffset = 0;
-int default_tzoffset = 0;
-
-
-static INLINE void configure_time()
+static INLINE
+void configure_time()
 {
 int epoch;
 S64 ly1960;
@@ -689,7 +742,6 @@ S64 ly1960;
                      ETOD_MIN);                         /* Convert to ETOD format */
 }
 
-
 /*-------------------------------------------------------------------*/
 /* epoch     1900|1960                                               */
 /*-------------------------------------------------------------------*/
@@ -704,7 +756,6 @@ int configure_epoch(int epoch)
 
     return 0;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* yroffset  +|-142                                                  */
@@ -721,7 +772,6 @@ int configure_yroffset(int yroffset)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* tzoffset  -2359..+2359                                            */
 /*-------------------------------------------------------------------*/
@@ -737,15 +787,13 @@ int configure_tzoffset(int tzoffset)
     return 0;
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Query current tzoffset value for reporting                        */
 /*-------------------------------------------------------------------*/
-int query_tzoffset(void)
+int query_tzoffset()
 {
     return default_tzoffset;
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Update TOD clock                                                  */
@@ -765,8 +813,7 @@ int query_tzoffset(void)
 /* has been adjusted.                                                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-// static ETOD tod_value;
-TOD update_tod_clock(void)
+TOD update_tod_clock()
 {
     TOD new_clock;
 
@@ -793,6 +840,10 @@ TOD update_tod_clock(void)
     return new_clock;
 }
 
+/*-------------------------------------------------------------------*/
+/*              Hercules Suspend/Resume support                      */
+/*-------------------------------------------------------------------*/
+
 #define SR_SYS_CLOCK_CURRENT_CSR          ( SR_SYS_CLOCK | 0x001 )
 #define SR_SYS_CLOCK_UNIVERSAL_TOD        ( SR_SYS_CLOCK | 0x002 )
 #define SR_SYS_CLOCK_HW_STEERING          ( SR_SYS_CLOCK | 0x004 )
@@ -810,6 +861,8 @@ TOD update_tod_clock(void)
 #define SR_SYS_CLOCK_NEW_CSR_BASE_OFFSET  ( SR_SYS_CLOCK | 0x202 )
 #define SR_SYS_CLOCK_NEW_CSR_FINE_S_RATE  ( SR_SYS_CLOCK | 0x203 )
 #define SR_SYS_CLOCK_NEW_CSR_GROSS_S_RATE ( SR_SYS_CLOCK | 0x204 )
+
+/*-------------------------------------------------------------------*/
 
 int clock_hsuspend(void *file)
 {
@@ -836,6 +889,8 @@ int clock_hsuspend(void *file)
 
     return 0;
 }
+
+/*-------------------------------------------------------------------*/
 
 int clock_hresume(void *file)
 {
@@ -905,10 +960,11 @@ int clock_hresume(void *file)
     return 0;
 }
 
+/*-------------------------------------------------------------------*/
+
 #endif // COMPILE_THIS_ONLY_ONCE
 
-
-#if defined(FEATURE_INTERVAL_TIMER)
+#if defined( FEATURE_INTERVAL_TIMER )
 static INLINE void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
 {
 S32 itimer;
@@ -944,18 +1000,21 @@ S32 vtimer=0;
     }
 }
 
+/*-------------------------------------------------------------------*/
 
 DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *regs)
 {
     ARCH_DEP(_store_int_timer_2) (regs,1);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(store_int_timer_nolock) (REGS *regs)
 {
     ARCH_DEP(_store_int_timer_2) (regs,0);
 }
 
+/*-------------------------------------------------------------------*/
 
 DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *regs)
 {
@@ -963,19 +1022,22 @@ S32 itimer;
     FETCH_FW(itimer, regs->psa->inttimer);
     OBTAIN_INTLOCK(HOSTREGS?regs:NULL);
     set_int_timer(regs, itimer);
-#if defined(FEATURE_ECPSVM)
+
+#if defined( FEATURE_ECPSVM )
     if(regs->ecps_vtmrpt)
     {
         FETCH_FW(itimer, regs->ecps_vtmrpt);
         set_ecps_vtimer(regs, itimer);
     }
-#endif /*defined(FEATURE_ECPSVM)*/
-    RELEASE_INTLOCK(HOSTREGS?regs:NULL);
-}
 #endif
 
+    RELEASE_INTLOCK(HOSTREGS?regs:NULL);
+}
+#endif /* defined( FEATURE_INTERVAL_TIMER ) */
 
-#if defined(FEATURE_028_TOD_CLOCK_STEER_FACILITY)
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY )
 
 void ARCH_DEP(set_gross_s_rate) (REGS *regs)
 {
@@ -985,6 +1047,7 @@ S32 gsr;
     set_gross_steering_rate(gsr);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(set_fine_s_rate) (REGS *regs)
 {
@@ -994,6 +1057,7 @@ S32 fsr;
     set_fine_steering_rate(fsr);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(set_tod_offset) (REGS *regs)
 {
@@ -1003,6 +1067,7 @@ S64 offset;
     set_tod_offset(offset >> 8);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(adjust_tod_offset) (REGS *regs)
 {
@@ -1012,12 +1077,14 @@ S64 offset;
     adjust_tod_offset(offset >> 8);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(query_physical_clock) (REGS *regs)
 {
     ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(query_steering_information) (REGS *regs)
 {
@@ -1037,6 +1104,7 @@ PTFFQSI qsi;
     ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
@@ -1051,6 +1119,7 @@ PTFFQTO qto;
     ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
 
+/*-------------------------------------------------------------------*/
 
 void ARCH_DEP(query_available_functions) (REGS *regs)
 {
@@ -1062,7 +1131,9 @@ PTFFQAF qaf;
 
     ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
-#endif /*defined(FEATURE_028_TOD_CLOCK_STEER_FACILITY)*/
+#endif /* defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
 
 #if !defined(_GEN_ARCH)
 

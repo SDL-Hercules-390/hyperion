@@ -212,6 +212,18 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _CLOCK_C_
+  #ifndef  _HENGINE_DLL_
+    #define CLOCK_DLL_IMPORT        DLL_IMPORT
+  #else
+    #define CLOCK_DLL_IMPORT        extern
+  #endif
+#else
+  #define   CLOCK_DLL_IMPORT        DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _CMDTAB_C_
   #ifndef  _HENGINE_DLL_
     #define CMDT_DLL_IMPORT         DLL_IMPORT
