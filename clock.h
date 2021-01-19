@@ -5,6 +5,87 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/* --------------------------------------------------------------------
+                    z/Architecture Clock Formats
+   --------------------------------------------------------------------
+
+
+
+       TOD (SCK, SCKC, STCK, STCKC)
+       +--------------------------+------+
+       |                          |      |
+       +--------------------------+------+
+        0                        51     63
+
+
+   ETOD (STCKE)
+   +--+---------------------------+--+------------------------+-----+
+   |EI|                           |  |                        | PGF |
+   +--+---------------------------+--+------------------------+-----+
+   0  7                          59 63                     111    127
+
+
+   Where:
+
+   - TOD: bit 51 represents one microsecond
+   - TOD: bit 63 represents 244 picoseconds
+
+   - ETOD: EI = 8-bit Epoch Index field
+   - ETOD: PF = 16-bit Programmable Field (STKPF)
+   - ETOD: bit 59 represents one microsecond
+   - ETOD: bit 63 represents 62.5 nanoseconds
+
+
+
+   --------------------------------------------------------------------
+                    Hercules Clock and Timer Formats
+   --------------------------------------------------------------------
+
+
+
+   64-bit Clock/Timer Format
+   +------------------------------+--+
+   |                              |  |
+   +------------------------------+--+
+    0                            59 63
+
+
+   128-bit Clock Format
+   +------------------------------+--+------------------------------+
+   |                              |  |                              |
+   +------------------------------+--+------------------------------+
+    0                            59 63                            127
+
+
+   Where:
+
+   - Bit 59 represents one microsecond
+   - Bit 63 represents 62.5 nanoseconds
+
+
+
+   --------------------------------------------------------------------
+                            Usage Notes
+   --------------------------------------------------------------------
+
+   - Bits 0-63 of the Hercules 64-bit clock format are identical to
+     bits 0-63 of the 128-bit Hercules clock format.
+
+   - The 128-bit Hercules clock format extends the 64-bit clock format
+     by an additional 64-bits to the right (low-order) of the 64-bit
+     Hercules clock format.
+
+   - Hercules timers only use the 64-bit Hercules clock/timer format.
+
+   - The Hercules clock format has a period of over 36,533 years.
+
+   - With masking, the Hercules 128-bit clock format may be used for
+     extended TOD clock operations.
+
+   - The ETOD2TOD() call may be used to convert a Hercules 128-bit
+     clock value to a standard z/Architecture 64-bit TOD clock value.
+*/
+
 #ifndef _CLOCK_H
 #define _CLOCK_H
 
@@ -96,6 +177,7 @@ extern int    query_tzoffset();                /* Current TZOFFSET   */
 
 /*-------------------------------------------------------------------*/
 /*                clock.h static INLINE functions                    */
+/*              (forward references; defined below)                  */
 /*-------------------------------------------------------------------*/
 
 static INLINE void ETOD_add  (ETOD* result, const ETOD a, const ETOD b );
@@ -117,7 +199,7 @@ static INLINE TOD  timespec2ETOD ( ETOD* ETOD, const struct timespec* ts );
 static INLINE
 TOD ETOD2TOD( const ETOD ETOD )
 {
-  return ( (ETOD.high << 8) | (ETOD.low >> 56) );
+    return ((ETOD.high << 8) | (ETOD.low >> (64-8)));
 }
 
 /*-------------------------------------------------------------------*/
@@ -164,83 +246,89 @@ S64 timespec2usecs( const struct timespec* ts )
 /*-------------------------------------------------------------------*/
 
 static INLINE
-void ETOD_add (ETOD* result, const ETOD a, const ETOD b)
+void ETOD_add( ETOD* result, const ETOD a, const ETOD b )
 {
-  register uint64_t high = a.high + b.high;
-  register uint64_t low  = a.low + b.low;
-  if (low < a.low)
-    ++high;
-  result->high = high;
-  result->low  = low;
+    register U64 high  = a.high + b.high;
+    register U64 low   = a.low  + b.low;
+
+    if (low < a.low)
+        ++high;
+
+    result->high = high;
+    result->low  = low;
 }
 
 /*-------------------------------------------------------------------*/
 
 static INLINE
-void ETOD_sub (ETOD* result, const ETOD a, const ETOD b)
+void ETOD_sub( ETOD* result, const ETOD a, const ETOD b )
 {
-  register uint64_t high = a.high - b.high;
-  register uint64_t low  = a.low - b.low;
-  if (a.low < b.low)
-    --high;
-  result->high = high;
-  result->low  = low;
+    register U64 high  = a.high - b.high;
+    register U64 low   = a.low  - b.low;
+
+    if (a.low < b.low)
+        --high;
+
+    result->high = high;
+    result->low  = low;
 }
 
 /*-------------------------------------------------------------------*/
 
 static INLINE
-void ETOD_shift (ETOD* result, const ETOD a, int shift)
+void ETOD_shift( ETOD* result, const ETOD a, int shift )
 {
-  register uint64_t high;
-  register uint64_t low;
+    register U64 high;
+    register U64 low;
 
-  if (shift == 0)
-  {
-    high = a.high;
-    low  = a.low;
-  }
-  else if (shift < 0)
-  {
-    shift = -shift;
-    if (shift >= 64)
+    if (shift == 0)                 /* Zero shift: copy in to out */
     {
-      shift -= 64;
-      if (shift == 0)
-        high = a.low;
-      else if (shift > 64)
-        high = 0;
-      else
-        high = a.low << shift;
-      low = 0;
+        high = a.high;
+        low  = a.low;
     }
-    else
+    else if (shift < 0)             /* Negtative: shift LEFT */
     {
-      high = a.high << shift |
-             a.low >> (64 - shift);
-      low  = a.low << shift;
-    }
-  }
-  else if (shift >= 64)
-  {
-    shift -= 64;
-    high   = 0;
-    if (shift == 0)
-      low = a.high;
-    else if (shift < 64)
-      low = a.high >> shift;
-    else
-      low = 0;
-  }
-  else
-  {
-    high = a.high >> shift;
-    low  = a.high << (64 - shift) |
-           a.low >> shift;
-  }
+        shift = -shift;             /* (get positive shift amount) */
 
-  result->low  = low;
-  result->high = high;
+        if (shift >= 64)            /* Negtative: shift LEFT >= 64 */
+        {
+            shift -= 64;            /* (get shift amount 0-64) */
+
+            if (shift == 0)
+                high = a.low;
+            else if (shift > 64)
+                high = 0;
+            else
+                high = a.low << shift;
+
+            low = 0;
+        }
+        else                        /* Negtative: shift LEFT < 64 */
+        {
+            high = a.high << shift | a.low >> (64 - shift);
+            low  = a.low << shift;
+        }
+    }
+    else if (shift >= 64)           /* Positive: shift RIGHT >= 64 */
+    {
+        shift -= 64;                /* (get shift amount 0-64) */
+        high   = 0;
+
+        if (shift == 0)
+            low = a.high;
+        else if (shift < 64)
+            low = a.high >> shift;
+        else
+            low = 0;
+    }
+    else                            /* Positive: shift RIGHT < 64 */
+    {
+        high = a.high >> shift;
+        low  = a.high << (64 - shift) | a.low >> shift;
+    }
+
+    result->low  = low;
+    result->high = high;
 }
 
 /*-------------------------------------------------------------------*/
@@ -474,21 +562,21 @@ TOD host_tod()
   register TOD  result;
   register U64  temp;
 
-  /* Use the same clock source as host_ETOD; refer to host_ETOD in clock.c for
-   * additional comments.
+  /* Use the same clock source as host_ETOD().
+     Refer to host_ETOD() in clock.c for additional comments.
    */
 
 #if !defined( _MSVC_ ) && !defined( CLOCK_REALTIME )
   {
     struct timeval time;
-    gettimeofday(&time, NULL);      /* Get current host time         */
+    gettimeofday( &time, NULL );    /* Get current host time         */
     result = time.tv_usec << 4;     /* Adjust microseconds to bit-59 */
     temp   = time.tv_sec;           /* Load seconds                  */
   }
 #else
   {
     struct timespec time;
-    clock_gettime(CLOCK_REALTIME, &time);
+    clock_gettime( CLOCK_REALTIME, &time );
     result  = time.tv_nsec;         /* Adjust nanoseconds to bit-59  */
     result <<= 1;                   /* and divide by 1000
                                        (bit-shift compressed)        */
@@ -507,6 +595,11 @@ TOD host_tod()
 
 /*-------------------------------------------------------------------*/
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*                  external clock.c functions                       */
+/*                    (defined in clock.c)                           */
 /*-------------------------------------------------------------------*/
 
 CLOCK_DLL_IMPORT    void ARCH_DEP( fetch_int_timer )       ( REGS* );
@@ -533,8 +626,9 @@ extern              TOD  thread_cputime(const REGS*);       /* Thread real CPU u
 extern              U64  thread_cputime_us(const REGS*);    /* Thread real CPU used (us) */
 
 //----------------------------------------------------------------------
-//
-// Interval Timer Conversions to/from Extended TOD Clock Values
+//                  Interval Timer Conversions
+//              to/from Extended TOD Clock Values
+//----------------------------------------------------------------------
 //
 // S/360 - Decrementing at 50 or 60 cycles per second, depending on line
 //         frequency, effectively decrementing at 1/300 second in bit
@@ -554,11 +648,12 @@ extern              U64  thread_cputime_us(const REGS*);    /* Thread real CPU u
 //
 // References:
 //
-//  A22-6821-7  IBM System/360 Principles of Operation, Timer Feature,
+// GA22-6821-7  IBM System/360 Principles of Operation, Timer Feature,
 //              p. 17.1
 // GA22-6942-1  IBM System/370 Model 155 Functional Characteristics,
 //              Interval Timer, p. 7
 //
+//----------------------------------------------------------------------
 
 #define CPU_TIMER(_regs)            (get_cpu_timer(_regs))
 #define ITIMER_TO_TOD(_units)       (((S64)(_units) * 625) / 3)

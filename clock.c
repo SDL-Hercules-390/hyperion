@@ -8,47 +8,85 @@
 /* The emulated hardware clock is based on the host clock, adjusted  */
 /* by means of an offset and a steering rate.                        */
 
-/*
+/* --------------------------------------------------------------------
+                    z/Architecture Clock Formats
+   --------------------------------------------------------------------
 
-   Hercules Clock and Timer Formats
+
+
+       TOD (SCK, SCKC, STCK, STCKC)
+       +--------------------------+------+
+       |                          |      |
+       +--------------------------+------+
+        0                        51     63
+
+
+   ETOD (STCKE)
+   +--+---------------------------+--+------------------------+-----+
+   |EI|                           |  |                        | PGF |
+   +--+---------------------------+--+------------------------+-----+
+   0  7                          59 63                     111    127
+
+
+   Where:
+
+   - TOD: bit 51 represents one microsecond
+   - TOD: bit 63 represents 244 picoseconds
+
+   - ETOD: EI = 8-bit Epoch Index field
+   - ETOD: PF = 16-bit Programmable Field (STKPF)
+   - ETOD: bit 59 represents one microsecond
+   - ETOD: bit 63 represents 62.5 nanoseconds
+
+
+
+   --------------------------------------------------------------------
+                    Hercules Clock and Timer Formats
+   --------------------------------------------------------------------
+
+
 
    64-bit Clock/Timer Format
    +------------------------------+--+
    |                              |  |
    +------------------------------+--+
-    0                           59 63
+    0                            59 63
+
 
    128-bit Clock Format
    +------------------------------+--+------------------------------+
    |                              |  |                              |
    +------------------------------+--+------------------------------+
-    0                           59 63                            127
-
-   where:
-
-   - Bit-59 represents one microsecond
-   - Bit-63 represents 62.5 nanoseconds
+    0                            59 63                            127
 
 
-   Usage Notes:
+   Where:
 
-   - Bits 0-63 of the 64-bit clock format are identical to bits 0-63
-     of the 128-bit clock format
+   - Bit 59 represents one microsecond
+   - Bit 63 represents 62.5 nanoseconds
 
-   - The 128-bit clock format extends the 64-bit clock format by an
-     additional 64-bits to the right (low-order) of the 64-bit clock
-     format.
 
-   - Hercules timers only use the 64-bit clock/timer format.
+
+   --------------------------------------------------------------------
+                            Usage Notes
+   --------------------------------------------------------------------
+
+   - Bits 0-63 of the Hercules 64-bit clock format are identical to
+     bits 0-63 of the 128-bit Hercules clock format.
+
+   - The 128-bit Hercules clock format extends the 64-bit clock format
+     by an additional 64-bits to the right (low-order) of the 64-bit
+     Hercules clock format.
+
+   - Hercules timers only use the 64-bit Hercules clock/timer format.
 
    - The Hercules clock format has a period of over 36,533 years.
 
-   - With masking, the 128-bit clock format may be used for extended TOD clock
-     operations.
+   - With masking, the Hercules 128-bit clock format may be used for
+     extended TOD clock operations.
 
-   - The ETOD2TOD() call may be used to convert a Hercules 128-bit clock value
-     to a standard TOD clock value.
-
+   - The ETOD2TOD() call may be used to convert a Hercules 128-bit
+     clock value to a standard z/Architecture 64-bit TOD clock value.
 */
 
 #include "hstdinc.h"
@@ -131,7 +169,7 @@ static        void      adjust_tod_offset( const S64 offset );
               S64       get_tod_epoch();
               void      set_tod_epoch       ( const S64 );
               void      adjust_tod_epoch    ( const S64 );
-static        U64       adjust_tod_epoch_all( const U64 epoch );
+static        U64       set_tod_epoch_all( const U64 epoch );
 
 /*-------------------------------------------------------------------*/
 
@@ -234,17 +272,22 @@ void ARCH_DEP(query_physical_clock) (REGS *regs)
 void ARCH_DEP(query_steering_information) (REGS *regs)
 {
 PTFFQSI qsi;
-    obtain_lock(&sysblk.todlock);
-    STORE_DW(qsi.physclk, universal_clock() << 8);
-    STORE_DW(qsi.oldestart, episode_old.start_time << 8);
-    STORE_DW(qsi.oldebase, episode_old.base_offset << 8);
-    STORE_FW(qsi.oldfsr, episode_old.fine_s_rate );
-    STORE_FW(qsi.oldgsr, episode_old.gross_s_rate );
-    STORE_DW(qsi.newestart, episode_new.start_time << 8);
-    STORE_DW(qsi.newebase, episode_new.base_offset << 8);
-    STORE_FW(qsi.newfsr, episode_new.fine_s_rate );
-    STORE_FW(qsi.newgsr, episode_new.gross_s_rate );
-    release_lock(&sysblk.todlock);
+
+    obtain_lock( &sysblk.todlock );
+    {
+        STORE_DW( qsi.physclk,   universal_clock() << 8);
+
+        STORE_DW( qsi.oldestart, episode_old.start_time  << 8);
+        STORE_DW( qsi.oldebase,  episode_old.base_offset << 8);
+        STORE_FW( qsi.oldfsr,    episode_old.fine_s_rate );
+        STORE_FW( qsi.oldgsr,    episode_old.gross_s_rate );
+
+        STORE_DW( qsi.newestart, episode_new.start_time  << 8);
+        STORE_DW( qsi.newebase,  episode_new.base_offset << 8);
+        STORE_FW( qsi.newfsr,    episode_new.fine_s_rate );
+        STORE_FW( qsi.newgsr,    episode_new.gross_s_rate );
+    }
+    release_lock( &sysblk.todlock );
 
     ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
@@ -254,12 +297,15 @@ PTFFQSI qsi;
 void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
-    obtain_lock(&sysblk.todlock);
-    STORE_DW(qto.todoff, (hw_clock_locked() - universal_tod.high) << 8);
-    STORE_DW(qto.physclk, (universal_tod.high << 8) | (universal_tod.low >> 56));
-    STORE_DW(qto.ltodoff, episode_current->base_offset << 8);
-    STORE_DW(qto.todepoch, regs->tod_epoch << 8);
-    release_lock(&sysblk.todlock);
+
+    obtain_lock( &sysblk.todlock );
+    {
+        STORE_DW(qto.todoff,   (hw_clock_locked() - universal_tod.high) << 8);
+        STORE_DW(qto.physclk,  (universal_tod.high << 8) | (universal_tod.low >> (64-8)));
+        STORE_DW(qto.ltodoff,  episode_current->base_offset << 8);
+        STORE_DW(qto.todepoch, regs->tod_epoch << 8);
+    }
+    release_lock( &sysblk.todlock );
 
     ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
@@ -269,10 +315,11 @@ PTFFQTO qto;
 void ARCH_DEP(query_available_functions) (REGS *regs)
 {
 PTFFQAF qaf;
-    STORE_FW(qaf.sb[0] , 0xF0000000);        /* Functions 0x00..0x1F */
-    STORE_FW(qaf.sb[1] , 0x00000000);        /* Functions 0x20..0x3F */
-    STORE_FW(qaf.sb[2] , 0xF0000000);        /* Functions 0x40..0x5F */
-    STORE_FW(qaf.sb[3] , 0x00000000);        /* Functions 0x60..0x7F */
+
+    STORE_FW( qaf.sb[0] , 0xF0000000 );     /* Functions 0x00..0x1F */
+    STORE_FW( qaf.sb[1] , 0x00000000 );     /* Functions 0x20..0x3F */
+    STORE_FW( qaf.sb[2] , 0xF0000000 );     /* Functions 0x40..0x5F */
+    STORE_FW( qaf.sb[3] , 0x00000000 );     /* Functions 0x60..0x7F */
 
     ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }
@@ -380,10 +427,10 @@ void ARCH_DEP( fetch_int_timer )( REGS* regs )
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
-/* host_ETOD - Primary high-resolution clock fetch and conversion    */
+/*  host_ETOD - Primary high-resolution clock fetch and conversion   */
 /*-------------------------------------------------------------------*/
 
-ETOD* host_ETOD (ETOD* ETOD)
+ETOD* host_ETOD( ETOD* ETOD )
 {
     struct timespec time;
 
@@ -391,8 +438,8 @@ ETOD* host_ETOD (ETOD* ETOD)
      * destroys consistent monotonic clock.
      */
 
-    clock_gettime(CLOCK_REALTIME, &time);
-    timespec2ETOD(ETOD, &time);
+    clock_gettime( CLOCK_REALTIME, &time );
+    timespec2ETOD( ETOD, &time );
     return ( ETOD );                /* Return address of result      */
 }
 
@@ -400,11 +447,13 @@ ETOD* host_ETOD (ETOD* ETOD)
 
 void csr_reset()
 {
-    episode_new.start_time = 0;
-    episode_new.base_offset = 0;
-    episode_new.fine_s_rate = 0;
+    episode_new.start_time   = 0;
+    episode_new.base_offset  = 0;
+    episode_new.fine_s_rate  = 0;
     episode_new.gross_s_rate = 0;
+
     episode_current = &episode_new;
+
     episode_old = episode_new;
 }
 
@@ -413,7 +462,7 @@ void csr_reset()
 static
 TOD universal_clock() /* really: any clock used as a base */
 {
-    host_ETOD(&universal_tod);
+    host_ETOD( &universal_tod );
     return (universal_tod.high);
 }
 
@@ -469,7 +518,7 @@ TOD hw_calculate_unique_tick()
 /*-------------------------------------------------------------------*/
 
 static
-TOD hw_adjust(TOD base_tod)
+TOD hw_adjust( TOD base_tod )
 {
     /* Apply hardware offset, this is the offset achieved by all
        previous steering episodes */
@@ -489,7 +538,7 @@ TOD hw_adjust(TOD base_tod)
              hw_unique_clock_tick.high == 0)
         hw_calculate_unique_tick();
     else
-        ETOD_add(&hw_tod, hw_tod, hw_unique_clock_tick);
+        ETOD_add( &hw_tod, hw_tod, hw_unique_clock_tick );
 
     return ( hw_tod.high );
 }
@@ -500,7 +549,7 @@ static
 TOD hw_clock_locked()
 {
     /* Get time of day (GMT); adjust speed and ensure uniqueness */
-    return ( hw_adjust(universal_clock()) );
+    return hw_adjust( universal_clock() );
 }
 
 /*-------------------------------------------------------------------*/
@@ -520,25 +569,29 @@ TOD hw_clock()
 }
 
 /*-------------------------------------------------------------------*/
-/* set_tod_steering(double) sets a new steering rate.                */
-/* When a new steering episode begins, the offset is adjusted,       */
-/* and the new steering rate takes effect                            */
+/*                      set_tod_steering                             */
+/*-------------------------------------------------------------------*/
+/* Sets a new steering rate. When a new steering episode begins,     */
+/* the offset is adjusted, and the new steering rate takes effect    */
+/*-------------------------------------------------------------------*/
 
-void set_tod_steering(const double steering)
+void set_tod_steering( const double steering )
 {
-    obtain_lock(&sysblk.todlock);
+    obtain_lock( &sysblk.todlock );
+    {
+        /* Get current offset between hw_adjust and universal TOD value  */
+        hw_offset = hw_clock_locked() - universal_tod.high;
 
-    /* Get current offset between hw_adjust and universal TOD value  */
-    hw_offset = hw_clock_locked() - universal_tod.high;
-
-    hw_episode = hw_tod.high;
-    hw_steering = steering;
-    release_lock(&sysblk.todlock);
+        hw_episode = hw_tod.high;
+        hw_steering = steering;
+    }
+    release_lock( &sysblk.todlock );
 }
 
 
 /*-------------------------------------------------------------------*/
-/* Start a new episode */
+/*                     start_new_episode                             */
+/*-------------------------------------------------------------------*/
 
 static INLINE
 void start_new_episode()
@@ -553,12 +606,13 @@ void start_new_episode()
 }
 
 /*-------------------------------------------------------------------*/
-/* Prepare for a new episode */
+/*                     prepare_new_episode                           */
+/*-------------------------------------------------------------------*/
 
 static INLINE
 void prepare_new_episode()
 {
-    if(episode_current == &episode_new)
+    if (episode_current == &episode_new)
     {
         episode_old = episode_new;
         episode_current = &episode_old;
@@ -566,22 +620,26 @@ void prepare_new_episode()
 }
 
 /*-------------------------------------------------------------------*/
-/* Ajust the epoch for all active cpu's in the configuration */
+/*   Adjust the epoch for all active cpu's in the configuration      */
+/*-------------------------------------------------------------------*/
 
 static
-U64 adjust_tod_epoch_all(const U64 epoch)
+U64 set_tod_epoch_all( const U64 epoch )
 {
 int cpu;
 
     /* Update the TOD clock of all CPU's in the configuration
-       as we simulate 1 shared TOD clock, and do not support the
-       TOD clock sync check */
+       as we simulate 1 shared TOD clock, and do not support
+       the TOD clock sync check.
+    */
     for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
     {
-        obtain_lock(&sysblk.cpulock[cpu]);
-        if (IS_CPU_ONLINE(cpu))
-            sysblk.regs[cpu]->tod_epoch = epoch;
-        release_lock(&sysblk.cpulock[cpu]);
+        obtain_lock( &sysblk.cpulock[ cpu ]);
+        {
+            if (IS_CPU_ONLINE(cpu))
+                sysblk.regs[ cpu ]->tod_epoch = epoch;
+        }
+        release_lock( &sysblk.cpulock[ cpu ]);
     }
 
     return epoch;
@@ -596,24 +654,30 @@ double get_tod_steering()
 
 /*-------------------------------------------------------------------*/
 
-void set_tod_epoch(const S64 epoch)
+void set_tod_epoch( const S64 epoch )
 {
-    obtain_lock(&sysblk.todlock);
-    csr_reset();
-    tod_epoch = epoch;
-    release_lock(&sysblk.todlock);
-    adjust_tod_epoch_all(epoch);
+    obtain_lock( &sysblk.todlock );
+    {
+        csr_reset();
+        tod_epoch = epoch;
+    }
+    release_lock( &sysblk.todlock );
+
+    set_tod_epoch_all( tod_epoch );
 }
 
 /*-------------------------------------------------------------------*/
 
-void adjust_tod_epoch(const S64 epoch)
+void adjust_tod_epoch( const S64 adjustment )
 {
-    obtain_lock(&sysblk.todlock);
-    csr_reset();
-    tod_epoch += epoch;
-    release_lock(&sysblk.todlock);
-    adjust_tod_epoch_all(tod_epoch);
+    obtain_lock( &sysblk.todlock );
+    {
+        csr_reset();
+        tod_epoch += adjustment;
+    }
+    release_lock( &sysblk.todlock );
+
+    set_tod_epoch_all( tod_epoch );
 }
 
 /*-------------------------------------------------------------------*/
@@ -633,75 +697,87 @@ S64 get_tod_epoch()
 /*-------------------------------------------------------------------*/
 
 static
-void set_gross_steering_rate(const S32 gsr)
+void set_gross_steering_rate( const S32 gsr )
 {
-    obtain_lock(&sysblk.todlock);
-    prepare_new_episode();
-    episode_new.gross_s_rate = gsr;
-    release_lock(&sysblk.todlock);
-}
-
-/*-------------------------------------------------------------------*/
-
-static
-void set_fine_steering_rate(const S32 fsr)
-{
-    obtain_lock(&sysblk.todlock);
-    prepare_new_episode();
-    episode_new.fine_s_rate = fsr;
-    release_lock(&sysblk.todlock);
-}
-
-/*-------------------------------------------------------------------*/
-
-static
-void set_tod_offset(const S64 offset)
-{
-    obtain_lock(&sysblk.todlock);
-    prepare_new_episode();
-    episode_new.base_offset = offset;
-    release_lock(&sysblk.todlock);
-}
-
-/*-------------------------------------------------------------------*/
-
-static
-void adjust_tod_offset(const S64 offset)
-{
-    obtain_lock(&sysblk.todlock);
-    prepare_new_episode();
-    episode_new.base_offset = episode_old.base_offset + offset;
-    release_lock(&sysblk.todlock);
-}
-
-/*-------------------------------------------------------------------*/
-/* The CPU timer is internally kept as an offset to the hw_clock()
- * the cpu timer counts down as the clock approaches the timer epoch
- *
- * To be in agreement with reporting of time in association with real
- * diagnose code x'204' for partition management and resource reporting,
- * only user time is considered as CPU time used. System time is
- * considered to be overhead time of the system (partition overhead or
- * management time).
- */
-U64 thread_cputime_us(const REGS *regs)
-{
-    U64 result;
-    int             rc = -1;
-    struct timespec cputime;
-
-    if (sysblk.cpuclockid[regs->cpuad])
+    obtain_lock( &sysblk.todlock );
     {
-        rc = clock_gettime(sysblk.cpuclockid[regs->cpuad], &cputime);
+        prepare_new_episode();
+        episode_new.gross_s_rate = gsr;
     }
-    result = (likely(rc == 0)) ? timespec2usecs(&cputime) : ETOD_high64_to_usecs(host_tod());
+    release_lock( &sysblk.todlock );
+}
 
+/*-------------------------------------------------------------------*/
+
+static
+void set_fine_steering_rate( const S32 fsr )
+{
+    obtain_lock( &sysblk.todlock );
+    {
+        prepare_new_episode();
+        episode_new.fine_s_rate = fsr;
+    }
+    release_lock( &sysblk.todlock );
+}
+
+/*-------------------------------------------------------------------*/
+
+static
+void set_tod_offset( const S64 offset )
+{
+    obtain_lock( &sysblk.todlock );
+    {
+        prepare_new_episode();
+        episode_new.base_offset = offset;
+    }
+    release_lock( &sysblk.todlock );
+}
+
+/*-------------------------------------------------------------------*/
+
+static
+void adjust_tod_offset( const S64 offset )
+{
+    obtain_lock( &sysblk.todlock );
+    {
+        prepare_new_episode();
+        episode_new.base_offset = episode_old.base_offset + offset;
+    }
+    release_lock( &sysblk.todlock );
+}
+
+/*-------------------------------------------------------------------*/
+/*                      thread_cputime_us                            */
+/*-------------------------------------------------------------------*/
+/* The CPU timer is internally kept as an offset to the hw_clock().  */
+/* The cpu timer counts down as the clock approaches the timer epoch.*/
+/*                                                                   */
+/* To be in agreement with reporting of time in association with     */
+/* real diagnose code x'204' for partition management and resource   */
+/* reporting, only "user" time is considered as CPU time used.       */
+/*                                                                   */
+/* System time is considered to be overhead time of the system       */
+/* (partition overhead or management time).                          */
+/*-------------------------------------------------------------------*/
+
+U64 thread_cputime_us( const REGS* regs )
+{
+    U64              result;
+    int              rc = -1;
+    struct timespec  cputime;
+
+    if (sysblk.cpuclockid[ regs->cpuad ])
+    {
+        rc = clock_gettime( sysblk.cpuclockid[ regs->cpuad ], &cputime );
+    }
+    result = (likely(rc == 0)) ? timespec2usecs( &cputime )
+                               : ETOD_high64_to_usecs( host_tod() );
     return (result);
 }
 
 /*-------------------------------------------------------------------*/
 
-void set_cpu_timer(REGS *regs, const S64 timer)
+void set_cpu_timer( REGS* regs, const S64 timer )
 {
     U64 new_epoch_us = (sysblk.lparmode && !WAITSTATE( &regs->psw )) ?
         thread_cputime_us( regs ) : (U64) ETOD_high64_to_usecs( host_tod() );
@@ -713,22 +789,22 @@ void set_cpu_timer(REGS *regs, const S64 timer)
         regs->bcputime  = new_epoch_us;
     }
 
-    regs->cpu_timer = TOD_high64_to_ETOD_high56(timer) + hw_clock();
+    regs->cpu_timer = TOD_high64_to_ETOD_high56( timer ) + hw_clock();
 }
 
 /*-------------------------------------------------------------------*/
 
-S64 get_cpu_timer(REGS *regs)
+S64 get_cpu_timer( REGS* regs )
 {
 S64 timer;
-    timer = (S64)ETOD_high64_to_TOD_high56(regs->cpu_timer - hw_clock());
+    timer = (S64)ETOD_high64_to_TOD_high56( regs->cpu_timer - hw_clock() );
     return timer;
 }
 
 /*-------------------------------------------------------------------*/
 
 DLL_EXPORT
-TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
+TOD etod_clock( REGS* regs, ETOD* ETOD, ETOD_format format )
 {
     /* STORE CLOCK and STORE CLOCK EXTENDED values must be in ascending
      * order for comparison. Consequently, swap delays for a subsequent
@@ -842,10 +918,10 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 
 /*-------------------------------------------------------------------*/
 
-TOD get_tod_clock (REGS* regs)
+TOD get_tod_clock( REGS* regs )
 {
     ETOD    ETOD;
-    return ( etod_clock(regs, &ETOD, ETOD_fast) );
+    return etod_clock( regs, &ETOD, ETOD_fast );
 }
 
 /*-------------------------------------------------------------------*/
@@ -854,14 +930,10 @@ TOD get_tod_clock (REGS* regs)
 /*
  *  Algorithm:
  *
- *    if year modulo 400 is 0 then
- *       is_leap_year
- *    else if year modulo 100 is 0 then
- *       not_leap_year
- *    else if year modulo 4 is 0 then
- *       is_leap_year
- *    else
- *       not_leap_year
+ *         if year modulo 400 is 0 then   is_leap_year
+ *    else if year modulo 100 is 0 then  not_leap_year
+ *    else if year modulo   4 is 0 then   is_leap_year
+ *    else                               not_leap_year
  *
  *
  *  Notes and Restrictions:
@@ -905,24 +977,26 @@ static INLINE bool is_leapyear( const unsigned int year )
 /*-------------------------------------------------------------------*/
 
 static INLINE
-S64 lyear_adjust(const int epoch)
+S64 lyear_adjust( const int epoch )
 {
 int year, leapyear;
 TOD tod = hw_clock();
 
-    if(tod >= TOD_YEAR)
+    if (tod >= TOD_YEAR)
     {
         tod -= TOD_YEAR;
         year = (tod / TOD_4YEARS * 4) + 1;
         tod %= TOD_4YEARS;
-        if((leapyear = tod / TOD_YEAR) == 4)
+
+        if ((leapyear = tod / TOD_YEAR) == 4)
             year--;
+
         year += leapyear;
     }
     else
        year = 0;
 
-    if(epoch > 0)
+    if (epoch > 0)
         return ( ((!is_leapyear(year)) && (((year % 4) - (epoch % 4)) <= 0)) ? -TOD_DAY : 0 );
     else
         return ( ((is_leapyear(year) && (-epoch % 4) != 0) || ((year % 4) + (-epoch % 4) > 4)) ? TOD_DAY : 0 );
@@ -958,13 +1032,12 @@ S64 ly1960;
 /*-------------------------------------------------------------------*/
 /* epoch     1900|1960                                               */
 /*-------------------------------------------------------------------*/
-int configure_epoch(int epoch)
+int configure_epoch( int epoch )
 {
-    if(epoch != 1900 && epoch != 1960)
+    if (epoch != 1900 && epoch != 1960)
         return -1;
 
     default_epoch = epoch;
-
     configure_time();
 
     return 0;
@@ -973,9 +1046,9 @@ int configure_epoch(int epoch)
 /*-------------------------------------------------------------------*/
 /* yroffset  +|-142                                                  */
 /*-------------------------------------------------------------------*/
-int configure_yroffset(int yroffset)
+int configure_yroffset( int yroffset )
 {
-    if(yroffset < -142 || yroffset > 142)
+    if (yroffset < -142 || yroffset > 142)
         return -1;
 
     default_yroffset = yroffset;
@@ -994,14 +1067,13 @@ int configure_tzoffset(int tzoffset)
         return -1;
 
     default_tzoffset = tzoffset;
-
     configure_time();
 
     return 0;
 }
 
 /*-------------------------------------------------------------------*/
-/* Query current tzoffset value for reporting                        */
+/*        Query current tzoffset value for reporting                 */
 /*-------------------------------------------------------------------*/
 int query_tzoffset()
 {
@@ -1009,15 +1081,14 @@ int query_tzoffset()
 }
 
 /*-------------------------------------------------------------------*/
-/* Update TOD clock                                                  */
-/*                                                                   */
-/* This function updates the TOD clock.                              */
+/*                      update_tod_clock                             */
+/*-------------------------------------------------------------------*/
 /*                                                                   */
 /* This function is called by timer_thread and by cpu_thread         */
 /* instructions that manipulate any of the timer related entities    */
 /* (clock comparator, cpu timer and interval timer).                 */
 /*                                                                   */
-/* Internal function `check_timer_event' is called which will signal */
+/* Internal function 'check_timer_event' is called which will signal */
 /* any timer related interrupts to the appropriate cpu_thread.       */
 /*                                                                   */
 /* Callers *must* own the todlock and *must not* own the intlock.    */
@@ -1030,21 +1101,21 @@ TOD update_tod_clock()
 {
     TOD new_clock;
 
-    obtain_lock(&sysblk.todlock);
+    obtain_lock( &sysblk.todlock );
+    {
+        new_clock = hw_clock_locked();
 
-    new_clock = hw_clock_locked();
+        /* If we are in the old episode, and the new episode has arrived
+           then we must take action to start the new episode */
+        if (episode_current == &episode_old)
+            start_new_episode();
 
-    /* If we are in the old episode, and the new episode has arrived
-       then we must take action to start the new episode */
-    if (episode_current == &episode_old)
-        start_new_episode();
-
-    /* Set the clock to the new updated value with offset applied */
-    new_clock += episode_current->base_offset;
-    tod_value.high = new_clock;
-    tod_value.low  = hw_tod.low;
-
-    release_lock(&sysblk.todlock);
+        /* Set the clock to the new updated value with offset applied */
+        new_clock += episode_current->base_offset;
+        tod_value.high = new_clock;
+        tod_value.low  = hw_tod.low;
+    }
+    release_lock( &sysblk.todlock );
 
     /* Update the timers and check if either a clock related event has
        become pending */
@@ -1070,7 +1141,7 @@ TOD update_tod_clock()
 #if defined( _FEATURE_ECPSVM )
 
 static INLINE
-S32 get_ecps_vtimer(const REGS *regs)
+S32 get_ecps_vtimer( const REGS* regs )
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
 }
@@ -1078,7 +1149,7 @@ S32 get_ecps_vtimer(const REGS *regs)
 /*-------------------------------------------------------------------*/
 
 static INLINE
-void set_ecps_vtimer(REGS *regs, const S32 vtimer)
+void set_ecps_vtimer( REGS* regs, const S32 vtimer )
 {
     regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
     regs->ecps_oldtmr = vtimer;
@@ -1089,14 +1160,14 @@ void set_ecps_vtimer(REGS *regs, const S32 vtimer)
 /*-------------------------------------------------------------------*/
 
 static INLINE
-S32 get_int_timer(const REGS *regs)
+S32 get_int_timer( const REGS* regs )
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
 
 /*-------------------------------------------------------------------*/
 
-void set_int_timer(REGS *regs, const S32 itimer)
+void set_int_timer( REGS* regs, const S32 itimer )
 {
     regs->int_timer = (U64)(hw_clock() + ITIMER_TO_TOD(itimer));
     regs->old_timer = itimer;
@@ -1104,29 +1175,31 @@ void set_int_timer(REGS *regs, const S32 itimer)
 
 /*-------------------------------------------------------------------*/
 
-int chk_int_timer(REGS *regs)
+int chk_int_timer( REGS* regs )
 {
 S32 itimer;
 int pending = 0;
 
-    itimer = get_int_timer(regs);
-    if(itimer < 0 && regs->old_timer >= 0)
+    itimer = get_int_timer( regs );
+    if (itimer < 0 && regs->old_timer >= 0)
     {
-        ON_IC_ITIMER(regs);
+        ON_IC_ITIMER( regs );
         pending = 1;
         regs->old_timer=itimer;
     }
-#if defined(_FEATURE_ECPSVM)
-    if(regs->ecps_vtmrpt)
+#if defined( _FEATURE_ECPSVM )
+
+    if (regs->ecps_vtmrpt)
     {
-        itimer = get_ecps_vtimer(regs);
-        if(itimer < 0 && regs->ecps_oldtmr >= 0)
+        itimer = get_ecps_vtimer( regs );
+
+        if (itimer < 0 && regs->ecps_oldtmr >= 0)
         {
-            ON_IC_ECPSVTIMER(regs);
+            ON_IC_ECPSVTIMER( regs );
             pending += 2;
         }
     }
-#endif /* defined( _FEATURE_ECPSVM ) */
+#endif
 
     return pending;
 }

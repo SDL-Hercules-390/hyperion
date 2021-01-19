@@ -2474,17 +2474,28 @@ struct SYSIBVMDB                        /* Virtual Machine Desc Block*/
 typedef struct SYSIBVMDB SYSIBVMDB;
 
 /*-------------------------------------------------------------------*/
+/*           PTFF  -- Perform Timing Facility Function               */
+/*-------------------------------------------------------------------*/
 
 #define PTFF_GPR0_RESV          0x00000080
 #define PTFF_GPR0_FC_MASK       0x0000007F
-#define PTFF_GPR0_FC_QAF        0x00
-#define PTFF_GPR0_FC_QTO        0x01
-#define PTFF_GPR0_FC_QSI        0x02
-#define PTFF_GPR0_FC_QPT        0x03
-#define PTFF_GPR0_FC_ATO        0x40
-#define PTFF_GPR0_FC_STO        0x41
-#define PTFF_GPR0_FC_SFS        0x42
-#define PTFF_GPR0_FC_SGS        0x43
+
+#define PTFF_GPR0_FC_QAF        0   /* Query Available Functions     */
+#define PTFF_GPR0_FC_QTO        1   /* Query TOD Offset              */
+#define PTFF_GPR0_FC_QSI        2   /* Query Steering Information    */
+#define PTFF_GPR0_FC_QPT        3   /* Query Physical Clock          */
+#define PTFF_GPR0_FC_QUI        4   /* Query UTC Information         */
+#define PTFF_GPR0_FC_QTOU       5   /* Query TOD Offset User         */
+#define PTFF_GPR0_FC_QSIE      10   /* Query Steering Info Extended  */
+#define PTFF_GPR0_FC_QTOUE     13   /* Query TOD Offset User Extended*/
+
+#define PTFF_GPR0_FC_ATO       64   /* Adjust TOD Offset             */
+#define PTFF_GPR0_FC_STO       65   /* Set TOD Offset                */
+#define PTFF_GPR0_FC_SFS       66   /* Set Fine-Steering Rate        */
+#define PTFF_GPR0_FC_SGS       67   /* Set Gross-Steering Rate       */
+#define PTFF_GPR0_FC_STOU      69   /* Set TOD Offset User           */
+#define PTFF_GPR0_FC_STOE      73   /* Set TOD Offset Extended       */
+#define PTFF_GPR0_FC_STOUE     77   /* Set TOD Offset User Extended  */
 
 /*-------------------------------------------------------------------*/
 /*                          PTFFQAF                                  */
