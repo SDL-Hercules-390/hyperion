@@ -152,6 +152,234 @@ static INLINE bool      is_leapyear( const unsigned int year );
 static INLINE S64       lyear_adjust( const int epoch );
 
 /*-------------------------------------------------------------------*/
+
+#if defined( _FEATURE_INTERVAL_TIMER )
+  #if defined( _FEATURE_ECPSVM )
+
+    static INLINE S32   ecps_vtimer( const REGS* regs );
+    static INLINE void  set_ecps_vtimer( REGS* regs, const S32 vtimer );
+
+  #endif
+
+  static INLINE S32   int_timer( const REGS* regs );
+                void  set_int_timer( REGS* regs, const S32 itimer );
+                int   chk_int_timer( REGS* regs );
+
+#endif // defined( _FEATURE_INTERVAL_TIMER )
+#endif // COMPILE_THIS_ONLY_ONCE
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+#if defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY )
+
+void ARCH_DEP(set_gross_s_rate) (REGS *regs)
+{
+S32 gsr;
+    gsr = ARCH_DEP(vfetch4) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    set_gross_steering_rate(gsr);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(set_fine_s_rate) (REGS *regs)
+{
+S32 fsr;
+    fsr = ARCH_DEP(vfetch4) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    set_fine_steering_rate(fsr);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(set_tod_offset) (REGS *regs)
+{
+S64 offset;
+    offset = ARCH_DEP(vfetch8) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    set_tod_offset(offset >> 8);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(adjust_tod_offset) (REGS *regs)
+{
+S64 offset;
+    offset = ARCH_DEP(vfetch8) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+
+    adjust_tod_offset(offset >> 8);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(query_physical_clock) (REGS *regs)
+{
+    ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(query_steering_information) (REGS *regs)
+{
+PTFFQSI qsi;
+    obtain_lock(&sysblk.todlock);
+    STORE_DW(qsi.physclk, universal_clock() << 8);
+    STORE_DW(qsi.oldestart, episode_old.start_time << 8);
+    STORE_DW(qsi.oldebase, episode_old.base_offset << 8);
+    STORE_FW(qsi.oldfsr, episode_old.fine_s_rate );
+    STORE_FW(qsi.oldgsr, episode_old.gross_s_rate );
+    STORE_DW(qsi.newestart, episode_new.start_time << 8);
+    STORE_DW(qsi.newebase, episode_new.base_offset << 8);
+    STORE_FW(qsi.newfsr, episode_new.fine_s_rate );
+    STORE_FW(qsi.newgsr, episode_new.gross_s_rate );
+    release_lock(&sysblk.todlock);
+
+    ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(query_tod_offset) (REGS *regs)
+{
+PTFFQTO qto;
+    obtain_lock(&sysblk.todlock);
+    STORE_DW(qto.todoff, (hw_clock_locked() - universal_tod.high) << 8);
+    STORE_DW(qto.physclk, (universal_tod.high << 8) | (universal_tod.low >> 56));
+    STORE_DW(qto.ltodoff, episode_current->base_offset << 8);
+    STORE_DW(qto.todepoch, regs->tod_epoch << 8);
+    release_lock(&sysblk.todlock);
+
+    ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP(query_available_functions) (REGS *regs)
+{
+PTFFQAF qaf;
+    STORE_FW(qaf.sb[0] , 0xF0000000);        /* Functions 0x00..0x1F */
+    STORE_FW(qaf.sb[1] , 0x00000000);        /* Functions 0x20..0x3F */
+    STORE_FW(qaf.sb[2] , 0xF0000000);        /* Functions 0x40..0x5F */
+    STORE_FW(qaf.sb[3] , 0x00000000);        /* Functions 0x60..0x7F */
+
+    ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+}
+#endif /* defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_INTERVAL_TIMER )
+
+void ARCH_DEP( store_int_timer_locked )( REGS* regs )
+{
+    S32 itimer;
+    S32 vtimer=0;
+
+    itimer = int_timer( regs );
+    STORE_FW( regs->psa->inttimer, itimer );
+
+#if defined( FEATURE_ECPSVM )
+
+    if (regs->ecps_vtmrpt)
+    {
+        vtimer = ecps_vtimer( regs );
+        STORE_FW( regs->ecps_vtmrpt, vtimer );
+    }
+#endif
+
+    chk_int_timer( regs );
+
+#if defined( FEATURE_ECPSVM )
+
+    if (regs->ecps_vtmrpt)
+        regs->ecps_oldtmr = vtimer;
+
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT
+void ARCH_DEP( store_int_timer )( REGS* regs )
+{
+    OBTAIN_INTLOCK( HOSTREGS ? regs : NULL );
+    {
+        ARCH_DEP( store_int_timer_locked )( regs );
+    }
+    RELEASE_INTLOCK( HOSTREGS ? regs : NULL );
+}
+
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT
+void ARCH_DEP( fetch_int_timer )( REGS* regs )
+{
+    S32 itimer;
+
+    FETCH_FW( itimer, regs->psa->inttimer );
+
+    OBTAIN_INTLOCK( HOSTREGS ? regs : NULL );
+    {
+        set_int_timer( regs, itimer );
+
+#if defined( FEATURE_ECPSVM )
+        if (regs->ecps_vtmrpt)
+        {
+            FETCH_FW( itimer, regs->ecps_vtmrpt );
+            set_ecps_vtimer( regs, itimer );
+        }
+#endif
+    }
+    RELEASE_INTLOCK( HOSTREGS ? regs : NULL );
+}
+
+#endif /* defined( FEATURE_INTERVAL_TIMER ) */
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+#if !defined( _GEN_ARCH )
+
+  #if defined(              _ARCH_NUM_1 )
+    #define   _GEN_ARCH     _ARCH_NUM_1
+    #include "clock.c"
+  #endif
+
+  #if defined(              _ARCH_NUM_2 )
+    #undef    _GEN_ARCH
+    #define   _GEN_ARCH     _ARCH_NUM_2
+    #include "clock.c"
+  #endif
+
+/*-------------------------------------------------------------------*/
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
 /* host_ETOD - Primary high-resolution clock fetch and conversion    */
 /*-------------------------------------------------------------------*/
 
@@ -621,73 +849,6 @@ TOD get_tod_clock (REGS* regs)
 }
 
 /*-------------------------------------------------------------------*/
-#if defined( _FEATURE_INTERVAL_TIMER )
-#if defined( _FEATURE_ECPSVM )
-
-static INLINE
-S32 ecps_vtimer(const REGS *regs)
-{
-    return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
-}
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-void set_ecps_vtimer(REGS *regs, const S32 vtimer)
-{
-    regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
-    regs->ecps_oldtmr = vtimer;
-}
-
-#endif /* defined( _FEATURE_ECPSVM ) */
-
-/*-------------------------------------------------------------------*/
-
-static INLINE
-S32 int_timer(const REGS *regs)
-{
-    return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
-}
-
-/*-------------------------------------------------------------------*/
-
-void set_int_timer(REGS *regs, const S32 itimer)
-{
-    regs->int_timer = (U64)(hw_clock() + ITIMER_TO_TOD(itimer));
-    regs->old_timer = itimer;
-}
-
-/*-------------------------------------------------------------------*/
-
-int chk_int_timer(REGS *regs)
-{
-S32 itimer;
-int pending = 0;
-
-    itimer = int_timer(regs);
-    if(itimer < 0 && regs->old_timer >= 0)
-    {
-        ON_IC_ITIMER(regs);
-        pending = 1;
-        regs->old_timer=itimer;
-    }
-#if defined(_FEATURE_ECPSVM)
-    if(regs->ecps_vtmrpt)
-    {
-        itimer = ecps_vtimer(regs);
-        if(itimer < 0 && regs->ecps_oldtmr >= 0)
-        {
-            ON_IC_ECPSVTIMER(regs);
-            pending += 2;
-        }
-    }
-#endif /* defined( _FEATURE_ECPSVM ) */
-
-    return pending;
-}
-#endif /* defined( _FEATURE_INTERVAL_TIMER ) */
-
-/*-------------------------------------------------------------------*/
 /*                          is_leapyear                              */
 /*-------------------------------------------------------------------*/
 /*
@@ -892,6 +1053,85 @@ TOD update_tod_clock()
     return new_clock;
 }
 
+//-------------------------------------------------------------------
+//                      _FEATURE_XXX code
+//-------------------------------------------------------------------
+// Place any _FEATURE_XXX depdendent functions (WITH the underscore)
+// here. You may need to define such functions whenever one or more
+// build architectures has a given FEATURE_XXX (WITHOUT underscore)
+// defined for it. The underscore means AT LEAST ONE of the build
+// architectures #defined that feature. (See featchk.h) You must NOT
+// use any #ifdef FEATURE_XXX here. Test for ONLY for _FEATURE_XXX.
+// The functions in this area are compiled ONCE (only ONE time) and
+// ONLY one time but are always compiled LAST after everything else.
+//-------------------------------------------------------------------
+
+#if defined( _FEATURE_INTERVAL_TIMER )
+#if defined( _FEATURE_ECPSVM )
+
+static INLINE
+S32 ecps_vtimer(const REGS *regs)
+{
+    return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
+}
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+void set_ecps_vtimer(REGS *regs, const S32 vtimer)
+{
+    regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
+    regs->ecps_oldtmr = vtimer;
+}
+
+#endif /* defined( _FEATURE_ECPSVM ) */
+
+/*-------------------------------------------------------------------*/
+
+static INLINE
+S32 int_timer(const REGS *regs)
+{
+    return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
+}
+
+/*-------------------------------------------------------------------*/
+
+void set_int_timer(REGS *regs, const S32 itimer)
+{
+    regs->int_timer = (U64)(hw_clock() + ITIMER_TO_TOD(itimer));
+    regs->old_timer = itimer;
+}
+
+/*-------------------------------------------------------------------*/
+
+int chk_int_timer(REGS *regs)
+{
+S32 itimer;
+int pending = 0;
+
+    itimer = int_timer(regs);
+    if(itimer < 0 && regs->old_timer >= 0)
+    {
+        ON_IC_ITIMER(regs);
+        pending = 1;
+        regs->old_timer=itimer;
+    }
+#if defined(_FEATURE_ECPSVM)
+    if(regs->ecps_vtmrpt)
+    {
+        itimer = ecps_vtimer(regs);
+        if(itimer < 0 && regs->ecps_oldtmr >= 0)
+        {
+            ON_IC_ECPSVTIMER(regs);
+            pending += 2;
+        }
+    }
+#endif /* defined( _FEATURE_ECPSVM ) */
+
+    return pending;
+}
+#endif /* defined( _FEATURE_INTERVAL_TIMER ) */
+
 /*-------------------------------------------------------------------*/
 /*              Hercules Suspend/Resume support                      */
 /*-------------------------------------------------------------------*/
@@ -1011,190 +1251,5 @@ int clock_hresume(void *file)
     } while ((key & SR_SYS_MASK) == SR_SYS_CLOCK);
     return 0;
 }
-
-#endif // COMPILE_THIS_ONLY_ONCE
-
-/*-------------------------------------------------------------------*/
-
-#if defined( FEATURE_INTERVAL_TIMER )
-
-void ARCH_DEP( store_int_timer_locked )( REGS* regs )
-{
-    S32 itimer;
-    S32 vtimer=0;
-
-    itimer = int_timer( regs );
-    STORE_FW( regs->psa->inttimer, itimer );
-
-#if defined( FEATURE_ECPSVM )
-
-    if (regs->ecps_vtmrpt)
-    {
-        vtimer = ecps_vtimer( regs );
-        STORE_FW( regs->ecps_vtmrpt, vtimer );
-    }
-#endif
-
-    chk_int_timer( regs );
-
-#if defined( FEATURE_ECPSVM )
-
-    if (regs->ecps_vtmrpt)
-        regs->ecps_oldtmr = vtimer;
-
-#endif
-}
-
-/*-------------------------------------------------------------------*/
-
-DLL_EXPORT
-void ARCH_DEP( store_int_timer )( REGS* regs )
-{
-    OBTAIN_INTLOCK( HOSTREGS ? regs : NULL );
-    {
-        ARCH_DEP( store_int_timer_locked )( regs );
-    }
-    RELEASE_INTLOCK( HOSTREGS ? regs : NULL );
-}
-
-/*-------------------------------------------------------------------*/
-
-DLL_EXPORT
-void ARCH_DEP( fetch_int_timer )( REGS* regs )
-{
-    S32 itimer;
-
-    FETCH_FW( itimer, regs->psa->inttimer );
-
-    OBTAIN_INTLOCK( HOSTREGS ? regs : NULL );
-    {
-        set_int_timer( regs, itimer );
-
-#if defined( FEATURE_ECPSVM )
-        if (regs->ecps_vtmrpt)
-        {
-            FETCH_FW( itimer, regs->ecps_vtmrpt );
-            set_ecps_vtimer( regs, itimer );
-        }
-#endif
-    }
-    RELEASE_INTLOCK( HOSTREGS ? regs : NULL );
-}
-
-#endif /* defined( FEATURE_INTERVAL_TIMER ) */
-
-/*-------------------------------------------------------------------*/
-
-#if defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY )
-
-void ARCH_DEP(set_gross_s_rate) (REGS *regs)
-{
-S32 gsr;
-    gsr = ARCH_DEP(vfetch4) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-
-    set_gross_steering_rate(gsr);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(set_fine_s_rate) (REGS *regs)
-{
-S32 fsr;
-    fsr = ARCH_DEP(vfetch4) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-
-    set_fine_steering_rate(fsr);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(set_tod_offset) (REGS *regs)
-{
-S64 offset;
-    offset = ARCH_DEP(vfetch8) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-
-    set_tod_offset(offset >> 8);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(adjust_tod_offset) (REGS *regs)
-{
-S64 offset;
-    offset = ARCH_DEP(vfetch8) (regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-
-    adjust_tod_offset(offset >> 8);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(query_physical_clock) (REGS *regs)
-{
-    ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(query_steering_information) (REGS *regs)
-{
-PTFFQSI qsi;
-    obtain_lock(&sysblk.todlock);
-    STORE_DW(qsi.physclk, universal_clock() << 8);
-    STORE_DW(qsi.oldestart, episode_old.start_time << 8);
-    STORE_DW(qsi.oldebase, episode_old.base_offset << 8);
-    STORE_FW(qsi.oldfsr, episode_old.fine_s_rate );
-    STORE_FW(qsi.oldgsr, episode_old.gross_s_rate );
-    STORE_DW(qsi.newestart, episode_new.start_time << 8);
-    STORE_DW(qsi.newebase, episode_new.base_offset << 8);
-    STORE_FW(qsi.newfsr, episode_new.fine_s_rate );
-    STORE_FW(qsi.newgsr, episode_new.gross_s_rate );
-    release_lock(&sysblk.todlock);
-
-    ARCH_DEP(vstorec) (&qsi, sizeof(qsi)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(query_tod_offset) (REGS *regs)
-{
-PTFFQTO qto;
-    obtain_lock(&sysblk.todlock);
-    STORE_DW(qto.todoff, (hw_clock_locked() - universal_tod.high) << 8);
-    STORE_DW(qto.physclk, (universal_tod.high << 8) | (universal_tod.low >> 56));
-    STORE_DW(qto.ltodoff, episode_current->base_offset << 8);
-    STORE_DW(qto.todepoch, regs->tod_epoch << 8);
-    release_lock(&sysblk.todlock);
-
-    ARCH_DEP(vstorec) (&qto, sizeof(qto)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(query_available_functions) (REGS *regs)
-{
-PTFFQAF qaf;
-    STORE_FW(qaf.sb[0] , 0xF0000000);        /* Functions 0x00..0x1F */
-    STORE_FW(qaf.sb[1] , 0x00000000);        /* Functions 0x20..0x3F */
-    STORE_FW(qaf.sb[2] , 0xF0000000);        /* Functions 0x40..0x5F */
-    STORE_FW(qaf.sb[3] , 0x00000000);        /* Functions 0x60..0x7F */
-
-    ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
-}
-#endif /* defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY ) */
-
-/*-------------------------------------------------------------------*/
-
-#if !defined(_GEN_ARCH)
-
-#if defined(_ARCH_NUM_1)
- #define  _GEN_ARCH _ARCH_NUM_1
- #include "clock.c"
-#endif
-
-#if defined(_ARCH_NUM_2)
- #undef   _GEN_ARCH
- #define  _GEN_ARCH _ARCH_NUM_2
- #include "clock.c"
-#endif
-
 
 #endif /*!defined(_GEN_ARCH)*/
