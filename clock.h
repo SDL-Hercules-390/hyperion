@@ -496,9 +496,9 @@ TOD ETOD2TOD (const ETOD ETOD)
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
 /*-------------------------------------------------------------------*/
 
-CLOCK_DLL_IMPORT    void ARCH_DEP(store_int_timer) (REGS *);
-extern              void ARCH_DEP(store_int_timer_nolock) (REGS *);
-CLOCK_DLL_IMPORT    void ARCH_DEP(fetch_int_timer) (REGS *);
+CLOCK_DLL_IMPORT    void ARCH_DEP( fetch_int_timer )       ( REGS* );
+CLOCK_DLL_IMPORT    void ARCH_DEP( store_int_timer )       ( REGS* );
+extern              void ARCH_DEP( store_int_timer_locked )( REGS* );
 
 extern              void ARCH_DEP(set_gross_s_rate) (REGS *);
 extern              void ARCH_DEP(set_fine_s_rate) (REGS *);

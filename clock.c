@@ -262,7 +262,8 @@ void set_tod_steering(const double steering)
 /*-------------------------------------------------------------------*/
 /* Start a new episode */
 
-static INLINE void start_new_episode()
+static INLINE
+void start_new_episode()
 {
     hw_offset = hw_tod.high - universal_tod.high;
     hw_episode = hw_tod.high;
@@ -276,7 +277,8 @@ static INLINE void start_new_episode()
 /*-------------------------------------------------------------------*/
 /* Prepare for a new episode */
 
-static INLINE void prepare_new_episode()
+static INLINE
+void prepare_new_episode()
 {
     if(episode_current == &episode_new)
     {
@@ -567,14 +569,16 @@ TOD tod_clock (REGS* regs)
 #if defined( _FEATURE_INTERVAL_TIMER )
 #if defined( _FEATURE_ECPSVM )
 
-static INLINE S32 ecps_vtimer(const REGS *regs)
+static INLINE
+S32 ecps_vtimer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->ecps_vtimer - hw_clock()));
 }
 
 /*-------------------------------------------------------------------*/
 
-static INLINE void set_ecps_vtimer(REGS *regs, const S32 vtimer)
+static INLINE
+void set_ecps_vtimer(REGS *regs, const S32 vtimer)
 {
     regs->ecps_vtimer = (U64)(hw_clock() + ITIMER_TO_TOD(vtimer));
     regs->ecps_oldtmr = vtimer;
@@ -584,7 +588,8 @@ static INLINE void set_ecps_vtimer(REGS *regs, const S32 vtimer)
 
 /*-------------------------------------------------------------------*/
 
-static INLINE S32 int_timer(const REGS *regs)
+static INLINE
+S32 int_timer(const REGS *regs)
 {
     return (S32)TOD_TO_ITIMER((S64)(regs->int_timer - hw_clock()));
 }
@@ -960,79 +965,75 @@ int clock_hresume(void *file)
     return 0;
 }
 
-/*-------------------------------------------------------------------*/
-
 #endif // COMPILE_THIS_ONLY_ONCE
 
+/*-------------------------------------------------------------------*/
+
 #if defined( FEATURE_INTERVAL_TIMER )
-static INLINE void ARCH_DEP(_store_int_timer_2) (REGS *regs,int getlock)
+
+void ARCH_DEP( store_int_timer_locked )( REGS* regs )
 {
-S32 itimer;
-S32 vtimer=0;
+    S32 itimer;
+    S32 vtimer=0;
 
-    if(getlock)
-    {
-        OBTAIN_INTLOCK(HOSTREGS?regs:NULL);
-    }
-    itimer=int_timer(regs);
-    STORE_FW(regs->psa->inttimer, itimer);
-#if defined(FEATURE_ECPSVM)
-    if(regs->ecps_vtmrpt)
-    {
-        vtimer=ecps_vtimer(regs);
-        // MODRWP
-        // STORE_FW(regs->ecps_vtmrpt, itimer);
-        STORE_FW(regs->ecps_vtmrpt, vtimer);
-    }
-#endif /*defined(FEATURE_ECPSVM)*/
-
-    chk_int_timer(regs);
-#if defined(FEATURE_ECPSVM)
-    if(regs->ecps_vtmrpt)
-    {
-        regs->ecps_oldtmr = vtimer;
-    }
-#endif /*defined(FEATURE_ECPSVM)*/
-
-    if(getlock)
-    {
-        RELEASE_INTLOCK(HOSTREGS?regs:NULL);
-    }
-}
-
-/*-------------------------------------------------------------------*/
-
-DLL_EXPORT void ARCH_DEP(store_int_timer) (REGS *regs)
-{
-    ARCH_DEP(_store_int_timer_2) (regs,1);
-}
-
-/*-------------------------------------------------------------------*/
-
-void ARCH_DEP(store_int_timer_nolock) (REGS *regs)
-{
-    ARCH_DEP(_store_int_timer_2) (regs,0);
-}
-
-/*-------------------------------------------------------------------*/
-
-DLL_EXPORT void ARCH_DEP(fetch_int_timer) (REGS *regs)
-{
-S32 itimer;
-    FETCH_FW(itimer, regs->psa->inttimer);
-    OBTAIN_INTLOCK(HOSTREGS?regs:NULL);
-    set_int_timer(regs, itimer);
+    itimer = int_timer( regs );
+    STORE_FW( regs->psa->inttimer, itimer );
 
 #if defined( FEATURE_ECPSVM )
-    if(regs->ecps_vtmrpt)
+
+    if (regs->ecps_vtmrpt)
     {
-        FETCH_FW(itimer, regs->ecps_vtmrpt);
-        set_ecps_vtimer(regs, itimer);
+        vtimer = ecps_vtimer( regs );
+        STORE_FW( regs->ecps_vtmrpt, vtimer );
     }
 #endif
 
-    RELEASE_INTLOCK(HOSTREGS?regs:NULL);
+    chk_int_timer( regs );
+
+#if defined( FEATURE_ECPSVM )
+
+    if (regs->ecps_vtmrpt)
+        regs->ecps_oldtmr = vtimer;
+
+#endif
 }
+
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT
+void ARCH_DEP( store_int_timer )( REGS* regs )
+{
+    OBTAIN_INTLOCK( HOSTREGS ? regs : NULL );
+    {
+        ARCH_DEP( store_int_timer_locked )( regs );
+    }
+    RELEASE_INTLOCK( HOSTREGS ? regs : NULL );
+}
+
+/*-------------------------------------------------------------------*/
+
+DLL_EXPORT
+void ARCH_DEP( fetch_int_timer )( REGS* regs )
+{
+    S32 itimer;
+
+    FETCH_FW( itimer, regs->psa->inttimer );
+
+    OBTAIN_INTLOCK( HOSTREGS ? regs : NULL );
+    {
+        set_int_timer( regs, itimer );
+
+#if defined( FEATURE_ECPSVM )
+        if (regs->ecps_vtmrpt)
+        {
+            FETCH_FW( itimer, regs->ecps_vtmrpt );
+            set_ecps_vtimer( regs, itimer );
+        }
+#endif
+    }
+    RELEASE_INTLOCK( HOSTREGS ? regs : NULL );
+}
+
 #endif /* defined( FEATURE_INTERVAL_TIMER ) */
 
 /*-------------------------------------------------------------------*/

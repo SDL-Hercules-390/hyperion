@@ -659,7 +659,7 @@ int i, rc = 0;                          /* Array subscript           */
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    ARCH_DEP(store_int_timer_nolock) (regs);
+    ARCH_DEP( store_int_timer_locked )( regs );
 #endif
 
    if(regs->host && GUESTREGS)

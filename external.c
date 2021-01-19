@@ -125,7 +125,7 @@ int     rc;
 
 #if defined(FEATURE_INTERVAL_TIMER)
     /* Ensure the interval timer is uptodate */
-    ARCH_DEP(store_int_timer_nolock) (regs);
+    ARCH_DEP( store_int_timer_locked )( regs );
 #endif
     RELEASE_INTLOCK(regs);
 
