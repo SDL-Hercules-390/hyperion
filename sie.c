@@ -1415,7 +1415,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     /* Save CPU timer  */
-    STORE_DW( STATEBK->cputimer, cpu_timer( GUESTREGS ));
+    STORE_DW( STATEBK->cputimer, get_cpu_timer( GUESTREGS ));
 
     /* Save clock comparator */
     STORE_DW( STATEBK->clockcomp, etod2tod( GUESTREGS->clkc ));

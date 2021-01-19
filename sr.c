@@ -254,7 +254,7 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_DXC, regs->dxc, sizeof(regs->dxc));
         SR_WRITE_VALUE(file, SR_CPU_MC, regs->MC_G, sizeof(regs->MC_G));
         SR_WRITE_VALUE(file, SR_CPU_EA, regs->EA_G, sizeof(regs->EA_G));
-        SR_WRITE_VALUE(file, SR_CPU_PTIMER, cpu_timer(regs), sizeof(S64));
+        SR_WRITE_VALUE(file, SR_CPU_PTIMER, get_cpu_timer(regs), sizeof(S64));
         SR_WRITE_VALUE(file, SR_CPU_CLKC, regs->clkc, sizeof(regs->clkc));
         SR_WRITE_VALUE(file, SR_CPU_CHANSET, regs->chanset, sizeof(regs->chanset));
         SR_WRITE_VALUE(file, SR_CPU_TODPR, regs->todpr, sizeof(regs->todpr));

@@ -511,8 +511,8 @@ extern              void ARCH_DEP(query_available_functions) (REGS *);
 
 CLOCK_DLL_IMPORT    TOD  etod_clock( REGS*, ETOD*,          /* Get extended TOD clock    */
                                      ETOD_format );
-extern              TOD  tod_clock(REGS *);                 /* Get TOD clock non-unique  */
-extern              S64  cpu_timer(REGS *);                 /* Retrieve CPU timer        */
+extern              TOD  get_tod_clock(REGS *);                 /* Get TOD clock non-unique  */
+extern              S64  get_cpu_timer(REGS *);             /* Retrieve CPU timer        */
 extern              void set_cpu_timer(REGS *, const S64);  /* Set CPU timer             */
 extern              void set_int_timer(REGS *, const S32);  /* Set interval timer        */
 extern              int  chk_int_timer(REGS *);             /* Check int_timer pending   */
@@ -547,7 +547,7 @@ extern              U64  thread_cputime_us(const REGS*);    /* Thread real CPU u
 //              Interval Timer, p. 7
 //
 
-#define CPU_TIMER(_regs)            (cpu_timer(_regs))
+#define CPU_TIMER(_regs)            (get_cpu_timer(_regs))
 #define ITIMER_TO_TOD(_units)       (((S64)(_units) * 625) / 3)
 #define TOD_TO_ITIMER(_units)       ((S32)(((S64)(_units) * 3) / 625))
 

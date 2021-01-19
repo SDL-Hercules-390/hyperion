@@ -459,7 +459,7 @@ VADR effective_addr1, effective_addr2; \
 
 #define STPT(_x) \
 { \
-    EVM_STD(cpu_timer(regs),_x); \
+    EVM_STD(get_cpu_timer(regs),_x); \
 }
 
 #define SPT(_x) \

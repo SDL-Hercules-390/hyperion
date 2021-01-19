@@ -281,7 +281,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
     /* External interrupt if TOD clock exceeds clock comparator */
     if (1
-        && tod_clock( regs ) > regs->clkc
+        && get_tod_clock( regs ) > regs->clkc
         && OPEN_IC_CLKC( regs )
     )
     {
@@ -548,7 +548,7 @@ PSA     *sspsa;                         /* -> Store status area      */
     sspsa = (void*)(ssreg->mainstor + aaddr);
 
     /* Store CPU timer in bytes 216-223 */
-    STORE_DW(sspsa->storeptmr, cpu_timer(ssreg));
+    STORE_DW(sspsa->storeptmr, get_cpu_timer(ssreg));
 
     /* Store clock comparator in bytes 224-231 */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )

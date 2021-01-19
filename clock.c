@@ -108,8 +108,8 @@ static        TOD       hw_adjust( TOD base_tod );
 static        TOD       hw_clock_locked();
 
               void      set_tod_clock( const U64 tod );
+              TOD       get_tod_clock( REGS* regs );
               TOD       update_tod_clock();
-              TOD       tod_clock( REGS* regs );
 DLL_EXPORT    TOD       etod_clock( REGS*, ETOD*, ETOD_format );
               ETOD*     host_ETOD( ETOD* );
 
@@ -135,10 +135,10 @@ static        U64       adjust_tod_epoch_all( const U64 epoch );
 
 /*-------------------------------------------------------------------*/
 
-              S64       cpu_timer( REGS* regs );
-              U64       thread_cputime_us( const REGS* regs );
+              S64       get_cpu_timer( REGS* regs );
               void      set_cpu_timer( REGS* regs, const S64 timer );
               void      update_cpu_timer();
+              U64       thread_cputime_us( const REGS* regs );
 
 /*-------------------------------------------------------------------*/
 
@@ -488,7 +488,7 @@ void set_cpu_timer(REGS *regs, const S64 timer)
 
 /*-------------------------------------------------------------------*/
 
-S64 cpu_timer(REGS *regs)
+S64 get_cpu_timer(REGS *regs)
 {
 S64 timer;
     timer = (S64)etod2tod(regs->cpu_timer - hw_clock());
@@ -612,7 +612,7 @@ TOD etod_clock(REGS *regs, ETOD* ETOD, ETOD_format format)
 
 /*-------------------------------------------------------------------*/
 
-TOD tod_clock (REGS* regs)
+TOD get_tod_clock (REGS* regs)
 {
     ETOD    ETOD;
     return ( etod_clock(regs, &ETOD, ETOD_fast) );

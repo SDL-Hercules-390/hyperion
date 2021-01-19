@@ -1794,7 +1794,7 @@ cpustate_stopping:
     /* This is where a stopped CPU will wait */
     if (unlikely(regs->cpustate == CPUSTATE_STOPPED))
     {
-        S64 saved_timer = cpu_timer(regs);
+        S64 saved_timer = get_cpu_timer(regs);
         regs->ints_state = IC_INITIAL_STATE;
         sysblk.started_mask ^= regs->cpubit;
 
@@ -2170,8 +2170,8 @@ void ARCH_DEP( process_trace )( REGS* regs, BYTE* dest )
             /* The CPU timer is not decremented for a CPU that is in
                the manual state (e.g. stopped in single step mode) */
 
-            saved_timer[0] = cpu_timer( regs     );
-            saved_timer[1] = cpu_timer( hostregs );
+            saved_timer[0] = get_cpu_timer( regs     );
+            saved_timer[1] = get_cpu_timer( hostregs );
 
             hostregs->cpustate = CPUSTATE_STOPPED;
             sysblk.started_mask &= ~hostregs->cpubit;

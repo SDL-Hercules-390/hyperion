@@ -2263,7 +2263,7 @@ U64     gr0, gr1;                       /* Result register workareas */
     OBTAIN_INTLOCK(regs);
 
     /* Save the CPU timer value */
-    dreg = cpu_timer(regs);
+    dreg = get_cpu_timer(regs);
 
     /* Reset the cpu timer pending flag according to its value */
     if( CPU_TIMER(regs) < 0 )

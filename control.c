@@ -4768,7 +4768,7 @@ U64     dreg;                           /* Clock value               */
        the setting of the tod clock */
     OBTAIN_INTLOCK( regs );
     {
-        if (tod_clock( regs ) > regs->clkc)
+        if (get_tod_clock( regs ) > regs->clkc)
             ON_IC_CLKC( regs );
         else
             OFF_IC_CLKC( regs );
@@ -4817,7 +4817,7 @@ U64     dreg;                           /* Clock value               */
 
         /* reset the clock comparator pending flag according to
            the setting of the tod clock */
-        if (tod_clock( regs ) > dreg)
+        if (get_tod_clock( regs ) > dreg)
             ON_IC_CLKC( regs );
         else
             OFF_IC_CLKC( regs );
@@ -6530,7 +6530,7 @@ U64     dreg;                           /* Clock value               */
 
         /* reset the clock comparator pending flag according to
            the setting of the tod clock */
-        if (tod_clock( regs ) > dreg)
+        if (get_tod_clock( regs ) > dreg)
         {
             ON_IC_CLKC( regs );
 
@@ -6680,7 +6680,7 @@ S64     dreg;                           /* Double word workarea      */
     OBTAIN_INTLOCK( regs );
     {
         /* Save the CPU timer value */
-        dreg = cpu_timer(regs);
+        dreg = get_cpu_timer(regs);
 
         /* reset the cpu timer pending flag according to its value */
         if (unlikely( dreg < 0 ))
