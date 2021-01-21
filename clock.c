@@ -274,8 +274,8 @@ S64 offset;
     if (MLVL( VERBOSE ))
     {
         char buf[32];
-        MSGBUF( buf, "0x%16.16"PRIX64, offset );
-        WRMSG( HHC90000, "D", "PTFF-STOU %s!", buf );
+        MSGBUF( buf, "PTFF-STOU 0x%16.16"PRIX64"!", offset );
+        WRMSG( HHC90000, "D", buf );
     }
 }
 
