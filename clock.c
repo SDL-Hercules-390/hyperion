@@ -252,6 +252,57 @@ S64 offset;
 
 /*-------------------------------------------------------------------*/
 
+void ARCH_DEP( set_tod_offset_user )( REGS* regs )
+{
+S64 offset;
+
+    /* "This function specifies a value that is to replace the 
+        *USER*-specified portion of the TOD epoch difference;"
+
+        Since, at the basic-machine or LPAR hypervisor level, the
+        user-specified epoch difference is always ZERO (see the
+        'query_tod_offset_user' function), we should ideally never
+        see this function ever being called since z/VM should be
+        handling it itself (i.e. simulating it for the SIE guest).
+        Therefore we ignore this call and do absolutely nothing.
+    */
+
+    /* Fetch the value anyway to check for any addressing exception */
+    offset = ARCH_DEP( vfetch8 )( regs->GR(1) & ADDRESS_MAXWRAP( regs ), 1, regs );
+
+    /* Inform the user that an unexpected situation has occurred */
+    if (MLVL( VERBOSE ))
+    {
+        char buf[32];
+        MSGBUF( buf, "0x%16.16"PRIX64, offset );
+        WRMSG( HHC90000, "D", "PTFF-STOU %s!", buf );
+    }
+}
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+
+void ARCH_DEP( set_tod_offset_extended )( REGS* regs )
+{
+    // TODO...
+}
+
+#endif /* defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+
+void ARCH_DEP( set_tod_offset_user_extended )( REGS* regs )
+{
+    // TODO...
+}
+
+#endif /* defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+
 void ARCH_DEP(adjust_tod_offset) (REGS *regs)
 {
 S64 offset;
@@ -265,6 +316,18 @@ S64 offset;
 void ARCH_DEP(query_physical_clock) (REGS *regs)
 {
     ARCH_DEP(vstore8) (universal_clock() << 8, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
+}
+
+/*-------------------------------------------------------------------*/
+
+void ARCH_DEP( query_utc_information )( REGS* regs )
+{
+    /* "The information in the UIB is provided by the server-time-
+        protocol (STP) facility that also controls TOD-clock steering.
+        When STP is not installed, all fields in the UIB are zero."
+    */
+    static const BYTE uib[256] = {0};
+    ARCH_DEP( vstorec )( &uib, sizeof( uib )-1, regs->GR(1) & ADDRESS_MAXWRAP( regs ), 1, regs );
 }
 
 /*-------------------------------------------------------------------*/
@@ -294,16 +357,36 @@ PTFFQSI qsi;
 
 /*-------------------------------------------------------------------*/
 
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+
+void ARCH_DEP( query_steering_information_extended )( REGS* regs )
+{
+    // TODO...
+}
+
+#endif /* defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+/*       Helper function to fill in PTFFQTO struct fields            */
+/*-------------------------------------------------------------------*/
+
+static void build_qto_locked( PTFFQTO* qto, REGS* regs )
+{
+    STORE_DW( qto->todoff,   (hw_clock_locked() - universal_tod.high) << 8);
+    STORE_DW( qto->physclk,  (universal_tod.high << 8) | (universal_tod.low >> (64-8)));
+    STORE_DW( qto->ltodoff,  episode_current->base_offset << 8);
+    STORE_DW( qto->todepoch, regs->tod_epoch << 8);
+}
+
+/*-------------------------------------------------------------------*/
+
 void ARCH_DEP(query_tod_offset) (REGS *regs)
 {
 PTFFQTO qto;
 
     obtain_lock( &sysblk.todlock );
     {
-        STORE_DW(qto.todoff,   (hw_clock_locked() - universal_tod.high) << 8);
-        STORE_DW(qto.physclk,  (universal_tod.high << 8) | (universal_tod.low >> (64-8)));
-        STORE_DW(qto.ltodoff,  episode_current->base_offset << 8);
-        STORE_DW(qto.todepoch, regs->tod_epoch << 8);
+        build_qto_locked( &qto, regs );
     }
     release_lock( &sysblk.todlock );
 
@@ -312,14 +395,66 @@ PTFFQTO qto;
 
 /*-------------------------------------------------------------------*/
 
+void ARCH_DEP( query_tod_offset_user )( REGS* regs )
+{
+    /* "The 64-bit TOD user specified epoch difference value returned
+        is the user-specified portion of the *GUEST* epoch difference
+        for the current level of CPU execution. When executed at the
+        basic-machine or LPAR hypervisor level, this value is zero."
+    */
+    struct
+    {
+        PTFFQTO  qto;
+        DBLWRD   tod_user_specified_epoch_difference;
+    }
+    qtou;
+
+    obtain_lock( &sysblk.todlock );
+    {
+        build_qto_locked( &qtou.qto, regs );
+        STORE_DW( qtou.tod_user_specified_epoch_difference, 0 );
+    }
+    release_lock( &sysblk.todlock );
+
+    ARCH_DEP( vstorec )( &qtou, sizeof( qtou )-1, regs->GR(1) & ADDRESS_MAXWRAP( regs ), 1, regs );
+}
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+
+void ARCH_DEP( query_tod_offset_user_extended )( REGS* regs )
+{
+    // TODO...
+}
+
+#endif /* defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+
 void ARCH_DEP(query_available_functions) (REGS *regs)
 {
-PTFFQAF qaf;
+    BYTE qaf[16] = {0};
 
-    STORE_FW( qaf.sb[0] , 0xF0000000 );     /* Functions 0x00..0x1F */
-    STORE_FW( qaf.sb[1] , 0x00000000 );     /* Functions 0x20..0x3F */
-    STORE_FW( qaf.sb[2] , 0xF0000000 );     /* Functions 0x40..0x5F */
-    STORE_FW( qaf.sb[3] , 0x00000000 );     /* Functions 0x60..0x7F */
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QAF  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QTO  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QSI  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QPT  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QUI  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QTOU );
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QSIE  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_QTOUE );
+#endif
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_ATO  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_STO  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_SFS  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_SGS  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_STOU );
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_STOE  );
+    BIT_ARRAY_SET( qaf, PTFF_GPR0_FC_STOUE );
+#endif
 
     ARCH_DEP(vstorec) (&qaf, sizeof(qaf)-1, regs->GR(1) & ADDRESS_MAXWRAP(regs), 1, regs);
 }

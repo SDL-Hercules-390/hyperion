@@ -5389,59 +5389,123 @@ int     cc;                             /* Condition code            */
 /*-------------------------------------------------------------------*/
 /* 0104 PTFF  - Perform Timing Facility Function                 [E] */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_timing_facility_function)
+DEF_INST( perform_timing_facility_function )
 {
+    int fc;                             /* Function Code from GR0    */
+
     E( inst, regs );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-    SIE_INTERCEPT(regs);
 
-    if(regs->GR_L(0) & PTFF_GPR0_RESV)
-        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+    /* z/VM should always simulate this instruction when in SIE mode */
+    SIE_INTERCEPT( regs );
 
-    switch(regs->GR_L(0) & PTFF_GPR0_FC_MASK)
+    if (regs->GR_L(0) & PTFF_GPR0_RESV)
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Extract function code from GR0 */
+    fc = regs->GR_L(0) & PTFF_GPR0_FC_MASK;
+
+    switch (fc)
     {
+        /* Query functions */
+
         case PTFF_GPR0_FC_QAF:
-            ARCH_DEP(query_available_functions) (regs);
+            ARCH_DEP( query_available_functions )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
         case PTFF_GPR0_FC_QTO:
-            ARCH_DEP(query_tod_offset) (regs);
+            ARCH_DEP( query_tod_offset )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
         case PTFF_GPR0_FC_QSI:
-            ARCH_DEP(query_steering_information) (regs);
+            ARCH_DEP( query_steering_information )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
         case PTFF_GPR0_FC_QPT:
-            ARCH_DEP(query_physical_clock) (regs);
+            ARCH_DEP( query_physical_clock )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
+        case PTFF_GPR0_FC_QUI:
+            ARCH_DEP( query_utc_information)( regs );
+            regs->psw.cc = 0;
+            return;
+        case PTFF_GPR0_FC_QTOU:
+            ARCH_DEP( query_tod_offset_user )( regs );
+            regs->psw.cc = 0;
+            return;
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+        case PTFF_GPR0_FC_QSIE:
+            ARCH_DEP( query_steering_information_extended )( regs );
+            regs->psw.cc = 0;
+            return;
+        case PTFF_GPR0_FC_QTOUE:
+            ARCH_DEP( query_tod_offset_user_extended )( regs );
+            regs->psw.cc = 0;
+            return;
+#endif
+
+        /* Control functions */
+
         case PTFF_GPR0_FC_ATO:
-            PRIV_CHECK(regs);
-            ARCH_DEP(adjust_tod_offset) (regs);
+            PRIV_CHECK( regs );
+            ARCH_DEP( adjust_tod_offset )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
         case PTFF_GPR0_FC_STO:
-            PRIV_CHECK(regs);
-            ARCH_DEP(set_tod_offset) (regs);
+            PRIV_CHECK( regs );
+            ARCH_DEP( set_tod_offset )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
         case PTFF_GPR0_FC_SFS:
-            PRIV_CHECK(regs);
-            ARCH_DEP(set_fine_s_rate) (regs);
+            PRIV_CHECK( regs );
+            ARCH_DEP( set_fine_s_rate )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
         case PTFF_GPR0_FC_SGS:
-            PRIV_CHECK(regs);
-            ARCH_DEP(set_gross_s_rate) (regs);
+            PRIV_CHECK( regs );
+            ARCH_DEP( set_gross_s_rate )( regs );
             regs->psw.cc = 0;
-            break;
+            return;
+        case PTFF_GPR0_FC_STOU:
+            PRIV_CHECK( regs );
+            ARCH_DEP( set_tod_offset_user )( regs );
+            regs->psw.cc = 0;
+            return;
+
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+        case PTFF_GPR0_FC_STOE:
+            PRIV_CHECK( regs );
+            ARCH_DEP( set_tod_offset_extended )( regs );
+            regs->psw.cc = 0;
+            return;
+        case PTFF_GPR0_FC_STOUE:
+            PRIV_CHECK( regs );
+            ARCH_DEP( set_tod_offset_user_extended )( regs );
+            regs->psw.cc = 0;
+            return;
+#endif
+
         default:
-            PTT_ERR("*PTFF",regs->GR_L(0),regs->GR_L(1),regs->psw.IA_L);
-            regs->psw.cc = 3;
+            break;
     }
+
+    PTT_ERR( "*PTFF", regs->GR_L(0), regs->GR_L(1), regs->psw.IA_L );
+
+    /* Set cc3 if undefined Control function in Supervisor state */
+    if (1
+        && fc >= 64                     // (control function?)
+        && !PROBSTATE( &regs->psw )     // (supervisor state?)
+    )
+    {
+        regs->psw.cc = 3;
+        return;
+    }
+
+    /* Otherwise Problem state or undefined Query function */
+    regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 }
 #endif /* defined( FEATURE_028_TOD_CLOCK_STEER_FACILITY ) */
 

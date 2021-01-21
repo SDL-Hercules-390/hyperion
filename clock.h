@@ -609,11 +609,20 @@ extern              void ARCH_DEP( store_int_timer_locked )( REGS* );
 extern              void ARCH_DEP(set_gross_s_rate) (REGS *);
 extern              void ARCH_DEP(set_fine_s_rate) (REGS *);
 extern              void ARCH_DEP(set_tod_offset) (REGS *);
+extern              void ARCH_DEP(set_tod_offset_user) (REGS *);
 extern              void ARCH_DEP(adjust_tod_offset) (REGS *);
 extern              void ARCH_DEP(query_physical_clock) (REGS *);
 extern              void ARCH_DEP(query_steering_information) (REGS *);
 extern              void ARCH_DEP(query_tod_offset) (REGS *);
+extern              void ARCH_DEP(query_tod_offset_user) (REGS *);
 extern              void ARCH_DEP(query_available_functions) (REGS *);
+extern              void ARCH_DEP(query_utc_information) (REGS *);
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
+extern              void ARCH_DEP(query_steering_information_extended) (REGS *);
+extern              void ARCH_DEP(query_tod_offset_user_extended) (REGS *);
+extern              void ARCH_DEP(set_tod_offset_extended) (REGS *);
+extern              void ARCH_DEP(set_tod_offset_user_extended) (REGS *);
+#endif
 
 CLOCK_DLL_IMPORT    TOD  etod_clock( REGS*, ETOD*,          /* Get extended TOD clock    */
                                      ETOD_format );

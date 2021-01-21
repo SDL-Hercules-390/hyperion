@@ -2486,25 +2486,20 @@ typedef struct SYSIBVMDB SYSIBVMDB;
 #define PTFF_GPR0_FC_QPT        3   /* Query Physical Clock          */
 #define PTFF_GPR0_FC_QUI        4   /* Query UTC Information         */
 #define PTFF_GPR0_FC_QTOU       5   /* Query TOD Offset User         */
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
 #define PTFF_GPR0_FC_QSIE      10   /* Query Steering Info Extended  */
 #define PTFF_GPR0_FC_QTOUE     13   /* Query TOD Offset User Extended*/
+#endif
 
 #define PTFF_GPR0_FC_ATO       64   /* Adjust TOD Offset             */
 #define PTFF_GPR0_FC_STO       65   /* Set TOD Offset                */
 #define PTFF_GPR0_FC_SFS       66   /* Set Fine-Steering Rate        */
 #define PTFF_GPR0_FC_SGS       67   /* Set Gross-Steering Rate       */
 #define PTFF_GPR0_FC_STOU      69   /* Set TOD Offset User           */
+#if defined( FEATURE_139_MULTIPLE_EPOCH_FACILITY )
 #define PTFF_GPR0_FC_STOE      73   /* Set TOD Offset Extended       */
 #define PTFF_GPR0_FC_STOUE     77   /* Set TOD Offset User Extended  */
-
-/*-------------------------------------------------------------------*/
-/*                          PTFFQAF                                  */
-/*-------------------------------------------------------------------*/
-struct PTFFQAF                          /* Query Available Functions */
-{
-    FWORD   sb[4];                      /* Status Bits words         */
-};
-typedef struct PTFFQAF PTFFQAF;
+#endif
 
 /*-------------------------------------------------------------------*/
 /*                          PTFFQTO                                  */
