@@ -173,6 +173,11 @@ EXTRA_DIST =                    \
      FAC53.list                 \
      FAC53.pdf                  \
      FAC53.tst                  \
+     FAC5861.asm                \
+     FAC5861.core               \
+     FAC5861.list               \
+     FAC5861.pdf                \
+     FAC5861.tst                \
      cpsdr.txt                  \
      csst.txt                   \
      cvttst.rexx                \

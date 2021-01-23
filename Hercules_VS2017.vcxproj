@@ -884,6 +884,11 @@
     <None Include="tests\FAC53.list" />
     <None Include="tests\FAC53.pdf" />
     <None Include="tests\FAC53.tst" />
+    <None Include="tests\FAC5861.asm" />
+    <None Include="tests\FAC5861.core" />
+    <None Include="tests\FAC5861.list" />
+    <None Include="tests\FAC5861.pdf" />
+    <None Include="tests\FAC5861.tst" />
     <None Include="tests\fix-page.asm" />
     <None Include="tests\fix-page.core" />
     <None Include="tests\fix-page.list" />

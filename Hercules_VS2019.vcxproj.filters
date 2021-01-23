@@ -1703,6 +1703,21 @@
     <None Include="tests\FAC53.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\FAC5861.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\FAC5861.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\FAC5861.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\FAC5861.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\FAC5861.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\fix-page.core">
       <Filter>Other Files\tests\core</Filter>
     </None>

@@ -3403,6 +3403,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\FAC5861.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\fix-page.core"
 						>
 					</File>
@@ -4358,6 +4362,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\FAC5861.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\fix-page.tst"
 							>
 						</File>
@@ -4710,6 +4718,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\FAC5861.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\fix-page.asm"
 							>
 						</File>
@@ -4918,6 +4930,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\FAC53.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\FAC5861.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\FAC5861.pdf"
 								>
 							</File>
 							<File
