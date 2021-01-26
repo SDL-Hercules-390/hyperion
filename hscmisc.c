@@ -180,7 +180,11 @@ BYTE    c;                              /* Character work area       */
     {
         c = regs->mainstor[aaddr++];
         j += snprintf (hbuf+j, sizeof(hbuf)-j, "%2.2X", c);
-        if ((aaddr & 0x3) == 0x0) hbuf[j++] = SPACE;
+        if ((aaddr & 0x3) == 0x0)
+        {
+            hbuf[j] = SPACE;
+            hbuf[++j] = 0;
+        }
         c = guest_to_host(c);
         if (!isprint(c)) c = '.';
         cbuf[i] = c;
@@ -1072,7 +1076,7 @@ char    regs_msg_buf[4*512] = {0};
                                  opcode == 0xB1 ? ACCTYPE_LRA :
                                                   ACCTYPE_READ ), "", &xcode );
 
-        MSGBUF( op1_stor_msg, MSG( HHC02326, "I", buf2 ));
+        MSGBUF( op1_stor_msg, MSG( HHC02326, "I", RTRIM( buf2 )));
     }
 
     /* Format storage at second storage operand location */
@@ -1101,7 +1105,7 @@ char    regs_msg_buf[4*512] = {0};
         ARCH_DEP( display_virt )( regs, addr2, buf2+n, sizeof( buf2 )-n-1,
                                   ar, ACCTYPE_READ, "", &xcode );
 
-        MSGBUF( op2_stor_msg, MSG( HHC02326, "I", buf2 ));
+        MSGBUF( op2_stor_msg, MSG( HHC02326, "I", RTRIM( buf2 )));
     }
 
     /* Format registers associated with the instruction */
