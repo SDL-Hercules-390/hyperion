@@ -1214,7 +1214,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
         n = USE_HOME_SPACE;
         break;
     case 4: /* Use current addressing mode (PSW bits 16-17) */
-        n = r2; /* r2 is the access register number if ARMODE */
+        n = r2; /* r2 is the access register number if AR-mode */
         break;
     default: /* Specification exception if invalid value for m4 */
         n = -1; /* makes compiler happy */

@@ -15,10 +15,11 @@
 
 /*-------------------------------------------------------------------*/
 /*                           maddr_l                                 */
+/*-------------------------------------------------------------------*/
 /* For compatibility, it is usually invoked using the MADDRL macro   */
 /* in feature.h                                                      */
 /*-------------------------------------------------------------------*/
-/* Convert logical address to absolute address.  This is the DAT     */
+/* Convert logical address to absolute address. This is the DAT      */
 /* logic that does an accelerated TLB lookup to return the prev-     */
 /* iously determined value from an earlier translation for this      */
 /* logical address.  It performs a series of checks to ensure the    */
@@ -27,7 +28,7 @@
 /* for the current address being translated.  If any of the cond-    */
 /* itions have changed (i.e. if any of the comparisons fail) then    */
 /* the TLB cannot be used (TLB miss) and "logical_to_main_l" is      */
-/* called to perform a full address translation.  Otherwise if all   */
+/* called to perform a full address translation. Otherwise if all    */
 /* of the conditions are still true (nothing has changed from the    */
 /* the last time we translated this address), then the previously    */
 /* translated address from the TLB is returned instead (TLB hit).    */
@@ -48,8 +49,9 @@
 /*                 USE_HOME_SPACE                                    */
 /*                 USE_ARMODE + access register number               */
 /*              An access register number ORed with the special      */
-/*              value USE_ARMODE forces this routine to use ARMODE   */
-/*              regardless of the PSW address-space control setting. */
+/*              value USE_ARMODE forces this routine to use AR-mode  */
+/*              address translation regardless of the PSW address-   */
+/*              space control setting.                               */
 /*      regs    Pointer to the CPU register context                  */
 /*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
 /*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
@@ -74,18 +76,18 @@ static inline  BYTE* ARCH_DEP( maddr_l )
        (which is many, many instructions)
     */
 
-    int  aea_arn  = regs->AEA_AR( arn >= USE_ARMODE ? arn & 0xF : arn );
+    int  aea_crn  = (arn >= USE_ARMODE) ? 0 : regs->AEA_AR( arn );
     U16  tlbix    = TLBIX( addr );
-    BYTE *maddr = NULL;
+    BYTE *maddr   = NULL;
 
-    /* Non-zero AEA Access Register number? */
-    if (aea_arn)
+    /* Non-zero AEA Control Register number? */
+    if (aea_crn)
     {
         /* Same Addess Space Designator as before? */
         /* Or if not, is address in a common segment? */
         if (0
-            || (regs->CR( aea_arn ) == regs->tlb.TLB_ASD( tlbix ))
-            || (regs->AEA_COMMON( aea_arn ) & regs->tlb.common[ tlbix ])
+            || (regs->CR( aea_crn ) == regs->tlb.TLB_ASD( tlbix ))
+            || (regs->AEA_COMMON( aea_crn ) & regs->tlb.common[ tlbix ])
         )
         {
             /* Storage Key zero? */
@@ -113,7 +115,7 @@ static inline  BYTE* ARCH_DEP( maddr_l )
                         if (acctype & ACC_CHECK)
                             regs->dat.storkey = regs->tlb.storkey[ tlbix ];
 
-                        maddr = MAINADDR(regs->tlb.main[tlbix], addr);
+                        maddr = MAINADDR( regs->tlb.main[tlbix], addr );
                     }
                 }
             }

@@ -541,10 +541,11 @@ int i;
 /* Input:                                                            */
 /*      arn     Access register number (0-15) to be used if the      */
 /*              address-space control (PSW bits 16-17) indicates     */
-/*              that ARMODE is the current translation mode.         */
+/*              that AR-mode is the current translation mode.        */
 /*              An access register number ORed with the special      */
-/*              value USE_ARMODE forces this routine to use ARMODE   */
-/*              regardless of the PSW address-space control setting. */
+/*              value USE_ARMODE forces this routine to use AR-mode  */
+/*              address translation regardless of the PSW address-   */
+/*              space control setting.                               */
 /*              Access register 0 is treated as if it contained 0    */
 /*              and its actual contents are not examined.            */
 /*              Alternatively the arn parameter may contain one      */
