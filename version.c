@@ -701,6 +701,11 @@ static const char *build_info[] = {
 #else
     "Without \"Optimized\" instructions",
 #endif
+#if defined( OPTION_TXF_PPA_SUPPORT )           // TXF PPA support
+    "With    TXF PPA support",
+#else
+    "Without TXF PPA support",
+#endif
 
 //---------------------------------------------------------------------
 

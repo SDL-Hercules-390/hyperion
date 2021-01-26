@@ -79,18 +79,12 @@
   #undef  PTT_TXF
   #define PTT_TXF( ... )              // (nothing)
 #endif
-
 #endif // DID_TXF_DEBUGGING
 
 #if defined( FEATURE_049_PROCESSOR_ASSIST_FACILITY )
 /*-------------------------------------------------------------------*/
 /* B2E8 PPA   - Perform Processor Assist                     [RRF-c] */
 /*-------------------------------------------------------------------*/
-
-#define PPA_MAX_HELP_THRESHOLD  16
-#define PPA_MED_HELP_THRESHOLD   8
-#define PPA_MIN_HELP_THRESHOLD   1
-
 DEF_INST( perform_processor_assist )
 {
 int     r1, r2;                         /* Operand register numbers  */
@@ -112,27 +106,9 @@ U32     abort_count;                    /* Transaction Abort count   */
     {
     case 1: // Transaction Abort Assist
     {
-        /* Provide least amount of assistance required */
-        if (abort_count >= PPA_MAX_HELP_THRESHOLD)
-        {
-            /* Provide maximal assistance */
-            // TODO... do something useful
-        }
-        else if (abort_count >= PPA_MED_HELP_THRESHOLD)
-        {
-            /* Provide medium assistance */
-            // TODO... do something useful
-        }
-        else if (abort_count >= PPA_MIN_HELP_THRESHOLD)
-        {
-            /* Provide minimal assistance */
-            // TODO... do something useful
-        }
-        else // zero!
-        {
-            /* Provide NO assistance at all */
-            // (why are you wasting my time?!)
-        }
+#if defined( OPTION_TXF_PPA_SUPPORT )
+        regs->txf_PPA = abort_count;
+#endif
         return;
     }
 #if defined( FEATURE_081_PPA_IN_ORDER_FACILITY )
@@ -541,6 +517,11 @@ int         txf_tnd, txf_tac, slot;
         /* Reset abort count */
         regs->txf_aborts = 0;
 
+#if defined( OPTION_TXF_PPA_SUPPORT )
+        /* Reset PPA assistance */
+        regs->txf_PPA = 0;
+#endif
+
         PERFORM_SERIALIZATION( regs );
     }
     RELEASE_INTLOCK( regs );
@@ -754,6 +735,10 @@ TPAGEMAP   *pmap;
         ABORT_TRANS( regs, ABORT_RETRY_PGMCHK, TAC_NESTING );
         UNREACHABLE_CODE( return );
     }
+
+#if defined( OPTION_TXF_PPA_SUPPORT )
+    atomic_update32( &sysblk.txf_counter, +1 );
+#endif
 
     CONTRAN_INSTR_CHECK( regs );    /* Unallowed in CONSTRAINED mode */
 
@@ -1141,6 +1126,12 @@ int        retry;           /* Actual retry code                     */
 
     /* Count total retries for this transaction */
     regs->txf_aborts++;
+
+#if defined( OPTION_TXF_PPA_SUPPORT )
+    /* Provide PPA assist for constrained transactions too */
+    if (regs->txf_contran)
+        regs->txf_PPA = regs->txf_aborts;
+#endif
 
     /* Track total aborts by cause (TAC) */
     if (regs->txf_tac == TAC_MISC)
@@ -2528,6 +2519,39 @@ void txf_model_warning( bool txf_enabled_or_enabling_txf )
         WRMSG( HHC02385, "W", sysblk.cpumodel );
     }
 }
+
+#if defined( OPTION_TXF_PPA_SUPPORT )
+/*-------------------------------------------------------------------*/
+/* Helper function to set a proper TXF timerint value                */
+/*-------------------------------------------------------------------*/
+void txf_set_timerint( bool txf_enabled_or_enabling_txf )
+{
+    if (!sysblk.config_processed)
+        return;
+
+    if (txf_enabled_or_enabling_txf)
+    {
+        if (sysblk.timerint >= MIN_TXF_TIMERINT)
+        {
+            /* Use the user's defined timerint value for TXF */
+            sysblk.txf_timerint = sysblk.timerint;
+        }
+        else
+        {
+            // "TXF: TIMERINT %d is too small; using default of %d instead"
+            WRMSG( HHC17736, "W", sysblk.timerint, DEF_TXF_TIMERINT );
+
+            sysblk.txf_timerint = sysblk.timerint = DEF_TXF_TIMERINT;
+        }
+    }
+    else
+    {
+        /* Reset the timerint value back to its original value */
+
+        sysblk.timerint = sysblk.cfg_timerint;
+    }
+}
+#endif /* defined( OPTION_TXF_PPA_SUPPORT ) */
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

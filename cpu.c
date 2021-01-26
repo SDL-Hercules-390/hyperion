@@ -1713,21 +1713,33 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         }
 
         /* Process external interrupt */
-        if ( OPEN_IC_EXTPENDING(regs) )
+        if (1
+            && OPEN_IC_EXTPENDING( regs )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+            /* Don't interrupt active transaction */
+            && (regs->txf_PPA < PPA_SOME_HELP_THRESHOLD)
+#endif
+        )
         {
-            PERFORM_SERIALIZATION (regs);
-            PERFORM_CHKPT_SYNC (regs);
-            ARCH_DEP (perform_external_interrupt) (regs);
+            PERFORM_SERIALIZATION( regs );
+            PERFORM_CHKPT_SYNC( regs );
+            ARCH_DEP( perform_external_interrupt )( regs );
         }
 
         /* Process I/O interrupt */
         if (IS_IC_IOPENDING)
         {
-            if ( OPEN_IC_IOPENDING(regs) )
+            if (1
+                && OPEN_IC_IOPENDING( regs )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+                /* Don't interrupt active transaction */
+                && (regs->txf_PPA < PPA_SOME_HELP_THRESHOLD)
+#endif
+            )
             {
-                PERFORM_SERIALIZATION (regs);
-                PERFORM_CHKPT_SYNC (regs);
-                ARCH_DEP (perform_io_interrupt) (regs);
+                PERFORM_SERIALIZATION( regs );
+                PERFORM_CHKPT_SYNC( regs );
+                ARCH_DEP( perform_io_interrupt )( regs );
             }
             else
                 WAKEUP_CPU_MASK(sysblk.waiting_mask);
@@ -2314,6 +2326,20 @@ int   rc;
             return NULL;
         }
     }
+
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+    if (!sysblk.rubtid)
+    {
+        rc = create_thread( &sysblk.rubtid, DETACHED,
+             rubato_thread, NULL, RUBATO_THREAD_NAME );
+        if (rc)
+        {
+            WRMSG( HHC00102, "E", strerror( rc ));
+            RELEASE_INTLOCK( NULL );
+            return NULL;
+        }
+    }
+#endif
 
     /* Set CPU thread priority */
     set_thread_priority( sysblk.cpuprio);

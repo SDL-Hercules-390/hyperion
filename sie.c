@@ -907,10 +907,19 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                 /* Set `execflag' to 0 in case EXecuted instruction did progjmp */
                 GUESTREGS->execflag = 0;
 
-                if (0
-                    || SIE_I_STOP ( GUESTREGS )
-                    || SIE_I_EXT  ( GUESTREGS )
-                    || SIE_I_IO   ( GUESTREGS )
+                /* Exit from SIE mode when either asked or
+                   if External or I/O Interrupt is pending
+                */
+                if (1
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+                    /* Don't interrupt active transaction */
+                    && (GUESTREGS->txf_PPA < PPA_SOME_HELP_THRESHOLD)
+#endif
+                    && (0
+                        || SIE_I_STOP ( GUESTREGS )
+                        || SIE_I_EXT  ( GUESTREGS )
+                        || SIE_I_IO   ( GUESTREGS )
+                       )
                 )
                     break;
 
@@ -928,9 +937,19 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                     /* Set psw.IA and invalidate the aia */
                     INVALIDATE_AIA( GUESTREGS );
 
-                    if (OPEN_IC_EXTPENDING( GUESTREGS ))
+                    /* Process External Interrupt if one is pending */
+                    if (1
+                        && OPEN_IC_EXTPENDING( GUESTREGS )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+                        /* Don't interrupt active transaction */
+                        && (GUESTREGS->txf_PPA < PPA_SOME_HELP_THRESHOLD)
+#endif
+                    )
                         ARCH_DEP( perform_external_interrupt )( GUESTREGS );
 
+                    /* Process I/O Interrupt if either I/O or SIGA Assist is enabled
+                       and an I/O Interrupt is pending.
+                    */
                     if (1
                         && (0
                             || (STATEBK->ec[0] & SIE_EC0_IOA)
@@ -1143,19 +1162,31 @@ txf_slower_loop:
 endloop:        ; // (nop to make compiler happy)
             }
             /******************************************/
-            /* Remain in SIE (above loop) until ...   */
-            /*  - A Host Interrupt is made pending    */
-            /*  - A Sie defined irpt becomes enabled  */
-            /*  - A guest interrupt is made pending   */
+            /* Remain in SIE (above loop) as long as: */
+            /*  - No Host Interrupt is pending        */
+            /*  - No SIE defined Interrupt is pending */
+            /*    (Wait, External or I/O)             */
+            /*  - No guest interrupt is pending       */
             /******************************************/
-            while (unlikely
-            (1
-                && !SIE_I_HOST            (    regs   )
-                && !SIE_I_WAIT            ( GUESTREGS )
-                && !SIE_I_EXT             ( GUESTREGS )
-                && !SIE_I_IO              ( GUESTREGS )
-                && !SIE_INTERRUPT_PENDING ( GUESTREGS )
-            ));
+            while
+            (0
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+             /* Don't interrupt active transaction */
+             || (GUESTREGS->txf_PPA >= PPA_SOME_HELP_THRESHOLD)
+#endif
+             || (1
+                 && !SIE_I_HOST            (    regs   )
+                 && !SIE_I_WAIT            ( GUESTREGS )
+                 && !SIE_I_EXT             ( GUESTREGS )
+                 && !SIE_I_IO              ( GUESTREGS )
+                 && !SIE_INTERRUPT_PENDING ( GUESTREGS )
+                )
+            );
+
+            /* Otherwise break out of the above loop
+               and check if we should exit from SIE
+               (check is done slightly further below)
+            */
         }
         else
         {
@@ -1176,21 +1207,27 @@ endloop:        ; // (nop to make compiler happy)
 
         PTT_SIE( "run_sie !run", icode, 0, 0 );
 
+        /* Check if we should remain in, or exit from, SIE mode */
         if (!icode || SIE_NO_INTERCEPT == icode)
         {
             /* Check PER first, higher priority */
             if (OPEN_IC_PER( GUESTREGS ))
                 ARCH_DEP( program_interrupt )( GUESTREGS, PGM_PER_EVENT );
 
+            /* Check for SIE exit conditions... */
+
                  if (SIE_I_EXT  ( GUESTREGS )) icode = SIE_INTERCEPT_EXTREQ;
             else if (SIE_I_IO   ( GUESTREGS )) icode = SIE_INTERCEPT_IOREQ;
             else if (SIE_I_STOP ( GUESTREGS )) icode = SIE_INTERCEPT_STOPREQ;
             else if (SIE_I_WAIT ( GUESTREGS )) icode = SIE_INTERCEPT_WAIT;
             else if (SIE_I_HOST (   regs    )) icode = SIE_HOST_INT_PEND;
+
+            /* Otherwise we should remain in SIE mode */
         }
 
         PTT_SIE( "run_sie !run", icode, 0, 0 );
     }
+    /* Try to remain in SIE mode if possible */
     while (!icode || icode == SIE_NO_INTERCEPT);
 
     PTT_SIE( "run_sie ret", icode, 0, 0 );

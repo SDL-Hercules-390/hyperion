@@ -1889,6 +1889,9 @@ FAC_MOD_OK_FUNC           ( modtrans )
                 return HHC00890E(  STFL_049_EXECUTION_HINT );
 
             txf_model_warning( true );
+#if defined( OPTION_TXF_PPA_SUPPORT )
+            txf_set_timerint( true );
+#endif
         }
         else if (bitno == STFL_081_PPA_IN_ORDER)
         {
@@ -1928,6 +1931,10 @@ FAC_MOD_OK_FUNC           ( modtrans )
 
             if (FACILITY_ENABLED_ARCH( HERC_TXF_RESTRICT_3, archnum ))
                 return HHC00890E( STFL_HERC_TXF_RESTRICT_3 );
+
+#if defined( OPTION_TXF_PPA_SUPPORT )
+            txf_set_timerint( false );
+#endif
         }
     }
 

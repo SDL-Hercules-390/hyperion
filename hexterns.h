@@ -255,6 +255,9 @@ IMPL_DLL_IMPORT COMMANDHANDLER getCommandHandler(void);
 
 /* Functions in module timer.c */
 void* timer_thread( void* argp );
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+void* rubato_thread( void* argp );
+#endif
 
 /* Functions in module clock.c */
 void update_TOD_clock (void);

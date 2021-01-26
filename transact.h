@@ -34,6 +34,14 @@
                                       /* Cache lines per 4K page     */
 #define  ZOCTOWORD_SIZE       (8*4)   /* IBM z "octoword" size       */
 
+#define  PPA_SOME_HELP_THRESHOLD  2   /* Provide SOME assistance     */
+#define  PPA_MUCH_HELP_THRESHOLD  4   /* Provide LOTS of assistance! */
+
+#if defined( OPTION_TXF_PPA_SUPPORT )
+#define  MIN_TXF_TIMERINT       200   /* Minimum txf_timerint value  */
+#define  DEF_TXF_TIMERINT       400   /* Default txf_timerint value  */
+#endif
+
 /*-------------------------------------------------------------------*/
 /*        Transactional-Execution Facility Condition Codes           */
 /*-------------------------------------------------------------------*/
@@ -303,6 +311,9 @@ const char* txf_why_str( char* buffer, int buffsize, int why );
 bool is_TXF_model( U16 cpumodel );
 void defsym_TXF_models();
 void txf_model_warning( bool txf_enabled_or_enabling_txf );
+#if defined( OPTION_TXF_PPA_SUPPORT )
+void txf_set_timerint( bool txf_enabled_or_enabling_txf );
+#endif
 
 /*-------------------------------------------------------------------*/
 /*               Why transaction was aborted codes                   */

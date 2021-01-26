@@ -824,6 +824,10 @@ int     rc;
 
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
 
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+    sysblk.txf_timerint = sysblk.timerint;
+#endif
+
 #if defined( _FEATURE_ECPSVM )
     sysblk.ecpsvm.available = 0;
     sysblk.ecpsvm.level = 20;
@@ -1329,10 +1333,22 @@ int     rc;
     }
 
     sysblk.config_processed = true;
+    sysblk.cfg_timerint = sysblk.timerint;
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-    txf_model_warning( FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ));
+
+    if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ))
+    {
+        txf_model_warning( true );
+#if defined( OPTION_TXF_PPA_SUPPORT )
+        txf_set_timerint( true );
 #endif
+    }
+#if defined( OPTION_TXF_PPA_SUPPORT )
+    else
+        txf_set_timerint( false );
+#endif
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     /* Process the .rc file synchronously when in daemon mode. */
     /* Otherwise Start up the RC file processing thread.       */

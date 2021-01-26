@@ -369,6 +369,9 @@ struct REGS {                           /* Processor registers       */
         bool    txf_UPGM_abort;         /* true == transaction was
                                            aborted due to TAC_UPGM   */
         int     txf_aborts;             /* Abort count               */
+#if defined( OPTION_TXF_PPA_SUPPORT )
+        S32     txf_PPA;                /* PPA assistance level      */
+#endif
         BYTE    txf_tnd;                /* Transaction nesting depth.
                                            Use txf_lock to access!   */
 
@@ -672,6 +675,11 @@ struct SYSBLK {
         int     txf_tnd;                /* (only when TXF_TR_TND)    */
         int     txf_fails;              /* (only when TXF_TR_FAILS)  */
         int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
+#if defined( OPTION_TXF_PPA_SUPPORT )
+        TID     rubtid;                 /* Threadid for rubato timer */
+        U32     txf_counter;            /* counts TBEGIN/TBEGINC     */
+        int     txf_timerint;           /* modulation of timerint    */
+#endif
 
 #define TXF_TR_INSTR    0x80000000      // instructions
 #define TXF_TR_C        0x08000000      // constrained
@@ -830,6 +838,7 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
 #define PANC_BG_IDX     1               /*  Background               */
 
         int     timerint;               /* microsecs timer interval  */
+        int     cfg_timerint;           /* (value defined in config) */
         char   *pantitle;               /* Alt console panel title   */
 #if defined( OPTION_SCSI_TAPE )
         /* Access to all SCSI fields controlled by sysblk.stape_lock */

@@ -2528,7 +2528,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC17733 "MAXIMUM   =%12"PRIu64
 #define HHC17734 "%12"PRIu64"  (%4.1f%%)  Retries due to TAC %3d %s"
 #define HHC17735 "%12"PRIu64"  (%4.1f%%)  Retries due to other TAC"
-//efine HHC17736 - HHC17749 (available)
+#define HHC17736 "TXF: TIMERINT %d is too small; using default of %d instead"
+//efine HHC17737 - HHC17749 (available)
 
 // range 17750 - 17799 available
 // range 17800 - 17899 available
