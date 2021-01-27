@@ -1946,6 +1946,18 @@
     <None Include="tests\mvcle.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\mvcos-001.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\mvcos-001.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\mvcos-001.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\mvcos-001.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\pfpo.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>

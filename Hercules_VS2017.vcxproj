@@ -935,6 +935,10 @@
     <None Include="tests\mvcle.assemble" />
     <None Include="tests\mvcle.listing" />
     <None Include="tests\mvcle.tst" />
+    <None Include="tests\mvcos-001.asm" />
+    <None Include="tests\mvcos-001.core" />
+    <None Include="tests\mvcos-001.list" />
+    <None Include="tests\mvcos-001.tst" />
     <None Include="tests\pfpo.asm" />
     <None Include="tests\pfpo.core" />
     <None Include="tests\pfpo.list" />

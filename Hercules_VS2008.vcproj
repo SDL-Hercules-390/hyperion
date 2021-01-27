@@ -3414,7 +3414,11 @@
 						RelativePath=".\tests\mhi.core"
 						>
 					</File>
-					<File
+          <File
+						RelativePath=".\tests\mvcos-001.core"
+						>
+          </File>
+          <File
 						RelativePath=".\tests\pfpo.core"
 						>
 					</File>
@@ -4437,7 +4441,11 @@
 							RelativePath=".\tests\mvcle.tst"
 							>
 						</File>
-						<File
+   					<File
+    	        RelativePath=".\tests\mvcos-001.tst"
+							>
+		        </File>
+			      <File
 							RelativePath=".\tests\pfpo.tst"
 							>
 						</File>
@@ -4729,7 +4737,11 @@
 							RelativePath=".\tests\mhi.asm"
 							>
 						</File>
-						<File
+            <File
+							RelativePath=".\tests\mvcos-001.asm"
+							>
+            </File>
+            <File
 							RelativePath=".\tests\pfpo.asm"
 							>
 						</File>
@@ -4944,7 +4956,11 @@
 								RelativePath=".\tests\fix-page.list"
 								>
 							</File>
-							<File
+              <File
+								RelativePath=".\tests\mvcos-001.list"
+								>
+              </File>
+             	<File
 								RelativePath=".\tests\mhi.list"
 								>
 							</File>
