@@ -605,8 +605,19 @@ void* log_do_callback( void* dummy )
 
     UNREFERENCED( dummy );
 
-    while ((msglen = log_read( &msgbuf, &msgidx, LOG_BLOCK )))
-        log_callback( msgbuf, msglen );
+    while (!sysblk.shutfini && logger_isactive())
+    {
+        msglen = log_read( &msgbuf, &msgidx, LOG_NOBLOCK );
+
+        if (msglen)
+        {
+            log_callback( msgbuf, msglen );
+            continue;
+        }
+
+        /* wait a bit for new message(s) to arrive before retrying */
+        usleep( PANEL_REFRESH_RATE_FAST * 1000 );
+    }
 
     /* Let them know logger thread has ended */
     log_callback( NULL, 0 );

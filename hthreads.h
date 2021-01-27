@@ -270,6 +270,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define HTTP_SRVR_THREAD_NAME   "http_server"
 #define HTTP_REQ_THREAD_NAME    "http_request"
 #define WATCHDOG_THREAD_NAME    "watchdog_thread"
+#define HERCLIN_KB_THREAD       "keyboard thread"
 
 /*-------------------------------------------------------------------*/
 /*                   Hercules lock structures                        */
