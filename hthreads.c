@@ -475,7 +475,8 @@ static HTHREAD* hthread_find_HTHREAD( TID tid )
 static void hthread_obtaining_lock( LOCK* plk )
 {
     HTHREAD* ht;
-    ht = hthread_find_HTHREAD( hthread_self() );
+    if (!(ht = hthread_find_HTHREAD( hthread_self() )))
+        return;
     ht->ht_ob_lock = plk;
     gettimeofday( &ht->ht_ob_time, NULL );
 }
@@ -486,7 +487,8 @@ static void hthread_obtaining_lock( LOCK* plk )
 static void hthread_lock_obtained()
 {
     HTHREAD* ht;
-    ht = hthread_find_HTHREAD( hthread_self() );
+    if (!(ht = hthread_find_HTHREAD( hthread_self() )))
+        return;
     ht->ht_ob_lock = NULL;
 }
 
@@ -1023,10 +1025,13 @@ static void hthread_has_exited( TID tid, const char* exit_loc )
     LockThreadsList();
     {
         HTHREAD* ht = hthread_find_HTHREAD_locked( tid, NULL );
-        RemoveListEntry( &ht->ht_link );
-        threadcount--;
-        free( ht->ht_name );
-        free_aligned( ht );
+        if (ht)
+        {
+            RemoveListEntry( &ht->ht_link );
+            threadcount--;
+            free( ht->ht_name );
+            free_aligned( ht );
+        }
     }
     UnlockThreadsList();
 }
