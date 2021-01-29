@@ -718,7 +718,7 @@
 #undef LTDL_SYSSEARCHPATH
 
 /* Defines the maximum number of emulated CPU engines */
-#undef MAX_CPU_ENGINES
+#undef MAX_CPU_ENGS
 
 /* Define to indicate optreset exists */
 #undef NEED_GETOPT_OPTRESET
