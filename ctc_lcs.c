@@ -3126,6 +3126,44 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 return -1;
             }
 
+            /*                                                       */
+            /* The keyword is a device address.                      */
+            /*                                                       */
+            /* If the operand, i.e. the mode, is IP, the device      */
+            /* address can be either the even or the odd address of  */
+            /* an even/odd device address pair, e.g. either 0E42 or  */
+            /* 0E43. Whichever device address is specified will      */
+            /* become the read device, and the other device address  */
+            /* of the even/odd pair will become the write device.    */
+            /* For example, if device address 0E42 is specified,     */
+            /* device address 0E42 will become the read device, and  */
+            /* device address 0E43 will become the write device.     */
+            /* However, if device address 0E43 is specified, device  */
+            /* address 0E43 will become the read device, and device  */
+            /* address 0E42 will become the write device.            */
+            /*                                                       */
+            /* If the operand, i.e. the mode, is SNA, the device     */
+            /* address can be any device address, e.g. 0E42 or 0E43. */
+            /* SNA uses a single device for both read and write.     */
+            /*                                                       */
+            /* The following extract from an OAT illustrates the     */
+            /* above. The guest will have four interfaces, two IP    */
+            /* and two SNA. All four interfaces will use the same    */
+            /* port, i.e the tap. The first IP interface will use    */
+            /* the even device address 0E40 as the read device and   */
+            /* the odd device address 0E41 as the write device.      */
+            /* However, the second IP interface will use the odd     */
+            /* device address 0E43 as the read device and the even   */
+            /* device address 0E42 as the write device. The first    */
+            /* SNA interface will use the even device address 0E44,  */
+            /* and the second SNA interface will use the odd device  */
+            /* address 0E45.                                         */
+            /*                                                       */
+            /*   0E40  IP   00  NO  192.168.1.1                      */
+            /*   0E43  IP   00  NO  192.168.1.2                      */
+            /*   0E44  SNA  00                                       */
+            /*   0E45  SNA  00                                       */
+            /*                                                       */
             if (strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1)
             {
