@@ -2094,7 +2094,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
     }
     else
     {
-        int i;
+        int acount;
         DEVGRP* pDEVGRP;
         DEVBLK* pDEVBLK;
 
@@ -2106,37 +2106,41 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         }
 
         pDEVGRP = dev->group;
+        acount = 0;
 
         if (CTC_CTCI == dev->ctctype)
         {
-            for (i=0; i < pDEVGRP->acount; i++)
+            if (pDEVGRP && pDEVGRP->acount)  /* CTCI should be a group of two devices. */
             {
-                pDEVBLK = pDEVGRP->memdev[i];
+                pDEVBLK = pDEVGRP->memdev[0];
                 pCTCBLK = pDEVBLK->dev_data;
                 pCTCBLK->fDebug = onoff;
+                acount = pDEVGRP->acount;
             }
         }
-        else if (CTC_LCS == dev->ctctype)
+        else if (CTC_LCS == dev->ctctype)  /* LCS should be a group of one or more devices. */
         {
-            for (i=0; i < pDEVGRP->acount; i++)
+            if (pDEVGRP && pDEVGRP->acount)
             {
-                pDEVBLK = pDEVGRP->memdev[i];
+                pDEVBLK = pDEVGRP->memdev[0];
                 pLCSDEV = pDEVBLK->dev_data;
                 pLCSBLK = pLCSDEV->pLCSBLK;
                 pLCSBLK->fDebug = onoff;
+                acount = pDEVGRP->acount;
             }
         }
-        else if (CTC_PTP == dev->ctctype)
+        else if (CTC_PTP == dev->ctctype)  /* PTP should be a group of two devices. */
         {
-            for (i=0; i < pDEVGRP->acount; i++)
+            if (pDEVGRP && pDEVGRP->acount)
             {
-                pDEVBLK = pDEVGRP->memdev[i];
+                pDEVBLK = pDEVGRP->memdev[0];
                 pPTPATH = pDEVBLK->dev_data;
                 pPTPBLK = pPTPATH->pPTPBLK;
                 pPTPBLK->uDebugMask = mask;
+                acount = pDEVGRP->acount;
             }
         }
-        else if (CTC_CTCE == dev->ctctype)
+        else if (CTC_CTCE == dev->ctctype)  /* CTCE is not grouped. */
         {
             if (onoff)
             {
@@ -2153,17 +2157,24 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
         }
         else
         {
+            /* HHC02209 "%1d:%04X device is not a %s" */
             WRMSG(HHC02209, "E", lcss, devnum, "supported CTCI, LSC, PTP or CTCE" );
             return -1;
         }
 
         {
-          char buf[128];
-          MSGBUF( buf, "%s for %s device %1d:%04X%s",
+          char buf1[32] = {0};
+          char buf2[128];
+          if (acount) {
+            MSGBUF( buf1, " group (%d devices)", acount);
+          }
+          MSGBUF( buf2, "%s for %s device %1d:%04X%s",
                   startup ? "STARTUP" : onoff ? "ON" : "OFF",
                   CTC_CTCE == dev->ctctype ? "CTCE" : CTC_LCS == dev->ctctype ? "LCS" : CTC_PTP == dev->ctctype ? "PTP" : "CTCI",
-                  lcss, devnum, CTC_CTCE != dev->ctctype ? "pair" : "" );
-          WRMSG(HHC02204, "I", "CTC DEBUG", buf);
+                  lcss, devnum,
+                  buf1 );
+          /* HHC02204 "%-14s set to %s" */
+          WRMSG(HHC02204, "I", "CTC DEBUG", buf2);
         }
     }
 
