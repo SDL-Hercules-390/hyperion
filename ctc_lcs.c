@@ -888,7 +888,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
               sType[pLCSDEV->bType],
               pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetIfName,
               pLCSDEV->pLCSBLK->fDebug ? " -d" : "",
-              ( pDEVBLK->devnum & 1 ) == 0 ? pLCSDEV->pDEVBLK[0]->excps : pLCSDEV->pDEVBLK[1]->excps );
+              pDEVBLK->excps );
 }
 
 // ====================================================================
