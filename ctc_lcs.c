@@ -157,6 +157,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     PLCSDEV     pLCSDev;
     PLCSPORT    pLCSPORT;
     int         i;
+    int         rc;
+    BYTE        bMode;   /* Either LCSDEV_MODE_IP or LCSDEV_MODE_SNA */
 
     struct in_addr  addr;               // Work area for addresses
 
@@ -200,12 +202,14 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         }
 
         // Parse configuration file statement
-        if (ParseArgs( pDEVBLK, pLCSBLK, argc, (char**) argv ) != 0)
+        rc = ParseArgs( pDEVBLK, pLCSBLK, argc, (char**) argv );
+        if (rc < 0)
         {
             free( pLCSBLK );
             pLCSBLK = NULL;
             return -1;
         }
+        bMode = rc;
 
         if (pLCSBLK->pszOATFilename)
         {
@@ -225,23 +229,32 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->pDevices = malloc( sizeof( LCSDEV ));
 
             memset( pLCSBLK->pDevices, 0, sizeof( LCSDEV ));
-
-            if (pLCSBLK->pszIPAddress)
-            {
-                pLCSBLK->pDevices->pszIPAddress = strdup( pLCSBLK->pszIPAddress );
-                inet_aton( pLCSBLK->pDevices->pszIPAddress, &addr );
-                pLCSBLK->pDevices->lIPAddress = addr.s_addr; // (network byte order)
-                pLCSBLK->pDevices->bType    = LCSDEV_TYPE_NONE;
-            }
-            else
-                pLCSBLK->pDevices->bType    = LCSDEV_TYPE_PRIMARY;
-
             pLCSBLK->pDevices->sAddr        = pDEVBLK->devnum;
-            pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
             pLCSBLK->pDevices->bPort        = 0;
             pLCSBLK->pDevices->pNext        = NULL;
 
-            pLCSBLK->icDevices = 2;
+            if (bMode == LCSDEV_MODE_IP)
+            {
+                if (pLCSBLK->pszIPAddress)
+                {
+                    pLCSBLK->pDevices->pszIPAddress = strdup( pLCSBLK->pszIPAddress );
+                    inet_aton( pLCSBLK->pDevices->pszIPAddress, &addr );
+                    pLCSBLK->pDevices->lIPAddress = addr.s_addr; // (network byte order)
+                    pLCSBLK->pDevices->bType    = LCSDEV_TYPE_NONE;
+                }
+                else
+                    pLCSBLK->pDevices->bType    = LCSDEV_TYPE_PRIMARY;
+
+                pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
+
+                pLCSBLK->icDevices = 2;
+            }
+            else
+            {
+                pLCSBLK->pDevices->bMode        = LCSDEV_MODE_SNA;
+
+                pLCSBLK->icDevices = 1;
+            }
         }
 
         // Now we must create the group
@@ -888,7 +901,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
               sType[pLCSDEV->bType],
               pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort].szNetIfName,
               pLCSDEV->pLCSBLK->fDebug ? " -d" : "",
-              ( pDEVBLK->devnum & 1 ) == 0 ? pLCSDEV->pDEVBLK[0]->excps : pLCSDEV->pDEVBLK[1]->excps );
+              pDEVBLK->excps );
 }
 
 // ====================================================================
@@ -2682,6 +2695,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     char            **argv = argn;
     int             saw_if = 0;        /* -x (or --if) specified */
     int             saw_conf = 0;      /* Other configuration flags present */
+    BYTE            bMode = LCSDEV_MODE_IP;      /* Default mode is IP */
 
 
     // Build a copy of the argv list.
@@ -2717,15 +2731,16 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  LCS_OPTSTRING    "n:m:o:dk:i:w"
+  #define  LCS_OPTSTRING    "e:n:m:o:dk:i:w"
 #else
-  #define  LCS_OPTSTRING    "n:x:m:o:d"
+  #define  LCS_OPTSTRING    "e:n:x:m:o:d"
 #endif
 #if defined( HAVE_GETOPT_LONG )
         int     iOpt;
 
         static struct option options[] =
         {
+            { "mode",   required_argument, NULL, 'e' },
             { "dev",    required_argument, NULL, 'n' },
 #if !defined(OPTION_W32_CTCI)
             { "if",     required_argument, NULL, 'x' },
@@ -2754,6 +2769,25 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
         switch (c)
         {
+
+        case 'e':  /* Mode */
+            if (strcmp( optarg, "SNA" ) == 0 )
+            {
+                bMode = LCSDEV_MODE_SNA;      /* Mode is SNA */
+            }
+            else if (strcmp( optarg, "IP" ) == 0 )
+            {
+                bMode = LCSDEV_MODE_IP;       /* Mode is IP (the default) */
+            }
+            else
+            {
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "device mode", optarg );
+                return -1;
+            }
+            break;
+
         case 'n':
 
             if (strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1)
@@ -2887,6 +2921,12 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         {
             /* The argument is an IPv4 address. If the -x option was specified, */
             /* it has pre-named the TAP interface that LCS will use (*nix).     */
+            if ( bMode == LCSDEV_MODE_SNA )      /* Is the mode SNA? */
+            {
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "IP address", *argv );
+                return -1;
+            }
             if ( pLCSBLK->pszIPAddress ) { free( pLCSBLK->pszIPAddress ); pLCSBLK->pszIPAddress = NULL; }
             pLCSBLK->pszIPAddress = strdup( *argv );
             pLCSBLK->Port[0].fPreconfigured = FALSE;
@@ -2922,7 +2962,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     }
 #endif /*!defined(OPTION_W32_CTCI)*/
 
-    return 0;
+    return bMode;
 }
 
 // ====================================================================
@@ -3126,6 +3166,44 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 return -1;
             }
 
+            /*                                                       */
+            /* The keyword is a device address.                      */
+            /*                                                       */
+            /* If the operand, i.e. the mode, is IP, the device      */
+            /* address can be either the even or the odd address of  */
+            /* an even/odd device address pair, e.g. either 0E42 or  */
+            /* 0E43. Whichever device address is specified will      */
+            /* become the read device, and the other device address  */
+            /* of the even/odd pair will become the write device.    */
+            /* For example, if device address 0E42 is specified,     */
+            /* device address 0E42 will become the read device, and  */
+            /* device address 0E43 will become the write device.     */
+            /* However, if device address 0E43 is specified, device  */
+            /* address 0E43 will become the read device, and device  */
+            /* address 0E42 will become the write device.            */
+            /*                                                       */
+            /* If the operand, i.e. the mode, is SNA, the device     */
+            /* address can be any device address, e.g. 0E42 or 0E43. */
+            /* SNA uses a single device for both read and write.     */
+            /*                                                       */
+            /* The following extract from an OAT illustrates the     */
+            /* above. The guest will have four interfaces, two IP    */
+            /* and two SNA. All four interfaces will use the same    */
+            /* port, i.e the tap. The first IP interface will use    */
+            /* the even device address 0E40 as the read device and   */
+            /* the odd device address 0E41 as the write device.      */
+            /* However, the second IP interface will use the odd     */
+            /* device address 0E43 as the read device and the even   */
+            /* device address 0E42 as the write device. The first    */
+            /* SNA interface will use the even device address 0E44,  */
+            /* and the second SNA interface will use the odd device  */
+            /* address 0E45.                                         */
+            /*                                                       */
+            /*   0E40  IP   00  NO  192.168.1.1                      */
+            /*   0E43  IP   00  NO  192.168.1.2                      */
+            /*   0E44  SNA  00                                       */
+            /*   0E45  SNA  00                                       */
+            /*                                                       */
             if (strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1)
             {
