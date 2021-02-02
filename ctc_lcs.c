@@ -157,6 +157,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     PLCSDEV     pLCSDev;
     PLCSPORT    pLCSPORT;
     int         i;
+    int         rc;
+    BYTE        bMode;   /* Either LCSDEV_MODE_IP or LCSDEV_MODE_SNA */
 
     struct in_addr  addr;               // Work area for addresses
 
@@ -200,12 +202,14 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         }
 
         // Parse configuration file statement
-        if (ParseArgs( pDEVBLK, pLCSBLK, argc, (char**) argv ) != 0)
+        rc = ParseArgs( pDEVBLK, pLCSBLK, argc, (char**) argv );
+        if (rc < 0)
         {
             free( pLCSBLK );
             pLCSBLK = NULL;
             return -1;
         }
+        bMode = rc;
 
         if (pLCSBLK->pszOATFilename)
         {
@@ -225,23 +229,32 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             pLCSBLK->pDevices = malloc( sizeof( LCSDEV ));
 
             memset( pLCSBLK->pDevices, 0, sizeof( LCSDEV ));
-
-            if (pLCSBLK->pszIPAddress)
-            {
-                pLCSBLK->pDevices->pszIPAddress = strdup( pLCSBLK->pszIPAddress );
-                inet_aton( pLCSBLK->pDevices->pszIPAddress, &addr );
-                pLCSBLK->pDevices->lIPAddress = addr.s_addr; // (network byte order)
-                pLCSBLK->pDevices->bType    = LCSDEV_TYPE_NONE;
-            }
-            else
-                pLCSBLK->pDevices->bType    = LCSDEV_TYPE_PRIMARY;
-
             pLCSBLK->pDevices->sAddr        = pDEVBLK->devnum;
-            pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
             pLCSBLK->pDevices->bPort        = 0;
             pLCSBLK->pDevices->pNext        = NULL;
 
-            pLCSBLK->icDevices = 2;
+            if (bMode == LCSDEV_MODE_IP)
+            {
+                if (pLCSBLK->pszIPAddress)
+                {
+                    pLCSBLK->pDevices->pszIPAddress = strdup( pLCSBLK->pszIPAddress );
+                    inet_aton( pLCSBLK->pDevices->pszIPAddress, &addr );
+                    pLCSBLK->pDevices->lIPAddress = addr.s_addr; // (network byte order)
+                    pLCSBLK->pDevices->bType    = LCSDEV_TYPE_NONE;
+                }
+                else
+                    pLCSBLK->pDevices->bType    = LCSDEV_TYPE_PRIMARY;
+
+                pLCSBLK->pDevices->bMode        = LCSDEV_MODE_IP;
+
+                pLCSBLK->icDevices = 2;
+            }
+            else
+            {
+                pLCSBLK->pDevices->bMode        = LCSDEV_MODE_SNA;
+
+                pLCSBLK->icDevices = 1;
+            }
         }
 
         // Now we must create the group
@@ -2682,6 +2695,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     char            **argv = argn;
     int             saw_if = 0;        /* -x (or --if) specified */
     int             saw_conf = 0;      /* Other configuration flags present */
+    BYTE            bMode = LCSDEV_MODE_IP;      /* Default mode is IP */
 
 
     // Build a copy of the argv list.
@@ -2717,15 +2731,16 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  LCS_OPTSTRING    "n:m:o:dk:i:w"
+  #define  LCS_OPTSTRING    "e:n:m:o:dk:i:w"
 #else
-  #define  LCS_OPTSTRING    "n:x:m:o:d"
+  #define  LCS_OPTSTRING    "e:n:x:m:o:d"
 #endif
 #if defined( HAVE_GETOPT_LONG )
         int     iOpt;
 
         static struct option options[] =
         {
+            { "mode",   required_argument, NULL, 'e' },
             { "dev",    required_argument, NULL, 'n' },
 #if !defined(OPTION_W32_CTCI)
             { "if",     required_argument, NULL, 'x' },
@@ -2754,6 +2769,25 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
         switch (c)
         {
+
+        case 'e':  /* Mode */
+            if (strcmp( optarg, "SNA" ) == 0 )
+            {
+                bMode = LCSDEV_MODE_SNA;      /* Mode is SNA */
+            }
+            else if (strcmp( optarg, "IP" ) == 0 )
+            {
+                bMode = LCSDEV_MODE_IP;       /* Mode is IP (the default) */
+            }
+            else
+            {
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "device mode", optarg );
+                return -1;
+            }
+            break;
+
         case 'n':
 
             if (strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1)
@@ -2887,6 +2921,12 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         {
             /* The argument is an IPv4 address. If the -x option was specified, */
             /* it has pre-named the TAP interface that LCS will use (*nix).     */
+            if ( bMode == LCSDEV_MODE_SNA )      /* Is the mode SNA? */
+            {
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "IP address", *argv );
+                return -1;
+            }
             if ( pLCSBLK->pszIPAddress ) { free( pLCSBLK->pszIPAddress ); pLCSBLK->pszIPAddress = NULL; }
             pLCSBLK->pszIPAddress = strdup( *argv );
             pLCSBLK->Port[0].fPreconfigured = FALSE;
@@ -2922,7 +2962,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     }
 #endif /*!defined(OPTION_W32_CTCI)*/
 
-    return 0;
+    return bMode;
 }
 
 // ====================================================================
