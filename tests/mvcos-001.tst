@@ -2,6 +2,8 @@
 
 # Created and placed into the public domain 27 JAN 2021 by Bob Polmanter.
 
+################################################################################
+#
 #     Execute the MVCOS instruction iteratively, each time trying a
 #     different combination of machine state, address space control
 #     mode, MVCOS operand 1 control modes, MVCOS operand 2 control
@@ -9,13 +11,14 @@
 #     These individual tests are nested in a series of loops, so that
 #     each state or mode is tested with each other combination of
 #     states or modes in an exhaustive way.  See mvcos-001.asm for
-#     specifc details
+#     specifc details.
 #
-#
+################################################################################
 
-###########################################################################################
 
-# set up, load, and run the test case
+################################################################################
+#                  set up, load, and run the test case
+################################################################################
 
 # Suppress logging of program checks. Processing of this  test script
 # intentionally generates program checks (specification exception) as part
@@ -39,9 +42,9 @@ runtest
 
 ostailor default
 
-###########################################################################################
-
-# Analyze results
+################################################################################
+#                             Analyze results
+################################################################################
 
 *Compare
 #                            0 1 2 3  4 5 6 7  8 9 A B  C D E F
