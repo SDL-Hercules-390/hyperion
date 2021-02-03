@@ -1,6 +1,6 @@
  TITLE '                   mvcos-001.asm        Test MVCOS Instruction'
 *Testcase mvsos001:   MVCOS
-* Created and placed into the public domain 
+* Created and placed into the public domain
 * 27 JAN 2021 by Bob Polmanter.
                                                                 SPACE
 R0       EQU   0          General Purpose Registers
@@ -78,16 +78,16 @@ CR15     EQU   15
 *     respectively.
 *
 * Upon success this is the number of tests performed:
+*
 *   Successfully completed MVCOS executions:             384
 *   Expected protection check events:                  1,152
 *   Expected special operation exception events:          92
 *   TOTAL TESTS:                                       1,328
 *
-* Test Success:   Disabled Wait PSW X'000'
-* Test Failure:   Disabled Wait PSW X'BAD'
-*
-* Unexpected program check:  Disabled Wait PSW X'00F'
-*
+* MVCOS Results Failure:      Disabled Wait PSW X'BAD1'
+* Overall Test Failure:       Disabled Wait PSW X'BAD9'
+* Overall Test Success:       Disabled Wait PSW X'0000'
+* Unexpected Program Check:   Disabled Wait PSW X'DEAD'
 *
 * The expected protection checks arise from enabling key controlled
 * protection in register 0 as specified by the instruction. Keys
@@ -156,7 +156,7 @@ CR15     EQU   15
 *
 * If any MVCOS test fails (data from the specified address space is
 * not identified as expected), the machine will be halted to preserve
-* results and a disabled wait PSW of X'BAD' will be loaded. Use
+* results and a disabled wait PSW of X'BAD1' will be loaded. Use
 * register 0 and the address space control value in byte PSWASC to
 * determine what should have been moved to where.  View the literals
 * at virtual location X'00010FF0' to determine which space you are
@@ -167,7 +167,7 @@ CR15     EQU   15
 * each address space.
 *
 * If an unexpected program check occurs, the PSW will be loaded with
-* a disabled wait code X'00F'. The machine is halted immediately
+* a disabled wait code X'DEAD'. The machine is halted immediately
 * upon occurance and no registers are altered; hence their values
 * reflect the state of the failure.
 *
@@ -249,7 +249,7 @@ CR15     EQU   15
 *
 *                   Execute MVCOS
 *
-*                   Check results; PSW=X'BAD' if failed
+*                   Check results; PSW=X'BAD1' if failed
 *                   Next loop 10
 *                   Next loop 9
 *                   Next loop 8
@@ -299,12 +299,10 @@ PGMNPSW  DC    X'04004000',X'80000000',A(0),A(PGMFLIH)  DAT ON, AR MODE
                                                                 SPACE 3
 *                     Test Counters
 *
-         ORG   STRTLABL+X'200'     Test counters
-MVCOSOK  DC    PL4'0'               # of successful tests
-PIC04    DC    PL4'0'               # of Pchecks 04
-PIC13    DC    PL4'0'               # of Pchecks 13
-         DC    F'0'
-*
+         ORG   STRTLABL+X'200'  Test counters
+MVCOSOK  DC    PL4'0'           # of successful MVCOS   =     384
+PIC04    DC    PL4'0'           # of Pchecks 04         =   1,152
+PIC13    DC    PL4'0'           # of Pchecks 13         =      92
          EJECT
 ***********************************************************************
 *                       Main program
@@ -560,7 +558,7 @@ CHK020   EQU   *
 *
          CLC   8(16,R1),0(R2)          Check if MVCOS worked
          BE    CHK100                  TEST SUCCESS
-         LPSWE TESTFAIL                Stop machine if test failed
+         LPSWE BADMVCOS                Stop machine if test failed
 *
 CHK100   EQU   *
          AP    MVCOSOK,=P'1'           Increment # successful tests
@@ -585,11 +583,17 @@ NEXTTEST EQU   *
          BCT   R14,STATE000            Switch to next PSW state
                                                                 SPACE 2
 ***********************************************************************
-*                         TEST SUCCESS?
+*                         END OF TEST
 ***********************************************************************
-*
          SVC   0                       Back to supervisor state
-         LPSWE GOODPSW                 Stop on success
+         CP    MVCOSOK,=P'384'         Expected count?
+         BNE   FAILTEST                No, test failure
+         CP    PIC04,=P'1152'          Expected count?
+         BNE   FAILTEST                No, test failure
+         CP    PIC13,=P'92'            Expected count?
+         BNE   FAILTEST                No, test failure
+         LPSWE TESTGOOD                Test SUCCESS
+FAILTEST LPSWE TESTBAD                 Test FAILURE
                                                                 SPACE 2
 ***********************************************************************
 *        SETAR and GETALET are blocks of EXecuted instructions
@@ -606,13 +610,8 @@ GETALET  LA    R2,0            AS=00   Primary, set ALET=0
          LA    R2,2               11   Home set ALET=2
                                                                 SPACE 2
 ***********************************************************************
-*                     HERE FOR SVCs
-*
-*         SVC  0  -  Set supervisor state in PSW
-*         SVC  1  -  Set problem state in PSW
-*
+* SVC 0: Set supervisor state in PSW, SVC 1: Set problem state in PSW
 ***********************************************************************
-         DC    0D'0'
 SVCFLIH  EQU   *                       SVC Interruption Routine
          MVC   SVCOPSW+1(1),SVCINTC+3  Set state based on SVC num
          LPSWE SVCOPSW                 Resume execution
@@ -621,7 +620,6 @@ SVCFLIH  EQU   *                       SVC Interruption Routine
 *                 HERE FOR PROGRAM CHECKS
 ***********************************************************************
 *
-         DC    0D'0'
 PGMFLIH  EQU   *                       Program check interruptions
          CLI   PGMINTC+3,X'13'         Was this a special op exception?
          BE    PGM13                   Yes, use microscope
@@ -670,7 +668,7 @@ PGMSTOP  EQU   *                       Halt if something wrong
 ***********************************************************************
 *
          LTORG
-                                                                SPACE 3
+                                                                SPACE
          DC    0D'0'
 PRIPG1   DC    CL16'PRI-PG1'            Eyecatcher
 PRIPG2   DC    CL16'PRI-PG2'            Eyecatcher
@@ -683,9 +681,10 @@ FROMPRI  DC    CL16'FROMPRI1FROMPRI2'   Eyecatcher
 FROMSEC  DC    CL16'FROMSEC1FROMSEC2'   Eyecatcher
 FROMHOM  DC    CL16'FROMHOM1FROMHOM2'   Eyecatcher
                                                                 SPACE 3
-TESTFAIL DC    X'0402400080000000',XL4'00',X'00000BAD'  TEST FAILED
-GOODPSW  DC    X'0402400080000000',XL4'00',X'00000000'  Test Success
-HALT     DC    X'04024000',X'80000000',XL4'00',X'0000000F' Abnormal end
+BADMVCOS DC    X'0402400080000000',XL4'00',X'0000BAD1'  MVCOS failed
+TESTBAD  DC    X'0402400080000000',XL4'00',X'0000BAD9'  Test Failure
+TESTGOOD DC    X'0402400080000000',XL4'00',X'00000000'  Test Success
+HALT     DC    X'0402400080000000',XL4'00',X'0000DEAD'  Test Crashed!
                                                                 SPACE 2
 *        Control registers
 *

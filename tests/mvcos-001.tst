@@ -36,19 +36,9 @@ archmode esame
 loadcore "$(testpath)/mvcos-001.core"
 
 # Run the program
-runtest
+runtest .5
 
 # Restore program check messages
-
 ostailor default
-
-################################################################################
-#                             Analyze results
-################################################################################
-
-*Compare
-#                            0 1 2 3  4 5 6 7  8 9 A B  C D E F
-r 200.0C
-*Want "# successful tests"  0000384C 0001152C 0000092C
 
 *Done
