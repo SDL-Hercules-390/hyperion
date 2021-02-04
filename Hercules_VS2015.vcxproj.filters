@@ -1955,6 +1955,9 @@
     <None Include="tests\mvcos-001.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\mvcos-001.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\mvcos-001.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>

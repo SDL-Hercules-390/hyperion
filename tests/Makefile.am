@@ -330,6 +330,11 @@ EXTRA_DIST =                    \
      mvcle.listing              \
      mvcle.tst                  \
      mvcos.txt                  \
+     mvcos-001.asm              \
+     mvcos-001.core             \
+     mvcos-001.list             \
+     mvcos-001.pdf              \
+     mvcos-001.tst              \
      mxtr.txt                   \
      pfpo.asm                   \
      pfpo.core                  \
