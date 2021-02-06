@@ -2047,7 +2047,7 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
         cacheidxe = endingoff >> ZCACHE_LINE_SHIFT;
 
         if (cacheidxe > (ZCACHE_LINE_PAGE - 1))
-            cacheidxe = (ZCACHE_LINE_PAGE - 1)
+            cacheidxe = (ZCACHE_LINE_PAGE - 1);
     }
 
     /* Check if we have already captured this page and if not,
