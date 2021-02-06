@@ -332,9 +332,6 @@ int         txf_tnd, txf_tac, slot;
             /* Set PIFC for this nesting level */
             regs->txf_pifc = regs->txf_pifctab[ txf_tnd - 1 ];
 
-            /* Reset CONSTRAINED trans instruction fetch constraint */
-            ARCH_DEP( reset_txf_aie )( regs );
-
             /* Remain in transactional-execution mode */
             PTT_TXF( "TXF end", 0, regs->txf_contran, txf_tnd );
             RELEASE_INTLOCK( regs );
@@ -521,6 +518,8 @@ int         txf_tnd, txf_tac, slot;
         /* Reset PPA assistance */
         regs->txf_PPA = 0;
 #endif
+        /* Reset CONSTRAINED trans instruction fetch constraint */
+        ARCH_DEP( reset_txf_aie )( regs );
 
         PERFORM_SERIALIZATION( regs );
     }
@@ -2046,6 +2045,9 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
 
         /* Data ends on this cache line */
         cacheidxe = endingoff >> ZCACHE_LINE_SHIFT;
+
+        if (cacheidxe > (ZCACHE_LINE_PAGE - 1))
+            cacheidxe = (ZCACHE_LINE_PAGE - 1)
     }
 
     /* Check if we have already captured this page and if not,
