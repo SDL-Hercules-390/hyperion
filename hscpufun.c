@@ -679,7 +679,7 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
         if (CMD( argv[1], DEFAULT, 7 ) || CMD( argv[1], RESET, 5 ))
         {
             sysblk.timerint     = DEF_TOD_UPDATE_USECS;
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
             sysblk.txf_timerint = sysblk.timerint;
 #endif
             if (MLVL( VERBOSE ))
@@ -699,7 +699,7 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
             )
             {
                 sysblk.timerint     = timerint;
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
                 sysblk.txf_timerint = sysblk.timerint;
 #endif
                 if (MLVL( VERBOSE ))
@@ -720,7 +720,7 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 
         if (rc == 0 && sysblk.config_processed)
         {

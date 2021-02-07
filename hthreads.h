@@ -256,7 +256,7 @@ typedef void* (THREAD_FUNC)( void* );   /* Generic thread function   */
 #define LOGGER_THREAD_NAME      "logger_thread"
 #define SCRIPT_THREAD_NAME      "script_thread"
 #define TIMER_THREAD_NAME       "timer_thread"
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 #define RUBATO_THREAD_NAME      "rubato_thread"
 #endif
 #define SCSISTAT_THREAD_NAME    "scsi_status"

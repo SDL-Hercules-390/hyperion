@@ -179,7 +179,7 @@ U64     diff;                           /* Interval                  */
 U64     halfdiff;                       /* One-half interval         */
 U64     waittime;                       /* Wait time                 */
 const U64   period = ETOD_SEC;          /* MIPS calculation period   */
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 bool    txf_PPA;                        /* true == PPA assist needed */
 #endif
 
@@ -198,7 +198,7 @@ bool    txf_PPA;                        /* true == PPA assist needed */
 
     while (!sysblk.shutfini)
     {
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         txf_PPA = false;                /* default until we learn otherwise */
 #endif
         /* Update TOD clock and save TOD clock value */
@@ -266,7 +266,7 @@ bool    txf_PPA;                        /* true == PPA assist needed */
                     regs->cpupct = min( (diff > waittime) ?
                         diffrate(diff - waittime, 100) : 0, 100 );
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
                     if (0
                         || (HOSTREGS  && HOSTREGS ->txf_PPA >= PPA_MUCH_HELP_THRESHOLD)
                         || (GUESTREGS && GUESTREGS->txf_PPA >= PPA_MUCH_HELP_THRESHOLD)
@@ -288,7 +288,7 @@ bool    txf_PPA;                        /* true == PPA assist needed */
 
         /* Sleep for another timer update interval... */
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
         if (txf_PPA)
             usleep( sysblk.txf_timerint );
         else
@@ -307,7 +307,7 @@ bool    txf_PPA;                        /* true == PPA assist needed */
 } /* end function timer_thread */
 
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 /*-------------------------------------------------------------------*/
 /*              Rubato style TIMERINT modulation                     */
 /*-------------------------------------------------------------------*/
@@ -399,4 +399,4 @@ void* rubato_thread( void* argp )
     return NULL;
 
 } /* end function rubato_thread */
-#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT ) */
+#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */

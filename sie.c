@@ -911,7 +911,7 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                    if External or I/O Interrupt is pending
                 */
                 if (1
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                     /* Don't interrupt active transaction */
                     && (GUESTREGS->txf_PPA < PPA_SOME_HELP_THRESHOLD)
 #endif
@@ -940,7 +940,7 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                     /* Process External Interrupt if one is pending */
                     if (1
                         && OPEN_IC_EXTPENDING( GUESTREGS )
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                         /* Don't interrupt active transaction */
                         && (GUESTREGS->txf_PPA < PPA_SOME_HELP_THRESHOLD)
 #endif
@@ -1170,7 +1170,7 @@ endloop:        ; // (nop to make compiler happy)
             /******************************************/
             while
             (0
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
              /* Don't interrupt active transaction */
              || (GUESTREGS->txf_PPA >= PPA_SOME_HELP_THRESHOLD)
 #endif

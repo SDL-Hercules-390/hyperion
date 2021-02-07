@@ -106,9 +106,7 @@ U32     abort_count;                    /* Transaction Abort count   */
     {
     case 1: // Transaction Abort Assist
     {
-#if defined( OPTION_TXF_PPA_SUPPORT )
         regs->txf_PPA = abort_count;
-#endif
         return;
     }
 #if defined( FEATURE_081_PPA_IN_ORDER_FACILITY )
@@ -514,10 +512,9 @@ int         txf_tnd, txf_tac, slot;
         /* Reset abort count */
         regs->txf_aborts = 0;
 
-#if defined( OPTION_TXF_PPA_SUPPORT )
         /* Reset PPA assistance */
         regs->txf_PPA = 0;
-#endif
+
         /* Reset CONSTRAINED trans instruction fetch constraint */
         ARCH_DEP( reset_txf_aie )( regs );
 
@@ -735,9 +732,8 @@ TPAGEMAP   *pmap;
         UNREACHABLE_CODE( return );
     }
 
-#if defined( OPTION_TXF_PPA_SUPPORT )
+    /* Count transaction */
     atomic_update32( &sysblk.txf_counter, +1 );
-#endif
 
     CONTRAN_INSTR_CHECK( regs );    /* Unallowed in CONSTRAINED mode */
 
@@ -1126,11 +1122,9 @@ int        retry;           /* Actual retry code                     */
     /* Count total retries for this transaction */
     regs->txf_aborts++;
 
-#if defined( OPTION_TXF_PPA_SUPPORT )
     /* Provide PPA assist for constrained transactions too */
     if (regs->txf_contran)
         regs->txf_PPA = regs->txf_aborts;
-#endif
 
     /* Track total aborts by cause (TAC) */
     if (regs->txf_tac == TAC_MISC)
@@ -2522,7 +2516,6 @@ void txf_model_warning( bool txf_enabled_or_enabling_txf )
     }
 }
 
-#if defined( OPTION_TXF_PPA_SUPPORT )
 /*-------------------------------------------------------------------*/
 /* Helper function to set a proper TXF timerint value                */
 /*-------------------------------------------------------------------*/
@@ -2549,11 +2542,9 @@ void txf_set_timerint( bool txf_enabled_or_enabling_txf )
     else
     {
         /* Reset the timerint value back to its original value */
-
         sysblk.timerint = sysblk.cfg_timerint;
     }
 }
-#endif /* defined( OPTION_TXF_PPA_SUPPORT ) */
 
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

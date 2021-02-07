@@ -1715,7 +1715,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         /* Process external interrupt */
         if (1
             && OPEN_IC_EXTPENDING( regs )
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
             /* Don't interrupt active transaction */
             && (regs->txf_PPA < PPA_SOME_HELP_THRESHOLD)
 #endif
@@ -1731,7 +1731,7 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
         {
             if (1
                 && OPEN_IC_IOPENDING( regs )
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                 /* Don't interrupt active transaction */
                 && (regs->txf_PPA < PPA_SOME_HELP_THRESHOLD)
 #endif
@@ -2327,7 +2327,7 @@ int   rc;
         }
     }
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (!sysblk.rubtid)
     {
         rc = create_thread( &sysblk.rubtid, DETACHED,

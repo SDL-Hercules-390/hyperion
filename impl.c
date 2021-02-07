@@ -835,7 +835,7 @@ int     rc;
 
     sysblk.timerint = DEF_TOD_UPDATE_USECS;
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) && defined( OPTION_TXF_PPA_SUPPORT )
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
     sysblk.txf_timerint = sysblk.timerint;
 #endif
 
@@ -1351,14 +1351,11 @@ int     rc;
     if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, ARCH_900_IDX ))
     {
         txf_model_warning( true );
-#if defined( OPTION_TXF_PPA_SUPPORT )
         txf_set_timerint( true );
-#endif
     }
-#if defined( OPTION_TXF_PPA_SUPPORT )
     else
         txf_set_timerint( false );
-#endif
+
 #endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     /* Process the .rc file synchronously when in daemon mode. */
