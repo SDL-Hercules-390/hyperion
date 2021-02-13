@@ -327,6 +327,12 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             STRLCPY( pLCSDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
         }
 
+        // Initialize the buffer size. See the programming note re
+        // frame buffer size in ctcadpt.h, and note that the LCS_Startup
+        // command might reduce the value in pLCSDEV->iMaxFrameBufferSize.
+        // For SNA, the LCS_Startup command seems to be not used.
+        pLCSDev->iMaxFrameBufferSize = sizeof(pLCSDev->bFrameBuffer);
+
         // Indicate that the DEVBLK(s) have been create sucessfully
         pLCSDev->fDevCreated = 1;
 
@@ -426,7 +432,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
         if (pLCSDev->pDEVBLK[1])
             pLCSDev->pDEVBLK[1]->fd = pLCSPORT->fd;
-    }
+
+    }   // end of  for (pLCSDev = pLCSBLK->pDevices; pLCSDev; pLCSDev = pLCSDev->pNext)
 
     return 0;
 }
@@ -1345,13 +1352,15 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 #ifdef OPTION_TUNTAP_DELADD_ROUTES
     PLCSRTE     pLCSRTE;
 #endif // OPTION_TUNTAP_DELADD_ROUTES
+    DEVBLK*     pDEVBLK;
     int         nIFFlags;
-    DEVBLK*     pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
     U8          fStartPending = 0;
 
     INIT_REPLY_FRAME( reply, pCmdFrame );
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
+    pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
+    if (!pDEVBLK) pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
 
     // Serialize access to eliminate ioctl errors
     PTT_DEBUG(        "GET  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
@@ -1456,6 +1465,7 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame )
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
     pDEVBLK  =  pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
+    if (!pDEVBLK) pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
 
     // Serialize access to eliminate ioctl errors
     PTT_DEBUG(        "GET  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
@@ -1824,10 +1834,18 @@ static void LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t iS
     BYTE      bPort;
     time_t    t1, t2;
 
+
     bPort = pLCSDEV->bPort;
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ bPort ];
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
+    // Trace command reply frame about to be enqueued...
+    if (pLCSDEV->pLCSBLK->fDebug)
+    {
+        // HHC00923 "%1d:%04X CTC: lcs command reply enqueue"
+        WRMSG( HHC00923, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
+        net_data_trace( pDEVBLK, (BYTE*)pReply, iSize, '>', 'D', "reply", 0 );
+    }
 
     PTT_DEBUG( "ENQ RepFrame ENTRY", pReply->bCmdCode, pDEVBLK->devnum, bPort );
 

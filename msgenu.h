@@ -782,6 +782,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC00920 "%1d:%04X CTC: lcs device %04X not in configuration"
 #define HHC00921 "CTC: lcs device port %2.2X: %s Multicast assist enabled"
 #define HHC00922 "%1d:%04X CTC: lcs command packet received"
+#define HHC00923 "%1d:%04X CTC: lcs command reply enqueue"
 #define HHC00933 "%1d:%04X CTC: executing command %s"
 #define HHC00934 "%1d:%04X CTC: sending packet to file %s"
 #define HHC00935 "CTC: lcs device port %2.2X: %s Checksum Offload enabled"
