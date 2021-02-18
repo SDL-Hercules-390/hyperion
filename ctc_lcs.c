@@ -110,26 +110,26 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 //                       Helper macros
 // ====================================================================
 
-#define INIT_REPLY_FRAME( pReply, iReplyLen, pCmdFrame, iCmdLen )  \
+#define INIT_REPLY_FRAME( pReply, iReplyLen, pCmdFrame, iCmdLen )    \
     do                                                               \
     {                                                                \
-        if ( (iCmdLen) >= (iReplyLen) )                            \
+        if ( (iCmdLen) >= (iReplyLen) )                              \
         {                                                            \
             memcpy( (pReply), (pCmdFrame), (iReplyLen) );            \
         }                                                            \
         else                                                         \
         {                                                            \
             memset( (pReply), 0, (iReplyLen) );                      \
-            memcpy( (pReply), (pCmdFrame), (iCmdLen) );            \
-            (iReplyLen) = (iCmdLen);                               \
+            memcpy( (pReply), (pCmdFrame), (iCmdLen) );              \
+            (iReplyLen) = (iCmdLen);                                 \
         }                                                            \
         STORE_HW( (pReply)->bLCSCmdHdr.bLCSHdr.hwOffset, 0x0000 );   \
         STORE_HW( (pReply)->bLCSCmdHdr.hwReturnCode, 0x0000 );       \
     }                                                                \
     while (0)
 
-#define ENQUEUE_REPLY_FRAME( pLCSDEV, pReply, iReplyLen )               \
-                                                            \
+#define ENQUEUE_REPLY_FRAME( pLCSDEV, pReply, iReplyLen )            \
+                                                                     \
     LCS_EnqueueReplyFrame( (pLCSDEV), (LCSCMDHDR*) (pReply), (iReplyLen) )
 
 #define SET_CPKTTYPE( ethtyp, pkttyp )                                        \
