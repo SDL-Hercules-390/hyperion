@@ -29,6 +29,7 @@ struct HTHREAD                  /* Hercules internal thread structure*/
     TID          ht_tid;        /* Thread-Id of the thread           */
     LOCK*        ht_ob_lock;    /* Lock attempting to obtain or NULL */
     TIMEVAL      ht_ob_time;    /* Time of day when obtain attempted */
+    const char*  ht_ob_where;   /* Location where obtain attempted   */
     const char*  ht_name;       /* strdup of Thread name             */
     bool         ht_footprint;  /* Footprint for deadlock detection  */
 };
@@ -472,12 +473,14 @@ static HTHREAD* hthread_find_HTHREAD( TID tid )
 /*-------------------------------------------------------------------*/
 /* Remember that a thread is waiting to obtain a given lock          */
 /*-------------------------------------------------------------------*/
-static void hthread_obtaining_lock( LOCK* plk )
+static void hthread_obtaining_lock( LOCK* plk, const char* loc )
 {
     HTHREAD* ht;
     if (!(ht = hthread_find_HTHREAD( hthread_self() )))
         return;
     ht->ht_ob_lock = plk;
+    free( ht->ht_ob_where );
+    ht->ht_ob_where = strdup( loc );
     gettimeofday( &ht->ht_ob_time, NULL );
 }
 
@@ -502,7 +505,7 @@ DLL_EXPORT int  hthread_obtain_lock( LOCK* plk, const char* obtain_loc )
     ILOCK* ilk;
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
-    hthread_obtaining_lock( plk );
+    hthread_obtaining_lock( plk, obtain_loc );
     PTTRACE( "lock before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_mutex_trylock( &ilk->il_lock );
     if (EBUSY == rc)
@@ -725,7 +728,7 @@ DLL_EXPORT int  hthread_obtain_rdlock( RWLOCK* plk, const char* obtain_loc )
     U64 waitdur;
     ILOCK* ilk;
     ilk = (ILOCK*) plk->ilk;
-    hthread_obtaining_lock( (LOCK*) plk );
+    hthread_obtaining_lock( (LOCK*) plk, obtain_loc );
     PTTRACE( "rdlock before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_rwlock_tryrdlock( &ilk->il_rwlock );
     if (EBUSY == rc)
@@ -753,7 +756,7 @@ DLL_EXPORT int  hthread_obtain_wrlock( RWLOCK* plk, const char* obtain_loc )
     ILOCK* ilk;
     TIMEVAL tv;
     ilk = (ILOCK*) plk->ilk;
-    hthread_obtaining_lock( (LOCK*) plk );
+    hthread_obtaining_lock( (LOCK*) plk, obtain_loc );
     PTTRACE( "wrlock before", plk, NULL, obtain_loc, PTT_MAGIC );
     rc = hthread_rwlock_trywrlock( &ilk->il_rwlock );
     if (EBUSY == rc)
@@ -1612,11 +1615,11 @@ DLL_EXPORT int threads_cmd( int argc, char* argv[], char* cmdline )
                         {
                             FormatTIMEVAL( &ht[i].ht_ob_time, ht_ob_time, sizeof( ht_ob_time ));
 
-                            // "Thread %-15.15s tid="TIDPAT" waiting since %s for lock %s = "PTR_FMTx
+                            // "Thread %-15.15s tid="TIDPAT" waiting since %s at %s for lock %s = "PTR_FMTx
 
                             WRMSG( HHC90023, "W", ht[i].ht_name, TID_CAST( ht[i].ht_tid ),
-                                &ht_ob_time[11], get_lock_name( ht[i].ht_ob_lock ),
-                                PTR_CAST( ht[i].ht_ob_lock ));
+                                &ht_ob_time[11], TRIMLOC( ht[i].ht_ob_where ),
+                                get_lock_name( ht[i].ht_ob_lock ), PTR_CAST( ht[i].ht_ob_lock ));
                         }
                         else
                         {
