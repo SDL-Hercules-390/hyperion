@@ -2041,6 +2041,7 @@ static int  CTCE_Init( DEVBLK *dev, int argc, char *argv[] )
                     CTCX_DEVNUM( dev ), dev->ctce_rccuu );
                 return -1;
             }
+            dev->ctce_rccuu += dev->numconfdev - 1;
         }
 
         // Remote CCUU addresses < 256 are not supported, but such values
@@ -2329,8 +2330,9 @@ static void*  CTCE_ListenThread( void* argp )
                             && dev->allocated
                             && dev->ctctype == CTC_CTCE
                             && dev->ctce_ipaddr.s_addr == parm_listen.addr.sin_addr.s_addr
+                            && dev->ctce_rport == pSokBuf->ctce_lport
                             &&  ( 0
-                                || ( ( dev->ctce_rccuu == 0 ) && ( dev->ctce_rport == pSokBuf->ctce_lport ) )
+                                ||   ( dev->ctce_rccuu == 0 )
                                 || ( ( dev->ctce_rccuu != 0 ) && ( dev->ctce_rccuu == pSokBuf->devnum     ) )
                                 )
                             )

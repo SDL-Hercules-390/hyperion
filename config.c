@@ -2127,7 +2127,7 @@ int parse_and_attach_devices(const char *sdevnum,
                    orig_newargv[j]=newargv[j]=resolve_symbol_string(addargv[j]);
                }
                /* Build the device configuration block */
-               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv, numconfdev);
+               rc=attach_device(dnd.lcss, devnum, sdevtype, addargc, newargv, devnum - da[i].cuu1 + 1);
                for(j=0;j<addargc;j++)
                {
                    free(orig_newargv[j]);
