@@ -1152,33 +1152,48 @@ The following special variables are recognized:
 <p>
 Note that substitution of a $<i>n</i> variable does not occur if there are
 fewer than <i>n</i> capturing groups in the regular expression.
+
 <p>
-As an example, the rule below issues the command 'i 001F' in response to
-the message HHCTE014I 3270 device 001F client 127.0.0.1 connection reset:
+As an example, the rule below issues the command "<code>i 001F</code>" in response to
+the Hercules message "<code>HHC01090I 0:001F COMM: client 127.0.0.1 devtype 3270:
+connection reset</code>":
 <pre>
-   hao tgt HHCTE014I 3270 device ([0-9A-F]{3,4})
+   hao tgt HHC01090I .:([0-9A-F]{4}) COMM: .* connection reset
    hao cmd i $1
 </pre>
+
 <p>
 Another example, shown below, illustrates how the dot matrix display of a
-3480 tape unit might be used to implement an automatic tape library:
+3590(?) tape unit might be used to implement an automatic tape library in
+response to the Hercules message "<code>HHC00224I 0:0581 Tape file *, type
+HET: display "K2DSBK2 " / "M2DSBK3S" (alternating)</code>":
 <pre>
-   hao tgt HHCTA010I ([0-9A-F]{4}): Now Displays: (?:".{8}" / )?"M([A-Z0-9]{1,6})\s*S"
-   hao cmd devinit $1 /u/tapes/$2.awstape
+   hao tgt HHC00224I .:([0-9A-F]{4}) Tape file .*: display (?:".{8}" \/ )?"M([A-Z0-9]{1,6})\s*S"
+   hao cmd devinit $1 /u/tapes/$2.aws
 </pre>
+Which would result in the Hercules command "<code>devinit 0581 /u/tapes/2DSBK3.aws</code>"
+being automatically issued.
+
+<p>
+More information about Perl Compatible Regular Expression (PCRE) syntax (as well as a nice online web page that allows you to test your expressions) can be found here:
+<p>
+<ul>
+<li><a href="https://www.debuggex.com/cheatsheet/regex/pcre">PCRE Regex Cheatsheet</a>
+<li><a href="https://regex101.com/">Online PCRE test page</a>
+</ul>
 
 <h5>Other commands and limitations</h5>
 <p>
-To delete a fully or partially defined HAO rule, first use the 'hao list'
+To delete a fully or partially defined HAO rule, first use the "<code>hao list</code>"
 command to list all of the defined (or partially defined) rules, and then use
-the 'hao del <i>nnn</i>' command to delete the specific rule identified by
+the "<code>hao del <i>nnn</i></code>" command to delete the specific rule identified by
 <i>nnn</i> (all rules are assigned numbers as they are defined and are thus
 identified by their numeric value). Optionally, you can delete all defined or
-partially defined rules by issuing the command 'hao clear'.
+partially defined rules by issuing the command "<code>hao clear</code>".
 <p>
 The current implementation limits the total number of defined rules to 64.
-This limit may be raised by  increasing the value of the HAO_MAXRULE
-constant in hao.c and rebuilding Hercules.
+This limit may be raised by  increasing the value of the <code>HAO_MAXRULE</code>
+constant in source file <code>hao.c</code> and then rebuilding Hercules.
 <p>
 All defined rules are checked for a match each time Hercules issues a message.
 There is no way to specify "stop processing subsequent rules". If a message is

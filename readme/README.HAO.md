@@ -52,15 +52,22 @@ The following special variables are recognized:
 
 Note that substitution of a $n variable does not occur if there are fewer than n capturing groups in the regular expression.
 
-As an example, the rule below issues the command `i 001F` in response to the message `HHCTE014I 3270 device 001F client 127.0.0.1 connection reset`:
+As an example, the rule below issues the Hercules command `i 001F` in response to the Hercules message "`HHC01090I 0:001F COMM: client 127.0.0.1 devtype 3270: connection reset`":
 
-    hao tgt HHCTE014I 3270 device ([0-9A-F]{3,4})
+    hao tgt HHC01090I .:([0-9A-F]{4}) COMM: .* connection reset
     hao cmd i $1
 
-Another example, shown below, illustrates how the dot matrix display of a 3480 tape unit might be used to implement an automatic tape library:
+Another example, shown below, illustrates how the dot matrix display of a 3590(?) tape unit might be used to implement an automatic tape library in response to the Hercules message "`HHC00224I 0:0581 Tape file *, type HET: display "K2DSBK2 " / "M2DSBK3S" (alternating)`":
 
-    hao tgt HHCTA010I ([0-9A-F]{4}): Now Displays: (?:".{8}" / )?"M([A-Z0-9]{1,6})\s*S"
-    hao cmd devinit $1 /u/tapes/$2.awstape
+    hao tgt HHC00224I .:([0-9A-F]{4}) Tape file .*: display (?:".{8}" \/ )?"M([A-Z0-9]{1,6})\s*S"
+    hao cmd devinit $1 /u/tapes/$2.aws
+
+Which would result in the Hercules command "`devinit 0581 /u/tapes/2DSBK3.aws`" being automatically issued.
+
+More information about Perl Compatible Regular Expression (PCRE) syntax (as well as a nice online web page that allows you to test your expressions) can be found here:
+
+  *  [PCRE Regex Cheatsheet](https://www.debuggex.com/cheatsheet/regex/pcre)
+  *  [Online PCRE test page](https://regex101.com/)
 
 ## Other commands and limitations
 
@@ -75,4 +82,4 @@ To delete a fully or partially defined HAO rule, first use the `hao list` comman
 The Hercules Automatic Operator facility was designed eons ago (or so it seems anyway) by Bernard van der Helm of Noordwijkerhout, The Netherlands, and is thus copyrighted by him. All I did was FINALLY get around to implementing it in the current release of Hercules. If you like it and find it to be useful, I think it'd be real nice if you'd let Bernard know that. Thanks.
 
 -- Fish
-July 2013
+February 2021

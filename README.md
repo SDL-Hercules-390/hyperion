@@ -62,7 +62,7 @@ to our **bug report tracking system** by adding/creating a new
 
 [Customizable Hercules 3270 Logo](readme/README.HERCLOGO.md)  
 [Guest Access To Host IP Stack - The TCPIP (X'75') Instruction](readme/README.TCPIP.md)  
-[Hercules Automatic Operator](readme/README.HAO.md)  
+[HAO (Hercules Automatic Operator)](readme/README.HAO.md)  
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules Networking](readme/README.NETWORKING.md)  
 [TCPNJE Support](readme/README.TCPNJE.md)  
