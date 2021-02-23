@@ -420,7 +420,7 @@ void ARCH_DEP( SuccessfulBranch )( REGS* regs, VADR vaddr )
         /* Check for constraint BEFORE actually updating to new ip */
         BYTE* ip = regs->aip + (vaddr - regs->AIV);
         PTT_INF( "branch", vaddr, regs->AIV, ip );
-        TXF_INSTRADDR_CONSTRAINT( ip, regs );
+        TXF_INSTRADDR_CONSTRAINT( regs );
         regs->ip = ip;              /* branch to the new instruction */
         return;
     }
@@ -460,7 +460,7 @@ void ARCH_DEP( SuccessfulRelativeBranch )( REGS* regs, S64 offset )
         /* Check for constraint BEFORE actually updating to new ip */
         BYTE* ip = regs->ip + offset;
         PTT_INF( "rbranch <", regs->ip, offset, regs->aip );
-        TXF_INSTRADDR_CONSTRAINT( ip, regs );
+        TXF_INSTRADDR_CONSTRAINT( regs );
         regs->ip = ip;
         return;
     }
