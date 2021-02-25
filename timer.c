@@ -337,61 +337,69 @@ void* rubato_thread( void* argp )
     starting_timerint    = 0;
     intervals_per_second = MAX_TOD_UPDATE_USECS / sysblk.txf_timerint;
 
-    while (!sysblk.shutfini)
+    obtain_lock( &sysblk.rublock );
     {
-        /* Detect change to starting timerint value */
-        if (sysblk.timerint != starting_timerint)
+        while (!sysblk.shutfini && sysblk.rubtid)
         {
-            sysblk.txf_timerint = starting_timerint = sysblk.timerint;
+            /* Detect change to starting timerint value */
+            if (sysblk.timerint != starting_timerint)
+            {
+                sysblk.txf_timerint = starting_timerint = sysblk.timerint;
+                intervals_per_second = MAX_TOD_UPDATE_USECS / sysblk.txf_timerint;
+            }
+
+            /* Create room for a new transactions count */
+            for (i=1; i < 5; i++)
+                count[i-1] = count[i];
+
+            /* Insert new transactions count into array */
+            count[4] = sysblk.txf_counter;
+            sysblk.txf_counter = 0;
+
+            /* Calculate a maximum transactions-per-second rate
+               based on our past transactions count history.
+            */
+            max_tps_rate = 0;
+            for (i=0; i < 5; i++)
+                max_tps_rate = MAX( max_tps_rate, count[i] );
+            max_tps_rate *= intervals_per_second;
+
+            /* Now adjust the timer interrupt interval correspondingly...
+               The goal is to reduce the frequency of timer interrupts
+               during periods of high transaction rates by slightly
+               increasing the interval between timer interrupts
+               (thus causing timer interrupts to occur less frequently)
+               or reducing the interval (so that they occur slightly more
+               frequently), with the minimum interval (maximum frequency)
+               being the original user specified TIMERINT value and the
+               maximum interval (minimum frequency) being one second.
+            */
+
+            /* Calculate new timer update interval based on past 5 rates */
+            new_timerint_usecs = (int) (286000.0 * log( ((double) max_tps_rate + 200.0) / 100.0 ) - 212180.0);
+
+            /* MINMAX(x,y,z): ensure x remains within range y to z */
+            MINMAX( new_timerint_usecs, MIN_TOD_UPDATE_USECS, MAX_TOD_UPDATE_USECS );
+
+            sysblk.txf_timerint = new_timerint_usecs;
             intervals_per_second = MAX_TOD_UPDATE_USECS / sysblk.txf_timerint;
+
+            /* Now go back to sleep and wake up a little bit LATER than
+               before, or a little bit SOONER than before, before checking
+               again to see whether the period of high transaction rate
+               has finally subsided or not.
+            */
+            release_lock( &sysblk.rublock );
+            {
+                usleep( sysblk.txf_timerint );
+            }
+            obtain_lock( &sysblk.rublock );
         }
 
-        /* Create room for a new transactions count */
-        for (i=1; i < 5; i++)
-            count[i-1] = count[i];
-
-        /* Insert new transactions count into array */
-        count[4] = sysblk.txf_counter;
-        sysblk.txf_counter = 0;
-
-        /* Calculate a maximum transactions-per-second rate
-           based on our past transactions count history.
-        */
-        max_tps_rate = 0;
-        for (i=0; i < 5; i++)
-            max_tps_rate = MAX( max_tps_rate, count[i] );
-        max_tps_rate *= intervals_per_second;
-
-        /* Now adjust the timer interrupt interval correspondingly...
-           The goal is to reduce the frequency of timer interrupts
-           during periods of high transaction rates by slightly
-           increasing the interval between timer interrupts
-           (thus causing timer interrupts to occur less frequently)
-           or reducing the interval (so that they occur slightly more
-           frequently), with the minimum interval (maximum frequency)
-           being the original user specified TIMERINT value and the
-           maximum interval (minimum frequency) being one second.
-        */
-
-        /* Calculate new timer update interval based on past 5 rates */
-        new_timerint_usecs = (int) (286000.0 * log( ((double) max_tps_rate + 200.0) / 100.0 ) - 212180.0);
-
-        /* MINMAX(x,y,z): ensure x remains within range y to z */
-        MINMAX( new_timerint_usecs, MIN_TOD_UPDATE_USECS, MAX_TOD_UPDATE_USECS );
-
-        sysblk.txf_timerint = new_timerint_usecs;
-        intervals_per_second = MAX_TOD_UPDATE_USECS / sysblk.txf_timerint;
-
-        /* Now go back to sleep and wake up a little bit LATER than
-           before, or a little bit SOONER than before, before checking
-           again to see whether the period of high transaction rate
-           has finally subsided or not.
-        */
-        usleep( sysblk.txf_timerint );
+        sysblk.rubtid = 0;
+        sysblk.txf_timerint = sysblk.timerint;
     }
-
-    sysblk.rubtid = 0;
-    sysblk.txf_timerint = sysblk.timerint;
+    release_lock( &sysblk.rublock );
 
     // "Thread id "TIDPAT", prio %2d, name %s ended"
     LOG_THREAD_END( RUBATO_THREAD_NAME );

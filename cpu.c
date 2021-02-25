@@ -2324,20 +2324,6 @@ int   rc;
         }
     }
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (!sysblk.rubtid)
-    {
-        rc = create_thread( &sysblk.rubtid, DETACHED,
-             rubato_thread, NULL, RUBATO_THREAD_NAME );
-        if (rc)
-        {
-            WRMSG( HHC00102, "E", strerror( rc ));
-            RELEASE_INTLOCK( NULL );
-            return NULL;
-        }
-    }
-#endif
-
     /* Set CPU thread priority */
     set_thread_priority( sysblk.cpuprio);
 

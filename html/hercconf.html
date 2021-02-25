@@ -1469,17 +1469,18 @@ a real System/390.  The configuration file is an ASCII text file.
     updates the TOD Clock, CPU Timer, and other architectural related
     clock/timer values.  The default interval is 50 microseconds, which
     strikes a reasonable balance between clock accuracy and overall host
-    performance. The minimum allowed value is 1 microsecond and the maximum
-    is 1000000 microseconds (i.e. one second). Also note that due to host
-    system limitations and/or design, some hosts might round or
+    performance. For performance reasons, the minimum allowed value is also
+    50 microsecond as well. The maximum value is 1000000 microseconds
+    (i.e. one second). Also note that due to host system limitations and/or
+    design, some host operating systems might round or
     <a href="https://en.wikipedia.org/wiki/Timer_coalescing">coalesce</a>
     microsecond wait intervals up to a longer millisecond interval instead.
     <p>
-    <i><b>Caution:</b> &nbsp;While a lower TIMERINT value may help
+    <i><b>CAUTION!</b> &nbsp;While a lower TIMERINT value may help
     increase the accuracy of your guest's TOD Clock and CPU Timer values,
-    it could also have a severe negative impact on the overall performance
+    it could also have a <u>severe negative impact</u> on the overall performance
     of your host operating system depending on the priority (or 'nice' value)
-    of the Hercules process itself.
+    assigned to the Hercules process itself!
     </i>
     <p>
 

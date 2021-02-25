@@ -2538,9 +2538,31 @@ void txf_set_timerint( bool txf_enabled_or_enabling_txf )
 
             sysblk.txf_timerint = sysblk.timerint = DEF_TXF_TIMERINT;
         }
+
+        /* Start the rubato_thread if it hasn't been started yet */
+        obtain_lock( &sysblk.rublock );
+        {
+            if (!sysblk.rubtid)
+            {
+                int rc = create_thread( &sysblk.rubtid, DETACHED,
+                     rubato_thread, NULL, RUBATO_THREAD_NAME );
+                if (rc)
+                    // "Error in function create_thread(): %s"
+                    WRMSG( HHC00102, "E", strerror( rc ));
+            }
+        }
+        release_lock( &sysblk.rublock );
     }
     else
     {
+        /* Stop the rubato_thread if it's still running */
+        obtain_lock( &sysblk.rublock );
+        {
+            /* Tell rubato_thread to please exit */
+            sysblk.rubtid = 0;
+        }
+        release_lock( &sysblk.rublock );
+
         /* Reset the timerint value back to its original value */
         sysblk.timerint = sysblk.cfg_timerint;
     }

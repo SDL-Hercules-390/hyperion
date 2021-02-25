@@ -675,6 +675,7 @@ struct SYSBLK {
         int     txf_cpuad;              /* (only when TXF_TR_CPU)    */
 
         TID     rubtid;                 /* Threadid for rubato timer */
+        LOCK    rublock;                /* Rubato thread lock        */
         U32     txf_counter;            /* counts TBEGIN/TBEGINC     */
         int     txf_timerint;           /* modulation of timerint    */
 
