@@ -3884,6 +3884,10 @@ U32 mask4;
     {
         /* This code is executed for each device in the group. */
 
+
+        memset( dev->sense,        0,       sizeof( dev->sense     ));
+        memcpy( dev->devid, sense_id_bytes, sizeof( sense_id_bytes ));
+
         dev->rcd         =  &qeth_read_configuration_data;
         dev->numsense    =  32;
         dev->numdevid    =  sizeof( sense_id_bytes );
@@ -3891,9 +3895,6 @@ U32 mask4;
         dev->chptype[0]  =  CHP_TYPE_OSD;
         dev->pmcw.flag4 |=  PMCW4_Q;
         dev->fd          =  -1;
-
-        memset( dev->sense,        0,       sizeof( dev->sense     ));
-        memcpy( dev->devid, sense_id_bytes, sizeof( sense_id_bytes ));
 
         /* Setting dev->bufsize = 0xFFFF causes, on return to attach_device */
         /* in config.c, storage of size 0xFFFF bytes to be obtained, and    */
