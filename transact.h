@@ -34,8 +34,8 @@
                                       /* Cache lines per 4K page     */
 #define  ZOCTOWORD_SIZE       (8*4)   /* IBM z "octoword" size       */
 
-#define  PPA_SOME_HELP_THRESHOLD  2   /* Provide SOME assistance     */
-#define  PPA_MUCH_HELP_THRESHOLD  4   /* Provide LOTS of assistance! */
+#define  PPA_SOME_HELP_THRESHOLD  1   /* Provide SOME assistance     */
+#define  PPA_MUCH_HELP_THRESHOLD  2   /* Provide LOTS of assistance! */
 
 #define  MIN_TXF_TIMERINT       200   /* Minimum txf_timerint value  */
 #define  DEF_TXF_TIMERINT       400   /* Default txf_timerint value  */
