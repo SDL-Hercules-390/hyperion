@@ -1882,7 +1882,7 @@ U16 offph;
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_0008:       /* 0x0008 */
-                        strcat( dev->dev_data, ": CMD_0006" );         /* Prepare the contentstring */
+                        strcat( dev->dev_data, ": CMD_0008" );         /* Prepare the contentstring */
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     default:
