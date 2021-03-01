@@ -755,8 +755,9 @@ struct MPC_IPA_SAS_HDR {
 #define IPA_SAS_CMD_STOP       0x0002
 #define IPA_SAS_CMD_CONFIGURE  0x0003
 #define IPA_SAS_CMD_ENABLE     0x0004
-#define IPA_SAS_CMD_0005       0x0005   /* I wonder what */
-#define IPA_SAS_CMD_0006       0x0006   /* these two do? */
+#define IPA_SAS_CMD_0005       0x0005   /* I wonder what this does?  */
+#define IPA_SAS_CMD_0006       0x0006   /* And this?                 */
+#define IPA_SAS_CMD_0008       0x0008   /* And this?                 */
 /*008*/ HWORD   rc;             /* Return code                       */
 /*00A*/ BYTE    norep;          /* Number of replies                 */
 /*00B*/ BYTE    seqno;          /* Sequence number                   */

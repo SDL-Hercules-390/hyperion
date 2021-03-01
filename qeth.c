@@ -1852,7 +1852,7 @@ U16 offph;
                     FETCH_FW(ano,ipa_sas->hdr.ano);    /* Assist number */
                     FETCH_HW(cmd,ipa_sas->hdr.cmd);    /* Command code */
                     FETCH_HW(len,ipa_sas->hdr.len);    /* Length */
-                    MSGBUF(anoc, " 0x%08X", ano);
+                    MSGBUF(anoc, " 0x%08X", ano);      /* Assist number in hex character */
 
                     strcat( dev->dev_data, ": IPA_CMD_SETASSPARMS" );  /* Prepare the contentstring */
                     strcat( dev->dev_data, protoc );                   /* Prepare the contentstring */
@@ -1878,6 +1878,10 @@ U16 offph;
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
+                        strcat( dev->dev_data, ": CMD_0006" );         /* Prepare the contentstring */
+                        strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
+                        break;
+                    case IPA_SAS_CMD_0008:       /* 0x0008 */
                         strcat( dev->dev_data, ": CMD_0006" );         /* Prepare the contentstring */
                         strcat( dev->dev_data, anoc );                 /* Prepare the contentstring */
                         break;
@@ -1933,6 +1937,7 @@ U16 offph;
                     case IPA_SAS_CMD_ENABLE:     /* 0x0004 */
                     case IPA_SAS_CMD_0005:       /* 0x0005 */
                     case IPA_SAS_CMD_0006:       /* 0x0006 */
+                    case IPA_SAS_CMD_0008:       /* 0x0008 */
                         STORE_HW(ipa_sas->hdr.rc,IPA_RC_OK);
                         STORE_HW(ipa->rc,IPA_RC_OK);
                         break;
