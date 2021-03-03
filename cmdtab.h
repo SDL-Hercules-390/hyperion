@@ -844,21 +844,25 @@
   "hardware     specifies the hardware model setting. Specifying an \"=\"\n"    \
   "             resets the hardware model to \"EMULATOR\"; specifying an\n"     \
   "             \"*\" leaves the current hardware model setting intact.\n"      \
+  "             Valid characters are 0-9 and uppercase A-Z only.\n"             \
   "             The default hardware model is \"EMULATOR\".\n"                  \
   "\n"                                                                          \
   "capacity     specifies the capacity model setting. Specifying an \"=\"\n"    \
   "             copies the current hardware model; specifying an \"*\" \n"      \
-  "             leaves the current capacity model setting intact. The\n"        \
-  "             default capacity model is \"EMULATOR\".\n"                      \
+  "             leaves the current capacity model setting intact.\n"            \
+  "             Valid characters are 0-9 and uppercase A-Z only.\n"             \
+  "             The default capacity model is \"EMULATOR\".\n"                  \
   "\n"                                                                          \
   "permanent    specifies the permanent model setting. Specifying an\n"         \
   "             \"=\" copies the current capacity model; specifying an\n"       \
   "             \"*\" leaves the current permanent model setting intact.\n"     \
+  "             Valid characters are 0-9 and uppercase A-Z only.\n"             \
   "             The default permanent model is \"\" (null string).\n"           \
   "\n"                                                                          \
   "temporary    specifies the temporary model setting. Specifying an\n"         \
   "             \"=\" copies the current permanent model; specifying an\n"      \
   "             \"*\" leaves the current temporary model setting intact.\n"     \
+  "             Valid characters are 0-9 and uppercase A-Z only.\n"             \
   "             The default temporary model is \"\" (null string).\n"
 
 #define modpath_cmd_desc        "Set module load path"

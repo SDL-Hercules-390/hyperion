@@ -428,31 +428,6 @@ int set_model(char *m1, char *m2, char *m3, char *m4)
     return 0;
 }
 
-LOADPARM_DLL_IMPORT
-char **str_model()
-{
-    static char h_model[sizeof(gsysinfo.model)+1];
-    static char c_model[sizeof(gsysinfo.modelcapa)+1];
-    static char p_model[sizeof(gsysinfo.modelperm)+1];
-    static char t_model[sizeof(gsysinfo.modeltemp)+1];
-    static char *models[5] = { h_model, c_model, p_model, t_model, NULL };
-
-    if (gsysinfo_init_flg == FALSE )
-        get_gsysinfo(NULL);
-
-    memset(h_model, 0, sizeof(h_model));
-    memset(c_model, 0, sizeof(c_model));
-    memset(p_model, 0, sizeof(p_model));
-    memset(t_model, 0, sizeof(t_model));
-
-    (void)copy_ebcdic_to_stringz(h_model, sizeof(h_model), gsysinfo.model, sizeof(gsysinfo.model));
-    (void)copy_ebcdic_to_stringz(c_model, sizeof(c_model), gsysinfo.modelcapa, sizeof(gsysinfo.modelcapa));
-    (void)copy_ebcdic_to_stringz(p_model, sizeof(p_model), gsysinfo.modelperm, sizeof(gsysinfo.modelperm));
-    (void)copy_ebcdic_to_stringz(t_model, sizeof(t_model), gsysinfo.modeltemp, sizeof(gsysinfo.modeltemp));
-
-    return models;
-}
-
 void get_model(BYTE *dest)
 {
     if (gsysinfo_init_flg == FALSE )

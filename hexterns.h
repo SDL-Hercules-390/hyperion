@@ -215,7 +215,6 @@ LOADPARM_DLL_IMPORT char *str_manufacturer();
 int set_plant(char *name);
 LOADPARM_DLL_IMPORT char *str_plant();
 int set_model(char *m1, char* m2, char* m3, char* m4);
-LOADPARM_DLL_IMPORT char **str_model();
 char *str_modelhard();
 char *str_modelcapa();
 char *str_modelperm();

@@ -1103,8 +1103,9 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="MANUFACTURER"></a>
 <dt><code>MANUFACTURER &nbsp; <em>name</em></code>
 <dd><p>
-    Specifies the MANUFACTURER name returned the STSI instruction.  The default is
-    <code>HRC</code>.
+    Specifies the 1-16 character MANUFACTURER name returned the STSI instruction.
+    Valid characters are 0-9 and uppercase A-Z only.
+    The default is <code>HRC</code>.
     <p>
 
 <a name="MAXCPU"></a>
@@ -1150,7 +1151,9 @@ a real System/390.  The configuration file is an ASCII text file.
     [ <em>temp_capacity_model</em> ]
     </code>
 <dd><p>
-    Specifies the MODEL names returned by the STSI instruction.
+    Specifies the 1-16 character MODEL names returned the STSI instruction.
+    Valid characters are 0-9 and uppercase A-Z only.
+    The default is <code>EMULATOR</code>.
     <p>
     If two operands are supplied, the first is the hardware model name (CPC
     ND model) and the second is the capacity model name (CPC SI model).
@@ -1158,8 +1161,6 @@ a real System/390.  The configuration file is an ASCII text file.
     name and the capacity model name.
     The optional third and fourth operands specify the permanent capacity
     model name and the temporary capacity model name respectively.
-    <p>
-    The default is <code>EMULATOR</code>.
     <p>
 
 <a name="MODPATH"></a>
@@ -1372,8 +1373,9 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="PLANT"></a>
 <dt><code>PLANT &nbsp; <em>name</em></code>
 <dd><p>
-    Specifies the PLANT name returned by the STSI instruction.  The default is
-    <code>ZZ</code>.
+    Specifies the 1-16 character PLANT name returned the STSI instruction.
+    Valid characters are 0-9 and uppercase A-Z only.
+    The default is <code>ZZ</code>.
     <p>
 
 <a name="SCSIMOUNT"></a>
