@@ -1,5 +1,6 @@
 /* CCKDDASD.C   (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) Copyright Greg Smith, 2002-2012                  */
+/*              (C) and others 2013-2021                             */
 /*                                                                   */
 /*              CCKD (Compressed CKD) Device Handler                 */
 /*                                                                   */
@@ -5396,7 +5397,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 len = (int)l2.L2_size;
                 if (i + l2.L2_len > (int)ulen) break;
 
-                CCKD_TRACE( "gcperc move trk %d at pos 0x%16.16"PRIx64" len %h",
+                CCKD_TRACE( "gcperc move trk %d at pos 0x%16.16"PRIx64" len %hu",
                             trk, upos + i, l2.L2_len);
 
                 /* Relocate the track image somewhere else */
