@@ -1,5 +1,6 @@
 /* GENERAL2.C   (C) Copyright Roger Bowler, 1994-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              Hercules CPU Emulator - Instructions N-Z             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

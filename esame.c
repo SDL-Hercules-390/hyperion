@@ -1,4 +1,5 @@
 /* ESAME.C      (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              ESAME (z/Architecture) instructions                  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

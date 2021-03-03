@@ -1,4 +1,5 @@
 /* SCESCSI.C    (C) Copyright Jan Jaeger, 1999-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              Service Control Element SCSI Boot Support Functions  */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

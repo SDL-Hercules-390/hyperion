@@ -1,4 +1,5 @@
 /* TIMER.C      (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2021                             */
 /*              Timer support functions                              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

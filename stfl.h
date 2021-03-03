@@ -1,5 +1,5 @@
 /* STFL.H       (C) Copyright Roger Bowler, 1994-2012                */
-/*              (C) Copyright "Fish" (David B. Trout), 2018-2019     */
+/*              (C) Copyright "Fish" (David B. Trout), 2018-2021     */
 /*              Store Facility List (STFL) bit definitions           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

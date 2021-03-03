@@ -1,6 +1,7 @@
 /* OPCODE.C     (C) Copyright Jan Jaeger, 2000-2012                  */
 /*              (C) Copyright Roger Bowler, 2010-2011                */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2021                             */
 /*              Instruction decoding functions                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

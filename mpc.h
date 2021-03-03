@@ -1,6 +1,7 @@
 /* MPC.H        (C) Copyright Jan Jaeger,  2010-2012                 */
 /*              (C) Copyright Ian Shorter, 2011-2012                 */
 /*              (C) Copyright Harold Grovesteen, 2011-2012           */
+/*              (C) and others 2013-2021                             */
 /*              MPC (Multi-Path Channel) functions                   */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

@@ -1,4 +1,4 @@
-/* IMPEXP.H     (C) "Fish" (David B. Trout), 2018                    */
+/* IMPEXP.H     (C) "Fish" (David B. Trout), 2018-2021               */
 /*              DLL_IMPORT/DLL_EXPORT/extern control                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

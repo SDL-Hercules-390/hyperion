@@ -2,6 +2,7 @@
 /*              (C) Copyright Roger Bowler, 2000-2012                */
 /*              (c) Copyright Vic Cross, 2001-2009                   */
 /*              (C) Copyright Peter J. Jansen, 2014-2020             */
+/*              (C) and others 2013-2021                             */
 /*              Hercules Channel-to-Channel Emulation Support        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

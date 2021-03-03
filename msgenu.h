@@ -1,5 +1,6 @@
 /* MSGENU.H     (C) Copyright Bernard van der Helm, 2010-2012        */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
+/*              (C) and others 2013-2021                             */
 /*              Header file for Hercules messages (US English)       */
 /* Message text (C) Copyright Roger Bowler and others, 1999-2011     */
 /*                                                                   */

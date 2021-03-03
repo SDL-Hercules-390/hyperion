@@ -1,4 +1,5 @@
 /* TRANSACT.H   (C) Copyright Bob Wood, 2019-2020                    */
+/*              (C) and others 2020-2021                             */
 /*                  Transactional-Execution consts and structs       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

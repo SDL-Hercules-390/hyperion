@@ -1,4 +1,4 @@
-/* W32UTIL.C    (C) Copyright "Fish" (David B. Trout), 2005-2012     */
+/* W32UTIL.C    (C) Copyright "Fish" (David B. Trout), 2005-2021     */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
 /*              Windows porting functions                            */
 /*                                                                   */

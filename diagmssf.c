@@ -1,4 +1,5 @@
 /* DIAGMSSF.C   (C) Copyright Jan Jaeger, 1999-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              ESA/390 Diagnose Functions                           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

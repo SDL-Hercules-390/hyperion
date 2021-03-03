@@ -1,4 +1,5 @@
 /* FEAT900.H    (C) Copyright Jan Jaeger, 2000-2012                  */
+/*              (C) and others 2013-2021                             */
 /*              ESAME feature definitions                            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */

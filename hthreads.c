@@ -1,4 +1,4 @@
-/* HTHREADS.C   (C) Copyright "Fish" (David B. Trout), 2013          */
+/* HTHREADS.C   (C) Copyright "Fish" (David B. Trout), 2013-2021     */
 /*              Hercules locking and threading                       */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
