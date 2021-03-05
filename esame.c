@@ -3746,7 +3746,7 @@ S32     op2;                            /* Operand-2 value           */
     
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFF && resultlo <  0)) ? 3
+                     (((U32)resulthi) == 0xFFFFFFFF && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
@@ -3784,7 +3784,7 @@ S64     op2;                            /* Operand-2 value           */
 
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
+                     (((U64)resulthi) == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
@@ -3850,7 +3850,7 @@ S32     resulthi, resultlo;             /* 64-bit result             */
     
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFF && resultlo <  0)) ? 3
+                     (((U32)resulthi) == 0xFFFFFFFF && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
@@ -3882,7 +3882,7 @@ S64     resulthi, resultlo;             /* 128-bit result            */
     
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
-                     (resulthi == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
+                     (((U64)resulthi) == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
                     : resulthi == 0 && resultlo == 0 ? 0
                     : resulthi < 0 ? 1 : 2;
 
