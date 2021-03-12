@@ -1013,9 +1013,9 @@ U64     new;                            /* new value                 */
                     SYNCHRONIZE_CPUS( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-                    txf_abort_all( regs->cpuad, TXF_WHY_CSPG_INSTR, PTT_LOC );
+                    if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
+                        txf_abort_all( regs->cpuad, TXF_WHY_CSPG_INSTR, PTT_LOC );
 #endif
-
                     if (regs->GR_L(r2) & 1)
                         ARCH_DEP( purge_tlb_all )();
 
@@ -1144,7 +1144,8 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
             SYNCHRONIZE_CPUS( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-            txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
+            if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
+                txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
 #endif
             ARCH_DEP( purge_tlb_all )();
         }
@@ -1165,7 +1166,8 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
             SYNCHRONIZE_CPUS( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-            txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
+            if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
+                txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
 #endif
             ARCH_DEP( purge_tlb_all )();
         }

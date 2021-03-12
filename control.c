@@ -904,7 +904,8 @@ U32     old;                            /* old value                 */
                     SYNCHRONIZE_CPUS( regs );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-                    txf_abort_all( regs->cpuad, TXF_WHY_CSP_INSTR, PTT_LOC );
+                    if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
+                        txf_abort_all( regs->cpuad, TXF_WHY_CSP_INSTR, PTT_LOC );
 #endif
                     if (regs->GR_L(r2) & 1)
                         ARCH_DEP( purge_tlb_all )();
@@ -1754,7 +1755,8 @@ int     op3;
 #endif /* defined( _FEATURE_SIE ) */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-        txf_abort_all( regs->cpuad, TXF_WHY_IPTE_INSTR, PTT_LOC );
+        if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
+            txf_abort_all( regs->cpuad, TXF_WHY_IPTE_INSTR, PTT_LOC );
 #endif
 
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
