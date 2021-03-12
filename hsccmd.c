@@ -158,8 +158,6 @@ static void* deadlocks_1( void* parg)
     UNREFERENCED( parg );
 
     // 1 acq a, then b
-    // 2 acq b, then c
-    // 3 acq c, then a
 
     obtain_lock( &deadlocks_a );
     {
@@ -179,9 +177,7 @@ static void* deadlocks_2( void* parg)
 {
     UNREFERENCED( parg );
 
-    // 1 acq a, then b
     // 2 acq b, then c
-    // 3 acq c, then a
 
     obtain_lock( &deadlocks_b );
     {
@@ -201,8 +197,6 @@ static void* deadlocks_3( void* parg)
 {
     UNREFERENCED( parg );
 
-    // 1 acq a, then b
-    // 2 acq b, then c
     // 3 acq c, then a
 
     obtain_lock( &deadlocks_c );
@@ -255,9 +249,9 @@ int $test_cmd(int argc, char *argv[],char *cmdline)
             set_lock_name( &deadlocks_b, "b" );
             set_lock_name( &deadlocks_c, "c" );
 
-            VERIFY( create_thread( &tid, DETACHED, deadlocks_1, 0, "#1"  ) == 0);
+            VERIFY( create_thread( &tid, DETACHED, deadlocks_1, 0, "#1" ) == 0);
             VERIFY( create_thread( &tid, DETACHED, deadlocks_2, 0, "#2" ) == 0);
-            VERIFY( create_thread( &tid, DETACHED, deadlocks_3, 0, "#3"  ) == 0);
+            VERIFY( create_thread( &tid, DETACHED, deadlocks_3, 0, "#3" ) == 0);
         }
         else if (CMD( argv[1], LOCKS, 5 ))
         {

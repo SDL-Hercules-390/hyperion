@@ -1671,6 +1671,7 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
                                           LIST_ENTRY* ilk_anchor )
 {
     HTHREAD*  ht;
+    HTHREAD*  ht2;
     ILOCK*    ilk;
     struct timeval  now;    // Current time of day.
     struct timeval  dur;    // How long we've been waiting for lock.
@@ -1686,6 +1687,7 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
     // as soon as we reach a thread that is either not waiting for
     // any lock or is not waiting long enough for a lock.
 
+    /* Start clean: remove all previous footprints */
     gettimeofday( &now, NULL );
     {
         LIST_ENTRY* le = ht_anchor->Flink;
@@ -1697,38 +1699,80 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
         }
     }
 
+    /* Locate the thread entry for the thread we're interested in */
     if (!(ht = hthread_find_HTHREAD_locked( tid, ht_anchor )))
         return false;
 
     /* Chase thread's lock chain until deadlock detected */
     while (!ht->ht_footprint)
     {
+        /* Remember that we've been here before */
         ht->ht_footprint = true;
 
+        /* Is this thread waiting for a lock? */
         if (!ht->ht_ob_lock)
             return false;
 
+        /* Has thread been waiting for this lock for a long time? */
         timeval_subtract( &ht->ht_ob_time, &now, &dur );
         if (dur.tv_sec < DEADLOCK_SECONDS)
             return false;
 
+        /* Remember which thread is waiting to obtain a lock */
+        ht2 = ht;
+
+        /* Locate the lock entry that this thread is waiting for */
         if (!(ilk = hthreads_find_ILOCK_locked( ht->ht_ob_lock, ilk_anchor )))
             return false;
 
+        /* Now switch over to chasing the lock chain for the thread
+           currently owning the lock our thread is waiting to obtain.
+        */
         if (!(ht = hthread_find_HTHREAD_locked( ilk->il_ob_tid, ht_anchor )))
             return false;
+
+        // PROGRAMMING NOTE: due to the way hthreads tracks lock
+        // attempts and lock acquisition (wherein it first marks
+        // that a lock is ATTEMPTING to be obtained (by setting
+        // ht_ob_lock), then AFTERWARDS marking that it has now
+        // been successfully obtained (by CLEARING ht_ob_lock),
+        // (which are two separate function calls), it becomes
+        // possible for our COPIED locks list to indicate that
+        // our thread is still waiting for a lock (as indicated
+        // by "ht_ob_lock" being non-NULL in our COPIED threads
+        // list) that in fact (in actuality) has already been
+        // successfully obtained! (as inciated by our COPIED
+        // locks list entry indicating that it is in fact OUR
+        // thread that currently owns the lock in question!)
+        //
+        // That is to say, our working COPIES of the live locks
+        // and threads lists, by coincidence, was made AFTER
+        // the lock's "il_ob_tid" field was set to our thread's
+        // id (indicating our thread successfully obtained the
+        // lock) but BEFORE the thread entry's "ht_ob_lock" field
+        // could be cleared to indicate the thread was no longer
+        // waiting for the lock.
+        //
+        // Therefore we must always check whether the lock that
+        // currently owns the lock that we are supposedly waiting
+        // to obtain happens to be OURSELVES or not! If it's NOT
+        // currently owned by us, then fine, we continue chasing
+        // our lock chain for this new thread. But if the owner
+        // is in fact OURSELVES, there obviously is no deadlock
+        // so we immediately return false.
+
+        if (ht == ht2)          // (lock owned by OURSELVES?!)
+            return false;       // (then obviously no deadlock!)
     }
 
     /* Report the deadlock if asked to do so */
     if (sev)
     {
-        HTHREAD* ht2;
-
         ht  = hthread_find_HTHREAD_locked( tid, ht_anchor );
         ilk = hthreads_find_ILOCK_locked( ht->ht_ob_lock, ilk_anchor );
         ht2 = hthread_find_HTHREAD_locked( ilk->il_ob_tid, ht_anchor );
 
-        // "Thread %s waiting for lock %s held by thread %s"
+        // "Thread %s is stuck waiting for lock %s held by thread %s"
         WRMSG( HHC90025, sev, ht->ht_name, ilk->il_name, ht2->ht_name );
     }
 

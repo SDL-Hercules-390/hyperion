@@ -2577,7 +2577,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
 #define HHC90022 "Thread %-15.15s tid="TIDPAT" created on %s at %-18.18s"
 #define HHC90023 "Thread %-15.15s tid="TIDPAT" waiting since %s at %s for lock %s = "PTR_FMTx
 #define HHC90024 "DEADLOCK!"
-#define HHC90025 "Thread %s waiting for lock %s held by thread %s"
+#define HHC90025 "Thread %s is stuck waiting for lock %s held by thread %s"
 #define HHC90026 "No threads found with tid "TIDPAT"."
 #define HHC90027 "Total threads running: %d"
 #define HHC90028 "lock %s was already initialized at %s"
