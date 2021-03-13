@@ -2565,6 +2565,8 @@ static void constty_input( TELNET* tn, const BYTE* buffer, U32 size )
 /*       SUBROUTINE TO RECEIVE 3270 DATA FROM THE CLIENT             */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/* The caller MUST hold the device lock.                             */
+/*                                                                   */
 /* This subroutine receives bytes from the client and appends them   */
 /* to any data already in the 3270 receive buffer.                   */
 /*                                                                   */
