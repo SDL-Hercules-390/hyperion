@@ -1753,13 +1753,13 @@ static bool hthread_is_deadlocked_locked( const char* sev, TID tid,
         // could be cleared to indicate the thread was no longer
         // waiting for the lock.
         //
-        // Therefore we must always check whether the lock that
+        // Therefore we must always check whether the thread that
         // currently owns the lock that we are supposedly waiting
-        // to obtain happens to be OURSELVES or not! If it's NOT
-        // currently owned by us, then fine, we continue chasing
-        // our lock chain for this new thread. But if the owner
-        // is in fact OURSELVES, there obviously is no deadlock
-        // so we immediately return false.
+        // to obtain happens to be OURSELVES or not! If the thread
+        // that currently owns the lock is not ourselves, then fine,
+        // we continue chasing our lock chain for this new thread.
+        // But if the lock owner is in fact OURSELVES, there is
+        // obviously is no deadlock so we immediately return false.
 
         if (ht == ht2)          // (lock owned by OURSELVES?!)
             return false;       // (then obviously no deadlock!)
