@@ -1261,27 +1261,49 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="OSTAILOR"></a>
-<dt><code>OSTAILOR &nbsp; OS/390 &#124; z/OS &#124;
-    VM &#124; VSE &#124; z/VSE &#124; LINUX &#124; OpenSolaris &#124; QUIET &#124; NULL</code>
+<dt><code>OSTAILOR &nbsp; <u>DEFAULT</u> &#124; OS/390 &#124; z/OS
+    &#124; VM &#124; z/VM &#124; VSE &#124; z/VSE &#124; LINUX
+    &#124; OpenSolaris &#124; QUIET &#124; NULL</code>
 <dd><p>
     Specifies the intended operating system.  The effect of this
     parameter is to reduce control panel message traffic by
     selectively suppressing trace messages for program checks
     which are considered normal in the specified environment.
-    <code>QUIET</code> discards all exception messages.
-    <code>NULL</code> allows all exception messages to be logged.
+    <code>QUIET</code> <i>suppresses</i> all exception messages.
+    <code>NULL</code> <i>displays</i> all exception messages.
     <p>
-    Optionally prefix any value except <code>QUIET</code> or
-    <code>NULL</code> with '+' to cause the suppressions for that
+    <i>
+    QUIET should normally <i><u>never</u></i> be used in normal circumstances
+    as it hides what otherwise might be important messages needed to diagnose
+    incorrect Hercules functionality. Only use <code>QUIET</code> under the
+    guidance of Hercules product support personnel. Instead, please specify an
+    OSTAILOR value that is appropriate for the guest operating system you intend
+    to run under Hercules or else let it default by not specifying it at all.
+    </i>
+    <p>
+    If no <code>OSTAILOR</code> statement is specified at all, then <code><u>DEFAULT</u></code>
+    is used, which suppresses only program check messages for interruption codes
+    10 (segment-translation exception), 11 (page-translation exception),
+    16 (trace-table exception) and 1C (space-switch event), which are considered
+    to be completely normal and unremarkable for virtually all known mainframe
+    operating systems.
+    <p>
+    Optionally prefix any value (except <code>QUIET</code> or
+    <code>NULL</code>) with '+' to cause the suppressions for that
     environment to be combined (added) to those already specified,
     or with '-' to remove such suppressions (i.e. to allow them).
     <p>
-    If the <code>OSTAILOR</code>
-    statement is omitted, exception messages for program checks
-    10, 11, 16, and 1C are suppressed.
+    This allows you to, for example, suppress messages for both z/VM
+    as well as for z/OS too (for situations where you intend to run
+    z/OS as a guest under z/VM) by specifying two OSTAILOR statements
+    as follows:
+    <blockquote><code>
+        OSTAILOR &nbsp;z/VM</br>
+        OSTAILOR &nbsp;+Z/OS    
+    </code> </blockquote>
     <p>
     Use the <code>ostailor</code> or <code>pgmtrace</code> panel
-    commands to display or alter the current settings.
+    commands to display or fine tune the current settings.
     <p>
 
 <a name="PANOPT"></a>
