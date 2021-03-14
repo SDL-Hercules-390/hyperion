@@ -1640,7 +1640,7 @@ DLL_EXPORT void set_panel_colors()
         sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
 
         sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
-        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_BLUE;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_BLUE;
 
         break;
 
@@ -1659,7 +1659,7 @@ DLL_EXPORT void set_panel_colors()
         sysblk.pan_color[ PANC_W_IDX ][ PANC_BG_IDX ] = COLOR_RED;
 
         sysblk.pan_color[ PANC_D_IDX ][ PANC_FG_IDX ] = COLOR_LIGHT_GREY;
-        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_LIGHT_BLUE;
+        sysblk.pan_color[ PANC_D_IDX ][ PANC_BG_IDX ] = COLOR_BLUE;
 
         break;
     }
