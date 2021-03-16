@@ -1999,12 +1999,13 @@ DLL_EXPORT BYTE* txf_maddr_l( const U64  vaddr,   const size_t  len,
     /* Normalize access type for TXF usage */
     txf_acctype = TXF_ACCTYPE( acctype );
 
-    /*  "The transaction's storage operands access no more than four
-         octowords. Note: LOAD ON CONDITION and STORE ON CONDITION are
-         considered to reference storage regardless of the condition
-         code." (SA22-7832-12, page 5-109)
+    /*  Constrained transactions constraint #4: "The transaction's
+        storage operands access no more than four octowords. Note:
+        LOAD ON CONDITION and STORE ON CONDITION are considered to
+        reference storage regardless of the condition code."
+        (SA22-7832-12, page 5-109)
     */
-    if (len > (4 * ZOCTOWORD_SIZE))
+    if (regs->txf_contran && len > (4 * ZOCTOWORD_SIZE))
     {
         int txf_tac = TXF_IS_FETCH_ACCTYPE() ? TAC_FETCH_OVF
                                              : TAC_STORE_OVF;
