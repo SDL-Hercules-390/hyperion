@@ -914,7 +914,10 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                 if (1
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                     /* Don't interrupt active transaction */
-                    && (GUESTREGS->txf_PPA < PPA_MUCH_HELP_THRESHOLD)
+                    && (0
+                        || GUESTREGS->txf_tnd == 0
+                        || GUESTREGS->txf_PPA < PPA_MUCH_HELP_THRESHOLD
+                       )
 #endif
                     && (0
                         || SIE_I_STOP ( GUESTREGS )
@@ -943,7 +946,10 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                         && OPEN_IC_EXTPENDING( GUESTREGS )
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                         /* Don't interrupt active transaction */
-                        && (GUESTREGS->txf_PPA < PPA_MUCH_HELP_THRESHOLD)
+                        && (0
+                            || GUESTREGS->txf_tnd == 0
+                            || GUESTREGS->txf_PPA < PPA_MUCH_HELP_THRESHOLD
+                           )
 #endif
                     )
                         ARCH_DEP( perform_external_interrupt )( GUESTREGS );
@@ -1173,7 +1179,10 @@ endloop:        ; // (nop to make compiler happy)
             (0
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
              /* Don't interrupt active transaction */
-             || (GUESTREGS->txf_PPA >= PPA_MUCH_HELP_THRESHOLD)
+             || (1
+                 && GUESTREGS->txf_tnd > 0
+                 && GUESTREGS->txf_PPA >= PPA_MUCH_HELP_THRESHOLD
+                )
 #endif
              || (1
                  && !SIE_I_HOST            (    regs   )

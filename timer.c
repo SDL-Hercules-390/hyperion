@@ -269,8 +269,16 @@ bool    txf_PPA;                        /* true == PPA assist needed */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
                     if (0
-                        || (HOSTREGS  && HOSTREGS ->txf_PPA >= PPA_SOME_HELP_THRESHOLD)
-                        || (GUESTREGS && GUESTREGS->txf_PPA >= PPA_SOME_HELP_THRESHOLD)
+                        || (1
+                            && HOSTREGS 
+                            && HOSTREGS->txf_tnd > 0
+                            && HOSTREGS ->txf_PPA >= PPA_SOME_HELP_THRESHOLD
+                           )
+                        || (1
+                            && GUESTREGS
+                            && GUESTREGS->txf_tnd > 0
+                            && GUESTREGS->txf_PPA >= PPA_SOME_HELP_THRESHOLD
+                           )
                     )
                         txf_PPA = true;
 #endif

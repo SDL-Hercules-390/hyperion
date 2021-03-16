@@ -1715,7 +1715,10 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
             && OPEN_IC_EXTPENDING( regs )
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
             /* Don't interrupt active transaction */
-            && (regs->txf_PPA < PPA_MUCH_HELP_THRESHOLD)
+            && (0
+                || regs->txf_tnd == 0
+                || regs->txf_PPA < PPA_MUCH_HELP_THRESHOLD
+               )
 #endif
         )
         {
@@ -1731,7 +1734,10 @@ void (ATTR_REGPARM(1) ARCH_DEP(process_interrupt))(REGS *regs)
                 && OPEN_IC_IOPENDING( regs )
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                 /* Don't interrupt active transaction */
-                && (regs->txf_PPA < PPA_MUCH_HELP_THRESHOLD)
+                && (0
+                    || regs->txf_tnd == 0
+                    || regs->txf_PPA < PPA_MUCH_HELP_THRESHOLD
+                   )
 #endif
             )
             {
