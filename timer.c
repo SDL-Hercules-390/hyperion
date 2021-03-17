@@ -268,19 +268,33 @@ bool    txf_PPA;                        /* true == PPA assist needed */
                         diffrate(diff - waittime, 100) : 0, 100 );
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+                    /*
+                                     PROGRAMMING NOTE
+
+                       We are purposely NOT taking the current "txf_tnd"
+                       value into consideration here in our decision
+                       whether the "sysblk.txf_timerint" value should be
+                       used or not (as indicated by our "txf_PPA" flag)
+                       because the fact that "regs->txf_PPA" is greater
+                       than our "some help" threshold indicates that a
+                       transaction DID recently fail and thus will very
+                       likely be retried very soon!
+
+                       Thus we DON'T want to negate our whole purpose
+                       of trying to MINIMIZE timer interrupts whenever
+                       there are transactions failing and being retried!
+
+                       (Which is what WOULD happen if we caused "txf_PPA"
+                       flag to NOT get set simply because "regs->txf_tnd"
+                       happened to be false during the very brief period
+                       between when the transaction failed but before it
+                       has had a chance to be retried.)
+                    */
                     if (0
-                        || (1
-                            && HOSTREGS 
-                            && HOSTREGS->txf_tnd > 0
-                            && HOSTREGS ->txf_PPA >= PPA_SOME_HELP_THRESHOLD
-                           )
-                        || (1
-                            && GUESTREGS
-                            && GUESTREGS->txf_tnd > 0
-                            && GUESTREGS->txf_PPA >= PPA_SOME_HELP_THRESHOLD
-                           )
+                        || (HOSTREGS  && HOSTREGS ->txf_PPA >= PPA_SOME_HELP_THRESHOLD)
+                        || (GUESTREGS && GUESTREGS->txf_PPA >= PPA_SOME_HELP_THRESHOLD)
                     )
-                        txf_PPA = true;
+                        txf_PPA = true; // (use rubato thread timerint)
 #endif
                 }
                 release_lock( &sysblk.cpulock[ i ]);
@@ -298,6 +312,9 @@ bool    txf_PPA;                        /* true == PPA assist needed */
         /* Sleep for another timer update interval... */
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+        /* Do we need to temporarily reduce the frequency of timer
+           interrupts? (By waiting slightly longer than normal?)
+        */
         if (txf_PPA)
             usleep( sysblk.txf_timerint );
         else
