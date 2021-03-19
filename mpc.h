@@ -531,17 +531,13 @@ typedef struct _MPC_IPA {
                       | IPA_MULTICASTING \
                       | IPA_QUERY_ARP_COUNTERS \
                       | IPA_SETADAPTERPARMS \
-                      | IPA_VLAN_PRIO \
                       | IPA_PASSTHRU \
-                      | IPA_FULL_VLAN \
                       )
 #define IPA_SUPP_IPv6 ( 0 \
                       | IPA_IPV6 \
                       | IPA_MULTICASTING \
                       | IPA_SETADAPTERPARMS \
-                      | IPA_VLAN_PRIO \
                       | IPA_PASSTHRU \
-                      | IPA_FULL_VLAN \
                       )
 #else
 #define IPA_SUPP_IPv4 ( 0 \
@@ -550,9 +546,7 @@ typedef struct _MPC_IPA {
                       | IPA_MULTICASTING \
                       | IPA_QUERY_ARP_COUNTERS \
                       | IPA_SETADAPTERPARMS \
-                      | IPA_VLAN_PRIO \
                       | IPA_PASSTHRU \
-                      | IPA_FULL_VLAN \
                       )
 #endif /*defined(ENABLE_IPV6)*/
 

@@ -3422,11 +3422,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
             o3hdr = (OSA_HDR3*)hdr;
             if (o3hdr->flags & HDR3_FLAGS_PASSTHRU)
             {
+                eth = (ETHFRM*)pkt;
+                FETCH_HW( hwEthernetType, eth->hwEthernetType );
+                /* */
                 if (!(o3hdr->flags & HDR3_FLAGS_IPV6))
                 {
                     /* It probably is an L2 Ethernet Frame! */
-                    eth = (ETHFRM*)pkt;
-                    FETCH_HW( hwEthernetType, eth->hwEthernetType );
                     if (hwEthernetType != ETH_TYPE_IP)
                     {
                         /* Can't write L2 Ethernet frame to L3 tun device! */
@@ -3452,6 +3453,12 @@ static QRC write_buffered_packets( DEVBLK* dev, OSA_GRP *grp,
                 /* Bump past L2 Ethernet header to actual L3 IP packet */
                 pkt += sizeof(ETHFRM);
                 pktlen -= sizeof(ETHFRM);
+                /* Bump past 802.1Q header to actual L3 IP packet */
+                if (hwEthernetType == ETH_TYPE_VLANTAG)
+                {
+                    pkt += 4;
+                    pktlen -= 4;
+                }
             }
         }
 
