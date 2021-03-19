@@ -5528,7 +5528,11 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     TRAN_INSTR_CHECK( regs );
     PTT_INF("PTF",regs->GR_G(r1),0,regs->psw.IA_L);
     PRIV_CHECK(regs);
-    SIE_INTERCEPT(regs);
+
+    /* Programing note : Under SIE polarization is always horizontal */
+    /* and cannot be changed                                         */
+    /* DO NOT INTERCEPT. The underlying hypervisor will treat PTF as */
+    /*    an unknown instruction                                     */
 
     /* Specification Exception if bits 0-55 of general register R1
        are not zeros */
@@ -5545,35 +5549,59 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     switch (fc)
     {
     case 0:                     /* Request horizontal polarization */
-        if (sysblk.topology == TOPOLOGY_HORIZ) {
-            regs->psw.cc = 2;   /* Request rejected */
-            rc = 1;             /* Already polarized as specified */
-        } else {
-            sysblk.topology = TOPOLOGY_HORIZ;
-            sysblk.topchnge = 1;
-            regs->psw.cc = 0;
-            rc = 0;
+        if(SIE_MODE(regs))
+        {
+            regs->psw.cc=2;
+            regs->psw.cc=1; /* Already horizontal */
+        }
+        else
+        {
+                if (sysblk.topology == TOPOLOGY_HORIZ) {
+                    regs->psw.cc = 2;   /* Request rejected */
+                    rc = 1;             /* Already polarized as specified */
+                } else {
+                    sysblk.topology = TOPOLOGY_HORIZ;
+                    sysblk.topchnge = 1;
+                    regs->psw.cc = 0;
+                    rc = 0;
+                }
         }
         break;
 
     case 1:                     /* Request vertical polarization */
-        if (sysblk.topology == TOPOLOGY_VERT) {
-            regs->psw.cc = 2;   /* Request rejected */
-            rc = 1;             /* Already polarized as specified */
-        } else {
-            sysblk.topology = TOPOLOGY_VERT;
-            sysblk.topchnge = 1;
-            regs->psw.cc = 0;
-            rc = 0;
+        if(SIE_MODE(regs))
+        {
+            regs->psw.cc=2;
+            rc=0;               /* Unspecified reason (not allowed */
+        }
+        else
+        {
+                if (sysblk.topology == TOPOLOGY_VERT) {
+                    regs->psw.cc = 2;   /* Request rejected */
+                    rc = 1;             /* Already polarized as specified */
+                } else {
+                    sysblk.topology = TOPOLOGY_VERT;
+                    sysblk.topchnge = 1;
+                    regs->psw.cc = 0;
+                    rc = 0;
+                }
         }
         break;
 
     case 2:                     /* Check topology-change status */
-        OBTAIN_INTLOCK(regs);
-        regs->psw.cc = sysblk.topchnge ? 1    /* (report was pending) */
-                                       : 0;   /* (report not pending) */
-        sysblk.topchnge = 0;                  /* (clear pending flag) */
-        RELEASE_INTLOCK(regs);
+        if(SIE_MODE(regs))
+        {
+            /* Not chnaged (cannot be changed) */
+            regs->psw.cc=0;
+        }
+        else
+        {
+                OBTAIN_INTLOCK(regs);
+                regs->psw.cc = sysblk.topchnge ? 1    /* (report was pending) */
+                                               : 0;   /* (report not pending) */
+                sysblk.topchnge = 0;                  /* (clear pending flag) */
+                RELEASE_INTLOCK(regs);
+        }
         break;
 
     default:
