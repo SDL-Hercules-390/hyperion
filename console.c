@@ -2615,8 +2615,14 @@ BYTE    buf[ BUFLEN_3270 ];             /* Temporary recv() buffer   */
         else
             // "%s COMM: recv() failed: %s"
             CONERROR( HHC90507, "D", dev->tn->clientid, strerror( HSO_errno ));
-        dev->sense[0] = SENSE_EC;
-        return (CSW_ATTN | CSW_UC);
+        if (HSO_EAGAIN == HSO_errno)
+            // non blocking call and no data
+            return 0;
+        else
+        {
+            dev->sense[0] = SENSE_EC;
+            return (CSW_ATTN | CSW_UC);
+        }
     }
 
     /* If zero bytes were received then client has closed connection */
@@ -3748,6 +3754,14 @@ int prev_rlen3270;
                 if ((dev->devtype == 0x3270) ||
                     (dev->devtype == 0x3287))
                 {
+                    /* Make the first call to recv  elow non-blocking
+                       in case pselect lied to us and there isn't any
+                       data available.  If we do multiple recv's then
+                       the subsequent ones are blocking 
+                       
+                       See the linux man page for select(2) for 
+                       more info. */
+                    socket_set_blocking_mode( dev->fd, 0 );
                     do
                         {
                             prev_rlen3270 = dev->rlen3270;
@@ -3756,13 +3770,19 @@ int prev_rlen3270;
                             // "%s COMM: recv_3270_data: %d bytes received"
                             CONDEBUG2( HHC90502, "D", dev->tn->clientid,
                                 dev->rlen3270 - prev_rlen3270 );
+                            /* If we do another recv, make it blocking.
+                               Otherwise we might just spin. */
+                            socket_set_blocking_mode( dev->fd, 1 );
                         }
                         while ((unitstat == 0) && dev->rlen3270);
 
                     dev->readpending = 3;
                 }
                 else
+                {
                     unitstat = recv_1052_data( dev );
+                    socket_set_blocking_mode( dev->fd, 1 );
+                }
 
                 /* Close the connection if an error occurred */
                 if (unitstat & CSW_UC)
