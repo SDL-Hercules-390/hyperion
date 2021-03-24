@@ -2783,8 +2783,14 @@ BYTE    buf[BUFLEN_1052];               /* Receive buffer            */
         // "%s COMM: recv() failed: %s"
         CONERROR( HHC90507, "D", dev->tn->clientid, strerror( HSO_errno ));
 
-        dev->sense[0] = SENSE_EC;
-        return (CSW_ATTN | CSW_UC);
+        if (HSO_EAGAIN == HSO_errno)
+            // non blocking call and no data
+            return 0;
+        else
+        {
+            dev->sense[0] = SENSE_EC;
+            return (CSW_ATTN | CSW_UC);
+        }
     }
 
     /* If zero bytes were received then client has closed connection */
