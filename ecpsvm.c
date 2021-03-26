@@ -68,9 +68,6 @@
 /* |0A   | SVC   | Virtual SVC Assist                     |*/
 /* |80   | SSM   | Virtual SSM Assist                     |*/
 /* |82   | LPSW  | Virtual LPSW Assist                    |*/
-/* |83   | DIAG  | Virtual DIAG Assist                    |*/
-/* |9C00 | SIO   | Virtual SIO Assist                     |*/
-/* |9C01 | SIOF  | Virtual SIOF Assist                    |*/
 /* |AC   | STNSM | Virtual STNSM Assist                   |*/
 /* |AD   | STOSM | Virtual STOSM Assist                   |*/
 /* |B1   | LRA   | Virtual LRA Assist                     |*/
@@ -82,6 +79,11 @@
 
 // $Log$    Update revision number in define variable ECPSCODEVER, below.
 //
+// Revision 1.88  2021/03/25 18:55:00  bobpolmanter
+// CP Assist DISP2 not reloading floating point registers correctly
+//  resulting in arithmetic errors for virtual machines using floating point.
+// Remove SIO and DIAG assists due to incompatibilities.
+
 // Revision 1.87  2018/08/05 14:20:00  bobpolmanter
 // CP Assist DFCCW failing on tranbrng error; let CP handle this instead
 //  of transferring control to CCWBAD.
@@ -193,7 +195,7 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 
 #ifdef FEATURE_ECPSVM
 
-#define ECPSCODEVER 1.87    //  <--------------- UPDATE CODE VERSION
+#define ECPSCODEVER 1.88    //  <--------------- UPDATE CODE VERSION
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -217,11 +219,11 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DEF(LPSW),
     ECPSVM_STAT_DEF(STNSM),
     ECPSVM_STAT_DEF(STOSM),
-    ECPSVM_STAT_DEF(SIO),
+    ECPSVM_STAT_DEFU(SIO),
     ECPSVM_STAT_DEF(VTIMER),
     ECPSVM_STAT_DEF(STCTL),
     ECPSVM_STAT_DEF(LCTL),
-    ECPSVM_STAT_DEF(DIAG),
+    ECPSVM_STAT_DEFU(DIAG),
     ECPSVM_STAT_DEFU(IUCV),
     ECPSVM_STAT_DEF(LRA),
 };
@@ -1265,6 +1267,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     }
     svmb=EVM_L(ASYSVM);
     /* Check IOB/TRQ for dispatch */
+    /* at DMKDSP CKCPSTAK */
     F_TRQB=EVM_L(dl+8);
     if(F_TRQB!=dl)
     {
@@ -1272,6 +1275,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         DEBUG_CPASSISTX(DISP2,WRMSG(HHC90000, "D", buf));
         /* We have a TRQ/IOB */
         /* Update stack */
+        /* at DMKDSP PROCIOB */
         F=EVM_L(F_TRQB+8);
         B=EVM_L(F_TRQB+12);
         EVM_ST(F,B+8);
@@ -1295,6 +1299,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         return(0);
     }
     /* Check CPEX BLOCK for dispatch */
+    /* at DMKDSP WINDOW */
     F_CPEXB=EVM_L(dl+0);
     if(F_CPEXB!=dl)
     {
@@ -1311,6 +1316,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         HW1--;
         EVM_STH(HW1,vmb+VMSTKCNT);
         CHARGE_START(vmb);
+        EVM_ST(vmb,STACKVM);
         /* Copy CPEXBLOCK Contents, and attempt FRET */
         /* If fret fails, use exit #12 */
         for(i=0;i<15;i++)
@@ -1454,17 +1460,14 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         F_MICBLOK=EVM_L(vmb+VMMCR6) & ADDRESS_MAXWRAP(regs);
 
         /* LOAD FPRS */
-        for(i=0;i<8;i+=2)
-        {
-            FW1=EVM_L(vmb+VMFPRS+(i*16));
-            regs->fpr[i*4]=FW1;
-            FW1=EVM_L(vmb+VMFPRS+(i*16)+4);
-            regs->fpr[i*4+1]=FW1;
-            FW1=EVM_L(vmb+VMFPRS+(i*16)+8);
-            regs->fpr[i*4+2]=FW1;
-            FW1=EVM_L(vmb+VMFPRS+(i*16)+12);
-            regs->fpr[i*4+3]=FW1;
-        }
+        regs->fpr[0] = EVM_L(vmb+VMFPRS+0);
+        regs->fpr[1] = EVM_L(vmb+VMFPRS+4);
+        regs->fpr[4] = EVM_L(vmb+VMFPRS+8);
+        regs->fpr[5] = EVM_L(vmb+VMFPRS+12);
+        regs->fpr[8] = EVM_L(vmb+VMFPRS+16);
+        regs->fpr[9] = EVM_L(vmb+VMFPRS+20);
+        regs->fpr[12] = EVM_L(vmb+VMFPRS+24);
+        regs->fpr[13] = EVM_L(vmb+VMFPRS+28);
 
         INITPSEUDOREGS(wregs);
         work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
@@ -3860,261 +3863,16 @@ int ecpsvm_virttmr_ext(REGS *regs)
 }
 #endif // please leave this code in place for reference
 
-/*************************************************************************/
-/* Common routine for SIO/SIOF and DIAG instruction assists              */
-/*************************************************************************/
-/* Change the machine state from running a virtual machine user to       */
-/* that of CP.  This function is required to invoke the SIO and DIAG     */
-/* instruction assists.  The user's state must be saved and the machine  */
-/* placed in supervisor state in order to run CP.                        */
-/*                                                                       */
-/* The functions of DMKPRG and DMKPRV for the SIO/SIOF code path as well */
-/* the DIAG code path are performed per the VM Assist flower boxes in    */
-/* DMKPRG/DMKPRV source.                                                 */
-/*************************************************************************/
-
-int     ecpsvm_ChangeMachineState(REGS *regs, VADR vmb, U32 F_VMINST)
-{
-
-PSA_3XX *psa;
-VADR ia;
-BYTE work;
-
-    /* Store the current PSW in pgmold in order to simulate a privileged operation exception.    */
-    MAYBE_SET_PSW_IA_FROM_IP(regs);
-    psa=(PSA_3XX *)MADDR((VADR)0 , USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
-    ARCH_DEP(store_psw) (regs, (BYTE *)&psa->pgmold);
-
-    /* Manipulate the real PSW to resume execution in CP mode: Sup state, disabled, DAT-off, key 0 */
-    regs->psw.sysmask=0;
-    regs->psw.pkey=0;
-    regs->psw.states=BIT(PSW_EC_BIT)         /* ECMODE */
-                   | BIT(PSW_MACH_BIT);      /* MC Enabled */
-    SET_IC_MASK(regs);
-    TEST_SET_AEA_MODE(regs);
-
-    /* Now that the PSW key is 0, store the ILC and INTC for the instruction at location X'8C' */
-    EVM_ST(0x00040002,PGMINT);
-
-    /* Using the VMBLOK of the RUNUSER and stop charging CPU time. Also, save the interval
-       timer value.  (These actions are documented in DMKPRGIN)
-    */
-    STPT(vmb+VMTMOUTQ);
-    SPT(vmb+VMTTIME);
-    EVM_ST(EVM_L(INTTIMER),QUANTUMR);
-
-    /* Set up the virtual PSW to resume at the instruction following the SIO or DIAG instruction.
-       We must properly transfer the ilc and program mask from the real PSW.  The CC should be
-       zero for SIO (per DMKVSI), but transferred for DIAG.
-    */
-    ia=EVM_L(PGMOPSW+4);
-    work=regs->psw.progmask;
-    if ((F_VMINST & 0x83000000) == 0x83000000)
-    {
-        work|=(regs->psw.cc << 4);                  /* for DIAG, preserve CC */
-    }
-    if(EVM_IC(vmb+VMPSW+1) & BIT(PSW_EC_BIT))
-    {
-        EVM_STC(work,vmb+VMPSW+2);                  /* EC mode */
-        EVM_ST(ia,vmb+VMPSW+4);
-    }
-    else
-    {
-        work|=(regs->psw.ilc << 5);                 /* BC mode */
-        EVM_ST((work << 24) | ia, vmb+VMPSW+4);
-    }
-
-    /* Store the VMINST instruction image.  VMPRGIL must contain the ILC   */
-    EVM_ST(F_VMINST,vmb+VMINST);
-    EVM_STH(regs->psw.ilc,vmb+VMPRGIL);
-
-    /* Indicate we are in CP mode, and set the RUNUSER in Instruction Simulation wait.    */
-    EVM_STC(EVM_IC(CPSTATUS)|CPSUPER,CPSTATUS);
-    EVM_STC(EVM_IC(vmb+VMRSTAT)|VMEXWAIT,vmb+VMRSTAT);
-
-    /* Save the RUNUSER's registers in the VMBLOK */
-    for(ia=0;ia<16;ia++)
-    {
-        EVM_ST(regs->GR_L(ia),vmb+VMGPRS+ia*4);
-    }
-    /* Save the RUNUSER's floating pt. registers in the VMBLOK, each half of the register at a time */
-    for(ia=0;ia<8;ia++)
-    {
-        EVM_ST(regs->fpr[ia],vmb+VMFPRS+ia*4);
-    }
-    return 0;
-}
-
-
-/*****************************************/
-/* 9C00-9C01 SIO/SIOF Instruction Assist */
-/*****************************************/
-/* The VM Assist for SIO/SIOF is a       */
-/* partial assist per the specification. */
-/* This assist avoids a privileged       */
-/* operation exception and a trip        */
-/* through the DMKPRG & DMKPRV code      */
-/* path.  In addition, the virtual       */
-/* device blocks are located and scanned */
-/* to check for pending interruptions.   */
-/* If everything is clean, the assist    */
-/* returns to CP at DMKVSIVS so the      */
-/* the virtual i/o can be issued.        */
-/* If something isnt right, we return    */
-/* to CP at DMKVSIEX so CP can handle    */
-/* the i/o request and any resulting     */
-/* issues.                               */
-/*****************************************/
-
+/* SIO/SIOF Assist */
+/* Not supported */
 int ecpsvm_dosio(REGS *regs,int b2,VADR e2)
 {
-VADR vmb;
-VADR vmalist;
-VADR retaddr;
-U32  F_VMINST;
-U16  H_VDEVINTS;
-BYTE B_VCHTYPE;
-BYTE B_VCHSTAT;
-BYTE B_VCUTYPE;
-BYTE B_VCUSTAT;
-BYTE B_VCUINTS;
-BYTE B_VDEVSTAT;
-BYTE B_VDEVFLG2;
-BYTE work;
-
     SASSIST_PROLOG(SIO);
     UNREFERENCED(b2);
-
-    /* Reject if MICEVMA says not to do SIO sim */
-    if(!(micevma & MICSIO))
-    {
-        DEBUG_SASSISTX( SIO, WRMSG( HHC90000, "D", "SASSIST SIO reject : SIO disabled in MICEVMA" ));
-        return(1);
-    }
-
-    /* VMINST must contain an image of the SIO instruction and the virtual device address.    */
-    F_VMINST=0x9C000000 | e2;
-
-    /* Switch the machine from running a VM user to CP */
-    vmb=vpswa-0xA8;
-    ecpsvm_ChangeMachineState(regs,vmb,F_VMINST);
-
-    /* Get pointer to a list of support addresses for the assist.  Set the return addr
-       to DMKVSIEX which is where we will return to if there is any problem from here
-    */
-    vmalist=EVM_L(AVMALIST);
-    retaddr=EVM_L(vmalist+VSIEX);
-    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
-
-    /* Load CP's registers with the values required by DMKVSIEX.  R12=base reg. */
-    regs->CR_L(0)=EVM_L(CPCREG0);
-    regs->CR_L(1)=EVM_L(vmb+VMSEG);
-    regs->CR_L(8)=EVM_L(CPCREG8);
-    regs->GR_L(11)=vmb;
-    regs->GR_L(12)=retaddr;
-
-    /* Begin doing the functions of DMKVSIEX.  If at any time something isn't right, just
-       return.  We'll let CP do it for real in DMKVSIEX.  If we make it to the end with
-       out a problem, we'll load the pointer to exit to DMKVSIVS with the SIO assist
-       completed successfully.
-    */
-
-    work=EVM_IC(vmb+VMDSTAT);
-    work &= ~VMTIO;
-    EVM_STC(work,vmb+VMDSTAT);
-
-    if(ecpsvm_do_scnvu(regs,vmb+VMCHTBL,vmb+VMCHSTRT,e2)!=0)
-    {
-        return(0);        /* exit; no VBLOKS found */
-    }
-
-    /* Cache some frequently referenced flags from the VBLOKs. */
-    B_VCHTYPE=EVM_IC(regs->GR_L(6)+VCHTYPE);
-    B_VCHSTAT=EVM_IC(regs->GR_L(6)+VCHSTAT);
-    B_VCUTYPE=EVM_IC(regs->GR_L(7)+VCUTYPE);
-    B_VCUSTAT=EVM_IC(regs->GR_L(7)+VCUSTAT);
-    B_VDEVSTAT=EVM_IC(regs->GR_L(8)+VDEVSTAT);
-
-    /* Check the VBLOKS to see if a channel interrupt is pending */
-    /* This code is "DMKVSI label CHSCAN"                        */
-    regs->GR_L(3)=regs->GR_L(6);
-    if(B_VCHTYPE & VCHSEL)
-    {
-        if(B_VCHSTAT & VCHBUSY)
-        {
-            return(0);      /* exit; selector channel is busy */
-        }
-        else
-        {
-            if(B_VCHSTAT & VCHCEPND)
-            {
-                return(0);  /* exit; selector channel-end pending */
-            }
-        }
-    }
-    /* Maybe channel interrupt pending in the subchannel */
-    regs->GR_L(3)=regs->GR_L(7);
-    if(!(B_VCUTYPE & (VCUSHRD | VCUCTCA)))         /* shared subchannel? */
-    {
-        /* here if channel interrupt NOT pending in subchannel; set up to check VDEVBLOK */
-        regs->GR_L(3)=regs->GR_L(8);
-        if(B_VDEVSTAT & VDEVCHBS)
-        {
-            return(0);      /* exit; subchannel busy pending for device */
-        }
-        if(B_VDEVSTAT & VDEVCHAN)
-        {
-            return(0);      /* exit; channel-end pending for device */
-        }
-    }
-    if(B_VCUSTAT & VCUCHBSY)
-    {
-        return(0);          /* exit; control unit busy pending for device */
-    }
-    if(B_VCUSTAT & VCUCEPND)
-    {
-        return(0);          /* exit; channel-end pending for controller */
-    }
-
-    /* If we've made it this far, no interrupts in channel/subchannel. */
-    /* Now do the CU scan  "DMKVSI label CUSCAN"                       */
-    if(B_VCUSTAT & VCUBUSY)
-    {
-        return(0);          /* exit; CU is busy */
-    }
-    B_VCUINTS=EVM_IC(regs->GR_L(7)+VCUINTS);
-    if(B_VCUINTS & CUE)
-    {
-        return(0);          /* exit; Control-unit End is pending */
-    }
-
-    /* If we've made it this far, no interrupts in control unit. */
-    /* Now do the VDEV scan  "DMKVSI label DEVSCAN"              */
-    if(B_VDEVSTAT & VDEVBUSY)
-    {
-        return(0);          /* exit; virtual device busy */
-    }
-    H_VDEVINTS=EVM_LH(regs->GR_L(8)+VDEVINTS);
-    B_VDEVFLG2=EVM_IC(regs->GR_L(8)+VDEVFLG2);
-    if(H_VDEVINTS)
-    {
-        return(0);          /* exit; virtual device interruption pending */
-    }
-    if(B_VDEVFLG2 & VDEVRRF)
-    {
-        return(0);          /* exit; virtual device using reserve/release feature */
-    }
-
-    /* Ok, we made it through the interruptions gauntlet.  Now set up a few registers on behalf
-       of DMKVSIVS and exit with assist successful.
-    */
-    regs->GR_L(4)=0;
-    regs->GR_L(13)=e2;
-    retaddr=EVM_L(vmalist+VSIVS);
-    SASSIST_HIT(SIO);
-    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
-    return(0);
+    UNREFERENCED(e2);
+    return(1);
 }
+
 
 /* AC - STNSM Instruction Assist */
 int ecpsvm_dostnsm(REGS *regs,int b1,VADR effective_addr1,int imm2)
@@ -4504,62 +4262,16 @@ int ecpsvm_doiucv(REGS *regs,int b2,VADR effective_addr2)
     return(1);
 }
 
-/*****************************************/
-/* 83 - DIAGNOSE Instruction Assist      */
-/*****************************************/
-/* The VM Assist for DIAG is a           */
-/* partial assist per the specification. */
-/* This assist avoids a privileged       */
-/* operation exception and a trip        */
-/* through the DMKPRG & DMKPRV code      */
-/* path.                         l       */
-/*                                       */
-/* The actual DIAGNOSE functionality     */
-/* is not assisted; rather, this         */
-/* assist's purpose is only to avoid     */
-/* the overhead of DMKPRG and DMKPRV.    */
-/*****************************************/
-
+/* DIAG Assist */
+/* Not supported */
 int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
 {
-
-VADR vmb;
-VADR vmalist;
-VADR retaddr;
-U32  F_VMINST;
-
     SASSIST_PROLOG(DIAG);
+    UNREFERENCED(r1);
+    UNREFERENCED(r3);
     UNREFERENCED(b2);
-
-    /* Reject if MICEVMA says not to do DIAG sim */
-    if(!(micevma & MICDIAG))
-    {
-        DEBUG_SASSISTX(DIAG, WRMSG( HHC90000, "D", "SASSIST DIAG reject : DIAG disabled in MICEVMA" ));
-        return(1);
-    }
-
-
-    /* VMINST must contain an image of the DIAG instruction that brought us here.    */
-    F_VMINST=0x83000000 | r1 << 20 | r3 << 16 | effective_addr2;
-    DEBUG_SASSISTX(DIAG,MSGBUF(buf, "SASSIST DIAG : VMINST = %8.8X",F_VMINST));
-    DEBUG_SASSISTX(DIAG,WRMSG(HHC90000, "D", buf));
-
-    /* Switch the machine from running a VM user to CP */
-    vmb=vpswa-0xA8;
-    ecpsvm_ChangeMachineState(regs,vmb,F_VMINST);
-
-    /* Load CP's registers with the values required by DMKHVCAL.  R12=base reg.    */
-
-    vmalist=EVM_L(AVMALIST);
-    retaddr=EVM_L(vmalist+HVCAL);
-    regs->CR_L(0)=EVM_L(CPCREG0);
-    regs->CR_L(8)=EVM_L(CPCREG8);
-    regs->GR_L(11)=vmb;
-    regs->GR_L(12)=retaddr;
-
-    SASSIST_HIT(DIAG);
-    SET_PSW_IA_AND_MAYBE_IP(regs,retaddr);
-    return(0);
+    UNREFERENCED(effective_addr2);
+    return(1);
 }
 
 /*  B1 - LRA Instruction Assist */

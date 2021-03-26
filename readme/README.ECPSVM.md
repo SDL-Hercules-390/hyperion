@@ -21,6 +21,8 @@ and
 ## Change Log
 
 ```
+03/25/21 : Bug fix in DISP2 for floating point users
+         ; removed support for SIO and DIAG assists due to incompatibilities.
 08/06/18 : Updated supported functions to include DIAG and STCTL instruction assists
          ; added support for CP assist LCSPG.
 04/12/17 : Updated supported functions to include LRA instruction assist
@@ -157,13 +159,13 @@ Some assists are just invoked once at IPL (STEVL). This is normal behavior.
 
 ### VM ASSISTS:
 
-- [x]    DIAG Simulation
+- [ ]    DIAG Simulation
 - [ ]    IUCV
 - [ ]    ISK/SSK/ISKE/SSKE/IVSK    Extended Key Operations assist
 - [x]    LCTL Simulation
 - [x]    LPSW Simulation
 - [x]    LRA Simulation
-- [x]    SIO/SIOF Simulation
+- [ ]    SIO/SIOF Simulation
 - [x]    SSM Simulation
 - [x]    SVC Simulation
 - [x]    STNSM Simulation
@@ -197,7 +199,7 @@ You can determine if ECPS:VM is operating with the trap after IPL by issuing the
 15:04:36 HHC01603I ecpsvm stat
 15:04:36 HHC01719I ECPS:VM Command processor invoked
 14:04:36 HHC01724I ECPS:VM Operating with CP FREE/FRET trap in effect
-15:04:36 HHC01725I ECPS:VM Code version 1.87
+15:04:36 HHC01725I ECPS:VM Code version 1.88
 15:04:36 HHC01702I +-----------+------------+------------+-------+
 15:04:36 HHC01706I | VM ASSIST |    Calls   |     Hits   | Ratio |
 15:04:36 HHC01702I +-----------+------------+------------+-------+
@@ -208,9 +210,7 @@ You can determine if ECPS:VM is operating with the trap after IPL by issuing the
 15:04:36 HHC01701I | LCTL      |     699101 |     245626 |   35% |
 15:04:36 HHC01701I | SVC       |     258185 |     258181 |   99% |
 15:04:36 HHC01701I | SSM       |     209426 |     209228 |   99% |
-15:04:36 HHC01701I | SIO       |     162147 |     161640 |   99% |
 15:04:36 HHC01701I | STCTL     |     149228 |     149228 |  100% |
-15:04:36 HHC01701I | DIAG      |       7025 |       7025 |  100% |
 15:04:36 HHC01702I +-----------+------------+------------+-------+
 15:04:36 HHC01701I | Total     |    7513360 |    6967661 |   92% |
 15:04:36 HHC01702I +-----------+------------+------------+-------+
