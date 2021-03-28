@@ -79,7 +79,7 @@ Examples:
 /*-------------------------------------------------------------------*/
 LOGM_DLL_IMPORT void fwritemsg( const char* filename, int line, const char* func, BYTE panel, FILE* f, const char* fmt, ... ) ATTR_PRINTF( 6, 7 );
 LOGM_DLL_IMPORT void logmsg( const char* fmt, ... ) ATTR_PRINTF( 1, 2 );
-LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp );
+LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet );
 
 /*-------------------------------------------------------------------*/
 /*                    PRIMARY MESAGE MACROS                          */

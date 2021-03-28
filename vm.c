@@ -1155,7 +1155,7 @@ int     freeresp;                       /* Flag to free resp         */
         /* Issue the command and capture the response */
         if (cmdflags & CMDFLAGS_RESPONSE)
         {
-            panel_command_capture( cmd, &resp );
+            panel_command_capture( cmd, &resp, false );
 
             if (resp)
                 freeresp = 1;

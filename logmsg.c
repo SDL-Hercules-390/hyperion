@@ -101,6 +101,7 @@ CAPTCTL;
 
 static CAPTCTL  captctl_tab     [ MAX_CPU_ENGS + 4 ]   = {0};
 static LOCK     captctl_lock;
+static bool     wrmsg_quiet = false; // suppress panel output if true
 
 #define  lock_capture()         obtain_lock(  &captctl_lock )
 #define  unlock_capture()       release_lock( &captctl_lock );
@@ -199,13 +200,15 @@ static void capture_message( const char* msg, CAPTMSGS* pCAPTMSGS )
 /*-------------------------------------------------------------------*/
 /*            Issue panel command and capture results                */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT int panel_command_capture( char* cmd, char** resp )
+DLL_EXPORT int panel_command_capture( char* cmd, char** resp, bool quiet )
 {
     int rc;
     CAPTCTL*  pCAPTCTL;             // ptr to capturing control entry
     CAPTMSGS  captmsgs  = {0};      // captured messages structure
 
     /* Start capturing */
+    wrmsg_quiet = quiet;            // caller can suppress panel output
+                                    // by setting quiet to true
     pCAPTCTL = start_capturing( &captmsgs );
 
     /* Execute the Hercules panel command and save the return code */
@@ -216,6 +219,7 @@ DLL_EXPORT int panel_command_capture( char* cmd, char** resp )
 
     /* Stop capturing */
     stop_capturing( pCAPTCTL );
+    wrmsg_quiet = false;            // reinstate panel output
 
     /* Return to caller */
     return rc;
@@ -351,7 +355,7 @@ static void flog_write( int panel, FILE* f, const char* msg )
     }
 
     /* If write to panel wanted, send message through logmsg pipe */
-    if (panel & WRMSG_PANEL)
+    if ((panel & WRMSG_PANEL) && !wrmsg_quiet)
         _flog_write_pipe( f, msg );
 
     /* Capture this message if capturing is active for this thread */

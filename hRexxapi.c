@@ -132,6 +132,8 @@ static HR_EXTFUNC_T     AWSCmd
     PRXSTRING   RetValue        // Returned result string
 );
 
+    static BYTE RegisterRexxHandlersAndFunctions();
+
 /*-------------------------------------------------------------------*/
 /* Helper function to 'sprintf' to an RXSTRING                       */
 /*-------------------------------------------------------------------*/
@@ -603,13 +605,18 @@ static HR_ERR_T   HerculesCommand
 {
     HR_ERR_T  err;          // Hercules Rexx error code
     char*     resp;         // Response from panel_command
+    bool      quiet;        // don't show response on console if true
 
     /* Validate arguments and trim Hercules command line */
     if (!herccmd || !*TRIM( herccmd ) || !panelrc)
         return HRERR_BADARGS;
 
+    /* if response is wanted, ask Hercules to be quiet on the console */
+    if (stemname) quiet = true;
+    else          quiet = false;
+
     /* Issue the Hercules command and capture the response */
-    *panelrc = panel_command_capture( herccmd, &resp );
+    *panelrc = panel_command_capture( herccmd, &resp, quiet );
 
     /* Format response string stem values if response is wanted */
     if (stemname)
@@ -879,6 +886,10 @@ static HR_REXXRC_T  HRexxStart
        debug every call made to RexxStart without having to set many
        separate breakpoints all over the place.
     */
+#if REXX_PKGNUM == REGINA_PKGNUM
+    /* When running a Regina script in background, handlers need to be re-registered. */
+    if (!equal_threads( thread_id(), sysblk.impltid )) RegisterRexxHandlersAndFunctions();
+#endif
     HR_REXXRC_T  rc  = REXX_DEP( RexxStart )
     (
         ArgCount,                       // Number of arguments
@@ -1271,6 +1282,21 @@ BYTE REXX_DEP( LoadExtra )( BYTE verbose )
     for (i=0; i < (int) NUM_EXTRALIBS; ++i)
     {
         libname = REXX_DEP( ExtraLibs )[i];
+
+        /* ooRexx version 5 and higher doesn't have the rexxutil library anymore */
+#if REXX_PKGNUM == OOREXX_PKGNUM
+        if (1
+            && (REXX_DEP( PackageMajorVers ) >= '5')
+    #if defined( _MSVC_ )
+            && !strcmp( libname, "rexxutil.dll" )
+    #elif defined( __APPLE__ )
+            && !strcmp( libname, "librexxutil.dylib" )
+    #else
+            && !strcmp( libname, "librexxutil.so" )
+    #endif
+           )
+               continue;
+#endif
 
         if (libname && !(libhandle[i] = dlopen( libname, RTLD_NOW )))
         {

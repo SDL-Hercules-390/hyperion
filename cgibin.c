@@ -1279,7 +1279,7 @@ void cgibin_cmd_cmd(WEBBLK *webblk, char *command)
         return;             /* command is all blank, ignore */
     }
 
-    panel_command_capture( command, &response );
+    panel_command_capture( command, &response, false );
 
     if (response == NULL)
     {
