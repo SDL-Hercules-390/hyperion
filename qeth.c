@@ -4606,9 +4606,9 @@ U32 num;                                /* Number of bytes to move   */
     /* Display various information, maybe */
     if (grp->debugmask & DBGQETHCCW)
     {
-        // "%1d:%04X %s: Code %02X: Flags %02X: Chained %02X: Count %08X: PrevCode %02X: CCWseq %d"
+        // "%1d:%04X %s: Code %02X: Flags %02X: Count %08X: Chained %02X: PrevCode %02X: CCWseq %d"
         WRMSG( HHC03992, "D", LCSS_DEVNUM,
-            dev->typname, code, flags, chained, count, prevcode, ccwseq );
+            dev->typname, code, flags, count, chained, prevcode, ccwseq );
     }
 
     /* Process depending on CCW opcode */
@@ -5291,9 +5291,9 @@ U32 num;                                /* Number of bytes to move   */
     /* Display various information, maybe */
     if (grp->debugmask & DBGQETHCCW)
     {
-        // "%1d:%04X %s: More %02X: Status %02X: Residual %08X"
+        // "%1d:%04X %s: Status %02X: Residual %08X: More %02X"
         WRMSG( HHC03993, "D", LCSS_DEVNUM,
-            dev->typname, *more, *unitstat, *residual );
+            dev->typname, *unitstat, *residual, *more );
     }
 
 } /* end function qeth_execute_ccw */
