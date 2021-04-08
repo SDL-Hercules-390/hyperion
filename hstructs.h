@@ -305,6 +305,7 @@ struct REGS {                           /* Processor registers       */
                 sie_active:1,           /* SIE active   (host  only) */
                 sie_mode:1,             /* In SIE mode  (guest only) */
                 sie_pref:1;             /* Preferred-storage mode    */
+                                        /* (e.g. V=R guest)          */
 
         ALIGN_16
         U16     perc;                   /* PER code                  */

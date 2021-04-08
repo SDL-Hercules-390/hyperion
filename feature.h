@@ -36,10 +36,69 @@
   #undef  FEATCHK_DO_DEFINES            // (enable featchk pass 2)
   #define DID_FEATCHK_PASS_1            // (don't do pass 1 twice)
 
+  /*-----------------------------------------------------------------*/
+  /*       Storage Key array unit size and shift amount values       */
+  /*-----------------------------------------------------------------*/
+  /*                                                                 */
+  /*  If 2K pages need to be supported, "_FEATURE_2K_STORAGE_KEYS"   */
+  /*  will be defined  (Note UNDERSCORE!), and our "storkeys" BYTE   */
+  /*  array must have AT LEAST one slot (BYTE) for each 2K page of   */
+  /*  mainstor.                                                      */
+  /*                                                                 */
+  /*  Otherwise (i.e. if we're only building for 390 and/or z/Arch   */
+  /*  and thus are not interested in supporting 2K pages), then the  */
+  /*  "_FEATURE_2K_STORAGE_KEYS" macro won't be defined and we only  */
+  /*  need half as many array entries (one for each 4K of mainstor). */
+  /*                                                                 */
+  /*  If the guest/architecture ACCESSING the array uses 2K storage  */
+  /*  keys (i.e. if "FEATURE_2K_STORAGE_KEYS" as well as its under-  */
+  /*  scored counterpart "_FEATURE_2K_STORAGE_KEYS" are defined) the */
+  /*  "STORAGE_KEY" macro will end up accessing CONSECUTIVE storkeys */
+  /*  bytes for each 2K page.                                        */
+  /*                                                                 */
+  /*  If the guest/architecture ACCESSING the array, uses 4K storage */
+  /*  keys (the "FEATURE_4K_STORAGE_KEYS" macro is defined and the   */
+  /*  "FEATURE_2K_STORAGE_KEYS" is *not* defined, regardless of the  */
+  /*  corresponding "_FEATURE_2K_STORAGE_KEYS" setting), then the    */
+  /*  "STORAGE_KEY" macro will end up accessing EVERY OTHER byte of  */
+  /*  storkeys array for each 4K page.                               */
+  /*                                                                 */
+  /*  Since Hercules does not normally support the "4K-byte Block    */
+  /*  Facility" (unless it is built without support for System/370   */
+  /*  which would neither of the "FEATURE_2K_STORAGE_KEYS" nor the   */
+  /*  "_FEATURE_2K_STORAGE_KEYS macros to ever be defined), we also  */
+  /*  need to #define a "STORAGE_KEY1" and "STORAGE_KEY2" macro too  */
+  /*  in order to support the ISKE, RRBE and SSKE instructions that  */
+  /*  the "Storage-Key-Instruction-Extension Facility" provides,     */
+  /*  which operate on BOTH keys of each double-keyed 4K byte block  */
+  /*  (i.e. they access the storkeys array in consecutive PAIRS of   */
+  /*  bytes), whereas the ISK, RRB and SSK instructions operate on   */
+  /*  each individual byte separately (i.e. they can individually    */
+  /*  access each separate key of each double-keyed 4K byte block).  */
+  /*                                                                 */
+  /*  BUT THE BOTTON LINE IS, if 2K storage keys must be supported   */
+  /*  (i.e. if "_FEATURE_2K_STORAGE_KEYS" (underscore) is #defined)  */
+  /*  then the *SHIFT* amount that the STORAGE_KEY, STORAGE_KEY1,    */
+  /*  and STORAGE_KEY2 macros needs to use *MUST* be set to **11**   */
+  /*  in order to properly index into the storkeys byte array to     */
+  /*  reach the proper key byte or pair of key bytes.                */
+  /*                                                                 */
+  /*  Which is admittedly somewhat counter-intuitive.                */
+  /*                                                                 */
+  /*  Nevertheless, it *MUST* be done this way since 390-mode SIE    */
+  /*  (i.e. VM/ESA) must be able to support not only 390-mode guests */
+  /*  running under SIE (which use 4K keys and ISKE/RRBE/SSKE), but  */
+  /*  must ALSO support 370 guests running under SIE too (which use  */
+  /*  ISK/RRB/SSK and possibly ISKE/RRBE/SSKE too).                  */
+  /*                                                                 */
+  /*-----------------------------------------------------------------*/
+
   #if defined( _FEATURE_2K_STORAGE_KEYS )
     #define _STORKEY_ARRAY_UNITSIZE   2048
+    #define _STORKEY_ARRAY_SHIFTAMT   11
   #else
     #define _STORKEY_ARRAY_UNITSIZE   4096
+    #define _STORKEY_ARRAY_SHIFTAMT   12
   #endif
 
 #endif /* !defined( DID_FEATCHK_PASS_1 ) */
@@ -245,7 +304,6 @@
 
 // 370
 
-#undef STORAGE_KEY_PAGESHIFT
 #undef STORAGE_KEY_PAGESIZE
 #undef STORAGE_KEY_BYTEMASK
 #undef STORAGE_KEY_PAGEMASK
@@ -253,22 +311,17 @@
 
 #if defined(FEATURE_2K_STORAGE_KEYS)
 
-  #define STORAGE_KEY_PAGESHIFT     11
   #define STORAGE_KEY_PAGESIZE      2048
   #define STORAGE_KEY_BYTEMASK      0x000007FF
   #define STORAGE_KEY_PAGEMASK      0x7FFFF800
 
 #else /* FEATURE_4K_STORAGE_KEYS */
 
-  #define STORAGE_KEY_PAGESHIFT     12
   #define STORAGE_KEY_PAGESIZE      4096
   #define STORAGE_KEY_BYTEMASK      0x00000FFF
   #define STORAGE_KEY_PAGEMASK      0x7FFFF000
 
 #endif
-
-#define STORAGE_KEY(_addr, _pointer) \
-   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
 /*----------------------------------------------------------------------------*/
 #elif __GEN_ARCH == 390
@@ -380,7 +433,6 @@
 
 // 390
 
-#undef STORAGE_KEY_PAGESHIFT
 #undef STORAGE_KEY_PAGESIZE
 #undef STORAGE_KEY_BYTEMASK
 #undef STORAGE_KEY_PAGEMASK
@@ -390,7 +442,6 @@
   #error FEATURE_2K_STORAGE_KEYS unsupported for __GEN_ARCH == 390!
 #else /* FEATURE_4K_STORAGE_KEYS */
 
-  #define STORAGE_KEY_PAGESHIFT     12
   #define STORAGE_KEY_PAGESIZE      4096
   #define STORAGE_KEY_BYTEMASK      0x00000FFF
   #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -400,9 +451,6 @@
   #endif
 
 #endif
-
-#define STORAGE_KEY(_addr, _pointer) \
-   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
 /*----------------------------------------------------------------------------*/
 #elif __GEN_ARCH == 900
@@ -528,7 +576,6 @@
 
 // 900
 
-#undef STORAGE_KEY_PAGESHIFT
 #undef STORAGE_KEY_PAGESIZE
 #undef STORAGE_KEY_BYTEMASK
 #undef STORAGE_KEY_PAGEMASK
@@ -538,7 +585,6 @@
   #error FEATURE_2K_STORAGE_KEYS unsupported for __GEN_ARCH == 900!
 #else /* FEATURE_4K_STORAGE_KEYS */
 
-  #define STORAGE_KEY_PAGESHIFT     12
   #define STORAGE_KEY_PAGESIZE      4096
   #define STORAGE_KEY_BYTEMASK      0x00000FFF
   #if !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -548,9 +594,6 @@
   #endif
 
 #endif
-
-#define STORAGE_KEY(_addr, _pointer) \
-   (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
 /*----------------------------------------------------------------------------*/
 #else // __GEN_ARCH != 370 or 390 or 900...
@@ -570,15 +613,25 @@
 /*  of a given build architecture).                                  */
 /*-------------------------------------------------------------------*/
 
+/*-------------------------------------------------------------------*/
+/*                     STORAGE_KEY macros                            */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*   Note the use of "_STORKEY_ARRAY_SHIFTAMT" shift value in each   */
+/*   of the below macros so that ALL supported build architectures   */
+/*   can thus be properly supported. The two STORAGE_KEY1/2 macros   */
+/*   are used by the ISKE, RRBE and SSKE instructions which always   */
+/*   operate on BOTH the low-order *and* high-order keys of each     */
+/*   double-keyed 4K byte block.                                     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+#undef STORAGE_KEY
 #undef STORAGE_KEY1
 #undef STORAGE_KEY2
 
-#if defined(_FEATURE_2K_STORAGE_KEYS)
-  #define STORAGE_KEY1(_addr, _pointer) \
-    (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)&~1]
-  #define STORAGE_KEY2(_addr, _pointer) \
-    (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)|1]
-#endif
+#define STORAGE_KEY(  _addr, _regs ) (_regs)->storkeys[ ((_addr) >> _STORKEY_ARRAY_SHIFTAMT)      ]
+#define STORAGE_KEY1( _addr, _regs ) (_regs)->storkeys[ ((_addr) >> _STORKEY_ARRAY_SHIFTAMT) & ~1 ]
+#define STORAGE_KEY2( _addr, _regs ) (_regs)->storkeys[ ((_addr) >> _STORKEY_ARRAY_SHIFTAMT) |  1 ]
 
 /*-------------------------------------------------------------------*/
 /* PAGEFRAME-size related constants                                  */
