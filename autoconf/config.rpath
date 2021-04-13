@@ -236,7 +236,7 @@ else
     darwin* | rhapsody*)
       hardcode_direct=yes
       ;;
-    freebsd1*)
+    freebsd1 | freebsd1.*)
       ld_shlibs=no
       ;;
     freebsd2.2*)
@@ -389,8 +389,6 @@ case "$host_os" in
     ;;
   darwin* | rhapsody*)
     shlibext=dylib
-    ;;
-  freebsd1*)
     ;;
   freebsd*)
     shlibext=so

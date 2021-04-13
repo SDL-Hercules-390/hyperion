@@ -1307,10 +1307,6 @@ dgux*)
   shlibpath_var=LD_LIBRARY_PATH
   ;;
 
-freebsd1*)
-  dynamic_linker=no
-  ;;
-
 kfreebsd*-gnu)
   version_type=linux
   need_lib_prefix=no
@@ -1323,7 +1319,9 @@ kfreebsd*-gnu)
   dynamic_linker='GNU ld.so'
   ;;
 
-freebsd*)
+# FreeBSD before 4.0 may have supported a.out format.
+# Test for it, and if the objformat migration tool does not exist, assume a.out.
+freebsd2 | freebsd2.* | freebsd3 | freebsd3.* )
   objformat=`test -x /usr/bin/objformat && /usr/bin/objformat || echo aout`
   version_type=freebsd-$objformat
   case $version_type in
@@ -1351,6 +1349,16 @@ freebsd*)
     hardcode_into_libs=yes
     ;;
   esac
+  ;;
+
+# FreeBSD 4 and higher always support, and only support, ELF
+freebsd*)
+  library_names_spec='${libname}${release}${shared_ext}$versuffix $libname${release}${shared_ext} $libname${shared_ext}'
+  need_version=no
+  need_lib_prefix=no
+  shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=no
+  hardcode_into_libs=yes
   ;;
 
 gnu*)
@@ -5430,10 +5438,6 @@ EOF
       _LT_AC_TAGVAR(archive_cmds, $1)='$LD -G -h $soname -o $lib $libobjs $deplibs $linker_flags'
       _LT_AC_TAGVAR(hardcode_libdir_flag_spec, $1)='-L$libdir'
       _LT_AC_TAGVAR(hardcode_shlibpath_var, $1)=no
-      ;;
-
-    freebsd1*)
-      _LT_AC_TAGVAR(ld_shlibs, $1)=no
       ;;
 
     # FreeBSD 2.2.[012] allows us to include c++rt0.o to get C++ constructor

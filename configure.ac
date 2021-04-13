@@ -39,6 +39,14 @@ AM_MAINTAINER_MODE()
 AC_CANONICAL_HOST()           # (sets $host_cpu, $host_vendor, and $host_os)
 AC_CANONICAL_TARGET()         # (sets $target_cpu, $target_vendor, and $target_os)
 
+# FORTRAN detection scanning can goof up our shared libraries.
+# So we diable checking for it.  And C++, too, while we're at it.
+#
+# Idea from https://stackoverflow.com/questions/4292683
+#
+m4_defun([_LT_AC_LANG_CXX_CONFIG], [:])
+m4_defun([_LT_AC_LANG_F77_CONFIG], [:])
+
 ###############################################################################
 #   Programs section...
 ###############################################################################
@@ -364,6 +372,14 @@ AC_LIBTOOL_WIN32_DLL()                  # (we need Win32 support in libtool)
 # -----------------------------------------------------------------------------
 
 case $host_os in
+    freebsd1 | freebsd1.* | freebsd2 | freebsd2.* | freebsd3 | freebsd3.*)
+      lt_cv_deplibs_check_method="match_pattern /lib[^/]+(\\.so|_pic\\.a|\\.a)\$"
+      ;;
+
+    freebsd*)
+      lt_cv_deplibs_check_method="pass_all"
+      ;;
+
     netbsd*)
       #lt_cv_deplibs_check_method="match_pattern /lib[^/]+(\\.so|_pic\\.a|\\.a)\$"
       lt_cv_deplibs_check_method="pass_all"
