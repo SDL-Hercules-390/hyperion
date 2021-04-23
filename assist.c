@@ -13,10 +13,10 @@
 /* instructions described in the manual GA22-7079-01.                */
 /*-------------------------------------------------------------------*/
 
-/*              Instruction decode rework - Jan Jaeger               */
-/*              Correct address wraparound - Jan Jaeger              */
-/*              Add dummy assist instruction - Jay Maynard,          */
-/*                  suggested by Brandon Hill                        */
+/*           Instruction decode rework - Jan Jaeger                  */
+/*           Correct address wraparound - Jan Jaeger                 */
+/*           Add dummy assist instruction - Jay Maynard,             */
+/*               suggested by Brandon Hill                           */
 
 #include "hstdinc.h"
 
@@ -58,24 +58,25 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 
 #endif /*!defined(_ASSIST_C)*/
 
-/* The macro below allows each assist instruction to execute in a virtual machine. Per
-   GA22-7072-0, these assist instructions must co-exist with ECPS:VM if present (whether
-   enabled or disabled), so that MVS running as a guest of VM can use these assists.
-   This is the Virtual Machine Extended Facility Assist feature, also known as "370E"
-   in VM. The macro will allow execution of these privileged assist instructions when
-   the real PSW is in the problem state - if and only if the guest virtual machine PSW
-   is in the virtual supervisor state (ECPSVM_CR6_VIRTPROB=0) and the 370E feature is
-   enabled (ECPS_CR6_VMMVSAS=1). Otherwise, PRIV_CHECK is invoked to cause a
-   privileged operation exception.
+/* The macro below allows each assist instruction to execute in a virtual
+   machine. Per GA22-7072-0, these assist instructions must co-exist with
+   ECPS:VM if present (whether enabled or disabled), so that MVS running
+   as a guest of VM can use these assists. This is the "Virtual Machine
+   Extended Facility Assist" feature, also known as "370E" in VM. The macro
+   will allow execution of these privileged assist instructions when the
+   real PSW is in the problem state -- if and only if the guest virtual
+   machine PSW is in the virtual supervisor state (ECPSVM_CR6_VIRTPROB=0)
+   and the 370E feature is enabled (ECPS_CR6_VMMVSAS=1).  Otherwise, the
+   PRIV_CHECK macro is invoked to cause a privileged operation exception.
 */
 #define GUEST_CHECK( ) \
-    if(PROBSTATE(&regs->psw)) \
+    if (PROBSTATE( &regs->psw )) \
     { \
         if ((regs->CR_L(6) & (ECPSVM_CR6_VIRTPROB + ECPSVM_CR6_VMMVSAS)) != ECPSVM_CR6_VMMVSAS) \
-           PRIV_CHECK(regs); \
+           PRIV_CHECK( regs ); \
     }
 
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 
 /*-------------------------------------------------------------------*/
 /* E502       - Page Fix                                       [SSE] */
@@ -89,20 +90,27 @@ RADR    mplp;
 
 #define MPLPFAL  0x34
 
-    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
 
-    GUEST_CHECK( );
+    GUEST_CHECK();
 
-    /* The Page Fix assist cannot return via the PTT_ERR( ) method as used in most of the
-       other assists here.  Per GA22-7079-1 IBM System/370 Assists for MVS, this assist must
-       NOT exit to the next sequential instruction.  Instead, we follow the 'simplified
-       execution path' described on page 3 of that documentation for Fix Page. */
+    /* The Page Fix assist cannot return via the PTT_ERR( ) method as used
+       in most of the other assists here.  Per GA22-7079-1 "IBM System/370
+       Assists for MVS", this assist must NOT exit to the next sequential
+       instruction.  Instead, we follow the "simplified execution path"
+       described on page 3 of that documentation for Fix Page.
+    */
     regs->GR_L(14) = PSW_IA_FROM_IP(regs, 0);
-    mplp = ARCH_DEP( vfetch4 )( (effective_addr2 & ADDRESS_MAXWRAP( regs )), USE_INST_SPACE, regs );
-    regs->GR_L(15) = ARCH_DEP( vfetch4 )( (( mplp+MPLPFAL ) & ADDRESS_MAXWRAP( regs )), USE_INST_SPACE, regs );
-    SET_PSW_IA_AND_MAYBE_IP(regs, regs->GR_L(15));
+
+    mplp = ARCH_DEP( vfetch4 )( (effective_addr2 & ADDRESS_MAXWRAP( regs )),
+        USE_INST_SPACE, regs );
+
+    regs->GR_L(15) = ARCH_DEP( vfetch4 )( (( mplp+MPLPFAL ) & ADDRESS_MAXWRAP( regs )),
+        USE_INST_SPACE, regs );
+
+    SET_PSW_IA_AND_MAYBE_IP( regs, regs->GR_L(15) );
 }
-#endif /*!defined(FEATURE_S390_DAT) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
+#endif /* !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
 
 /*-------------------------------------------------------------------*/
@@ -118,10 +126,9 @@ VADR    effective_addr1,
 
     GUEST_CHECK( );
 
-    PTT_ERR("*E503 SVCA",effective_addr1,effective_addr2,regs->psw.IA_L);
+    PTT_ERR( "*E503 SVCA", effective_addr1, effective_addr2, regs->psw.IA_L );
     /*INCOMPLETE: NO ACTION IS TAKEN, THE SVC IS UNASSISTED
                   AND MVS WILL HAVE TO HANDLE THE SITUATION*/
-
 }
 
 
@@ -130,19 +137,19 @@ VADR    effective_addr1,
 /*-------------------------------------------------------------------*/
 DEF_INST(obtain_local_lock)
 {
-    int     b1, b2;                         /* Values of base field      */
+    int     b1, b2;                     /* Values of base field      */
     VADR    effective_addr1,
-            effective_addr2;                /* Effective addresses       */
-    VADR    ascb_addr;                      /* Virtual address of ASCB   */
-    U32     hlhi_word;                      /* Highest lock held word    */
-    VADR    lit_addr;                       /* Virtual address of lock
-                                               interface table           */
-    U32     lcpa;                           /* Logical CPU address       */
-    VADR    newia;                          /* Unsuccessful branch addr  */
-    BYTE   *main;                           /* mainstor address          */
-    U32     old;                            /* old value                 */
-    U32     new;                            /* new value                 */
-    int     acc_mode = 0;                   /* access mode to use        */
+            effective_addr2;            /* Effective addresses       */
+    VADR    ascb_addr;                  /* Virtual address of ASCB   */
+    U32     hlhi_word;                  /* Highest lock held word    */
+    VADR    lit_addr;                   /* Virtual address of lock
+                                           interface table           */
+    U32     lcpa;                       /* Logical CPU address       */
+    VADR    newia;                      /* Unsuccessful branch addr  */
+    BYTE   *main;                       /* mainstor address          */
+    U32     old;                        /* old value                 */
+    U32     new;                        /* new value                 */
+    int     acc_mode = 0;               /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -173,11 +180,12 @@ DEF_INST(obtain_local_lock)
         /* Get mainstor address of ASCBLOCK word */
         main = MADDRL (ascb_addr + ASCBLOCK, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-        /* The lock word should contain 0; use this as our compare value.  Swap in the CPU address in lpca */
+        /* The lock word should contain 0; use this as our compare value.
+           Swap in the CPU address in lpca */
         old = 0;     
         new = CSWAP32(lcpa); 
 
-        /* Attempt to exchange the values; cmpxchg4 success returns 0, failure returns 1 */
+        /* Try exchanging values; cmpxchg4 returns 0=success, !0=failure */
         if (!cmpxchg4( &old, new, main ))
         {
             /* Store the unchanged value into the second operand to
@@ -318,22 +326,22 @@ int     acc_mode = 0;                   /* access mode to use        */
 /*-------------------------------------------------------------------*/
 DEF_INST(obtain_cms_lock)
 {
-    int     b1, b2;                         /* Values of base field      */
+    int     b1, b2;                     /* Values of base field      */
     VADR    effective_addr1,
-            effective_addr2;                /* Effective addresses       */
-    VADR    ascb_addr;                      /* Virtual address of ASCB   */
-    U32     hlhi_word;                      /* Highest lock held word    */
-    VADR    lit_addr;                       /* Virtual address of lock
-                                               interface table           */
-    VADR    lock_addr;                      /* Lock address              */
-    int     lock_arn;                       /* Lock access register      */
-    U32     lock;                           /* Lock value                */
-    VADR    newia;                          /* Unsuccessful branch addr  */
-    BYTE   *main;                           /* mainstor address          */
-    U32     old;                            /* old value                 */
-    U32     new;                            /* new value                 */
-    U32     locked = 0;                     /* status of cmpxchg4 result */
-    int     acc_mode = 0;                   /* access mode to use        */
+            effective_addr2;            /* Effective addresses       */
+    VADR    ascb_addr;                  /* Virtual address of ASCB   */
+    U32     hlhi_word;                  /* Highest lock held word    */
+    VADR    lit_addr;                   /* Virtual address of lock
+                                           interface table           */
+    VADR    lock_addr;                  /* Lock address              */
+    int     lock_arn;                   /* Lock access register      */
+    U32     lock;                       /* Lock value                */
+    VADR    newia;                      /* Unsuccessful branch addr  */
+    BYTE   *main;                       /* mainstor address          */
+    U32     old;                        /* old value                 */
+    U32     new;                        /* new value                 */
+    U32     locked = 0;                 /* status of cmpxchg4 result */
+    int     acc_mode = 0;               /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -379,7 +387,7 @@ DEF_INST(obtain_cms_lock)
             old = 0;     
             new = CSWAP32(ascb_addr);  
 
-            /* Attempt to exchange the values; cmpxchg4 success returns 0, failure returns 1 */
+            /* Try exchanging values; cmpxchg4 returns 0=success, !0=failure */
             locked = !cmpxchg4( &old, new, main );
         }
 
@@ -535,7 +543,6 @@ VADR    effective_addr1,
 
     PTT_ERR("*E508 TRSVC",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
-
 }
 
 
@@ -558,7 +565,6 @@ VADR    effective_addr1,
 
     PTT_ERR("*E509 TRPGM",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
-
 }
 
 
@@ -581,7 +587,6 @@ VADR    effective_addr1,
 
     PTT_ERR("*E50A TRSRB",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
-
 }
 
 
@@ -604,7 +609,6 @@ VADR    effective_addr1,
 
     PTT_ERR("*E50B TRIO",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
-
 }
 
 
@@ -627,7 +631,6 @@ VADR    effective_addr1,
 
     PTT_ERR("*E50C TRTSK",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
-
 }
 
 
@@ -650,7 +653,6 @@ VADR    effective_addr1,
 
     PTT_ERR("*E50D TRRTN",effective_addr1,effective_addr2,regs->psw.IA_L);
     /*INCOMPLETE: NO TRACE ENTRY IS GENERATED*/
-
 }
 #endif /*!defined(FEATURE_TRACING)*/
 
