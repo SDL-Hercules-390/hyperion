@@ -15,9 +15,7 @@ ldadd          = @LIBS@
 
 #------------------------------------------------------------------------------
 
-ACLOCAL_AMFLAGS =   \
-  -I autoconf       \
-  -I m4
+ACLOCAL_AMFLAGS = -I autoconf -I m4
 
 AM_CPPFLAGS =       \
   -I $(top_srcdir)  \
