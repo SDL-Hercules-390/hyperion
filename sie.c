@@ -295,6 +295,13 @@ volatile int icode = 0;                 /* interrupt code            */
 bool    same_cpu, same_state;           /* boolean helper flags      */
 U64     dreg;
 
+#if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL )
+U32     fld;                            /* Facility List Designator  */
+#if !defined( OPTION_SIE2BK_FLD_COPY)
+int     i;                              /* (work)                    */
+#endif
+#endif
+
     S( inst, regs, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -492,7 +499,7 @@ U64     dreg;
         FETCH_DW( GUESTREGS->sie_mso, STATEBK->mso );
         GUESTREGS->sie_mso &= SIE2_MS_MASK;
 
-        /* Load main storage extend */
+        /* Load main storage extent */
         FETCH_DW( GUESTREGS->mainlim, STATEBK->mse );
         GUESTREGS->mainlim |= ~SIE2_MS_MASK;
 
@@ -512,7 +519,7 @@ U64     dreg;
         FETCH_HW( GUESTREGS->sie_mso, STATEBK->mso );
         GUESTREGS->sie_mso <<= 16;
 
-        /* Load main storage extend */
+        /* Load main storage extent */
         FETCH_HW( GUESTREGS->mainlim, STATEBK->mse );
         GUESTREGS->mainlim = ((GUESTREGS->mainlim + 1) << 16) - 1;
 
@@ -578,49 +585,60 @@ U64     dreg;
         }
     }
 
+    GUESTREGS->sie_fld = false;  // (default until we learn otherwise)
+
 #if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL )
 
     /* Set Virtual Architecture Level (Facility List) */
+    /* SIE guest facilities by default start out same as host's */
+    memcpy( GUESTREGS->facility_list, HOSTREGS->facility_list, STFL_HERC_BY_SIZE );
+
+    /* Fetch address of optional SIE guest facility list designator */
+    FETCH_FW( fld, STATEBK->fld );
+
+    if (0
+        || (U64)fld > regs->mainlim /* (beyond end of main storage?)  */
+        || (fld & ~0x7ffffff8)      /* (above 2GB or not DW aligned?) */
+    )
     {
-        U32  fld;       /* SIE Facility List Designator */
-
-        /* SIE guest facilities by default start out same as host's */
-        memcpy( GUESTREGS->facility_list, regs->facility_list, STFL_HERC_BY_SIZE );
-
-        /* Fetch address of optional SIE guest facility list mask */
-        FETCH_FW( fld, STATEBK->fld );
-
-        if (0
-            || (U64)fld > regs->mainlim /* (beyond end of main storage?)  */
-            || (fld & ~0x7ffffff8)      /* (above 2GB or not DW aligned?) */
-        )
-        {
-            /* ZZ: FIXME
-            SIE_SET_VI( SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_??ADR, GUESTREGS );
-            */
-            STATEBK->c = SIE_C_VALIDITY;
-            return;
-        }
-
-        /* If a facility list mask was provided then use it to
-           clear SIE guest facility bits which shouldn't be on */
-        if (fld)
-        {
-            int    i;
-            BYTE   facilities_mask[ STFL_HERC_BY_SIZE ];
-
-            /* Copy mask bits to work area */
-            memcpy( facilities_mask, &regs->mainstor[ fld ], STFL_HERC_BY_SIZE );
-
-            /* Prevent certain facility bits from being masked */
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-            BIT_ARRAY_SET( facilities_mask, STFL_001_ZARCH_INSTALLED );
-#endif
-            /* Mask SIE guest facility bits as requested */
-            for (i=0; i < (int) STFL_IBM_BY_SIZE; i++)
-               GUESTREGS->facility_list[i] &= facilities_mask[i];
-        }
+        /* ZZ: FIXME
+        SIE_SET_VI( SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_??ADR, GUESTREGS );
+        */
+        STATEBK->c = SIE_C_VALIDITY;
+        return;
     }
+
+    if (fld)
+    {
+        GUESTREGS->sie_fld = true;
+
+#if defined( OPTION_SIE2BK_FLD_COPY)
+
+        /* If a facility list designator was provided
+           then it defines the SIE guest facility bits.
+        */
+        memcpy( GUESTREGS->facility_list, &regs->mainstor[ fld ], STFL_HERC_BY_SIZE );
+
+#else /* !defined( OPTION_SIE2BK_FLD_COPY) */
+
+        /* If a facility list designator was provided
+           then it's used as a mask to clear the SIE
+           guest facility bits which shouldn't be on.
+        */
+        for (i=0; i < (int) STFL_IBM_BY_SIZE; i++)
+            GUESTREGS->facility_list[i] &= regs->mainstor[ fld + i ];
+
+#endif /* defined( OPTION_SIE2BK_FLD_COPY) */
+    }
+
+    /* Prevent certain facility bits from being masked */
+    BIT_ARRAY_SET( GUESTREGS->facility_list, STFL_001_ZARCH_INSTALLED );
+
+    if (ARCH_900_IDX == GUESTREGS->arch_mode)
+        BIT_ARRAY_SET( GUESTREGS->facility_list, STFL_002_ZARCH_ACTIVE );
+    else
+        BIT_ARRAY_CLR( GUESTREGS->facility_list, STFL_002_ZARCH_ACTIVE );
+
 #endif /* defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) */
 
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )

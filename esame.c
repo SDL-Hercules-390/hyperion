@@ -6187,10 +6187,21 @@ int     cc;                             /* Condition code            */
 
     TRAN_INSTR_CHECK( regs );
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_ON(regs,IC0, STFL))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+    // Let VM simulate this instruction if SIE interception is either
+    // explicitly requested -OR- implicitly required to do so (which
+    // only applies with z/SIE Virtual Architecture Level support).
+
+#if defined( _FEATURE_SIE )
+    if (0
+        || SIE_STATE_BIT_ON( regs,IC0, STFL )     // Explicit request?
+#if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) // z/SIE Virt Arch?
+        || (SIE_MODE( regs ) && !regs->sie_fld)   // Implicitly required?
+#endif
+    )
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+#endif
+
+    // Else not running under SIE or intercept not requested/required
 
     PTT_INF("STFLE",regs->GR_L(0),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
