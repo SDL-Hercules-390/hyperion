@@ -28,7 +28,7 @@
 #endif
 
 /*
-|| Chunk header for an HET.  Physically compatable with AWSTAPE format.
+|| Chunk header for an HET.  Physically compatible with AWSTAPE format.
 */
 typedef struct _hethdr
 {
@@ -45,7 +45,7 @@ typedef struct _hethdr
 #define HETHDR_PLEN( h ) ( ( (h)->chdr.plen[ 1 ] << 8 ) + (h)->chdr.plen[ 0 ] )
 
 /*
-|| Definitions for HETHDR flags byte 1 (compression incompatable with AWSTAPE)
+|| Definitions for HETHDR flags byte 1 (compression incompatible with AWSTAPE)
 */
 #define HETHDR_FLAGS1_BOR       0x80    /* Start of new record              */
 #define HETHDR_FLAGS1_TAPEMARK  0x40    /* Tape mark                        */
@@ -55,7 +55,7 @@ typedef struct _hethdr
 #define HETHDR_FLAGS1_ZLIB      0x01    /* ZLIB compression                 */
 
 /*
-|| Definitions for HETHDR flags byte 2 (incompatable with AWSTAPE and HET)
+|| Definitions for HETHDR flags byte 2 (incompatible with AWSTAPE and HET)
 */
 #define HETHDR_FLAGS2_COMPRESS     0x80 /* Compression method mask          */
 #define HETHDR_FLAGS2_ZLIB_BUSTECH 0x80 /* Bus-Tech ZLIB compression        */

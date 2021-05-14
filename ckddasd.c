@@ -1517,7 +1517,7 @@ int shift;  /* num of bits to shift left 'high cyl' in sense6 */
 
     } /* end switch(format) */
 
-    /* Sense byte 27 bit 0 indicates 24-byte compatability sense data*/
+    /* Sense byte 27 bit 0 indicates 24-byte compatibility sense data*/
     dev->sense[27] = 0x80;
 
     /* Sense bytes 29-30 contain the cylinder address */

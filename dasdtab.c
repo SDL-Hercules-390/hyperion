@@ -406,7 +406,7 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[5]  = ckd->model;                   // Device model
     store_fw(devchar+6, cu->sctlfeat |          // Device and SD facilities
       (cu->devt == 0x3990 &&                    // ... or in 24-byte sense
-       ckd->devt == 0x3380));                   // ... compatability for 3380
+       ckd->devt == 0x3380));                   // ... compatibility for 3380
                                                 // ... hosted on 3990 controller
     devchar[10] = ckd->devclass;                // Device class code
     devchar[11] = ckd->code;                    // Device type code

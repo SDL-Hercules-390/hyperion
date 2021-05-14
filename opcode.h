@@ -1387,6 +1387,8 @@ do {                                                                  \
          + (uintptr_t)(_aaddr)) \
          ^ (uintptr_t)((_addr) & TLB_PAGEMASK))
 
+#define MAIN_TO_ABS(_main)  ((U64)((BYTE*)(_main) - sysblk.mainstor))
+
 /* Perform invalidation after storage key update.
  * If the REF or CHANGE bit is turned off for an absolute
  * address then we need to invalidate any cached entries
@@ -1394,31 +1396,48 @@ do {                                                                  \
  * FIXME: Synchronization, esp for the CHANGE bit, should
  * be tighter than what is provided here.
  */
-#define STORKEY_INVALIDATE(_regs, _n) \
- do { \
-   BYTE *mn; \
-   mn = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK); \
-   ARCH_DEP( invalidate_tlbe )((_regs), mn); \
-   if (sysblk.cpus > 1) { \
-     int i; \
-     OBTAIN_INTLOCK ((_regs)); \
-     for (i = 0; i < sysblk.hicpu; i++) { \
-       if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
-         if ( sysblk.waiting_mask & CPU_BIT(i) ) \
-           ARCH_DEP( invalidate_tlbe )(sysblk.regs[i], mn); \
-         else { \
-           ON_IC_INTERRUPT(sysblk.regs[i]); \
-           if (!sysblk.regs[i]->invalidate) { \
-             sysblk.regs[i]->invalidate = 1; \
-             sysblk.regs[i]->invalidate_main = mn; \
-           } else \
-             sysblk.regs[i]->invalidate_main = NULL; \
-         } \
-       } \
-     } \
-     RELEASE_INTLOCK((_regs)); \
-   } \
- } while (0)
+#define STORKEY_INVALIDATE( _regs, _n )                               \
+ do                                                                   \
+ {                                                                    \
+   BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);       \
+                                                                      \
+   ARCH_DEP( invalidate_tlbe )( (_regs), abs );                       \
+                                                                      \
+   if (sysblk.cpus > 1)                                               \
+   {                                                                  \
+     int cpu;                                                         \
+                                                                      \
+     OBTAIN_INTLOCK( (_regs) );                                       \
+                                                                      \
+     for (cpu=0; cpu < sysblk.hicpu; cpu++)                           \
+     {                                                                \
+       if (IS_CPU_ONLINE( cpu ) && cpu != (_regs)->cpuad)             \
+       {                                                              \
+         if (sysblk.waiting_mask & CPU_BIT( cpu ))                    \
+         {                                                            \
+           ARCH_DEP( invalidate_tlbe )( sysblk.regs[cpu], abs );      \
+         }                                                            \
+         else                                                         \
+         {                                                            \
+           ON_IC_INTERRUPT( sysblk.regs[cpu] );                       \
+                                                                      \
+           if (!sysblk.regs[cpu]->invalidate)                         \
+           {                                                          \
+             sysblk.regs[cpu]->invalidate = 1;                        \
+             sysblk.regs[cpu]->invalidate_main = abs;                 \
+           }                                                          \
+           else                                                       \
+           {                                                          \
+             sysblk.regs[cpu]->invalidate_main = NULL;                \
+           }                                                          \
+         }                                                            \
+       }                                                              \
+     }                                                                \
+                                                                      \
+     RELEASE_INTLOCK((_regs));                                        \
+   }                                                                  \
+ }                                                                    \
+ while (0)
 
 #if defined( INLINE_STORE_FETCH_ADDR_CHECK )
  #define FETCH_MAIN_ABSOLUTE(_addr, _regs, _len) \

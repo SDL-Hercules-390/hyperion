@@ -15,6 +15,11 @@
 /* Format-2 State Descriptor Block (SIE2BK) documented at:           */
 /*  http://www.vm.ibm.com/pubs/cp710/SIEBK.HTML                      */
 
+/* The RCP (Reference and Change Preservation) table is documented   */
+/* on page 541 of "IBM Journal of Research and Development" vol. 27, */
+/* no. 6 (November 1983) article "System/370 Extended Architecture:  */
+/* Facilities for Virtual Machines", by P.H.Gum                      */
+
 #ifndef _ESA390_H
 #define _ESA390_H
 
@@ -260,6 +265,25 @@ struct DAT
             protect:2;      /* 1=Page prot, 2=ALE prot               */
 };
 typedef struct DAT  DAT;
+
+/*-------------------------------------------------------------------*/
+/* MVPG instruction General Purpose Register 0 bit definitions       */
+/* (Note: only Move Page Facility 2 is supported by Hercules)        */
+        
+#define GR0_MVPG_DRI            0x00000200      /* bit 22 or 54      */
+#define GR0_MVPG_CCO            0x00000100      /* bit 23 or 55      */
+
+#define GR0_MVPG_RSRVD          0x0000F000      /* bits 16-19        */
+#define GR0_MVPG_FIRST          0x00000800      /* bit  20           */
+#define GR0_MVPG_SECOND         0x00000400      /* bit  21           */
+#define GR0_MVPG_KEY            0x000000F0      /* bits 24-27        */
+
+/* The below bit definitions are only used when the Move-Page-and-   */
+/* -Set-Key Facility (149_MOVEPAGE_SETKEY) is installed.             */
+
+#define GR0_MVPG_149_RSRVD      0x0000E000      /* bits 48-50        */
+#define GR0_MVPG_149_KFC        0x00001C00      /* bits 51-53        */
+#define GR0_MVPG_149_KEY        0x000000FE      /* bits 56-62        */
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 0 */
@@ -1743,9 +1767,9 @@ struct SIE1BK
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
 #define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
-#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
+#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE/IRBM   */
 #define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
-#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE        */
+#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE/RRBM   */
 #define SIE_IC2_PC      0x08            /* Intercept PC              */
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
@@ -1931,7 +1955,7 @@ struct SIE2BK
 #define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
-#define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+#define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE/CSP/CSPG   */
 #define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW/LPSWE      */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
@@ -1942,9 +1966,9 @@ struct SIE2BK
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
 #define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
-#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
+#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE/IRBM   */
 #define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
-#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE        */
+#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE/RRBM   */
 #define SIE_IC2_PC      0x08            /* Intercept PC              */
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */

@@ -44,7 +44,7 @@
                                                168 are both zero, ESA/390
                                                mode is active. When bit 2
                                                is zero and bit 168 is one,
-                                               ESA/390-compatability mode
+                                               ESA/390-compatibility mode
                                                is active.                */
 #define STFL_003_DAT_ENHANCE_1         3    /* DAT-Enhancement Facility 1
                                                is installed.             */

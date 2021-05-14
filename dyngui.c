@@ -206,7 +206,7 @@ void ReadInputData ( int nTimeoutMillsecs )
         if (HSO_EINTR == HSO_errno)
             return;             // (we were interrupted by a signal)
 
-        // A bona fide error occurred; abort...
+        // A bonafide error occurred; abort...
 
         WRMSG
         (
@@ -244,7 +244,7 @@ void ReadInputData ( int nTimeoutMillsecs )
         if (EINTR == errno)
             return;             // (we were interrupted by a signal)
 
-        // A bona fide error occurred; abort...
+        // A bonafide error occurred; abort...
 
         WRMSG
         (
