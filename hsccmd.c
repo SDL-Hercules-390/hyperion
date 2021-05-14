@@ -5041,7 +5041,7 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
 
     UPPER_ARGV_0( argv );
 
-    if (argc < 1 || argc > 2)
+    if (argc < 1 || argc > 3)
     {
         // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
@@ -5064,8 +5064,23 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
         && (sscanf( argv[1], "%x%c", &version, &c ) == 1)
     )
     {
+        bool force = false;
+
+        /* Check for 'FORCE' option */
+        if (argc == 3)
+        {
+            if (CMD( argv[2], FORCE, 5 ))
+                force = true;
+            else
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "" );
+                return -1;
+            }
+        }
+
         /* Update all CPU identifiers */
-        if (!setAllCpuIds_lock( -1, version, -1, -1 ))
+        if (!setAllCpuIds_lock( -1, version, -1, -1, force ))
             return -1;
 
         MSGBUF( chversion,"%02X", sysblk.cpuversion );
@@ -5124,7 +5139,7 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
     )
     {
         /* Update all CPU IDs */
-        if (!setAllCpuIds_lock( cpumodel, -1, -1, -1 ))
+        if (!setAllCpuIds_lock( cpumodel, -1, -1, -1, false ))
             return -1;
 
         MSGBUF( chmodel, "%04X", sysblk.cpumodel );
@@ -5190,7 +5205,7 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
     )
     {
         /* Update all CPU IDs */
-        if (!setAllCpuIds_lock( -1, -1, cpuserial, -1 ))
+        if (!setAllCpuIds_lock( -1, -1, cpuserial, -1, false ))
             return -1;
 
         /* Show them the now newly-updated SYSBLK value */

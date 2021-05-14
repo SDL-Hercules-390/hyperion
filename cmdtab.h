@@ -340,6 +340,15 @@
 #define cpumodel_cmd_desc       "Set CPU model number"
 #define cpuserial_cmd_desc      "Set CPU serial number"
 #define cpuverid_cmd_desc       "Set CPU verion number"
+#define cpuverid_cmd_help       \
+                                \
+  "Format: \"cpuverid xx [force]\" where 'xx' is the 2 hexadecimal digit\n"     \
+  "CPU version code stored by the STIDP instruction when the architecture\n"    \
+  "mode is S/370 or ESA390. If the architecture mode is z/Arch, then the\n"     \
+  "version code is always stored as '00' and the value specified here is\n"     \
+  "ignored unless the 'FORCE' option is specified. The default version code\n"  \
+   "is 'FD' unless set to a different value.\n"
+
 #define cr_cmd_desc             "Display or alter control registers"
 #define cr_cmd_help             \
                                 \
@@ -1923,7 +1932,7 @@ COMMAND( "cnslport",                cnslport_cmd,           SYSCFGNDIAG8,       
 COMMAND( "cpuidfmt",                cpuidfmt_cmd,           SYSCFGNDIAG8,       cpuidfmt_cmd_desc,      NULL                )
 COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       cpumodel_cmd_desc,      NULL                )
 COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       cpuserial_cmd_desc,     NULL                )
-COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      NULL                )
+COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      cpuverid_cmd_help   )
 COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )

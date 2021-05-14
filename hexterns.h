@@ -131,12 +131,10 @@ HCEM_DLL_IMPORT int aia_cmd       ( int argc, char* argv[], char* cmdline );
 
 /* CPU ID related functions in module hscemode.c */
 extern U64  createCpuId      ( const U64 model, const U64 version, const U64 serial, const U64 MCEL );
-extern BYTE setAllCpuIds     ( const S32 model, const S16 version, const S32 serial, const S32 MCEL );
-extern BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL );
-extern void setCpuIdregs     ( REGS* regs,
-                               S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL );
-extern void setCpuId         ( const unsigned int cpu,
-                               S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL );
+extern BYTE setAllCpuIds     ( const S32 model, const S16 version, const S32 serial, const S32 MCEL, bool force );
+extern BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL, bool force );
+extern void setCpuIdregs     ( REGS* regs, S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL, bool force );
+extern void setCpuId         ( const unsigned int cpu, S32 arg_model, S16 arg_version, S32 arg_serial, S32 arg_MCEL, bool force );
 extern BYTE resetAllCpuIds();
 extern void setOperationMode();
 extern void enable_lparmode( const bool enable );

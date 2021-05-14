@@ -680,13 +680,14 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUVERID"></a>
-<dt><code>CPUVERID &nbsp; <u>FD</u> &#124; <em>xx</em></code>
+<dt><code>CPUVERID &nbsp; <u>FD</u> &#124; <em>xx</em> &nbsp; [FORCE]</code>
 <dd><p>
     Specifies the 2 hexadecimal digit CPU version code stored by the STIDP
     instruction when the architecture mode is S/370 or ESA390. When the
-    architecture mode is z/Arch the version code is always stored as
-    <code>00</code> and the value specified here is ignored. The default
-    version code is <code>FD</code> unless changed.
+    architecture mode is z/Arch, the version code is always stored as
+    <code>00</code> and the value specified here is ignored unless the
+    <code>FORCE</code> option is specified. The default version code is
+    <code>FD</code> unless changed to a different value.
     <p>
 
 <a name="DEFSYM"></a>
@@ -3051,7 +3052,7 @@ a real System/390.  The configuration file is an ASCII text file.
             to <code>65535</code>, the latter being the default.
             Decreasing the value from its default may reduce compression
             performance.
-            For compatability with AWSTAPE files created by the P/390,
+            For compatibility with AWSTAPE files created by the P/390,
             specify <code>AWSTAPE</code> with <code>CHUNKSIZE=4096</code>.
             <p>
 

@@ -1960,7 +1960,7 @@ int     aswitch;
         regs->arch_mode = sysblk.arch_mode;
 
         /* Ensure CPU ID is accurate in case archmode changed */
-        setCpuIdregs( regs, -1, -1, -1, -1 );
+        setCpuIdregs( regs, -1, -1, -1, -1, true );
 
         oldregs = malloc_aligned(sizeof(REGS), 4096);
         if (oldregs)
@@ -2405,7 +2405,7 @@ int i;
     /* Set initial CPU ID by REGS context.  Note that this
        must only be done AFTER regs->arch_mode has been set.
     */
-    setCpuIdregs( regs, -1, -1, -1, -1 );
+    setCpuIdregs( regs, -1, -1, -1, -1, true );
 
     initialize_condition (&regs->intcond);
     regs->cpulock = &sysblk.cpulock[cpu];
