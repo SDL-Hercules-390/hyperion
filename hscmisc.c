@@ -28,18 +28,6 @@
 #define COMPILE_THIS_ONLY_ONCE
 
 //-------------------------------------------------------------------
-//                     Helper macro
-//-------------------------------------------------------------------
-
-#define LIMIT_RANGE( _start, _end, _limit )                           \
-    do {                                                              \
-        if ((_end) > (_limit) && ((_end) - (_limit) + 1) > (_start))  \
-            (_end) = ((_start) + (_limit) - 1);                       \
-    } while(0)
-
-#define RANGE_LIMIT  _64_KILOBYTE  // (default limit for LIMIT_RANGE)
-
-//-------------------------------------------------------------------
 //         (static helper function forward references)
 //-------------------------------------------------------------------
 
@@ -1918,8 +1906,8 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 /*           start/end/value are returned in saddr, eaddr, newval    */
 /*      -1 = error message issued                                    */
 /*-------------------------------------------------------------------*/
-static int parse_range (char *operand, U64 maxadr, U64 *sadrp,
-                        U64 *eadrp, BYTE *newval)
+DLL_EXPORT int parse_range (char *operand, U64 maxadr, U64 *sadrp,
+                            U64 *eadrp, BYTE *newval)
 {
 U64     opnd1, opnd2;                   /* Address/length operands   */
 U64     saddr, eaddr;                   /* Range start/end addresses */

@@ -520,7 +520,20 @@
 
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
-#define f_cmd_desc              "Mark frames unusable/usable"
+
+#define fquest_cmd_desc         "Query unusable page frame range(s)"
+#define f_cmd_desc              "Mark page frame(s) as +usable/-unusable"
+#define f_cmd_help              \
+                                \
+  "Format: \"f{+/-} addr[.len]\" or \"f{+/-} addr[-addr2]\" to mark an area\n"  \
+  "of storage as being either +usable or -unusable where 'addr' is absolute\n"  \
+  "address of the range of storage to be modified. Guest operating systems\n"   \
+  "can then use the B22C 'TB' (Test Block) instruction to determine whether\n"  \
+  "a given page is usable or not and react accordingly. Note that Hercules\n"   \
+  "does not prevent unusable frames from being used anyway. That is to say\n"   \
+  "frames marked as unusable can still be accessed normally without error.\n"   \
+  "Use \"f?\" to display the currently defined -unusable storage range(s).\n"
+
 #define facility_cmd_desc       "Enable/Disable/Query z/Arch STFLE Facility bits"
 #define facility_cmd_help       \
                                 \
@@ -1842,6 +1855,7 @@ COMMAND( "cr",                      cr_cmd,                 SYSCMDNOPER,        
 COMMAND( "cscript",                 cscript_cmd,            SYSCMDNOPER,        cscript_cmd_desc,       cscript_cmd_help    )
 COMMAND( "ctc",                     ctc_cmd,                SYSCMDNOPER,        ctc_cmd_desc,           ctc_cmd_help        )
 COMMAND( "ds",                      ds_cmd,                 SYSCMDNOPER,        ds_cmd_desc,            NULL                )
+COMMAND( "f?",                      fquest_cmd,             SYSCMDNOPER,        fquest_cmd_desc,        NULL                )
 COMMAND( "fpc",                     fpc_cmd,                SYSCMDNOPER,        fpc_cmd_desc,           fpc_cmd_help        )
 COMMAND( "fpr",                     fpr_cmd,                SYSCMDNOPER,        fpr_cmd_desc,           fpr_cmd_help        )
 COMMAND( "g",                       g_cmd,                  SYSCMDNOPER,        g_cmd_desc,             NULL                )
@@ -1983,7 +1997,7 @@ COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             
         // PROGRAMMING NOTE: the following "+/-" commands ("f+adr", "t+dev",
         // etc) are directly routed by cmdtab.c's 'CallHercCmd' function.
 
-COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             NULL                )
+COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             f_cmd_help          )
 COMMAND( "s{+/-}dev",               NULL,                   SYSCMDNOPER,        sdev_cmd_desc,          NULL                )
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )

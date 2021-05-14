@@ -375,6 +375,7 @@ const char* FormatORB( ORB* orb, char* buf, size_t bufsz );
 const char* FormatSCL( ESW* esw, char* buf, size_t bufsz );
 const char* FormatERW( ESW* esw, char* buf, size_t bufsz );
 const char* FormatESW( ESW* esw, char* buf, size_t bufsz );
+HMISC_DLL_IMPORT int parse_range (char *operand, U64 maxadr, U64 *sadrp, U64 *eadrp, BYTE *newval);
 HMISC_DLL_IMPORT REGS* copy_regs( REGS* regs );
 HMISC_DLL_IMPORT const char* FormatSID( BYTE* iobuf, int num, char* buf, size_t bufsz );
 HMISC_DLL_IMPORT const char* FormatRCD( BYTE* iobuf, int num, char* buf, size_t bufsz );
