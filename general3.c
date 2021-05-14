@@ -2850,6 +2850,9 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
+    /* Program check if operand not on fullword boundary */
+    FW_CHECK( effective_addr2, regs );
+
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
 
@@ -2937,6 +2940,9 @@ int     rc;                             /* Return code               */
 BYTE    opcode;                         /* 2nd byte of opcode        */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
+
+    /* Program check if operand not on doubleword boundary */
+    DW_CHECK( effective_addr2, regs );
 
     /* Extract second byte of instruction opcode */
     opcode = inst[5];
