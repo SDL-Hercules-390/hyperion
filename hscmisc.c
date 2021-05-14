@@ -72,7 +72,7 @@ static int  parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* eadr
 /*      arn     Access register number                               */
 /*      regs    CPU register context                                 */
 /*      acctype Type of access (ACCTYPE_INSTFETCH, ACCTYPE_READ,     */
-/*              ACCTYPE_WRITE or ACCTYPE_LRA)                        */
+/*              ACCTYPE_WRITE, ACCTYPE_LRA or ACCTYPE_HW)            */
 /* Output:                                                           */
 /*      raptr   Points to word in which real address is returned     */
 /*      siptr   Points to word to receive indication of which        */
@@ -396,7 +396,7 @@ char    buf[512];                       /* MSGBUF work buffer        */
     }
 
     /* Limit the amount to be displayed to a reasonable value */
-    LIMIT_RANGE( saddr, eaddr, RANGE_LIMIT );
+    LIMIT_RANGE( saddr, eaddr, _64_KILOBYTE );
 
     /* Display real storage */
     while (saddr <= eaddr)
@@ -406,7 +406,7 @@ char    buf[512];                       /* MSGBUF work buffer        */
         else
         {
             /* Convert virtual address to real address */
-            if((xcode = ARCH_DEP(virt_to_real) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
+            if((xcode = ARCH_DEP(virt_to_real) (&raddr, &stid, saddr, 0, regs, ACCTYPE_HW) ))
             {
                 MSGBUF( buf, "R:"F_RADR"  Storage not accessible code = %4.4X (%s)",
                     saddr, xcode, PIC2Name( xcode ));
@@ -553,7 +553,7 @@ char    absorr[8];                      /* Uppercase command         */
     }
 
     /* Limit the amount to be displayed to a reasonable value */
-    LIMIT_RANGE( saddr, eaddr, RANGE_LIMIT );
+    LIMIT_RANGE( saddr, eaddr, _64_KILOBYTE );
 
     /* Display real or absolute storage */
     if ((totamt = (eaddr - saddr) + 1) > 0)
@@ -704,8 +704,8 @@ size_t  totamt;                         /* Total amount to be dumped */
 
     /* Alter virtual storage */
     if (len > 0
-        && ARCH_DEP(virt_to_real) (&raddr, &stid, saddr, arn, regs, ACCTYPE_LRA) == 0
-        && ARCH_DEP(virt_to_real) (&raddr, &stid, eaddr, arn, regs, ACCTYPE_LRA) == 0
+        && ARCH_DEP(virt_to_real) (&raddr, &stid, saddr, arn, regs, ACCTYPE_HW) == 0
+        && ARCH_DEP(virt_to_real) (&raddr, &stid, eaddr, arn, regs, ACCTYPE_HW) == 0
     )
     {
         for (i=0; i < len; i++)
@@ -715,7 +715,7 @@ size_t  totamt;                         /* Total amount to be dumped */
 
             /* Convert virtual address to real address */
             xcode = ARCH_DEP(virt_to_real) (&raddr, &stid, vaddr,
-                arn, regs, ACCTYPE_LRA);
+                arn, regs, ACCTYPE_HW);
             ARCH_DEP( bldtrans )(regs, arn, stid, trans, sizeof(trans));
 
             /* Check for Translation Exception */
@@ -751,7 +751,7 @@ size_t  totamt;                         /* Total amount to be dumped */
     }
 
     /* Limit the amount to be displayed to a reasonable value */
-    LIMIT_RANGE( saddr, eaddr, RANGE_LIMIT );
+    LIMIT_RANGE( saddr, eaddr, _64_KILOBYTE );
 
     /* Display virtual storage */
     if ((totamt = (eaddr - saddr) + 1) > 0)
@@ -774,7 +774,7 @@ size_t  totamt;                         /* Total amount to be dumped */
 
             /* Convert virtual address to real address */
             xcode = ARCH_DEP( virt_to_real )( &raddr, &stid, vaddr,
-                arn, regs, ACCTYPE_LRA );
+                arn, regs, ACCTYPE_HW );
             ARCH_DEP( bldtrans )(regs, arn, stid, trans, sizeof(trans));
 
             /* Check for Translation Exception */
@@ -1078,16 +1078,16 @@ char    regs_msg_buf[4*512] = {0};
 
         if (REAL_MODE( &regs->psw ))
             ARCH_DEP( display_virt )( regs, addr1, buf2+n, sizeof( buf2 )-n-1,
-                                      USE_REAL_ADDR, ACCTYPE_READ, "", &xcode );
+                                      USE_REAL_ADDR, ACCTYPE_HW, "", &xcode );
         else
             ARCH_DEP( display_virt )( regs, addr1, buf2+n, sizeof( buf2 )-n-1,
                                       b1, (opcode == 0x44                 // EX?
 #if defined( FEATURE_035_EXECUTE_EXTN_FACILITY )
                                  || (opcode == 0xc6 && !(inst[1] & 0x0f)) // EXRL?
 #endif
-                                                ? ACCTYPE_INSTFETCH :     // EX/EXRL
-                                 opcode == 0xB1 ? ACCTYPE_LRA :
-                                                  ACCTYPE_READ ), "", &xcode );
+                                                ? ACCTYPE_HW :     // EX/EXRL
+                                 opcode == 0xB1 ? ACCTYPE_HW :
+                                                  ACCTYPE_HW ), "", &xcode );
 
         MSGBUF( op1_stor_msg, MSG( HHC02326, "I", RTRIM( buf2 )));
     }
@@ -1116,7 +1116,7 @@ char    regs_msg_buf[4*512] = {0};
             ar = USE_REAL_ADDR;
 
         ARCH_DEP( display_virt )( regs, addr2, buf2+n, sizeof( buf2 )-n-1,
-                                  ar, ACCTYPE_READ, "", &xcode );
+                                  ar, ACCTYPE_HW, "", &xcode );
 
         MSGBUF( op2_stor_msg, MSG( HHC02326, "I", RTRIM( buf2 )));
     }

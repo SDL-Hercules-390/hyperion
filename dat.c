@@ -2318,6 +2318,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         return regs->mainstor + aaddr;
 #endif
 
+    /* Check protection and set reference and change bits */
     if (likely(acctype & ACC_READ))
     {
         /* Program check if fetch protected location */
@@ -2337,7 +2338,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, apfra);
 
     }
-    else /* if(acctype & (ACC_WRITE|ACC_CHECK)) */
+    else /* if(acctype & (ACC_WRITE|ACC_CHECK|ACCTYPE_HW)) */
     {
         /* Program check if store protected location */
         if (unlikely(ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs)))
