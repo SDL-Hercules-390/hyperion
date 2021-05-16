@@ -1120,6 +1120,7 @@
   "     (no)lcs1         trace LCS timing events\n"                                 \
   "     (no)lcs2         trace LCS general debugging events\n"                      \
   "     (no)qeth         trace QETH general debugging events\n"                     \
+  "     (no)xxx          trace undefined/generic/custom events\n"                   \
   "\n"                                                                              \
   "options:   (should be specified last, after any events are specified)\n"         \
   "\n"                                                                              \
