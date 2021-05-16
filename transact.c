@@ -271,6 +271,7 @@ int         txf_tnd, txf_tac, slot;
         U64    txf_aie_aiv;      /* (saved original value) */
         U64    txf_aie_aiv2;     /* (saved original value) */
         int    txf_aie_off2;     /* (saved original value) */
+        BYTE   refchg;           /* (storagekey work flag) */
 
         SYNCHRONIZE_CPUS( regs );
 
@@ -450,6 +451,8 @@ int         txf_tnd, txf_tac, slot;
 
         for (i=0; i < regs->txf_pgcnt; i++, pmap++)
         {
+            refchg = STORKEY_REF; // (wouldn't be in map if it wasn't!)
+
             if (TXF_TRACE_PAGES( regs, txf_contran ))
             {
                 // "TXF: %s%02X: %svirt 0x%16.16"PRIX64", abs 0x%16.16"PRIX64", alt 0x%16.16"PRIX64
@@ -468,6 +471,7 @@ int         txf_tnd, txf_tac, slot;
                 altaddr  = pmap->altpageaddr  + (j << ZCACHE_LINE_SHIFT);
 
                 memcpy( mainaddr, altaddr, ZCACHE_LINE_SIZE );
+                refchg |= STORKEY_CHANGE;
 
                 if (TXF_TRACE_LINES( regs, txf_contran ))
                 {
@@ -475,6 +479,8 @@ int         txf_tnd, txf_tac, slot;
                     dump_cache( regs, TXF_DUMP_PFX( HHC17707 ), j, altaddr );
                 }
             }
+
+            STORAGE_KEY( MAIN_TO_ABS( pmap->mainpageaddr ), regs ) |= refchg;
         }
 
         /* Mark the page map as now being empty */
@@ -1443,10 +1449,16 @@ int        retry;           /* Actual retry code                     */
     /*----------------------------------------------------*/
 
     if (pi_tdb)
+    {
         memcpy( pi_tdb, &regs->txf_tdb, sizeof( TDB ));
+        STORAGE_KEY( MAIN_TO_ABS( pi_tdb ), regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 
     if (tb_tdb)
+    {
         memcpy( tb_tdb, &regs->txf_tdb, sizeof( TDB ));
+        STORAGE_KEY( MAIN_TO_ABS( tb_tdb ), regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 
     /* Trace TDB if requested */
     if (TXF_TRACE_TDB( regs, txf_contran ))
