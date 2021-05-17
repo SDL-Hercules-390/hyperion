@@ -32,7 +32,6 @@
 //-------------------------------------------------------------------
 
 static int  display_inst_regs ( REGS* regs, BYTE* inst, BYTE opcode, char* buf, int buflen );
-static int  parse_range       ( char* operand, U64 maxadr, U64* sadrp, U64* eadrp, BYTE* newval );
 
 #endif /* COMPILE_THIS_ONLY_ONCE */
 

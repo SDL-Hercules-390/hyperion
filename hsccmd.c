@@ -7476,6 +7476,10 @@ int fquest_cmd( int argc, char* argv[], char* cmdline )
     bool  looking4bad = true, bad, foundbad = false;
     REGS* regs = sysblk.regs[ sysblk.pcpu ];
 
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
+
     /* Scan all of defined storage to locate all bad frames */
     OBTAIN_INTLOCK( NULL );
     {
