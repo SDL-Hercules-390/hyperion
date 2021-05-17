@@ -7472,7 +7472,7 @@ int delsym_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int fquest_cmd( int argc, char* argv[], char* cmdline )
 {
-    U64   aaddr, begbad;
+    U64   aaddr, begbad = 0;
     bool  looking4bad = true, bad, foundbad = false;
     REGS* regs = sysblk.regs[ sysblk.pcpu ];
 
