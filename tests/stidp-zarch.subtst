@@ -12,6 +12,8 @@ numcpu      $(test_numcpu)
 lparnum     $(test_lparnum)
 cpuidfmt    $(test_cpuidfmt)
 
+cpuverid    AA                          # (reset from previous tests!)
+
 r 1a0=00000001800000000000000000000200  # z/Arch  restart PSW
 r 1d0=0002000180000000000000000000dead  # z/Arch  pgm new PSW
 
