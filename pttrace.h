@@ -122,7 +122,7 @@ do {                                                                 \
 #define PTT_LCS1(  m, d1, d2, rc )  PTT( PTT_CL_LCS1,  m, d1, d2, rc )
 #define PTT_LCS2(  m, d1, d2, rc )  PTT( PTT_CL_LCS2,  m, d1, d2, rc )
 #define PTT_QETH(  m, d1, d2, rc )  PTT( PTT_CL_QETH,  m, d1, d2, rc )
-#define PTT_XXX (  m, d1, d2, rc )  PTT( PTT_CL_XXX,   m, d1, d2, rc )
+#define PTT_XXX(   m, d1, d2, rc )  PTT( PTT_CL_XXX,   m, d1, d2, rc )
 
 /*-------------------------------------------------------------------*/
 /*           Shorter name than 'struct timeval'                      */
