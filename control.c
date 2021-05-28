@@ -4358,15 +4358,20 @@ BYTE    storkey;                        /* Storage key               */
                 else
                     realkey = 0;
 
-                /* The storage key is obtained by logical or
-                   or the real and guest RC bits */
+                /* The storage key is obtained by the logical 'or' of the
+                   real and guest reference and change bits */
                 storkey = realkey | (rcpkey & (STORKEY_REF | STORKEY_CHANGE));
-                /* or with host set */
+
+                /* 'or' with host set */
                 rcpkey |= realkey << 4;
+
                 /* Put storage key in guest set */
                 rcpkey |= storkey;
+
                 /* reset the reference bit */
                 rcpkey &= ~(STORKEY_REF);
+
+                /* Update the guest RCP byte */
                 regs->mainstor[rcpa] = rcpkey;
                 STORAGE_KEY( rcpa, regs ) |= (STORKEY_REF|STORKEY_CHANGE);
             }
@@ -4404,8 +4409,14 @@ BYTE    storkey;                        /* Storage key               */
 #endif
     }
 
-    /* Set the condition code according to the original state
-       of the reference and change bits in the storage key */
+    /* Set the condition code according to the state of the
+       reference and change bits in the ORIGINAL storage key:
+
+            0  Reference bit zero; change bit zero
+            1  Reference bit zero; change bit one
+            2  Reference bit one;  change bit zero
+            3  Reference bit one;  change bit one
+    */
     regs->psw.cc =
          ((storkey & STORKEY_REF)    ? 2 : 0)
        | ((storkey & STORKEY_CHANGE) ? 1 : 0);
@@ -4476,7 +4487,7 @@ BYTE    storkey;                        /* Storage key               */
             STORAGE_KEY2( n, regs ) &= ~(STORKEY_REF);
 #endif
             }
-        else
+            else
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
             {
             BYTE rcpkey, realkey;
@@ -4548,15 +4559,20 @@ BYTE    storkey;                        /* Storage key               */
                 else
                     realkey = 0;
 
-                /* The storage key is obtained by logical or
-                   or the real and guest RC bits */
+                /* The storage key is obtained by the logical 'or' of the
+                   real and guest reference and change bits */
                 storkey = realkey | (rcpkey & (STORKEY_REF | STORKEY_CHANGE));
-                /* or with host set */
+
+                /* 'or' with host set */
                 rcpkey |= realkey << 4;
+
                 /* Put storage key in guest set */
                 rcpkey |= storkey;
+
                 /* reset the reference bit */
                 rcpkey &= ~(STORKEY_REF);
+
+                /* Update the guest RCP byte */
                 regs->mainstor[ rcpa ] = rcpkey;
                 STORAGE_KEY( rcpa, regs ) |= (STORKEY_REF|STORKEY_CHANGE);
             }
@@ -4598,16 +4614,22 @@ BYTE    storkey;                        /* Storage key               */
 #endif
     }
 
-    /* Set the condition code according to the original state
-       of the reference and change bits in the storage key */
+    /* Set the condition code according to the state of the
+       reference and change bits in the ORIGINAL storage key:
+
+            0  Reference bit zero; change bit zero
+            1  Reference bit zero; change bit one
+            2  Reference bit one;  change bit zero
+            3  Reference bit one;  change bit one
+    */
     regs->psw.cc =
          ((storkey & STORKEY_REF)    ? 2 : 0)
        | ((storkey & STORKEY_CHANGE) ? 1 : 0);
 
     /* If the storage key had the REF bit on then perform
-     * accelerated looup invalidations on all CPUs
+     * accelerated lookup invalidations on all CPUs
      * so that the REF bit will be set when referenced next.
-    */
+     */
     if (storkey & STORKEY_REF)
         STORKEY_INVALIDATE( regs, n );
 
@@ -5261,17 +5283,22 @@ RADR    n;                              /* Absolute storage addr     */
                               & (STORKEY_REF | STORKEY_CHANGE);
                 }
 
-                /* fetch the RCP key */
+                /* fetch the guest RCP key */
                 rcpkey = regs->mainstor[ rcpa ];
                 STORAGE_KEY( rcpa, regs ) |= STORKEY_REF;
-                /* or with host set */
+
+                /* 'or' with host set */
                 rcpkey |= realkey << 4;
+
                 /* or new settings with guest set */
                 rcpkey &= ~(STORKEY_REF | STORKEY_CHANGE);
                 rcpkey |= regs->GR_L(r1) & (STORKEY_REF | STORKEY_CHANGE);
+
+                /* Update the guest RCP byte */
                 regs->mainstor[ rcpa ] = rcpkey;
                 STORAGE_KEY( rcpa, regs ) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
+
                 /* Insert key in new storage key */
                 if (SIE_STATE_BIT_ON( regs, RCPO0, SKA ))
                     regs->mainstor[ rcpa - 1 ] = regs->GR_LHLCL(r1)
@@ -5446,12 +5473,14 @@ BYTE    r1key;
     PERFORM_CHKPT_SYNC( regs );
 
 #if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
+
     if (FACILITY_ENABLED( 008_EDAT_1, regs )
      && (m3 & SSKE_MASK_MB))
         fc = 0x100 - ((a & 0xFF000) >> PAGEFRAME_PAGESHIFT);
     else
         fc = 1;
 
+    /* For each frame... */
     for ( ; fc--; )
     {
 
@@ -5555,8 +5584,12 @@ BYTE    r1key;
                     if (sr)
                     {
                         realkey = 0;
+
+                        /* Get just the reference and change bits */
                         protkey = rcpkey & (STORKEY_REF | STORKEY_CHANGE);
-                        /* rcpa-1 is correct here - would have been SIE Intercepted otherwise */
+
+                        /* Or-in the host key value and fetch protect bit from host RCP byte */
+                        /* (rcpa-1 is correct here - would have been SIE Intercepted otherwise) */
                         protkey |= regs->mainstor[rcpa-1] & (STORKEY_KEY | STORKEY_FETCH);
                     }
                     else
@@ -5579,12 +5612,15 @@ BYTE    r1key;
                     /* Perform conditional SSKE procedure */
                     if (ARCH_DEP(conditional_sske_procedure)(regs, r1, m3, protkey, r1key))
                         return;
-#endif /* defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY ) */
-                    /* or with host set */
+#endif
+                    /* 'or' with host set */
                     rcpkey |= realkey << 4;
+
                     /* insert new settings of the guest set */
                     rcpkey &= ~(STORKEY_REF | STORKEY_CHANGE);
                     rcpkey |= r1key & (STORKEY_REF | STORKEY_CHANGE);
+
+                    /* Update key in guest RCP byte */
                     regs->mainstor[ rcpa ] = rcpkey;
                     STORAGE_KEY( rcpa, regs ) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
@@ -5614,7 +5650,7 @@ BYTE    r1key;
                     }
                 }
             }
-            else /* sie_pref */
+            else /* regs->sie_pref */
             {
 #if defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY )
                 /* Perform conditional SSKE procedure */

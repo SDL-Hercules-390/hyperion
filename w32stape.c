@@ -650,7 +650,7 @@ ssize_t  w32_read_tape ( ufd_t ufd, void* buf, size_t nbyte )
         return 0;   // (tapemark)
     }
 
-    // EIO != errno || !GMT_EOF( *pStat )  -->  bona fide i/o error...
+    // EIO != errno || !GMT_EOF( *pStat )  -->  bonafide i/o error...
 
     ASSERT( ERROR_FILEMARK_DETECTED != dwLastError );
     return -1;

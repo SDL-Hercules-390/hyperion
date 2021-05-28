@@ -1215,7 +1215,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         WRMSG(HHC00915, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTCI");
         return -1;
     }
-    // Compatability with old format configuration files needs to be
+    // Compatibility with old format configuration files needs to be
     // maintained. Old format statements have the tun character device
     // name as the second argument on Linux.
     if (strncasecmp( argv[0], "/", 1 ) == 0)

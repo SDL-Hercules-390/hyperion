@@ -675,7 +675,7 @@ int i, rc = 0;                          /* Array subscript           */
     init_cpu_facilities( regs );
 
     /* Ensure CPU ID is accurate in case archmode changed */
-    setCpuIdregs( regs, -1, -1, -1, -1 );
+    setCpuIdregs( regs, -1, -1, -1, -1, true );
 
    return rc;
 } /* end function cpu_reset */

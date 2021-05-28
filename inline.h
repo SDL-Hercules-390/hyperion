@@ -108,6 +108,16 @@ _VFETCH_C_STATIC BYTE * s390_instfetch (REGS *regs, int exec);
 #ifndef _INLINE_H
 #define _INLINE_H
 
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: compiled only ONCE after last arch built   */
+/*-------------------------------------------------------------------*/
+/*  Note: the last architecture has been built so the normal non-    */
+/*  underscore FEATURE values are now #defined according to the      */
+/*  LAST built architecture just built (usually zarch = 900). This   */
+/*  means from this point onward (to the end of file) you should     */
+/*  ONLY be testing the underscore _FEATURE values to see if the     */
+/*  given feature was defined for *ANY* of the build architectures.  */
+/*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* Add two unsigned fullwords giving an unsigned fullword result     */
@@ -388,6 +398,19 @@ static inline int mult_logical_long
 
 #endif /*!defined(_INLINE_H)*/
 
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
 /* Test for fetch protected storage location.                        */

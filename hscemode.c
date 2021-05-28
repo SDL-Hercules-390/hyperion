@@ -2487,7 +2487,8 @@ void setCpuIdregs
     S32    arg_model,
     S16    arg_version,
     S32    arg_serial,
-    S32    arg_MCEL
+    S32    arg_MCEL,
+    bool   force
 )
 {
     U16  model;
@@ -2506,7 +2507,7 @@ void setCpuIdregs
     MCEL    = arg_MCEL    >= 0 ? (U32) arg_MCEL                : sysblk.cpuid;
 
     /* Version is always zero in z/Architecture mode */
-    if (regs->arch_mode == ARCH_900_IDX)
+    if (!force && regs->arch_mode == ARCH_900_IDX)
         version = 0;
 
     /* Register new CPU ID settings */
@@ -2571,7 +2572,8 @@ void setCpuId
     S32                 arg_model,
     S16                 arg_version,
     S32                 arg_serial,
-    S32                 arg_MCEL
+    S32                 arg_MCEL,
+    bool                force
 )
 {
     REGS*  regs;
@@ -2587,7 +2589,7 @@ void setCpuId
     regs = sysblk.regs[ cpu ];
 
     /* Set new CPU ID */
-    setCpuIdregs( regs, arg_model, arg_version, arg_serial, arg_MCEL );
+    setCpuIdregs( regs, arg_model, arg_version, arg_serial, arg_MCEL, force );
 }
 
 
@@ -2614,7 +2616,7 @@ void setOperationMode()
 /*-------------------------------------------------------------------*/
 /* Set/update all CPU IDs                                            */
 /*-------------------------------------------------------------------*/
-BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S32 MCEL )
+BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S32 MCEL, bool force )
 {
     U64  mcel;
     int  cpu;
@@ -2642,7 +2644,7 @@ BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S
 
     /* Set a tailored CPU ID for each and every defined CPU */
     for (cpu=0; cpu < MAX_CPU_ENGS; ++cpu )
-        setCpuId( cpu, model, version, serial, MCEL );
+        setCpuId( cpu, model, version, serial, MCEL, force );
 
    return TRUE;
 }
@@ -2651,13 +2653,13 @@ BYTE setAllCpuIds( const S32 model, const S16 version, const S32 serial, const S
 /*-------------------------------------------------------------------*/
 /* setAllCpuIds_lock  -  Obtain INTLOCK and then set all CPU IDs     */
 /*-------------------------------------------------------------------*/
-BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL )
+BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, const S32 MCEL, bool force )
 {
     BYTE success;
     OBTAIN_INTLOCK( NULL );
     {
         /* Call unlocked version of setAllCpuIds */
-        success = setAllCpuIds( model, version, serial, MCEL );
+        success = setAllCpuIds( model, version, serial, MCEL, force );
     }
     RELEASE_INTLOCK( NULL );
     return success;
@@ -2669,7 +2671,7 @@ BYTE setAllCpuIds_lock( const S32 model, const S16 version, const S32 serial, co
 /*-------------------------------------------------------------------*/
 BYTE resetAllCpuIds()
 {
-    return setAllCpuIds( -1, -1, -1, -1 );
+    return setAllCpuIds( -1, -1, -1, -1, true );
 }
 
 

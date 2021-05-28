@@ -13,7 +13,9 @@
 #define _PTTHREAD_H_
 
 /*-------------------------------------------------------------------*/
-/*                     PTT Trace Classes                             */
+/*                    PTT TRACE CLASSES                              */
+/*-------------------------------------------------------------------*/
+/*                    (System Classes)                               */
 /*-------------------------------------------------------------------*/
 #define PTT_CL_LOG   0x0000000000000001 /* Logger records            */
 #define PTT_CL_TMR   0x0000000000000002 /* Timer/Clock records       */
@@ -35,10 +37,13 @@
 //efine PTT_CL_XXX   0x0000000000002000 /* System class 14           */
 //efine PTT_CL_XXX   0x0000000000004000 /* System class 15           */
 //efine PTT_CL_XXX   0x0000000000008000 /* System class 16           */
+/*-------------------------------------------------------------------*/
+/*                     (User Classes)                                */
+/*-------------------------------------------------------------------*/
 #define PTT_CL_LCS1  0x0000000000010000 /* LCS Timing Debug          */
 #define PTT_CL_LCS2  0x0000000000020000 /* LCS General Debugging     */
 #define PTT_CL_QETH  0x0000000000040000 /* QETH General Debugging    */
-//efine PTT_CL_ZZZ   0x0000000000080000 /* User class 4              */
+#define PTT_CL_XXX   0x0000000000080000 /* Undefined/generic/custom  */
 //efine PTT_CL_ZZZ   0x0000000000100000 /* User class 5              */
 //efine PTT_CL_ZZZ   0x0000000000200000 /* User class 6              */
 //efine PTT_CL_ZZZ   0x0000000000400000 /* User class 7              */
@@ -117,6 +122,7 @@ do {                                                                 \
 #define PTT_LCS1(  m, d1, d2, rc )  PTT( PTT_CL_LCS1,  m, d1, d2, rc )
 #define PTT_LCS2(  m, d1, d2, rc )  PTT( PTT_CL_LCS2,  m, d1, d2, rc )
 #define PTT_QETH(  m, d1, d2, rc )  PTT( PTT_CL_QETH,  m, d1, d2, rc )
+#define PTT_XXX(   m, d1, d2, rc )  PTT( PTT_CL_XXX,   m, d1, d2, rc )
 
 /*-------------------------------------------------------------------*/
 /*           Shorter name than 'struct timeval'                      */

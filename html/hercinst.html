@@ -829,10 +829,11 @@ panel commands:
      autoinit             *Display/Set auto-create-empty-tape-file option
      automount            *Display/Update allowable tape automount directories
      b                    *Set breakpoint
-     b+                    Set breakpoint
-     b-                   *Delete breakpoint
+     b+                    (Synonym for 'b')
+     b-                    Delete breakpoint
+     b?                    Query breakpoint
      cachestats            Cache stats command
-     cckd                 *cckd command
+     cckd                 *Compressed CKD command
      cctape               *Display a printer's current cctape
      cf                   *Configure current CPU online or offline
      cfall                 Configure all CPU's online or offline
@@ -847,19 +848,19 @@ panel commands:
      cpu                  *Define target cpu for panel display and commands
      cpuidfmt              Set format BASIC/0/1 STIDP generation
      cpumodel              Set CPU model number
-     cpuprio              *Set/Display CPU threads priority
+     cpuprio              *(deprecated)
      cpuserial             Set CPU serial number
-     cpuverid              Set CPU verion number
+     cpuverid             *Set CPU verion number
      cr                   *Display or alter control registers
      cscript              *Cancels a running script thread
      ctc                  *Enable/Disable CTC debugging
      define               *Rename device
      defsym               *Define symbol
      delsym               *Delete a symbol
-     detach                Remove device
+     detach               *Remove device
      devinit              *Reinitialize device
      devlist              *List device, device class, or all devices
-     devprio              *Set/Display Device threads priority
+     devprio              *(deprecated)
      devtmax              *Display or set max device threads
      diag8cmd             *Set DIAG 8 instruction options
      ds                    Display subchannel
@@ -871,18 +872,19 @@ panel commands:
      exec                 *Execute a Rexx script
      exit                  (Synonym for 'quit')
      ext                   Generate external interrupt
+     f?                    Query unusable page frame range(s)
      facility             *Enable/Disable/Query z/Arch STFLE Facility bits
      fcb                  *Display a printer's current FCB
      fpc                  *Display or alter floating point control register
      fpr                  *Display or alter floating point registers
-     f{+/-}adr             Mark frames unusable/usable
+     f{+/-}adr            *Mark page frame(s) as +usable/-unusable
      g                     Turn off instruction stepping and start all CPUs
      gpr                  *Display or alter general purpose registers
      hao                  *Hercules Automatic Operator
      help                 *list all commands / command specific help
      herclogo             *Read a new hercules logo file
-     hercnice             *Set/Display Hercules process NICE value
-     hercprio             *Set/Display Hercules main thread priority
+     hercnice             *(deprecated)
+     hercprio             *(deprecated)
      hst                  *History of commands
      http                 *Start/Stop/Modify/Display HTTP Server
      hwldr                *Specify boot loader filename
@@ -896,7 +898,7 @@ panel commands:
      legacysenseid         Set legacysenseid setting
      loadcore             *Load a core image file
      loaddev              *Specify bootstrap loader IPL parameters
-     loadparm             *Set the IPL 'LOADPARM' parameter
+     loadparm             *Set the default IPL 'LOADPARM' parameter
      loadtext             *Load a text deck file
      locks                *Display internal locks list
      log                  *Direct logger output
@@ -921,12 +923,12 @@ panel commands:
      mt                   *Control magnetic tape operation
      netdev               *Set default host networking device
      numcpu                Set numcpu parameter
-     numvec                Set numvec parameter
      osa                  *(Synonym for 'qeth')
      ostailor             *Tailor trace information for specific OS
      o{+/-}dev             Turn ORB tracing on/off
-     panrate              *Display or set rate at which console refreshes
-     pantitle             *Display or set console title
+     panopt               *Set or display panel options
+     panrate               (deprecated; use PANOPT RATE=nnn instead)
+     pantitle              (deprecated; use PANOPT TITLE=xxx instead)
      pgmprdos             *Set LPP license setting
      pgmtrace             *Trace program interrupts
      plant                 Set STSI plant code
@@ -950,26 +952,26 @@ panel commands:
      rexx                 *Modify/Display Hercules's Rexx settings
      rmmod                 Delete a module
      s                    *Instruction stepping
-     s+                   *Instruction stepping on
+     s+                   *Activate instruction stepping
      s-                    Turn off instruction stepping
-     s?                   *Instruction stepping query
+     s?                   *Query instruction stepping
      savecore             *Save a core image to file
      sclproot             *Set SCLP base directory
      scpecho              *Set/Display option to echo to console and history of scp replys
      scpimply             *Set/Display option to pass non-hercules commands to the scp
      script               *Run a sequence of panel commands contained in a file
      scsimount            *Automatic SCSI tape mounts
-     sf+dev                Add shadow file
-     sf-dev                Delete shadow file
-     sfc                   Compress shadow files
-     sfd                   Display shadow file stats
+     sf+dev               *Add shadow file
+     sf-dev               *Delete shadow file
+     sfc                  *Compress shadow files
+     sfd                  *Display shadow file stats
      sfk                  *Check shadow files
      sh                   *Shell command
      shcmdopt             *Set shell command options
-     shrd                  shrd command
-     shrdport              Set shrdport value
+     shrd                 *shrd command
+     shrdport             *Set shrdport value
      sizeof                Display size of structures
-     srvprio              *Set/Display Server threads priority
+     srvprio              *(deprecated)
      ssd                  *Signal shutdown
      start                *Start CPU (or printer/punch device if argument given)
      startall              Start all CPU's
@@ -982,17 +984,19 @@ panel commands:
      sysepoch              Set sysepoch parameter
      sysreset             *System Reset manual operation
      s{+/-}dev             Turn CCW stepping on/off
-     t                    *Set instruction tracing address range
+     t                    *Set tracing range or Query tracing
      t+                   *Turn on instruction tracing
      t+-                  *Automatic instruction tracing
      t-                    Turn off instruction tracing
      t?                   *Query instruction tracing values
+     threads              *Display internal threads list
      timerint             *Display or set timers update interval
      tlb                   Display TLB tables
      toddrag               Display or set TOD clock drag factor
-     todprio              *Set/Display TOD Clock/Timer threads priority
+     todprio              *(deprecated)
      traceopt             *Instruction and/or CCW trace display option
      tt32                 *Control/query CTCI-WIN functionality
+     txf                  *Transactional-Execution Facility tracing
      tzoffset              Set tzoffset parameter
      t{+/-}CKD             Turn CKD_KEY tracing on/off
      t{+/-}dev             Turn CCW tracing on/off

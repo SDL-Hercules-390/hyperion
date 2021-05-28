@@ -5041,7 +5041,7 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
 
     UPPER_ARGV_0( argv );
 
-    if (argc < 1 || argc > 2)
+    if (argc < 1 || argc > 3)
     {
         // "Invalid number of arguments for %s"
         WRMSG( HHC01455, "E", argv[0] );
@@ -5064,8 +5064,23 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
         && (sscanf( argv[1], "%x%c", &version, &c ) == 1)
     )
     {
+        bool force = false;
+
+        /* Check for 'FORCE' option */
+        if (argc == 3)
+        {
+            if (CMD( argv[2], FORCE, 5 ))
+                force = true;
+            else
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[2], "" );
+                return -1;
+            }
+        }
+
         /* Update all CPU identifiers */
-        if (!setAllCpuIds_lock( -1, version, -1, -1 ))
+        if (!setAllCpuIds_lock( -1, version, -1, -1, force ))
             return -1;
 
         MSGBUF( chversion,"%02X", sysblk.cpuversion );
@@ -5124,7 +5139,7 @@ int cpumodel_cmd( int argc, char* argv[], char* cmdline )
     )
     {
         /* Update all CPU IDs */
-        if (!setAllCpuIds_lock( cpumodel, -1, -1, -1 ))
+        if (!setAllCpuIds_lock( cpumodel, -1, -1, -1, false ))
             return -1;
 
         MSGBUF( chmodel, "%04X", sysblk.cpumodel );
@@ -5190,7 +5205,7 @@ int cpuserial_cmd( int argc, char* argv[], char* cmdline )
     )
     {
         /* Update all CPU IDs */
-        if (!setAllCpuIds_lock( -1, -1, cpuserial, -1 ))
+        if (!setAllCpuIds_lock( -1, -1, cpuserial, -1, false ))
             return -1;
 
         /* Show them the now newly-updated SYSBLK value */
@@ -7256,7 +7271,7 @@ REGS *regs;
     /* Write smaller more manageable chunks until all is written */
     do
     {
-        chunk = (64 * 1024 * 1024);
+        chunk = (64 * ONE_MEGABYTE);
 
         if (chunk > total)
             chunk = total;
@@ -7453,62 +7468,139 @@ int delsym_cmd( int argc, char* argv[], char* cmdline )
 }
 
 /*-------------------------------------------------------------------*/
+/* f? command - display currently defined unusable storage range(s)  */
+/*-------------------------------------------------------------------*/
+int fquest_cmd( int argc, char* argv[], char* cmdline )
+{
+    U64   aaddr, begbad = 0;
+    bool  looking4bad = true, bad, foundbad = false;
+    REGS* regs = sysblk.regs[ sysblk.pcpu ];
+
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
+
+    /* Scan all of defined storage to locate all bad frames */
+    OBTAIN_INTLOCK( NULL );
+    {
+        for (aaddr=0; aaddr < sysblk.mainsize; aaddr += _4K)
+        {
+            /* NOTE: we use the internal "_get_storage_key" function
+               here so we're returned the internal STORKEY_BADFRM bit.
+            */
+            bad = STORAGE_KEY( aaddr, regs ) & STORKEY_BADFRM;
+
+            if (looking4bad && bad)
+            {
+                foundbad = true;
+                begbad = aaddr;         /* Beginning of bad range */
+                looking4bad = false;
+            }
+            else if (!looking4bad && !bad)
+            {
+                // "Frames "F_RADR"-"F_RADR" are currently set to unusable"
+                WRMSG( HHC02390, "I", begbad, aaddr - 1);
+                looking4bad = true;
+            }
+        }
+    }
+    RELEASE_INTLOCK( NULL );
+
+    if (!looking4bad)
+        // "Frames "F_RADR"-"F_RADR" are currently set to unusable"
+        WRMSG( HHC02390, "I", begbad, aaddr - 1);
+    else if (!foundbad)
+        // "No unusable storage found"
+        WRMSG( HHC02391, "I" );
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* x+ and x- commands - turn switches on or off                      */
 /*-------------------------------------------------------------------*/
-int OnOffCommand(int argc, char *argv[], char *cmdline)
+int OnOffCommand( int argc, char* argv[], char* cmdline )
 {
-    char   *cmd = cmdline;              /* Copy of panel command     */
-    int     oneorzero;                  /* 1=x+ command, 0=x-        */
-    char   *onoroff;                    /* "on" or "off"             */
-    U64     work64;                     /* 64-bit work variable      */
+    char*   cmd = cmdline;              /* Copy of panel command     */
+    bool    plus_enable_on;             /* true == x+, false == x-   */
+    char*   onoroff;                    /* x+ == "on", x- == "off"   */
     RADR    aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
     U16     lcss;
-REGS *regs;
-BYTE c;                                 /* Character work area       */
+    REGS*   regs;
 
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
 
-    if (cmd[1] == '+') {
-        oneorzero = 1;
+    if (cmd[1] == '+')
+    {
+        plus_enable_on = true;
         onoroff = "ON";
-    } else {
-        oneorzero = 0;
+    }
+    else
+    {
+        plus_enable_on = false;
         onoroff = "OFF";
     }
 
-    OBTAIN_INTLOCK(NULL);
+    OBTAIN_INTLOCK( NULL );
 
-    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    if (!IS_CPU_ONLINE( sysblk.pcpu ))
     {
-        RELEASE_INTLOCK(NULL);
-        WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
+        RELEASE_INTLOCK( NULL );
+        // "Processor %s%02X: processor is not %s"
+        WRMSG( HHC00816, "W", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online" );
         return 0;
     }
-    regs=sysblk.regs[sysblk.pcpu];
 
+    regs = sysblk.regs[ sysblk.pcpu ];
 
-    // f- and f+ commands - mark frames unusable/usable
+    // f- and f+ commands - mark 4K page frame as -unusable or +usable
 
-    if ((cmd[0] == 'f') && sscanf(cmd+2, "%"SCNx64"%c", &work64, &c) == 1)
+    if (cmd[0] == 'f')
     {
-        char buf[40];
-        aaddr = (RADR) work64;
-        if (aaddr > regs->mainlim)
+        U64   saddr, eaddr;             /* Range start/end addresses */
+        int   len;                      /* Number of bytes to alter  */
+        char  buf[64];                  /* Message buffer            */
+
+        /* Parse the range operand(s) */
+        if ((len = parse_range( cmd+2, sysblk.mainsize-1, &saddr, &eaddr, NULL )) < 0)
         {
-            RELEASE_INTLOCK(NULL);
-            MSGBUF( buf, F_RADR, aaddr);
-            WRMSG(HHC02205, "E", buf, "" );
-            return -1;
+            RELEASE_INTLOCK( NULL );
+            return 0; /* (error message already issued) */
         }
-        STORAGE_KEY(aaddr, regs) &= ~(STORKEY_BADFRM);
-        if (!oneorzero)
-            STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
-        RELEASE_INTLOCK(NULL);
-        MSGBUF( buf, "frame "F_RADR, aaddr);
-        WRMSG(HHC02204, "I", buf, oneorzero ? "usable" : "unusable");
+
+        /* Round start/end address to page boundary */
+        saddr &= 0xFFFFFFFFFFFFF000ULL;
+        eaddr &= 0xFFFFFFFFFFFFF000ULL;
+
+        /* Mark all frames in range as usable or unusable */
+        for (aaddr = saddr; aaddr <= eaddr; aaddr += _4K)
+        {
+            if (aaddr > regs->mainlim)
+            {
+                RELEASE_INTLOCK( NULL );
+                MSGBUF( buf, F_RADR, aaddr);
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", buf, "" );
+                return -1;
+            }
+
+            /* Note: we must use the internal "_xxx_storage_key"
+               functions to be able to directly set/clear the
+               internal STORKEY_BADFRM bit.
+            */
+            if (plus_enable_on)
+                STORAGE_KEY( aaddr, regs ) &= ~STORKEY_BADFRM;
+            else
+                STORAGE_KEY( aaddr, regs ) |=  STORKEY_BADFRM;
+        }
+
+        RELEASE_INTLOCK( NULL );
+        MSGBUF( buf, "Frames "F_RADR"-"F_RADR, saddr, eaddr + 0x00000FFF );
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", buf, plus_enable_on ? "usable" : "unusable" );
         return 0;
     }
 
@@ -7521,10 +7613,10 @@ BYTE c;                                 /* Character work area       */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
             if (dev->devchar[10] == 0x20)
-                dev->ckdkeytrace = oneorzero;
+                dev->ckdkeytrace = plus_enable_on;
         }
-        RELEASE_INTLOCK(NULL);
-        WRMSG(HHC02204, "I", "CKD key trace", onoroff );
+        RELEASE_INTLOCK( NULL );
+        WRMSG( HHC02204, "I", "CKD key trace", onoroff );
         return 0;
     }
 
@@ -7553,20 +7645,20 @@ BYTE c;                                 /* Character work area       */
         if (cmd[0] == 'o')
         {
             typ = "ORB trace";
-            dev->orbtrace = oneorzero;
+            dev->orbtrace = plus_enable_on;
         }
         else if (cmd[0] == 't')
         {
             typ = "CCW trace";
-            dev->orbtrace = oneorzero;
-            dev->ccwtrace = oneorzero;
+            dev->orbtrace = plus_enable_on;
+            dev->ccwtrace = plus_enable_on;
         }
         else // (cmd[0] == 's')
         {
             typ = "CCW step";
-            dev->orbtrace = oneorzero;
-            dev->ccwtrace = oneorzero;
-            dev->ccwstep  = oneorzero;
+            dev->orbtrace = plus_enable_on;
+            dev->ccwtrace = plus_enable_on;
+            dev->ccwstep  = plus_enable_on;
         }
         MSGBUF( buf, "%s for %1d:%04X", typ, lcss, devnum );
         // "%-14s set to %s"

@@ -230,10 +230,10 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     akey1 = akey2 = regs->psw.pkey;
 
     /* If register 0 bit 20 or 21 is one, get access key from R0 */
-    if (regs->GR_L(0) & 0x00000C00)
+    if (regs->GR_L(0) & (GR0_MVPG_FIRST | GR0_MVPG_SECOND))
     {
         /* Extract the access key from register 0 bits 24-27 */
-        akey = regs->GR_L(0) & 0x000000F0;
+        akey = regs->GR_L(0) & GR0_MVPG_KEY;
 
         /* Priviliged operation exception if in problem state, and
            the specified key is not permitted by the PSW key mask */
@@ -242,18 +242,19 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             regs->program_interrupt (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
         /* If register 0 bit 20 is one, use R0 key for operand 1 */
-        if (regs->GR_L(0) & 0x00000800)
+        if (regs->GR_L(0) & GR0_MVPG_FIRST)
             akey1 = akey;
 
         /* If register 0 bit 21 is one, use R0 key for operand 2 */
-        if (regs->GR_L(0) & 0x00000400)
+        if (regs->GR_L(0) & GR0_MVPG_SECOND)
             akey2 = akey;
     }
 
     /* Specification exception if register 0 bits 16-19 are
        not all zero, or if bits 20 and 21 are both ones */
-    if ((regs->GR_L(0) & 0x0000F000) != 0
-        || (regs->GR_L(0) & 0x00000C00) == 0x00000C00)
+    if ((regs->GR_L(0) & GR0_MVPG_RSRVD) != 0
+        || (regs->GR_L(0) & (GR0_MVPG_FIRST | GR0_MVPG_SECOND))
+                         == (GR0_MVPG_FIRST | GR0_MVPG_SECOND))
         regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Determine the logical addresses of each operand */
@@ -300,7 +301,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
             /* Convert host real address to host absolute address */
             raddr2 = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
-        }
+        } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -324,7 +325,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                         cc = 2;
                         goto mvpg_progck;
                     }
-                }
+                } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
                 rc = 0;
@@ -396,7 +397,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
             /* Convert host real address to host absolute address */
             raddr1 = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
-        }
+        } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -452,9 +453,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Program check if operand not valid in main or expanded */
         if (rc)
         {
-        cc = 1;
+            cc = 1;
             goto mvpg_progck;
-    }
+        }
 
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
@@ -468,13 +469,13 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     } /* end if(!REAL_MODE) */
 
 #if defined(FEATURE_EXPANDED_STORAGE)
-    /* Program check if both operands are in expanded storage, or
-       if first operand is in expanded storage and the destination
-       reference intention (register 0 bit 22) is set to one, or
-       if first operand is in expanded storage and pte lock bit on, or
-       if first operand is in expanded storage and frame invalid */
+    /* Program check if both operands are in expanded storage,
+       or if first operand is in expanded storage and the Destination
+       Reference Intention (DRI) bit (register 0 bit 22) is set to one,
+       or if first operand is in expanded storage and PTE lock bit on,
+       or if first operand is in expanded storage and frame invalid */
     if ((xpvalid1 && xpvalid2)
-        || (xpvalid1 && (regs->GR_L(0) & 0x00000200))
+        || (xpvalid1 && (regs->GR_L(0) & GR0_MVPG_DRI))
         || (xpvalid1 && (pte1 & PAGETAB_PGLOCK))
         || (xpvalid1 && (xpblk1 >= sysblk.xpndsize)))
     {
@@ -513,7 +514,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     {
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
-        main1 = MADDRL (vaddr1, 4096, r1, regs, ACCTYPE_WRITE_SKP, akey1);
+        main1 = MADDRL (vaddr1, _4K, r1, regs, ACCTYPE_WRITE_SKP, akey1);
         sk1 = regs->dat.storkey;
     }
 
@@ -548,7 +549,6 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Set Expanded Storage reference bit in the PTE */
         STORE_W(regs->mainstor + raddr2, pte2 | PAGETAB_ESREF);
 
-
         /* Move 4K bytes from expanded storage to main storage */
         memcpy (main1,
                 sysblk.xpndstor + ((size_t)xpblk2 << XSTORE_PAGESHIFT),
@@ -582,9 +582,9 @@ mvpg_progck:
 
     PTT_ERR("*MVPG",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
 
-    /* If page translation exception (PTE invalid) and condition code
-        option in register 0 bit 23 is set, return condition code */
-    if ((regs->GR_L(0) & 0x00000100)
+    /* If page translation exception (PTE invalid) and Condition Code
+        Option (CCO) bit (register 0 bit 23) is set, return condition code */
+    if ((regs->GR_L(0) & GR0_MVPG_CCO)
         && regs->dat.xcode == PGM_PAGE_TRANSLATION_EXCEPTION
         && rc == 2)
     {

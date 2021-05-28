@@ -307,6 +307,8 @@ struct REGS {                           /* Processor registers       */
                 sie_pref:1;             /* Preferred-storage mode    */
                                         /* (e.g. V=R guest)          */
 
+        bool    sie_fld;                /* SIE2BK fld field provided */
+
         ALIGN_16
         U16     perc;                   /* PER code                  */
         RADR    peradr;                 /* PER address               */

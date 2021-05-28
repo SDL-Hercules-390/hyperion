@@ -416,7 +416,7 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
   if(rc==0)
   {
     /* Update the REF/CHANGE flag in the storage key */
-    STORAGE_KEY(addr,dev)|=(acc & (STORKEY_FETCH | STORKEY_CHANGE));
+    STORAGE_KEY(addr,dev)|=(acc & (STORKEY_REF | STORKEY_CHANGE));
   }
   return rc;
 }
@@ -2595,7 +2595,7 @@ static QRC SBALE_Error( char* msg, QRC qrc, DEVBLK* dev,
 /*-------------------------------------------------------------------*/
 #define SBALE_ERROR(_qrc,_dev,_sbal,_sbalk,_sb)                     \
     SBALE_Error( "** " #_qrc " **: SBAL(%d) @ %llx [%02X]:"         \
-        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",            \
+        " Addr: %llx Len: %d flags[0,3]: %2.2X %2.2X",              \
         (_qrc), (_dev), (_sbal), (_sbalk), (_sb))
 
 

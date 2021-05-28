@@ -340,6 +340,15 @@
 #define cpumodel_cmd_desc       "Set CPU model number"
 #define cpuserial_cmd_desc      "Set CPU serial number"
 #define cpuverid_cmd_desc       "Set CPU verion number"
+#define cpuverid_cmd_help       \
+                                \
+  "Format: \"cpuverid xx [force]\" where 'xx' is the 2 hexadecimal digit\n"     \
+  "CPU version code stored by the STIDP instruction when the architecture\n"    \
+  "mode is S/370 or ESA390. If the architecture mode is z/Arch, then the\n"     \
+  "version code is always stored as '00' and the value specified here is\n"     \
+  "ignored unless the 'FORCE' option is specified. The default version code\n"  \
+   "is 'FD' unless set to a different value.\n"
+
 #define cr_cmd_desc             "Display or alter control registers"
 #define cr_cmd_help             \
                                 \
@@ -520,7 +529,20 @@
 
 #define exit_cmd_desc           "(Synonym for 'quit')"
 #define ext_cmd_desc            "Generate external interrupt"
-#define f_cmd_desc              "Mark frames unusable/usable"
+
+#define fquest_cmd_desc         "Query unusable page frame range(s)"
+#define f_cmd_desc              "Mark page frame(s) as +usable/-unusable"
+#define f_cmd_help              \
+                                \
+  "Format: \"f{+/-} addr[.len]\" or \"f{+/-} addr[-addr2]\" to mark an area\n"  \
+  "of storage as being either +usable or -unusable where 'addr' is absolute\n"  \
+  "address of the range of storage to be modified. Guest operating systems\n"   \
+  "can then use the B22C 'TB' (Test Block) instruction to determine whether\n"  \
+  "a given page is usable or not and react accordingly. Note that Hercules\n"   \
+  "does not prevent unusable frames from being used anyway. That is to say\n"   \
+  "frames marked as unusable can still be accessed normally without error.\n"   \
+  "Use \"f?\" to display the currently defined -unusable storage range(s).\n"
+
 #define facility_cmd_desc       "Enable/Disable/Query z/Arch STFLE Facility bits"
 #define facility_cmd_help       \
                                 \
@@ -1098,6 +1120,7 @@
   "     (no)lcs1         trace LCS timing events\n"                                 \
   "     (no)lcs2         trace LCS general debugging events\n"                      \
   "     (no)qeth         trace QETH general debugging events\n"                     \
+  "     (no)xxx          trace undefined/generic/custom events\n"                   \
   "\n"                                                                              \
   "options:   (should be specified last, after any events are specified)\n"         \
   "\n"                                                                              \
@@ -1842,6 +1865,7 @@ COMMAND( "cr",                      cr_cmd,                 SYSCMDNOPER,        
 COMMAND( "cscript",                 cscript_cmd,            SYSCMDNOPER,        cscript_cmd_desc,       cscript_cmd_help    )
 COMMAND( "ctc",                     ctc_cmd,                SYSCMDNOPER,        ctc_cmd_desc,           ctc_cmd_help        )
 COMMAND( "ds",                      ds_cmd,                 SYSCMDNOPER,        ds_cmd_desc,            NULL                )
+COMMAND( "f?",                      fquest_cmd,             SYSCMDNOPER,        fquest_cmd_desc,        NULL                )
 COMMAND( "fpc",                     fpc_cmd,                SYSCMDNOPER,        fpc_cmd_desc,           fpc_cmd_help        )
 COMMAND( "fpr",                     fpr_cmd,                SYSCMDNOPER,        fpr_cmd_desc,           fpr_cmd_help        )
 COMMAND( "g",                       g_cmd,                  SYSCMDNOPER,        g_cmd_desc,             NULL                )
@@ -1909,7 +1933,7 @@ COMMAND( "cnslport",                cnslport_cmd,           SYSCFGNDIAG8,       
 COMMAND( "cpuidfmt",                cpuidfmt_cmd,           SYSCFGNDIAG8,       cpuidfmt_cmd_desc,      NULL                )
 COMMAND( "cpumodel",                cpumodel_cmd,           SYSCFGNDIAG8,       cpumodel_cmd_desc,      NULL                )
 COMMAND( "cpuserial",               cpuserial_cmd,          SYSCFGNDIAG8,       cpuserial_cmd_desc,     NULL                )
-COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      NULL                )
+COMMAND( "cpuverid",                cpuverid_cmd,           SYSCFGNDIAG8,       cpuverid_cmd_desc,      cpuverid_cmd_help   )
 COMMAND( "diag8cmd",                diag8_cmd,              SYSCFGNDIAG8,       diag8_cmd_desc,         diag8_cmd_help      )
 COMMAND( "engines",                 engines_cmd,            SYSCFGNDIAG8,       engines_cmd_desc,       NULL                )
 COMMAND( "lparname",                lparname_cmd,           SYSCFGNDIAG8,       lparname_cmd_desc,      lparname_cmd_help   )
@@ -1983,7 +2007,7 @@ COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             
         // PROGRAMMING NOTE: the following "+/-" commands ("f+adr", "t+dev",
         // etc) are directly routed by cmdtab.c's 'CallHercCmd' function.
 
-COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             NULL                )
+COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             f_cmd_help          )
 COMMAND( "s{+/-}dev",               NULL,                   SYSCMDNOPER,        sdev_cmd_desc,          NULL                )
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
