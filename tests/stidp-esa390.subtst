@@ -12,6 +12,8 @@ numcpu      $(test_numcpu)
 lparnum     $(test_lparnum)
 cpuidfmt    $(test_cpuidfmt)
 
+cpuverid    AA                          # (in case architecure changed)
+
 r 000=0008000000000200                  # EC mode restart PSW
 r 068=000a00000000dead                  # EC mode pgm new PSW
 

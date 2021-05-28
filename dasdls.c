@@ -32,17 +32,16 @@ int  hword               (HWORD value);
 
 int  extent_size         (DSXTENT *ext, int heads);
 int  extents_array       (DSXTENT extents[], int max, int *count, int heads);
-int  chainf3             (int *size, BYTE *ptr, int *count, char *fname, char *sfname);
+int  chainf3             (int *size, BYTE *ptr, int *count );
 int  ordday_to_calday    (int year, int ordinalday, int *month, int *day);
 
 int  end_of_track        (BYTE *p);
-int  list_contents       (CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char *sfname);
-int  do_ls_cif           (CIFBLK *cif, char *fname, char *sfname);
+int  list_contents       (CIFBLK *cif, char *volser, DSXTENT *extent );
+int  do_ls_cif           (CIFBLK *cif);
 int  do_ls               (char *file, char *sfile);
 
 /* globals */
-static CIFBLK *cifx  = NULL;    /* distinct CIF instance for F3 DSCB processing
-                                   else screw up the F1 processing   */
+static CIFBLK* cif   = NULL;
 static int yroffs    = 0;       /* year offset                       */
 #define                DEFAULT_DSNLEN   44
 static int dsnlen    = DEFAULT_DSNLEN;
@@ -289,7 +288,7 @@ int extents_array( DSXTENT extents[], int max, int *count, int heads )
     return size;
 }
 
-int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
+int chainf3( int *size, BYTE *ptr, int *count )
 {
     FORMAT3_DSCB *f3dscb = NULL;
     int rc = 0; /* prime for success */
@@ -299,17 +298,7 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
 //*debug*/fprintf(stderr, "*** %d %.2x%.2x %.2x%.2x %.2x\n",
 //*debug*/        *count, ptr[0], ptr[1], ptr[2], ptr[3], ptr[4]);
 
-        if (!cifx)
-        {
-            if (!(cifx = open_ckd_image( fname, sfname,
-                    O_RDONLY | O_BINARY, IMAGE_OPEN_QUIET )))
-            {
-//*debug*/      fprintf(stderr, "*** Open cifx failed\n");
-                return -1; /* open failed */
-            }
-        }
-
-        if (read_block( cifx, hword( &ptr[0] ), hword( &ptr[2] ), ptr[4],
+        if (read_block( cif, hword( &ptr[0] ), hword( &ptr[2] ), ptr[4],
                         (BYTE**) &f3dscb, NULL, NULL, NULL ) == 0)
         {
             switch (f3dscb->ds3fmtid)
@@ -327,8 +316,8 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
                     }
                     else
                     {
-                        *size += extents_array( &f3dscb->ds3extnt[0], 4, count, cifx->heads );
-                        *size += extents_array( &f3dscb->ds3adext[0], 9, count, cifx->heads );
+                        *size += extents_array( &f3dscb->ds3extnt[0], 4, count, cif->heads );
+                        *size += extents_array( &f3dscb->ds3adext[0], 9, count, cif->heads );
                     }
                 }
                 /* Fall through to below 0xf2 case */
@@ -350,21 +339,12 @@ int chainf3( int *size, BYTE *ptr, int *count, char *fname, char *sfname )
 
     } /* end of while loop */
 
-    /* if necessary, close the CIFBLK used for F3 DSCBs */
-    if (cifx)
-    {
-        int rc2 = close_ckd_image( cifx );
-        cifx = NULL;
-        if (rc2)
-            return rc2;
-    }
-
     return rc;
 }
 
 /* list_contents partly based on dasdutil.c:search_key_equal */
 
-int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char *sfname )
+int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent )
 {
     u_int cext  = 0;
     u_int ccyl  = (extent[cext].xtbcyl[0] << 8) | extent[cext].xtbcyl[1];
@@ -522,7 +502,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
                         space = extents_array( &f1dscb->ds1ext1, 3, &numext, cif->heads );
     //*debug*/           printf("SPACE nach extents_array = %d", space);
 
-                        chainf3( &space, &f1dscb->ds1ptrds[0], &numext, fname, sfname );
+                        chainf3( &space, &f1dscb->ds1ptrds[0], &numext );
     //*debug*/           printf("SPACE nach chainf3 = %d", space);
 
                         printf(" %5d", space);
@@ -596,7 +576,7 @@ int list_contents( CIFBLK *cif, char *volser, DSXTENT *extent, char *fname, char
 
 /* do_ls_cif based on dasdutil.c:build_extent_array  */
 
-int do_ls_cif( CIFBLK *cif, char *fname, char *sfname )
+int do_ls_cif( CIFBLK *cif )
 {
     int rc;
 
@@ -642,23 +622,29 @@ int do_ls_cif( CIFBLK *cif, char *fname, char *sfname )
         return -1;
     }
 
-    return list_contents( cif, volser, &f4dscb->ds4vtoce, fname, sfname );
+    return list_contents( cif, volser, &f4dscb->ds4vtoce );
 }
 
 int do_ls( char *file, char *sfile )
 {
-    CIFBLK* cif;
-
     printf("\n");
 
-    cif = open_ckd_image( file, sfile, O_RDONLY|O_BINARY, IMAGE_OPEN_NORMAL );
-
-    if (0
-        || !cif
-        || do_ls_cif( cif, file, sfile )
-        || close_ckd_image( cif )
-    )
+    if (!(cif = open_ckd_image( file, sfile, O_RDONLY | O_BINARY, IMAGE_OPEN_NORMAL )))
         return -1;
 
+    if (do_ls_cif( cif ) != 0)
+    {
+        close_ckd_image( cif );
+        cif = NULL;
+        return -1;
+    }
+
+    if (close_ckd_image( cif ) != 0)
+    {
+        cif = NULL;
+        return -1;
+    }
+
+    cif = NULL;
     return 0;
 }

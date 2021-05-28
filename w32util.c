@@ -3084,7 +3084,7 @@ DLL_EXPORT int inet_aton( const char* cp, struct in_addr* addr )
 // Do '_get_osfhandle'.
 //
 // If '_get_osfhandle' error, then it's either already a HANDLE (SOCKET probably),
-// or else a bona fide invalid file descriptor or invalid SOCKET handle, so do a
+// or else a bonafide invalid file descriptor or invalid SOCKET handle, so do a
 // normal FD_SET.
 //
 // Otherwise ('_get_osfhandle' success), then it WAS a file descriptor

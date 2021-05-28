@@ -779,7 +779,7 @@ struct mtop opblk;
         return 0;
     }
 
-    /* Bona fide forward space block error ... */
+    /* Bonafide forward space block error ... */
 
     save_errno = errno;
     {
@@ -914,7 +914,7 @@ struct mtget starting_mtget;
     ** the supposed i/o error. If the file# is one less than it was
     ** before and the block# is -1, then a tapemark was simply spaced
     ** over. If the file# and block# is anything else however, then
-    ** the originally reported error was a bona-fide i/o error (i.e.
+    ** the originally reported error was a bonafide i/o error (i.e.
     ** the original backspace-block (MTBSR) actually *failed*).
     **
     ** I say "semi-reliable" because comments seem to indicate that
@@ -924,7 +924,7 @@ struct mtget starting_mtget;
     ** for now, we're going to rely on their accuracy since without
     ** them there's really no way whatsoever to distingish between
     ** a normal backspacing over a tapemark unit exception condition
-    ** and a bona-fide i/o error (other than doing our own SCSI i/o
+    ** and a bonafide i/o error (other than doing our own SCSI i/o
     ** of course (which we don't support (yet))). -- Fish, May 2008
     */
     if ( EIO == errno )
@@ -957,7 +957,7 @@ struct mtget starting_mtget;
         }
     }
 
-    /* Bona fide backspace block i/o error ... */
+    /* Bonafide backspace block i/o error ... */
     save_errno = errno;
     {
         // "%1d:%04X Tape file %s, type %s: error in function %s: %s"

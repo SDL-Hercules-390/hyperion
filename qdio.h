@@ -18,31 +18,6 @@
 typedef void QDIOTRC( DEVBLK* dev, char* fmt, ... );
 
 /*-------------------------------------------------------------------*/
-/*             qdio_storage_access_check_and_update                  */
-/*-------------------------------------------------------------------*/
-/* Check storage access and update reference and change bits.        */
-/* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
-/* Storage key ref & change bits are only updated if successful.     */
-/*-------------------------------------------------------------------*/
-QDIO_DLL_IMPORT int qdio_storage_access_check_and_update
-(
-    U64      addr,              /* Storage address being accessed    */
-    size_t   len,               /* Length of storage being accessed  */
-    int      key,               /* Storage access key                */
-    int      acc,               /* Access type (STORKEY_REF/_CHANGE) */
-    DEVBLK*  dev,               /* Pointer to device block           */
-    QDIOTRC* dbg                /* Optional debug trace callback     */
-);
-
-
-/*-------------------------------------------------------------------*/
-/* Macro to call above qdio_storage_access_check_and_update function */
-/*-------------------------------------------------------------------*/
-#define QDIO_STORCHK( _addr, _len, _key, _acc, _dev, _dbg ) \
-  qdio_storage_access_check_and_update( _addr, _len, _key, _acc, _dev, _dbg )
-
-
-/*-------------------------------------------------------------------*/
 /* OSA Device Structure                                              */
 /*-------------------------------------------------------------------*/
 typedef struct _QDIO_DEV {

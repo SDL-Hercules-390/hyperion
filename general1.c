@@ -233,7 +233,7 @@ DEF_INST(and_immediate)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE   *dest;                         /* Pointer to target byte      */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
     ITIMER_SYNC(effective_addr1, 0, regs);
@@ -4439,7 +4439,7 @@ DEF_INST(exclusive_or_immediate)
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE   *dest;                         /* Pointer to target byte      */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 

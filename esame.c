@@ -5628,6 +5628,7 @@ DEF_INST(reset_reference_bits_multiple)
 {
 int     r1, r2;                         /* Register values           */
 RADR    a;                              /* Abs frame addr stor key   */
+RADR    n;
 BYTE    storkey;                        /* Storage key               */
 int     i;
 U64     bitmap;                         /* Bitmap to be ret in r1    */
@@ -5651,23 +5652,25 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs) && (SIE_STATE_BIT_ON(regs, IC2, RRBE)))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif
 
-
-    for(i =0 , bitmap = 0; i < 64; i++, a+= PAGEFRAME_PAGESIZE, bitmap <<= 1)
+    /* For each frame... */
+    for(i =0 , bitmap = 0; i < 64; i++, a+= PAGEFRAME_PAGESIZE)
     {
-    RADR n = a;
+        n = a;
 
+#if defined(_FEATURE_SIE)
         if(SIE_MODE(regs))
         {
             SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
-            if(regs->sie_pref)
+            if (!regs->sie_pref)
             {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                   || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
+#endif
                   ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
                 {
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
@@ -5696,8 +5699,8 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                     if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                       || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
-                                                                 )
+#endif
+                    )
                     {
                         /* guest absolute to host PTE addr */
                         if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
@@ -5718,8 +5721,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
                         if(SIE_STATE_BIT_ON(regs, MX, XC))
                             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-
+#endif
                         /* Obtain address of the RCP area from the state desc */
                         rcpa = regs->sie_rcpo &= 0x7FFFF000;
 
@@ -5758,12 +5760,15 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
                         realkey = 0;
 
                     /* The storage key is obtained by logical or
-                       or the real and guest RC bits */
+                       or the real and guest RCP bits */
                     storkey = realkey | (rcpkey & (STORKEY_REF));
+
                     /* or with host set */
                     rcpkey |= realkey << 4;
+
                     /* Put storage key in guest set */
                     rcpkey |= storkey;
+
                     /* reset the reference bit */
                     rcpkey &= ~(STORKEY_REF);
                     regs->mainstor[rcpa] = rcpkey;
@@ -5788,9 +5793,10 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 #endif
             }
         }
-        else
+        else /* !SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
         {
+            /* Save a copy of the original storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
             storkey = STORAGE_KEY(n, regs);
 #else
@@ -5809,6 +5815,7 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 
         /* Insert the original state of the reference bit
            in the bitmap */
+        bitmap <<= 1;
         bitmap |= (storkey & STORKEY_REF) ? 0x01ULL : 0;
 
         /* If the storage key had the REF bit on then perform
@@ -5817,7 +5824,8 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
          */
         if (storkey & STORKEY_REF)
             STORKEY_INVALIDATE(regs, n);
-    }
+
+    } /* end for each frame... */
 
     regs->GR_G(r1) = bitmap;
 
@@ -6179,10 +6187,21 @@ int     cc;                             /* Condition code            */
 
     TRAN_INSTR_CHECK( regs );
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_ON(regs,IC0, STFL))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+    // Let VM simulate this instruction if SIE interception is either
+    // explicitly requested -OR- implicitly required to do so (which
+    // only applies with z/SIE Virtual Architecture Level support).
+
+#if defined( _FEATURE_SIE )
+    if (0
+        || SIE_STATE_BIT_ON( regs,IC0, STFL )     // Explicit request?
+#if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) // z/SIE Virt Arch?
+        || (SIE_MODE( regs ) && !regs->sie_fld)   // Implicitly required?
+#endif
+    )
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+#endif
+
+    // Else not running under SIE or intercept not requested/required
 
     PTT_INF("STFLE",regs->GR_L(0),(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 

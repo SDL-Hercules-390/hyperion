@@ -1485,7 +1485,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02387 "Configure expanded storage error %d"
 #define HHC02388 "Configure storage error %d"
 #define HHC02389 "CPUs must be offline or stopped"
-//efine HHC02390 - HHC02399 (available)
+#define HHC02390 "Frames "F_RADR"-"F_RADR" are currently set to unusable"
+#define HHC02391 "No unusable storage found"
+//efine HHC02392 - HHC02399 (available)
 
 // reserve 024xx for dasd utilities
 // dasdcat.c
