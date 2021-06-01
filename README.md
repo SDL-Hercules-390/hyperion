@@ -41,13 +41,14 @@ to our **bug report tracking system** by adding/creating a new
 
 ### Building Hercules
 
+[**Building Hercules (Overview)**](html/hercinst.html#install) &nbsp; _(Important!)_  
+[**Building "External Packages"**](readme/README.EXTPKG.md) &nbsp; _(Important!)_  
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
 [Budiling Hercules for OSX](readme/README.OSX.md)  
 [Building Hercules under 64-bit Windows](readme/README.WIN64.md)  
 [Building Hercules with MinGW](readme/README.MINGW.md) &nbsp; _(obsolete)_  
 [Building Hercules for Windows with Visual C](readme/README.MSVC.md) &nbsp; _(obsolete)_  
-[Hercules "External Packages"](readme/README.EXTPKG.md)  
 [HercIFC and Hercules as setuid root programs](readme/README.SETUID.md)  
 [How to build Hercules from SVN under Solaris](readme/README.SUN.md)  
 
@@ -65,22 +66,22 @@ to our **bug report tracking system** by adding/creating a new
 [HAO (Hercules Automatic Operator)](readme/README.HAO.md)  
 [Hercules CCKD64 Support](readme/README.CCKD64.md)  
 [Hercules Networking](readme/README.NETWORKING.md)  
-[TCPNJE Support](readme/README.TCPNJE.md)  
 [Hercules REXX Support](readme/README.REXX.md)  
 [Hercules Tape Support Enhancements SPE/Fixes](readme/README.TAPE.md)  
 [Host Resource Access Facility](readme/README.HRAF.md)  
 [Runtest Low-level Test Cases](tests/README.md)  
 [S/370 Backport of select ESA/390 and z/Architecture instructions](readme/README.S37X.md)  
+[TCPNJE Support](readme/README.TCPNJE.md)  
 [VMFPLC2 (VM) Formatted Tape Utility](readme/README.VMFPLC2.md)  
 
 ### HERCULES INTERNAL READMEs
 
 [Adding New Files to Hercules](readme/README.ADDING.md)  
 [Adding New z/Architecture Facilities to Hercules](readme/README.FACILITIES.md)  
-[Low-level Test Cases](tests/README.md)  
-[HQA Build Scenarios](readme/README.HQA.md)  
-[PTT Tracing](readme/README.PTT.md)  
 [CMPSC "Compression Call" instruction support](readme/README.CMPSC.md)  
 [Hercules Dynamic Loader](readme/README.HDL.md)  
 [Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
+[HQA Build Scenarios](readme/README.HQA.md)  
 [Input/Output Architecture](readme/README.IOARCH.md)  
+[Low-level Test Cases](tests/README.md)  
+[PTT Tracing](readme/README.PTT.md)  
