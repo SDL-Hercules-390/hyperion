@@ -41,7 +41,7 @@ to our **bug report tracking system** by adding/creating a new
 
 ### Building Hercules
 
-[**Building Hercules (Overview)**](html/hercinst.html#install) &nbsp; _(Important!)_  
+[**Building Hercules (Overview)**](http://sdl-hercules-390.github.io/html/hercinst.html#install) &nbsp; _(Important!)_  
 [**Building "External Packages"**](readme/README.EXTPKG.md) &nbsp; _(Important!)_  
 [Building Hercules under AIX](readme/README.AIX.md)  
 [Building Hercules under BSD/OSX](readme/README.BSD.md)  
