@@ -98,6 +98,12 @@ case "$target_os" in
         else
             hc_cv_is_apple=no
         fi
+# WRL
+        if test $target_cpu = aarch64; then
+            hc_cv_build_apple_m1=yes
+        else
+            hc_cv_build_apple_m1=no
+        fi
         ;;
     *bsd*)
         hc_cv_is_aix=no
@@ -551,6 +557,7 @@ AH_TEMPLATE( [OPTION_HAO],              [Define to enable Hercules Automatic Ope
 AH_TEMPLATE( [HDL_USE_LIBTOOL],         [Define to cause dynamic loader to use libtool instead of dlopen] )
 AH_TEMPLATE( [BUILD_HERCIFC],           [Define if hercifc program is to be built] )
 AH_TEMPLATE( [WIN32],                   [Define when building under Win32 (MinGW or Cygwin)] )
+AH_TEMPLATE( [BUILD_APPLE_M1],          [Define when building for Apple Darwin M1 ARM] )
 AH_TEMPLATE( [OPTION_FTHREADS],         [Define to use included threads implementation (fthreads)] )
 AH_TEMPLATE( [TIMESPEC_IN_TIME_H],      [Define if 'struct timespec' defined in <time.h>] )
 AH_TEMPLATE( [TIMESPEC_IN_SYS_TYPES_H], [Define if 'struct timespec' defined in <sys/types.h>] )
@@ -2937,6 +2944,7 @@ test "$hc_cv_have_getsetuid"             != "yes"  &&  AC_DEFINE(NO_SETUID)
 test "$hc_cv_asm_byteswap"               != "yes"  &&  AC_DEFINE(NO_ASM_BYTESWAP)
 test "$hc_cv_non_unique_gettimeofday"     = "yes"  &&  AC_DEFINE(NON_UNIQUE_GETTIMEOFDAY)
 test "$hc_cv_build_hercifc"               = "yes"  &&  AC_DEFINE(BUILD_HERCIFC)
+test "$hc_cv_build_apple_m1"              = "yes"  &&  AC_DEFINE(BUILD_APPLE_M1)
 test "$hc_cv_opt_capabilities"            = "yes"  &&  AC_DEFINE(OPTION_CAPABILITIES)
 test "$hc_cv_ena_object_rexx"             = "yes"  &&  AC_DEFINE(HAVE_OBJECT_REXX)
 test "$hc_cv_ena_regina_rexx"             = "yes"  &&  AC_DEFINE(HAVE_REGINA_REXX)
@@ -3070,6 +3078,8 @@ if test "x$hc_cv_hercifc_groupname" != "x"; then
     HERCIFC_GROUPNAME=${hc_cv_hercifc_groupname}
     AC_SUBST(HERCIFC_GROUPNAME)
 fi
+
+AM_CONDITIONAL( BUILD_APPLE_M1,      [ test "$hc_cv_build_apple_m1"   = "yes" ] )
 
 ###############################################################################
 #                       External Packages support
