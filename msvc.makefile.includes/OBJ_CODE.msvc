@@ -118,6 +118,7 @@ hengine_OBJ = \
     $(O)httpserv.obj \
     $(O)ieee.obj     \
     $(O)impl.obj     \
+    $(O)inline.obj   \
     $(O)io.obj       \
     $(O)ipl.obj      \
     $(O)loadmem.obj  \
@@ -146,5 +147,6 @@ hengine_OBJ = \
     $(O)vector.obj   \
     $(O)vm.obj       \
     $(O)vmd250.obj   \
+    $(O)vstore.obj   \
     $(O)x75.obj      \
     $(O)xstore.obj

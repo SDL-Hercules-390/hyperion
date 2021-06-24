@@ -1040,6 +1040,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\inline.c"
+							>
+						</File>
+						<File
 							RelativePath=".\io.c"
 							>
 						</File>
@@ -1177,6 +1181,10 @@
 						</File>
 						<File
 							RelativePath=".\vmd250.c"
+							>
+						</File>
+						<File
+							RelativePath=".\vstore.c"
 							>
 						</File>
 						<File

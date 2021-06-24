@@ -403,6 +403,7 @@
     <ClCompile Include="httpserv.c" />
     <ClCompile Include="ieee.c" />
     <ClCompile Include="impl.c" />
+    <ClCompile Include="inline.c" />
     <ClCompile Include="io.c" />
     <ClCompile Include="ipl.c" />
     <ClCompile Include="loadmem.c" />
@@ -456,6 +457,7 @@
     <ClCompile Include="vm.c" />
     <ClCompile Include="vmd250.c" />
     <ClCompile Include="vmfplc2.c" />
+    <ClCompile Include="vstore.c" />
     <ClCompile Include="w32ctca.c" />
     <ClCompile Include="w32stape.c" />
     <ClCompile Include="w32util.c" />

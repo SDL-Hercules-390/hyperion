@@ -14,157 +14,66 @@
 /*   that use this header file.                                      */
 /*-------------------------------------------------------------------*/
 
-/*-------------------------------------------------------------------*/
-/*                           maddr_l                                 */
-/*-------------------------------------------------------------------*/
-/* For compatibility, it is usually invoked using the MADDRL macro   */
-/* in feature.h                                                      */
-/*-------------------------------------------------------------------*/
-/* Convert logical address to absolute address. This is the DAT      */
-/* logic that does an accelerated TLB lookup to return the prev-     */
-/* iously determined value from an earlier translation for this      */
-/* logical address.  It performs a series of checks to ensure the    */
-/* values that were used in the previous translation (the results    */
-/* of which are in the corresponding TLB entry) haven't changed      */
-/* for the current address being translated.  If any of the cond-    */
-/* itions have changed (i.e. if any of the comparisons fail) then    */
-/* the TLB cannot be used (TLB miss) and "logical_to_main_l" is      */
-/* called to perform a full address translation. Otherwise if all    */
-/* of the conditions are still true (nothing has changed from the    */
-/* the last time we translated this address), then the previously    */
-/* translated address from the TLB is returned instead (TLB hit).    */
-/*                                                                   */
-/* PLEASE NOTE that the address that is retrieved from the TLB is    */
-/* an absolute address from the Hercules guest's point of view but   */
-/* the address RETURNED TO THE CALLER is a Hercules host address     */
-/* pointing to MAINSTOR that Hercules can then directly use.         */
-/*                                                                   */
-/* Input:                                                            */
-/*      addr    Logical address to be translated                     */
-/*      len     Length of data access for PER SA purpose             */
-/*      arn     Access register number or the special value:         */
-/*                 USE_INST_SPACE                                    */
-/*                 USE_REAL_ADDR                                     */
-/*                 USE_PRIMARY_SPACE                                 */
-/*                 USE_SECONDARY_SPACE                               */
-/*                 USE_HOME_SPACE                                    */
-/*                 USE_ARMODE + access register number               */
-/*              An access register number ORed with the special      */
-/*              value USE_ARMODE forces this routine to use AR-mode  */
-/*              address translation regardless of the PSW address-   */
-/*              space control setting.                               */
-/*      regs    Pointer to the CPU register context                  */
-/*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
-/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
-/*      akey    Bits 0-3=access key, 4-7=zeroes                      */
-/*                                                                   */
-/* Returns:                                                          */
-/*      Directly usable guest absolute storage MAINADDR address.     */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-static inline  BYTE* ARCH_DEP( maddr_l )
-    ( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey )
-{
-    /* Note: ALL of the below conditions must be true for a TLB hit
-       to occur.  If ANY of them are false, then it's a TLB miss,
-       requiring us to then perform a full DAT address translation.
-
-       Note too that on the grand scheme of things the order/sequence
-       of the below tests (if statements) is completely unimportant
-       since ALL conditions must be checked anyway in order for a hit
-       to occur, and it doesn't matter that a miss tests a few extra
-       conditions since it's going to do a full translation anyway!
-       (which is many, many instructions)
-    */
-
-    int  aea_crn  = (arn >= USE_ARMODE) ? 0 : regs->AEA_AR( arn );
-    U16  tlbix    = TLBIX( addr );
-    BYTE *maddr   = NULL;
-
-    /* Non-zero AEA Control Register number? */
-    if (aea_crn)
-    {
-        /* Same Addess Space Designator as before? */
-        /* Or if not, is address in a common segment? */
-        if (0
-            || (regs->CR( aea_crn ) == regs->tlb.TLB_ASD( tlbix ))
-            || (regs->AEA_COMMON( aea_crn ) & regs->tlb.common[ tlbix ])
-        )
-        {
-            /* Storage Key zero? */
-            /* Or if not, same Storage Key as before? */
-            if (0
-                || akey == 0
-                || akey == regs->tlb.skey[ tlbix ]
-            )
-            {
-                /* Does the page address match the one in the TLB? */
-                /* (does a TLB entry exist for this page address?) */
-                if (
-                    ((addr & TLBID_PAGEMASK) | regs->tlbID)
-                    ==
-                    regs->tlb.TLB_VADDR( tlbix )
-                )
-                {
-                    /* Is storage being accessed same way as before? */
-                    if (acctype & regs->tlb.acc[ tlbix ])
-                    {
-                        /*------------------------------------------*/
-                        /* TLB hit: use previously translated value */
-                        /*------------------------------------------*/
-
-                        if (acctype & ACC_CHECK)
-                            regs->dat.storkey = regs->tlb.storkey[ tlbix ];
-
-                        maddr = MAINADDR( regs->tlb.main[tlbix], addr );
-                    }
-                }
-            }
-        }
-    }
-
-    /*---------------------------------------*/
-    /* TLB miss: do full address translation */
-    /*---------------------------------------*/
-    if (!maddr)
-        maddr = ARCH_DEP( logical_to_main_l )( addr, arn, regs, acctype, akey, len );
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
-    {
-        /* SA22-7832-12 Principles of Operation, page 5-99:
-
-             "Storage accesses for instruction and DAT- and ART-
-              table fetches follow the non-transactional rules."
-        */
-        if (0
-            || !regs
-            || !regs->txf_tnd
-            || arn == USE_INST_SPACE    /* Instruction fetching */
-            || arn == USE_REAL_ADDR     /* Address translation  */
-        )
-            return maddr;
-
-        /* Quick exit if NTSTG call */
-        if (regs->txf_NTSTG)
-        {
-            regs->txf_NTSTG = false;
-            return maddr;
-        }
-
-        /* Translate to alternate TXF address */
-        maddr = TXF_MADDRL( addr, len, arn, regs, acctype, maddr );
-    }
-#endif
-
-    return maddr;
-}
+extern inline BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey );
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
-
-U16  ARCH_DEP( translate_asn )( U16 asn, REGS* regs, U32* asteo, U32 aste[] );
-int  ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, REGS* regs );
-
+extern inline int ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, REGS* regs );
 #endif
+
+extern inline void ARCH_DEP( purge_tlb )( REGS* regs );
+extern inline void ARCH_DEP( purge_tlb_all )();
+extern inline void ARCH_DEP( purge_tlbe_all )( RADR pfra );
+
+#if defined( FEATURE_ACCESS_REGISTERS )
+extern inline void ARCH_DEP( purge_alb )( REGS* regs );
+extern inline void ARCH_DEP( purge_alb_all )();
+#endif
+
+/*-------------------------------------------------------------------*/
+
+#if defined( FEATURE_ACCESS_REGISTERS )
+U16  ARCH_DEP( translate_alet )( U32 alet, U16 eax, int acctype, REGS* regs, U32* asteo, U32 aste[] );
+#endif
+
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
+U16 ARCH_DEP( translate_asn )( U16 asn, REGS* regs, U32* asteo, U32 aste[] );
+#endif
+
+int  ARCH_DEP( translate_addr  )( VADR vaddr, int arn, REGS* regs, int acctype );
+void ARCH_DEP( purge_tlbe      )( REGS* regs, RADR pfra );
+void ARCH_DEP( invalidate_tlb  )( REGS* regs, BYTE  mask );
+void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main );
+void ARCH_DEP( invalidate_pte  )( BYTE ibyte, RADR op1, U32 op2, REGS* regs );
+
+/*-------------------------------------------------------------------*/
+/* The following function must be declared separately for each       */
+/* build architecture because of opcode.h's "SIE_TRANSLATE_ADDR"     */
+/* macro's need (for SIE purposes) to call "translate_addr" for      */
+/* an architecture other than the current build architecture.        */
+/*-------------------------------------------------------------------*/
+
+#if defined( _FEATURE_SIE ) && ARCH_900_IDX != ARCH_IDX
+  int s390_translate_addr ( U32 vaddr, int arn, REGS* regs, int acctype);
+#endif
+#if defined( _FEATURE_ZSIE )
+  int z900_translate_addr ( U64 vaddr, int arn, REGS* regs, int acctype );
+#endif
+
+/*-------------------------------------------------------------------*/
+/* The following function must be declared separately for each       */
+/* build architecture because of opcode.h's "SIE_LOGICAL_TO_ABS"     */
+/* macro's need (for SIE purposes) to call "logical_to_main" for     */
+/* an architecture other than the current build architecture.        */
+/*-------------------------------------------------------------------*/
+
+#if defined( _FEATURE_SIE ) && ARCH_900_IDX != ARCH_IDX
+  DAT_DLL_IMPORT BYTE* s390_logical_to_main( U32 addr,  int arn, REGS* regs, int acctype, BYTE akey );
+#endif
+#if defined( _FEATURE_ZSIE )
+  DAT_DLL_IMPORT BYTE* z900_logical_to_main( U64 addr,  int arn, REGS* regs, int acctype, BYTE akey );
+#endif
+
+DAT_DLL_IMPORT BYTE* ARCH_DEP( logical_to_main   )( VADR addr, int arn, REGS* regs, int acctype, BYTE akey );
+DAT_DLL_IMPORT BYTE* ARCH_DEP( logical_to_main_l )( VADR addr, int arn, REGS* regs, int acctype, BYTE akey, size_t len );
 
 /* end of DAT.H */

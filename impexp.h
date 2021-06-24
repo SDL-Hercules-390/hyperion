@@ -368,6 +368,18 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _INLINE_C_
+  #ifndef  _HENGINE_DLL_
+    #define INLINE_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define INLINE_DLL_IMPORT       extern
+  #endif
+#else
+  #define   INLINE_DLL_IMPORT       DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _LOADPARM_C_
   #ifndef  _HENGINE_DLL_
     #define LOADPARM_DLL_IMPORT     DLL_IMPORT
@@ -472,6 +484,18 @@
   #endif
 #else
   #define   VECT_DLL_IMPORT         DLL_EXPORT
+#endif
+
+/*----------------------------------------------------*/
+
+#ifndef    _VSTORE_C_
+  #ifndef  _HENGINE_DLL_
+    #define VSTORE_DLL_IMPORT       DLL_IMPORT
+  #else
+    #define VSTORE_DLL_IMPORT       extern
+  #endif
+#else
+  #define   VSTORE_DLL_IMPORT       DLL_EXPORT
 #endif
 
 /*********************************************************************/
