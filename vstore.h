@@ -1,6 +1,6 @@
 /* VSTORE.H     (C) Copyright Roger Bowler, 2000-2012                */
 /*              (C) and others 2013-2021                             */
-/*               ESA/390 Virtual Storage Functions                   */
+/*                  Virtual Storage Functions                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -10,31 +10,40 @@
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
-/* This module contains various functions which store, fetch, and    */
-/* copy values to, from, or between virtual storage locations.       */
 /*                                                                   */
-/* Functions provided in this module are:                            */
-/* vstorec      Store 1 to 256 characters into virtual storage       */
-/* vstoreb      Store a single byte into virtual storage             */
-/* vstore2      Store a two-byte integer into virtual storage        */
-/* vstore4      Store a four-byte integer into virtual storage       */
-/* vstore8      Store an eight-byte integer into virtual storage     */
-/* vfetchc      Fetch 1 to 256 characters from virtual storage       */
-/* vfetchb      Fetch a single byte from virtual storage             */
-/* vfetch2      Fetch a two-byte integer from virtual storage        */
-/* vfetch4      Fetch a four-byte integer from virtual storage       */
-/* vfetch8      Fetch an eight-byte integer from virtual storage     */
-/* instfetch    Fetch instruction from virtual storage               */
-/* move_chars   Move characters using specified keys and addrspaces  */
-/* move_charx   Move characters with optional specifications         */
-/* validate_operand   Validate addressing, protection, translation   */
-/*-------------------------------------------------------------------*/
-/* And provided by means of macro's address wrapping versions of     */
-/* the above:                                                        */
-/* wstoreX                                                           */
-/* wfetchX                                                           */
-/* wmove_chars                                                       */
-/* wvalidate_operand                                                 */
+/*                  Virtual Storage Functions                        */
+/*                                                                   */
+/*  This module contains various functions which store, fetch, and   */
+/*  copy values to, from, or between virtual storage locations.      */
+/*                                                                   */
+/*  Functions provided in this module are:                           */
+/*                                                                   */
+/*  vstoreb      Store a single byte into virtual storage            */
+/*  vstore2      Store a two-byte integer into virtual storage       */
+/*  vstore4      Store a four-byte integer into virtual storage      */
+/*  vstore8      Store an eight-byte integer into virtual storage    */
+/*  vstorec      Store 1 to 256 characters into virtual storage      */
+/*                                                                   */
+/*  wstoreX      Address-wrapping version of the above               */
+/*                                                                   */
+/*  vfetchb      Fetch a single byte from virtual storage            */
+/*  vfetch2      Fetch a two-byte integer from virtual storage       */
+/*  vfetch4      Fetch a four-byte integer from virtual storage      */
+/*  vfetch8      Fetch an eight-byte integer from virtual storage    */
+/*  vfetchc      Fetch 1 to 256 characters from virtual storage      */
+/*                                                                   */
+/*  wfetchX      Address-wrapping version of the above               */
+/*                                                                   */
+/*  instfetch    Fetch instruction from virtual storage              */
+/*                                                                   */
+/*  validate_operand   Validate addressing, protection, translation  */
+/*  wvalidate_opend    Address wrapping version of the above         */
+/*                                                                   */
+/*  move_chars   Move characters using specified keys and addrspaces */
+/*  wmove_chars  Address-wrapping version of the above               */
+/*                                                                   */
+/*  move_charx   Move characters with optional specifications        */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 /* 2019-12-05  Bob Wood                                              */
 /* Code modified to pass the correct length when needed for MADDR.   */
@@ -44,6 +53,14 @@
 /* it is only an issue if the actual length spans a cache line       */
 /* boundary but not a page boundary.                                 */
 /*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*-------------------------------------------------------------------*/
+
+#if (ARCH_370_IDX == ARCH_IDX && !defined( DID_370_VSTORE_H )) \
+ || (ARCH_390_IDX == ARCH_IDX && !defined( DID_390_VSTORE_H )) \
+ || (ARCH_900_IDX == ARCH_IDX && !defined( DID_900_VSTORE_H ))
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
         s370_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
@@ -71,6 +88,8 @@
 #define s370_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
         s370_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
+/*-------------------------------------------------------------------*/
+
 #define s390_wstorec(_src, _len, _addr, _arn, _regs) \
         s390_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wstoreb(_value, _addr, _arn, _regs) \
@@ -96,6 +115,8 @@
                         ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
 #define s390_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
         s390_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
+
+/*-------------------------------------------------------------------*/
 
 #define z900_wstorec(_src, _len, _addr, _arn, _regs) \
         z900_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
@@ -124,6 +145,331 @@
         z900_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
 /*-------------------------------------------------------------------*/
+/* The following two functions (concpy, concpy_rl) must be defined   */
+/* first, before all the others, since the inline functions (which   */
+/* follow afterwards) use them.                                      */
+/*-------------------------------------------------------------------*/
+
+#ifndef _VSTORE_CONCPY
+#define _VSTORE_CONCPY
+
+/*-------------------------------------------------------------------*/
+/* Copy 8 bytes at a time concurrently   (from left to right)        */
+/*-------------------------------------------------------------------*/
+inline void concpy( REGS* regs, void* d, void* s, int n )
+{
+    BYTE* u8d = d;
+    BYTE* u8s = s;
+
+    /* Copy until ready or 8 byte integral boundary */
+    while (n && ((uintptr_t) u8d & 7))
+    {
+        *u8d++ = *u8s++;
+        n--;
+    }
+
+#if !((defined( SIZEOF_LONG )  && SIZEOF_LONG  > 7) || \
+      (defined( SIZEOF_INT_P ) && SIZEOF_INT_P > 7) || \
+       defined( OPTION_STRICT_ALLIGNMENT ))
+
+    /* Code for 32-bit builds... */
+
+    /* Copy full words in right condition, on enough length and src - dst distance */
+    if (1
+        && n
+        && regs->cpubit == regs->sysblk->started_mask
+        && abs( u8d - u8s ) > 3
+    )
+    {
+        while (n > 3)
+        {
+            store_fw_noswap( u8d, fetch_fw_noswap( u8s ));
+            u8d += 4;
+            u8s += 4;
+            n   -= 4;
+        }
+    }
+    else // copy double words
+
+#else // x64 builds
+
+    UNREFERENCED( regs );
+
+#endif // end code for 32-bit builds
+
+    /* Copy double words on enough length and src - dst distance */
+    if (n && labs( u8d - u8s ) > 7)
+    {
+        while(n > 7)
+        {
+            store_dw_noswap( u8d, fetch_dw_noswap( u8s ));
+            u8d += 8;
+            u8s += 8;
+            n -= 8;
+        }
+    }
+
+    /* Copy leftovers */
+    while (n)
+    {
+        *u8d++ = *u8s++;
+        n--;
+    }
+} /* end function concpy */
+#endif // _VSTORE_CONCPY
+
+#if defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+
+#ifndef _VSTORE_CONCPY_RL
+#define _VSTORE_CONCPY_RL
+
+/*-------------------------------------------------------------------*/
+/* Copy 8 bytes at a time concurrently   (from right to left)        */
+/*-------------------------------------------------------------------*/
+inline void concpy_rl( REGS* regs, void* d, void* s, int n )
+{
+    BYTE* u8d = (BYTE*)d + n;
+    BYTE* u8s = (BYTE*)s + n;
+
+    /* Copy until ready or 8 byte integral boundary */
+    while (n && ((uintptr_t) u8d & 7))
+    {
+        *--u8d = *--u8s;
+        n--;
+    }
+
+#if !((defined( SIZEOF_LONG )  && SIZEOF_LONG  > 7) || \
+      (defined( SIZEOF_INT_P ) && SIZEOF_INT_P > 7) || \
+       defined( OPTION_STRICT_ALLIGNMENT ))
+
+    /* Code for 32-bit builds... */
+
+    /* Copy full words in right condition, on enough length and (src - dst) distance */
+    if (1
+        && n
+        && regs->cpubit == regs->sysblk->started_mask
+        && abs( u8d - u8s ) > 3
+    )
+    {
+        while (n > 3)
+        {
+            store_fw_noswap( u8d-4, fetch_fw_noswap( u8s-4 ));
+            u8d -= 4;
+            u8s -= 4;
+            n   -= 4;
+        }
+    }
+    else // copy double words...
+
+#else // x64 builds
+
+    UNREFERENCED( regs );
+
+#endif // end code for 32-bit builds
+
+    /* Copy double words on enough length and (src - dst) distance */
+    if (n && labs( u8d - u8s ) > 7)
+    {
+        while (n > 7)
+        {
+            store_dw_noswap( u8d-8, fetch_dw_noswap( u8s - 8 ));
+            u8d -= 8;
+            u8s -= 8;
+            n   -= 8;
+        }
+    }
+
+    /* Copy leftovers */
+    while (n)
+    {
+        *--u8d = *--u8s;
+        n--;
+    }
+} /* end function concpy_rl */
+
+#endif // _VSTORE_CONCPY_RL
+
+#endif // defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
+
+/*-------------------------------------------------------------------*/
+/* Store a two-byte integer into virtual storage operand             */
+/*                                                                   */
+/* Input:                                                            */
+/*      value   16-bit integer value to be stored                    */
+/*      addr    Logical address of leftmost operand byte             */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or protection             */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( vstore2_full )( U16 value, VADR addr, int arn, REGS* regs )
+{
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
+
+    main1 = MADDR( addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+    sk = regs->dat.storkey;
+    main2 = MADDR( (addr + 1) & ADDRESS_MAXWRAP( regs ), arn, regs,
+                    ACCTYPE_WRITE, regs->psw.pkey );
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    *main1 = value >> 8;
+    *main2 = value & 0xFF;
+}
+
+/*-------------------------------------------------------------------*/
+/* Store a four-byte integer into virtual storage operand            */
+/*                                                                   */
+/* Input:                                                            */
+/*      value   32-bit integer value to be stored                    */
+/*      addr    Logical address of leftmost operand byte             */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or protection             */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( vstore4_full )( U32 value, VADR addr, int arn, REGS* regs )
+{
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
+int     len;                            /* Length to end of page     */
+BYTE    temp[4];                        /* Copied value              */
+
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+    sk = regs->dat.storkey;
+    main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4-len, arn, regs,
+                    ACCTYPE_WRITE, regs->psw.pkey );
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    STORE_FW( temp, value );
+    memcpy( main1, temp,       len );
+    memcpy( main2, temp+len, 4-len );
+}
+
+/*-------------------------------------------------------------------*/
+/* Store an eight-byte integer into virtual storage operand          */
+/*                                                                   */
+/* Input:                                                            */
+/*      value   64-bit integer value to be stored                    */
+/*      addr    Logical address of leftmost operand byte             */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or protection             */
+/*      exception, and in this case the function does not return.    */
+/*                                                                   */
+/*      NOTE that vstore8_full should only be invoked when a page    */
+/*           boundary IS going to be crossed.                        */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( vstore8_full )( U64 value, VADR addr, int arn, REGS* regs )
+{
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk;                             /* Storage key addresses     */
+int     len;                            /* Length to end of page     */
+BYTE    temp[8];                        /* Copied value              */
+
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
+    sk = regs->dat.storkey;
+    main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8-len, arn, regs,
+                    ACCTYPE_WRITE, regs->psw.pkey );
+    *sk |= (STORKEY_REF | STORKEY_CHANGE);
+    STORE_DW( temp, value );
+    memcpy( main1, temp,       len );
+    memcpy( main2, temp+len, 8-len );
+}
+
+/*-------------------------------------------------------------------*/
+/* Fetch a two-byte integer operand from virtual storage             */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr    Logical address of leftmost byte of operand          */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/* Returns:                                                          */
+/*      Operand in 16-bit integer format                             */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or fetch protection       */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+inline U16 ARCH_DEP( vfetch2_full )( VADR addr, int arn, REGS* regs )
+{
+BYTE   *mn;                             /* Main storage addresses    */
+U16     value;
+
+    mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+    value = *mn << 8;
+    mn = MADDR( (addr + 1) & ADDRESS_MAXWRAP( regs ), arn, regs,
+                 ACCTYPE_READ, regs->psw.pkey );
+    value |= *mn;
+    return value;
+}
+
+/*-------------------------------------------------------------------*/
+/* Fetch a four-byte integer operand from virtual storage            */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr    Logical address of leftmost byte of operand          */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/* Returns:                                                          */
+/*      Operand in 32-bit integer format                             */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or fetch protection       */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+inline U32 ARCH_DEP( vfetch4_full )( VADR addr, int arn, REGS* regs )
+{
+BYTE   *mn;                             /* Main storage addresses    */
+int     len;                            /* Length to end of page     */
+BYTE    temp[8];                        /* Copy destination          */
+
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp, mn, len);
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4 - len, arn, regs,
+                  ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp+len, mn, 4 - len);
+    return fetch_fw( temp );
+}
+
+/*-------------------------------------------------------------------*/
+/* Fetch an eight-byte integer operand from virtual storage          */
+/*                                                                   */
+/* Input:                                                            */
+/*      addr    Logical address of leftmost byte of operand          */
+/*      arn     Access register number                               */
+/*      regs    CPU register context                                 */
+/* Returns:                                                          */
+/*      Operand in 64-bit integer format                             */
+/*                                                                   */
+/*      A program check may be generated if the logical address      */
+/*      causes an addressing, translation, or fetch protection       */
+/*      exception, and in this case the function does not return.    */
+/*-------------------------------------------------------------------*/
+inline U64 ARCH_DEP( vfetch8_full )( VADR addr, int arn, REGS* regs )
+{
+BYTE   *mn;                             /* Main storage addresses    */
+int     len;                            /* Length to end of page     */
+BYTE    temp[16];                       /* Copy destination          */
+
+    /* Get absolute address of first byte of operand */
+    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
+    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp, mn, len);
+    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8 - len, arn, regs,
+                 ACCTYPE_READ, regs->psw.pkey );
+    memcpy( temp+len, mn, 8 );
+    return fetch_dw( temp );
+}
+
+/*-------------------------------------------------------------------*/
 /* Store 1 to 256 characters into virtual storage operand            */
 /*                                                                   */
 /* Input:                                                            */
@@ -138,8 +484,8 @@
 /*      exception, and in this case no real storage locations are    */
 /*      updated, and the function does not return.                   */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( vstorec )( const void* src, BYTE len, VADR addr, int arn, REGS* regs )
+// (needed by dyncrypt.c)
+VSTORE_INL_DLL_IMPORT inline void ARCH_DEP( vstorec )( const void* src, BYTE len, VADR addr, int arn, REGS* regs )
 {
 BYTE   *main1, *main2;                  /* Mainstor addresses        */
 BYTE   *sk;                             /* Storage key addresses     */
@@ -164,8 +510,7 @@ int     len2;                           /* Length to end of page     */
         memcpy( main1, src, len2 );
         memcpy( main2, (BYTE*)src + len2, len + 1 - len2 );
     }
-
-} /* end function ARCH_DEP(vstorec) */
+}
 
 /*-------------------------------------------------------------------*/
 /* Store a single byte into virtual storage operand                  */
@@ -180,49 +525,19 @@ int     len2;                           /* Length to end of page     */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( vstoreb )( BYTE value, VADR addr, int arn, REGS* regs )
+inline void ARCH_DEP( vstoreb )( BYTE value, VADR addr, int arn, REGS* regs )
 {
 BYTE   *main1;                          /* Mainstor address          */
 
     main1 = MADDR( addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey );
     *main1 = value;
     ITIMER_UPDATE( addr, 1-1, regs );
-
-} /* end function ARCH_DEP(vstoreb) */
+}
 
 /*-------------------------------------------------------------------*/
-/* Store a two-byte integer into virtual storage operand             */
-/*                                                                   */
-/* Input:                                                            */
-/*      value   16-bit integer value to be stored                    */
-/*      addr    Logical address of leftmost operand byte             */
-/*      arn     Access register number                               */
-/*      regs    CPU register context                                 */
-/*                                                                   */
-/*      A program check may be generated if the logical address      */
-/*      causes an addressing, translation, or protection             */
-/*      exception, and in this case the function does not return.    */
+/* vstore2 accelerator - Simple case only (better inline candidate)  */
 /*-------------------------------------------------------------------*/
-_VSTORE_FULL_C_STATIC
-void ARCH_DEP( vstore2_full )( U16 value, VADR addr, int arn, REGS* regs )
-{
-BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk;                             /* Storage key addresses     */
-
-    main1 = MADDR( addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
-    sk = regs->dat.storkey;
-    main2 = MADDR( (addr + 1) & ADDRESS_MAXWRAP( regs ), arn, regs,
-                    ACCTYPE_WRITE, regs->psw.pkey );
-    *sk |= (STORKEY_REF | STORKEY_CHANGE);
-    *main1 = value >> 8;
-    *main2 = value & 0xFF;
-
-} /* end function ARCH_DEP(vstore2_full) */
-
-/* vstore2 accelerator - Simple case only (better inline candidate) */
-_VSTORE_C_STATIC
-void ARCH_DEP( vstore2 )( U16 value, VADR addr, int arn, REGS* regs )
+inline void ARCH_DEP( vstore2 )( U16 value, VADR addr, int arn, REGS* regs )
 {
     /* Most common case : Aligned & not crossing page boundary */
     if (likely(!((VADR_L)addr & 1)
@@ -235,44 +550,12 @@ void ARCH_DEP( vstore2 )( U16 value, VADR addr, int arn, REGS* regs )
     }
     else
         ARCH_DEP( vstore2_full )( value, addr, arn, regs );
-} /* end function ARCH_DEP(vstore2) */
+}
 
 /*-------------------------------------------------------------------*/
-/* Store a four-byte integer into virtual storage operand            */
-/*                                                                   */
-/* Input:                                                            */
-/*      value   32-bit integer value to be stored                    */
-/*      addr    Logical address of leftmost operand byte             */
-/*      arn     Access register number                               */
-/*      regs    CPU register context                                 */
-/*                                                                   */
-/*      A program check may be generated if the logical address      */
-/*      causes an addressing, translation, or protection             */
-/*      exception, and in this case the function does not return.    */
+/* vstore4 accelerator - Simple case only (better inline candidate)  */
 /*-------------------------------------------------------------------*/
-_VSTORE_FULL_C_STATIC
-void ARCH_DEP( vstore4_full )( U32 value, VADR addr, int arn, REGS* regs )
-{
-BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk;                             /* Storage key addresses     */
-int     len;                            /* Length to end of page     */
-BYTE    temp[4];                        /* Copied value              */
-
-    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-    main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
-    sk = regs->dat.storkey;
-    main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4-len, arn, regs,
-                    ACCTYPE_WRITE, regs->psw.pkey );
-    *sk |= (STORKEY_REF | STORKEY_CHANGE);
-    STORE_FW( temp, value );
-    memcpy( main1, temp,       len );
-    memcpy( main2, temp+len, 4-len );
-
-} /* end function ARCH_DEP(vstore4_full) */
-
-/* vstore4 accelerator - Simple case only (better inline candidate) */
-_VSTORE_C_STATIC
-void ARCH_DEP( vstore4 )( U32 value, VADR addr, int arn, REGS* regs )
+inline void ARCH_DEP( vstore4 )( U32 value, VADR addr, int arn, REGS* regs )
 {
     /* Most common case : Aligned & not crossing page boundary */
     if (likely(!((VADR_L)addr & 0x03))
@@ -288,43 +571,9 @@ void ARCH_DEP( vstore4 )( U32 value, VADR addr, int arn, REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
-/* Store an eight-byte integer into virtual storage operand          */
-/*                                                                   */
-/* Input:                                                            */
-/*      value   64-bit integer value to be stored                    */
-/*      addr    Logical address of leftmost operand byte             */
-/*      arn     Access register number                               */
-/*      regs    CPU register context                                 */
-/*                                                                   */
-/*      A program check may be generated if the logical address      */
-/*      causes an addressing, translation, or protection             */
-/*      exception, and in this case the function does not return.    */
-/*                                                                   */
-/*      NOTE that vstore8_full should only be invoked when a page    */
-/*           boundary IS going to be crossed.                        */
+/* vstore8 accelerator - Simple case only (better inline candidate)  */
 /*-------------------------------------------------------------------*/
-_VSTORE_FULL_C_STATIC
-void ARCH_DEP( vstore8_full )( U64 value, VADR addr, int arn, REGS* regs )
-{
-BYTE   *main1, *main2;                  /* Mainstor addresses        */
-BYTE   *sk;                             /* Storage key addresses     */
-int     len;                            /* Length to end of page     */
-BYTE    temp[8];                        /* Copied value              */
-
-    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-    main1 = MADDRL( addr, len, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey );
-    sk = regs->dat.storkey;
-    main2 = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8-len, arn, regs,
-                    ACCTYPE_WRITE, regs->psw.pkey );
-    *sk |= (STORKEY_REF | STORKEY_CHANGE);
-    STORE_DW( temp, value );
-    memcpy( main1, temp,       len );
-    memcpy( main2, temp+len, 8-len );
-
-} /* end function ARCH_DEP(vstore8) */
-
-_VSTORE_C_STATIC
-void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
+inline void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
     /* Check alignement. If aligned then we are guaranteed
@@ -377,12 +626,11 @@ void ARCH_DEP( vstore8 )( U64 value, VADR addr, int arn, REGS* regs )
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( vfetchc )( void* dest, BYTE len, VADR addr, int arn, REGS* regs )
+// (needed by dyncrypt.c)
+VSTORE_INL_DLL_IMPORT inline void ARCH_DEP( vfetchc )( void* dest, BYTE len, VADR addr, int arn, REGS* regs )
 {
 BYTE   *main1, *main2;                  /* Main storage addresses    */
 int     len2;                           /* Length to copy on page    */
-
 
     if (NOCROSSPAGE( addr, len ))
     {
@@ -399,8 +647,7 @@ int     len2;                           /* Length to copy on page    */
         memcpy(        dest,        main1,           len2 );
         memcpy( (BYTE*)dest + len2, main2, len + 1 - len2 );
     }
-
-} /* end function ARCH_DEP(vfetchc) */
+}
 
 /*-------------------------------------------------------------------*/
 /* Fetch a single byte operand from virtual storage                  */
@@ -416,47 +663,19 @@ int     len2;                           /* Length to copy on page    */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-BYTE ARCH_DEP( vfetchb )( VADR addr, int arn, REGS* regs )
+inline BYTE ARCH_DEP( vfetchb )( VADR addr, int arn, REGS* regs )
 {
-BYTE   *mn;                           /* Main storage address      */
+BYTE   *mn;                             /* Main storage address      */
 
     ITIMER_SYNC( addr, 1-1, regs );
     mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
     return *mn;
-} /* end function ARCH_DEP(vfetchb) */
+}
 
 /*-------------------------------------------------------------------*/
-/* Fetch a two-byte integer operand from virtual storage             */
-/*                                                                   */
-/* Input:                                                            */
-/*      addr    Logical address of leftmost byte of operand          */
-/*      arn     Access register number                               */
-/*      regs    CPU register context                                 */
-/* Returns:                                                          */
-/*      Operand in 16-bit integer format                             */
-/*                                                                   */
-/*      A program check may be generated if the logical address      */
-/*      causes an addressing, translation, or fetch protection       */
-/*      exception, and in this case the function does not return.    */
+/* vfetch2 accelerator - Simple case only (better inline candidate)  */
 /*-------------------------------------------------------------------*/
-_VSTORE_FULL_C_STATIC
-U16 ARCH_DEP( vfetch2_full )( VADR addr, int arn, REGS* regs )
-{
-BYTE   *mn;                             /* Main storage addresses    */
-U16     value;
-
-    mn = MADDR( addr, arn, regs, ACCTYPE_READ, regs->psw.pkey );
-    value = *mn << 8;
-    mn = MADDR( (addr + 1) & ADDRESS_MAXWRAP( regs ), arn, regs,
-                 ACCTYPE_READ, regs->psw.pkey );
-    value |= *mn;
-    return value;
-
-} /* end function ARCH_DEP(vfetch2) */
-
-_VSTORE_C_STATIC
-U16 ARCH_DEP( vfetch2 )( VADR addr, int arn, REGS* regs )
+inline U16 ARCH_DEP( vfetch2 )( VADR addr, int arn, REGS* regs )
 {
     if (likely(!((VADR_L)addr & 0x01))
         || (((VADR_L)addr & PAGEFRAME_BYTEMASK) != PAGEFRAME_BYTEMASK ))
@@ -470,38 +689,9 @@ U16 ARCH_DEP( vfetch2 )( VADR addr, int arn, REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
-/* Fetch a four-byte integer operand from virtual storage            */
-/*                                                                   */
-/* Input:                                                            */
-/*      addr    Logical address of leftmost byte of operand          */
-/*      arn     Access register number                               */
-/*      regs    CPU register context                                 */
-/* Returns:                                                          */
-/*      Operand in 32-bit integer format                             */
-/*                                                                   */
-/*      A program check may be generated if the logical address      */
-/*      causes an addressing, translation, or fetch protection       */
-/*      exception, and in this case the function does not return.    */
+/* vfetch4 accelerator - Simple case only (better inline candidate)  */
 /*-------------------------------------------------------------------*/
-_VSTORE_FULL_C_STATIC
-U32 ARCH_DEP( vfetch4_full )( VADR addr, int arn, REGS* regs )
-{
-BYTE   *mn;                             /* Main storage addresses    */
-int     len;                            /* Length to end of page     */
-BYTE    temp[8];                        /* Copy destination          */
-
-    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp, mn, len);
-    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 4 - len, arn, regs,
-                  ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp+len, mn, 4 - len);
-    return fetch_fw( temp );
-
-} /* end function ARCH_DEP(vfetch4_full) */
-
-_VSTORE_C_STATIC
-U32 ARCH_DEP( vfetch4 )( VADR addr, int arn, REGS* regs )
+inline U32 ARCH_DEP( vfetch4 )( VADR addr, int arn, REGS* regs )
 {
     if ((likely(!((VADR_L)addr & 0x03))
         || (((VADR_L)addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_BYTEMASK-3) )))
@@ -515,39 +705,9 @@ U32 ARCH_DEP( vfetch4 )( VADR addr, int arn, REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
-/* Fetch an eight-byte integer operand from virtual storage          */
-/*                                                                   */
-/* Input:                                                            */
-/*      addr    Logical address of leftmost byte of operand          */
-/*      arn     Access register number                               */
-/*      regs    CPU register context                                 */
-/* Returns:                                                          */
-/*      Operand in 64-bit integer format                             */
-/*                                                                   */
-/*      A program check may be generated if the logical address      */
-/*      causes an addressing, translation, or fetch protection       */
-/*      exception, and in this case the function does not return.    */
+/* vfetch8 accelerator - Simple case only (better inline candidate)  */
 /*-------------------------------------------------------------------*/
-_VSTORE_FULL_C_STATIC
-U64 ARCH_DEP( vfetch8_full )( VADR addr, int arn, REGS* regs )
-{
-BYTE   *mn;                             /* Main storage addresses    */
-int     len;                            /* Length to end of page     */
-BYTE    temp[16];                       /* Copy destination          */
-
-    /* Get absolute address of first byte of operand */
-    len = PAGEFRAME_PAGESIZE - (addr & PAGEFRAME_BYTEMASK);
-    mn = MADDRL( addr, len, arn, regs, ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp, mn, len);
-    mn = MADDRL( (addr + len) & ADDRESS_MAXWRAP( regs ), 8 - len, arn, regs,
-                 ACCTYPE_READ, regs->psw.pkey );
-    memcpy( temp+len, mn, 8 );
-    return fetch_dw( temp );
-
-} /* end function ARCH_DEP(vfetch8) */
-
-_VSTORE_C_STATIC
-U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
+inline U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
 {
 #if defined( OPTION_SINGLE_CPU_DW ) && defined( ASSIST_STORE_DW )
     if(likely(!((VADR_L)addr & 0x07)))
@@ -613,7 +773,7 @@ U64 ARCH_DEP( vfetch8 )( VADR addr, int arn, REGS* regs )
 /*      (either 0 or 1) the references to exec are optimized out by  */
 /*      the compiler.                                                */
 /*-------------------------------------------------------------------*/
-_VFETCH_C_STATIC BYTE* ARCH_DEP( instfetch )( REGS* regs, int exec )
+inline BYTE* ARCH_DEP( instfetch )( REGS* regs, int exec )
 {
 VADR    addr;                           /* Instruction address       */
 BYTE*   ip;                             /* Instruction pointer       */
@@ -690,7 +850,7 @@ int     len;                            /* Length for page crossing  */
             &&  regs->ip < (regs->aip + pagesz - 5)
         )
         {
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
             /* Update CONSTRAINED trans instruction fetch constraint */
             if (regs->txf_contran)
@@ -701,7 +861,7 @@ int     len;                            /* Length for page crossing  */
 
             TXF_INSTRADDR_CONSTRAINT( regs );
 
-#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
             return regs->ip;
         }
@@ -762,7 +922,7 @@ int     len;                            /* Length for page crossing  */
         }
     }
 
-#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
     /* Update CONSTRAINED trans instruction fetch constraint */
     if (regs->txf_contran)
@@ -773,131 +933,11 @@ int     len;                            /* Length for page crossing  */
 
     TXF_INSTRADDR_CONSTRAINT( regs );
 
-#endif /* defined( _FEATURE_073_TRANSACT_EXEC_FACILITY ) */
+#endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
     return dest;
 
-} /* end function ARCH_DEP(instfetch) */
-
-
-#ifndef _VSTORE_CONCPY
-#define _VSTORE_CONCPY
-/*-------------------------------------------------------------------*/
-/* Copy 8 bytes at a time concurrently   (from left to right)        */
-/*-------------------------------------------------------------------*/
-static __inline__ void concpy(REGS *regs, void *d, void *s, int n)
-{
-  BYTE *u8d = d;
-  BYTE *u8s = s;
-
-  /* Copy until ready or 8 byte integral boundary */
-  while(n && ((uintptr_t) u8d & 7))
-  {
-    *u8d++ = *u8s++;
-    n--;
-  }
-
-#if !((defined(SIZEOF_LONG) && SIZEOF_LONG > 7) || (defined(SIZEOF_INT_P) && SIZEOF_INT_P > 7) || defined(OPTION_STRICT_ALLIGNMENT))
-  /* Code for 32-bit builds */
-  /* Copy full words in right condition, on enough length and src - dst distance */
-  if(n && regs->cpubit == regs->sysblk->started_mask && abs(u8d - u8s) > 3)
-  {
-    while(n > 3)
-    {
-      store_fw_noswap(u8d, fetch_fw_noswap(u8s));
-      u8d += 4;
-      u8s += 4;
-      n -= 4;
-    }
-  }
-  else /* copy double words */
-#else // x64 builds
-  UNREFERENCED(regs);
-#endif /* end code for 32-bit builds */
-
-  /* Copy double words on enough length and src - dst distance */
-  if(n && labs(u8d - u8s) > 7)
-  {
-    while(n > 7)
-    {
-      store_dw_noswap(u8d, fetch_dw_noswap(u8s));
-      u8d += 8;
-      u8s += 8;
-      n -= 8;
-    }
-  }
-
-  /* Copy leftovers */
-  while(n)
-  {
-    *u8d++ = *u8s++;
-    n--;
-  }
-}
-
-#if defined( _FEATURE_061_MISC_INSTR_EXT_FACILITY_3 )
-/*-------------------------------------------------------------------*/
-/* Copy 8 bytes at a time concurrently   (from right to left)        */
-/*-------------------------------------------------------------------*/
-static __inline__ void concpy_rl( REGS* regs, void* d, void* s, int n )
-{
-    BYTE* u8d = (BYTE*)d + n;
-    BYTE* u8s = (BYTE*)s + n;
-
-    /* Copy until ready or 8 byte integral boundary */
-    while (n && ((uintptr_t) u8d & 7))
-    {
-        *--u8d = *--u8s;
-        n--;
-    }
-
-#if !((defined( SIZEOF_LONG )  && SIZEOF_LONG  > 7) || \
-      (defined( SIZEOF_INT_P ) && SIZEOF_INT_P > 7) || \
-       defined( OPTION_STRICT_ALLIGNMENT ))
-
-    /* Code for 32-bit builds... */
-
-    /* Copy full words in right condition, on enough length and (src - dst) distance */
-    if (1
-        && n
-        && regs->cpubit == regs->sysblk->started_mask
-        && abs( u8d - u8s ) > 3
-    )
-    {
-        while (n > 3)
-        {
-            store_fw_noswap( u8d-4, fetch_fw_noswap( u8s-4 ));
-            u8d -= 4;
-            u8s -= 4;
-            n   -= 4;
-        }
-    }
-    else /* copy double words... */
-#else // x64 builds
-    UNREFERENCED( regs );
-#endif /* end code for 32-bit builds */
-
-    /* Copy double words on enough length and (src - dst) distance */
-    if (n && labs(u8d - u8s) > 7)
-    {
-        while (n > 7)
-        {
-            store_dw_noswap( u8d-8, fetch_dw_noswap( u8s-8 ));
-            u8d -= 8;
-            u8s -= 8;
-            n   -= 8;
-        }
-    }
-
-    /* Copy leftovers */
-    while (n)
-    {
-        *--u8d = *--u8s;
-        n--;
-    }
-}
-#endif /* defined( _FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
-#endif /* !defined(_VSTORE_CONCPY) */
+} /* end function ARCH_DEP( instfetch ) */
 
 /*-------------------------------------------------------------------*/
 /*                  Move characters left to right                    */
@@ -942,10 +982,9 @@ static __inline__ void concpy_rl( REGS* regs, void* d, void* s, int n )
 /*      causes an addressing, protection, or translation exception,  */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( move_chars )( VADR addr1, int arn1, BYTE key1,
-                             VADR addr2, int arn2, BYTE key2,
-                             int len, REGS* regs )
+inline void ARCH_DEP( move_chars )( VADR addr1, int arn1, BYTE key1,
+                                    VADR addr2, int arn2, BYTE key2,
+                                    int len, REGS* regs )
 {
 BYTE   *dest1,   *dest2;                /* Destination addresses     */
 BYTE   *source1, *source2;              /* Source addresses          */
@@ -1096,10 +1135,9 @@ int     len1,     len2;                 /* Lengths to copy           */
 /*      causes an addressing, protection, or translation exception,  */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( move_chars_rl )( VADR addr1, int arn1, BYTE key1,
-                                VADR addr2, int arn2, BYTE key2,
-                                int len, REGS* regs )
+inline void ARCH_DEP( move_chars_rl )( VADR addr1, int arn1, BYTE key1,
+                                       VADR addr2, int arn2, BYTE key2,
+                                       int len, REGS* regs )
 {
 BYTE   *dest1,   *dest2;                /* Destination addresses     */
 BYTE   *source1, *source2;              /* Source addresses          */
@@ -1203,7 +1241,6 @@ int     len1,     len2;                 /* Lengths to copy           */
 } /* end function ARCH_DEP( move_chars_rl ) */
 #endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
 
-
 #if defined( FEATURE_027_MVCOS_FACILITY )
 /*-------------------------------------------------------------------*/
 /* Move characters with optional specifications                      */
@@ -1236,10 +1273,9 @@ int     len1,     len2;                 /* Lengths to copy           */
 /*      causes an addressing, protection, or translation exception,  */
 /*      and in this case the function does not return.               */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( move_charx )( VADR addr1, int space1, BYTE key1,
-                             VADR addr2, int space2, BYTE key2,
-                             int len, REGS* regs )
+inline void ARCH_DEP( move_charx )( VADR addr1, int space1, BYTE key1,
+                                    VADR addr2, int space2, BYTE key2,
+                                    int len, REGS* regs )
 {
 BYTE   *main1, *main2;                  /* Main storage pointers     */
 int     len1, len2, len3;               /* Work areas for lengths    */
@@ -1298,7 +1334,6 @@ int     len1, len2, len3;               /* Work areas for lengths    */
 } /* end function ARCH_DEP( move_charx ) */
 #endif /* defined( FEATURE_027_MVCOS_FACILITY ) */
 
-
 /*-------------------------------------------------------------------*/
 /* Validate operand for addressing, protection, translation          */
 /*                                                                   */
@@ -1318,9 +1353,9 @@ int     len1, len2, len3;               /* Work areas for lengths    */
 /*      addressing, protection, or translation exception, and        */
 /*      in this case the function does not return.                   */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC
-void ARCH_DEP( validate_operand )( VADR addr, int arn, int len,
-                                   int acctype, REGS* regs )
+// (needed by dyncrypt.c)
+VSTORE_INL_DLL_IMPORT inline void ARCH_DEP( validate_operand )( VADR addr, int arn, int len,
+                                          int acctype, REGS* regs )
 {
     /* Translate address of leftmost operand byte */
     MADDR( addr, arn, regs, acctype, regs->psw.pkey );
@@ -1335,4 +1370,24 @@ void ARCH_DEP( validate_operand )( VADR addr, int arn, int len,
     else
         ITIMER_SYNC( addr, len, regs );
 #endif
-} /* end function ARCH_DEP( validate_operand ) */
+}
+
+/*-------------------------------------------------------------------*/
+/*  We only need to compile this header ONCE for each architecture!  */
+/*-------------------------------------------------------------------*/
+
+#if      ARCH_370_IDX == ARCH_IDX
+  #define DID_370_VSTORE_H
+#endif
+
+#if      ARCH_390_IDX == ARCH_IDX
+  #define DID_390_VSTORE_H
+#endif
+
+#if      ARCH_900_IDX == ARCH_IDX
+  #define DID_900_VSTORE_H
+#endif
+
+#endif // #if (ARCH_xxx_IDX == ARCH_IDX && !defined( DID_xxx_DAT_H )) ...
+
+/* end of VSTORE.H */

@@ -491,6 +491,7 @@ libherc_la_SOURCES = \
   httpserv.c         \
   ieee.c             \
   impl.c             \
+  inline.c           \
   io.c               \
   ipl.c              \
   loadmem.c          \
@@ -517,6 +518,7 @@ libherc_la_SOURCES = \
   vector.c           \
   vm.c               \
   vmd250.c           \
+  vstore.c           \
   x75.c              \
   xstore.c           \
   $(DYNSRC)
