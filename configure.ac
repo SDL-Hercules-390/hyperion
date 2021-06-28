@@ -98,7 +98,8 @@ case "$target_os" in
         else
             hc_cv_is_apple=no
         fi
-# WRL
+
+        # Added for Apple Mac M1
         if test $target_cpu = aarch64; then
             hc_cv_build_apple_m1=yes
         else
