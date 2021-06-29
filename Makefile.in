@@ -114,11 +114,18 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autoconf/hercules.m4 \
 	$(top_srcdir)/autoconf/libtool.m4 \
-	$(top_srcdir)/autoconf/ltdl.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/autoconf/ltargz.m4 \
+	$(top_srcdir)/autoconf/ltdl.m4 \
+	$(top_srcdir)/autoconf/ltoptions.m4 \
+	$(top_srcdir)/autoconf/ltsugar.m4 \
+	$(top_srcdir)/autoconf/ltversion.m4 \
+	$(top_srcdir)/autoconf/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
-	$(am__configure_deps) $(noinst_HEADERS) $(am__DIST_COMMON)
+	$(am__configure_deps) $(am__noinst_HEADERS_DIST) \
+	$(am__DIST_COMMON)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
@@ -303,6 +310,13 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	sie.lo sr.lo stack.lo strsignal.lo tcpip.lo timer.lo trace.lo \
 	transact.lo vector.lo vm.lo vmd250.lo vstore.lo x75.lo \
 	xstore.lo $(am__objects_1)
+am__EXTRA_libherc_la_SOURCES_DIST = ltdl.c memrchr.c dyncrypt.c \
+	dyngui.c hdteq.c awstape.c cardpch.c cardrdr.c comm3705.c \
+	commadpt.c tcpnje.c con1052c.c console.c ctc_ctci.c ctc_lcs.c \
+	ctc_ptp.c ctcadpt.c faketape.c ftlib.c hchan.c hetlib.c \
+	hettape.c mpc.c netsupp.c omatape.c printer.c qeth.c resolve.c \
+	scsitape.c sllib.c sockdev.c tapeccws.c tapedev.c tuntap.c \
+	dummydev.c zfcp.c fthreads.c
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -336,11 +350,12 @@ am__libhercu_la_SOURCES_DIST = codepage.c hdl.c hexdumpe.c hostinfo.c \
 	parser.c pttrace.c version.c fthreads.c ltdl.c
 am__objects_2 = fthreads.lo
 @BUILD_FTHREADS_TRUE@am__objects_3 = $(am__objects_2)
-am__objects_4 = ltdl.lo
+@BUILD_APPLE_M1_FALSE@am__objects_4 = ltdl.lo
+@BUILD_APPLE_M1_FALSE@am__objects_5 = $(am__objects_4)
 am_libhercu_la_OBJECTS = codepage.lo hdl.lo hexdumpe.lo hostinfo.lo \
 	hscutl.lo hsocket.lo hthreads.lo logger.lo logmsg.lo \
 	memrchr.lo parser.lo pttrace.lo version.lo $(am__objects_3) \
-	$(am__objects_4)
+	$(am__objects_5)
 libhercu_la_OBJECTS = $(am_libhercu_la_OBJECTS)
 libhercu_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -729,7 +744,7 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
 	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
 	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
-	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
+	$(am__EXTRA_libherc_la_SOURCES_DIST) $(libhercd_la_SOURCES) \
 	$(libhercs_la_SOURCES) $(libherct_la_SOURCES) \
 	$(am__libhercu_la_SOURCES_DIST) $(cckdcdsk_SOURCES) \
 	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
@@ -759,6 +774,27 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+am__noinst_HEADERS_DIST = archlvl.h cache.h ccfixme.h cckd.h cckd64.h \
+	cckddasd.h ccnowarn.h ccwarn.h chain.h chsc.h clock.h cmdtab.h \
+	cmpsc.h cmpscbit.h cmpscdbg.h cmpscdct.h cmpscget.h cmpscmem.h \
+	cmpscput.h cnsllogo.h codepage.h comm3705.h commadpt.h \
+	tcpnje.h cpuint.h ctc_ptp.h ctcadpt.h dasdblks.h dasdtab.h \
+	dat.h dbgtrace.h devtype.h ecpsvm.h esa390.h esa390io.h \
+	extstring.h facility.h feat370.h feat390.h feat900.h featall.h \
+	featchk.h feature.h fillfnam.h fthreads.h ftlib.h getopt.h \
+	hatomic.h hbyteswp.h hchan.h hconsole.h hconsts.h hcrypto.h \
+	hdiagf18.h hdl.h herc_getopt.h hercifc.h hercules.h hercwind.h \
+	herror.h hetlib.h hexdumpe.h hexterns.h hifr.h hinlines.h \
+	history.h hmacros.h hmalloc.h hostinfo.h hostopts.h hqadefs.h \
+	hqainc.h hqawarn.h hRexx.h hRexxapi.c hscutl.h hsocket.h \
+	hstdinc.h hstructs.h hthreads.h httpmisc.h htypes.h impexp.h \
+	inline.h instfmts.h linklist.h logger.h ltdl.h machdep.h \
+	memrchr.h mpc.h msgenu.h netsupp.h opcode.h parser.h \
+	printfmt.h pttrace.h qdio.h qeth.h resolve.h scsitape.h \
+	scsiutil.h service.h shared.h sllib.h sockdev.h sr.h stfl.h \
+	tapedev.h targetver.h tcpip.h transact.h tt32api.h tt32if.h \
+	tuntap.h version.h vmd250.h vstore.h w32ctca.h w32dl.h \
+	w32mtio.h w32stape.h w32util.h x75.h zfcp.h
 HEADERS = $(noinst_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
@@ -862,7 +898,8 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-ECHO = @ECHO@
+DSYMUTIL = @DSYMUTIL@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -871,28 +908,49 @@ EXEEXT = @EXEEXT@
 EXTPKG_HEADERS = @EXTPKG_HEADERS@
 EXTPKG_INCDIRS = @EXTPKG_INCDIRS@
 EXTPKG_LDADD = @EXTPKG_LDADD@
+FGREP = @FGREP@
 GREP = @GREP@
 HERCIFC_GROUPNAME = @HERCIFC_GROUPNAME@
 HQA_DIR = @HQA_DIR@
 HQA_INC = @HQA_INC@
+INCLTDL = @INCLTDL@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBADD_DL = @LIBADD_DL@
+LIBADD_DLD_LINK = @LIBADD_DLD_LINK@
+LIBADD_DLOPEN = @LIBADD_DLOPEN@
+LIBADD_SHL_LOAD = @LIBADD_SHL_LOAD@
+LIBLTDL = @LIBLTDL@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
+LIPO = @LIPO@
 LN_S = @LN_S@
+LTDLDEPS = @LTDLDEPS@
+LTDLINCL = @LTDLINCL@
+LTDLOPEN = @LTDLOPEN@
 LTLIBOBJS = @LTLIBOBJS@
+LT_ARGZ_H = @LT_ARGZ_H@
+LT_CONFIG_H = @LT_CONFIG_H@
+LT_DLLOADERS = @LT_DLLOADERS@
+LT_DLPREOPEN = @LT_DLPREOPEN@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+NM = @NM@
+NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -902,6 +960,7 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -910,7 +969,9 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -941,6 +1002,8 @@ libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
+ltdl_LIBOBJS = @ltdl_LIBOBJS@
+ltdl_LTLIBOBJS = @ltdl_LTLIBOBJS@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 modexecdir = @modexecdir@
@@ -953,6 +1016,8 @@ runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
+subdirs = @subdirs@
+sys_symbol_underscore = @sys_symbol_underscore@
 sysconfdir = @sysconfdir@
 target = @target@
 target_alias = @target_alias@
@@ -973,10 +1038,7 @@ lns = @LN_S@
 ldadd = @LIBS@
 
 #------------------------------------------------------------------------------
-ACLOCAL_AMFLAGS = \
-  -I autoconf       \
-  -I m4
-
+ACLOCAL_AMFLAGS = -I autoconf -I m4
 
 # Now simply pass those version defines on the command-line...
 AM_CPPFLAGS = -I $(top_srcdir) -I $(hqa_inc) $(extpkg_incdirs) -D \
@@ -1078,7 +1140,9 @@ dyndev_SRC = \
 #-----------------------------------------------------------------
 XSTATIC = 
 DYNSRC = 
-LTDL = ltdl.c
+
+# LTDL    =  ltdl.c
+@BUILD_APPLE_M1_FALSE@LTDL = ltdl.c
 DYNMOD_LD_FLAGS = \
   -module           \
   -no-undefined     \
@@ -1247,10 +1311,12 @@ libhercd_la_LIBADD = \
   libhercs.la        \
   libhercu.la
 
+@BUILD_APPLE_M1_FALSE@libhercu_la_SOURCES_M1 = $(LTDL)
 
 #--------------------------------------------
 # Pure Utility functions
 #--------------------------------------------
+@BUILD_APPLE_M1_TRUE@libhercu_la_SOURCES_M1 = 
 libhercu_la_SOURCES = \
   codepage.c          \
   hdl.c               \
@@ -1266,7 +1332,7 @@ libhercu_la_SOURCES = \
   pttrace.c           \
   version.c           \
   $(FTHREADS)         \
-  $(LTDL)
+  $(libhercu_la_SOURCES_M1)
 
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD = \
@@ -1379,8 +1445,10 @@ libherc_la_SOURCES = \
   xstore.c           \
   $(DYNSRC)
 
+@BUILD_APPLE_M1_FALSE@EXTRA_libherc_la_SOURCES_M1 = ltdl.c
+@BUILD_APPLE_M1_TRUE@EXTRA_libherc_la_SOURCES_M1 = 
 EXTRA_libherc_la_SOURCES = \
-  ltdl.c             \
+  $(EXTRA_libherc_la_SOURCES_M1) \
   memrchr.c          \
   $(dynamic_SRC)     \
   $(dyndev_SRC)      \
@@ -1689,10 +1757,12 @@ EXTRA_DIST = \
   util/CMPSC.txt              \
   $(extpkg_headers)
 
+@BUILD_APPLE_M1_FALSE@noinst_HEADERS_M1 = ltdl.h
 
 #------------------------------------------------------------------------------
 # Source Header files. No 'build' for those
 #------------------------------------------------------------------------------
+@BUILD_APPLE_M1_TRUE@noinst_HEADERS_M1 = 
 noinst_HEADERS = \
   archlvl.h               \
   cache.h                 \
@@ -1781,7 +1851,7 @@ noinst_HEADERS = \
   instfmts.h              \
   linklist.h              \
   logger.h                \
-  ltdl.h                  \
+  $(noinst_HEADERS_M1)    \
   machdep.h               \
   memrchr.h               \
   mpc.h                   \
