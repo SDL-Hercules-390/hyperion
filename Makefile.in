@@ -301,15 +301,15 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	cmpscput.lo config.lo control.lo cpu.lo crypto.lo dat.lo \
 	decimal.lo dfp.lo diagmssf.lo diagnose.lo dyn76.lo ecpsvm.lo \
 	esame.lo external.lo facility.lo fillfnam.lo float.lo \
-	general1.lo general2.lo general3.lo hao.lo hconsole.lo \
-	hdiagf18.lo history.lo hRexx.lo hRexx_o.lo hRexx_r.lo \
-	hsccmd.lo hscemode.lo hscloc.lo hscmisc.lo hscpufun.lo \
-	httpserv.lo ieee.lo impl.lo inline.lo io.lo ipl.lo loadmem.lo \
-	loadparm.lo losc.lo machchk.lo opcode.lo panel.lo pfpo.lo \
-	plo.lo qdio.lo scedasd.lo scescsi.lo script.lo service.lo \
-	sie.lo sr.lo stack.lo strsignal.lo tcpip.lo timer.lo trace.lo \
-	transact.lo vector.lo vm.lo vmd250.lo vstore.lo x75.lo \
-	xstore.lo $(am__objects_1)
+	general1.lo general2.lo general3.lo hao.lo hbyteswp.lo \
+	hconsole.lo hdiagf18.lo history.lo hRexx.lo hRexx_o.lo \
+	hRexx_r.lo hsccmd.lo hscemode.lo hscloc.lo hscmisc.lo \
+	hscpufun.lo httpserv.lo ieee.lo impl.lo inline.lo io.lo ipl.lo \
+	loadmem.lo loadparm.lo losc.lo machchk.lo machdep.lo opcode.lo \
+	panel.lo pfpo.lo plo.lo qdio.lo scedasd.lo scescsi.lo \
+	script.lo service.lo sie.lo sr.lo stack.lo strsignal.lo \
+	tcpip.lo timer.lo trace.lo transact.lo vector.lo vm.lo \
+	vmd250.lo vstore.lo x75.lo xstore.lo $(am__objects_1)
 am__EXTRA_libherc_la_SOURCES_DIST = ltdl.c memrchr.c dyncrypt.c \
 	dyngui.c hdteq.c awstape.c cardpch.c cardrdr.c comm3705.c \
 	commadpt.c tcpnje.c con1052c.c console.c ctc_ctci.c ctc_lcs.c \
@@ -645,25 +645,26 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/general1.Plo ./$(DEPDIR)/general2.Plo \
 	./$(DEPDIR)/general3.Plo ./$(DEPDIR)/hRexx.Plo \
 	./$(DEPDIR)/hRexx_o.Plo ./$(DEPDIR)/hRexx_r.Plo \
-	./$(DEPDIR)/hao.Plo ./$(DEPDIR)/hchan.Plo \
-	./$(DEPDIR)/hconsole.Plo ./$(DEPDIR)/hdiagf18.Plo \
-	./$(DEPDIR)/hdl.Plo ./$(DEPDIR)/hdteq.Plo \
-	./$(DEPDIR)/hercifc.Po ./$(DEPDIR)/herclin.Po \
-	./$(DEPDIR)/hetget.Po ./$(DEPDIR)/hetinit.Po \
-	./$(DEPDIR)/hetlib.Plo ./$(DEPDIR)/hetmap.Po \
-	./$(DEPDIR)/hettape.Plo ./$(DEPDIR)/hetupd.Po \
-	./$(DEPDIR)/hexdumpe.Plo ./$(DEPDIR)/history.Plo \
-	./$(DEPDIR)/hostinfo.Plo ./$(DEPDIR)/hsccmd.Plo \
-	./$(DEPDIR)/hscemode.Plo ./$(DEPDIR)/hscloc.Plo \
-	./$(DEPDIR)/hscmisc.Plo ./$(DEPDIR)/hscpufun.Plo \
-	./$(DEPDIR)/hscutl.Plo ./$(DEPDIR)/hsocket.Plo \
-	./$(DEPDIR)/hsys.Plo ./$(DEPDIR)/hthreads.Plo \
-	./$(DEPDIR)/httpserv.Plo ./$(DEPDIR)/ieee.Plo \
-	./$(DEPDIR)/impl.Plo ./$(DEPDIR)/inline.Plo ./$(DEPDIR)/io.Plo \
-	./$(DEPDIR)/ipl.Plo ./$(DEPDIR)/loadmem.Plo \
-	./$(DEPDIR)/loadparm.Plo ./$(DEPDIR)/logger.Plo \
-	./$(DEPDIR)/logmsg.Plo ./$(DEPDIR)/losc.Plo \
-	./$(DEPDIR)/ltdl.Plo ./$(DEPDIR)/machchk.Plo \
+	./$(DEPDIR)/hao.Plo ./$(DEPDIR)/hbyteswp.Plo \
+	./$(DEPDIR)/hchan.Plo ./$(DEPDIR)/hconsole.Plo \
+	./$(DEPDIR)/hdiagf18.Plo ./$(DEPDIR)/hdl.Plo \
+	./$(DEPDIR)/hdteq.Plo ./$(DEPDIR)/hercifc.Po \
+	./$(DEPDIR)/herclin.Po ./$(DEPDIR)/hetget.Po \
+	./$(DEPDIR)/hetinit.Po ./$(DEPDIR)/hetlib.Plo \
+	./$(DEPDIR)/hetmap.Po ./$(DEPDIR)/hettape.Plo \
+	./$(DEPDIR)/hetupd.Po ./$(DEPDIR)/hexdumpe.Plo \
+	./$(DEPDIR)/history.Plo ./$(DEPDIR)/hostinfo.Plo \
+	./$(DEPDIR)/hsccmd.Plo ./$(DEPDIR)/hscemode.Plo \
+	./$(DEPDIR)/hscloc.Plo ./$(DEPDIR)/hscmisc.Plo \
+	./$(DEPDIR)/hscpufun.Plo ./$(DEPDIR)/hscutl.Plo \
+	./$(DEPDIR)/hsocket.Plo ./$(DEPDIR)/hsys.Plo \
+	./$(DEPDIR)/hthreads.Plo ./$(DEPDIR)/httpserv.Plo \
+	./$(DEPDIR)/ieee.Plo ./$(DEPDIR)/impl.Plo \
+	./$(DEPDIR)/inline.Plo ./$(DEPDIR)/io.Plo ./$(DEPDIR)/ipl.Plo \
+	./$(DEPDIR)/loadmem.Plo ./$(DEPDIR)/loadparm.Plo \
+	./$(DEPDIR)/logger.Plo ./$(DEPDIR)/logmsg.Plo \
+	./$(DEPDIR)/losc.Plo ./$(DEPDIR)/ltdl.Plo \
+	./$(DEPDIR)/machchk.Plo ./$(DEPDIR)/machdep.Plo \
 	./$(DEPDIR)/maketape.Po ./$(DEPDIR)/memrchr.Plo \
 	./$(DEPDIR)/mpc.Plo ./$(DEPDIR)/netsupp.Plo \
 	./$(DEPDIR)/omatape.Plo ./$(DEPDIR)/opcode.Plo \
@@ -1399,6 +1400,7 @@ libherc_la_SOURCES = \
   general2.c         \
   general3.c         \
   hao.c              \
+  hbyteswp.c         \
   hconsole.c         \
   hdiagf18.c         \
   history.c          \
@@ -1420,6 +1422,7 @@ libherc_la_SOURCES = \
   loadparm.c         \
   losc.c             \
   machchk.c          \
+  machdep.c          \
   opcode.c           \
   panel.c            \
   pfpo.c             \
@@ -2394,6 +2397,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hRexx_o.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hRexx_r.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hao.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hbyteswp.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hchan.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hconsole.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hdiagf18.Plo@am__quote@ # am--include-marker
@@ -2432,6 +2436,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/losc.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltdl.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/machchk.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/machdep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/maketape.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memrchr.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mpc.Plo@am__quote@ # am--include-marker
@@ -2985,6 +2990,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/hRexx_o.Plo
 	-rm -f ./$(DEPDIR)/hRexx_r.Plo
 	-rm -f ./$(DEPDIR)/hao.Plo
+	-rm -f ./$(DEPDIR)/hbyteswp.Plo
 	-rm -f ./$(DEPDIR)/hchan.Plo
 	-rm -f ./$(DEPDIR)/hconsole.Plo
 	-rm -f ./$(DEPDIR)/hdiagf18.Plo
@@ -3023,6 +3029,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/losc.Plo
 	-rm -f ./$(DEPDIR)/ltdl.Plo
 	-rm -f ./$(DEPDIR)/machchk.Plo
+	-rm -f ./$(DEPDIR)/machdep.Plo
 	-rm -f ./$(DEPDIR)/maketape.Po
 	-rm -f ./$(DEPDIR)/memrchr.Plo
 	-rm -f ./$(DEPDIR)/mpc.Plo
@@ -3215,6 +3222,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/hRexx_o.Plo
 	-rm -f ./$(DEPDIR)/hRexx_r.Plo
 	-rm -f ./$(DEPDIR)/hao.Plo
+	-rm -f ./$(DEPDIR)/hbyteswp.Plo
 	-rm -f ./$(DEPDIR)/hchan.Plo
 	-rm -f ./$(DEPDIR)/hconsole.Plo
 	-rm -f ./$(DEPDIR)/hdiagf18.Plo
@@ -3253,6 +3261,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/losc.Plo
 	-rm -f ./$(DEPDIR)/ltdl.Plo
 	-rm -f ./$(DEPDIR)/machchk.Plo
+	-rm -f ./$(DEPDIR)/machdep.Plo
 	-rm -f ./$(DEPDIR)/maketape.Po
 	-rm -f ./$(DEPDIR)/memrchr.Plo
 	-rm -f ./$(DEPDIR)/mpc.Plo
