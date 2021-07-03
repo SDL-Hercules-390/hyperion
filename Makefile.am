@@ -477,6 +477,7 @@ libherc_la_SOURCES = \
   general2.c         \
   general3.c         \
   hao.c              \
+  hbyteswp.c         \
   hconsole.c         \
   hdiagf18.c         \
   history.c          \
@@ -498,6 +499,7 @@ libherc_la_SOURCES = \
   loadparm.c         \
   losc.c             \
   machchk.c          \
+  machdep.c          \
   opcode.c           \
   panel.c            \
   pfpo.c             \

@@ -75,8 +75,8 @@ extern inline BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, const int arn, R
   #ifndef DID_SIE_APPLY_PREFIXING
   #define DID_SIE_APPLY_PREFIXING
 
-    extern inline U64 s390_apply_prefixing( U64 raddr, U64 px );
-    extern inline U64 z900_apply_prefixing( U64 raddr, U64 px );
+    extern inline U64 sie_apply_s390_host_prefixing( U64 raddr, U64 px );
+    extern inline U64 sie_apply_z900_host_prefixing( U64 raddr, U64 px );
 
   #endif // DID_SIE_APPLY_PREFIXING
 
