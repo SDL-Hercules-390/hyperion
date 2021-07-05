@@ -330,9 +330,6 @@
     <ClCompile Include="vmfplc2.c">
       <Filter>Source Files\Utilities\tape</Filter>
     </ClCompile>
-    <ClCompile Include="vstore.c">
-      <Filter>Source Files\Utilities\tape</Filter>
-    </ClCompile>
     <ClCompile Include="conspawn.c">
       <Filter>Source Files\Utilities\other</Filter>
     </ClCompile>
@@ -606,9 +603,6 @@
     <ClCompile Include="hchan.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hbyteswp.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hconsole.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -678,9 +672,6 @@
     <ClCompile Include="impl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="inline.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="io.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -706,9 +697,6 @@
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="machchk.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="machdep.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="memrchr.c">
@@ -2499,9 +2487,6 @@
       <Filter>Other Files\Build\msvc</Filter>
     </None>
     <None Include=".travis.yml">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="CODEOWNERS">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="tests\dotest">

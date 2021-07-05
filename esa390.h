@@ -211,7 +211,7 @@ typedef struct PSW  PSW;
 /*                                                                   */
 /*      asd, vaddr, pte, id, common and protect.                     */
 /*                                                                   */
-/*  Fields set by logical_to_main_l() are:                           */
+/*  Fields set by logical_to_main() are:                             */
 /*                                                                   */
 /*      main, storkey, skey, read and write,                         */
 /*      and are used for accelerated address lookup (formerly AEA).  */

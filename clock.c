@@ -257,7 +257,7 @@ void ARCH_DEP( set_tod_offset_user )( REGS* regs )
 {
 S64 offset;
 
-    /* "This function specifies a value that is to replace the
+    /* "This function specifies a value that is to replace the 
         *USER*-specified portion of the TOD epoch difference;"
 
         Since, at the basic-machine or LPAR hypervisor level, the

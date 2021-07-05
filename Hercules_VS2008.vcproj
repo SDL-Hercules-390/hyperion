@@ -944,10 +944,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\hbyteswp.c"
-							>
-						</File>
-						<File
 							RelativePath=".\hchan.c"
 							>
 						</File>
@@ -1044,10 +1040,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\inline.c"
-							>
-						</File>
-						<File
 							RelativePath=".\io.c"
 							>
 						</File>
@@ -1081,10 +1073,6 @@
 						</File>
 						<File
 							RelativePath=".\machchk.c"
-							>
-						</File>
-						<File
-							RelativePath=".\machdep.c"
 							>
 						</File>
 						<File
@@ -1189,10 +1177,6 @@
 						</File>
 						<File
 							RelativePath=".\vmd250.c"
-							>
-						</File>
-						<File
-							RelativePath=".\vstore.c"
 							>
 						</File>
 						<File
@@ -1990,10 +1974,6 @@
 			</File>
 			<File
 				RelativePath=".\.travis.yml"
-				>
-			</File>
-			<File
-				RelativePath=".\CODEOWNERS"
 				>
 			</File>
 			<File

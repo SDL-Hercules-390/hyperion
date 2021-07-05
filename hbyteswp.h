@@ -5,12 +5,10 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
-/*-------------------------------------------------------------------*/
 /* These definitions are only nessesary when running on older        */
 /* versions of linux that do not have /usr/include/byteswap.h        */
 /* compile option -DNO_ASM_BYTESWAP will expand 'C' code             */
 /* otherwise Intel (486+) assember will be generated  (Jan Jaeger)   */
-/*-------------------------------------------------------------------*/
 
 #ifndef _BYTESWAP_H
 #define _BYTESWAP_H
@@ -35,7 +33,7 @@
 
     #else // !defined( HAVE_SWAP_BUILTINS )
 
-      inline uint16_t (ATTR_REGPARM(1) bswap_16 )( uint16_t  x )
+      static __inline__ uint16_t (ATTR_REGPARM(1) bswap_16 )( uint16_t  x )
       {
       #if defined(__x86_64__)
           __asm__("xchgb %b0,%h0" : "=Q" (x) :  "0" (x));
@@ -45,7 +43,7 @@
         return x;
       }
 
-      inline uint32_t (ATTR_REGPARM(1) bswap_32 )( uint32_t  x )
+      static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32 )( uint32_t  x )
       {
       #if defined(__x86_64__)
           __asm__("bswapl %0" : "=r" (x) : "0" (x));
@@ -55,7 +53,7 @@
           return x;
       }
 
-      inline uint64_t (ATTR_REGPARM(1) bswap_64 )( uint64_t  x )
+      static __inline__ uint64_t (ATTR_REGPARM(1) bswap_64 )( uint64_t  x )
       {
       #if defined(__x86_64__)
           __asm__("bswapq %0" : "=r" (x) : "0" (x));

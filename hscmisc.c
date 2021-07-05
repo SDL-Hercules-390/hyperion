@@ -78,7 +78,7 @@ static int  display_inst_regs ( REGS* regs, BYTE* inst, BYTE opcode, char* buf, 
 /*      (v_vmd), 'alter_display_virt' (v_cmd), 'disasm_stor' (u_cmd) */
 /*      and 'display_inst'.                                          */
 /*                                                                   */
-/*      PLEASE NOTE HOWEVER,that since logical_to_main_l IS called,  */
+/*      PLEASE NOTE HOWEVER, that since "logical_to_main" IS called, */
 /*      the storage key reference and change bits ARE updated when   */
 /*      the translation is successful.                               */
 /*                                                                   */
@@ -99,7 +99,7 @@ int ARCH_DEP( virt_to_real )( U64* raptr, int* siptr, U64 vaddr,
         if (SIE_MODE( regs ))
             memcpy( HOSTREGS->progjmp, regs->progjmp, sizeof( jmp_buf ));
 
-        ARCH_DEP( logical_to_main_l )( (VADR)vaddr, temp_arn, regs, acctype, 0, 1 );
+        ARCH_DEP( logical_to_main )( (VADR)vaddr, temp_arn, regs, acctype, 0 );
     }
 
     *siptr = regs->dat.stid;

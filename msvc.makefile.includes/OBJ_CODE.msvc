@@ -106,7 +106,6 @@ hengine_OBJ = \
     $(O)general1.obj \
     $(O)general2.obj \
     $(O)general3.obj \
-    $(O)hbyteswp.obj \
     $(O)hconsole.obj \
     $(O)hdiagf18.obj \
     $(O)history.obj  \
@@ -119,14 +118,12 @@ hengine_OBJ = \
     $(O)httpserv.obj \
     $(O)ieee.obj     \
     $(O)impl.obj     \
-    $(O)inline.obj   \
     $(O)io.obj       \
     $(O)ipl.obj      \
     $(O)loadmem.obj  \
     $(O)loadparm.obj \
     $(O)losc.obj     \
     $(O)machchk.obj  \
-    $(O)machdep.obj  \
     $(O)opcode.obj   \
     $(O)panel.obj    \
     $(O)pfpo.obj     \
@@ -149,6 +146,5 @@ hengine_OBJ = \
     $(O)vector.obj   \
     $(O)vm.obj       \
     $(O)vmd250.obj   \
-    $(O)vstore.obj   \
     $(O)x75.obj      \
     $(O)xstore.obj

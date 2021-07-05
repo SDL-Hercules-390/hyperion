@@ -609,6 +609,43 @@
 #endif
 
 /*-------------------------------------------------------------------*/
+
+#undef  _VSTORE_C_STATIC
+#define _VSTORE_C_STATIC            static inline
+
+#undef  _VFETCH_C_STATIC
+#define _VFETCH_C_STATIC            static inline
+
+#undef  _VSTORE_FULL_C_STATIC
+#define _VSTORE_FULL_C_STATIC       static
+
+/*-------------------------------------------------------------------*/
+/*        Memory accessing and dynamic translation #defines          */
+/*-------------------------------------------------------------------*/
+/* Ordinarily #defines related to DLL_IMPORT, DLL_EXPORT and extern  */
+/* are performed within the 'hexterns.h' header in coordination with */
+/* the source member and loadable module itself (see e.g. hsccmd.c   */
+/* _HSCCMD_C_ and _HENGINE_DLL_ handshaking with hexterns.h header). */
+/* Since guest memory accessing and dynamic address translation are  */
+/* common to across ALL build architectures however (and we wish to  */
+/* declare such functions 'static inline' for speed, which requires  */
+/* that they all be declared identically across all architectures),  */
+/* it's easier and more reliable to do the #defines here instead.    */
+/*-------------------------------------------------------------------*/
+
+#undef     _LOGICAL_C_STATIC
+
+#ifndef    _DAT_C
+ #ifndef   _HENGINE_DLL_
+  #define  _LOGICAL_C_STATIC        DLL_IMPORT
+ #else
+  #define  _LOGICAL_C_STATIC        extern
+ #endif
+#else
+ #define   _LOGICAL_C_STATIC        DLL_EXPORT
+#endif
+
+/*-------------------------------------------------------------------*/
 /*                 Build architecture #defines                       */
 /*-------------------------------------------------------------------*/
 /* _nnn (_370, _390, _900) are architectures present in the build.   */

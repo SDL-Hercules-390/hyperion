@@ -11,30 +11,30 @@
 /* either normal unoptimzed C code, or else as hand-tuned optimized  */
 /* assembler-assisted functions for the given machine architecture:  */
 /*                                                                   */
+/*                                                                   */
 /*   Atomic COMPARE-AND-EXCHANGE functions:                          */
 /*                                                                   */
-/*         cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                   */
+/*       cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                     */
 /*                                                                   */
-/*   Atomic half, full and doubleword fetch/store functions:         */
 /*                                                                   */
-/*     fetch_hw, fetch_hw_noswap, store_hw, store_hw_noswap          */
-/*     fetch_fw, fetch_fw_noswap, store_fw, store_fw_noswap          */
-/*     fetch_dw, fetch_dw_noswap, store_dw, store_dw_noswap          */
+/*   Atomic word/double-word FETCH/STORE functions:                  */
 /*                                                                   */
-/*   64-bit architectures would normally not need to specify any     */
-/*   of the fetch_ or store_ variants.                               */
+/*       fetch_hw, fetch_hw_noswap, store_hw, store_hw_noswap        */
+/*       fetch_fw, fetch_fw_noswap, store_fw, store_fw_noswap        */
+/*       fetch_dw, fetch_dw_noswap, store_dw, store_dw_noswap        */
 /*                                                                   */
-/*   32-bit architectures should specify BOTH of the 'fetch_dw'      */
-/*   and 'store_dw' variants.                                        */
+/*     64 bit architectures would normally not need to specify       */
+/*     any of the fetch_ or store_ macros.                           */
 /*                                                                   */
-/*   Little-endian machines should specify the 'noswap' variants.    */
-/*                                                                   */
-/*   Big-endian machines can specify either, both being the same.    */
+/*     32 bit architectures should specify one of the 'fetch_dw'     */
+/*     and 'store_dw' macros.  Little-endian machines should specify */
+/*     the 'noswap' macros.  Big-endian machines can specify either, */
+/*     both being the same.                                          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#ifndef _MACHDEP_H
-#define _MACHDEP_H
+#ifndef _HERCULES_MACHDEP_H
+#define _HERCULES_MACHDEP_H 1
 
 #include "opcode.h"         // (need CSWAP32, et.al macros, etc)
 #include "htypes.h"         // (need Hercules fixed-size data types)
@@ -93,14 +93,15 @@
 
     #pragma intrinsic ( _InterlockedCompareExchange64 )
 
-    inline BYTE __fastcall cmpxchg8_x86 ( U64* old, U64 unew, volatile void* ptr )
+    static __inline BYTE __fastcall cmpxchg8_x86 ( U64 *old, U64 unew, volatile void *ptr )
     {
         // returns 0 == success, 1 otherwise
         U64 tmp = *old;
         *old = _InterlockedCompareExchange64( ptr, unew, *old );
         return ((tmp == *old) ? 0 : 1);
     }
-    inline BYTE __fastcall cmpxchg4_x86 ( U32* old, U32 unew, volatile void* ptr )
+
+    static __inline BYTE __fastcall cmpxchg4_x86 ( U32 *old, U32 unew, volatile void *ptr )
     {
         // returns 0 == success, 1 otherwise
         U32 tmp = *old;
@@ -109,7 +110,7 @@
     }
 
     // (must follow cmpxchg4 since it uses it)
-    inline BYTE __fastcall cmpxchg1_x86 ( BYTE* old, BYTE unew, volatile void* ptr )
+    static __inline BYTE __fastcall cmpxchg1_x86 ( BYTE *old, BYTE unew, volatile void *ptr )
     {
         // returns 0 == success, 1 otherwise
 
@@ -136,7 +137,7 @@
 
       #pragma intrinsic ( _InterlockedCompareExchange128 )
       #define cmpxchg16(  x, y, z, r, s  ) cmpxchg16_x86( x, y, z, r, s )
-      inline int cmpxchg16_x86 ( U64* old1, U64* old2, U64 new1, U64 new2, volatile void* ptr )
+      static __inline__ int cmpxchg16_x86( U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr)
       {
         // Please note : old1 MUST be 16-byte aligned !
         // returns 0 == success, 1 otherwise
@@ -150,7 +151,7 @@
 
       #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
       // (must follow cmpxchg8 since it uses it)
-      inline U64 __fastcall fetch_dw_x86_noswap ( volatile const void* ptr )
+      static __inline U64 __fastcall fetch_dw_x86_noswap ( volatile const void *ptr )
       {
         U64 value = *(U64*)ptr;
         cmpxchg8( &value, value, (U64*)ptr );
@@ -159,7 +160,7 @@
 
       #define store_dw_noswap(_p, _v) store_dw_x86_noswap( (_p), (_v))
       // (must follow cmpxchg8 since it uses it)
-      inline void __fastcall store_dw_x86_noswap ( volatile void* ptr, U64 value )
+      static __inline void __fastcall store_dw_x86_noswap ( volatile void *ptr, U64 value )
       {
         U64 orig = *(U64*)ptr;
         while ( cmpxchg8( &orig, value, (U64*)ptr ) );
@@ -185,9 +186,9 @@
     #define  cmpxchg16(     x1, x2, y1, y2, z ) \
              cmpxchg16_x86( x1, x2, y1, y2, z )
 
-    inline int __fastcall cmpxchg16_x86 ( U64* old1, U64* old2,
-                                          U64  new1, U64  new2,
-                                          volatile void* ptr )
+    static __inline int __fastcall cmpxchg16_x86 ( U64 *old1, U64 *old2,
+                                                   U64  new1, U64  new2,
+                                                   volatile void  *ptr )
     {
         // returns 0 == success, 1 otherwise
 
@@ -222,32 +223,25 @@
 /*-------------------------------------------------------------------
  * GNU C or other compiler...   (i.e. NON-Microsoft C/C++)
  *-------------------------------------------------------------------*/
-  #if defined( __i686__       ) \
-   || defined( __pentiumpro__ ) \
-   || defined( __pentium4__   ) \
-   || defined( __athlon__     ) \
-   || defined( __athlon       ) 
-
+  #if   defined(__i686__) || defined(__pentiumpro__) || \
+        defined(__pentium4__) || defined(__athlon__) || \
+        defined(__athlon)
     #define _ext_ia32
 
-  #elif defined( __amd64__ )
-
+  #elif defined(__amd64__)
     #define _ext_amd64
 
-  #elif defined( __powerpc__ ) \
-     || defined( __ppc__     ) \
-     || defined( __POWERPC__ ) \
-     || defined( __PPC__     ) \
-     || defined( _POWER      )
-
+  #elif defined(__powerpc__) || defined(__ppc__) || \
+        defined(__POWERPC__) || defined(__PPC__) || \
+        defined(_POWER)
     #define _ext_ppc
-
   #endif
 
 /*-------------------------------------------------------------------
  * Intel pentiumpro/i686
  *-------------------------------------------------------------------*/
-#if defined( _ext_ia32 )
+#if defined(_ext_ia32)
+
     /*
      * If PIC is defined then ebx is used as the 'thunk' reg
      * However cmpxchg8b requires ebx
@@ -256,17 +250,16 @@
      */
 #undef BREG
 #undef XCHG_BREG
-
-#if defined( PIC ) && !defined( __CYGWIN__ )
-  #define BREG          "S"
-  #define XCHG_BREG     "xchgl   %%ebx,%%esi\n\t"
+#if defined(PIC) && !defined(__CYGWIN__)
+#define BREG "S"
+#define XCHG_BREG "xchgl   %%ebx,%%esi\n\t"
 #else
-  #define BREG          "b"
-  #define XCHG_BREG     ""
+#define BREG "b"
+#define XCHG_BREG ""
 #endif
 
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
-inline BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
+static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
  BYTE code;
  __asm__ __volatile__ (
          "lock; cmpxchgb %b3,%4\n\t"
@@ -280,7 +273,7 @@ inline BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 }
 
 #define cmpxchg4(x,y,z) cmpxchg4_i686(x,y,z)
-inline BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
+static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
  BYTE code;
  __asm__ __volatile__ (
          "lock; cmpxchgl %3,%4\n\t"
@@ -294,7 +287,7 @@ inline BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
 }
 
 #define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
-inline BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
+static __inline__ BYTE cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
  BYTE code;
 __asm__ __volatile__ (
          XCHG_BREG
@@ -311,7 +304,7 @@ __asm__ __volatile__ (
 }
 
 #define fetch_dw_noswap(x) fetch_dw_i686_noswap(x)
-inline U64 fetch_dw_i686_noswap(const void *ptr)
+static __inline__ U64 fetch_dw_i686_noswap(const void *ptr)
 {
  U64 value = *(U64 *)ptr;
 __asm__ __volatile__ (
@@ -327,7 +320,7 @@ __asm__ __volatile__ (
 }
 
 #define store_dw_noswap(x,y) store_dw_i686_noswap(x,y)
-inline void store_dw_i686_noswap(void *ptr, U64 value) {
+static __inline__ void store_dw_i686_noswap(void *ptr, U64 value) {
 __asm__ __volatile__ (
          XCHG_BREG
          "1:\t"
@@ -349,7 +342,7 @@ __asm__ __volatile__ (
 #if defined(_ext_amd64)
 
 #define cmpxchg1(x,y,z) cmpxchg1_amd64(x,y,z)
-inline BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
+static __inline__ BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
  /* returns 0 on success otherwise returns 1 */
  BYTE code;
  BYTE *ptr_data=ptr;
@@ -365,7 +358,7 @@ inline BYTE cmpxchg1_amd64(BYTE *old, BYTE new, void *ptr) {
 }
 
 #define cmpxchg4(x,y,z) cmpxchg4_amd64(x,y,z)
-inline BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
+static __inline__ BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
  /* values passed in guest big-endian format */
  /* returns 0 on success otherwise returns 1 */
  BYTE code;
@@ -382,7 +375,7 @@ inline BYTE cmpxchg4_amd64(U32 *old, U32 new, void *ptr) {
 }
 
 #define cmpxchg8(x,y,z) cmpxchg8_amd64(x,y,z)
-inline BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
+static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
  /* values passed in guest big-endian format */
  /* returns 0 on success otherwise returns 1 */
  BYTE code;
@@ -399,7 +392,7 @@ inline BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 }
 
 #define cmpxchg16(x,y,z,r,s) cmpxchg16_amd64(x,y,z,r,s)
-inline int cmpxchg16_amd64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+static __inline__ int cmpxchg16_amd64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
 /* returns 0 on success otherwise returns 1 */
     BYTE code;
     volatile __int128_t *ptr_data=ptr;
@@ -441,7 +434,7 @@ inline int cmpxchg16_amd64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile vo
 
 #if defined( __64BIT__ )
 
-inline U64
+static __inline__ U64
 __cmpxchg_u64(volatile U64 *p, U64 old, U64 new)
 {
     U64 prev;
@@ -463,7 +456,7 @@ LABEL2
 }
 
 #define cmpxchg8(x,y,z) cmpxchg8_ppc(x,y,z)
-inline BYTE cmpxchg8_ppc(U64 *old, U64 new, void *ptr) {
+static __inline__ BYTE cmpxchg8_ppc(U64 *old, U64 new, void *ptr) {
 /* values passed in guest big-endian format */
 /* returns 0 on success otherwise returns 1 */
 U64 prev = *old;
@@ -472,7 +465,7 @@ return (prev != (*old = __cmpxchg_u64((U64*)ptr, prev, new)));
 
 #endif // defined( __64BIT__ )
 
-inline U32
+static __inline__ U32
 __cmpxchg_u32(volatile U32 *p, U32 old, U32 new)
 {
     U32 prev;
@@ -494,7 +487,7 @@ LABEL2
 }
 
 #define cmpxchg4(x,y,z) cmpxchg4_ppc(x,y,z)
-inline BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
+static __inline__ BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
 /* values passed in guest big-endian format */
 /* returns 0 on success otherwise returns 1 */
 U32 prev = *old;
@@ -502,7 +495,7 @@ return (prev != (*old = __cmpxchg_u32((U32*)ptr, prev, new)));
 }
 
 #define cmpxchg1(x,y,z) cmpxchg1_ppc(x,y,z)
-inline BYTE cmpxchg1_ppc(BYTE *old, BYTE new, void *ptr) {
+static __inline__ BYTE cmpxchg1_ppc(BYTE *old, BYTE new, void *ptr) {
 /* returns 0 on success otherwise returns 1 */
 long  off, shift;
 BYTE  cc;
@@ -528,7 +521,7 @@ U32  *ptr4, val4, old4, new4;
 
 #ifndef cmpxchg16
   #define cmpxchg16(x,y,z,r,s) cmpxchg16_aarch64(x,y,z,r,s)
-inline int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+static __inline__ int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
 /* returns 0 on success otherwise returns 1 */
     int result = 1;
     U64 expected1 = *old1;
@@ -561,7 +554,7 @@ inline int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile 
 #endif
 #ifndef cmpxchg1
 #define cmpxchg1(x,y,z) cmpxchg1_C11(x,y,z)
-inline BYTE cmpxchg1_C11(BYTE *old, BYTE new, volatile void *ptr) {
+static __inline__ BYTE cmpxchg1_C11(BYTE *old, BYTE new, volatile void *ptr) {
 /* returns 0 on success otherwise returns 1 */
             return __atomic_compare_exchange_n ((volatile BYTE *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
         }
@@ -572,7 +565,7 @@ inline BYTE cmpxchg1_C11(BYTE *old, BYTE new, volatile void *ptr) {
 #endif
 #ifndef cmpxchg4
 #define cmpxchg4(x,y,z) cmpxchg4_C11(x,y,z)
-inline BYTE cmpxchg4_C11(U32 *old, U32 new, volatile void *ptr) {
+static __inline__ BYTE cmpxchg4_C11(U32 *old, U32 new, volatile void *ptr) {
 /* returns zero on success otherwise returns 1 */
             return __atomic_compare_exchange_n ((volatile U32 *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
         }
@@ -583,7 +576,7 @@ inline BYTE cmpxchg4_C11(U32 *old, U32 new, volatile void *ptr) {
 #endif
 #ifndef cmpxchg8
 #define cmpxchg8(x,y,z) cmpxchg8_C11(x,y,z)
-inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
+static __inline__ BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
 /* returns 0 on success otherwise returns 1 */
             return __atomic_compare_exchange_n ((volatile U64 *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
         }
@@ -633,9 +626,9 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
     && defined( cmpxchg8 )         \
     && defined( cmpxchg16 )
   #undef  OBTAIN_MAINLOCK
-  #define OBTAIN_MAINLOCK(_regs)
+  #define OBTAIN_MAINLOCK(_regs) {}
   #undef  RELEASE_MAINLOCK
-  #define RELEASE_MAINLOCK(_regs)
+  #define RELEASE_MAINLOCK(_regs) {}
 #endif
 
 /*-------------------------------------------------------------------
@@ -645,7 +638,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(fetch_hw)
     #define fetch_hw_noswap(_p) CSWAP16(fetch_hw((_p)))
   #else
-    inline U16 fetch_hw_noswap(const void *ptr) {
+    static __inline__ U16 fetch_hw_noswap(const void *ptr) {
       U16 value;
       memcpy(&value, (BYTE *)ptr, 2);
       return value;
@@ -663,7 +656,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(store_hw)
     #define store_hw_noswap(_p, _v) store_hw((_p), CSWAP16(_v))
   #else
-    inline void store_hw_noswap(void *ptr, U16 value) {
+    static __inline__ void store_hw_noswap(void *ptr, U16 value) {
       memcpy((BYTE *)ptr, (BYTE *)&value, 2);
     }
   #endif
@@ -679,7 +672,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(fetch_fw)
     #define fetch_fw_noswap(_p) CSWAP32(fetch_fw((_p)))
   #else
-    inline U32 fetch_fw_noswap(const void *ptr) {
+    static __inline__ U32 fetch_fw_noswap(const void *ptr) {
       U32 value;
       memcpy(&value, (BYTE *)ptr, 4);
       return value;
@@ -697,7 +690,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(store_fw)
     #define store_fw_noswap(_p, _v) store_fw((_p), CSWAP32(_v))
   #else
-    inline void store_fw_noswap(void *ptr, U32 value) {
+    static __inline__ void store_fw_noswap(void *ptr, U32 value) {
       memcpy((BYTE *)ptr, (BYTE *)&value, 4);
     }
   #endif
@@ -713,7 +706,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(fetch_f3)
     #define fetch_f3_noswap(_p) CSWAP32(fetch_f3((_p)))
   #else
-    inline U32 fetch_f3_noswap(const void *ptr) {
+    static __inline__ U32 fetch_f3_noswap(const void *ptr) {
       U32 value;
       memcpy(((BYTE *)&value), (BYTE *)ptr, 3);
       value <<= 8;
@@ -732,7 +725,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(store_f3)
     #define store_f3_noswap(_p, _v) store_f3((_p), CSWAP32(_v))
   #else
-    inline void store_f3_noswap(void *ptr, U32 value) {
+    static __inline__ void store_f3_noswap(void *ptr, U32 value) {
       value >>= 8;
       memcpy((BYTE *)ptr, ((BYTE *)&value), 3);
     }
@@ -749,7 +742,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(fetch_dw)
     #define fetch_dw_noswap(_p) CSWAP64(fetch_dw((_p)))
   #else
-    inline U64 fetch_dw_noswap(const void *ptr) {
+    static __inline__ U64 fetch_dw_noswap(const void *ptr) {
       U64 value;
       memcpy(&value, (BYTE *)ptr, 8);
       return value;
@@ -767,7 +760,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
   #if defined(store_dw)
     #define store_dw_noswap(_p, _v) store_dw((_p), CSWAP64(_v))
   #else
-    inline void store_dw_noswap(void *ptr, U64 value) {
+    static __inline__ void store_dw_noswap(void *ptr, U64 value) {
       memcpy((BYTE *)ptr, (BYTE *)&value, 8);
     }
   #endif
@@ -780,7 +773,7 @@ inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
  * cmpxchg1
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg1
-inline BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
+static __inline__ BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
  /* returns 0 on success otherwise returns 1 */
  BYTE code;
  if (*old == *(BYTE *)ptr)
@@ -801,7 +794,7 @@ inline BYTE cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
  * cmpxchg4
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg4
-inline BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
+static __inline__ BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
  /* values passed in guest big-endian format */
  /* returns 0 on success otherwise returns 1 */
  BYTE code;
@@ -823,7 +816,7 @@ inline BYTE cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
  * cmpxchg8
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg8
-inline BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
+static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
  /* values passed in guest big-endian format */
  /* returns 0 on success otherwise returns 1 */
  BYTE code;
@@ -845,7 +838,7 @@ inline BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
  * cmpxchg16
  *-------------------------------------------------------------------*/
 #ifndef cmpxchg16
-inline int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
  /* values passed in guest big-endian format */
  /* returns 0 on success otherwise returns 1 */
  int code;
@@ -865,6 +858,10 @@ inline int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *pt
 }
 #endif
 
+#ifndef BIT
+#define BIT(nr) (1<<(nr))
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                      Hardware Sync                                */
 /*-------------------------------------------------------------------*/
@@ -877,4 +874,4 @@ inline int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *pt
   #endif // (which compiler)
 #endif
 
-#endif /* _MACHDEP_H */
+#endif /* _HERCULES_MACHDEP_H */

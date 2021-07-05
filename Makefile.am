@@ -15,7 +15,9 @@ ldadd          = @LIBS@
 
 #------------------------------------------------------------------------------
 
-ACLOCAL_AMFLAGS = -I autoconf -I m4
+ACLOCAL_AMFLAGS =   \
+  -I autoconf       \
+  -I m4
 
 AM_CPPFLAGS =       \
   -I $(top_srcdir)  \
@@ -142,12 +144,7 @@ dyndev_SRC =  \
 
 XSTATIC =
 DYNSRC  =
-
-if BUILD_APPLE_M1
-# LTDL    =  ltdl.c
-else
 LTDL    =  ltdl.c
-endif
 
 DYNMOD_LD_FLAGS =   \
   -module           \
@@ -390,12 +387,6 @@ libhercd_la_LIBADD = \
 # Pure Utility functions
 #--------------------------------------------
 
-if BUILD_APPLE_M1
-  libhercu_la_SOURCES_M1 =
-else
-  libhercu_la_SOURCES_M1 = $(LTDL)
-endif
-
 libhercu_la_SOURCES = \
   codepage.c          \
   hdl.c               \
@@ -411,8 +402,7 @@ libhercu_la_SOURCES = \
   pttrace.c           \
   version.c           \
   $(FTHREADS)         \
-  $(libhercu_la_SOURCES_M1)
-
+  $(LTDL)
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD =  \
   $(extpkg_ldadd)     \
@@ -477,7 +467,6 @@ libherc_la_SOURCES = \
   general2.c         \
   general3.c         \
   hao.c              \
-  hbyteswp.c         \
   hconsole.c         \
   hdiagf18.c         \
   history.c          \
@@ -492,14 +481,12 @@ libherc_la_SOURCES = \
   httpserv.c         \
   ieee.c             \
   impl.c             \
-  inline.c           \
   io.c               \
   ipl.c              \
   loadmem.c          \
   loadparm.c         \
   losc.c             \
   machchk.c          \
-  machdep.c          \
   opcode.c           \
   panel.c            \
   pfpo.c             \
@@ -520,19 +507,12 @@ libherc_la_SOURCES = \
   vector.c           \
   vm.c               \
   vmd250.c           \
-  vstore.c           \
   x75.c              \
   xstore.c           \
   $(DYNSRC)
 
-if BUILD_APPLE_M1
-EXTRA_libherc_la_SOURCES_M1 =
-else
-EXTRA_libherc_la_SOURCES_M1 = ltdl.c
-endif
-
 EXTRA_libherc_la_SOURCES = \
-  $(EXTRA_libherc_la_SOURCES_M1) \
+  ltdl.c             \
   memrchr.c          \
   $(dynamic_SRC)     \
   $(dyndev_SRC)      \
@@ -888,12 +868,6 @@ EXTRA_DIST =                  \
 # Source Header files. No 'build' for those
 #------------------------------------------------------------------------------
 
-if BUILD_APPLE_M1
-noinst_HEADERS_M1 =
-else
-noinst_HEADERS_M1 = ltdl.h
-endif
-
 noinst_HEADERS =          \
   archlvl.h               \
   cache.h                 \
@@ -982,7 +956,7 @@ noinst_HEADERS =          \
   instfmts.h              \
   linklist.h              \
   logger.h                \
-  $(noinst_HEADERS_M1)    \
+  ltdl.h                  \
   machdep.h               \
   memrchr.h               \
   mpc.h                   \

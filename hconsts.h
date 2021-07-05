@@ -362,7 +362,7 @@
 #define PGM_PRD_OS_LICENSED   0                 /* Licensed          */
 
 /*-------------------------------------------------------------------*/
-/*           Storage access bits used by logical_to_main_l           */
+/*           Storage access bits used by logical_to_main             */
 /*-------------------------------------------------------------------*/
 #define ACC_CHECK          0x0001          /* Possible storage update*/
 #define ACC_WRITE          0x0002          /* Storage update         */

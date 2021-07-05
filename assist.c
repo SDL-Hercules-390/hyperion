@@ -164,6 +164,7 @@ DEF_INST(obtain_local_lock)
     /* MAINLOCK may be required if cmpxchg assists unavailable */
     OBTAIN_MAINLOCK(regs);
     {
+
         if (ACCESS_REGISTER_MODE(&regs->psw))
             acc_mode = USE_PRIMARY_SPACE;
 
@@ -181,8 +182,8 @@ DEF_INST(obtain_local_lock)
 
         /* The lock word should contain 0; use this as our compare value.
            Swap in the CPU address in lpca */
-        old = 0;
-        new = CSWAP32(lcpa);
+        old = 0;     
+        new = CSWAP32(lcpa); 
 
         /* Try exchanging values; cmpxchg4 returns 0=success, !0=failure */
         if (!cmpxchg4( &old, new, main ))
@@ -216,6 +217,8 @@ DEF_INST(obtain_local_lock)
             /* Update the PSW instruction address */
             SET_PSW_IA_AND_MAYBE_IP(regs, newia);
         }
+
+    /* Release main-storage access lock */
     }
     RELEASE_MAINLOCK(regs);
 
@@ -254,7 +257,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
-
+    
     if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
 
@@ -356,7 +359,7 @@ DEF_INST(obtain_cms_lock)
 
     /* MAINLOCK may be required if cmpxchg assists unavailable */
     OBTAIN_MAINLOCK(regs);
-    {
+    {    
         if (ACCESS_REGISTER_MODE(&regs->psw))
             acc_mode = USE_PRIMARY_SPACE;
 
@@ -379,10 +382,10 @@ DEF_INST(obtain_cms_lock)
             /* Get mainstor address of lock word */
             main = MADDRL (lock_addr, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-            /* The lock word should contain 0; use this as our compare value.
+            /* The lock word should contain 0; use this as our compare value.  
             Swap in the ASCB address from instruction operand 1            */
-            old = 0;
-            new = CSWAP32(ascb_addr);
+            old = 0;     
+            new = CSWAP32(ascb_addr);  
 
             /* Try exchanging values; cmpxchg4 returns 0=success, !0=failure */
             locked = !cmpxchg4( &old, new, main );
@@ -419,6 +422,7 @@ DEF_INST(obtain_cms_lock)
             /* Update the PSW instruction address */
             SET_PSW_IA_AND_MAYBE_IP(regs, newia);
         }
+    /* Release main-storage access lock */
     }
     RELEASE_MAINLOCK(regs);
 
@@ -460,7 +464,7 @@ int     acc_mode = 0;                   /* access mode to use        */
 
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
-
+    
     if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
 
