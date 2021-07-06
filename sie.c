@@ -393,8 +393,7 @@ int     i;                              /* (work)                    */
         lpsw_xcode = s370_load_psw(GUESTREGS, STATEBK->psw);
 #else
         /* Validity intercept when 370 mode not installed */
-        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
-          SIE_VI_WHY_370NI, GUESTREGS);
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_370NI, GUESTREGS);
         STATEBK->c = SIE_C_VALIDITY;
         return;
 #endif
@@ -978,7 +977,7 @@ static int ARCH_DEP( run_sie )( REGS* regs )
                     if (1
                         && (0
                             || (STATEBK->ec[0] & SIE_EC0_IOA)
-                            || (STATEBK->ec[3] & SIE_EC3_SIGAA)
+                            || (STATEBK->ec[3] & SIE_EC3_SIGA)
                            )
                         && OPEN_IC_IOPENDING( GUESTREGS )
                     )
@@ -1374,7 +1373,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
         case SIE_INTERCEPT_INST:       STATEBK->c = SIE_C_INST;     break;
         case SIE_INTERCEPT_PER:        STATEBK->f |= SIE_F_IF;
                                        /* fall through */
-        case SIE_INTERCEPT_INSTCOMP:   STATEBK->c = SIE_C_PGMINST;  break;
+        case SIE_INTERCEPT_INSTCOMP:   STATEBK->c = SIE_C_BOTH;     break;
         case SIE_INTERCEPT_WAIT:       STATEBK->c = SIE_C_WAIT;     break;
         case SIE_INTERCEPT_STOPREQ:    STATEBK->c = SIE_C_STOPREQ;  break;
         case SIE_INTERCEPT_IOREQ:      STATEBK->c = SIE_C_IOREQ;    break;
@@ -1544,7 +1543,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     /* If format-2 interception, we have more work to do */
     if (0
         || STATEBK->c == SIE_C_INST
-        || STATEBK->c == SIE_C_PGMINST
+        || STATEBK->c == SIE_C_BOTH
         || STATEBK->c == SIE_C_OPEREXC
         || STATEBK->c == SIE_C_IOINST
     )

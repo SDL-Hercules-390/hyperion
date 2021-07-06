@@ -3745,7 +3745,7 @@ S32     op2;                            /* Operand-2 value           */
 
     /* Move rightmost 32 bits of 64-bit result into register 1 */
     regs->GR_L(r1) = resultlo;
-    
+
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
                      (((U32)resulthi) == 0xFFFFFFFF && resultlo <  0)) ? 3
@@ -3849,7 +3849,7 @@ S32     resulthi, resultlo;             /* 64-bit result             */
 
     /* Move rightmost 32 bits of 64-bit result into register 1 */
     regs->GR_L(r1) = resultlo;
-    
+
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x00000000 && resultlo >= 0) ||
                      (((U32)resulthi) == 0xFFFFFFFF && resultlo <  0)) ? 3
@@ -3881,7 +3881,7 @@ S64     resulthi, resultlo;             /* 128-bit result            */
 
     /* Move rightmost 64 bits of 128-bit result into register 1 */
     regs->GR_G(r1) = resultlo;
-    
+
     /* Check for overflow and set condition code */
     regs->psw.cc = !((resulthi == 0x0000000000000000 && resultlo >= 0) ||
                      (((U64)resulthi) == 0xFFFFFFFFFFFFFFFF && resultlo <  0)) ? 3
@@ -6150,12 +6150,8 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_ON(regs,IC0, STFL))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
-
-    SIE_INTERCEPT(regs);
+    // This instruction should *ALWAYS* be simulated under SIE
+    SIE_INTERCEPT( regs );
 
     PTT_INF("STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
@@ -6193,7 +6189,7 @@ int     cc;                             /* Condition code            */
 
 #if defined( _FEATURE_SIE )
     if (0
-        || SIE_STATE_BIT_ON( regs,IC0, STFL )     // Explicit request?
+        || SIE_STATE_BIT_ON( regs, IC0, ICFII )   // Explicit request?
 #if defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) // z/SIE Virt Arch?
         || (SIE_MODE( regs ) && !regs->sie_fld)   // Implicitly required?
 #endif
@@ -7303,7 +7299,7 @@ DEF_INST(and_immediate_y)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE   *dest;                         /* Pointer to target byte      */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -7689,7 +7685,7 @@ DEF_INST(exclusive_or_immediate_y)
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE   *dest;                         /* Pointer to target byte      */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 
@@ -8073,7 +8069,7 @@ DEF_INST(or_immediate_y)
 BYTE    i2;                             /* Immediate operand byte    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE   *dest;                         /* Pointer to target byte      */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SIY(inst, regs, i2, b1, effective_addr1);
 

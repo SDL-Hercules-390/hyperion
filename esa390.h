@@ -269,7 +269,7 @@ typedef struct DAT  DAT;
 /*-------------------------------------------------------------------*/
 /* MVPG instruction General Purpose Register 0 bit definitions       */
 /* (Note: only Move Page Facility 2 is supported by Hercules)        */
-        
+
 #define GR0_MVPG_DRI            0x00000200      /* bit 22 or 54      */
 #define GR0_MVPG_CCO            0x00000100      /* bit 23 or 55      */
 
@@ -1668,6 +1668,7 @@ typedef struct MBK  MBK;
 
 /*-------------------------------------------------------------------*/
 /*     SIE Format 1 State Descriptor Block (SIE1BK) structure        */
+/*          https://www.vm.ibm.com/pubs/cp240/SIEBK.HTML             */
 /*-------------------------------------------------------------------*/
 struct SIE1BK
 {
@@ -1735,6 +1736,7 @@ struct SIE1BK
 #define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
 #define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
 #define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+
 #define SIE_LCTL1       lctl_ctl[1]
 #define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
 #define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
@@ -1752,11 +1754,11 @@ struct SIE1BK
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
-#define SIE_IC0_STFL    0x10            /* Intercept STFL/STFLE      */
 #define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
 #define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+
 #define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW            */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
@@ -1765,6 +1767,7 @@ struct SIE1BK
 #define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
 #define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+
 #define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
 #define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE/IRBM   */
@@ -1774,6 +1777,7 @@ struct SIE1BK
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
 #define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+
 #define SIE_IC3         ic[3]
 #define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
 #define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
@@ -1793,13 +1797,14 @@ struct SIE1BK
 #define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
 #define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+
 #define SIE_EC1         ec[1]
 #define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
 #define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
+
 #define SIE_EC2         ec[2]
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
 #define SIE_EC3         ec[3]
-#define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
 
 /*050*/ BYTE  c;                        /* Interception Code         */
 
@@ -1821,7 +1826,6 @@ struct SIE1BK
 /*051*/ BYTE  f;                        /* Interception Status       */
 
 #define SIE_F           f
-#define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
 
@@ -1830,15 +1834,20 @@ struct SIE1BK
 /*056*/ HWORD ipa;                      /* Instruction parameter A   */
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD ipc;                      /* Instruction parameter C   */
-/*060*/ FWORD rcpo;                     /* RCP area origin           */
-
+/*060*/ FWORD rcpo;                     /* RCP area origin (but only
+                                           if high-order 80 "Assist
+                                           is enabled" flag is off)  */
 #define SIE_RCPO0       rcpo[0]
-#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
+#define SIE_RCPO0_ASIST 0x80            /* An assist is enabled      */
+#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist Enabled*/
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
+
 #define SIE_RCPO2       rcpo[2]
-#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass (don't use RCP)*/
 
 /*064*/ FWORD scao;                     /* SCA area origin           */
+#define SIEISCAM        0XFFFFFFF0      /* SCA address mask          */
+
 /*068*/ FWORD subchtabo;                /* Subchannel table origin   */
 /*06C*/ FWORD resv6Cf;
 /*070*/ HWORD tch_ctl;                  /* Test Channel control      */
@@ -1847,19 +1856,12 @@ struct SIE1BK
 /*075*/ BYTE  resv075;
 /*076*/ BYTE  tschds;                   /* TSCH device status        */
 /*077*/ BYTE  tschsc;                   /* TSCH subchannel status    */
-/*078*/ BYTE  xslim[3];                 /* Extended stor upper lim   */
+/*078*/ BYTE  xslim[3];                 /* Extended Storage Upper-   */
+                                        /* Limit Block Address       */
 /*07B*/ BYTE  resv7Bb;
 /*07C*/ FWORD resv7Cf;
 /*080*/ FWORD cr[16];                   /* Guest Control registers   */
 /*0C0*/ BYTE  ip[34];                   /* Interruption parameters   */
-
-#define SIE_IP_PSA_OFFSET   0x40        /* Offset of the IP field
-                                           relative to the ipfields
-                                           in the PSA                */
-#define SIE_II_PSA_OFFSET   0x30        /* Offset of the IP field
-                                           relative to the I/O fields
-                                           in the PSA for ESAME guest*/
-
 /*0E2*/ BYTE  xso[3];                   /* Expanded storage origin   */
 /*0E5*/ BYTE  xsl[3];                   /* Expanded storage limit    */
 /*0E8*/ BYTE  resvE8b[24];
@@ -1870,6 +1872,7 @@ CASSERT( sizeof( SIE1BK ) == 256, esa390_h );
 
 /*-------------------------------------------------------------------*/
 /*     SIE Format 2 State Descriptor Block (SIE2BK) structure        */
+/*          http://www.vm.ibm.com/pubs/cp710/SIEBK.HTML              */
 /*-------------------------------------------------------------------*/
 struct SIE2BK
 {
@@ -1885,7 +1888,8 @@ struct SIE2BK
 /*001*/ BYTE  s;                        /* State controls            */
 
 #define SIE_S           s
-#define SIE_S_T         0x80            /* Interval timer irpt pend  */
+#define SIE_S_RUNNING   0x80            /* SIE Running (indicates    */
+                                        /* guest CPU is running)     */
 #define SIE_S_RETENTION 0x40            /* SIE State retained        */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
@@ -1894,18 +1898,13 @@ struct SIE2BK
 
 #define SIE_MX          mx
 #define SIE_MX_RRF      0x80            /* Region Relocate Installed */
-#define SIE_MX_XC       0x01            /* XC mode guest             */
 #define SIE_MX_ESAME    0x08            /* ESAME mode guest          */
 
 /*003*/ BYTE  m;                        /* Mode controls             */
 
 #define SIE_M           m
-#define SIE_M_VCC       0x40            /* Vector change control     */
-#define SIE_M_XA        0x20            /* XA mode guest             */
-#define SIE_M_370       0x10            /* 370 mode guest            */
 #define SIE_M_VR        0x08            /* V=R mode guest            */
-#define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
-#define SIE_M_GPE       0x01            /* Guest per enhancement     */
+#define SIE_M_GPE       0x01            /* Guest PER enhancement     */
 
 /*004*/ FWORD  prefix;                  /* Guest prefix register     */
 /*008*/ FWORD  resv008f;
@@ -1935,6 +1934,7 @@ struct SIE2BK
 #define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
 #define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
 #define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+
 #define SIE_LCTL1       lctl_ctl[1]
 #define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
 #define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
@@ -1952,10 +1952,11 @@ struct SIE2BK
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
-#define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
-#define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
-#define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
+#define SIE_IC0_ICFII   0x10            /* Intercept Facility Indi-  */
+                                        /* cating Instructions (e.g. */
+                                        /* STFL and STFLE)           */
 #define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE/CSP/CSPG   */
+
 #define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW/LPSWE      */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
@@ -1964,6 +1965,7 @@ struct SIE2BK
 #define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
 #define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+
 #define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
 #define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE/IRBM   */
@@ -1973,11 +1975,10 @@ struct SIE2BK
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
 #define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+
 #define SIE_IC3         ic[3]
-#define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
 #define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
 #define SIE_IC3_SCKC    0x20            /* Intercept SCKC and STCKC  */
-#define SIE_IC3_VACRS   0x10            /* Intercept VACRS           */
 #define SIE_IC3_PR      0x08            /* Intercept PR              */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
@@ -1992,19 +1993,19 @@ struct SIE2BK
 #define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
 #define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+
 #define SIE_EC1         ec[1]
-#define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
-#define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
+#define SIE_EC1_VEC     0x02            /* Vector Facility Enabled   */
+
 #define SIE_EC2         ec[2]
-#define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
 #define SIE_EC3         ec[3]
-#define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
+#define SIE_EC3_SIGA    0x04            /* SIGA Assist               */
 
 /*050*/ BYTE  c;                        /* Interception Code         */
 
 #define SIE_C_INST         4            /* Instruction interception  */
 #define SIE_C_PGMINT       8            /* Program interruption      */
-#define SIE_C_PGMINST     12            /* Program/instruction int   */
+#define SIE_C_BOTH        12            /* Both (program and instr.) */
 #define SIE_C_EXTREQ      16            /* External request          */
 #define SIE_C_EXTINT      20            /* External interruption     */
 #define SIE_C_IOREQ       24            /* I/O request               */
@@ -2012,6 +2013,8 @@ struct SIE2BK
 #define SIE_C_VALIDITY    32            /* Validity                  */
 #define SIE_C_STOPREQ     40            /* Stop request              */
 #define SIE_C_OPEREXC     44            /* Operation Exception       */
+#define SIE_C_ALT         48            /* Alert                     */
+#define SIE_C_PIX         56            /* Partial Instr. Execution  */
 #define SIE_C_IOINT       60            /* I/O Interruption          */
 #define SIE_C_IOINST      64            /* I/O Instruction           */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
@@ -2036,32 +2039,33 @@ struct SIE2BK
 
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD scaoh;                    /* SCAO high word            */
-/*060*/ FWORD rcpo;                     /* RCP area origin           */
+/*060*/ FWORD rcpo;                     /* RCP area origin (but only
+                                           if high-order 80 "Assist
+                                           is enabled" flag is off)  */
 
-#define SIE_RCPO0       rcpo[0]
-#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
-#define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
-#define SIE_RCPO2       rcpo[2]
-#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+#define SIE_RCPO0       rcpo[0]         /*  (See SIE1BK for flags)   */
+//efine SIE_RCPO0_ASIST 0x80            /* An assist is enabled      */
+//efine SIE_RCPO0_SKA   0x80            /* Storage Key Assist Enabled*/
+//efine SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
 
-#define SIE_ECB0        rcpo[1]         /* Execution Controls Byte 0 */
-#define SIE_QEBSM       0x80            /* QEBSM Interpretation Act. */
-#define SIE_ECGSF       0x40            /* Guard.Stor.Facil.     133 */
-#define SIE_ECTX        0x10            /* Trans.Exec.Facil.     073 */
+#define SIE_ECB0        rcpo[1]         /* Exec. Controls 'B' Byte 0 */
+#define SIE_ECB0_QEBSM  0x80            /* QEBSM Interpretation Act. */
+#define SIE_ECB0_GSF    0x40            /* Guard.Stor.Facil.     133 */
+#define SIE_ECB0_TXF    0x10            /* Trans.Exec.Facil.     073 */
 
-#define SIE_ECB1        rcpo[2]         /* Execution Controls Byte 1 */
-#define SIE_ECIEP       0x40            /* Inst.Exe.Prot.Facil.  130 */
+#define SIE_ECB1        rcpo[2]         /* Exec. Controls 'B' Byte 1 */
+#define SIE_ECB1_IEP    0x20            /* Inst.Exe.Prot.Facil.  130 */
 
-/*064*/ FWORD  scao;                    /* SCA area origin           */
+/*064*/ FWORD  scao;                    /* SCA area origin low word  */
 /*068*/ FWORD  resv068f;
 /*06C*/ HWORD  todpfh;                  /* TOD pf high half          */
 /*06E*/ HWORD  todpf;                   /* TOD programmable field    */
-/*070*/ HWORD  tch_ctl;                 /* Test Channel control      */
+/*070*/ HWORD  gisa;                    /* GISA Absolute Adress      */
 /*072*/ HWORD  resv72h;
 /*074*/ BYTE   zone;                    /* Zone Number               */
 /*075*/ BYTE   resv075;
-/*076*/ BYTE   tschds;                  /* TSCH device status        */
-/*077*/ BYTE   tschsc;                  /* TSCH subchannel status    */
+/*076*/ BYTE   irb_dvst;                /* IRB Device status byte    */
+/*077*/ BYTE   irb_scst;                /* IRB Subchann. status byte */
 /*078*/ FWORD  resv078f;
 /*07C*/ FWORD  resv07cf;
 /*080*/ DBLWRD mso;                     /* Main Storage Origin       */
@@ -2071,10 +2075,12 @@ struct SIE2BK
 #define SIE2_MS_MASK    0xFFFFFFFFFFF00000ULL
 
 /*090*/ QWORD  psw;                     /* Guest PSW                 */
+
 /*0A0*/ DBLWRD gr14;                    /* Guest gr 14               */
 /*0A8*/ DBLWRD gr15;                    /* Guest gr 15               */
 /*0B0*/ DBLWRD recv0b0d;
-/*0B8*/ HWORD  recv0b8h;
+/*0B8*/ BYTE   hstid;                   /* Host Program Id           */
+/*0B9*/ BYTE   recv0b9b;
 /*0BA*/ BYTE   xso[3];                  /* Expanded storage origin   */
 /*0BD*/ BYTE   xsl[3];                  /* Expanded storage limit    */
 /*0C0*/ BYTE   ip[52];                  /* Interruption parameters   */
@@ -2086,15 +2092,21 @@ struct SIE2BK
                                            relative to the I/O fields
                                            in the PSA for ESAME guest*/
 /*0F4*/ BYTE   resv0f4b[6];
+
 /*0FA*/ HWORD  ief;                     /* Migration Emulation cnlt  */
 /*0FC*/ FWORD  resv0fcf;
+
 /*100*/ DBLWRD cr[16];                  /* Control registers         */
-/*180*/ DBLWRD gbea;
+/*180*/ DBLWRD bear;                    /* Breaking-Event-Address Reg*/
+
 /*188*/ BYTE   resv188b[24];
+
 /*1A0*/ FWORD  fld;                     /* Facility List Designation */
+                                        /* --> STFLE bits for guest  */
 /*1A4*/ BYTE   resv1a4b[68];
 /*1E8*/ DBLWRD itdba;                   /* Interception TDB address  */
-/*1F0*/ BYTE   resv1f0b[16];
+/*1F0*/ BYTE   resv1f0b[8];
+/*1F8*/ DBLWRD vrd;                     /* Vector Regs. Designation  */
 };
 typedef struct SIE2BK   SIE2BK;
 

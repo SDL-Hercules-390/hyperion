@@ -285,20 +285,15 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
   #define SIE_MODE( _regs )         ((_regs)->sie_mode)
   #define SIE_STATE( _regs )        ((_regs)->sie_state)
 
-  #define SIE_FEAT_BIT_ON( _regs, _byte, _bit ) \
-          ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _byte ## _ ## _bit)
+  #define SIE_FEAT_BIT_ON(   _regs, _byte, _bit )   ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _byte ## _ ## _bit)
+  #define SIE_EC_BIT_ON(     _regs, _byte, _bit )   ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _byte ## _ ## _bit)
 
-  #define SIE_EC_BIT_ON( _regs, _byte, _bit ) \
-          ((_regs)->siebk->SIE_ ## _byte & SIE_ ## _bit)
+  #define SIE_FEAT_BIT_OFF(  _regs, _byte, _bit )   !SIE_FEAT_BIT_ON( _regs, _byte, _bit )
+  #define SIE_EC_BIT_OFF(    _regs, _byte, _bit )   !SIE_EC_BIT_ON(   _regs, _byte, _bit )
 
-  #define SIE_FEAT_BIT_OFF( _regs, _byte, _bit )    !SIE_FEAT_BIT_ON( _regs, _byte, _bit )
-  #define SIE_EC_BIT_OFF(   _regs, _byte, _bit )    !SIE_EC_BIT_ON(   _regs, _byte, _bit )
+  #define SIE_STATE_BIT_ON(  _regs, _byte, _bit )   (SIE_MODE((_regs)) && SIE_FEAT_BIT_ON(  (_regs), _byte, _bit ))
+  #define SIE_STATE_BIT_OFF( _regs, _byte, _bit )   (SIE_MODE((_regs)) && SIE_FEAT_BIT_OFF( (_regs), _byte, _bit ))
 
-  #define SIE_STATE_BIT_ON( _regs, _byte, _bit ) \
-          (SIE_MODE((_regs)) && SIE_FEAT_BIT_ON(  (_regs), _byte, _bit ))
-
-  #define SIE_STATE_BIT_OFF( _regs, _byte, _bit ) \
-          (SIE_MODE((_regs)) && SIE_FEAT_BIT_OFF( (_regs), _byte, _bit ))
 
   #define TXF_SIE_INTERCEPT( _regs, _name )                     \
     do                                                          \
@@ -311,7 +306,7 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
         */                                                      \
         if (1                                                   \
             && SIE_MODE( (_regs) )                              \
-            && SIE_EC_BIT_OFF( (_regs), ECB0, ECTX )            \
+            && SIE_EC_BIT_OFF( (_regs), ECB0, TXF )             \
         )                                                       \
         {                                                       \
             if (TXF_TRACING())                                  \
@@ -1657,7 +1652,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TXF_MADDRL(   _vaddr,   _len,   _arn,   _regs,   _acctype,   _maddr  ) \
+  #define TXF_MADDRL(   _vaddr,   _len,   _arn,   _regs,   _acctype,   _maddr  )        \
           txf_maddr_l( (_vaddr), (_len), (_arn), (_regs), (_acctype), (_maddr) )
 
   #define ALLOC_TXFMAP( _regs )     alloc_txfmap( _regs )
@@ -1668,93 +1663,141 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 /*                     Instruction decoders                          */
 /*-------------------------------------------------------------------*/
-#include "instfmts.h"       /* (moved to separate #include header)   */
+
+#include "instfmts.h"     // (moved into separate #include header)
+
+/*-------------------------------------------------------------------*/
+/*                 SIE address translation macros                    */
 /*-------------------------------------------------------------------*/
 
-#undef SIE_TRANSLATE_ADDR
-#undef SIE_LOGICAL_TO_ABS
-#undef SIE_INTERCEPT
 #undef SIE_TRANSLATE
+#undef SIE_LOGICAL_TO_ABS
+#undef SIE_TRANSLATE_ADDR
 
 #if defined( _FEATURE_SIE )
 
-#define SIE_SET_VI(_who, _when, _why, _regs) \
-    { \
-        (_regs)->siebk->vi_who = (_who); \
-        (_regs)->siebk->vi_when = (_when); \
-        STORE_HW((_regs)->siebk->vi_why, (_why)); \
-        memset((_regs)->siebk->vi_zero, 0, 6); \
-    }
+  //-------------------------------------------------------------------
+  //  SIE_TRANSLATE:       SIE guest abs  -->  SIE host abs    (?nop)
+  //  SIE_LOGICAL_TO_ABS:  SIE host virt  -->  SIE host abs
+  //  SIE_TRANSLATE_ADDR:  SIE host virt  -->  SIE host real   (rc)
+  //-------------------------------------------------------------------
 
-#if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
+  #define SIE_TRANSLATE( _addr, _acctype, _regs )                                       \
+                                                                                        \
+    do {                                                                                \
+      if (SIE_MODE( (_regs) ) && !(_regs)->sie_pref)                                    \
+        *(_addr) = SIE_LOGICAL_TO_ABS( (_regs)->sie_mso + *(_addr),                     \
+                                        USE_PRIMARY_SPACE,                              \
+                                        HOST(_regs),                                    \
+                                        (_acctype), 0 );                                \
+    } while (0)
 
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype) \
-    ARCH_DEP( translate_addr )((_addr), (_arn), (_regs), (_acctype))
+  #if __GEN_ARCH == 370 && defined( _FEATURE_SIE )
 
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  ( \
-    ARCH_DEP( logical_to_main_l )((_addr), (_arn), (_regs), (_acctype), (_akey), 1), \
-    (_regs)->dat.aaddr \
-  )
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        s390_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ),     \
+        (_regs)->dat.aaddr /*  <-----<<<  this is what is returned */                   \
+      )
 
-#elif __GEN_ARCH == 370 && defined( _FEATURE_SIE )
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+                                                                                        \
+        s390_translate_addr( (_addr), (_arn), (_regs), (_acctype) )
 
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
-    s390_translate_addr((_addr), (_arn), (_regs), (_acctype))
+  #elif __GEN_ARCH == 390 && defined( _FEATURE_ZSIE )
 
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  ( \
-    s390_logical_to_main_l((_addr), (_arn), (_regs), (_acctype), (_akey), 1), \
-    (_regs)->dat.aaddr \
-  )
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        ((ARCH_390_IDX == (_regs)->arch_mode)                                           \
+        ? s390_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 )    \
+        : z900_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 )),  \
+        (_regs)->dat.aaddr /*  <-----<<<  this is what is returned */                   \
+      )
 
-#else /* __GEN_ARCH == 390 && defined( _FEATURE_ZSIE ) */
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+      (                                                                                 \
+        (ARCH_390_IDX == (_regs)->arch_mode)                                            \
+        ? s390_translate_addr( (_addr), (_arn), (_regs), (_acctype) )                   \
+        : z900_translate_addr( (_addr), (_arn), (_regs), (_acctype) )                   \
+      )
 
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
-    ( ((_regs)->arch_mode == ARCH_390_IDX) ?            \
-    s390_translate_addr((_addr), (_arn), (_regs), (_acctype)) : \
-    z900_translate_addr((_addr), (_arn), (_regs), (_acctype)) )
+  #else // __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
 
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  ( \
-    (((_regs)->arch_mode == ARCH_390_IDX) \
-    ? s390_logical_to_main_l((_addr), (_arn), (_regs), (_acctype), (_akey), 1) \
-    : z900_logical_to_main_l((_addr), (_arn), (_regs), (_acctype), (_akey), 1)), \
-    (_regs)->dat.aaddr \
-  )
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        ARCH_DEP( logical_to_main_l )( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ), \
+        (_regs)->dat.aaddr /*  <-----<<<  this is what is returned */                   \
+      )
 
-#endif
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+                                                                                        \
+        ARCH_DEP( translate_addr )( (_addr), (_arn), (_regs), (_acctype) )
 
-#define SIE_INTERCEPT(_regs) \
-do { \
-    if(SIE_MODE((_regs))) \
-    longjmp((_regs)->progjmp, SIE_INTERCEPT_INST); \
-} while(0)
+  #endif // __GEN_ARCH == ...
 
-#define SIE_TRANSLATE(_addr, _acctype, _regs) \
-do { \
-    if(SIE_MODE((_regs)) && !(_regs)->sie_pref) \
-    *(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
-      USE_PRIMARY_SPACE, HOST(_regs), (_acctype), 0); \
-} while(0)
+#else // !defined( _FEATURE_SIE )
 
-#else /* !defined( _FEATURE_SIE ) */
+  #define SIE_TRANSLATE( _addr, _acctype, _regs )
+  #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )
+  #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )
 
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)
-#define SIE_INTERCEPT(_regs)
-#define SIE_TRANSLATE(_addr, _acctype, _regs)
+#endif // defined( _FEATURE_SIE )
 
-#endif /* !defined( _FEATURE_SIE ) */
+/*-------------------------------------------------------------------*/
+/*                     other SIE helper macros                       */
+/*-------------------------------------------------------------------*/
 
-#undef SIE_XC_INTERCEPT
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
-  #define SIE_XC_INTERCEPT(_regs) \
-    if(SIE_STATE_BIT_ON((_regs), MX, XC)) \
-       SIE_INTERCEPT((_regs))
-#else
-  #define SIE_XC_INTERCEPT(_regs)
-#endif
+#undef  SIE_INTERCEPT
+#undef  SIE_XC_INTERCEPT
+#undef  SIE_SET_VI
+
+#if defined( _FEATURE_SIE )
+
+  /*---------------------------------------------*/
+  /*      SIE intercept if SIE mode              */
+  /*---------------------------------------------*/
+  #define SIE_INTERCEPT( _regs )                                      \
+                                                                      \
+    do {                                                              \
+      if (SIE_MODE( _regs ))                                          \
+        longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );              \
+    }                                                                 \
+    while (0)
+
+  /*---------------------------------------------*/
+  /*        SIE intercept if XC mode guest       */
+  /*---------------------------------------------*/
+  #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
+    #define SIE_XC_INTERCEPT( _regs )                                 \
+                                                                      \
+      do {                                                            \
+        if (SIE_MODE( _regs ) && SIE_STATE_BIT_ON( (_regs), MX, XC )) \
+          longjmp( (_regs)->progjmp, SIE_INTERCEPT_INST );            \
+      }                                                               \
+      while (0)
+  #else
+    #define SIE_XC_INTERCEPT( _regs )
+  #endif
+
+  /*---------------------------------------------*/
+  /*     Set SIE Validity Intercept fields       */
+  /*---------------------------------------------*/
+  #define SIE_SET_VI( _who, _when, _why, _regs )                      \
+    do {                                                              \
+                   (_regs)->siebk->vi_who  = (_who);                  \
+                   (_regs)->siebk->vi_when = (_when);                 \
+        STORE_HW(  (_regs)->siebk->vi_why,   (_why)   );              \
+        memset(    (_regs)->siebk->vi_zero, 0, 6 );                   \
+    }                                                                 \
+    while (0)
+
+#else // !defined( _FEATURE_SIE )
+
+  #define SIE_INTERCEPT( _regs )
+  #define SIE_XC_INTERCEPT( _regs )
+  #define SIE_SET_VI( _who, _when, _why, _regs )
+
+#endif // defined( _FEATURE_SIE )
 
 /*-------------------------------------------------------------------*/
 /*                  Instruction serialization                        */

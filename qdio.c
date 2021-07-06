@@ -43,7 +43,7 @@ DEVBLK *dev;                            /* -> device block           */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_OFF(regs, EC3, SIGAA))
+    if(SIE_STATE_BIT_OFF(regs, EC3, SIGA))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -189,7 +189,7 @@ U64     slsba;                 /* Storage list state block address   */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_OFF(regs, EC3, SIGAA))
+    if(SIE_STATE_BIT_OFF(regs, EC3, SIGA))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -283,7 +283,7 @@ U64     slsba;                /* Storage list state block address    */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_OFF(regs, EC3, SIGAA))
+    if(SIE_STATE_BIT_OFF(regs, EC3, SIGA))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
