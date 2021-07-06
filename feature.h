@@ -98,9 +98,11 @@
   /*-----------------------------------------------------------------*/
 
   #if defined( _FEATURE_2K_STORAGE_KEYS )
+    // Each individual storkey array byte represent 2K of storage
     #define _STORKEY_ARRAY_UNITSIZE   2048
     #define _STORKEY_ARRAY_SHIFTAMT   11
   #else
+    // Each individual storkey array byte represent 4K of storage
     #define _STORKEY_ARRAY_UNITSIZE   4096
     #define _STORKEY_ARRAY_SHIFTAMT   12
   #endif

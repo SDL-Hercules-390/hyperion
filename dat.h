@@ -1,6 +1,6 @@
 /* DAT.H        (C) Copyright Roger Bowler, 1999-2012                */
 /*              (C) and others 2013-2021                             */
-/*              ESA/390 Dynamic Address Translation                  */
+/*              Dynamic Address Translation                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -15,51 +15,60 @@
 
 /*-------------------------------------------------------------------*/
 /*                           maddr_l                                 */
+/*                PRIMARY DAT TLB LOOKUP FUNCTION                    */
 /*-------------------------------------------------------------------*/
-/* For compatibility, it is usually invoked using the MADDRL macro   */
-/* in feature.h                                                      */
+/*          For compatibility this function is usually               */
+/*          invoked using the MADDRL macro in feature.h              */
 /*-------------------------------------------------------------------*/
-/* Convert logical address to absolute address. This is the DAT      */
-/* logic that does an accelerated TLB lookup to return the prev-     */
-/* iously determined value from an earlier translation for this      */
-/* logical address.  It performs a series of checks to ensure the    */
-/* values that were used in the previous translation (the results    */
-/* of which are in the corresponding TLB entry) haven't changed      */
-/* for the current address being translated.  If any of the cond-    */
-/* itions have changed (i.e. if any of the comparisons fail) then    */
-/* the TLB cannot be used (TLB miss) and "logical_to_main_l" is      */
-/* called to perform a full address translation. Otherwise if all    */
-/* of the conditions are still true (nothing has changed from the    */
-/* the last time we translated this address), then the previously    */
-/* translated address from the TLB is returned instead (TLB hit).    */
 /*                                                                   */
-/* PLEASE NOTE that the address that is retrieved from the TLB is    */
-/* an absolute address from the Hercules guest's point of view but   */
-/* the address RETURNED TO THE CALLER is a Hercules host address     */
-/* pointing to MAINSTOR that Hercules can then directly use.         */
+/*  Convert logical address to absolute address. This is the DAT     */
+/*  logic that does an accelerated TLB lookup to return the prev-    */
+/*  iously determined value from an earlier translation for this     */
+/*  logical address.  It performs a series of checks to ensure the   */
+/*  values that were used in the previous translation (the results   */
+/*  of which are in the corresponding TLB entry) haven't changed     */
+/*  for the current address being translated.  If any of the cond-   */
+/*  itions have changed (i.e. if any of the comparisons fail) then   */
+/*  the TLB cannot be used (TLB miss) and "logical_to_main_l" is     */
+/*  called to perform a full address translation. Otherwise if all   */
+/*  of the conditions are still true (nothing has changed from the   */
+/*  the last time we translated this address), then the previously   */
+/*  translated address from the TLB is returned instead (TLB hit).   */
 /*                                                                   */
-/* Input:                                                            */
-/*      addr    Logical address to be translated                     */
-/*      len     Length of data access for PER SA purpose             */
-/*      arn     Access register number or the special value:         */
-/*                 USE_INST_SPACE                                    */
-/*                 USE_REAL_ADDR                                     */
-/*                 USE_PRIMARY_SPACE                                 */
-/*                 USE_SECONDARY_SPACE                               */
-/*                 USE_HOME_SPACE                                    */
-/*                 USE_ARMODE + access register number               */
-/*              An access register number ORed with the special      */
-/*              value USE_ARMODE forces this routine to use AR-mode  */
-/*              address translation regardless of the PSW address-   */
-/*              space control setting.                               */
-/*      regs    Pointer to the CPU register context                  */
-/*      acctype Type of access requested: READ, WRITE, INSTFETCH,    */
-/*              LRA, IVSK, TPROT, STACK, PTE, LPTEA                  */
-/*      akey    Bits 0-3=access key, 4-7=zeroes                      */
+/*  PLEASE NOTE that the address that is retrieved from the TLB is   */
+/*  an absolute address from the Hercules guest's point of view but  */
+/*  the address RETURNED TO THE CALLER is a Hercules host address    */
+/*  pointing to MAINSTOR that Hercules can then directly use.        */
 /*                                                                   */
-/* Returns:                                                          */
-/*      Directly usable guest absolute storage MAINADDR address.     */
+/*  Input:                                                           */
 /*                                                                   */
+/*       addr    Logical address to be translated                    */
+/*       len     Length of data access for PER SA purpose            */
+/*       arn     Access register number or the special value:        */
+/*                  USE_INST_SPACE                                   */
+/*                  USE_REAL_ADDR                                    */
+/*                  USE_PRIMARY_SPACE                                */
+/*                  USE_SECONDARY_SPACE                              */
+/*                  USE_HOME_SPACE                                   */
+/*                  USE_ARMODE + access register number              */
+/*               An access register number ORed with the special     */
+/*               value USE_ARMODE forces this routine to use AR-mode */
+/*               address translation regardless of the PSW address-  */
+/*               space control setting.                              */
+/*       regs    Pointer to the CPU register context                 */
+/*       acctype Type of access requested: READ, WRITE, INSTFETCH,   */
+/*               LRA, IVSK, TPROT, STACK, PTE, LPTEA                 */
+/*       akey    Bits 0-3=access key, 4-7=zeroes                     */
+/*                                                                   */
+/*  Returns:                                                         */
+/*                                                                   */
+/*     If successful, a directly usable guest absolute storage       */
+/*     MAINADDR address.                                             */
+/*                                                                   */
+/*     Otherwise if the logical address (as a result of having       */
+/*     to call logical_to_main_l due to a TLB miss) causes an        */
+/*     addressing, protection, or translation exception then a       */
+/*     program check is generated and the function does not return.  */
 /*-------------------------------------------------------------------*/
 static inline  BYTE* ARCH_DEP( maddr_l )
     ( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey )

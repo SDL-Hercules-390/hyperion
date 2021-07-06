@@ -817,7 +817,7 @@ U32   code;
             break;
         }
 
-        /* Update the storage key from R1 register bit 31 */
+        /* Update bad-frame bit based on low-order bit of R1 register*/
         STORAGE_KEY(n, regs) &= ~(STORKEY_BADFRM);
         STORAGE_KEY(n, regs) |= regs->GR_L(r1) & STORKEY_BADFRM;
 
