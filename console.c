@@ -3758,13 +3758,12 @@ int prev_rlen3270;
 
                 /* Receive console input data from the client */
 
-                /* Make the first call to recv  elow non-blocking
+                /* Make the first call to recv below non-blocking
                    in case pselect lied to us and there isn't any
                    data available.  If we do multiple recv's then
-                   the subsequent ones are blocking 
-                   
-                   See the linux man page for select(2) for 
-                   more info. */
+                   the subsequent ones are blocking. See the linux
+                   man page for select(2) for more info.
+                */
                 socket_set_blocking_mode( dev->fd, 0 );
                 if ((dev->devtype == 0x3270) ||
                     (dev->devtype == 0x3287))

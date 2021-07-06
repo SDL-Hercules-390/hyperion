@@ -286,7 +286,7 @@ struct REGS {                           /* Processor registers       */
         REGS   *guestregs;              /* Pointer to the guest
                                            register context          */
 
-#if defined(_FEATURE_SIE)
+#if defined( _FEATURE_SIE )
 
         CACHE_ALIGN
         RADR    sie_state;              /* Address of the SIE state

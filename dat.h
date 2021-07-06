@@ -10,8 +10,7 @@
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
-/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
-/*   that use this header file.                                      */
+/*   ARCH_DEP section: compiled multiple times, ONCE for each arch.  */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/

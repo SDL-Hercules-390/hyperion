@@ -887,7 +887,7 @@ U32 num;                                /* Number of bytes to move   */
         // However, since rejecting it causes z/OS to go into a
         // disabled wait, we are going to temporarily treat it
         // as a valid command until we can positively determine
-        // whether or not it is a bona fide valid OSA command.
+        // whether or not it is a bonafide valid OSA command.
 
         /* The Sense Command Byte command returns a single byte
            being the CCW opcode from the other end of the CTCA */
@@ -1116,34 +1116,36 @@ U32 num;                                /* Number of bytes to move   */
 
         for(i = 0; i < dev->qdio.i_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.i_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.i_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.i_slsbla[i],qdes->slsba);
-            dev->qdio.i_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.i_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.i_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.i_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.i_slsbla[i], qdes->slsba );
+
+            dev->qdio.i_slibk[i]  = (qdes->keyp1)      & 0xF0;
+            dev->qdio.i_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.i_sbalk[i]  = (qdes->keyp2)      & 0xF0;
             dev->qdio.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(QDIO_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK( dev->qdio.i_slsbla[i], sizeof(QDIO_SLSB) - 1, dev->qdio.i_slsblk[i], STORKEY_CHANGE, dev );
+            accerr |= STORCHK( dev->qdio.i_sla[i],    sizeof(QDIO_SL)   - 1, dev->qdio.i_slk[i],    STORKEY_REF,    dev );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*)qdes+(qdr->iqdsz << 2));
         }
 
         for(i = 0; i < dev->qdio.o_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.o_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.o_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.o_slsbla[i],qdes->slsba);
-            dev->qdio.o_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.o_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.o_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.o_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.o_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.o_slsbla[i], qdes->slsba );
+
+            dev->qdio.o_slibk[i]  = (qdes->keyp1)      & 0xF0;
+            dev->qdio.o_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.o_sbalk[i]  = (qdes->keyp2)      & 0xF0;
             dev->qdio.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(QDIO_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK( dev->qdio.o_slsbla[i], sizeof(QDIO_SLSB) - 1, dev->qdio.o_slsblk[i], STORKEY_CHANGE, dev );
+            accerr |= STORCHK( dev->qdio.o_sla[i],    sizeof(QDIO_SL)   - 1, dev->qdio.o_slk[i],    STORKEY_REF,    dev );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*)qdes+(qdr->oqdsz << 2));
         }
 
         /* Calculate residual byte count */

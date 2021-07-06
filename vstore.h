@@ -1,6 +1,6 @@
 /* VSTORE.H     (C) Copyright Roger Bowler, 2000-2012                */
 /*              (C) and others 2013-2021                             */
-/*               ESA/390 Virtual Storage Functions                   */
+/*                  Virtual Storage Functions                        */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -10,31 +10,40 @@
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
 /*-------------------------------------------------------------------*/
-/* This module contains various functions which store, fetch, and    */
-/* copy values to, from, or between virtual storage locations.       */
 /*                                                                   */
-/* Functions provided in this module are:                            */
-/* vstorec      Store 1 to 256 characters into virtual storage       */
-/* vstoreb      Store a single byte into virtual storage             */
-/* vstore2      Store a two-byte integer into virtual storage        */
-/* vstore4      Store a four-byte integer into virtual storage       */
-/* vstore8      Store an eight-byte integer into virtual storage     */
-/* vfetchc      Fetch 1 to 256 characters from virtual storage       */
-/* vfetchb      Fetch a single byte from virtual storage             */
-/* vfetch2      Fetch a two-byte integer from virtual storage        */
-/* vfetch4      Fetch a four-byte integer from virtual storage       */
-/* vfetch8      Fetch an eight-byte integer from virtual storage     */
-/* instfetch    Fetch instruction from virtual storage               */
-/* move_chars   Move characters using specified keys and addrspaces  */
-/* move_charx   Move characters with optional specifications         */
-/* validate_operand   Validate addressing, protection, translation   */
-/*-------------------------------------------------------------------*/
-/* And provided by means of macro's address wrapping versions of     */
-/* the above:                                                        */
-/* wstoreX                                                           */
-/* wfetchX                                                           */
-/* wmove_chars                                                       */
-/* wvalidate_operand                                                 */
+/*                  Virtual Storage Functions                        */
+/*                                                                   */
+/*  This module contains various functions which store, fetch, and   */
+/*  copy values to, from, or between virtual storage locations.      */
+/*                                                                   */
+/*  Functions provided in this module are:                           */
+/*                                                                   */
+/*  vstoreb      Store a single byte into virtual storage            */
+/*  vstore2      Store a two-byte integer into virtual storage       */
+/*  vstore4      Store a four-byte integer into virtual storage      */
+/*  vstore8      Store an eight-byte integer into virtual storage    */
+/*  vstorec      Store 1 to 256 characters into virtual storage      */
+/*                                                                   */
+/*  wstoreX      Address-wrapping version of the above               */
+/*                                                                   */
+/*  vfetchb      Fetch a single byte from virtual storage            */
+/*  vfetch2      Fetch a two-byte integer from virtual storage       */
+/*  vfetch4      Fetch a four-byte integer from virtual storage      */
+/*  vfetch8      Fetch an eight-byte integer from virtual storage    */
+/*  vfetchc      Fetch 1 to 256 characters from virtual storage      */
+/*                                                                   */
+/*  wfetchX      Address-wrapping version of the above               */
+/*                                                                   */
+/*  instfetch    Fetch instruction from virtual storage              */
+/*                                                                   */
+/*  validate_operand   Validate addressing, protection, translation  */
+/*  wvalidate_opend    Address wrapping version of the above         */
+/*                                                                   */
+/*  move_chars   Move characters using specified keys and addrspaces */
+/*  wmove_chars  Address-wrapping version of the above               */
+/*                                                                   */
+/*  move_charx   Move characters with optional specifications        */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 /* 2019-12-05  Bob Wood                                              */
 /* Code modified to pass the correct length when needed for MADDR.   */
@@ -43,6 +52,10 @@
 /* transaction mode operates at the cache line level (per the POP)   */
 /* it is only an issue if the actual length spans a cache line       */
 /* boundary but not a page boundary.                                 */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
 /*-------------------------------------------------------------------*/
 
 #define s370_wstorec(_src, _len, _addr, _arn, _regs) \
@@ -71,6 +84,8 @@
 #define s370_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
         s370_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
 
+/*-------------------------------------------------------------------*/
+
 #define s390_wstorec(_src, _len, _addr, _arn, _regs) \
         s390_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
 #define s390_wstoreb(_value, _addr, _arn, _regs) \
@@ -96,6 +111,8 @@
                         ((_addr2) & ADDRESS_MAXWRAP((_regs))), (_arn2), (_key2), (_len), (_regs))
 #define s390_wvalidate_operand(_addr, _arn, _len, _acctype, _regs) \
         s390_validate_operand(((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_len), (_acctype), (_regs))
+
+/*-------------------------------------------------------------------*/
 
 #define z900_wstorec(_src, _len, _addr, _arn, _regs) \
         z900_vstorec((_src), (_len), ((_addr) & ADDRESS_MAXWRAP((_regs))), (_arn), (_regs))
@@ -1203,7 +1220,6 @@ int     len1,     len2;                 /* Lengths to copy           */
 } /* end function ARCH_DEP( move_chars_rl ) */
 #endif /* defined( FEATURE_061_MISC_INSTR_EXT_FACILITY_3 ) */
 
-
 #if defined( FEATURE_027_MVCOS_FACILITY )
 /*-------------------------------------------------------------------*/
 /* Move characters with optional specifications                      */
@@ -1298,7 +1314,6 @@ int     len1, len2, len3;               /* Work areas for lengths    */
 } /* end function ARCH_DEP( move_charx ) */
 #endif /* defined( FEATURE_027_MVCOS_FACILITY ) */
 
-
 /*-------------------------------------------------------------------*/
 /* Validate operand for addressing, protection, translation          */
 /*                                                                   */
@@ -1335,4 +1350,4 @@ void ARCH_DEP( validate_operand )( VADR addr, int arn, int len,
     else
         ITIMER_SYNC( addr, len, regs );
 #endif
-} /* end function ARCH_DEP( validate_operand ) */
+}

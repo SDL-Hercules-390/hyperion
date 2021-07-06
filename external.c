@@ -408,7 +408,6 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                     sysblk.bioparm
                 );
 #endif
-
                 STORE_DW(regs->mainstor + servpadr,sysblk.bioparm);
                 psa = (void*)(regs->mainstor + regs->PX);
             }

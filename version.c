@@ -695,7 +695,7 @@ static const char *build_info[] = {
 
 
 //---------------------------------------------------------------------
-// Fishtest...
+// Fishtest:  log use of certain Research/Workaround build options
 
 #if defined( OPTION_OPTINST )                   // Doesn't really help much!
     "With    \"Optimized\" instructions",
@@ -703,7 +703,7 @@ static const char *build_info[] = {
     "Without \"Optimized\" instructions",
 #endif
 
-#if defined( OPTION_SIE2BK_FLD_COPY )           // SIE2BK 'fld' is NOT a mask!
+#if defined( OPTION_SIE2BK_FLD_COPY )           // SIE2BK 'fld' is NOT a mask
     "With    OPTION_SIE2BK_FLD_COPY",
 #endif
 

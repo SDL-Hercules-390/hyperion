@@ -2005,7 +2005,8 @@ COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             
 #if !defined( _FW_REF )
 
         // PROGRAMMING NOTE: the following "+/-" commands ("f+adr", "t+dev",
-        // etc) are directly routed by cmdtab.c's 'CallHercCmd' function.
+        // etc) are directly routed by cmdtab.c's "CallHercCmd" function
+        // directly to the "OnOffCommand" command function in hsccmd.c.
 
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             f_cmd_help          )
 COMMAND( "s{+/-}dev",               NULL,                   SYSCMDNOPER,        sdev_cmd_desc,          NULL                )

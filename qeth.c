@@ -428,16 +428,18 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
 /*-------------------------------------------------------------------*/
 /* Set Adapter Local Summary Indicator bits                          */
 /*-------------------------------------------------------------------*/
-static inline void set_alsi(DEVBLK *dev, BYTE bits)
+static inline void set_alsi( DEVBLK* dev, BYTE bits )
 {
-    if(dev->qdio.alsi)
+    if (dev->qdio.alsi)
     {
-    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
+        BYTE* alsi = dev->mainstor + dev->qdio.alsi;
 
-        obtain_lock(&sysblk.mainlock);
-        *alsi |= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
+        obtain_lock( &sysblk.mainlock );
+        {
+            *alsi |= bits;
+            STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        }
+        release_lock( &sysblk.mainlock );
     }
 }
 
@@ -447,19 +449,22 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
 /*-------------------------------------------------------------------*/
 /* Set Device State Change Indicator bits                            */
 /*-------------------------------------------------------------------*/
-static inline void set_dsci(DEVBLK *dev, BYTE bits)
+static inline void set_dsci( DEVBLK* dev, BYTE bits )
 {
-    if(dev->qdio.dsci)
+    if (dev->qdio.dsci)
     {
-    BYTE *dsci = dev->mainstor + dev->qdio.dsci;
-    BYTE *alsi = dev->mainstor + dev->qdio.alsi;
+        BYTE* dsci = dev->mainstor + dev->qdio.dsci;
+        BYTE* alsi = dev->mainstor + dev->qdio.alsi;
 
-        obtain_lock(&sysblk.mainlock);
-        *dsci |= bits;
-        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        *alsi |= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
-        release_lock(&sysblk.mainlock);
+        obtain_lock( &sysblk.mainlock );
+        {
+            *dsci |= bits;
+            STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+
+            *alsi |= bits;
+            STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        }
+        release_lock( &sysblk.mainlock );
     }
 }
 #define SET_DSCI(_dev,_bits)    set_dsci((_dev),(_bits))
@@ -5077,35 +5082,37 @@ U32 num;                                /* Number of bytes to move   */
 
         for(i = 0; i < dev->qdio.i_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.i_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.i_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.i_slsbla[i],qdes->slsba);
-            dev->qdio.i_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.i_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.i_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.i_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.i_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.i_slsbla[i], qdes->slsba );
+
+            dev->qdio.i_slibk[i]  = (qdes->keyp1)      & 0xF0;
+            dev->qdio.i_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.i_sbalk[i]  = (qdes->keyp2)      & 0xF0;
             dev->qdio.i_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.i_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.i_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.i_sla[i],sizeof(QDIO_SL)-1,dev->qdio.i_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK( dev->qdio.i_slsbla[i], sizeof(QDIO_SLSB) - 1, dev->qdio.i_slsblk[i], STORKEY_CHANGE, dev );
+            accerr |= STORCHK( dev->qdio.i_sla[i],    sizeof(QDIO_SL)   - 1, dev->qdio.i_slk[i],    STORKEY_REF,    dev );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->iqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*)qdes+(qdr->iqdsz << 2));
         }
 
         /* Check output Queue Descriptor Entry storage */
         for(i = 0; i < dev->qdio.o_qcnt; i++)
         {
-            FETCH_DW(dev->qdio.o_sliba[i],qdes->sliba);
-            FETCH_DW(dev->qdio.o_sla[i],qdes->sla);
-            FETCH_DW(dev->qdio.o_slsbla[i],qdes->slsba);
-            dev->qdio.o_slibk[i] = qdes->keyp1 & 0xF0;
-            dev->qdio.o_slk[i] = (qdes->keyp1 << 4) & 0xF0;
-            dev->qdio.o_sbalk[i] = qdes->keyp2 & 0xF0;
+            FETCH_DW( dev->qdio.o_sliba[i],  qdes->sliba );
+            FETCH_DW( dev->qdio.o_sla[i],    qdes->sla   );
+            FETCH_DW( dev->qdio.o_slsbla[i], qdes->slsba );
+
+            dev->qdio.o_slibk[i]  = (qdes->keyp1)      & 0xF0;
+            dev->qdio.o_slk[i]    = (qdes->keyp1 << 4) & 0xF0;
+            dev->qdio.o_sbalk[i]  = (qdes->keyp2)      & 0xF0;
             dev->qdio.o_slsblk[i] = (qdes->keyp2 << 4) & 0xF0;
 
-            accerr |= STORCHK(dev->qdio.o_slsbla[i],sizeof(QDIO_SLSB)-1,dev->qdio.o_slsblk[i],STORKEY_CHANGE,dev);
-            accerr |= STORCHK(dev->qdio.o_sla[i],sizeof(QDIO_SL)-1,dev->qdio.o_slk[i],STORKEY_REF,dev);
+            accerr |= STORCHK( dev->qdio.o_slsbla[i], sizeof(QDIO_SLSB) - 1, dev->qdio.o_slsblk[i], STORKEY_CHANGE, dev );
+            accerr |= STORCHK( dev->qdio.o_sla[i],    sizeof(QDIO_SL)   - 1, dev->qdio.o_slk[i],    STORKEY_REF,    dev );
 
-            qdes = (QDIO_QDES0*)((BYTE*)qdes+(qdr->oqdsz<<2));
+            qdes = (QDIO_QDES0*) ((BYTE*)qdes+(qdr->oqdsz << 2));
         }
 
         /* Initialize All Queues */

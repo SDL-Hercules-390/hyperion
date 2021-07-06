@@ -5,10 +5,12 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/*-------------------------------------------------------------------*/
 /* These definitions are only nessesary when running on older        */
 /* versions of linux that do not have /usr/include/byteswap.h        */
 /* compile option -DNO_ASM_BYTESWAP will expand 'C' code             */
 /* otherwise Intel (486+) assember will be generated  (Jan Jaeger)   */
+/*-------------------------------------------------------------------*/
 
 #ifndef _BYTESWAP_H
 #define _BYTESWAP_H

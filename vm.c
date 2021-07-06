@@ -1655,12 +1655,14 @@ BYTE    func;                           /* Function code...          */
         /* Obtain key from R2 register bits 24-28 */
         skey = regs->GR_L(r2) & (STORKEY_KEY | STORKEY_FETCH);
 
-        /* Set storage key for each frame within specified range */
+        /* Set storage key for each frame within specified range
+           without changing existing reference and change bits.
+        */
         for (abs = start; abs <= end; abs += STORAGE_KEY_PAGESIZE)
         {
             STORAGE_KEY(abs, regs) &= ~(STORKEY_KEY | STORKEY_FETCH);
             STORAGE_KEY(abs, regs) |= skey;
-        } /* end for(abs) */
+        }
 
         break;
 

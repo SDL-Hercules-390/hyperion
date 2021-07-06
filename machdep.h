@@ -11,30 +11,30 @@
 /* either normal unoptimzed C code, or else as hand-tuned optimized  */
 /* assembler-assisted functions for the given machine architecture:  */
 /*                                                                   */
-/*                                                                   */
 /*   Atomic COMPARE-AND-EXCHANGE functions:                          */
 /*                                                                   */
-/*       cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                     */
+/*         cmpxchg1, cmpxchg4, cmpxchg8, cmpxchg16                   */
 /*                                                                   */
+/*   Atomic half, full and doubleword fetch/store functions:         */
 /*                                                                   */
-/*   Atomic word/double-word FETCH/STORE functions:                  */
+/*     fetch_hw, fetch_hw_noswap, store_hw, store_hw_noswap          */
+/*     fetch_fw, fetch_fw_noswap, store_fw, store_fw_noswap          */
+/*     fetch_dw, fetch_dw_noswap, store_dw, store_dw_noswap          */
 /*                                                                   */
-/*       fetch_hw, fetch_hw_noswap, store_hw, store_hw_noswap        */
-/*       fetch_fw, fetch_fw_noswap, store_fw, store_fw_noswap        */
-/*       fetch_dw, fetch_dw_noswap, store_dw, store_dw_noswap        */
+/*   64-bit architectures would normally not need to specify any     */
+/*   of the fetch_ or store_ variants.                               */
 /*                                                                   */
-/*     64 bit architectures would normally not need to specify       */
-/*     any of the fetch_ or store_ macros.                           */
+/*   32-bit architectures should specify BOTH of the 'fetch_dw'      */
+/*   and 'store_dw' variants.                                        */
 /*                                                                   */
-/*     32 bit architectures should specify one of the 'fetch_dw'     */
-/*     and 'store_dw' macros.  Little-endian machines should specify */
-/*     the 'noswap' macros.  Big-endian machines can specify either, */
-/*     both being the same.                                          */
+/*   Little-endian machines should specify the 'noswap' variants.    */
+/*                                                                   */
+/*   Big-endian machines can specify either, both being the same.    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#ifndef _HERCULES_MACHDEP_H
-#define _HERCULES_MACHDEP_H 1
+#ifndef _MACHDEP_H
+#define _MACHDEP_H
 
 #include "opcode.h"         // (need CSWAP32, et.al macros, etc)
 #include "htypes.h"         // (need Hercules fixed-size data types)
@@ -223,25 +223,32 @@
 /*-------------------------------------------------------------------
  * GNU C or other compiler...   (i.e. NON-Microsoft C/C++)
  *-------------------------------------------------------------------*/
-  #if   defined(__i686__) || defined(__pentiumpro__) || \
-        defined(__pentium4__) || defined(__athlon__) || \
-        defined(__athlon)
+  #if defined( __i686__       ) \
+   || defined( __pentiumpro__ ) \
+   || defined( __pentium4__   ) \
+   || defined( __athlon__     ) \
+   || defined( __athlon       ) 
+
     #define _ext_ia32
 
-  #elif defined(__amd64__)
+  #elif defined( __amd64__ )
+
     #define _ext_amd64
 
-  #elif defined(__powerpc__) || defined(__ppc__) || \
-        defined(__POWERPC__) || defined(__PPC__) || \
-        defined(_POWER)
+  #elif defined( __powerpc__ ) \
+     || defined( __ppc__     ) \
+     || defined( __POWERPC__ ) \
+     || defined( __PPC__     ) \
+     || defined( _POWER      )
+
     #define _ext_ppc
+
   #endif
 
 /*-------------------------------------------------------------------
  * Intel pentiumpro/i686
  *-------------------------------------------------------------------*/
-#if defined(_ext_ia32)
-
+#if defined( _ext_ia32 )
     /*
      * If PIC is defined then ebx is used as the 'thunk' reg
      * However cmpxchg8b requires ebx
@@ -250,12 +257,13 @@
      */
 #undef BREG
 #undef XCHG_BREG
-#if defined(PIC) && !defined(__CYGWIN__)
-#define BREG "S"
-#define XCHG_BREG "xchgl   %%ebx,%%esi\n\t"
+
+#if defined( PIC ) && !defined( __CYGWIN__ )
+  #define BREG          "S"
+  #define XCHG_BREG     "xchgl   %%ebx,%%esi\n\t"
 #else
-#define BREG "b"
-#define XCHG_BREG ""
+  #define BREG          "b"
+  #define XCHG_BREG     ""
 #endif
 
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
@@ -626,9 +634,9 @@ static __inline__ BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
     && defined( cmpxchg8 )         \
     && defined( cmpxchg16 )
   #undef  OBTAIN_MAINLOCK
-  #define OBTAIN_MAINLOCK(_regs) {}
+  #define OBTAIN_MAINLOCK(_regs)
   #undef  RELEASE_MAINLOCK
-  #define RELEASE_MAINLOCK(_regs) {}
+  #define RELEASE_MAINLOCK(_regs)
 #endif
 
 /*-------------------------------------------------------------------
@@ -858,10 +866,6 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
 }
 #endif
 
-#ifndef BIT
-#define BIT(nr) (1<<(nr))
-#endif
-
 /*-------------------------------------------------------------------*/
 /*                      Hardware Sync                                */
 /*-------------------------------------------------------------------*/
@@ -874,4 +878,4 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
   #endif // (which compiler)
 #endif
 
-#endif /* _HERCULES_MACHDEP_H */
+#endif /* _MACHDEP_H */

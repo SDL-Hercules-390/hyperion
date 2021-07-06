@@ -493,7 +493,6 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off or ASF not enabled */
@@ -766,7 +765,6 @@ VADR    n = 0;                          /* Work area                 */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
 #if defined( _FEATURE_SIE )
@@ -1011,7 +1009,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1044,7 +1041,6 @@ int r1, r2;                             /* Values of R fields        */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1080,7 +1076,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1113,7 +1108,6 @@ int r1, r2;                             /* Values of R fields        */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1151,7 +1145,6 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Find the virtual address of the entry descriptor
@@ -1181,7 +1174,6 @@ int     max_esta_code;
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     if (REAL_MODE( &regs->psw )
@@ -1290,8 +1282,8 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST( insert_storage_key )
 {
-int     r1, r2;                         /* Values of R fields        */
-RADR    n;                              /* Absolute storage addr     */
+int     r1, r2;                         /* Operand register numbers  */
+RADR    n;                              /* Working abs page address  */
 #if defined( _FEATURE_SIE )
 BYTE    storkey;
 #endif
@@ -1301,6 +1293,7 @@ BYTE    storkey;
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
+    /* Special Operation Exception if Storkey exception control zero */
 #if defined( FEATURE_4K_STORAGE_KEYS ) || defined( _FEATURE_SIE )
     if (
 #if defined( _FEATURE_SIE ) && !defined( FEATURE_4K_STORAGE_KEYS )
@@ -1310,17 +1303,17 @@ BYTE    storkey;
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
 #endif
 
-    /* Program check if R2 bits 28-31 are not zeroes */
+    /* Program check if r2 bits 28-31 are not zeroes */
     if (regs->GR_L(r2) & 0x0000000F)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    /* Load 2K block address from R2 register */
+    /* Load 2K block address from r2 register */
     n = regs->GR_L(r2) & 0x00FFF800;
 
     /* Convert real address to absolute address */
     n = APPLY_PREFIXING( n, regs->PX );
 
-    /* Addressing exception if block is outside main storage */
+    /* Addressing exception if block is outside of main storage */
     if (n > regs->mainlim)
         ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
 
@@ -1328,12 +1321,12 @@ BYTE    storkey;
     if (SIE_MODE( regs ))
     {
         if (SIE_STATE_BIT_ON( regs, IC2, ISKE ))
-            longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+            SIE_INTERCEPT( regs );
 
         if (!regs->sie_pref)
         {
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
-            if (SIE_STATE_BIT_ON( regs, RCPO0, SKA   )
+            if (SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
             &&  SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
             {
                 SIE_TRANSLATE( &n, ACCTYPE_SIE, regs );
@@ -1437,7 +1430,9 @@ BYTE    storkey;
 
     /* In BC mode, clear bits 29-31 of R1 register */
     if (!ECMODE( &regs->psw ))
+    {
         regs->GR_LHLCL(r1) &= 0xF8;
+    }
 
 //  /*debug*/LOGMSG( "ISK storage block %8.8X key %2.2X\n",
 //                   regs->GR_L(r2), regs->GR_L(r1) & 0xFE );
@@ -1452,8 +1447,8 @@ BYTE    storkey;
 /*-------------------------------------------------------------------*/
 DEF_INST( insert_storage_key_extended )
 {
-int     r1, r2;                         /* Values of R fields        */
-RADR    n;                              /* Workarea                  */
+int     r1, r2;                         /* Operand register numbers  */
+RADR    n;                              /* Working abs page address  */
 #if defined( _FEATURE_SIE )
 BYTE    storkey;
 #endif
@@ -1463,13 +1458,13 @@ BYTE    storkey;
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
-    /* Load 4K block address from R2 register */
+    /* Load 4K block address from r2 register */
     n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
     /* Convert real address to absolute address */
     n = APPLY_PREFIXING( n, regs->PX );
 
-    /* Addressing exception if block is outside main storage */
+    /* Addressing exception if block is outside of main storage */
     if (n > regs->mainlim)
         ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
 
@@ -1477,20 +1472,21 @@ BYTE    storkey;
     if (SIE_MODE( regs ))
     {
         if (SIE_STATE_BIT_ON( regs, IC2, ISKE ))
-            longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+            SIE_INTERCEPT( regs );
 
         if (!regs->sie_pref)
         {
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
-            if ((SIE_STATE_BIT_ON( regs, RCPO0, SKA )
+            if ((SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
 #if defined( _FEATURE_ZSIE )
-              || (HOSTREGS->arch_mode == ARCH_900_IDX)
+              // SKA is always active for z/VM
+              || (ARCH_900_IDX == HOSTREGS->arch_mode)
 #endif
               ) && SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
             {
             SIE_TRANSLATE( &n, ACCTYPE_SIE, regs );
 
-                /* Insert the storage key into R1 register bits 24-31 */
+                /* Insert the requested storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
                 regs->GR_LHLCL(r1) = STORAGE_KEY( n, regs ) & 0xFE;
 #else
@@ -1569,7 +1565,7 @@ BYTE    storkey;
                     /* host real to host absolute */
                     n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
-                    /* Insert the storage key into R1 register bits 24-31 */
+                    /* Insert the requested storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
                     regs->GR_LHLCL(r1) = storkey | (STORAGE_KEY( n, regs ) & 0xFE);
 #else
@@ -1579,16 +1575,19 @@ BYTE    storkey;
             }
         }
         else /* sie_pref */
-            /* Insert the storage key into R1 register bits 24-31 */
+        {
+            /* Insert the requested storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
             regs->GR_LHLCL(r1) = STORAGE_KEY( n, regs ) & 0xFE;
 #else
             regs->GR_LHLCL(r1) = (STORAGE_KEY1( n, regs ) | STORAGE_KEY2( n, regs )) & 0xFE;
 #endif
+        }
     }
     else /* !SIE_MODE */
 #endif /* defined( _FEATURE_SIE ) */
-        /* Insert the storage key into R1 register bits 24-31 */
+
+        /* Insert the storage key into r1 register bits 24-31 */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
         regs->GR_LHLCL(r1) = STORAGE_KEY( n, regs ) & 0xFE;
 #else
@@ -1606,7 +1605,7 @@ BYTE    storkey;
 DEF_INST( insert_virtual_storage_key )
 {
 int     r1, r2;                         /* Values of R fields        */
-VADR    effective_addr;                 /* Virtual storage addr      */
+VADR    effective_addr;                 /* Operand-2 virtual page    */
 RADR    n;                              /* 32-bit operand values     */
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
 int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
@@ -1627,7 +1626,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
          && (regs->CR(0) & CR0_EXT_AUTH) == 0)
         ARCH_DEP( program_interrupt )( regs, PGM_PRIVILEGED_OPERATION_EXCEPTION );
 
-    /* Load virtual storage address from R2 register */
+    /* Load virtual storage address from r2 register */
     effective_addr = regs->GR(r2) & ADDRESS_MAXWRAP( regs );
 
     /* Translate virtual address to real address */
@@ -1647,7 +1646,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
        SPGTE rather then causing a host page fault. */
     if (SIE_MODE( regs )
       && !regs->sie_pref
-      && (SIE_STATE_BIT_ON( regs, RCPO0, SKA )
+      && (SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
 #if defined( _FEATURE_ZSIE )
       || (HOSTREGS->arch_mode == ARCH_900_IDX)
 #endif
@@ -1659,6 +1658,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
 
         n = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
+        /* Program Check if any unexpected translation error */
         if (sr != 0 && sr != 2)
             ARCH_DEP( program_interrupt )( HOSTREGS, HOSTREGS->dat.xcode );
 
@@ -1678,7 +1678,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
                56-60 and set bits 61-63 to zeroes */
             regs->GR_LHLCL(r1) = STORAGE_KEY( n, regs ) & 0xF8;
     }
-    else
+    else /* Not SIE, or else sie_pref, or else RCP Bypass...  */
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
     {
         SIE_TRANSLATE( &n, ACCTYPE_SIE, regs );
@@ -1814,9 +1814,7 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
-
     PRIV_CHECK( regs );
 
     /* Special operation exception if ASN translation control
@@ -2298,7 +2296,6 @@ void ARCH_DEP( load_real_address_proc )( REGS* regs,
 int     cc;                             /* Condition code            */
 
     SIE_XC_INTERCEPT( regs );
-
     PRIV_CHECK( regs );
 
     /* Translate the effective address to a real address */
@@ -2485,7 +2482,6 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     if (REAL_MODE( &regs->psw )
@@ -2528,7 +2524,6 @@ GREG    l;                              /* Unsigned workarea         */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Program check if secondary space control (CR0 bit 5) is 0,
@@ -2592,7 +2587,6 @@ GREG    l;                              /* Unsigned workarea         */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Program check if secondary space control (CR0 bit 5) is 0,
@@ -2743,7 +2737,6 @@ int     space1, space2;                 /* Address space modifiers   */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Program check if DAT is off */
@@ -2920,7 +2913,6 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-
     SIE_XC_INTERCEPT( regs );
 
 #if defined( _FEATURE_SIE )
@@ -3596,7 +3588,6 @@ int     rc;                             /* return code from load_psw */
     TRAN_INSTR_CHECK( regs );
 
     UNREFERENCED( inst );
-
     SIE_XC_INTERCEPT( regs );
 
 #if defined( _FEATURE_SIE )
@@ -4239,7 +4230,7 @@ DEF_INST( reset_reference_bit )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 RADR    n;                              /* Absolute storage addr     */
-BYTE    storkey;                        /* Storage key               */
+BYTE    storkey;                        /* Original Storage key      */
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -4271,22 +4262,24 @@ BYTE    storkey;                        /* Storage key               */
     if (SIE_MODE( regs ))
     {
         if (SIE_STATE_BIT_ON( regs, IC2, RRBE ))
-            longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+            SIE_INTERCEPT( regs );
 
         if (!regs->sie_pref)
         {
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
-            if (SIE_STATE_BIT_ON( regs, RCPO0, SKA   )
+            if (SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
             &&  SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
             {
                 SIE_TRANSLATE( &n, ACCTYPE_SIE, regs );
+
+                /* Save the original storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
                 storkey = STORAGE_KEY( n, regs );
 #else
                 storkey = STORAGE_KEY1( n, regs ) | STORAGE_KEY2( n, regs );
 #endif
 
-                /* Reset the reference bit in the storage key */
+                /* Reset the reference bit in the real page */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
                 STORAGE_KEY( n, regs ) &= ~(STORKEY_REF);
 #else
@@ -4378,6 +4371,7 @@ BYTE    storkey;                        /* Storage key               */
         }
         else /* sie_perf */
         {
+            /* Save the original storage key */
 #if defined( _FEATURE_2K_STORAGE_KEYS )
             storkey = STORAGE_KEY( n, regs );
 #else
@@ -4391,16 +4385,17 @@ BYTE    storkey;                        /* Storage key               */
             STORAGE_KEY2( n, regs ) &= ~(STORKEY_REF);
 #endif
         }
-    } /* !SIE_MODE */
-    else
+    }
+    else /* !SIE_MODE */
 #endif /* defined( _FEATURE_SIE ) */
     {
+        /* Save the original storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
         storkey =  STORAGE_KEY( n, regs );
 #else
         storkey =  STORAGE_KEY1( n, regs ) | STORAGE_KEY2( n, regs );
 #endif
-            /* Reset the reference bit in the storage key */
+        /* Reset the reference bit in the storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
         STORAGE_KEY( n, regs ) &= ~(STORKEY_REF);
 #else
@@ -4439,14 +4434,15 @@ DEF_INST( reset_reference_bit_extended )
 {
 int     r1, r2;                         /* Register values           */
 RADR    n;                              /* Abs frame addr stor key   */
-BYTE    storkey;                        /* Storage key               */
+BYTE    storkey;                        /* Original Storage key      */
 
     RRE( inst, regs, r1, r2 );
 
+    /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
-    /* Load 4K block address from R2 register */
+    /* Load 4K block real address from r2 register */
     n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
     /* Convert real address to absolute address */
@@ -4460,14 +4456,15 @@ BYTE    storkey;                        /* Storage key               */
     if (SIE_MODE( regs ))
     {
         if (SIE_STATE_BIT_ON( regs, IC2, RRBE ))
-            longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+            SIE_INTERCEPT( regs );
 
         if (!regs->sie_pref)
         {
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
-            if ((SIE_STATE_BIT_ON( regs, RCPO0, SKA )
+            if ((SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
 #if defined( _FEATURE_ZSIE )
-              || (HOSTREGS->arch_mode == ARCH_900_IDX)
+              // SKA is always active for z/VM
+              || (ARCH_900_IDX == HOSTREGS->arch_mode)
 #endif
               ) && SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
             {
@@ -4579,6 +4576,7 @@ BYTE    storkey;                        /* Storage key               */
         }
         else /* sie_pref */
         {
+            /* Save the original storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
             storkey = STORAGE_KEY( n, regs );
 #else
@@ -4598,6 +4596,7 @@ BYTE    storkey;                        /* Storage key               */
     else /* !SIE_MODE */
 #endif /* defined( _FEATURE_SIE ) */
     {
+        /* Save the original storage key */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
         storkey = STORAGE_KEY( n, regs );
 #else
@@ -5012,7 +5011,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif
 
     UNREFERENCED( r2 );
-
     SIE_XC_INTERCEPT( regs );
 
     /* Perform serialization and checkpoint-synchronization */
@@ -5172,14 +5170,16 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST( set_storage_key )
 {
-int     r1, r2;                         /* Values of R fields        */
-RADR    n;                              /* Absolute storage addr     */
+int     r1, r2;                         /* Operand register numbers  */
+RADR    n;                              /* Working abs page address  */
 
     RR( inst, regs, r1, r2 );
 
+    /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
+    /* Special Operation Exception if Storkey exception control zero */
 #if defined( FEATURE_4K_STORAGE_KEYS ) || defined( _FEATURE_SIE )
     if (
 #if defined( _FEATURE_SIE ) && !defined( FEATURE_4K_STORAGE_KEYS )
@@ -5193,13 +5193,13 @@ RADR    n;                              /* Absolute storage addr     */
     if (regs->GR_L(r2) & 0x0000000F)
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    /* Load 2K block address from R2 register */
+    /* Load 2K block real address from r2 register */
     n = regs->GR_L(r2) & 0x00FFF800;
 
     /* Convert real address to absolute address */
     n = APPLY_PREFIXING( n, regs->PX );
 
-    /* Addressing exception if block is outside main storage */
+    /* Addressing exception if block is outside of main storage */
     if (n > regs->mainlim)
         ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
 
@@ -5207,12 +5207,12 @@ RADR    n;                              /* Absolute storage addr     */
     if (SIE_MODE( regs ))
     {
         if (SIE_STATE_BIT_ON( regs, IC2, SSKE ))
-            longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+            SIE_INTERCEPT( regs );
 
         if (!regs->sie_pref)
         {
 #if defined( _FEATURE_STORAGE_KEY_ASSIST )
-            if (SIE_STATE_BIT_ON( regs, RCPO0, SKA   )
+            if (SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
             &&  SIE_STATE_BIT_ON( regs, RCPO2, RCPBY ))
                 { SIE_TRANSLATE( &n, ACCTYPE_SIE, regs ); }
             else
@@ -5323,7 +5323,7 @@ RADR    n;                              /* Absolute storage addr     */
         }
         else /* sie_pref */
         {
-            /* Update the storage key from R1 register bits 24-30 */
+            /* Update the storage key from r1 register bits 24-30 */
 #if !defined( _FEATURE_2K_STORAGE_KEYS )
             STORAGE_KEY ( n, regs ) &= STORKEY_BADFRM;
             STORAGE_KEY ( n, regs ) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
@@ -5338,7 +5338,7 @@ RADR    n;                              /* Absolute storage addr     */
     else /* !SIE_MODE */
 #endif /* defined( _FEATURE_SIE ) */
     {
-        /* Update the storage key from R1 register bits 24-30 */
+        /* Update the storage key from r1 register bits 24-30 */
 #if defined( _FEATURE_2K_STORAGE_KEYS )
         STORAGE_KEY ( n, regs ) &= STORKEY_BADFRM;
         STORAGE_KEY ( n, regs ) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
@@ -5350,6 +5350,8 @@ RADR    n;                              /* Absolute storage addr     */
 #endif
     }
 
+    /* Invalidate AIA/AEA so that the REF and CHANGE bits
+       will be set when referenced next */
     STORKEY_INVALIDATE( regs, n );
 
 //  /*debug*/LOGMSG( "SSK storage block %8.8X key %2.2X\n",
@@ -5449,8 +5451,8 @@ static inline int ARCH_DEP( conditional_sske_procedure )
 /*-------------------------------------------------------------------*/
 DEF_INST( set_storage_key_extended )
 {
-int     r1, r2;                         /* Register numbers          */
-int     m3;                             /* Mask field                */
+int     r1, r2;                         /* Operand register numbers  */
+int     m3;                             /* Operand-3 mask field      */
 RADR    a,n;                            /* Abs frame addr stor key   */
 #if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
 int     fc;                             /* Frame Count               */
@@ -5459,6 +5461,7 @@ BYTE    r1key;
 
     RRF_M( inst, regs, r1, r2, m3 );
 
+    /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
@@ -5722,7 +5725,6 @@ BYTE    r1key;
     }
 #endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
 
-    /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION( regs );
     PERFORM_CHKPT_SYNC( regs );
 
@@ -7631,7 +7633,7 @@ RADR    n;                              /* Real address              */
         n = APPLY_PREFIXING( n, regs->PX );
 
         /* Clear the 4K block to zeroes */
-        memset( regs->mainstor + n, 0, PAGEFRAME_PAGESIZE );
+        clear_page_4K( regs->mainstor + n );
 
         /* Set condition code 0 if storage usable, 1 if unusable */
         if (STORAGE_KEY( n, regs ) & STORKEY_BADFRM)
