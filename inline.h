@@ -39,22 +39,20 @@ void z900_invalidate_tlb (REGS *regs, BYTE mask);
 void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main);
 void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
         U32 op2, REGS *regs);
-_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
-        REGS *regs, int acctype, BYTE akey);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
         REGS *regs, int acctype, BYTE akey, size_t len);
 
 #if defined( _FEATURE_SIE ) && ARCH_IDX != ARCH_900_IDX
-_LOGICAL_C_STATIC BYTE *s390_logical_to_main (U32 addr, int arn, REGS *regs,
-        int acctype, BYTE akey);
+_LOGICAL_C_STATIC BYTE *s390_logical_to_main_l (U32 addr, int arn, REGS *regs,
+        int acctype, BYTE akey, size_t len);
 int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
         int acctype);
 static inline U64 s390_apply_prefixing( U64 raddr, U64 px );
 #endif
 
 #if defined( _FEATURE_ZSIE )
-_LOGICAL_C_STATIC BYTE *z900_logical_to_main (U64 addr, int arn, REGS *regs,
-        int acctype, BYTE akey);
+_LOGICAL_C_STATIC BYTE *z900_logical_to_main_l (U64 addr, int arn, REGS *regs,
+        int acctype, BYTE akey, size_t len);
 int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
         int acctype);
 static inline U64 z900_apply_prefixing( U64 raddr, U64 px );

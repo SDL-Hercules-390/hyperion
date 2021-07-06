@@ -1693,7 +1693,7 @@ do {                                                                  \
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
-    ARCH_DEP( logical_to_main )((_addr), (_arn), (_regs), (_acctype), (_akey)), \
+    ARCH_DEP( logical_to_main_l )((_addr), (_arn), (_regs), (_acctype), (_akey), 1), \
     (_regs)->dat.aaddr \
   )
 
@@ -1704,7 +1704,7 @@ do {                                                                  \
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
-    s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)), \
+    s390_logical_to_main_l((_addr), (_arn), (_regs), (_acctype), (_akey), 1), \
     (_regs)->dat.aaddr \
   )
 
@@ -1718,8 +1718,8 @@ do {                                                                  \
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
     (((_regs)->arch_mode == ARCH_390_IDX) \
-    ? s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)) \
-    : z900_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey))), \
+    ? s390_logical_to_main_l((_addr), (_arn), (_regs), (_acctype), (_akey), 1) \
+    : z900_logical_to_main_l((_addr), (_arn), (_regs), (_acctype), (_akey), 1)), \
     (_regs)->dat.aaddr \
   )
 

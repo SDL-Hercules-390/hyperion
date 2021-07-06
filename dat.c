@@ -2419,13 +2419,6 @@ vabs_prog_check:
     return NULL; /* prevent warning from compiler */
 } /* end function ARCH_DEP(logical_to_main_l) */
 
-/* Original logical_to_main() for compatiblity purpose */
-_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
-                                    REGS *regs, int acctype, BYTE akey)
-{
-    return ARCH_DEP(logical_to_main_l)(addr,arn,regs,acctype,akey,1);
-}
-
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
