@@ -1,16 +1,16 @@
 os: linux
-dist: trusty
+dist: bionic
 language: c
 #
 jobs:
   include:
 
-    - name: "Ub 16.04 -- gcc 5.4.0"
-      dist: xenial
+    - name: "Ubuntu 18.04 -- gcc 7.5.0"
+      dist: bionic
       env: MATRIX_EVAL="CC=gcc"
 
-    - name: "Ub 16.04 -- clang 7.0.0"
-      dist: xenial
+    - name: "Ubuntu 18.04 -- clang 7.0.0"
+      dist: bionic
       env: MATRIX_EVAL="CC=clang"
 
 #
@@ -23,7 +23,9 @@ before_install:
 before_script:
   - util/bldlvlck
   - ./autogen.sh
-  - ./configure --enable-regina-rexx
+  - mkdir build
+  - cd build
+  - ../configure --enable-regina-rexx
   - bash -c '${CC} --version'
 
 #
