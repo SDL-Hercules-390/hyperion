@@ -14,8 +14,12 @@ lns            = @LN_S@
 ldadd          = @LIBS@
 
 #------------------------------------------------------------------------------
+# Note! Backslash line continuation is disallowed by newer versions of aclocal
+#------------------------------------------------------------------------------
 
 ACLOCAL_AMFLAGS = -I autoconf -I m4
+
+#------------------------------------------------------------------------------
 
 AM_CPPFLAGS =       \
   -I $(top_srcdir)  \
@@ -24,7 +28,7 @@ AM_CPPFLAGS =       \
 AM_CPPFLAGS += $(extpkg_incdirs)
 
 #------------------------------------------------------------------------------
-# NOte! Due to inter-module dependencies the sequence
+# Note! Due to inter-module dependencies the sequence
 #       (ordering) of the SUBDIRS list is important!
 #------------------------------------------------------------------------------
 
