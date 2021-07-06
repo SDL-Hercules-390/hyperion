@@ -372,6 +372,7 @@
     <ClCompile Include="getopt.c" />
     <ClCompile Include="hao.c" />
     <ClCompile Include="hchan.c" />
+    <ClCompile Include="hbyteswp.c" />
     <ClCompile Include="hconsole.c" />
     <ClCompile Include="hdiagf18.c" />
     <ClCompile Include="hdl.c" />
@@ -403,6 +404,7 @@
     <ClCompile Include="httpserv.c" />
     <ClCompile Include="ieee.c" />
     <ClCompile Include="impl.c" />
+    <ClCompile Include="inline.c" />
     <ClCompile Include="io.c" />
     <ClCompile Include="ipl.c" />
     <ClCompile Include="loadmem.c" />
@@ -412,6 +414,7 @@
     <ClCompile Include="losc.c" />
     <ClCompile Include="ltdl.c" />
     <ClCompile Include="machchk.c" />
+    <ClCompile Include="machdep.c" />
     <ClCompile Include="maketape.c" />
     <ClCompile Include="memrchr.c" />
     <ClCompile Include="mpc.c" />
@@ -456,6 +459,7 @@
     <ClCompile Include="vm.c" />
     <ClCompile Include="vmd250.c" />
     <ClCompile Include="vmfplc2.c" />
+    <ClCompile Include="vstore.c" />
     <ClCompile Include="w32ctca.c" />
     <ClCompile Include="w32stape.c" />
     <ClCompile Include="w32util.c" />
@@ -465,6 +469,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".travis.yml" />
+    <None Include="CODEOWNERS" />
     <None Include="crypto\lib\crypto32.pdb" />
     <None Include="crypto\lib\crypto32d.pdb" />
     <None Include="crypto\lib\crypto64.pdb" />

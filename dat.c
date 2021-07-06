@@ -8,15 +8,6 @@
 
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
-#include "hstdinc.h"
-
-#define _DAT_C
-#define _HENGINE_DLL_
-
-#include "hercules.h"
-#include "opcode.h"
-#include "inline.h"
-
 /*-------------------------------------------------------------------*/
 /* This module implements the DAT, ALET, and ASN translation         */
 /* functions of the ESA/390 architecture, described in the manual    */
@@ -33,6 +24,64 @@
 /*      ESAME DAT support by Roger Bowler (SA22-7832)                */
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
+
+#include "hstdinc.h"
+
+#define _DAT_C
+#define _HENGINE_DLL_
+
+#include "hercules.h"
+#include "opcode.h"
+#include "inline.h"
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+extern inline void ARCH_DEP( purge_tlb )( REGS* regs );
+extern inline void ARCH_DEP( purge_tlb_all )();
+
+#if defined( FEATURE_ACCESS_REGISTERS )
+extern inline void ARCH_DEP( purge_alb )( REGS* regs );
+extern inline void ARCH_DEP( purge_alb_all )();
+#endif
+
+extern inline void ARCH_DEP( purge_tlbe_all )( RADR pfra );
+
+#if defined( FEATURE_DUAL_ADDRESS_SPACE )
+extern inline bool ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, REGS* regs );
+#endif
+
+extern inline BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey );
+
+/*-------------------------------------------------------------------*/
+/*  The below two specialized SIE functions must both be defined at  */
+/*  the same time since the "logical_to_main_l" function might need  */
+/*  to apply prefixing for a host architecture which is differernt   */
+/*  from the architecture currently executing "logical_to_main_l".   */
+/*-------------------------------------------------------------------*/
+#if defined( _FEATURE_SIE )
+
+  #ifndef DID_SIE_APPLY_PREFIXING
+  #define DID_SIE_APPLY_PREFIXING
+
+    extern inline U64 sie_apply_s390_host_prefixing( U64 raddr, U64 px );
+    extern inline U64 sie_apply_z900_host_prefixing( U64 raddr, U64 px );
+
+  #endif // DID_SIE_APPLY_PREFIXING
+
+#endif // _FEATURE_SIE
+
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
@@ -178,93 +227,6 @@ asn_asx_tran_excp:
     return code;
 
 } /* end function translate_asn */
-#endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
-
-
-#if defined( FEATURE_DUAL_ADDRESS_SPACE )
-/*-------------------------------------------------------------------*/
-/* Perform ASN authorization process                                 */
-/*                                                                   */
-/* Input:                                                            */
-/*      ax      Authorization index                                  */
-/*      aste    Pointer to 16-word area containing a copy of the     */
-/*              ASN second table entry associated with the ASN       */
-/*      atemask Specifies which authority bit to test in the ATE:    */
-/*              ATE_PRIMARY (for PT instruction)                     */
-/*              ATE_SECONDARY (for PR, SSAR, and LASP instructions,  */
-/*                             and all access register translations) */
-/*      regs    Pointer to the CPU register context                  */
-/*                                                                   */
-/* Operation:                                                        */
-/*      The AX is used to select an entry in the authority table     */
-/*      pointed to by the ASTE, and an authorization bit in the ATE  */
-/*      is tested.  For ATE_PRIMARY (X'80'), the P bit is tested.    */
-/*      For ATE_SECONDARY (X'40'), the S bit is tested.              */
-/*      Authorization is successful if the ATE falls within the      */
-/*      authority table limit and the tested bit value is 1.         */
-/*                                                                   */
-/* Output:                                                           */
-/*      If authorization is successful, the return value is zero.    */
-/*      If authorization is unsuccessful, the return value is 1.     */
-/*                                                                   */
-/*      A program check may be generated for addressing exception    */
-/*      if the authority table entry address is invalid, and in      */
-/*      this case the function does not return.                      */
-/*-------------------------------------------------------------------*/
-int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
-                                               int atemask, REGS *regs)
-{
-RADR    ato;                            /* Authority table origin    */
-int     atl;                            /* Authority table length    */
-BYTE    ate;                            /* Authority table entry     */
-
-    /* [3.10.3.1] Authority table lookup */
-
-    /* Isolate the authority table origin and length */
-    ato = aste[0] & ASTE0_ATO;
-    atl = aste[1] & ASTE1_ATL;
-
-    /* Authorization fails if AX is outside table */
-    if ((ax & 0xFFF0) > atl)
-        return 1;
-
-    /* Calculate the address of the byte in the authority
-       table which contains the 2 bit entry for this AX */
-    ato += (ax >> 2);
-
-    /* Ignore carry into bit position 0 */
-    ato &= 0x7FFFFFFF;
-
-    /* Addressing exception if ATE is outside main storage */
-    if (ato > regs->mainlim)
-        goto auth_addr_excp;
-
-    /* Load the byte containing the authority table entry
-       and shift the entry into the leftmost 2 bits */
-    ato = APPLY_PREFIXING (ato, regs->PX);
-
-    SIE_TRANSLATE(&ato, ACCTYPE_SIE, regs);
-
-    ate = regs->mainstor[ato];
-    ate <<= ((ax & 0x03)*2);
-
-    /* Set the main storage reference bit */
-    STORAGE_KEY(ato, regs) |= STORKEY_REF;
-
-    /* Authorization fails if the specified bit (either X'80' or
-       X'40' of the 2 bit authority table entry) is zero */
-    if ((ate & atemask) == 0)
-        return 1;
-
-    /* Exit with successful return code */
-    return 0;
-
-/* Conditions which always cause program check */
-auth_addr_excp:
-    regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
-    return 1;
-
-} /* end function authorize_asn */
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
 
@@ -490,41 +452,6 @@ ext_auth_excp:
     return regs->dat.xcode;
 
 } /* end function translate_alet */
-#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
-
-
-#if defined( FEATURE_ACCESS_REGISTERS )
-/*-------------------------------------------------------------------*/
-/* Purge the ART lookaside buffer                                    */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(purge_alb) (REGS *regs)
-{
-int i;
-
-    for(i = 1; i < 16; i++)
-        if(regs->AEA_AR(i) >= CR_ALB_OFFSET)
-            regs->AEA_AR(i) = 0;
-
-    if(regs->host && GUESTREGS)
-        for(i = 1; i < 16; i++)
-            if(GUESTREGS->AEA_AR(i) >= CR_ALB_OFFSET)
-                GUESTREGS->AEA_AR(i) = 0;
-
-} /* end function purge_alb */
-
-/*-------------------------------------------------------------------*/
-/* Purge the ART lookaside buffer for all CPUs                       */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(purge_alb_all) ()
-{
-int i;
-
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-         && (sysblk.regs[i]->cpubit & sysblk.started_mask))
-            ARCH_DEP(purge_alb) (sysblk.regs[i]);
-
-} /* end function purge_alb_all */
 #endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 
 
@@ -1751,50 +1678,6 @@ tran_excp_addr:
 
 
 /*-------------------------------------------------------------------*/
-/* Purge the translation lookaside buffer                            */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(purge_tlb) (REGS *regs)
-{
-    INVALIDATE_AIA(regs);
-
-    if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
-    {
-        memset(&regs->tlb.vaddr, 0, TLBN * sizeof(DW) );
-        regs->tlbID = 1;
-    }
-
-#if defined( _FEATURE_SIE )
-    /* Also clear the guest registers in the SIE copy */
-    if(regs->host && GUESTREGS)
-    {
-        INVALIDATE_AIA(GUESTREGS);
-
-        if (((++GUESTREGS->tlbID) & TLBID_BYTEMASK) == 0)
-        {
-            memset(&GUESTREGS->tlb.vaddr, 0, TLBN * sizeof(DW));
-            GUESTREGS->tlbID = 1;
-        }
-    }
-#endif /* defined( _FEATURE_SIE ) */
-} /* end function purge_tlb */
-
-
-/*-------------------------------------------------------------------*/
-/* Purge the translation lookaside buffer for all CPUs               */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(purge_tlb_all) ()
-{
-int i;
-
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-         && (sysblk.regs[i]->cpubit & sysblk.started_mask))
-            ARCH_DEP(purge_tlb) (sysblk.regs[i]);
-
-} /* end function purge_tlb_all */
-
-
-/*-------------------------------------------------------------------*/
 /* Purge a specific translation lookaside buffer entry               */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( purge_tlbe )( REGS* regs, RADR pfra )
@@ -1864,21 +1747,6 @@ RADR ptemask;
 #endif /* defined( _FEATURE_SIE ) */
 
 } /* end function purge_tlbe */
-
-
-/*-------------------------------------------------------------------*/
-/* Purge translation lookaside buffer entries for all CPUs           */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(purge_tlbe_all) (RADR pfra)
-{
-int i;
-
-    for (i = 0; i < sysblk.maxcpu; i++)
-        if (IS_CPU_ONLINE(i)
-         && (sysblk.regs[i]->cpubit & sysblk.started_mask))
-            ARCH_DEP(purge_tlbe) (sysblk.regs[i], pfra);
-
-} /* end function purge_tlbe_all */
 
 
 /*-------------------------------------------------------------------*/
@@ -2208,9 +2076,10 @@ static inline int ARCH_DEP( check_sa_per2 )( int arn, int acctype, REGS* regs )
 /*      and the function does not return.                            */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main_l) (VADR addr, int arn,
-                                    REGS *regs, int acctype, BYTE akey,
-                                    size_t len)
+DLL_EXPORT
+BYTE *ARCH_DEP( logical_to_main_l )( VADR addr, int arn,
+                                     REGS *regs, int acctype,
+                                     BYTE akey, size_t len )
 {
 RADR    aaddr;                          /* Absolute address          */
 RADR    apfra;                          /* Abs page frame address    */
@@ -2299,13 +2168,13 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         {
             case ARCH_390_IDX:
                 HOSTREGS->dat.aaddr = aaddr =
-                        s390_apply_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
-                apfra = s390_apply_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
+                        sie_apply_s390_host_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
+                apfra = sie_apply_s390_host_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
                 break;
             case ARCH_900_IDX:
                 HOSTREGS->dat.aaddr = aaddr =
-                        z900_apply_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
-                apfra = z900_apply_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
+                        sie_apply_z900_host_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
+                apfra = sie_apply_z900_host_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
                 break;
             /* No S/370 or any other SIE host exist */
             default:
@@ -2374,7 +2243,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.storkey[ix] = regs->dat.storkey;
         regs->tlb.skey[ix]    = *regs->dat.storkey & STORKEY_KEY;
         regs->tlb.acc[ix]     = (addr >= PSA_SIZE || regs->dat.pvtaddr)
-                              ? (ACC_READ|ACC_CHECK|acctype)
+                              ? (ACC_READ | ACC_CHECK | acctype)
                               :  ACC_READ;
         regs->tlb.main[ix]    = NEW_MAINADDR (regs, addr, apfra);
 

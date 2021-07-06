@@ -176,11 +176,19 @@
 #if defined(WIN32)                      /* "Windows" options         */
 
 #if defined(_MSVC_)
+
   #define  DLL_IMPORT   __declspec ( dllimport )
   #define  DLL_EXPORT   __declspec ( dllexport )
-#else
+  #define  INL_DLL_IMPORT
+  #define  INL_DLL_EXPORT       extern
+
+#else // (cygwin??)
+
   #define  DLL_IMPORT   extern
   #define  DLL_EXPORT
+  #define  INL_DLL_IMPORT
+  #define  INL_DLL_EXPORT       extern
+
 #endif
 
 #define OPTION_W32_CTCI                 /* Fish's TunTap for CTCA's  */
@@ -246,6 +254,8 @@
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT      extern
 #define MAX_DEVICE_THREADS          0   /* (0 == unlimited)          */
 #define MIXEDCASE_FILENAMES_ARE_UNIQUE  /* ("Foo" and "fOo" unique)  */
 #define HOW_TO_IMPLEMENT_SH_COMMAND       USE_ANSI_SYSTEM_API_FOR_SH_COMMAND
@@ -263,6 +273,8 @@
 #define MACOS_EXTPKG_DISPLAY_VERSION_WORKAROUND_KLUDGE
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT      extern
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
 #undef  OPTION_SCSI_TAPE                /* No SCSI tape support      */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
@@ -286,6 +298,8 @@
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT      extern
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
 #undef  OPTION_SCSI_ERASE_GAP           /* (NOT supported)           */
@@ -305,6 +319,8 @@
 
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT      extern
 #define TUNTAP_IFF_RUNNING_NEEDED       /* Needed by tuntap driver?? */
 #define OPTION_SCSI_TAPE                /* SCSI tape support         */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
@@ -332,6 +348,8 @@
 #define SOL_TCP      IPPROTO_TCP        /* (both mean same thing)    */
 #define DLL_IMPORT   extern
 #define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT      extern
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* (tuntap support unknown)  */
 #undef  OPTION_SCSI_TAPE                /* (NO SCSI tape support)    */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */
@@ -359,6 +377,8 @@ WARNING( "unknown target platform: defaulting to generic platform settings" )
 
 #define DLL_IMPORT   extern             /* (a safe default)          */
 #define DLL_EXPORT
+#define INL_DLL_IMPORT
+#define INL_DLL_EXPORT      extern
 #undef  TUNTAP_IFF_RUNNING_NEEDED       /* (tuntap support unknown)  */
 #undef  OPTION_SCSI_TAPE                /* (NO SCSI tape support)    */
 #undef  OPTION_SCSI_ERASE_TAPE          /* (NOT supported)           */

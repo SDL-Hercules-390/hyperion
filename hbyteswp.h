@@ -35,7 +35,7 @@
 
     #else // !defined( HAVE_SWAP_BUILTINS )
 
-      static __inline__ uint16_t (ATTR_REGPARM(1) bswap_16 )( uint16_t  x )
+      inline uint16_t (ATTR_REGPARM(1) bswap_16 )( uint16_t  x )
       {
       #if defined(__x86_64__)
           __asm__("xchgb %b0,%h0" : "=Q" (x) :  "0" (x));
@@ -45,7 +45,7 @@
         return x;
       }
 
-      static __inline__ uint32_t (ATTR_REGPARM(1) bswap_32 )( uint32_t  x )
+      inline uint32_t (ATTR_REGPARM(1) bswap_32 )( uint32_t  x )
       {
       #if defined(__x86_64__)
           __asm__("bswapl %0" : "=r" (x) : "0" (x));
@@ -55,7 +55,7 @@
           return x;
       }
 
-      static __inline__ uint64_t (ATTR_REGPARM(1) bswap_64 )( uint64_t  x )
+      inline uint64_t (ATTR_REGPARM(1) bswap_64 )( uint64_t  x )
       {
       #if defined(__x86_64__)
           __asm__("bswapq %0" : "=r" (x) : "0" (x));

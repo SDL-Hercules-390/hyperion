@@ -477,6 +477,7 @@ libherc_la_SOURCES = \
   general2.c         \
   general3.c         \
   hao.c              \
+  hbyteswp.c         \
   hconsole.c         \
   hdiagf18.c         \
   history.c          \
@@ -491,12 +492,14 @@ libherc_la_SOURCES = \
   httpserv.c         \
   ieee.c             \
   impl.c             \
+  inline.c           \
   io.c               \
   ipl.c              \
   loadmem.c          \
   loadparm.c         \
   losc.c             \
   machchk.c          \
+  machdep.c          \
   opcode.c           \
   panel.c            \
   pfpo.c             \
@@ -517,6 +520,7 @@ libherc_la_SOURCES = \
   vector.c           \
   vm.c               \
   vmd250.c           \
+  vstore.c           \
   x75.c              \
   xstore.c           \
   $(DYNSRC)
