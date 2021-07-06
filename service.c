@@ -977,19 +977,19 @@ BYTE ARCH_DEP(scpinfo_cfg11) =
 
 BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             0
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+#if defined( FEATURE_SIE )
 #if defined(_370) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
                             | SCCB_CPF0_SIE_370_MODE
 #endif /*defined(_370) && !defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                             | SCCB_CPF0_SIE_XA_MODE
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /* defined( FEATURE_SIE ) */
 //                          | SCCB_CPF0_SIE_SET_II_370_MODE
 #if defined(FEATURE_IO_ASSIST)
                             | SCCB_CPF0_SIE_SET_II_XA_MODE
 #endif /*defined(FEATURE_IO_ASSIST)*/
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+#if defined( FEATURE_SIE )
                             | SCCB_CPF0_SIE_NEW_INTERCEPT_FORMAT
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /* defined( FEATURE_SIE ) */
 #if defined(FEATURE_STORAGE_KEY_ASSIST)
                             | SCCB_CPF0_STORAGE_KEY_ASSIST
 #endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
@@ -1001,9 +1001,9 @@ BYTE ARCH_DEP(scpinfo_cpf)[12] = {
 #if defined(FEATURE_IO_ASSIST)
                             | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
 #endif /*defined(FEATURE_IO_ASSIST)*/
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+#if defined( FEATURE_SIE )
                             | SCCB_CPF1_GUEST_PER_ENHANCED
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /* defined( FEATURE_SIE ) */
 //                          | SCCB_CPF1_SIGP_INTERPRETATION_ASSIST
 #if defined(FEATURE_STORAGE_KEY_ASSIST)
                             | SCCB_CPF1_RCP_BYPASS_FACILITY

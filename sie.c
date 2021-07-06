@@ -278,7 +278,7 @@ void* sie_perfmon_disp()
 #endif /* defined( _FEATURE_SIE ) */
 
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 /*-------------------------------------------------------------------*/
 /* B214 SIE   - Start Interpretive Execution                     [S] */
 /*-------------------------------------------------------------------*/
@@ -873,7 +873,7 @@ int     i;                              /* (work)                    */
     longjmp( regs->progjmp, SIE_NO_INTERCEPT );
 
 } /* end of start_interpretive_execution instruction */
-#endif /* defined( FEATURE_INTERPRETIVE_EXECUTION ) */
+#endif /* defined( FEATURE_SIE ) */
 
 
 #if defined( _FEATURE_SIE )
@@ -1265,7 +1265,7 @@ endloop:        ; // (nop to make compiler happy)
 #endif /* defined( _FEATURE_SIE ) */
 
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 /*-------------------------------------------------------------------*/
 /*                         sie_exit                                  */
 /*-------------------------------------------------------------------*/
@@ -1630,11 +1630,11 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     PTT_SIE( "sie_xit ret", 0, 0, 0  );
 
 } /* end function sie_exit */
-#endif /* defined( FEATURE_INTERPRETIVE_EXECUTION ) */
+#endif /* defined( FEATURE_SIE ) */
 
 
 #if defined( _FEATURE_SIE )
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 #if defined( FEATURE_REGION_RELOCATE )
 /*-------------------------------------------------------------------*/
 /* B23D STZP  - Store Zone Parameter                             [S] */
@@ -1864,7 +1864,7 @@ U32    newgr1;
     release_lock (&dev->lock);
 }
 #endif /* defined( FEATURE_IO_ASSIST ) */
-#endif /* defined( FEATURE_INTERPRETIVE_EXECUTION ) */
+#endif /* defined( FEATURE_SIE ) */
 #endif /* defined( _FEATURE_SIE ) */
 
 /*-------------------------------------------------------------------*/

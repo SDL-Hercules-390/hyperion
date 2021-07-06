@@ -688,7 +688,7 @@ void   *zmoncode = NULL;                /* mon call SIE intercept;
                                            warning in GCC.. can't find
                                            why. ISW 2009/02/04       */
 #endif
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 int     sie_ilc=0;                      /* SIE instruction length    */
 #endif
 #if defined( _FEATURE_SIE )
@@ -734,7 +734,7 @@ bool    intercept;                      /* False for virtual pgmint  */
     /* Ensure psw.IA is set and aia invalidated */
     INVALIDATE_AIA(realregs);
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
     if (realregs->sie_active)
         INVALIDATE_AIA( GUEST( realregs ));
 #endif
@@ -744,7 +744,7 @@ bool    intercept;                      /* False for virtual pgmint  */
 
     PTT_PGM( "PGM ilc", 0, 0, ilc );
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
     if (realregs->sie_active)
     {
         sie_ilc = GUEST( realregs )->psw.zeroilc ? 0 : REAL_ILC( GUEST(realregs ));
@@ -832,7 +832,7 @@ bool    intercept;                      /* False for virtual pgmint  */
     PTT_PGM( "PGM execflag", realregs->execflag, realregs->sie_active, 0 );
     realregs->execflag = 0;
 
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+#if defined( FEATURE_SIE )
     if (realregs->sie_active)
         GUEST( realregs )->execflag = 0;
 #endif
@@ -847,7 +847,7 @@ bool    intercept;                      /* False for virtual pgmint  */
     PERFORM_SERIALIZATION( realregs );
     PERFORM_CHKPT_SYNC( realregs );
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
     /* Host protection and addressing exceptions
        must be reflected to the guest */
     if (1
@@ -878,7 +878,7 @@ bool    intercept;                      /* False for virtual pgmint  */
 #endif
         GUEST( realregs )->program_interrupt( GUEST( realregs ), pcode );
     }
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+#endif /* defined( FEATURE_SIE ) */
 
     /* Back up the PSW for exceptions which cause nullification,
        unless the exception occurred during instruction fetch
@@ -926,7 +926,7 @@ bool    intercept;                      /* False for virtual pgmint  */
 
         PTT_PGM( "PGM IA-ilc", realregs->psw.IA, realregs->instinvalid, ilc );
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
         /* When in SIE mode the guest instruction
            causing this host exception must also be nullified
         */
@@ -968,7 +968,7 @@ bool    intercept;                      /* False for virtual pgmint  */
     realregs->instinvalid = 0;
     PTT_PGM( "PGM inval=0", 0, 0, 0 );
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 
     /*---------------------------------------------------------*/
     /* If this is a host exception in SIE state then leave SIE */

@@ -41,7 +41,7 @@ int ARCH_DEP( archdep_pr_cmd )( REGS *regs, int argc, char *argv[] )
         if (px > regs->mainlim)
         {
             // PROGRAMMING NOTE: 'F_RADR' and 'RADR' are very likely
-            // 64-bit due to FEATURE_INTERPRETIVE_EXECUTION normally
+            // 64-bit due to FEATURE_SIE normally
             // being #defined, causing _FEATURE_ZSIE to be #defined.
 
             MSGBUF( buf, "A:"F_RADR"  Addressing exception", (RADR) px );

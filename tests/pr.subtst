@@ -46,7 +46,7 @@ r   4000.4
 
 pr 800000
 # PROGRAMMING NOTE: because Hercules is usually built with
-# FEATURE_INTERPRETIVE_EXECUTION the formatted real address
+# FEATURE_SIE the formatted real address
 # (F_RADR) in Addressing exception messages is 64-bits wide
 # for all archmodes, even for archmode ESA/390 and S/370.
 *Error HHC02290E A:0000000000800000  Addressing exception

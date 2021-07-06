@@ -2201,7 +2201,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
     /* Convert logical address to real address */
     if ( (REAL_MODE(&regs->psw) || arn == USE_REAL_ADDR)
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
       /* Under SIE guest real is always host primary, regardless
          of the DAT mode */
       && !(regs->sie_active
@@ -2212,7 +2212,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 //                               || SIE_STATE_BIT_ON(GUESTREGS, MX, XC) )
 #endif /* defined( _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) */
           )
-#endif /* defined( FEATURE_INTERPRETIVE_EXECUTION ) */
+#endif /* defined( FEATURE_SIE ) */
        )
     {
         regs->dat.pvtaddr = regs->dat.protect = 0;

@@ -42,8 +42,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#define OPTION_SIE2BK_FLD_COPY          // SIE2BK 'fld' is NOT a mask!
-
+#define OPTION_SIE2BK_FLD_COPY          // SIE2BK 'fld' is NOT a mask
 #define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
 #define OPTION_SIE_PURGE_DAT_ALWAYS     // Ivan 2016-07-30: purge DAT
@@ -320,7 +319,6 @@
 #undef  FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #undef  FEATURE_INTEGRATED_3270_CONSOLE
 #undef  FEATURE_INTEGRATED_ASCII_CONSOLE
-#undef  FEATURE_INTERPRETIVE_EXECUTION
 #undef  FEATURE_INTERVAL_TIMER
 #undef  FEATURE_IO_ASSIST
 #undef  FEATURE_LINKAGE_STACK
@@ -359,6 +357,7 @@
 #undef  FEATURE_SEGMENT_PROTECTION
 #undef  FEATURE_SERVICE_PROCESSOR
 #undef  FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST
+#undef  FEATURE_SIE
 #undef  FEATURE_SQUARE_ROOT
 #undef  FEATURE_STORAGE_KEY_ASSIST
 #undef  FEATURE_STORAGE_PROTECTION_OVERRIDE

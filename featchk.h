@@ -590,12 +590,11 @@
 /* of code pertaining to SIE appears to be an exception to the rule. */
 /*-------------------------------------------------------------------*/
 
-#if defined(   FEATURE_INTERPRETIVE_EXECUTION )
-
-  #define     _FEATURE_SIE    // (370/390 SIE)
+#if defined(   FEATURE_SIE )
+  #define     _FEATURE_SIE    // (370/390/900 SIE)
 
   #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    #define   _FEATURE_ZSIE   // (z/Arch SIE)
+    #define   _FEATURE_ZSIE   // (z/Arch-only SIE)
   #endif
 
   #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL )
@@ -787,7 +786,7 @@
 /*                   Facility-bit FEATUREs                           */
 /*-------------------------------------------------------------------*/
 
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_INTERPRETIVE_EXECUTION ) \
+#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && defined( FEATURE_SIE ) \
 && !defined( _FEATURE_SIE )
  #error z/Arch SIE requires ESA/390 SIE too
 #endif
@@ -1036,7 +1035,7 @@
  #error Move page facility cannot be defined with 2K Storage keys
 #endif
 
-#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE ) && !defined( FEATURE_SIE )
  #error MCDS is only supported with SIE
 #endif
 
@@ -1060,11 +1059,11 @@
  #error FEATURE_PER1 cannot be defined if FEATURE_PER2 or FEATURE_PER3 is defined
 #endif
 
-#if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_SIE )
  #error Protection Interception Control is only supported with SIE
 #endif
 
-#if defined( FEATURE_REGION_RELOCATE ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_REGION_RELOCATE ) && !defined( FEATURE_SIE )
  #error Region Relocate Facility only supported with SIE
 #endif
 
@@ -1084,7 +1083,7 @@
  #error SCSI IPL requires FEATURE_HARDWARE_LOADER
 #endif
 
-#if defined( FEATURE_STORAGE_KEY_ASSIST ) && !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_STORAGE_KEY_ASSIST ) && !defined( FEATURE_SIE )
  #error Storage Key assist only supported with SIE
 #endif
 
@@ -1092,6 +1091,6 @@
  #error VM Standard Block I/O DIAGNOSE 0x250 requires FEATURE_EMULATE_VM
 #endif
 
-#endif /* !defined( FEATALL_CHECKALL ) */
+#endif /* !defined( FEATCHK_DO_DEFINES ) */
 
 /* end of FEATCHK.H */

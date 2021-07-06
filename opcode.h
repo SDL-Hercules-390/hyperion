@@ -352,7 +352,7 @@ extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
   #define MULTIPLE_CONTROLLED_DATA_SPACE( _regs )   (0)
 #endif
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
   #undef  SIE_ACTIVE
   #define SIE_ACTIVE( _regs )     ((_regs)->sie_active)
 #else
@@ -3048,7 +3048,7 @@ DEF_INST( test_under_mask_high );
 DEF_INST( test_under_mask_low );
 #endif
 
-#if defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if defined( FEATURE_SIE )
 DEF_INST( start_interpretive_execution );
 #endif
 

@@ -1019,7 +1019,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( test_under_mask_low )
 #endif /*!defined( FEATURE_IMMEDIATE_AND_RELATIVE )*/
 
-#if !defined( FEATURE_INTERPRETIVE_EXECUTION )
+#if !defined( FEATURE_SIE )
  UNDEF_INST( start_interpretive_execution )
 #endif
 
