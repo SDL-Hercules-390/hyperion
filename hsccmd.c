@@ -416,6 +416,13 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
             maxrates_rpt_intvl = 1440;
             WRMSG( HHC02204, "I", argv[0], "midnight" );
         }
+        else if (CMD( argv[1], RESET, 5 ))
+        {
+            curr_high_mips_rate = 0;
+            curr_high_sios_rate = 0;
+            WRMSG( HHC02272, "I", "Done!" );
+            return 0;
+        }
         else
         {
             int   interval = 0;
