@@ -180,7 +180,7 @@ int     r1, r2;                         /* Values of R fields        */
     SYNCHRONIZE_CPUS(regs);
 
     /* Invalidate page table entry */
-    ARCH_DEP(invalidate_pte) (inst[1], regs->GR_G(r1), regs->GR_L(r2), regs);
+    ARCH_DEP( invalidate_pte )( inst[1], regs->GR_G(r1), regs->GR_L(r2), regs );
 
     RELEASE_INTLOCK(regs);
 

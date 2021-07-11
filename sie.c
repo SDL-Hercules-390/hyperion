@@ -25,14 +25,19 @@
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
-/*-------------------------------------------------------------------*/
-/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
-/*-------------------------------------------------------------------*/
-
 #if defined( _FEATURE_SIE )
 
 #if !defined( COMPILE_THIS_ONLY_ONCE )
 #define       COMPILE_THIS_ONLY_ONCE
+
+/*-------------------------------------------------------------------*/
+/*  non-ARCH_DEP section: due to above COMPILE_THIS_ONLY_ONCE guard, */
+/*  the below header section is compiled only ONCE, *before*         */
+/*  the very first architecture is ever built.                       */
+/*-------------------------------------------------------------------*/
+/*  The ARCH_DEP section (compiled multiple times, once for each     */
+/*  architecture) follows AFTER the COMPILE_THIS_ONLY_ONCE section.  */
+/*-------------------------------------------------------------------*/
 
 #if defined( SIE_DEBUG )
 static const char* sie_icode_2str( int icode );
@@ -247,8 +252,24 @@ void* sie_perfmon_disp()
 #endif /* !defined( COMPILE_THIS_ONLY_ONCE ) */
 
 /*-------------------------------------------------------------------*/
-/*                     SIE helper macros                             */
+/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
 /*-------------------------------------------------------------------*/
+
+//-------------------------------------------------------------------
+//                      ARCH_DEP() code
+//-------------------------------------------------------------------
+// ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
+// All BUILD architecture dependent (ARCH_DEP) function are compiled
+// multiple times (once for each defined build architecture) and each
+// time they are compiled with a different set of FEATURE_XXX defines
+// appropriate for that architecture. Use #ifdef FEATURE_XXX guards
+// to check whether the current BUILD architecture has that given
+// feature #defined for it or not. WARNING: Do NOT use _FEATURE_XXX.
+// The underscore feature #defines mean something else entirely. Only
+// test for FEATURE_XXX. (WITHOUT the underscore)
+//-------------------------------------------------------------------
+
+// (some needed  helper macros...)
 
 #undef SIE_I_WAIT
 #if defined(_FEATURE_WAITSTATE_ASSIST)
@@ -550,8 +571,8 @@ int     i;                              /* (work)                    */
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     {
-        U32 sie_scaoh;
         /* For ESAME insert the high word of the address */
+        U32 sie_scaoh;
         FETCH_FW( sie_scaoh, STATEBK->scaoh );
         GUESTREGS->sie_scao |= (RADR)sie_scaoh << 32;
     }
@@ -1888,6 +1909,9 @@ U32    newgr1;
 /*-------------------------------------------------------------------*/
 
 #if defined( SIE_DEBUG )
+/*-------------------------------------------------------------------*/
+/*     Return a text string describing an SIE intercept code         */
+/*-------------------------------------------------------------------*/
 static const char* sie_icode_2str( int icode )
 {
     static const char* icode_names[] =
@@ -1927,17 +1951,13 @@ static const char* sie_icode_2str( int icode )
     };
 #endif
 
-    const char* name;
+    const char* name;       // (string pointer to be returned)
 
-    if (icode < 0)
+    if (icode < 0)          // Intercept code?
     {
-        // Intercept code
-
         if (icode >= SIE_MAX_NEG)
-        {
             name = icode_names[ -icode - 1 ];
-        }
-        else // icode < SIE_MAX_NEG
+        else
         {
 #if defined( SIE_DEBUG_PERFMON )
             if (1
@@ -1950,16 +1970,14 @@ static const char* sie_icode_2str( int icode )
                 name = "???";
         }
     }
-    else // icode >= 0
+    else // (icode >= 0)    // Program interrupt code
     {
-        // Program interrupt code
-
 #if defined( SIE_DEBUG_PERFMON )
         if (icode == 0)
             name = "SIE performance monitor";
         else
 #endif
-        name = PIC2Name( icode );
+            name = PIC2Name( icode );
     }
 
     return name;
