@@ -303,7 +303,9 @@
   ::  VERS_INT=n and VERS_MIN=n statements.
   :: -------------------------------------------------------------------
 
-  for /f "delims==# tokens=1-3" %%a in ('type %configure_ac% ^| find /i "VERS_"') do (
+  :: (Workaround for VS2019 pipe bug)
+@REM  /f "delims==# tokens=1-3" %%a in ('type %configure_ac% ^| find /i "VERS_"') do (
+  for /f "delims==# tokens=1-3" %%a in ('type %configure_ac%'                   ) do (
     if /i "%%a" == "VERS_MAJ" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MAJ=%%n"
     if /i "%%a" == "VERS_INT" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_INT=%%n"
     if /i "%%a" == "VERS_MIN" for /f "tokens=1-2" %%n in ("%%b") do set "VERS_MIN=%%n"
