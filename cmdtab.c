@@ -334,7 +334,11 @@ BYTE    isdiag;
                     /* Calculate length of the command-line (all arguments
                        except the last one), including intervening blanks. */
                     for (len=0, i=0; i < argc-1; i++ )
+                    {
                         len += (int) strlen( (char*) argv[i] ) + 1;
+                        if (strchr( argv[i], ' ' ))
+                            len += 2; // (surrounding double quotes)
+                    }
 
                     /* Build parameter to pass to background thread */
                     bgcmd = (BGCMD*) malloc( sizeof(BGCMD) + len );
@@ -345,7 +349,14 @@ BYTE    isdiag;
                     for (i=1; i < argc-1; i++)
                     {
                         strlcat( bgcmd->cmdline,  " ",    len );
+
+                        if (strchr( argv[i], ' ' ))
+                            strlcat( bgcmd->cmdline,  "\"", len );
+
                         strlcat( bgcmd->cmdline, argv[i], len );
+
+                        if (strchr( argv[i], ' ' ))
+                            strlcat( bgcmd->cmdline,  "\"", len );
                     }
 
                     /* Process command asynchronously in the background */
