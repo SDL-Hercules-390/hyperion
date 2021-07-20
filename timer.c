@@ -174,18 +174,18 @@ U64     total_mips;                     /* Total MIPS rate           */
 U64     total_sios;                     /* Total SIO rate            */
 
 /* Clock times use the top 64-bits of the ETOD clock                 */
-U64     now;                            /* Current time of day       */
-U64     then;                           /* Previous time of day      */
-U64     diff;                           /* Interval                  */
-U64     halfdiff;                       /* One-half interval         */
-U64     waittime;                       /* Wait time                 */
-const U64   period = ETOD_SEC;          /* MIPS calculation period   */
+U64     now;                            /* Current  TOD              */
+U64     then;                           /* Previous TOD              */
+U64     saved_then;                     /* (saved original value)    */
+U64     intv_secs;                      /* Interval                  */
+U64     half_intv;                      /* One-half interval         */
+U64     wait_secs;                      /* Wait time                 */
+const U64   one_sec  = ETOD_SEC;        /* MIPS calculation period   */
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
 bool    txf_PPA;                        /* true == PPA assist needed */
 #endif
-
-#define diffrate(_x,_y) \
-        ((((_x) * (_y)) + halfdiff) / diff)
+// (helper macro)
+#define diffrate( x, y )        ((((x) * (y)) + half_intv) / intv_secs)
 
     UNREFERENCED( argp );
 
@@ -205,11 +205,12 @@ bool    txf_PPA;                        /* true == PPA assist needed */
         /* Update TOD clock and save TOD clock value */
         now = update_tod_clock();
 
-        diff = now - then;
+        intv_secs = now - then;
 
-        if (diff >= period)             /* Period expired? */
+        if (intv_secs >= one_sec)             /* Period expired? */
         {
-            halfdiff = diff / 2;        /* One-half interval for rounding */
+            half_intv = intv_secs / 2;        /* One-half interval for rounding */
+            saved_then = then;                /* Save value before updating */
             then = now;
             total_mips = total_sios = 0;
 
@@ -241,7 +242,7 @@ bool    txf_PPA;                        /* true == PPA assist needed */
                     mipsrate = regs->instcount;
                     regs->instcount   =  0;
                     regs->prevcount += mipsrate;
-                    mipsrate = diffrate(mipsrate, period);
+                    mipsrate = diffrate(mipsrate, one_sec);
                     regs->mipsrate = mipsrate;
                     total_mips += mipsrate;
 
@@ -249,23 +250,34 @@ bool    txf_PPA;                        /* true == PPA assist needed */
                     siosrate = regs->siocount;
                     regs->siocount = 0;
                     regs->siototal += siosrate;
-                    siosrate = diffrate(siosrate, period);
+                    siosrate = diffrate(siosrate, one_sec);
                     regs->siosrate = siosrate;
                     total_sios += siosrate;
 
                     /* Calculate CPU busy percentage */
-                    waittime = regs->waittime;
-                    regs->waittime_accumulated += waittime;
+                    wait_secs = regs->waittime;
+                    regs->waittime_accumulated += wait_secs;
                     regs->waittime = 0;
 
-                    if (regs->waittod)
+                    /* Are we currently waiting? */
+                    if (regs->waittod >= saved_then)
                     {
-                        waittime += (now - regs->waittod);
+                        /* Add time spent waiting during this interval too */
+                        wait_secs += (now - regs->waittod);
                         regs->waittod = now;
                     }
 
-                    regs->cpupct = min( (diff > waittime) ?
-                        diffrate(diff - waittime, 100) : 0, 100 );
+                    /* Were we idle the entire interval? */
+                    if (wait_secs >= intv_secs)
+                        regs->cpupct = 0;   /* Yes, 100% idle = 0% CPU */
+                    else
+                    {
+                        /* No, we were busy at least part of the time */
+
+                        U64  busy_secs  =  intv_secs - wait_secs;
+                        int  cpupct     =  (int)(diffrate( busy_secs, 100 ));
+                        regs->cpupct    =  min( cpupct, 100 );
+                    }
 
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
                     /*
@@ -307,7 +319,7 @@ bool    txf_PPA;                        /* true == PPA assist needed */
 
             update_maxrates_hwm(); // (update high-water-mark values)
 
-        } /* end if (diff >= period) */
+        } /* end if (intv_secs >= one_sec) */
 
         /* Sleep for another timer update interval... */
 
