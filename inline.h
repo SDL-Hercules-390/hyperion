@@ -15,13 +15,21 @@
 /* ESAME subspace replacement            v208e Roger Bowler 27/01/01 */
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
 
+
+#include "skey.h"       // Need storage key inline functions. Note
+                        // that this #include MUST come BEFORE the
+                        // the below _INLINE_H header guard to ensure
+                        // it is compiled multiple times, AND that it
+                        // get compiled BEFORE inline.h gets compiled,
+                        // since some of the below inline.h functions
+                        // may need to call a storage key function.
 #ifndef _INLINE_H
 #define _INLINE_H
 
 /*-------------------------------------------------------------------*/
-/*  non-ARCH_DEP section of header -- due to above _INLINE_H guard,  */
-/*  the below inline functions are compiled only ONCE, *before* the  */
-/*  very first architecture is ever built.                           */
+/*  non-ARCH_DEP section of header: due to above _INLINE_H guard,    */
+/*  the below code is compiled only once, BEFORE the  very first     */
+/*  architecture is ever built.                                      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -288,15 +296,12 @@ inline int mult_logical_long( U64* high, U64* lo, U64 md, U64 mr )
 #endif // defined( _INLINE_H )
 
 /*-------------------------------------------------------------------*/
-/*   ARCH_DEP section: compiled multiple times, once for each arch.  */
+/*      ARCH_DEP section: the below section of this header           */
+/*       is compiled multiple times, ONCE for each arch.             */
 /*-------------------------------------------------------------------*/
 
-#if (ARCH_370_IDX == ARCH_IDX && !defined( DID_370_INLINE_H )) \
- || (ARCH_390_IDX == ARCH_IDX && !defined( DID_390_INLINE_H )) \
- || (ARCH_900_IDX == ARCH_IDX && !defined( DID_900_INLINE_H ))
-
 //-------------------------------------------------------------------
-//                      ARCH_DEP() code
+//                       ARCH_DEP() code
 //-------------------------------------------------------------------
 // ARCH_DEP (build-architecture / FEATURE-dependent) functions here.
 // All BUILD architecture dependent (ARCH_DEP) function are compiled
@@ -309,10 +314,12 @@ inline int mult_logical_long( U64* high, U64* lo, U64 md, U64 mr )
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
-/*-------------------------------------------------------------------*/
-/*                    Miscellaneous functions                        */
-/*-------------------------------------------------------------------*/
+#if (ARCH_370_IDX == ARCH_IDX && !defined( DID_370_INLINE_H )) \
+ || (ARCH_390_IDX == ARCH_IDX && !defined( DID_390_INLINE_H )) \
+ || (ARCH_900_IDX == ARCH_IDX && !defined( DID_900_INLINE_H ))
 
+/*-------------------------------------------------------------------*/
+/*                      logical_to_main_l                            */
 /*-------------------------------------------------------------------*/
 /*  All 3 build architecture variants of the below function must     */
 /*  be defined at once (we cannot wait for them to be defined later  */
@@ -329,10 +336,14 @@ inline int mult_logical_long( U64* high, U64* lo, U64 md, U64 mr )
 /*  Note however that logical_to_main_l's actual implementation is   */
 /*  still defined in dat.c where it logically belongs.               */
 /*-------------------------------------------------------------------*/
+
 DAT_DLL_IMPORT BYTE* s370_logical_to_main_l( U32 addr, int arn, REGS* regs, int acctype, BYTE akey, size_t len );
 DAT_DLL_IMPORT BYTE* s390_logical_to_main_l( U32 addr, int arn, REGS* regs, int acctype, BYTE akey, size_t len );
 DAT_DLL_IMPORT BYTE* z900_logical_to_main_l( U64 addr, int arn, REGS* regs, int acctype, BYTE akey, size_t len );
 
+/*-------------------------------------------------------------------*/
+/*                    Miscellaneous functions                        */
+/*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
 /* Test for fetch protected storage location.                        */
@@ -520,7 +531,7 @@ inline BYTE* ARCH_DEP( fetch_main_absolute )( RADR addr, REGS* regs )
     SIE_TRANSLATE( &addr, ACCTYPE_READ, regs );
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(addr, regs) |= STORKEY_REF;
+    ARCH_DEP( or_storage_key )( addr, STORKEY_REF );
 
     /* Return absolute storage mainstor address */
     return (regs->mainstor + addr);
@@ -596,7 +607,7 @@ inline void ARCH_DEP( store_doubleword_absolute )( U64 value,
     SIE_TRANSLATE( &addr, ACCTYPE_WRITE, regs );
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(addr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( addr, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Store the doubleword into absolute storage */
     store_dw( regs->mainstor + addr, value );
@@ -624,7 +635,7 @@ inline void ARCH_DEP( store_fullword_absolute )( U32   value,
     SIE_TRANSLATE( &addr, ACCTYPE_WRITE, regs );
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(addr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( addr, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Store the fullword into absolute storage */
     store_fw( regs->mainstor + addr, value );
@@ -633,7 +644,7 @@ inline void ARCH_DEP( store_fullword_absolute )( U32   value,
 
 
 /*-------------------------------------------------------------------*/
-/*       Automatically #include dat.h and vstore.h headers           */
+/*          Automatically #include other needed headers              */
 /*-------------------------------------------------------------------*/
 
 #include "dat.h"
@@ -641,21 +652,27 @@ inline void ARCH_DEP( store_fullword_absolute )( U32   value,
 
 
 /*-------------------------------------------------------------------*/
-/*  We only need to compile this header ONCE for each architecture!  */
+/*      We only need to compile the above section of this header     */
+/*                only ONCE for each architecture                    */
 /*-------------------------------------------------------------------*/
 
 #if      ARCH_370_IDX == ARCH_IDX
   #define DID_370_INLINE_H
 #endif
-
 #if      ARCH_390_IDX == ARCH_IDX
   #define DID_390_INLINE_H
 #endif
-
 #if      ARCH_900_IDX == ARCH_IDX
   #define DID_900_INLINE_H
 #endif
 
-#endif // #if (ARCH_xxx_IDX == ARCH_IDX && !defined( DID_xxx_DAT_H )) ...
+#endif // #if (ARCH_xxx_IDX == ARCH_IDX && !defined( DID_xxx_INLINE_H )) ...
+
+/*-------------------------------------------------------------------*/
+/*      This section of the header is compiled ONLY ONCE             */
+/*      after *ALL* build architecture FEATURES are defined          */
+/*-------------------------------------------------------------------*/
+
+// (there is currently no code in this section of the header)
 
 /* end of INLINE.H */

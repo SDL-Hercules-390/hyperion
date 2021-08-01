@@ -631,8 +631,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
            or storage-protection override mechanisms, and
            an SBILIST entry cannot cross a page boundary */
         if (sbiaddr > regs->mainlim
-            || ((STORAGE_KEY(sbiaddr, regs) & STORKEY_FETCH)
-                && (STORAGE_KEY(sbiaddr, regs) & STORKEY_KEY) != ioparm.akey
+            || ((ARCH_DEP( get_storage_key )( sbiaddr ) & STORKEY_FETCH)
+                && (ARCH_DEP( get_storage_key )( sbiaddr ) & STORKEY_KEY) != ioparm.akey
                 && ioparm.akey != 0))
         {
             regs->GR_L(15) = 10;
@@ -664,8 +664,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
            pages, and the access is not subject to fetch-protection
            override, storage-protection override, or low-address
            protection */
-        skey1 = STORAGE_KEY(absadr, regs);
-        skey2 = STORAGE_KEY(absadr + blksize - 1, regs);
+        skey1 = ARCH_DEP( get_storage_key )( absadr );
+        skey2 = ARCH_DEP( get_storage_key )( absadr + blksize - 1 );
         if (ioparm.akey != 0
             && (
                    ((skey1 & STORKEY_KEY) != ioparm.akey
@@ -1660,8 +1660,8 @@ BYTE    func;                           /* Function code...          */
         */
         for (abs = start; abs <= end; abs += STORAGE_KEY_PAGESIZE)
         {
-            STORAGE_KEY(abs, regs) &= ~(STORKEY_KEY | STORKEY_FETCH);
-            STORAGE_KEY(abs, regs) |= skey;
+            BYTE refchg = ARCH_DEP( get_storage_key )( abs ) & (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( put_storage_key )( abs, skey | refchg );
         }
 
         break;

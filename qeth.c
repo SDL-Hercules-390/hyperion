@@ -120,6 +120,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "ctcadpt.h"
 #include "hercifc.h"
 #include "qeth.h"
+#include "inline.h"
 
 
 /*-------------------------------------------------------------------*/
@@ -396,14 +397,16 @@ static inline int qeth_storage_access_check(U64 addr, size_t len,int key,int acc
   if((key & 0Xf0)==0x60) return 0; /* Special case for key 6 ? */
 
   /* Key match check if keys match we're good */
-  if((STORAGE_KEY(addr,dev) & STORKEY_KEY) == key) return 0;
+  if((ARCH_DEP( get_dev_4K_storage_key )( dev, addr ) & STORKEY_KEY) == key) return 0;
 
-  /* Ok for fetch when key mismatches */
-  if(!((STORAGE_KEY(addr,dev)) & STORKEY_FETCH) && acc==STORKEY_FETCH) return 0;
+  /* Ok for fetch (i.e. ref) when key mismatches */
+  /* (as long as not fetch-protected) */
+  if(!((ARCH_DEP( get_dev_4K_storage_key )( dev, addr )) & STORKEY_FETCH) && acc==STORKEY_REF) return 0;
 
-  /* Ok for write or fetch when write allowed even on key mismatch */
-  if(((STORAGE_KEY(addr,dev)) & STORKEY_CHANGE)) return 0;
-  DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x",key,STORAGE_KEY(addr,dev),acc);
+  /* Ok for write (i.e. chg) or fetch (i.e. ref) when write allowed even on key mismatch */
+  /* (i.e. when storage already changed we presume writes are allowed?) */
+  if(((ARCH_DEP( get_dev_4K_storage_key )( dev, addr )) & STORKEY_CHANGE)) return 0;
+  DBGTRC(dev,"Key mismatch protection exception : requested key : %x, storage key : %x access type %x",key,ARCH_DEP( get_dev_4K_storage_key )( dev, addr ),acc);
 
   return CSW_PROTC;
 }
@@ -416,7 +419,7 @@ static inline int qeth_storage_access_check_and_update(U64 addr, size_t len,int 
   if(rc==0)
   {
     /* Update the REF/CHANGE flag in the storage key */
-    STORAGE_KEY(addr,dev)|=(acc & (STORKEY_REF | STORKEY_CHANGE));
+    ARCH_DEP( or_dev_4K_storage_key )( dev, addr, (acc & (STORKEY_REF | STORKEY_CHANGE)) );
   }
   return rc;
 }
@@ -437,7 +440,7 @@ static inline void set_alsi( DEVBLK* dev, BYTE bits )
         obtain_lock( &sysblk.mainlock );
         {
             *alsi |= bits;
-            STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.alsi, (STORKEY_REF | STORKEY_CHANGE) );
         }
         release_lock( &sysblk.mainlock );
     }
@@ -459,10 +462,10 @@ static inline void set_dsci( DEVBLK* dev, BYTE bits )
         obtain_lock( &sysblk.mainlock );
         {
             *dsci |= bits;
-            STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.dsci, (STORKEY_REF | STORKEY_CHANGE) );
 
             *alsi |= bits;
-            STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.alsi, (STORKEY_REF | STORKEY_CHANGE) );
         }
         release_lock( &sysblk.mainlock );
     }
@@ -3603,7 +3606,7 @@ int did_read = 0;                       /* Indicates some data read  */
                                 DBGTRC(dev, "Input Queue(%d) Buffer(%d)", qn, bn);
 
                             slsb->slsbe[bn] = SLSBE_INPUT_COMPLETED;
-                            STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
                             SET_DSCI(dev,DSCI_IOCOMP);
                             grp->iqPCI = TRUE;
                             PTT_QETH_TRACE( "prinq OK", qn,bn,qrc );
@@ -3624,7 +3627,7 @@ int did_read = 0;                       /* Indicates some data read  */
                     if (qrc < 0)
                     {
                         slsb->slsbe[bn] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.i_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
                         SET_ALSI(dev,ALSI_ERROR);
                         grp->iqPCI = TRUE;
                         PTT_QETH_TRACE( "*prcinq ERR", qn,bn,qrc );
@@ -3736,7 +3739,7 @@ int found_buff = 0;                     /* Found primed O/P buffer   */
                     }
 
                     /* Packets written or an error has ocurred */
-                    STORAGE_KEY(dev->qdio.o_slsbla[qn], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                    ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[qn], (STORKEY_REF | STORKEY_CHANGE) );
 
                     /* Handle errors */
                     if (qrc < 0)

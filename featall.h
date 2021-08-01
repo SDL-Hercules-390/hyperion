@@ -42,6 +42,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
+#define OPTION_USE_SKAIP_AS_LOCK        // Use SKAIP as lock, not RCP
 #define OPTION_SIE2BK_FLD_COPY          // SIE2BK 'fld' is NOT a mask
 #define OPTION_IODELAY_KLUDGE           // IODELAY kludge for Linux
 #define OPTION_MVS_TELNET_WORKAROUND    // Handle non-std MVS telnet
@@ -53,6 +54,9 @@
 /*-------------------------------------------------------------------*/
 /*              Normal default OPTIONs and FEATUREs                  */
 /*-------------------------------------------------------------------*/
+
+//efine OPTION_SKEY_ABS_CHECK           /* skey debugging option     */
+//efine OPTION_ATOMIC_SKEYS             /* Update skeys atomically   */
 
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */

@@ -1,4 +1,4 @@
-/* VSTORE.H     (C) Copyright Roger Bowler, 2000-2012                */
+/* VSTORE.C     (C) Copyright Roger Bowler, 2000-2012                */
 /*              (C) and others 2013-2021                             */
 /*                  Virtual Storage Functions                        */
 /*                                                                   */
@@ -60,7 +60,7 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
-#include "inline.h"     // (automatically #includes dat.h & vstore.h)
+#include "inline.h"
 
 //-------------------------------------------------------------------
 //                      ARCH_DEP() code

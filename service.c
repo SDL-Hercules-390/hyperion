@@ -1180,7 +1180,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     FETCH_HW(sccblen, sccb->length);
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_REF;
+    ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_REF );
 
     /* Program check if end of SCCB falls outside main storage */
     if ( sccb_absolute_addr + sccblen > regs->mainlim + 1)
@@ -1230,7 +1230,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     read_scpinfo:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1399,7 +1399,7 @@ docheckstop:
     case SCLP_READ_CHP_INFO:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1472,7 +1472,7 @@ docheckstop:
     case SCLP_READ_CSI_INFO:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1513,7 +1513,7 @@ docheckstop:
     case SCLP_WRITE_EVENT_DATA:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1650,7 +1650,7 @@ docheckstop:
     case SCLP_READ_EVENT_DATA:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1747,7 +1747,7 @@ docheckstop:
     case SCLP_WRITE_EVENT_MASK:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1813,7 +1813,7 @@ docheckstop:
    case SCLP_READ_XST_MAP:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_CHANGE );
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=

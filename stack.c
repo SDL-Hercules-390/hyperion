@@ -215,9 +215,9 @@ int  i;
         tsao = lastbyte & PAGEFRAME_PAGEMASK;
         tsaa2 = ARCH_DEP(abs_trap_addr) (tsao, regs, ACCTYPE_WRITE);
     }
-    STORAGE_KEY(tsaa1, regs) |= STORKEY_CHANGE;
+    ARCH_DEP( or_storage_key )( tsaa1, STORKEY_CHANGE );
     if (tsaa1 != tsaa2)
-        STORAGE_KEY(tsaa2, regs) |= STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( tsaa2, STORKEY_CHANGE );
 
 
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)

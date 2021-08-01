@@ -1420,8 +1420,8 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Fetch the BIOE from storage */
       memcpy(&bioe,ioctl->regs->mainstor+bioebeg,sizeof(BIOE32));
-      STORAGE_KEY(bioebeg, ioctl->regs) |= (STORKEY_REF);
-      STORAGE_KEY(bioeend, ioctl->regs) |= (STORKEY_REF);
+      ARCH_DEP( or_storage_key )( bioebeg, STORKEY_REF );
+      ARCH_DEP( or_storage_key )( bioeend, STORKEY_REF );
 
       /* Process a single BIOE */
       do
@@ -1508,12 +1508,13 @@ RADR   bufend;    /* Last byte read or written                 */
             /* Set I/O storage key references if successful */
             if (!status)
             {
-               STORAGE_KEY(bufbeg, ioctl->regs) |= (STORKEY_REF);
-               STORAGE_KEY(bufend, ioctl->regs) |= (STORKEY_REF);
+               ARCH_DEP( or_storage_key )( bufbeg, STORKEY_REF );
+               ARCH_DEP( or_storage_key )( bufend, STORKEY_REF );
+
 #if defined(FEATURE_2K_STORAGE_KEYS)
                if ( ioctl->dev->vmd250env->blksiz == 4096 )
                {
-                  STORAGE_KEY(bufbeg+2048, ioctl->regs) |= (STORKEY_REF);
+                  ARCH_DEP( or_storage_key )( bufbeg+2048, STORKEY_REF );
                }
 #endif
             }
@@ -1557,15 +1558,12 @@ RADR   bufend;    /* Last byte read or written                 */
                /* Set I/O storage key references if good I/O */
                if (!status)
                {
-                  STORAGE_KEY(bufbeg, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
-                  STORAGE_KEY(bufend, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
+                  ARCH_DEP( or_storage_key )( bufbeg, (STORKEY_REF | STORKEY_CHANGE) );
+                  ARCH_DEP( or_storage_key )( bufend, (STORKEY_REF | STORKEY_CHANGE) );
 #if defined(FEATURE_2K_STORAGE_KEYS)
                   if ( ioctl->dev->vmd250env->blksiz == 4096 )
                   {
-                  STORAGE_KEY(bufbeg+2048, ioctl->regs)
-                             |= (STORKEY_REF | STORKEY_CHANGE);
+                     ARCH_DEP( or_storage_key )( bufbeg+2048, (STORKEY_REF | STORKEY_CHANGE) );
                   }
 #endif
                }
@@ -1600,8 +1598,7 @@ RADR   bufend;    /* Last byte read or written                 */
       memcpy(ioctl->regs->mainstor+bioebeg+1,&status,1);
 
       /* Set the storage key change bit */
-      STORAGE_KEY(bioebeg+1, ioctl->regs)
-                 |= (STORKEY_REF | STORKEY_CHANGE);
+      ARCH_DEP( or_storage_key )( bioebeg+1, (STORKEY_REF | STORKEY_CHANGE) );
 
       if (ioctl->dev->ccwtrace)
       {
@@ -1699,13 +1696,13 @@ BYTE   skmid;    /* Storage key of middle byte of area        */
        return 0;
     }
 
-    sk1=STORAGE_KEY(beg,regs);
-    sk2=STORAGE_KEY(end,regs);
+    sk1 = ARCH_DEP( get_storage_key )( beg );
+    sk2 = ARCH_DEP( get_storage_key )( end );
 
 #if defined(FEATURE_2K_STORAGE_KEYS)
     if ( ( end - beg ) > 2048 )
     {
-       skmid=STORAGE_KEY(beg + 2048,regs);
+       skmid = ARCH_DEP( get_storage_key )( beg + 2048 );
     }
     else
     {
@@ -2011,8 +2008,8 @@ RADR   bufend;    /* Last byte read or written                 */
 
       /* Fetch the BIOE from storage */
       memcpy(&bioe,ioctl->regs->mainstor+bioebeg,sizeof(BIOE64));
-      STORAGE_KEY(bioebeg, ioctl->regs) |= (STORKEY_REF);
-      STORAGE_KEY(bioeend, ioctl->regs) |= (STORKEY_REF);
+      ARCH_DEP( or_storage_key )( bioebeg, STORKEY_REF );
+      ARCH_DEP( or_storage_key )( bioeend, STORKEY_REF );
 
       /* Process a single BIOE */
       do
@@ -2099,8 +2096,8 @@ RADR   bufend;    /* Last byte read or written                 */
             /* Set I/O storage key references if successful */
             if (!status)
             {
-               STORAGE_KEY(bufbeg, ioctl->regs) |= (STORKEY_REF);
-               STORAGE_KEY(bufend, ioctl->regs) |= (STORKEY_REF);
+               ARCH_DEP( or_storage_key )( bufbeg, STORKEY_REF );
+               ARCH_DEP( or_storage_key )( bufend, STORKEY_REF );
             }
 
             continue;
@@ -2141,10 +2138,8 @@ RADR   bufend;    /* Last byte read or written                 */
                /* Set I/O storage key references if good I/O */
                if (!status)
                {
-                  STORAGE_KEY(bufbeg, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
-                  STORAGE_KEY(bufend, ioctl->regs)
-                           |= (STORKEY_REF | STORKEY_CHANGE);
+                  ARCH_DEP( or_storage_key )( bufbeg, (STORKEY_REF | STORKEY_CHANGE) );
+                  ARCH_DEP( or_storage_key )( bufend, (STORKEY_REF | STORKEY_CHANGE) );
                }
                continue;
             } /* end of if BIOE_WRITE */
@@ -2175,8 +2170,7 @@ RADR   bufend;    /* Last byte read or written                 */
       memcpy(ioctl->regs->mainstor+bioebeg+1,&status,1);
 
       /* Set the storage key change bit */
-      STORAGE_KEY(bioebeg+1, ioctl->regs)
-                 |= (STORKEY_REF | STORKEY_CHANGE);
+      ARCH_DEP( or_storage_key )( bioebeg+1, (STORKEY_REF | STORKEY_CHANGE) );
 
       if (ioctl->dev->ccwtrace)
       {

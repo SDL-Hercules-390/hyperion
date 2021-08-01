@@ -327,7 +327,7 @@ int     cc = 0;                         /* Condition code            */
                  if (*dest1++ &= *source2++)
                      cc = 1;
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
     {
@@ -408,8 +408,8 @@ int     cc = 0;                         /* Condition code            */
                         cc = 1;
             }
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
+        ARCH_DEP( or_storage_key_by_ptr )( sk2, (STORKEY_REF | STORKEY_CHANGE) );
     }
     ITIMER_UPDATE( effective_addr1, len, regs );
 
@@ -4544,7 +4544,7 @@ int     cc = 0;                         /* Condition code            */
                  if (*dest1++ ^= *source2++)
                      cc = 1;
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
     {
@@ -4625,8 +4625,8 @@ int     cc = 0;                         /* Condition code            */
                         cc = 1;
             }
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
+        ARCH_DEP( or_storage_key_by_ptr )( sk2, (STORKEY_REF | STORKEY_CHANGE) );
     }
 
     regs->psw.cc = cc;
@@ -5363,7 +5363,7 @@ CREG    n;                              /* Work                      */
         psa = (void*)(regs->mainstor + px);
 
         /* Set the main storage reference bit */
-        STORAGE_KEY(px, regs) |= STORKEY_REF;
+        ARCH_DEP( or_storage_key )( px, STORKEY_REF );
 
         /* Fetch Counter Array Origin and Size from PSA */
         FETCH_DW(cao, psa->cao);
@@ -5388,11 +5388,11 @@ CREG    n;                              /* Work                      */
 
                     /* Update counter */
                     FETCH_HW(hwc, ceh + regs->mainstor);
-                    STORAGE_KEY(ceh, regs) |= STORKEY_REF;
+                    ARCH_DEP( or_storage_key )( ceh, STORKEY_REF );
                     if(++hwc)
                     {
-                         STORE_HW(ceh + regs->mainstor, hwc);
-                         STORAGE_KEY(ceh, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                        STORE_HW(ceh + regs->mainstor, hwc);
+                        ARCH_DEP( or_storage_key )( ceh, (STORKEY_REF | STORKEY_CHANGE) );
                     }
                     else
                     {
@@ -5413,10 +5413,10 @@ CREG    n;                              /* Work                      */
                                 fwc++;
 
                                 STORE_W(cew + regs->mainstor, fwc);
-                                STORAGE_KEY(cew, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                                ARCH_DEP( or_storage_key )( cew, (STORKEY_REF | STORKEY_CHANGE) );
 
                                 STORE_HW(ceh + regs->mainstor, hwc);
-                                STORAGE_KEY(ceh, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                                ARCH_DEP( or_storage_key )( ceh, (STORKEY_REF | STORKEY_CHANGE) );
                             }
                         }
                     }
@@ -5430,7 +5430,7 @@ CREG    n;                              /* Work                      */
             FETCH_W(ec,psa->ec);
             ec++;
             /* Set the main storage reference and change bits */
-            STORAGE_KEY(px, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( or_storage_key )( px, (STORKEY_REF | STORKEY_CHANGE) );
             STORE_W(psa->ec,ec);
         }
         return;
@@ -5890,7 +5890,7 @@ int     i;                              /* Loop counter              */
             for (i=0; i <= len2; i++)
                 MOVE_NUMERIC_BUMP( dest1, source2 );
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
     {
@@ -5961,8 +5961,8 @@ int     i;                              /* Loop counter              */
                     MOVE_NUMERIC_BUMP( dest2, source2 );
             }
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
+        ARCH_DEP( or_storage_key_by_ptr )( sk2, (STORKEY_REF | STORKEY_CHANGE) );
     }
     ITIMER_UPDATE( effective_addr1, len, regs );
 }
@@ -6181,7 +6181,7 @@ int     i;                              /* Loop counter              */
             for (i=0; i <= len2; i++)
                 MOVE_ZONE_BUMP( dest1, source2 );
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
     {
@@ -6252,8 +6252,8 @@ int     i;                              /* Loop counter              */
                     MOVE_ZONE_BUMP( dest2, source2 );
             }
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
+        ARCH_DEP( or_storage_key_by_ptr )( sk2, (STORKEY_REF | STORKEY_CHANGE) );
     }
     ITIMER_UPDATE( effective_addr1, len, regs );
 }

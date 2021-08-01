@@ -544,7 +544,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     if (xpvalid2)
     {
         /* Set the main storage reference and change bits */
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
 
         /* Set Expanded Storage reference bit in the PTE */
         STORE_W(regs->mainstor + raddr2, pte2 | PAGETAB_ESREF);
@@ -568,7 +568,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Set the main storage reference and change bits */
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
 
         /* Move 4K bytes from main storage to main storage */
         memcpy (main1, main2, XSTORE_PAGESIZE);

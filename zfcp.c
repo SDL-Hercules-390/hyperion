@@ -40,6 +40,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "devtype.h"
 #include "chsc.h"
 #include "zfcp.h"
+#include "inline.h"
 
 /*-------------------------------------------------------------------*/
 /* ZFCP Debugging                                                    */
@@ -122,21 +123,45 @@ static BYTE zfcp_immed_commands [256] =
 
 
 /*-------------------------------------------------------------------*/
-/* STORCHK macro: check storage access & update ref & change bits.   */
-/* Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.       */
-/* Storage key ref & change bits are only updated if successful.     */
+/*   STORCHK  --  check storage access & update ref & change bits    */
 /*-------------------------------------------------------------------*/
-#define STORCHK(_addr,_len,_key,_acc,_dev) \
-  (((((_addr) + (_len)) > (_dev)->mainlim) \
-    || (((_dev)->orb.flag5 & ORB5_A) \
-      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
-        && ((_addr) < sysblk.addrlimval)) \
-      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH) \
-        && (((_addr) + (_len)) > sysblk.addrlimval)) ) )) ? CSW_PROGC : \
-   ((_key) && ((STORAGE_KEY((_addr), (_dev)) & STORKEY_KEY) != (_key)) \
-&& ((STORAGE_KEY((_addr), (_dev)) & STORKEY_FETCH) || ((_acc) == STORKEY_CHANGE))) ? CSW_PROTC : \
-  ((STORAGE_KEY((_addr), (_dev)) |= ((((_acc) == STORKEY_CHANGE)) \
-    ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF)) && 0))
+/*  Returns 0 if successful or CSW_PROGC or CSW_PROTC if error.      */
+/*  Storage key ref & change bits are only updated if successful.    */
+/*-------------------------------------------------------------------*/
+BYTE STORCHK
+(
+    U64      addr,              /* Storage address being accessed    */
+    size_t   len,               /* Length of storage being accessed  */
+    BYTE     key,               /* Storage access key                */
+    BYTE     acc,               /* Access type (STORKEY_REF/_CHANGE) */
+    DEVBLK*  dev                /* Pointer to device block           */
+)
+{
+    /* Validate address limits */
+    if (0
+        || (addr + len) > dev->mainlim   // (outside main storage)
+        || (dev->orb.flag5 & ORB5_A      // (or outside address limits)
+            && ((dev->pmcw.flag5 & PMCW5_LM_LOW  && (addr +  0 ) < sysblk.addrlimval) ||
+                (dev->pmcw.flag5 & PMCW5_LM_HIGH && (addr + len) > sysblk.addrlimval)))
+    )
+        return CSW_PROGC;
+
+    /* Validate keyed access */
+    if (key && key != (ARCH_DEP( get_dev_4K_storage_key )( dev, addr ) & STORKEY_KEY) // (key doesn't match)
+        && (0
+            || ARCH_DEP( get_dev_4K_storage_key )( dev, addr ) & STORKEY_FETCH        // (and fetch protected)
+            || acc == STORKEY_CHANGE                                                  // (or trying to update)
+           )
+    )
+        return CSW_PROTC;
+
+    if (STORKEY_CHANGE == acc)
+        ARCH_DEP( or_dev_4K_storage_key )( dev, addr, (STORKEY_REF | STORKEY_CHANGE) );
+    else
+        ARCH_DEP( or_dev_4K_storage_key )( dev, addr, STORKEY_REF );
+
+    return 0;  // (0 == success)
+}
 
 
 #if defined( ZFCP_DEBUG )
@@ -162,7 +187,7 @@ static inline void set_alsi(DEVBLK *dev, BYTE bits)
 
         obtain_lock(&sysblk.mainlock);
         *alsi |= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.alsi, (STORKEY_REF | STORKEY_CHANGE) );
         release_lock(&sysblk.mainlock);
     }
 }
@@ -180,9 +205,9 @@ static inline void set_dsci(DEVBLK *dev, BYTE bits)
 
         obtain_lock(&sysblk.mainlock);
         *dsci |= bits;
-        STORAGE_KEY(dev->qdio.dsci, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.dsci, (STORKEY_REF | STORKEY_CHANGE) );
         *alsi |= bits;
-        STORAGE_KEY(dev->qdio.alsi, dev) |= (STORKEY_REF|STORKEY_CHANGE);
+        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.alsi, (STORKEY_REF | STORKEY_CHANGE) );
         release_lock(&sysblk.mainlock);
     }
 }
@@ -254,7 +279,7 @@ int mq = dev->qdio.i_qcnt;
                     if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.i_slk[iq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ib] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[iq], (STORKEY_REF | STORKEY_CHANGE) );
 #if defined(_FEATURE_QDIO_THININT)
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
@@ -273,7 +298,7 @@ int mq = dev->qdio.i_qcnt;
                         if(STORCHK(la,len-1,dev->qdio.i_sbalk[iq],STORKEY_CHANGE,dev))
                         {
                             slsb->slsbe[ib] = SLSBE_ERROR;
-                            STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[iq], (STORKEY_REF | STORKEY_CHANGE) );
 #if defined(_FEATURE_QDIO_THININT)
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
@@ -295,7 +320,7 @@ int mq = dev->qdio.i_qcnt;
 #endif /*defined(_FEATURE_QDIO_THININT)*/
                         grp->reqpci = TRUE;
                         slsb->slsbe[ib] = SLSBE_INPUT_COMPLETED;
-                        STORAGE_KEY(dev->qdio.i_slsbla[iq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.i_slsbla[iq], (STORKEY_REF | STORKEY_CHANGE) );
                         if(++ib >= 128)
                         {
                             ib = 0;
@@ -369,7 +394,7 @@ int mq = dev->qdio.o_qcnt;
                     if(STORCHK(sa,sizeof(QDIO_SBAL)-1,dev->qdio.o_slk[oq],STORKEY_REF,dev))
                     {
                         slsb->slsbe[ob] = SLSBE_ERROR;
-                        STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                        ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[oq], (STORKEY_REF | STORKEY_CHANGE) );
 #if defined(_FEATURE_QDIO_THININT)
                         set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
@@ -388,7 +413,7 @@ int mq = dev->qdio.o_qcnt;
                         if(STORCHK(la,len-1,dev->qdio.o_sbalk[oq],STORKEY_REF,dev))
                         {
                             slsb->slsbe[ob] = SLSBE_ERROR;
-                            STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                            ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[oq], (STORKEY_REF | STORKEY_CHANGE) );
 #if defined(_FEATURE_QDIO_THININT)
                             set_alsi(dev,ALSI_ERROR);
 #endif /*defined(_FEATURE_QDIO_THININT)*/
@@ -412,7 +437,7 @@ int mq = dev->qdio.o_qcnt;
                     }
 
                     slsb->slsbe[ob] = SLSBE_OUTPUT_COMPLETED;
-                    STORAGE_KEY(dev->qdio.o_slsbla[oq], dev) |= (STORKEY_REF|STORKEY_CHANGE);
+                    ARCH_DEP( or_dev_4K_storage_key )( dev, dev->qdio.o_slsbla[oq], (STORKEY_REF | STORKEY_CHANGE) );
                     if(++ob >= 128)
                     {
                         ob = 0;

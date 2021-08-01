@@ -60,7 +60,7 @@ int     rc;
     {
         /* Point to SIE copy of PSA in state descriptor */
         psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
-        STORAGE_KEY(SIE_STATE(regs), HOSTREGS) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( SIE_STATE( regs ), (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
@@ -71,7 +71,7 @@ int     rc;
         SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
         psa = (void*)(regs->mainstor + pfx);
-        STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( pfx, (STORKEY_REF | STORKEY_CHANGE) );
     }
 
     /* Store the interrupt code in the PSW */
@@ -397,9 +397,7 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 /* Point to 2nd page of PSA in main storage */
                 servpadr=APPLY_PREFIXING(VM_BLOCKIO_INT_PARM,regs->PX);
 
-                STORAGE_KEY(servpadr, regs)
-                    |= (STORKEY_REF | STORKEY_CHANGE);
-
+                ARCH_DEP( or_storage_key )( servpadr, (STORKEY_REF | STORKEY_CHANGE) );
 #if 0
                 /* Store the 64-bit interrupt parameter */
                 LOGMSG( "Saving 64-bit Block I/O interrupt parm at "
@@ -528,13 +526,13 @@ int     i;                              /* Array subscript           */
 PSA     *sspsa;                         /* -> Store status area      */
 
     /* Set reference and change bits */
-    STORAGE_KEY(aaddr, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( aaddr, (STORKEY_REF | STORKEY_CHANGE) );
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 
     /* The ESAME PSA is two pages in size */
     if(!aaddr)
-        STORAGE_KEY(aaddr + 4096, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( aaddr + 4096, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* For store status at address, we must adjust the PSA offset */
     /* ZZ THIS TEST IS NOT CONCLUSIVE */

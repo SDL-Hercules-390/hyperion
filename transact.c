@@ -480,7 +480,7 @@ int         txf_tnd, txf_tac, slot;
                 }
             }
 
-            STORAGE_KEY( MAIN_TO_ABS( pmap->mainpageaddr ), regs ) |= refchg;
+            ARCH_DEP( or_storage_key )( MAIN_TO_ABS( pmap->mainpageaddr ), refchg );
         }
 
         /* Mark the page map as now being empty */
@@ -1451,13 +1451,13 @@ int        retry;           /* Actual retry code                     */
     if (pi_tdb)
     {
         memcpy( pi_tdb, &regs->txf_tdb, sizeof( TDB ));
-        STORAGE_KEY( MAIN_TO_ABS( pi_tdb ), regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( MAIN_TO_ABS( pi_tdb ), (STORKEY_REF | STORKEY_CHANGE) );
     }
 
     if (tb_tdb)
     {
         memcpy( tb_tdb, &regs->txf_tdb, sizeof( TDB ));
-        STORAGE_KEY( MAIN_TO_ABS( tb_tdb ), regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( MAIN_TO_ABS( tb_tdb ), (STORKEY_REF | STORKEY_CHANGE) );
     }
 
     /* Trace TDB if requested */

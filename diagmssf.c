@@ -308,7 +308,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     FETCH_HW(spccblen,spccb->length);
 
     /* Mark page referenced */
-    STORAGE_KEY(spccb_absolute_addr, regs) |= STORKEY_REF;
+    ARCH_DEP( or_storage_key )( spccb_absolute_addr, STORKEY_REF );
 
     /* Program check if end of SPCCB falls outside main storage */
     if ( sysblk.mainsize - spccblen < spccb_absolute_addr )
@@ -427,7 +427,7 @@ DEVBLK            *dev;                /* Device block pointer       */
         } /* end switch(mssf_command) */
 
     /* Mark page changed */
-    STORAGE_KEY(spccb_absolute_addr, regs) |= STORKEY_CHANGE;
+    ARCH_DEP( or_storage_key )( spccb_absolute_addr, STORKEY_CHANGE );
 
     /* Set service signal external interrupt pending */
     sysblk.servparm &= ~SERVSIG_ADDR;
@@ -494,7 +494,7 @@ U64              wCPU[ MAX_CPU_ENGS ];  /* Wait CPU time    (usecs)  */
         hdrinfo = (DIAG204_HDR*)(regs->mainstor + abs);
 
         /* Mark page referenced */
-        STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
+        ARCH_DEP( or_storage_key )( abs, STORKEY_REF | STORKEY_CHANGE );
 
         /* Retrieve the TOD clock value */
         etod_clock(regs, &ETOD, ETOD_extended);
@@ -756,7 +756,7 @@ unsigned int      len, ptyp, i;        /* work                       */
         ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
 
     /* Mark page referenced */
-    STORAGE_KEY( abs, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( abs, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Point to DIAG 224 return area */
     p = regs->mainstor + abs;

@@ -440,6 +440,22 @@
  #define    _FEATURE_2K_STORAGE_KEYS
 #endif
 
+#if defined( FEATURE_4K_STORAGE_KEYS )
+ #define    _FEATURE_4K_STORAGE_KEYS
+#endif
+
+#if defined( FEATURE_ADDRESS_LIMIT_CHECKING )
+ #define    _FEATURE_ADDRESS_LIMIT_CHECKING
+#endif
+
+#if defined( FEATURE_BASIC_STORAGE_KEYS )
+ #define    _FEATURE_BASIC_STORAGE_KEYS
+#endif
+
+#if defined( FEATURE_EXTENDED_STORAGE_KEYS )
+ #define    _FEATURE_EXTENDED_STORAGE_KEYS
+#endif
+
 #if defined( FEATURE_370_EXTENSION )
  #define    _FEATURE_370_EXTENSION
 #endif
@@ -915,6 +931,10 @@
 #if (!defined( FEATURE_2K_STORAGE_KEYS ) && !defined( FEATURE_4K_STORAGE_KEYS ))
  || ( defined( FEATURE_2K_STORAGE_KEYS ) &&  defined( FEATURE_4K_STORAGE_KEYS ))
  #error Storage Keys must be either 2K or 4K
+#endif
+
+#if !defined( FEATURE_BASIC_STORAGE_KEYS ) && !defined( FEATURE_EXTENDED_STORAGE_KEYS )
+ #error FEATURE_BASIC_STORAGE_KEYS and/or FEATURE_EXTENDED_STORAGE_KEYS must be defined
 #endif
 
 #if defined( FEATURE_370_EXTENSION ) && !defined( OPTION_370_MODE )

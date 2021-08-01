@@ -41,6 +41,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "devtype.h"
 #include "opcode.h"
 #include "chsc.h"
+#include "inline.h"
 
 #ifdef FEATURE_S370_CHANNEL
 #include "commadpt.h"
@@ -2877,7 +2878,7 @@ BYTE   *ccw;                            /* CCW pointer               */
     }
 
     /* Channel protection check if CCW is fetch protected */
-    storkey = STORAGE_KEY(ccwaddr, dev);
+    storkey = ARCH_DEP( get_dev_storage_key )( dev, ccwaddr );
     if (ccwkey != 0 && (storkey & STORKEY_FETCH)
         && (storkey & STORKEY_KEY) != ccwkey)
     {
@@ -2886,7 +2887,7 @@ BYTE   *ccw;                            /* CCW pointer               */
     }
 
     /* Set the main storage reference bit for the CCW location */
-    STORAGE_KEY(ccwaddr, dev) |= STORKEY_REF;
+    ARCH_DEP( or_dev_storage_key )( dev, ccwaddr, STORKEY_REF );
 
     /* Point to the CCW in main storage */
     ccw = dev->mainstor + ccwaddr;
@@ -2951,7 +2952,7 @@ BYTE    storkey;                        /* Storage key               */
     }
 
     /* Channel protection check if IDAW is fetch protected */
-    storkey = STORAGE_KEY(idawaddr, dev);
+    storkey = ARCH_DEP( get_dev_storage_key )( dev, idawaddr );
     if (ccwkey != 0 && (storkey & STORKEY_FETCH)
         && (storkey & STORKEY_KEY) != ccwkey)
     {
@@ -2960,7 +2961,7 @@ BYTE    storkey;                        /* Storage key               */
     }
 
     /* Set the main storage reference bit for the IDAW location */
-    STORAGE_KEY(idawaddr, dev) |= STORKEY_REF;
+    ARCH_DEP( or_dev_storage_key )( dev, idawaddr, STORKEY_REF );
 
     /* Fetch IDAW from main storage */
     if (idawfmt == 2)
@@ -3084,7 +3085,7 @@ U16     maxlen;                         /* Maximum allowable length  */
     }
 
     /* Channel protection check if MIDAW is fetch protected */
-    storkey = STORAGE_KEY(midawadr, dev);
+    storkey = ARCH_DEP( get_dev_storage_key )( dev, midawadr );
     if (ccwkey != 0 && (storkey & STORKEY_FETCH)
         && (storkey & STORKEY_KEY) != ccwkey)
     {
@@ -3093,7 +3094,7 @@ U16     maxlen;                         /* Maximum allowable length  */
     }
 
     /* Set the main storage reference bit for the MIDAW location */
-    STORAGE_KEY(midawadr, dev) |= STORKEY_REF;
+    ARCH_DEP( or_dev_storage_key )( dev, midawadr, STORKEY_REF );
 
     /* Fetch MIDAW from main storage (MIDAW is quadword
        aligned and so cannot cross a page boundary) */
@@ -3333,7 +3334,7 @@ do {                                                                   \
                        is fetch protected, or if location is store
                        protected and command is READ, READ BACKWARD, or
                        SENSE */
-                    storkey = STORAGE_KEY(midawdat, dev);
+                    storkey = ARCH_DEP( get_dev_storage_key )( dev, midawdat );
                     if (ccwkey != 0
                         && (storkey & STORKEY_KEY) != ccwkey
                         && ((storkey & STORKEY_FETCH) || to_memory))
@@ -3368,9 +3369,10 @@ do {                                                                   \
 
                     /* Set the main storage reference and change
                        bits */
-                    STORAGE_KEY(midawdat, dev) |= (to_memory ?
-                            (STORKEY_REF|STORKEY_CHANGE) :
-                             STORKEY_REF);
+                    if (to_memory)
+                        ARCH_DEP( or_dev_storage_key )( dev, midawdat, (STORKEY_REF | STORKEY_CHANGE) );
+                    else
+                        ARCH_DEP( or_dev_storage_key )( dev, midawdat, STORKEY_REF );
 
                     /* Copy data between main storage and channel
                        buffer */
@@ -3492,7 +3494,7 @@ do {                                                                   \
             /* Channel protection check if IDAW data location is
                fetch protected, or if location is store protected
                and command is READ, READ BACKWARD, or SENSE */
-            storkey = STORAGE_KEY( idadata, dev );
+            storkey = ARCH_DEP( get_dev_storage_key )( dev, idadata );
 
             if (1
                 && ccwkey != 0
@@ -3574,9 +3576,10 @@ do {                                                                   \
             if (idalen)
             {
                 /* Set the main storage reference and change bits */
-                STORAGE_KEY( idadata, dev ) |=
-                    (to_memory ? (STORKEY_REF | STORKEY_CHANGE)
-                               : (STORKEY_REF));
+                if (to_memory)
+                    ARCH_DEP( or_dev_storage_key )( dev, idadata, (STORKEY_REF | STORKEY_CHANGE) );
+                else
+                    ARCH_DEP( or_dev_storage_key )( dev, idadata, STORKEY_REF );
 
                 /* Copy data between main storage and channel buffer */
                 if (readbackwards)
@@ -3663,7 +3666,7 @@ do {                                                                   \
                 break;
             }
 
-            storkey = STORAGE_KEY( page, dev );
+            storkey = ARCH_DEP( get_dev_storage_key )( dev, page );
 
             if (1
                 && ccwkey != 0
@@ -3719,9 +3722,10 @@ do {                                                                   \
                  page <= (endpage | STORAGE_KEY_BYTEMASK);
                  page += STORAGE_KEY_PAGESIZE)
             {
-                STORAGE_KEY( page, dev ) |=
-                    (to_memory ? (STORKEY_REF | STORKEY_CHANGE)
-                               : (STORKEY_REF));
+                if (to_memory)
+                    ARCH_DEP( or_dev_storage_key )( dev, page, (STORKEY_REF | STORKEY_CHANGE) );
+                else
+                    ARCH_DEP( or_dev_storage_key )( dev, page, STORKEY_REF );
             } /* end for(page) */
 
 #if DEBUG_PREFETCH
@@ -4343,10 +4347,10 @@ resume_suspend:
         mbaddr = _IOA_MBO;
         mbaddr += (dev->pmcw.mbi[0] << 8 | dev->pmcw.mbi[1]) << 5;
         if ( !CHADDRCHK(mbaddr, dev)
-            && (((STORAGE_KEY(mbaddr, dev) & STORKEY_KEY) == _IOA_MBK)
+            && (((ARCH_DEP( get_dev_storage_key )( dev, mbaddr ) & STORKEY_KEY) == _IOA_MBK)
                 || (_IOA_MBK == 0)))
         {
-            STORAGE_KEY(mbaddr, dev) |= (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( or_dev_storage_key )( dev, mbaddr, (STORKEY_REF | STORKEY_CHANGE) );
             mbk = (MBK*)&dev->mainstor[mbaddr];
             FETCH_HW(mbcount,mbk->srcount);
             mbcount++;

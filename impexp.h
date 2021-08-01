@@ -379,11 +379,7 @@
 #endif
 
 #ifndef    _INLINE_C_
-  #ifndef  _HENGINE_DLL_
-    #define INLINE_INL_DLL_IMPORT   // (nothing!)
-  #else
-    #define INLINE_INL_DLL_IMPORT   // (nothing!)
-  #endif
+  #define   INLINE_INL_DLL_IMPORT
 #else
   #define   INLINE_INL_DLL_IMPORT   extern
 #endif
@@ -474,6 +470,24 @@
 
 /*----------------------------------------------------*/
 
+#ifndef    _SKEY_C_
+  #ifndef  _HENGINE_DLL_
+    #define SKEY_DLL_IMPORT         DLL_IMPORT
+  #else
+    #define SKEY_DLL_IMPORT         extern
+  #endif
+#else
+  #define   SKEY_DLL_IMPORT         DLL_EXPORT
+#endif
+
+#ifndef    _SKEY_C_
+  #define   SKEY_INL_DLL_IMPORT
+#else
+  #define   SKEY_INL_DLL_IMPORT     extern
+#endif
+
+/*----------------------------------------------------*/
+
 #ifndef    _TRANSACT_C_
   #ifndef  _HENGINE_DLL_
     #define TRANS_DLL_IMPORT        DLL_IMPORT
@@ -509,11 +523,7 @@
 #endif
 
 #ifndef    _VSTORE_C_
-  #ifndef  _HENGINE_DLL_
-    #define VSTORE_INL_DLL_IMPORT   // (nothing!)
-  #else
-    #define VSTORE_INL_DLL_IMPORT   // (nothing!)
-  #endif
+  #define   VSTORE_INL_DLL_IMPORT
 #else
   #define   VSTORE_INL_DLL_IMPORT   extern
 #endif

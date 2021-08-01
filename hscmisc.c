@@ -159,7 +159,10 @@ BYTE    c;                              /* Character work area       */
         return n;
     }
 
-    n += snprintf (buf+n, bufl-n, "K:%2.2X=", STORAGE_KEY(aaddr, regs));
+    /* Note: we use the internal "_get_storage_key" function here
+       so that we display the STORKEY_BADFRM bit too, if it's set.
+    */
+    n += snprintf( buf+n, bufl-n, "K:%2.2X=", ARCH_DEP( _get_storage_key )( aaddr, SKEY_K ));
 
     memset (hbuf, SPACE, sizeof(hbuf));
     memset (cbuf, SPACE, sizeof(cbuf));
@@ -569,9 +572,12 @@ char    absorr[8];                      /* Uppercase command         */
                 break;
             }
 
-            /* Display storage key for this page */
+            /* Display storage key for this page. Note: we use the
+               internal "_get_storage_key" function here so that we
+               can display our STORKEY_BADFRM bit too, if it's set.
+            */
             MSGBUF( buf, "A:"F_RADR"  K:%2.2X",
-                aaddr, STORAGE_KEY( aaddr, regs ));
+                aaddr, ARCH_DEP( _get_storage_key )( aaddr, SKEY_K ));
             WRMSG( HHC02290, "I", buf );
 
             /* Now hexdump that absolute page */
@@ -771,9 +777,13 @@ size_t  totamt;                         /* Total amount to be dumped */
                     break;  /* (no sense in continuing) */
                 }
 
-                /* Display storage key for page and how translated */
+                /* Display storage key for page and how translated. Note: we
+                   use the internal "_get_storage_key" function here so that
+                   we can display our STORKEY_BADFRM bit too, if it's set.
+                */
                 MSGBUF( buf, "R:"F_RADR"  K:%2.2X  %s",
-                    raddr, STORAGE_KEY( aaddr, regs ), trans );
+                    raddr, ARCH_DEP( _get_storage_key )( aaddr, SKEY_K ), trans );
+
                 WRMSG( HHC02291, "I", buf );
 
                 /* Now hexdump that absolute page */

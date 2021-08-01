@@ -11,6 +11,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
+#include "inline.h"
 
 /*-------------------------------------------------------------------*/
 /*                non-ARCH_DEP helper functions                      */
@@ -218,7 +219,7 @@ char fmt_mem[8];
 
         do
         {
-            STORAGE_KEY(pageaddr, &sysblk) |= STORKEY_REF|STORKEY_CHANGE;
+            ARCH_DEP( or_storage_key )( pageaddr, STORKEY_REF | STORKEY_CHANGE );
             pageaddr += PAGEFRAME_PAGESIZE;
         }
         while (--pages);
@@ -413,7 +414,7 @@ U64 totwrite = 0;
         ste = (FWORD*)(sysblk.mainstor + sto);
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
         FETCH_W(pto, ste);
-        STORAGE_KEY(sto, &sysblk) |= (STORKEY_REF);
+        ARCH_DEP( or_storage_key )( sto, STORKEY_REF );
         if( pto & SEGTAB_INVALID )
             goto eof;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -442,7 +443,7 @@ U64 totwrite = 0;
             pte = (FWORD*)(sysblk.mainstor + pto);
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FETCH_W(pgo, pte);
-            STORAGE_KEY(pto, &sysblk) |= (STORKEY_REF);
+            ARCH_DEP( or_storage_key )( pto, STORKEY_REF );
             if( !(pgo & PAGETAB_INVALID) )
             {
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -461,7 +462,7 @@ U64 totwrite = 0;
                 if( nwrite != STORAGE_KEY_PAGESIZE )
                     goto eof;
 
-                STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF);
+                ARCH_DEP( or_storage_key )( pgo, STORKEY_REF );
             }
             size -= STORAGE_KEY_PAGESIZE;
         }
@@ -514,7 +515,7 @@ U64 totread = 0;
             ste = (FWORD*)(sysblk.mainstor + sto);
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
             FETCH_W(pto, ste);
-            STORAGE_KEY(sto, &sysblk) |= (STORKEY_REF);
+            ARCH_DEP( or_storage_key )( sto, STORKEY_REF );
             if( pto & SEGTAB_INVALID )
                 goto eof;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -542,7 +543,7 @@ U64 totread = 0;
                 pte = (FWORD*)(sysblk.mainstor + pto);
 #endif /*!defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)*/
                 FETCH_W(pgo, pte);
-                STORAGE_KEY(pto, &sysblk) |= (STORKEY_REF);
+                ARCH_DEP( or_storage_key )( pto, STORKEY_REF );
                 if( pgo & PAGETAB_INVALID )
                     goto eof;
 #if defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
@@ -560,7 +561,7 @@ U64 totread = 0;
                 size -= nread;
                 if( nread != STORAGE_KEY_PAGESIZE )
                     goto eof;
-                STORAGE_KEY(pgo, &sysblk) |= (STORKEY_REF|STORKEY_CHANGE);
+                ARCH_DEP( or_storage_key )( pgo, (STORKEY_REF | STORKEY_CHANGE) );
             }
         }
     }

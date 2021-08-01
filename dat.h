@@ -226,7 +226,7 @@ BYTE    ate;                            /* Authority table entry     */
     ate <<= ((ax & 0x03)*2);
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(ato, regs) |= STORKEY_REF;
+    ARCH_DEP( or_storage_key )( ato, STORKEY_REF );
 
     /* Authorization fails if the specified bit (either X'80' or
        X'40' of the 2 bit authority table entry) is zero */

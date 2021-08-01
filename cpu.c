@@ -1050,7 +1050,7 @@ bool    intercept;                      /* False for virtual pgmint  */
         PTT_PGM( "PGM !icept", intercept, 0, 0 );
 
         /* Set the main storage reference and change bits */
-        STORAGE_KEY( px, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( px, (STORKEY_REF | STORKEY_CHANGE) );
 
         /* Point to PSA in main storage */
         psa = (void*)(regs->mainstor + px);
@@ -1079,7 +1079,7 @@ bool    intercept;                      /* False for virtual pgmint  */
             psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_IP_PSA_OFFSET);
 
             /* Set the main storage reference and change bits */
-            STORAGE_KEY( SIE_STATE( regs ), HOSTREGS) |= (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( or_storage_key )( SIE_STATE( regs ), (STORKEY_REF | STORKEY_CHANGE) );
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
             /** FIXME : SEE ISW20090110-1 */
@@ -1097,7 +1097,7 @@ bool    intercept;                      /* False for virtual pgmint  */
             psa = (void*)(regs->mainstor + px);
 
             /* Set the main storage reference and change bits */
-            STORAGE_KEY( px, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( or_storage_key )( px, (STORKEY_REF | STORKEY_CHANGE) );
         }
     }
 #endif /*defined(_FEATURE_SIE)*/
@@ -1435,7 +1435,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     PTT_INF("*RESTART",regs->cpuad,regs->cpustate,regs->psw.IA_L);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( regs->PX, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Zeroize the interrupt code in the PSW */
     regs->psw.intcode = 0;
@@ -1502,7 +1502,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     {
         /* Point to SIE copy of PSA in state descriptor */
         psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
-        STORAGE_KEY(SIE_STATE(regs), HOSTREGS) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( SIE_STATE( regs ), (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
 #endif
@@ -1514,7 +1514,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
 #endif
               regs->PX;
         psa = (void*)(regs->mainstor + pfx);
-        STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key )( pfx, (STORKEY_REF | STORKEY_CHANGE) );
     }
 
 #ifdef FEATURE_S370_CHANNEL
@@ -1623,7 +1623,7 @@ RADR    fsta;                           /* Failing storage address   */
     if (rc == 0) return;
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( regs->PX, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Point to the PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);

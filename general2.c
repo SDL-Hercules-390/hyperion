@@ -182,7 +182,7 @@ int     cc = 0;                         /* Condition code            */
                  if ( (*dest1++ |= *source2++) )
                      cc = 1;
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
     }
     else
     {
@@ -263,8 +263,8 @@ int     cc = 0;                         /* Condition code            */
                         cc = 1;
             }
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
-        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+        ARCH_DEP( or_storage_key_by_ptr )( sk1, (STORKEY_REF | STORKEY_CHANGE) );
+        ARCH_DEP( or_storage_key_by_ptr )( sk2, (STORKEY_REF | STORKEY_CHANGE) );
     }
 
     regs->psw.cc = cc;
@@ -1485,7 +1485,7 @@ int     rc;                             /* Return code               */
     SIE_TRANSLATE(&px, ACCTYPE_WRITE, regs);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(px, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( px, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Use the I-byte to set the SVC interruption code */
     regs->psw.intcode = i;

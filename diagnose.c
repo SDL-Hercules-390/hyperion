@@ -817,9 +817,14 @@ U32   code;
             break;
         }
 
-        /* Update bad-frame bit based on low-order bit of R1 register*/
-        STORAGE_KEY(n, regs) &= ~(STORKEY_BADFRM);
-        STORAGE_KEY(n, regs) |= regs->GR_L(r1) & STORKEY_BADFRM;
+        /* Update bad-frame bit based on low-order bit of R1 register.
+           Note: we must use the internal "_xxx_storage_key" functions
+           to directly set/clear the internal STORKEY_BADFRM bit.
+        */
+        if (regs->GR_L(r1) & STORKEY_BADFRM)
+            ARCH_DEP( _or_storage_key )( n, STORKEY_BADFRM, SKEY_K );
+        else
+            ARCH_DEP( _and_storage_key )( n, STORKEY_BADFRM, SKEY_K );
 
         break;
 

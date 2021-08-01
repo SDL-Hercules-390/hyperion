@@ -2196,7 +2196,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 #endif /* defined( _FEATURE_SIE ) */
 
     /* Save ptr to storage key for this translated logical address */
-    regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
+    regs->dat.storkey = ARCH_DEP( get_ptr_to_storekey )( aaddr );
 
 #if defined( _FEATURE_SIE )
     /* Do not apply host key access when SIE fetches/stores data */
@@ -2215,11 +2215,11 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         }
 
         /* Set the reference bit in the storage key */
-        *regs->dat.storkey |= STORKEY_REF;
+        ARCH_DEP( or_storage_key_by_ptr )( regs->dat.storkey, STORKEY_REF );
 
         /* Update accelerated lookup TLB fields */
         regs->tlb.storkey[ix]    = regs->dat.storkey;
-        regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
+        regs->tlb.skey[ix]       = ARCH_DEP( get_storekey_by_ptr )( regs->dat.storkey ) & STORKEY_KEY;
         regs->tlb.acc[ix]        = ACC_READ;
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, apfra);
 
@@ -2237,11 +2237,11 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
         /* Set the reference and change bits in the storage key */
         if (acctype & ACC_WRITE)
-            *regs->dat.storkey |= (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( or_storage_key_by_ptr )( regs->dat.storkey, (STORKEY_REF | STORKEY_CHANGE) );
 
         /* Update accelerated lookup TLB fields */
         regs->tlb.storkey[ix] = regs->dat.storkey;
-        regs->tlb.skey[ix]    = *regs->dat.storkey & STORKEY_KEY;
+        regs->tlb.skey[ix]    = ARCH_DEP( get_storekey_by_ptr )( regs->dat.storkey ) & STORKEY_KEY;
         regs->tlb.acc[ix]     = (addr >= PSA_SIZE || regs->dat.pvtaddr)
                               ? (ACC_READ | ACC_CHECK | acctype)
                               :  ACC_READ;

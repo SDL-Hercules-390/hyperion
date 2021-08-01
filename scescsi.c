@@ -272,7 +272,7 @@ static bool ARCH_DEP( load_pages )( CREG pto, int fd, U32 *pages )
             (*pages)--;
 
             /* Update page's referenced and changed Storage Key bits */
-            STORAGE_KEY( pgo, &sysblk ) |= (STORKEY_REF | STORKEY_CHANGE);
+            ARCH_DEP( or_storage_key )( pgo, (STORKEY_REF | STORKEY_CHANGE) );
         }
     }
 

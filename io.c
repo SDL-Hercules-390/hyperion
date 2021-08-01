@@ -1,6 +1,6 @@
 /* IO.C         (C) Copyright Roger Bowler, 1994-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
-/*              ESA/390 CPU Emulator                                 */
+/*              I/O Instructions                                     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -313,7 +313,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
 
             dev->mainstor = &(sysblk.mainstor[ mso ]);
             dev->mainlim  = msl - mso;
-            dev->storkeys = &(STORAGE_KEY( mso, &sysblk ));
+            dev->storkeys = ARCH_DEP( get_ptr_to_storekey )( mso );
         }
 #endif
 
@@ -869,7 +869,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
                 {
                     /* Point to SIE copy of PSA in state descriptor */
                     psa = (void*)(HOSTREGS->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
-                    STORAGE_KEY( SIE_STATE( regs ), HOSTREGS ) |= (STORKEY_REF | STORKEY_CHANGE);
+                    ARCH_DEP( or_storage_key )( SIE_STATE( regs ), (STORKEY_REF | STORKEY_CHANGE) );
                 }
                 else
 #endif
@@ -878,7 +878,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
                     pfx = regs->PX;
                     SIE_TRANSLATE( &pfx, ACCTYPE_SIE, regs );
                     psa = (void*)(regs->mainstor + pfx);
-                    STORAGE_KEY( pfx, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
+                    ARCH_DEP( or_storage_key )( pfx, (STORKEY_REF | STORKEY_CHANGE) );
                 }
 
                 /* If operand address is zero, store in PSA */

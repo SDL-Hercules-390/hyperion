@@ -1813,13 +1813,13 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     DEBUG_CPASSISTX(TRBRG,MSGBUF(buf, "Checking 2K Storage keys @"F_RADR" & "F_RADR"",pg1,pg2));
     DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", buf));
     if(0
-        || (STORAGE_KEY(pg1,regs) & STORKEY_CHANGE)
-        || (STORAGE_KEY(pg2,regs) & STORKEY_CHANGE)
+        || (ARCH_DEP( get_storage_key )( pg1 ) & STORKEY_CHANGE)
+        || (ARCH_DEP( get_storage_key )( pg2 ) & STORKEY_CHANGE)
     )
 #else
     DEBUG_CPASSISTX(TRBRG,MSGBUF(buf, "Checking 4K Storage keys @"F_RADR,*raddr));
     DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", buf));
-    if (STORAGE_KEY(*raddr,regs) & STORKEY_CHANGE)
+    if (ARCH_DEP( get_storage_key )( *raddr ) & STORKEY_CHANGE)
 #endif
     {
         DEBUG_CPASSISTX(TRBRG,WRMSG(HHC90000, "D", "Page shared and changed"));
@@ -3122,10 +3122,10 @@ U16   pte;
 #if defined(FEATURE_2K_STORAGE_KEYS)
                         page2=page+0x800;
                         if(0
-                           || (STORAGE_KEY(page,regs) & STORKEY_CHANGE)
-                           || (STORAGE_KEY(page2,regs) & STORKEY_CHANGE))
+                           || (ARCH_DEP( get_storage_key )( page ) & STORKEY_CHANGE)
+                           || (ARCH_DEP( get_storage_key )( page2 ) & STORKEY_CHANGE))
 #else
-                        if (STORAGE_KEY(page,regs) & STORKEY_CHANGE)
+                        if (ARCH_DEP( get_storage_key )( page ) & STORKEY_CHANGE)
 #endif
                         {
                             return;                 // let CP handle if a page is changed

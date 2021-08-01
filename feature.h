@@ -41,53 +41,60 @@
   /*-----------------------------------------------------------------*/
 
   /*-----------------------------------------------------------------*/
+  /*                     PROGRAMMING NOTE                            */
   /*       Storage Key array unit size and shift amount values       */
   /*-----------------------------------------------------------------*/
   /*                                                                 */
   /*  If 2K pages need to be supported, "_FEATURE_2K_STORAGE_KEYS"   */
   /*  will be defined  (Note UNDERSCORE!), and our "storkeys" BYTE   */
-  /*  array must have AT LEAST one slot (BYTE) for each 2K page of   */
-  /*  mainstor.                                                      */
+  /*  array will have one slot (BYTE) for each 2K page of mainstor.  */
   /*                                                                 */
   /*  Otherwise (i.e. if we're only building for 390 and/or z/Arch   */
   /*  and thus are not interested in supporting 2K pages), then the  */
   /*  "_FEATURE_2K_STORAGE_KEYS" macro won't be defined and we only  */
-  /*  need half as many array entries (one for each 4K of mainstor). */
+  /*  need one slot (BYTE) for each 4K of mainstor.                  */
   /*                                                                 */
-  /*  If the guest/architecture ACCESSING the array uses 2K storage  */
-  /*  keys (i.e. if "FEATURE_2K_STORAGE_KEYS" as well as its under-  */
-  /*  scored counterpart "_FEATURE_2K_STORAGE_KEYS" are defined) the */
-  /*  "STORAGE_KEY" macro will end up accessing CONSECUTIVE storkeys */
-  /*  bytes for each 2K page.                                        */
+  /*  Since default Hercules builds DO support System/370 and thus   */
+  /*  "_FEATURE_2K_STORAGE_KEYS" is normally defined, the storkeys   */
+  /*  array normally contains one byte for each 2K of mainstor (or   */
+  /*  two bytes for each 4K of mainstor).                            */
   /*                                                                 */
-  /*  If the guest/architecture ACCESSING the array, uses 4K storage */
-  /*  keys (the "FEATURE_4K_STORAGE_KEYS" macro is defined and the   */
-  /*  "FEATURE_2K_STORAGE_KEYS" is *not* defined, regardless of the  */
-  /*  corresponding "_FEATURE_2K_STORAGE_KEYS" setting), then the    */
-  /*  "STORAGE_KEY" macro will end up accessing EVERY OTHER byte of  */
-  /*  storkeys array for each 4K page.                               */
+  /*  If the guest/architecture accessing the array uses 2K storage  */
+  /*  keys (i.e. both the  "FEATURE_2K_STORAGE_KEYS" as well as the  */
+  /*  "_FEATURE_2K_STORAGE_KEYS" macros are both defined), then the  */
+  /*  the Storage Key functions for the guest will ultimately access */
+  /*  CONSECUTIVE storkeys array bytes for each 2K page.             */
   /*                                                                 */
-  /*  Since Hercules does not normally support the "4K-byte Block    */
-  /*  Facility" (unless it is built without support for System/370   */
-  /*  which would neither of the "FEATURE_2K_STORAGE_KEYS" nor the   */
-  /*  "_FEATURE_2K_STORAGE_KEYS macros to ever be defined), we also  */
-  /*  need to #define a "STORAGE_KEY1" and "STORAGE_KEY2" macro too  */
-  /*  in order to support the ISKE, RRBE and SSKE instructions that  */
-  /*  the "Storage-Key-Instruction-Extension Facility" provides,     */
-  /*  which operate on BOTH keys of each double-keyed 4K byte block  */
-  /*  (i.e. they access the storkeys array in consecutive PAIRS of   */
-  /*  bytes), whereas the ISK, RRB and SSK instructions operate on   */
-  /*  each individual byte separately (i.e. they can individually    */
-  /*  access each separate key of each double-keyed 4K byte block).  */
+  /*  If the guest/architecture accessing the array uses 4K storage  */
+  /*  keys (i.e. if the "FEATURE_4K_STORAGE_KEYS" macro is defined   */
+  /*  and the "FEATURE_2K_STORAGE_KEYS" macro is NOT defined), then  */
+  /*  the Storage Key functions for the guest will end up accessing  */
+  /*  EVERY OTHER byte of the storkeys array for each 4K page.       */
   /*                                                                 */
-  /*  BUT THE BOTTON LINE IS, if 2K storage keys must be supported   */
-  /*  (i.e. if "_FEATURE_2K_STORAGE_KEYS" (underscore) is #defined)  */
-  /*  then the *SHIFT* amount that the STORAGE_KEY, STORAGE_KEY1,    */
-  /*  and STORAGE_KEY2 macros needs to use *MUST* be set to **11**   */
-  /*  in order to properly index into the storkeys byte array to     */
-  /*  reach the proper key byte or pair of key bytes.                */
+  /*  Since default builds of Hercules support S/370 and thus must   */
+  /*  support 2K storage keys, Hercules thus does NOT support the    */
+  /*  "4K-byte Block Facility". The SSK instruction always operates  */
+  /*  on the single key for each addressed 2K block, and the SSKE    */
+  /*  instruction always operates on the keys for BOTH 2K blocks     */
+  /*  that comprise the addressed 4K page.                           */
   /*                                                                 */
-  /*  Which is admittedly somewhat counter-intuitive.                */
+  /*  For ESA/390 and z/Architecture however (which only support     */
+  /*  4K pages), the SSKE instruction only operates on the single    */
+  /*  key for the addressed 4K page; it does NOT update "both keys   */
+  /*  of the double-keyed 4K byte block" since each 4K byte block    */
+  /*  is actually only a SINGLE keyed 4K byte block, NOT a double-   */
+  /*  keyed 4K byte block like it is on System/370.                  */
+  /*                                                                 */
+  /*  BUT THE BOTTOM LINE IS, if 2K storage keys must be supported   */
+  /*  (i.e. if "_FEATURE_2K_STORAGE_KEYS" (underscore) is #defined,  */
+  /*  which it normally is for default Hercules builds), then the    */
+  /*  *SHIFT* amount used by the Storage Key functions is *always*   */
+  /*  **11 bits** (i.e. 2048 bytes = 2K) in order to properly index  */
+  /*  into the storkeys byte array to reach the proper storage key   */
+  /*  byte or pair of bytes, and this is alway true REGARDLESS of    */
+  /*  whether the key for a 2K page -OR- 4K page is being accessed.  */
+  /*                                                                 */
+  /*  WHICH IS ADMITTEDLY SOMEWHAT COUNTER-INTUITIVE!                */
   /*                                                                 */
   /*  Nevertheless, it *MUST* be done this way since 390-mode SIE    */
   /*  (i.e. VM/ESA) must be able to support not only 390-mode guests */
@@ -97,14 +104,26 @@
   /*                                                                 */
   /*-----------------------------------------------------------------*/
 
+  // Build architecture INDEPENDENT constants...
+
+  #define STORAGE_KEY_2K_PAGESIZE       _2K
+  #define STORKEY_KEY_2K_SHIFTAMT       SHIFT_2K
+  #define STORAGE_KEY_2K_BYTEMASK       (~(((unsigned)(~0)) << SHIFT_2K))
+  #define STORAGE_KEY_2K_PAGEMASK       (~(STORAGE_KEY_2K_BYTEMASK))
+
+  #define STORAGE_KEY_4K_PAGESIZE       _4K
+  #define STORKEY_KEY_4K_SHIFTAMT       SHIFT_4K
+  #define STORAGE_KEY_4K_BYTEMASK       (~(((unsigned)(~0)) << SHIFT_4K))
+  #define STORAGE_KEY_4K_PAGEMASK       (~(STORAGE_KEY_4K_BYTEMASK))
+
   #if defined( _FEATURE_2K_STORAGE_KEYS )
     // Each individual storkey array byte represent 2K of storage
-    #define _STORKEY_ARRAY_UNITSIZE   2048
-    #define _STORKEY_ARRAY_SHIFTAMT   11
+    #define _STORKEY_ARRAY_UNITSIZE     STORAGE_KEY_2K_PAGESIZE
+    #define _STORKEY_ARRAY_SHIFTAMT     STORKEY_KEY_2K_SHIFTAMT
   #else
     // Each individual storkey array byte represent 4K of storage
-    #define _STORKEY_ARRAY_UNITSIZE   4096
-    #define _STORKEY_ARRAY_SHIFTAMT   12
+    #define _STORKEY_ARRAY_UNITSIZE     STORAGE_KEY_4K_PAGESIZE
+    #define _STORKEY_ARRAY_SHIFTAMT     STORKEY_KEY_4K_SHIFTAMT
   #endif
 
 #endif /* !defined( DID_FEATCHK_PASS_1 ) */
@@ -608,33 +627,6 @@
 
 #define DEF_INST(_name)     \
     void ( ATTR_REGPARM(2) ARCH_DEP( _name ) )( BYTE inst[], REGS* regs )
-
-/*-------------------------------------------------------------------*/
-/*  The following section of code defines constants and macros that  */
-/*  are not generally architecture dependent.  That is, the below    */
-/*  are #defines common for all build architectures (or independent  */
-/*  of a given build architecture).                                  */
-/*-------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------*/
-/*                     STORAGE_KEY macros                            */
-/*-------------------------------------------------------------------*/
-/*                                                                   */
-/*   Note the use of "_STORKEY_ARRAY_SHIFTAMT" shift value in each   */
-/*   of the below macros so that ALL supported build architectures   */
-/*   can thus be properly supported. The two STORAGE_KEY1/2 macros   */
-/*   are used by the ISKE, RRBE and SSKE instructions which always   */
-/*   operate on BOTH the low-order *and* high-order keys of each     */
-/*   double-keyed 4K byte block.                                     */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-#undef STORAGE_KEY
-#undef STORAGE_KEY1
-#undef STORAGE_KEY2
-
-#define STORAGE_KEY(  _addr, _regs ) (_regs)->storkeys[ ((_addr) >> _STORKEY_ARRAY_SHIFTAMT)      ]
-#define STORAGE_KEY1( _addr, _regs ) (_regs)->storkeys[ ((_addr) >> _STORKEY_ARRAY_SHIFTAMT) & ~1 ]
-#define STORAGE_KEY2( _addr, _regs ) (_regs)->storkeys[ ((_addr) >> _STORKEY_ARRAY_SHIFTAMT) |  1 ]
 
 /*-------------------------------------------------------------------*/
 /* PAGEFRAME-size related constants                                  */
