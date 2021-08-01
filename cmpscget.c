@@ -13,7 +13,6 @@
 #if !defined( NOT_HERC )        // (building Hercules?)
 #include "hercules.h"
 #include "opcode.h"
-#include "inline.h"
 #endif
 #include "cmpsc.h"              // (Master header)
 
