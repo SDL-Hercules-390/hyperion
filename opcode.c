@@ -2732,7 +2732,7 @@ static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B253*/ GENx___x___x___ ,
  /*B254*/ GENx___x390x900 ( "MVPG"      , RRE  , ASMFMT_RRE      , move_page                                           ),
  /*B255*/ GENx37Xx390x900 ( "MVST"      , RRE  , ASMFMT_RRE      , move_string                                         ),
- /*B256*/ GENx___x___x___ ,
+ /*B256*/ GENx___x___x___ , /* STHYI - Store Hypervisor Information */
  /*B257*/ GENx37Xx390x900 ( "CUSE"      , RRE  , ASMFMT_RRE      , compare_until_substring_equal                       ),
  /*B258*/ GENx___x390x900 ( "BSG"       , RRE  , ASMFMT_RRE      , branch_in_subspace_group                            ),
  /*B259*/ GENx___x390x900 ( "IESBE"     , RRE  , ASMFMT_RRE      , invalidate_expanded_storage_block_entry             ),
