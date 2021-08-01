@@ -20,7 +20,6 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "inline.h"
 
 #include "decimal128.h"
 #include "decimal64.h"
