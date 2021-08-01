@@ -40,7 +40,6 @@
 #include "devtype.h"
 #include "opcode.h"
 #include "history.h"
-// #include "inline.h"
 #include "fillfnam.h"
 #include "hconsole.h"
 
