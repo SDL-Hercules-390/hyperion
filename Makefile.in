@@ -307,9 +307,9 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	hscpufun.lo httpserv.lo ieee.lo impl.lo inline.lo io.lo ipl.lo \
 	loadmem.lo loadparm.lo losc.lo machchk.lo machdep.lo opcode.lo \
 	panel.lo pfpo.lo plo.lo qdio.lo scedasd.lo scescsi.lo \
-	script.lo service.lo sie.lo sr.lo stack.lo strsignal.lo \
-	tcpip.lo timer.lo trace.lo transact.lo vector.lo vm.lo \
-	vmd250.lo vstore.lo x75.lo xstore.lo $(am__objects_1)
+	script.lo service.lo sie.lo skey.lo sr.lo stack.lo \
+	strsignal.lo tcpip.lo timer.lo trace.lo transact.lo vector.lo \
+	vm.lo vmd250.lo vstore.lo x75.lo xstore.lo $(am__objects_1)
 am__EXTRA_libherc_la_SOURCES_DIST = ltdl.c memrchr.c dyncrypt.c \
 	dyngui.c hdteq.c awstape.c cardpch.c cardrdr.c comm3705.c \
 	commadpt.c tcpnje.c con1052c.c console.c ctc_ctci.c ctc_lcs.c \
@@ -676,7 +676,7 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/scescsi.Plo ./$(DEPDIR)/script.Plo \
 	./$(DEPDIR)/scsitape.Plo ./$(DEPDIR)/scsiutil.Plo \
 	./$(DEPDIR)/service.Plo ./$(DEPDIR)/shared.Plo \
-	./$(DEPDIR)/sie.Plo ./$(DEPDIR)/sllib.Plo \
+	./$(DEPDIR)/sie.Plo ./$(DEPDIR)/skey.Plo ./$(DEPDIR)/sllib.Plo \
 	./$(DEPDIR)/sockdev.Plo ./$(DEPDIR)/sr.Plo \
 	./$(DEPDIR)/stack.Plo ./$(DEPDIR)/strsignal.Plo \
 	./$(DEPDIR)/tapeccws.Plo ./$(DEPDIR)/tapecopy-scsiutil.Po \
@@ -792,10 +792,10 @@ am__noinst_HEADERS_DIST = archlvl.h cache.h ccfixme.h cckd.h cckd64.h \
 	inline.h instfmts.h linklist.h logger.h ltdl.h machdep.h \
 	memrchr.h mpc.h msgenu.h netsupp.h opcode.h parser.h \
 	printfmt.h pttrace.h qdio.h qeth.h resolve.h scsitape.h \
-	scsiutil.h service.h shared.h sllib.h sockdev.h sr.h stfl.h \
-	tapedev.h targetver.h tcpip.h transact.h tt32api.h tt32if.h \
-	tuntap.h version.h vmd250.h vstore.h w32ctca.h w32dl.h \
-	w32mtio.h w32stape.h w32util.h x75.h zfcp.h
+	scsiutil.h service.h shared.h sie.h skey.h sllib.h sockdev.h \
+	sr.h stfl.h tapedev.h targetver.h tcpip.h transact.h tt32api.h \
+	tt32if.h tuntap.h version.h vmd250.h vstore.h w32ctca.h \
+	w32dl.h w32mtio.h w32stape.h w32util.h x75.h zfcp.h
 HEADERS = $(noinst_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
@@ -1039,7 +1039,11 @@ lns = @LN_S@
 ldadd = @LIBS@
 
 #------------------------------------------------------------------------------
+# Note! Backslash line continuation is disallowed by newer versions of aclocal
+#------------------------------------------------------------------------------
 ACLOCAL_AMFLAGS = -I autoconf -I m4
+
+#------------------------------------------------------------------------------
 
 # Now simply pass those version defines on the command-line...
 AM_CPPFLAGS = -I $(top_srcdir) -I $(hqa_inc) $(extpkg_incdirs) -D \
@@ -1048,7 +1052,7 @@ AM_CPPFLAGS = -I $(top_srcdir) -I $(hqa_inc) $(extpkg_incdirs) -D \
 	VERS_BLD=$(VERS_BLD)
 
 #------------------------------------------------------------------------------
-# NOte! Due to inter-module dependencies the sequence
+# Note! Due to inter-module dependencies the sequence
 #       (ordering) of the SUBDIRS list is important!
 #------------------------------------------------------------------------------
 SUBDIRS = \
@@ -1433,6 +1437,7 @@ libherc_la_SOURCES = \
   script.c           \
   service.c          \
   sie.c              \
+  skey.c             \
   sr.c               \
   stack.c            \
   strsignal.c        \
@@ -1871,6 +1876,8 @@ noinst_HEADERS = \
   scsiutil.h              \
   service.h               \
   shared.h                \
+  sie.h                   \
+  skey.h                  \
   sllib.h                 \
   sockdev.h               \
   sr.h                    \
@@ -2460,6 +2467,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shared.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sie.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/skey.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sllib.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sockdev.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sr.Plo@am__quote@ # am--include-marker
@@ -3053,6 +3061,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/service.Plo
 	-rm -f ./$(DEPDIR)/shared.Plo
 	-rm -f ./$(DEPDIR)/sie.Plo
+	-rm -f ./$(DEPDIR)/skey.Plo
 	-rm -f ./$(DEPDIR)/sllib.Plo
 	-rm -f ./$(DEPDIR)/sockdev.Plo
 	-rm -f ./$(DEPDIR)/sr.Plo
@@ -3285,6 +3294,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/service.Plo
 	-rm -f ./$(DEPDIR)/shared.Plo
 	-rm -f ./$(DEPDIR)/sie.Plo
+	-rm -f ./$(DEPDIR)/skey.Plo
 	-rm -f ./$(DEPDIR)/sllib.Plo
 	-rm -f ./$(DEPDIR)/sockdev.Plo
 	-rm -f ./$(DEPDIR)/sr.Plo
