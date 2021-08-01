@@ -530,12 +530,6 @@ char    absorr[8];                      /* Uppercase command         */
             /* Update absolute storage */
             regs->mainstor[aaddr] = newval[i];
 
-#if defined( FEATURE_2K_STORAGE_KEYS )
-            STORAGE_KEY(  aaddr, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
-#else
-            STORAGE_KEY1( aaddr, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
-            STORAGE_KEY2( aaddr, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
-#endif
         } /* end for(i) */
     }
 
@@ -727,13 +721,6 @@ size_t  totamt;                         /* Total amount to be dumped */
 
             /* Update absolute storage */
             regs->mainstor[aaddr] = newval[i];
-
-#if defined( FEATURE_2K_STORAGE_KEYS )
-            STORAGE_KEY(  aaddr, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
-#else
-            STORAGE_KEY1( aaddr, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
-            STORAGE_KEY2( aaddr, regs ) |= (STORKEY_REF | STORKEY_CHANGE);
-#endif
         }
     }
 

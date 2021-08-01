@@ -328,8 +328,6 @@ int loadtext_cmd(int argc, char *argv[], char *cmdline)
                        }
                        ahighaddr = MAX(ahighaddr, lastbyte);                    // Keep track of highsest byte used
                        memcpy(regs->mainstor + aaddr + n, &buf[16], len);
-                       STORAGE_KEY(aaddr + n, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-                       STORAGE_KEY(aaddr + n + len - 1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
                     }
                 }
 
