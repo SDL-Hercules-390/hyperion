@@ -703,6 +703,10 @@ static const char *build_info[] = {
     "Without \"Optimized\" instructions",
 #endif
 
+#if defined( OPTION_USE_SKAIP_AS_LOCK )         // Use SKAIP as lock, not RCP
+    "With    OPTION_USE_SKAIP_AS_LOCK",
+#endif
+
 #if defined( OPTION_SIE2BK_FLD_COPY )           // SIE2BK 'fld' is NOT a mask
     "With    OPTION_SIE2BK_FLD_COPY",
 #endif

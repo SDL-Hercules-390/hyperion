@@ -9,14 +9,10 @@ EXTRA_DIST =                    \
      agf.assemble               \
      agf.listing                \
      agf.tst                    \
-     agf.txt                    \
      alsi.txt                   \
-     asmtst.xedit               \
      awsbsf.aws                 \
      awsbsf.tst                 \
      axtr.txt                   \
-     bldhtc.exec                \
-     bldhtc.rexx                \
      bfp-001-divtoint.asm       \
      bfp-001-divtoint.core      \
      bfp-001-divtoint.list      \
@@ -118,35 +114,21 @@ EXTRA_DIST =                    \
      CBUC.core                  \
      CBUC.list                  \
      CBUC.pdf                   \
+     CBUC.subtst                \
      CBUC.tst                   \
      CCW-ILS.asm                \
+     CCW-ILS.core               \
      CCW-ILS.list               \
      CCW-ILS.pdf                \
-     CCW-ILS.core               \
      CCW-ILS.tst                \
      CCWILS.3390-1.comp-z       \
+     cdfr.txt                   \
+     cdgr.txt                   \
      CDSG.asm                   \
      CDSG.core                  \
      CDSG.list                  \
-     CDSG.pdf                   \
+     CDSG.PDF                   \
      CDSG.tst                   \
-     CLCL-et-al.asm             \
-     CLCL-et-al.core            \
-     CLCL-et-al.list            \
-     CLCL-et-al.pdf             \
-     CLCL-et-al.tst             \
-     CLCL.asm                   \
-     CLCL.core                  \
-     CLCL.list                  \
-     CLCL.pdf                   \
-     CLCL.tst                   \
-     CMPSC.asm                  \
-     CMPSC.core                 \
-     CMPSC.list                 \
-     CMPSC.pdf                  \
-     CMPSC.tst                  \
-     cdfr.txt                   \
-     cdgr.txt                   \
      cdsg.txt                   \
      cgdr.txt                   \
      cgdtr.txt                  \
@@ -158,29 +140,33 @@ EXTRA_DIST =                    \
      cipher.assemble            \
      cipher.listing             \
      cipher.tst                 \
-     cmd-abs-2K.subtst          \
-     cmd-abs-4K.subtst          \
-     cmd-abs.tst                \
-     cmd-rv-2K.subtst           \
-     cmd-rv-4K-32.subtst        \
-     cmd-rv-4K-64.subtst        \
-     cmd-rv.tst                 \
-     cr.tst                     \
+     CLCL-et-al.asm             \
+     CLCL-et-al.core            \
+     CLCL-et-al.list            \
+     CLCL-et-al.pdf             \
+     CLCL-et-al.tst             \
+     CLCL.asm                   \
+     CLCL.core                  \
+     CLCL.list                  \
+     CLCL.pdf                   \
+     CLCL.tst                   \
+     cmd-abs-2K.subxxx          \
+     cmd-abs-4K.subxxx          \
+     cmd-abs.xxx                \
+     cmd-rv-2K.subxxx           \
+     cmd-rv-4K-32.subxxx        \
+     cmd-rv-4K-64.subxxx        \
+     cmd-rv.xxx                 \
+     CMPSC.asm                  \
+     CMPSC.core                 \
+     CMPSC.list                 \
+     CMPSC.pdf                  \
+     CMPSC.tst                  \
      comments.txt               \
-     cpu0off.core               \
-     FAC53.asm                  \
-     FAC53.core                 \
-     FAC53.list                 \
-     FAC53.pdf                  \
-     FAC53.tst                  \
-     FAC5861.asm                \
-     FAC5861.core               \
-     FAC5861.list               \
-     FAC5861.pdf                \
-     FAC5861.tst                \
      cpsdr.txt                  \
+     cpu0off.core               \
+     cr.tst                     \
      csst.txt                   \
-     cvttst.rexx                \
      csxtr.assemble             \
      csxtr.listing              \
      csxtr.tst                  \
@@ -193,33 +179,49 @@ EXTRA_DIST =                    \
      digest.listing             \
      digest.tst                 \
      dotest                     \
+     dummy.subtst               \
      dxtr.txt                   \
      epsw.txt                   \
      exrl.txt                   \
+     FAC53.asm                  \
+     FAC53.core                 \
+     FAC53.list                 \
+     FAC53.pdf                  \
+     FAC53.tst                  \
+     FAC5861.asm                \
+     FAC5861.core               \
+     FAC5861.list               \
+     FAC5861.pdf                \
+     FAC5861.tst                \
      fiebr.txt                  \
-     fixtr.txt                  \
      fix-page.asm               \
      fix-page.core              \
      fix-page.list              \
      fix-page.tst               \
+     fixtr.txt                  \
+     hetbsf-bzip2.het           \
      hetbsf.het                 \
      hetbsf.tst                 \
      iedtr.txt                  \
+     ifelse.tst                 \
      ilc.assemble               \
      ilc.listing                \
      ilc.tst                    \
      invpsw.assemble            \
      invpsw.listing             \
      invpsw.tst                 \
+     kimd-hw.tst                \
      kimd0.txt                  \
      kimd1.txt                  \
      kimd2.txt                  \
      kimd3.txt                  \
      kimd65.txt                 \
+     klmd-hw.tst                \
      klmd0.txt                  \
      klmd1.txt                  \
      klmd2.txt                  \
      klmd3.txt                  \
+     km-hw.tst                  \
      km0.txt                    \
      km1.txt                    \
      km10.txt                   \
@@ -237,6 +239,7 @@ EXTRA_DIST =                    \
      km58.txt                   \
      km60.txt                   \
      km9.txt                    \
+     kmac-hw.tst                \
      kmac0.txt                  \
      kmac1.txt                  \
      kmac10.txt                 \
@@ -250,6 +253,7 @@ EXTRA_DIST =                    \
      kmac28.txt                 \
      kmac3.txt                  \
      kmac9.txt                  \
+     kmc-hw.tst                 \
      kmc0.txt                   \
      kmc1.txt                   \
      kmc10.txt                  \
@@ -264,6 +268,7 @@ EXTRA_DIST =                    \
      kmc3.txt                   \
      kmc67.txt                  \
      kmc9.txt                   \
+     kmctr-hw.tst               \
      kmctr0.txt                 \
      kmctr1.txt                 \
      kmctr10.txt                \
@@ -277,6 +282,7 @@ EXTRA_DIST =                    \
      kmctr28.txt                \
      kmctr3.txt                 \
      kmctr9.txt                 \
+     kmf-hw.tst                 \
      kmf0.txt                   \
      kmf1.txt                   \
      kmf10.txt                  \
@@ -290,6 +296,7 @@ EXTRA_DIST =                    \
      kmf28.txt                  \
      kmf3.txt                   \
      kmf9.txt                   \
+     kmo-hw.tst                 \
      kmo0.txt                   \
      kmo1.txt                   \
      kmo10.txt                  \
@@ -322,19 +329,20 @@ EXTRA_DIST =                    \
      maer.txt                   \
      mainsize.tst               \
      Makefile.am                \
-     mhi.assemble               \
-     mhi.listing                \
+     mhi.asm                    \
+     mhi.core                   \
+     mhi.list                   \
      mhi.tst                    \
      mkcore.rexx                \
      mvcle.assemble             \
      mvcle.listing              \
      mvcle.tst                  \
-     mvcos.txt                  \
      mvcos-001.asm              \
      mvcos-001.core             \
      mvcos-001.list             \
      mvcos-001.pdf              \
      mvcos-001.tst              \
+     mvcos.txt                  \
      mxtr.txt                   \
      pfpo.asm                   \
      pfpo.core                  \
@@ -342,9 +350,17 @@ EXTRA_DIST =                    \
      PFPO.pdf                   \
      pfpo.tst                   \
      popcnt.txt                 \
-     pr.tst                     \
      pr.subtst                  \
+     pr.tst                     \
      printer.txt                \
+     privop.asm                 \
+     privop.core                \
+     privop.list                \
+     privop.tst                 \
+     problem.asm                \
+     problem.core               \
+     problem.list               \
+     problem.tst                \
      ptf.txt                    \
      README.md                  \
      redtest.rexx               \
@@ -355,25 +371,44 @@ EXTRA_DIST =                    \
      runtest                    \
      runtest.cmd                \
      runtest.subtst             \
-     stidp-esa390.subtst        \
-     stidp-s370.subtst          \
-     stidp-zarch.subtst         \
      runtest0.tst               \
      runtest4.tst               \
+     semipriv.asm               \
+     semipriv.core              \
+     semipriv.list              \
+     semipriv.tst               \
      sigp.assemble              \
      sigp.listing               \
      sigp.tst                   \
+     skey370.asm                \
+     skey370.core               \
+     skey370.list               \
+     skey370.pdf                \
+     skey370.tst                \
+     skey370.TXTCARDS           \
+     skey390z.asm               \
+     skey390z.core              \
+     skey390z.list              \
+     skey390z.pdf               \
+     skey390z.tst               \
      srdt.txt                   \
-     ssk370.tst                 \
+     ssk370.xxx                 \
      sske.assemble              \
      sske.listing               \
      sske.tst                   \
-     sske370.tst                \
-     sske390.tst                \
-     stfl.assemble              \
+     sske370.xxx                \
+     sske390.xxx                \
+     stfl.asm                   \
      stfl.core                  \
-     stfl.listing               \
+     stfl.list                  \
      stfl.tst                   \
+     stfle.txt                  \
+     stidp-esa390.subtst        \
+     stidp-force.tst            \
+     stidp-s370.subtst          \
+     stidp-zarch.subtst         \
+     stidp.tst                  \
+     stidp.txt                  \
      str-001-cksm.asm           \
      str-001-cksm.core          \
      str-001-cksm.list          \
@@ -390,28 +425,32 @@ EXTRA_DIST =                    \
      str-001-srst.core          \
      str-001-srst.list          \
      str-001-srst.tst           \
-     stidp.tst                  \
-     stfle.txt                  \
-     stidp.txt                  \
      stsi.txt                   \
      sus40002.txt               \
+     tape.240k-2.txt            \
+     tape.240k.txt              \
+     tape.2m.txt                \
+     tape.32k.txt               \
      tape.asm                   \
      tape.aws                   \
      tape.core                  \
      tape.list                  \
      tape.pdf                   \
      tape.tst                   \
-     tape.240k-2.txt            \
-     tape.240k.txt              \
-     tape.2m.txt                \
-     tape.32k.txt               \
      tapebsf.subtst             \
      tapepos.txt                \
      tbedr.txt                  \
      tdcdt.txt                  \
      tdgdt.txt                  \
      tests.conf                 \
+     text2tst.rexx              \
      thder.txt                  \
      timeout.tst                \
      trace.txt                  \
-     trte.txt
+     trte.txt                   \
+     wild.assemble              \
+     wild.listing               \
+     wild.tst                   \
+     zeos.assemble              \
+     zeos.listing               \
+     zeos.tst

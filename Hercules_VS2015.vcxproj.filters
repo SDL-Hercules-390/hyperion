@@ -756,6 +756,9 @@
     <ClCompile Include="sie.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="skey.c">
+      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="sr.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
@@ -1790,6 +1793,39 @@
     <None Include="tests\sigp.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
     </None>
+    <None Include="tests\skey370.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\skey390z.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\skey370.TXTCARDS">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\skey370.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\skey390z.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\skey370.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey370.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey390z.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey390z.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\skey370.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\skey390z.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\sske.assemble">
       <Filter>Other Files\tests\scripts\assemble</Filter>
     </None>
@@ -1916,10 +1952,10 @@
     <None Include="tests\cipher.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\cmd-abs.tst">
+    <None Include="tests\cmd-abs.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\cmd-rv.tst">
+    <None Include="tests\cmd-rv.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\cr.tst">
@@ -1988,16 +2024,16 @@
     <None Include="tests\sigp.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\ssk370.tst">
+    <None Include="tests\ssk370.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\sske.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\sske370.tst">
+    <None Include="tests\sske370.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\sske390.tst">
+    <None Include="tests\sske390.xxx">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\stfl.tst">
@@ -2018,22 +2054,25 @@
     <None Include="tests\stidp.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\stidp-force.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\timeout.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
-    <None Include="tests\cmd-abs-2K.subtst">
+    <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-abs-4K.subtst">
+    <None Include="tests\cmd-abs-4K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-rv-2K.subtst">
+    <None Include="tests\cmd-rv-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-rv-4K-32.subtst">
+    <None Include="tests\cmd-rv-4K-32.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
-    <None Include="tests\cmd-rv-4K-64.subtst">
+    <None Include="tests\cmd-rv-4K-64.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
     <None Include="tests\dummy.subtst">
@@ -2867,6 +2906,12 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="service.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sie.h">
+      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skey.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sr.h">

@@ -140,6 +140,7 @@ hengine_OBJ = \
     $(O)scedasd.obj  \
     $(O)scescsi.obj  \
     $(O)sie.obj      \
+    $(O)skey.obj     \
     $(O)sr.obj       \
     $(O)stack.obj    \
     $(O)tcpip.obj    \

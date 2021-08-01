@@ -514,6 +514,7 @@ libherc_la_SOURCES = \
   script.c           \
   service.c          \
   sie.c              \
+  skey.c             \
   sr.c               \
   stack.c            \
   strsignal.c        \
@@ -1003,6 +1004,8 @@ noinst_HEADERS =          \
   scsiutil.h              \
   service.h               \
   shared.h                \
+  sie.h                   \
+  skey.h                  \
   sllib.h                 \
   sockdev.h               \
   sr.h                    \

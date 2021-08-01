@@ -1148,6 +1148,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\skey.c"
+							>
+						</File>
+						<File
 							RelativePath=".\sr.c"
 							>
 						</File>
@@ -1541,6 +1545,14 @@
 						</File>
 						<File
 							RelativePath=".\service.h"
+							>
+						</File>
+						<File
+							RelativePath=".\sie.h"
+							>
+						</File>
+						<File
+							RelativePath=".\skey.h"
 							>
 						</File>
 						<File
@@ -3455,6 +3467,18 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\skey370.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\skey370.TXTCARDS"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\skey390z.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\stfl.core"
 						>
 					</File>
@@ -4358,11 +4382,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\cmd-abs.tst"
+							RelativePath=".\tests\cmd-abs.xxx"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\cmd-rv.tst"
+							RelativePath=".\tests\cmd-rv.xxx"
 							>
 						</File>
 						<File
@@ -4498,7 +4522,15 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\ssk370.tst"
+							RelativePath=".\tests\skey370.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\skey390z.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\ssk370.xxx"
 							>
 						</File>
 						<File
@@ -4506,15 +4538,19 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\sske370.tst"
+							RelativePath=".\tests\sske370.xxx"
 							>
 						</File>
 						<File
-							RelativePath=".\tests\sske390.tst"
+							RelativePath=".\tests\sske390.xxx"
 							>
 						</File>
 						<File
 							RelativePath=".\tests\stfl.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\stidp-force.tst"
 							>
 						</File>
 						<File
@@ -4561,23 +4597,23 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\cmd-abs-2K.subtst"
+								RelativePath=".\tests\cmd-abs-2K.subxxx"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\cmd-abs-4K.subtst"
+								RelativePath=".\tests\cmd-abs-4K.subxxx"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\cmd-rv-2K.subtst"
+								RelativePath=".\tests\cmd-rv-2K.subxxx"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\cmd-rv-4K-32.subtst"
+								RelativePath=".\tests\cmd-rv-4K-32.subxxx"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\cmd-rv-4K-64.subtst"
+								RelativePath=".\tests\cmd-rv-4K-64.subxxx"
 								>
 							</File>
 							<File
@@ -4775,6 +4811,14 @@
 						</File>
 						<File
 							RelativePath=".\tests\semipriv.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\skey370.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\skey390z.asm"
 							>
 						</File>
 						<File
@@ -5006,6 +5050,22 @@
 							</File>
 							<File
 								RelativePath=".\tests\semipriv.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\skey370.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\skey370.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\skey390z.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\skey390z.pdf"
 								>
 							</File>
 							<File

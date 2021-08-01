@@ -1,0 +1,1209 @@
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *                            SKEY370
+                                                     5 *
+                                                     6 ***********************************************************************
+                                                     7 *
+                                                     8 *   This program verifies proper functioning of the following
+                                                     9 *   System/370 Storage Key instructions:
+                                                    10 *
+                                                    11 *       ISK,  RRB,  SSK                     (GA22-7000-04 Sep 75)
+                                                    12 *       ISKE, RRBE, SSKE, IVSK, TPROT, TB   (GA22-7000-10 Sep 87)
+                                                    13 *
+                                                    14 *   NOTE: due to varying support for certain instructions under
+                                                    15 *   certain situations, some tests may crash at certain points.
+                                                    16 *   If the crash is expected, then the crash is ignored and the
+                                                    17 *   test that was being attempted is simply skipped.
+                                                    18 *
+                                                    19 *   PLEASE ALSO NOTE the program is purposely designed to branch to
+                                                    20 *   an odd address should any test fail (such as the condition code
+                                                    21 *   not being the expected value). The Program Check handler routine
+                                                    22 *   when it notices the Program Old PSW is an odd address, backs up
+                                                    23 *   the address by 5 bytes and uses that as the test's failing PSW.
+                                                    24 *
+                                                    25 *   Thus when any test fails, the disabled wait PSW points directly
+                                                    26 *   to the failing instruction (i.e. the branch following the failed
+                                                    27 *   comparison). ALSO NOTE that Hercules also issues a "Instruction
+                                                    28 *   fetch error" message to its hardware console too whenever this
+                                                    29 *   occurs (due to the PSW address being odd causing it to be unable
+                                                    30 *   to fetch the next instruction), which is expected.
+                                                    31 *
+                                                    32 *   FINALLY, when running under VM (high-order byte of CPUID = X'FF')
+                                                    33 *   the 'TB' (Test Block) test is always skipped since VM doesn't
+                                                    34 *   support the ability to mark frames of storage as "bad" (whereas
+                                                    35 *   Hercules does via its "f-" command).
+                                                    36 *
+                                                    37 ***********************************************************************
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    39 ***********************************************************************
+                                                    40 *                            LOW CORE
+                                                    41 ***********************************************************************
+
+
+
+
+                              00000000  0000125F    43 TEST     START 0
+00000000                      00000000              44          USING TEST,0                 Use absolute addressing
+
+
+
+00000000                      00000000  00000000    46          ORG   TEST+X'00'             S/370 Restart new PSW
+00000000  00080000                                  47          DC    XL4'00080000'          S/370 Restart new PSW
+00000004  00000200                                  48          DC    A(BEGIN)               S/370 Restart new PSW
+
+
+00000008                      00000008  00000028    50          ORG   TEST+X'28'             S/370 Program old PSW
+                              00000028  00000001    51 PGMOLD   EQU   *                      S/370 Program old PSW
+
+
+00000028                      00000028  00000068    53          ORG   TEST+X'68'             S/370 Program new PSW
+00000068  00080000                                  54          DC    XL4'00080000'          S/370 Program new PSW
+0000006C  000009F0                                  55          DC    A(PGMCHK)              S/370 Program new PSW
+
+
+00000070                      00000070  0000008C    57          ORG   TEST+X'8C'             Program interrupt code
+0000008C  00000000                                  58 PGMCODE  DC    F'0'                   Program interrupt code
+
+
+
+                              00000001  00000001    60 PGM_OPERATION_EXCEPTION           EQU   X'0001'
+                              00000006  00000001    61 PGM_SPECIFICATION_EXCEPTION       EQU   X'0006'
+                              00000013  00000001    62 PGM_SPECIAL_OPERATION_EXCEPTION   EQU   X'0013'
+
+
+
+
+
+
+
+00000090                      00000090  00000200    64          ORG   TEST+X'200'        Start of test program
+
+00000200  B202 0A68                     00000A68    66 BEGIN    STIDP CPUID              Save CPU ID (for later test for VM)
+00000204  47F0 0208                     00000208    67          B     TEST370            Go get started...
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    69 ***********************************************************************
+                                                    70 *               Determine Instruction Availability
+                                                    71 ***********************************************************************
+                                                    72 *
+                                                    73 *   The ISKE/RRBE/SSKE/IVSK/TPROT/TB instructions didn't exist on
+                                                    74 *   early System/370 machines. They were introduced much later. If
+                                                    75 *   we're running under e.g. VM/370 (which was written for earlier
+                                                    76 *   versions of System/370) then we cannot execute any of those
+                                                    77 *   instructions since VM/370 doesn't support them. Hercules does
+                                                    78 *   support them, but VM/370 itself doesn't, and as VM/370 didn't
+                                                    79 *   use SIE and had to simulate all control instructions itself,
+                                                    80 *   such instructions would cause a program check. Note that we do
+                                                    81 *   not have to test for support for all of them. A simple test of
+                                                    82 *   the RRBE instruction for example, if it fails, is good enough
+                                                    83 *   to let us know that very likely none of the other instructions
+                                                    84 *   are supported either.
+                                                    85 *
+                                                    86 ***********************************************************************
+
+
+00000208  B701 0A78                     00000A78    88 TEST370  LCTL  R0,R1,CR0_1_2K     2K pages + StorKey Except. Ctl.
+0000020C  1F22                                      89          SLR   R2,R2              Page address unimportant
+0000020E  B22A 0002                                 90          RRBE  R0,R2              Can we execute RRBE instructions?
+                              00000212  00000001    91 RRBE_PC  EQU   *                  (possible program check here...)
+
+00000212  92FF 0A89                     00000A89    93          MVI   _NEW370,X'FF'      It worked! Must be newer System/370
+00000216  47F0 0222                     00000222    94          B     TST4KBBF           Continue with initialization
+
+0000021A  9200 0A89                     00000A89    96 NO_RRBE  MVI   _NEW370,X'00'      It failed! Must be older System/370
+0000021E  47F0 0222                     00000222    97          B     TST4KBBF           Continue with initialization
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    99 ***********************************************************************
+                                                   100 *             Determine 4KBBF (4K-Byte-Block Facility)
+                                                   101 ***********************************************************************
+                                                   102 *
+                                                   103 *   Determine whether 4KBBF (4K-Byte-Block Facility) is installed
+                                                   104 *   or not. The 4K-Byte-Block Facility is basically hardware that
+                                                   105 *   only supports 4K page frames, each with a single storage key.
+                                                   106 *
+                                                   107 *   When installed, the SSK/ISK/RRB instructions cannot be executed
+                                                   108 *   unless the CR0 Storage Key Exception Control bit is one, which
+                                                   109 *   allows them to execute, but of course causes them to only operate
+                                                   110 *   on the single-keyed 4K page; it is NOT possible to set different
+                                                   111 *   keys for each of of the 2K pages within the 4K frame when 4KBBF
+                                                   112 *   is installed.
+                                                   113 *
+                                                   114 *   When 4KBBF is NOT installed, the Storage Key Exception Control
+                                                   115 *   bit in CR0 is ignored and SSK/ISK/RRB execute normally, and
+                                                   116 *   the storage key for each 2K page frame can be different.
+                                                   117 *
+                                                   118 ***********************************************************************
+
+
+00000222  B701 0A78                     00000A78   120 TST4KBBF LCTL  R0,R1,CR0_1_2K     Set 2K page mode
+00000226  BF11 0ABA                     00000ABA   121          ICM   R1,B'0001',=X'F0'  Arbitrary non-zero key value
+0000022A  5820 0A8C                     00000A8C   122          L     R2,=A(50*_2K)      Beginning of 4K page
+0000022E  0812                                     123          SSK   R1,R2              Set key for this SUPPOSED 2K page
+00000230  5820 0A90                     00000A90   124          L     R2,=A(51*_2K)      Middle of same 4K page
+00000234  0912                                     125          ISK   R1,R2              Get key for this SUPPOSED 2K page
+
+00000236  BD11 0ABA                     00000ABA   127          CLM   R1,B'0001',=X'F0'  Was it's key changed too?
+0000023A  4770 0246                     00000246   128          BNE   BEGX4K             No, then all pages are indeed 2K!
+0000023E  92FF 0A88                     00000A88   129          MVI   _4KBBF,X'FF'       Yes, then all pages are really 4K!
+00000242  47F0 027A                     0000027A   130          B     BEG4K              Run only 4KBBF tests
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   132 ***********************************************************************
+                                                   133 *                      non-4KBBF tests
+                                                   134 ***********************************************************************
+
+00000246  B701 0A80                     00000A80   136 BEGX4K   LCTL  R0,R1,CR0_1_4K     Set 4K page mode
+
+0000024A  45E0 02C0                     000002C0   138          BAL   R14,XSSK4K         SSK/ISK/RRB
+0000024E  95FF 0A89                     00000A89   139          CLI   _NEW370,X'FF'      Is this a newer model System/370?
+00000252  4770 025E                     0000025E   140          BNE   SKIPX4K            No, skip newer System/370 tests
+00000256  45E0 0358                     00000358   141          BAL   R14,XSSKE4K        SSKE/ISKE/RRBE
+0000025A  45E0 0402                     00000402   142          BAL   R14,XIVSK4K        IVSK/TPROT/TB
+
+0000025E  B701 0A78                     00000A78   144 SKIPX4K  LCTL  R0,R1,CR0_1_2K     Set 2K page mode
+
+00000262  45E0 048C                     0000048C   146          BAL   R14,XSSK2K         SSK/ISK/RRB
+00000266  95FF 0A89                     00000A89   147          CLI   _NEW370,X'FF'      Is this a newer model S/370?
+0000026A  4770 0276                     00000276   148          BNE   SKIPX2K            No, skip newer System/370 tests
+0000026E  45E0 0524                     00000524   149          BAL   R14,XSSKE2K        SSKE/ISKE/RRBE
+00000272  45E0 05CE                     000005CE   150          BAL   R14,XIVSK2K        IVSK/TPROT/TB
+
+00000276  47F0 02AE                     000002AE   152 SKIPX2K  B     SUCCESS            Done! All tests succeeded!
+
+                                                   154 ***********************************************************************
+                                                   155 *                       4KBBF tests
+                                                   156 ***********************************************************************
+
+0000027A  B701 0A80                     00000A80   158 BEG4K    LCTL  R0,R1,CR0_1_4K     Set 4K page mode
+
+0000027E  45E0 0658                     00000658   160          BAL   R14,SSK4K          SSK/ISK/RRB
+00000282  95FF 0A89                     00000A89   161          CLI   _NEW370,X'FF'      Is this a newer model Sustem/370?
+00000286  4770 0292                     00000292   162          BNE   SKIP4K             No, skip newer System/370 tests
+0000028A  45E0 06F0                     000006F0   163          BAL   R14,SSKE4K         SSKE/ISKE/RRBE
+0000028E  45E0 079A                     0000079A   164          BAL   R14,IVSK4K         IVSK/TPROT/TB
+
+00000292  B701 0A78                     00000A78   166 SKIP4K   LCTL  R0,R1,CR0_1_2K     Set 2K page mode
+
+00000296  45E0 0824                     00000824   168          BAL   R14,SSK2K          SSK/ISK/RRB
+0000029A  95FF 0A89                     00000A89   169          CLI   _NEW370,X'FF'      Is this a newer model System/370?
+0000029E  4770 02AA                     000002AA   170          BNE   SKIP2K             No, skip newer System/370 tests
+000002A2  45E0 08BC                     000008BC   171          BAL   R14,SSKE2K         SSKE/ISKE/RRBE
+000002A6  45E0 0966                     00000966   172          BAL   R14,IVSK2K         IVSK/TPROT/TB
+
+000002AA  47F0 02AE                     000002AE   174 SKIP2K   B     SUCCESS            Done! All tests succeeded!
+
+
+                                                   176 ***********************************************************************
+                                                   177 *                        SUCCESS!
+                                                   178 ***********************************************************************
+
+000002AE  8200 02B8                     000002B8   180 SUCCESS  LPSW  GOODPSW                Load  SUCCESS disabled wait PSW
+000002B8  000A0000                                 181 GOODPSW  DC    0D'0',XL4'000A0000'    S/370 SUCCESS disabled wait PSW
+000002BC  00000000                                 182          DC    A(0)                   S/370 SUCCESS disabled wait PSW
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   184 ***********************************************************************
+                                                   185 *                   SSK/ISK/RRB (non-4KBBF -- 4K mode)
+                                                   186 ***********************************************************************
+
+000002C0  BF11 0ABB                     00000ABB   188 XSSK4K   ICM   R1,B'0001',=X'16'
+000002C4  5820 0A94                     00000A94   189          L     R2,=A(6*_2K)
+000002C8  0812                                     190          SSK   R1,R2
+000002CA  BF11 0ABC                     00000ABC   191          ICM   R1,B'0001',=X'24'
+000002CE  5820 0A98                     00000A98   192          L     R2,=A(7*_2K)
+000002D2  0812                                     193          SSK   R1,R2
+000002D4  BF11 0ABD                     00000ABD   194          ICM   R1,B'0001',=X'4C'
+000002D8  5820 0A9C                     00000A9C   195          L     R2,=A(8*_2K)
+000002DC  0812                                     196          SSK   R1,R2
+                                                   197 *****************************************
+000002DE  5820 0A94                     00000A94   198          L     R2,=A(6*_2K)
+000002E2  0912                                     199          ISK   R1,R2
+000002E4  BD11 0ABB                     00000ABB   200          CLM   R1,B'0001',=X'16'
+000002E8  4770 02E9                     000002E9   201          BNE   *+1
+000002EC  5820 0A98                     00000A98   202          L     R2,=A(7*_2K)
+000002F0  0912                                     203          ISK   R1,R2
+000002F2  BD11 0ABC                     00000ABC   204          CLM   R1,B'0001',=X'24'
+000002F6  4770 02F7                     000002F7   205          BNE   *+1
+000002FA  5820 0A9C                     00000A9C   206          L     R2,=A(8*_2K)
+000002FE  0912                                     207          ISK   R1,R2
+00000300  BD11 0ABD                     00000ABD   208          CLM   R1,B'0001',=X'4C'
+00000304  4770 0305                     00000305   209          BNE   *+1
+                                                   210 *****************************************
+00000308  5820 0A94                     00000A94   211          L     R2,=A(6*_2K)
+0000030C  B213 2000                     00000000   212          RRB   0(R2)
+00000310  47E0 0311                     00000311   213          BC    B'1110',*+1      NOT CC3 = was REF 1, CHG 1
+00000314  5820 0A98                     00000A98   214          L     R2,=A(7*_2K)
+00000318  B213 2000                     00000000   215          RRB   0(R2)
+0000031C  47D0 031D                     0000031D   216          BC    B'1101',*+1      NOT CC2 = was REF 1, CHG 0
+00000320  5820 0A9C                     00000A9C   217          L     R2,=A(8*_2K)
+00000324  B213 2000                     00000000   218          RRB   0(R2)
+00000328  47D0 0329                     00000329   219          BC    B'1101',*+1      NOT CC2 = was REF 1, CHG 0
+                                                   220 *****************************************
+0000032C  5820 0A94                     00000A94   221          L     R2,=A(6*_2K)
+00000330  0912                                     222          ISK   R1,R2
+00000332  BD11 0ABE                     00000ABE   223          CLM   R1,B'0001',=X'12'
+00000336  4770 0337                     00000337   224          BNE   *+1
+0000033A  5820 0A98                     00000A98   225          L     R2,=A(7*_2K)
+0000033E  0912                                     226          ISK   R1,R2
+00000340  BD11 0ABF                     00000ABF   227          CLM   R1,B'0001',=X'20'
+00000344  4770 0345                     00000345   228          BNE   *+1
+00000348  5820 0A9C                     00000A9C   229          L     R2,=A(8*_2K)
+0000034C  0912                                     230          ISK   R1,R2
+0000034E  BD11 0AC0                     00000AC0   231          CLM   R1,B'0001',=X'48'
+00000352  4770 0353                     00000353   232          BNE   *+1
+00000356  07FE                                     233          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   235 ***********************************************************************
+                                                   236 *                   SSKE/ISKE/RRBE (non-4KBBF -- 4K mode)
+                                                   237 ***********************************************************************
+
+00000358  BF11 0AC1                     00000AC1   239 XSSKE4K  ICM   R1,B'0001',=X'1C'
+0000035C  5820 0AA0                     00000AA0   240          L     R2,=A((6*_2K)+X'100')
+00000360  B22B 0012                                241          SSKE  R1,R2
+00000364  BF11 0AC2                     00000AC2   242          ICM   R1,B'0001',=X'26'
+00000368  5820 0AA4                     00000AA4   243          L     R2,=A((7*_2K)+X'200')
+0000036C  B22B 0012                                244          SSKE  R1,R2
+00000370  BF11 0AC3                     00000AC3   245          ICM   R1,B'0001',=X'4E'
+00000374  5820 0AA8                     00000AA8   246          L     R2,=A((8*_2K)+X'300')
+00000378  B22B 0012                                247          SSKE  R1,R2
+                                                   248 *****************************************
+0000037C  5820 0AA0                     00000AA0   249          L     R2,=A((6*_2K)+X'100')
+00000380  B229 0012                                250          ISKE  R1,R2
+00000384  BD11 0AC2                     00000AC2   251          CLM   R1,B'0001',=X'26'
+00000388  4770 0389                     00000389   252          BNE   *+1
+0000038C  5820 0AA4                     00000AA4   253          L     R2,=A((7*_2K)+X'200')
+00000390  B229 0012                                254          ISKE  R1,R2
+00000394  BD11 0AC2                     00000AC2   255          CLM   R1,B'0001',=X'26'
+00000398  4770 0399                     00000399   256          BNE   *+1
+0000039C  5820 0AA8                     00000AA8   257          L     R2,=A((8*_2K)+X'300')
+000003A0  B229 0012                                258          ISKE  R1,R2
+000003A4  BD11 0AC3                     00000AC3   259          CLM   R1,B'0001',=X'4E'
+000003A8  4770 03A9                     000003A9   260          BNE   *+1
+                                                   261 *****************************************
+000003AC  5820 0AA0                     00000AA0   262          L     R2,=A((6*_2K)+X'100')
+000003B0  B22A 0002                                263          RRBE  R0,R2
+000003B4  47E0 03B5                     000003B5   264          BC    B'1110',*+1              NOT CC3 = was REF 1, CHG 1
+000003B8  5820 0AA4                     00000AA4   265          L     R2,=A((7*_2K)+X'200')
+000003BC  B22A 0002                                266          RRBE  R0,R2
+000003C0  47B0 03C1                     000003C1   267          BC    B'1011',*+1              NOT CC1 = was REF 0, CHG 1
+000003C4  5820 0AA8                     00000AA8   268          L     R2,=A((8*_2K)+X'300')
+000003C8  B22A 0002                                269          RRBE  R0,R2
+000003CC  47E0 03CD                     000003CD   270          BC    B'1110',*+1              NOT CC3 = was REF 1, CHG 1
+                                                   271 *****************************************
+000003D0  5820 0AA0                     00000AA0   272          L     R2,=A((6*_2K)+X'100')
+000003D4  B229 0012                                273          ISKE  R1,R2
+000003D8  BD11 0AC4                     00000AC4   274          CLM   R1,B'0001',=X'22'
+000003DC  4770 03DD                     000003DD   275          BNE   *+1
+000003E0  5820 0AA4                     00000AA4   276          L     R2,=A((7*_2K)+X'200')
+000003E4  B229 0012                                277          ISKE  R1,R2
+000003E8  BD11 0AC4                     00000AC4   278          CLM   R1,B'0001',=X'22'
+000003EC  4770 03ED                     000003ED   279          BNE   *+1
+000003F0  5820 0AA8                     00000AA8   280          L     R2,=A((8*_2K)+X'300')
+000003F4  B229 0012                                281          ISKE  R1,R2
+000003F8  BD11 0AC5                     00000AC5   282          CLM   R1,B'0001',=X'4A'
+000003FC  4770 03FD                     000003FD   283          BNE   *+1
+00000400  07FE                                     284          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   286 ***********************************************************************
+                                                   287 *                   IVSK/TPROT/TB (non-4KBBF -- 4K mode)
+                                                   288 ***********************************************************************
+
+00000402  BF11 0AC6                     00000AC6   290 XIVSK4K  ICM   R1,B'0001',=X'6E'
+00000406  5820 0AAC                     00000AAC   291          L     R2,=A((9*_2K)+X'400')
+0000040A  0812                                     292          SSK   R1,R2
+                                                   293 *
+0000040C  8000 0AC7                     00000AC7   294          SSM   =X'04'                   (enable DAT)
+00000410  B223 0012                                295          IVSK  R1,R2
+00000414  8000 0AC8                     00000AC8   296          SSM   =X'00'                   (disable DAT again)
+00000418  BD11 0AC9                     00000AC9   297          CLM   R1,B'0001',=X'68'
+0000041C  4770 041D                     0000041D   298          BNE   *+1
+                                                   299 *****************************************
+00000420  BF11 0ACA                     00000ACA   300          ICM   R1,B'0001',=X'10'
+00000424  5820 0A94                     00000A94   301          L     R2,=A(6*_2K)
+00000428  0812                                     302          SSK   R1,R2
+0000042A  5810 0AA0                     00000AA0   303          L     R1,=A((6*_2K)+X'100')
+0000042E  BF21 0ACA                     00000ACA   304          ICM   R2,B'0001',=X'10'
+00000432  E501 1000 2000      00000000  00000000   305          TPROT 0(R1),0(R2)
+00000438  4770 0439                     00000439   306          BC    B'0111',*+1              NOT CC0 = FETCH OK, STORE OK
+0000043C  BF21 0ABF                     00000ABF   307          ICM   R2,B'0001',=X'20'
+00000440  E501 1000 2000      00000000  00000000   308          TPROT 0(R1),0(R2)
+00000446  47B0 0447                     00000447   309          BC    B'1011',*+1              NOT CC1 = FETCH OK, STORE NO
+0000044A  BF11 0ACB                     00000ACB   310          ICM   R1,B'0001',=X'18'        (set fetch protect)
+0000044E  5820 0A94                     00000A94   311          L     R2,=A(6*_2K)
+00000452  0812                                     312          SSK   R1,R2
+00000454  5810 0A94                     00000A94   313          L     R1,=A(6*_2K)
+00000458  BF21 0ABF                     00000ABF   314          ICM   R2,B'0001',=X'20'
+0000045C  E501 1000 2000      00000000  00000000   315          TPROT 0(R1),0(R2)
+00000462  47D0 0463                     00000463   316          BC    B'1101',*+1              NOT CC2 = FETCH NO, STORE NO
+                                                   317 *****************************************
+00000466  95FF 0A68                     00000A68   318          CLI   CPUID,X'FF'              Are we running under VM?
+0000046A  4780 048A                     0000048A   319          BE    XSKPTB4K                 Yes, then skip 'TB' tests
+0000046E  1F00                                     320          SLR   R0,R0                    Required by TB instruction
+00000470  5820 0AB0                     00000AB0   321          L     R2,=A((10*_2K)+X'500')   Requires Herc 'f- 5000' cmd
+00000474  B22C 0012                                322          TB    R1,R2
+00000478  47B0 0479                     00000479   323          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+0000047C  1F00                                     324          SLR   R0,R0                    Required by TB instruction
+0000047E  5820 0AB4                     00000AB4   325          L     R2,=A((11*_2K)+X'600')   Requires Herc 'f- 5800' cmd
+00000482  B22C 0012                                326          TB    R1,R2
+00000486  47B0 0487                     00000487   327          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+                              0000048A  00000001   328 XSKPTB4K EQU   *
+0000048A  07FE                                     329          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   331 ***********************************************************************
+                                                   332 *                   SSK/ISK/RRB (non-4KBBF -- 2K mode)
+                                                   333 ***********************************************************************
+
+0000048C  BF11 0ABB                     00000ABB   335 XSSK2K   ICM   R1,B'0001',=X'16'
+00000490  5820 0A94                     00000A94   336          L     R2,=A(6*_2K)
+00000494  0812                                     337          SSK   R1,R2
+00000496  BF11 0ABC                     00000ABC   338          ICM   R1,B'0001',=X'24'
+0000049A  5820 0A98                     00000A98   339          L     R2,=A(7*_2K)
+0000049E  0812                                     340          SSK   R1,R2
+000004A0  BF11 0ABD                     00000ABD   341          ICM   R1,B'0001',=X'4C'
+000004A4  5820 0A9C                     00000A9C   342          L     R2,=A(8*_2K)
+000004A8  0812                                     343          SSK   R1,R2
+                                                   344 *****************************************
+000004AA  5820 0A94                     00000A94   345          L     R2,=A(6*_2K)
+000004AE  0912                                     346          ISK   R1,R2
+000004B0  BD11 0ABB                     00000ABB   347          CLM   R1,B'0001',=X'16'
+000004B4  4770 04B5                     000004B5   348          BNE   *+1
+000004B8  5820 0A98                     00000A98   349          L     R2,=A(7*_2K)
+000004BC  0912                                     350          ISK   R1,R2
+000004BE  BD11 0ABC                     00000ABC   351          CLM   R1,B'0001',=X'24'
+000004C2  4770 04C3                     000004C3   352          BNE   *+1
+000004C6  5820 0A9C                     00000A9C   353          L     R2,=A(8*_2K)
+000004CA  0912                                     354          ISK   R1,R2
+000004CC  BD11 0ABD                     00000ABD   355          CLM   R1,B'0001',=X'4C'
+000004D0  4770 04D1                     000004D1   356          BNE   *+1
+                                                   357 *****************************************
+000004D4  5820 0A94                     00000A94   358          L     R2,=A(6*_2K)
+000004D8  B213 2000                     00000000   359          RRB   0(R2)
+000004DC  47E0 04DD                     000004DD   360          BC    B'1110',*+1      NOT CC3 = was REF 1, CHG 1
+000004E0  5820 0A98                     00000A98   361          L     R2,=A(7*_2K)
+000004E4  B213 2000                     00000000   362          RRB   0(R2)
+000004E8  47D0 04E9                     000004E9   363          BC    B'1101',*+1      NOT CC2 = was REF 1, CHG 0
+000004EC  5820 0A9C                     00000A9C   364          L     R2,=A(8*_2K)
+000004F0  B213 2000                     00000000   365          RRB   0(R2)
+000004F4  47D0 04F5                     000004F5   366          BC    B'1101',*+1      NOT CC2 = was REF 1, CHG 0
+                                                   367 *****************************************
+000004F8  5820 0A94                     00000A94   368          L     R2,=A(6*_2K)
+000004FC  0912                                     369          ISK   R1,R2
+000004FE  BD11 0ABE                     00000ABE   370          CLM   R1,B'0001',=X'12'
+00000502  4770 0503                     00000503   371          BNE   *+1
+00000506  5820 0A98                     00000A98   372          L     R2,=A(7*_2K)
+0000050A  0912                                     373          ISK   R1,R2
+0000050C  BD11 0ABF                     00000ABF   374          CLM   R1,B'0001',=X'20'
+00000510  4770 0511                     00000511   375          BNE   *+1
+00000514  5820 0A9C                     00000A9C   376          L     R2,=A(8*_2K)
+00000518  0912                                     377          ISK   R1,R2
+0000051A  BD11 0AC0                     00000AC0   378          CLM   R1,B'0001',=X'48'
+0000051E  4770 051F                     0000051F   379          BNE   *+1
+00000522  07FE                                     380          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   382 ***********************************************************************
+                                                   383 *                   SSKE/ISKE/RRBE (non-4KBBF -- 2K mode)
+                                                   384 ***********************************************************************
+
+00000524  BF11 0AC1                     00000AC1   386 XSSKE2K  ICM   R1,B'0001',=X'1C'
+00000528  5820 0AA0                     00000AA0   387          L     R2,=A((6*_2K)+X'100')
+0000052C  B22B 0012                                388          SSKE  R1,R2
+00000530  BF11 0AC2                     00000AC2   389          ICM   R1,B'0001',=X'26'
+00000534  5820 0AA4                     00000AA4   390          L     R2,=A((7*_2K)+X'200')
+00000538  B22B 0012                                391          SSKE  R1,R2
+0000053C  BF11 0AC3                     00000AC3   392          ICM   R1,B'0001',=X'4E'
+00000540  5820 0AA8                     00000AA8   393          L     R2,=A((8*_2K)+X'300')
+00000544  B22B 0012                                394          SSKE  R1,R2
+                                                   395 *****************************************
+00000548  5820 0AA0                     00000AA0   396          L     R2,=A((6*_2K)+X'100')
+0000054C  B229 0012                                397          ISKE  R1,R2
+00000550  BD11 0AC2                     00000AC2   398          CLM   R1,B'0001',=X'26'
+00000554  4770 0555                     00000555   399          BNE   *+1
+00000558  5820 0AA4                     00000AA4   400          L     R2,=A((7*_2K)+X'200')
+0000055C  B229 0012                                401          ISKE  R1,R2
+00000560  BD11 0AC2                     00000AC2   402          CLM   R1,B'0001',=X'26'
+00000564  4770 0565                     00000565   403          BNE   *+1
+00000568  5820 0AA8                     00000AA8   404          L     R2,=A((8*_2K)+X'300')
+0000056C  B229 0012                                405          ISKE  R1,R2
+00000570  BD11 0AC3                     00000AC3   406          CLM   R1,B'0001',=X'4E'
+00000574  4770 0575                     00000575   407          BNE   *+1
+                                                   408 *****************************************
+00000578  5820 0AA0                     00000AA0   409          L     R2,=A((6*_2K)+X'100')
+0000057C  B22A 0002                                410          RRBE  R0,R2
+00000580  47E0 0581                     00000581   411          BC    B'1110',*+1              NOT CC3 = was REF 1, CHG 1
+00000584  5820 0AA4                     00000AA4   412          L     R2,=A((7*_2K)+X'200')
+00000588  B22A 0002                                413          RRBE  R0,R2
+0000058C  47B0 058D                     0000058D   414          BC    B'1011',*+1              NOT CC1 = was REF 0, CHG 1
+00000590  5820 0AA8                     00000AA8   415          L     R2,=A((8*_2K)+X'300')
+00000594  B22A 0002                                416          RRBE  R0,R2
+00000598  47E0 0599                     00000599   417          BC    B'1110',*+1              NOT CC3 = was REF 1, CHG 1
+                                                   418 *****************************************
+0000059C  5820 0AA0                     00000AA0   419          L     R2,=A((6*_2K)+X'100')
+000005A0  B229 0012                                420          ISKE  R1,R2
+000005A4  BD11 0AC4                     00000AC4   421          CLM   R1,B'0001',=X'22'
+000005A8  4770 05A9                     000005A9   422          BNE   *+1
+000005AC  5820 0AA4                     00000AA4   423          L     R2,=A((7*_2K)+X'200')
+000005B0  B229 0012                                424          ISKE  R1,R2
+000005B4  BD11 0AC4                     00000AC4   425          CLM   R1,B'0001',=X'22'
+000005B8  4770 05B9                     000005B9   426          BNE   *+1
+000005BC  5820 0AA8                     00000AA8   427          L     R2,=A((8*_2K)+X'300')
+000005C0  B229 0012                                428          ISKE  R1,R2
+000005C4  BD11 0AC5                     00000AC5   429          CLM   R1,B'0001',=X'4A'
+000005C8  4770 05C9                     000005C9   430          BNE   *+1
+000005CC  07FE                                     431          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   433 ***********************************************************************
+                                                   434 *                   IVSK/TPROT/TB (non-4KBBF -- 2K mode)
+                                                   435 ***********************************************************************
+
+000005CE  BF11 0AC6                     00000AC6   437 XIVSK2K  ICM   R1,B'0001',=X'6E'
+000005D2  5820 0AAC                     00000AAC   438          L     R2,=A((9*_2K)+X'400')
+000005D6  0812                                     439          SSK   R1,R2
+                                                   440 *
+000005D8  8000 0AC7                     00000AC7   441          SSM   =X'04'                   (enable DAT)
+000005DC  B223 0012                                442          IVSK  R1,R2
+000005E0  8000 0AC8                     00000AC8   443          SSM   =X'00'                   (disable DAT again)
+000005E4  BD11 0AC9                     00000AC9   444          CLM   R1,B'0001',=X'68'
+000005E8  4770 05E9                     000005E9   445          BNE   *+1
+                                                   446 *****************************************
+000005EC  BF11 0ACA                     00000ACA   447          ICM   R1,B'0001',=X'10'
+000005F0  5820 0A94                     00000A94   448          L     R2,=A(6*_2K)
+000005F4  0812                                     449          SSK   R1,R2
+000005F6  5810 0AA0                     00000AA0   450          L     R1,=A((6*_2K)+X'100')
+000005FA  BF21 0ACA                     00000ACA   451          ICM   R2,B'0001',=X'10'
+000005FE  E501 1000 2000      00000000  00000000   452          TPROT 0(R1),0(R2)
+00000604  4770 0605                     00000605   453          BC    B'0111',*+1              NOT CC0 = FETCH OK, STORE OK
+00000608  BF21 0ABF                     00000ABF   454          ICM   R2,B'0001',=X'20'
+0000060C  E501 1000 2000      00000000  00000000   455          TPROT 0(R1),0(R2)
+00000612  47B0 0613                     00000613   456          BC    B'1011',*+1              NOT CC1 = FETCH OK, STORE NO
+00000616  BF11 0ACB                     00000ACB   457          ICM   R1,B'0001',=X'18'        (set fetch protect)
+0000061A  5820 0A94                     00000A94   458          L     R2,=A(6*_2K)
+0000061E  0812                                     459          SSK   R1,R2
+00000620  5810 0A94                     00000A94   460          L     R1,=A(6*_2K)
+00000624  BF21 0ABF                     00000ABF   461          ICM   R2,B'0001',=X'20'
+00000628  E501 1000 2000      00000000  00000000   462          TPROT 0(R1),0(R2)
+0000062E  47D0 062F                     0000062F   463          BC    B'1101',*+1              NOT CC2 = FETCH NO, STORE NO
+                                                   464 *****************************************
+00000632  95FF 0A68                     00000A68   465          CLI   CPUID,X'FF'              Are we running under VM?
+00000636  4780 0656                     00000656   466          BE    XSKPTB2K                 Yes, then skip 'TB' tests
+0000063A  1F00                                     467          SLR   R0,R0                    Required by TB instruction
+0000063C  5820 0AB0                     00000AB0   468          L     R2,=A((10*_2K)+X'500')   Requires Herc 'f- 5000' cmd
+00000640  B22C 0012                                469          TB    R1,R2
+00000644  47B0 0645                     00000645   470          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+00000648  1F00                                     471          SLR   R0,R0                    Required by TB instruction
+0000064A  5820 0AB4                     00000AB4   472          L     R2,=A((11*_2K)+X'600')   Requires Herc 'f- 5800' cmd
+0000064E  B22C 0012                                473          TB    R1,R2
+00000652  47B0 0653                     00000653   474          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+                              00000656  00000001   475 XSKPTB2K EQU   *
+00000656  07FE                                     476          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   478 ***********************************************************************
+                                                   479 *                   SSK/ISK/RRB (4KBBF -- 4K mode)
+                                                   480 ***********************************************************************
+
+00000658  BF11 0ABB                     00000ABB   482 SSK4K    ICM   R1,B'0001',=X'16'
+0000065C  5820 0A94                     00000A94   483          L     R2,=A(6*_2K)
+00000660  0812                                     484          SSK   R1,R2
+00000662  BF11 0ABC                     00000ABC   485          ICM   R1,B'0001',=X'24'
+00000666  5820 0A98                     00000A98   486          L     R2,=A(7*_2K)
+0000066A  0812                                     487          SSK   R1,R2
+0000066C  BF11 0AC3                     00000AC3   488          ICM   R1,B'0001',=X'4E'
+00000670  5820 0A9C                     00000A9C   489          L     R2,=A(8*_2K)
+00000674  0812                                     490          SSK   R1,R2
+                                                   491 *****************************************
+00000676  5820 0A94                     00000A94   492          L     R2,=A(6*_2K)
+0000067A  0912                                     493          ISK   R1,R2
+0000067C  BD11 0ABC                     00000ABC   494          CLM   R1,B'0001',=X'24'
+00000680  4770 0681                     00000681   495          BNE   *+1
+00000684  5820 0A98                     00000A98   496          L     R2,=A(7*_2K)
+00000688  0912                                     497          ISK   R1,R2
+0000068A  BD11 0ABC                     00000ABC   498          CLM   R1,B'0001',=X'24'
+0000068E  4770 068F                     0000068F   499          BNE   *+1
+00000692  5820 0A9C                     00000A9C   500          L     R2,=A(8*_2K)
+00000696  0912                                     501          ISK   R1,R2
+00000698  BD11 0AC3                     00000AC3   502          CLM   R1,B'0001',=X'4E'
+0000069C  4770 069D                     0000069D   503          BNE   *+1
+                                                   504 *****************************************
+000006A0  5820 0A94                     00000A94   505          L     R2,=A(6*_2K)
+000006A4  B213 2000                     00000000   506          RRB   0(R2)
+000006A8  47D0 06A9                     000006A9   507          BC    B'1101',*+1      NOT CC2 = was REF 1, CHG 0
+000006AC  5820 0A98                     00000A98   508          L     R2,=A(7*_2K)
+000006B0  B213 2000                     00000000   509          RRB   0(R2)
+000006B4  4770 06B5                     000006B5   510          BC    B'0111',*+1      NOT CC0 = was REF 0, CHG 0
+000006B8  5820 0A9C                     00000A9C   511          L     R2,=A(8*_2K)
+000006BC  B213 2000                     00000000   512          RRB   0(R2)
+000006C0  47E0 06C1                     000006C1   513          BC    B'1110',*+1      NOT CC3 = was REF 1, CHG 1
+                                                   514 *****************************************
+000006C4  5820 0A94                     00000A94   515          L     R2,=A(6*_2K)
+000006C8  0912                                     516          ISK   R1,R2
+000006CA  BD11 0ABF                     00000ABF   517          CLM   R1,B'0001',=X'20'
+000006CE  4770 06CF                     000006CF   518          BNE   *+1
+000006D2  5820 0A98                     00000A98   519          L     R2,=A(7*_2K)
+000006D6  0912                                     520          ISK   R1,R2
+000006D8  BD11 0ABF                     00000ABF   521          CLM   R1,B'0001',=X'20'
+000006DC  4770 06DD                     000006DD   522          BNE   *+1
+000006E0  5820 0A9C                     00000A9C   523          L     R2,=A(8*_2K)
+000006E4  0912                                     524          ISK   R1,R2
+000006E6  BD11 0AC5                     00000AC5   525          CLM   R1,B'0001',=X'4A'
+000006EA  4770 06EB                     000006EB   526          BNE   *+1
+000006EE  07FE                                     527          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   529 ***********************************************************************
+                                                   530 *                   SSKE/ISKE/RRBE (4KBBF -- 4K mode)
+                                                   531 ***********************************************************************
+
+000006F0  BF11 0ABB                     00000ABB   533 SSKE4K   ICM   R1,B'0001',=X'16'
+000006F4  5820 0AA0                     00000AA0   534          L     R2,=A((6*_2K)+X'100')
+000006F8  B22B 0012                                535          SSKE  R1,R2
+000006FC  BF11 0ABC                     00000ABC   536          ICM   R1,B'0001',=X'24'
+00000700  5820 0AA4                     00000AA4   537          L     R2,=A((7*_2K)+X'200')
+00000704  B22B 0012                                538          SSKE  R1,R2
+00000708  BF11 0AC3                     00000AC3   539          ICM   R1,B'0001',=X'4E'
+0000070C  5820 0AA8                     00000AA8   540          L     R2,=A((8*_2K)+X'300')
+00000710  B22B 0012                                541          SSKE  R1,R2
+                                                   542 *****************************************
+00000714  5820 0AA0                     00000AA0   543          L     R2,=A((6*_2K)+X'100')
+00000718  B229 0012                                544          ISKE  R1,R2
+0000071C  BD11 0ABC                     00000ABC   545          CLM   R1,B'0001',=X'24'
+00000720  4770 0721                     00000721   546          BNE   *+1
+00000724  5820 0AA4                     00000AA4   547          L     R2,=A((7*_2K)+X'200')
+00000728  B229 0012                                548          ISKE  R1,R2
+0000072C  BD11 0ABC                     00000ABC   549          CLM   R1,B'0001',=X'24'
+00000730  4770 0731                     00000731   550          BNE   *+1
+00000734  5820 0AA8                     00000AA8   551          L     R2,=A((8*_2K)+X'300')
+00000738  B229 0012                                552          ISKE  R1,R2
+0000073C  BD11 0AC3                     00000AC3   553          CLM   R1,B'0001',=X'4E'
+00000740  4770 0741                     00000741   554          BNE   *+1
+                                                   555 *****************************************
+00000744  5820 0AA0                     00000AA0   556          L     R2,=A((6*_2K)+X'100')
+00000748  B22A 0002                                557          RRBE  R0,R2
+0000074C  47D0 074D                     0000074D   558          BC    B'1101',*+1              NOT CC2 = was REF 1, CHG 0
+00000750  5820 0AA4                     00000AA4   559          L     R2,=A((7*_2K)+X'200')
+00000754  B22A 0002                                560          RRBE  R0,R2
+00000758  4770 0759                     00000759   561          BC    B'0111',*+1              NOT CC0 = was REF 0, CHG 0
+0000075C  5820 0AA8                     00000AA8   562          L     R2,=A((8*_2K)+X'300')
+00000760  B22A 0002                                563          RRBE  R0,R2
+00000764  47E0 0765                     00000765   564          BC    B'1110',*+1              NOT CC3 = was REF 1, CHG 1
+                                                   565 *****************************************
+00000768  5820 0AA0                     00000AA0   566          L     R2,=A((6*_2K)+X'100')
+0000076C  B229 0012                                567          ISKE  R1,R2
+00000770  BD11 0ABF                     00000ABF   568          CLM   R1,B'0001',=X'20'
+00000774  4770 0775                     00000775   569          BNE   *+1
+00000778  5820 0AA4                     00000AA4   570          L     R2,=A((7*_2K)+X'200')
+0000077C  B229 0012                                571          ISKE  R1,R2
+00000780  BD11 0ABF                     00000ABF   572          CLM   R1,B'0001',=X'20'
+00000784  4770 0785                     00000785   573          BNE   *+1
+00000788  5820 0AA8                     00000AA8   574          L     R2,=A((8*_2K)+X'300')
+0000078C  B229 0012                                575          ISKE  R1,R2
+00000790  BD11 0AC5                     00000AC5   576          CLM   R1,B'0001',=X'4A'
+00000794  4770 0795                     00000795   577          BNE   *+1
+00000798  07FE                                     578          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   580 ***********************************************************************
+                                                   581 *                   IVSK/TPROT/TB (4KBBF -- 4K mode)
+                                                   582 ***********************************************************************
+
+0000079A  BF11 0AC6                     00000AC6   584 IVSK4K   ICM   R1,B'0001',=X'6E'
+0000079E  5820 0AAC                     00000AAC   585          L     R2,=A((9*_2K)+X'400')
+000007A2  0812                                     586          SSK   R1,R2
+                                                   587 *
+000007A4  8000 0AC7                     00000AC7   588          SSM   =X'04'                   (enable DAT)
+000007A8  B223 0012                                589          IVSK  R1,R2
+000007AC  8000 0AC8                     00000AC8   590          SSM   =X'00'                   (disable DAT again)
+000007B0  BD11 0AC9                     00000AC9   591          CLM   R1,B'0001',=X'68'
+000007B4  4770 07B5                     000007B5   592          BNE   *+1
+                                                   593 *****************************************
+000007B8  BF11 0ACA                     00000ACA   594          ICM   R1,B'0001',=X'10'
+000007BC  5820 0A94                     00000A94   595          L     R2,=A(6*_2K)
+000007C0  0812                                     596          SSK   R1,R2
+000007C2  5810 0AA0                     00000AA0   597          L     R1,=A((6*_2K)+X'100')
+000007C6  BF21 0ACA                     00000ACA   598          ICM   R2,B'0001',=X'10'
+000007CA  E501 1000 2000      00000000  00000000   599          TPROT 0(R1),0(R2)
+000007D0  4770 07D1                     000007D1   600          BC    B'0111',*+1              NOT CC0 = FETCH OK, STORE OK
+000007D4  BF21 0ABF                     00000ABF   601          ICM   R2,B'0001',=X'20'
+000007D8  E501 1000 2000      00000000  00000000   602          TPROT 0(R1),0(R2)
+000007DE  47B0 07DF                     000007DF   603          BC    B'1011',*+1              NOT CC1 = FETCH OK, STORE NO
+000007E2  BF11 0ACB                     00000ACB   604          ICM   R1,B'0001',=X'18'        (set fetch protect)
+000007E6  5820 0A94                     00000A94   605          L     R2,=A(6*_2K)
+000007EA  0812                                     606          SSK   R1,R2
+000007EC  5810 0A94                     00000A94   607          L     R1,=A(6*_2K)
+000007F0  BF21 0ABF                     00000ABF   608          ICM   R2,B'0001',=X'20'
+000007F4  E501 1000 2000      00000000  00000000   609          TPROT 0(R1),0(R2)
+000007FA  47D0 07FB                     000007FB   610          BC    B'1101',*+1              NOT CC2 = FETCH NO, STORE NO
+                                                   611 *****************************************
+000007FE  95FF 0A68                     00000A68   612          CLI   CPUID,X'FF'              Are we running under VM?
+00000802  4780 0822                     00000822   613          BE    SKPTB4K                  Yes, then skip 'TB' tests
+00000806  1F00                                     614          SLR   R0,R0                    Required by TB instruction
+00000808  5820 0AB0                     00000AB0   615          L     R2,=A((10*_2K)+X'500')   Requires Herc 'f- 5000' cmd
+0000080C  B22C 0012                                616          TB    R1,R2
+00000810  47B0 0811                     00000811   617          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+00000814  1F00                                     618          SLR   R0,R0                    Required by TB instruction
+00000816  5820 0AB4                     00000AB4   619          L     R2,=A((11*_2K)+X'600')   Requires Herc 'f- 5800' cmd
+0000081A  B22C 0012                                620          TB    R1,R2
+0000081E  47B0 081F                     0000081F   621          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+                              00000822  00000001   622 SKPTB4K  EQU   *
+00000822  07FE                                     623          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   625 ***********************************************************************
+                                                   626 *                   SSK/ISK/RRB (4KBBF -- 2K mode)
+                                                   627 ***********************************************************************
+
+00000824  BF11 0ABB                     00000ABB   629 SSK2K    ICM   R1,B'0001',=X'16'
+00000828  5820 0A94                     00000A94   630          L     R2,=A(6*_2K)
+0000082C  0812                                     631          SSK   R1,R2
+0000082E  BF11 0ABC                     00000ABC   632          ICM   R1,B'0001',=X'24'
+00000832  5820 0A98                     00000A98   633          L     R2,=A(7*_2K)
+00000836  0812                                     634          SSK   R1,R2
+00000838  BF11 0AC3                     00000AC3   635          ICM   R1,B'0001',=X'4E'
+0000083C  5820 0A9C                     00000A9C   636          L     R2,=A(8*_2K)
+00000840  0812                                     637          SSK   R1,R2
+                                                   638 *****************************************
+00000842  5820 0A94                     00000A94   639          L     R2,=A(6*_2K)
+00000846  0912                                     640          ISK   R1,R2
+00000848  BD11 0ABC                     00000ABC   641          CLM   R1,B'0001',=X'24'
+0000084C  4770 084D                     0000084D   642          BNE   *+1
+00000850  5820 0A98                     00000A98   643          L     R2,=A(7*_2K)
+00000854  0912                                     644          ISK   R1,R2
+00000856  BD11 0ABC                     00000ABC   645          CLM   R1,B'0001',=X'24'
+0000085A  4770 085B                     0000085B   646          BNE   *+1
+0000085E  5820 0A9C                     00000A9C   647          L     R2,=A(8*_2K)
+00000862  0912                                     648          ISK   R1,R2
+00000864  BD11 0AC3                     00000AC3   649          CLM   R1,B'0001',=X'4E'
+00000868  4770 0869                     00000869   650          BNE   *+1
+                                                   651 *****************************************
+0000086C  5820 0A94                     00000A94   652          L     R2,=A(6*_2K)
+00000870  B213 2000                     00000000   653          RRB   0(R2)
+00000874  47D0 0875                     00000875   654          BC    B'1101',*+1      NOT CC2 = was REF 1, CHG 0
+00000878  5820 0A98                     00000A98   655          L     R2,=A(7*_2K)
+0000087C  B213 2000                     00000000   656          RRB   0(R2)
+00000880  4770 0881                     00000881   657          BC    B'0111',*+1      NOT CC0 = was REF 0, CHG 0
+00000884  5820 0A9C                     00000A9C   658          L     R2,=A(8*_2K)
+00000888  B213 2000                     00000000   659          RRB   0(R2)
+0000088C  47E0 088D                     0000088D   660          BC    B'1110',*+1      NOT CC3 = was REF 1, CHG 1
+                                                   661 *****************************************
+00000890  5820 0A94                     00000A94   662          L     R2,=A(6*_2K)
+00000894  0912                                     663          ISK   R1,R2
+00000896  BD11 0ABF                     00000ABF   664          CLM   R1,B'0001',=X'20'
+0000089A  4770 089B                     0000089B   665          BNE   *+1
+0000089E  5820 0A98                     00000A98   666          L     R2,=A(7*_2K)
+000008A2  0912                                     667          ISK   R1,R2
+000008A4  BD11 0ABF                     00000ABF   668          CLM   R1,B'0001',=X'20'
+000008A8  4770 08A9                     000008A9   669          BNE   *+1
+000008AC  5820 0A9C                     00000A9C   670          L     R2,=A(8*_2K)
+000008B0  0912                                     671          ISK   R1,R2
+000008B2  BD11 0AC5                     00000AC5   672          CLM   R1,B'0001',=X'4A'
+000008B6  4770 08B7                     000008B7   673          BNE   *+1
+000008BA  07FE                                     674          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   676 ***********************************************************************
+                                                   677 *                   SSKE/ISKE/RRBE (4KBBF -- 2K mode)
+                                                   678 ***********************************************************************
+
+000008BC  BF11 0ABB                     00000ABB   680 SSKE2K   ICM   R1,B'0001',=X'16'
+000008C0  5820 0AA0                     00000AA0   681          L     R2,=A((6*_2K)+X'100')
+000008C4  B22B 0012                                682          SSKE  R1,R2
+000008C8  BF11 0ABC                     00000ABC   683          ICM   R1,B'0001',=X'24'
+000008CC  5820 0AA4                     00000AA4   684          L     R2,=A((7*_2K)+X'200')
+000008D0  B22B 0012                                685          SSKE  R1,R2
+000008D4  BF11 0AC3                     00000AC3   686          ICM   R1,B'0001',=X'4E'
+000008D8  5820 0AA8                     00000AA8   687          L     R2,=A((8*_2K)+X'300')
+000008DC  B22B 0012                                688          SSKE  R1,R2
+                                                   689 *****************************************
+000008E0  5820 0AA0                     00000AA0   690          L     R2,=A((6*_2K)+X'100')
+000008E4  B229 0012                                691          ISKE  R1,R2
+000008E8  BD11 0ABC                     00000ABC   692          CLM   R1,B'0001',=X'24'
+000008EC  4770 08ED                     000008ED   693          BNE   *+1
+000008F0  5820 0AA4                     00000AA4   694          L     R2,=A((7*_2K)+X'200')
+000008F4  B229 0012                                695          ISKE  R1,R2
+000008F8  BD11 0ABC                     00000ABC   696          CLM   R1,B'0001',=X'24'
+000008FC  4770 08FD                     000008FD   697          BNE   *+1
+00000900  5820 0AA8                     00000AA8   698          L     R2,=A((8*_2K)+X'300')
+00000904  B229 0012                                699          ISKE  R1,R2
+00000908  BD11 0AC3                     00000AC3   700          CLM   R1,B'0001',=X'4E'
+0000090C  4770 090D                     0000090D   701          BNE   *+1
+                                                   702 *****************************************
+00000910  5820 0AA0                     00000AA0   703          L     R2,=A((6*_2K)+X'100')
+00000914  B22A 0002                                704          RRBE  R0,R2
+00000918  47D0 0919                     00000919   705          BC    B'1101',*+1              NOT CC2 = was REF 1, CHG 0
+0000091C  5820 0AA4                     00000AA4   706          L     R2,=A((7*_2K)+X'200')
+00000920  B22A 0002                                707          RRBE  R0,R2
+00000924  4770 0925                     00000925   708          BC    B'0111',*+1              NOT CC0 = was REF 0, CHG 0
+00000928  5820 0AA8                     00000AA8   709          L     R2,=A((8*_2K)+X'300')
+0000092C  B22A 0002                                710          RRBE  R0,R2
+00000930  47E0 0931                     00000931   711          BC    B'1110',*+1              NOT CC3 = was REF 1, CHG 1
+                                                   712 *****************************************
+00000934  5820 0AA0                     00000AA0   713          L     R2,=A((6*_2K)+X'100')
+00000938  B229 0012                                714          ISKE  R1,R2
+0000093C  BD11 0ABF                     00000ABF   715          CLM   R1,B'0001',=X'20'
+00000940  4770 0941                     00000941   716          BNE   *+1
+00000944  5820 0AA4                     00000AA4   717          L     R2,=A((7*_2K)+X'200')
+00000948  B229 0012                                718          ISKE  R1,R2
+0000094C  BD11 0ABF                     00000ABF   719          CLM   R1,B'0001',=X'20'
+00000950  4770 0951                     00000951   720          BNE   *+1
+00000954  5820 0AA8                     00000AA8   721          L     R2,=A((8*_2K)+X'300')
+00000958  B229 0012                                722          ISKE  R1,R2
+0000095C  BD11 0AC5                     00000AC5   723          CLM   R1,B'0001',=X'4A'
+00000960  4770 0961                     00000961   724          BNE   *+1
+00000964  07FE                                     725          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   727 ***********************************************************************
+                                                   728 *                   IVSK/TPROT/TB (4KBBF -- 2K mode)
+                                                   729 ***********************************************************************
+
+00000966  BF11 0AC6                     00000AC6   731 IVSK2K   ICM   R1,B'0001',=X'6E'
+0000096A  5820 0AAC                     00000AAC   732          L     R2,=A((9*_2K)+X'400')
+0000096E  0812                                     733          SSK   R1,R2
+                                                   734 *
+00000970  8000 0AC7                     00000AC7   735          SSM   =X'04'                   (enable DAT)
+00000974  B223 0012                                736          IVSK  R1,R2
+00000978  8000 0AC8                     00000AC8   737          SSM   =X'00'                   (disable DAT again)
+0000097C  BD11 0AC9                     00000AC9   738          CLM   R1,B'0001',=X'68'
+00000980  4770 0981                     00000981   739          BNE   *+1
+                                                   740 *****************************************
+00000984  BF11 0ACA                     00000ACA   741          ICM   R1,B'0001',=X'10'
+00000988  5820 0A94                     00000A94   742          L     R2,=A(6*_2K)
+0000098C  0812                                     743          SSK   R1,R2
+0000098E  5810 0AA0                     00000AA0   744          L     R1,=A((6*_2K)+X'100')
+00000992  BF21 0ACA                     00000ACA   745          ICM   R2,B'0001',=X'10'
+00000996  E501 1000 2000      00000000  00000000   746          TPROT 0(R1),0(R2)
+0000099C  4770 099D                     0000099D   747          BC    B'0111',*+1              NOT CC0 = FETCH OK, STORE OK
+000009A0  BF21 0ABF                     00000ABF   748          ICM   R2,B'0001',=X'20'
+000009A4  E501 1000 2000      00000000  00000000   749          TPROT 0(R1),0(R2)
+000009AA  47B0 09AB                     000009AB   750          BC    B'1011',*+1              NOT CC1 = FETCH OK, STORE NO
+000009AE  BF11 0ACB                     00000ACB   751          ICM   R1,B'0001',=X'18'        (set fetch protect)
+000009B2  5820 0A94                     00000A94   752          L     R2,=A(6*_2K)
+000009B6  0812                                     753          SSK   R1,R2
+000009B8  5810 0A94                     00000A94   754          L     R1,=A(6*_2K)
+000009BC  BF21 0ABF                     00000ABF   755          ICM   R2,B'0001',=X'20'
+000009C0  E501 1000 2000      00000000  00000000   756          TPROT 0(R1),0(R2)
+000009C6  47D0 09C7                     000009C7   757          BC    B'1101',*+1              NOT CC2 = FETCH NO, STORE NO
+                                                   758 *****************************************
+000009CA  95FF 0A68                     00000A68   759          CLI   CPUID,X'FF'              Are we running under VM?
+000009CE  4780 09EE                     000009EE   760          BE    SKPTB2K                  Yes, then skip 'TB' tests
+000009D2  1F00                                     761          SLR   R0,R0                    Required by TB instruction
+000009D4  5820 0AB0                     00000AB0   762          L     R2,=A((10*_2K)+X'500')   Requires Herc 'f- 5000' cmd
+000009D8  B22C 0012                                763          TB    R1,R2
+000009DC  47B0 09DD                     000009DD   764          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+000009E0  1F00                                     765          SLR   R0,R0                    Required by TB instruction
+000009E2  5820 0AB4                     00000AB4   766          L     R2,=A((11*_2K)+X'600')   Requires Herc 'f- 5800' cmd
+000009E6  B22C 0012                                767          TB    R1,R2
+000009EA  47B0 09EB                     000009EB   768          BC    B'1011',*+1              NOT CC1 = Unusable/BAD block
+                              000009EE  00000001   769 SKPTB2K  EQU   *
+000009EE  07FE                                     770          BR    R14
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   772 ***********************************************************************
+                                                   773 *                 System/370 PROGRAM CHECK ROUTINE
+                                                   774 ***********************************************************************
+
+000009F0  5010 0A70                     00000A70   776 PGMCHK   ST    R1,SAVER1          Save original R1
+000009F4  4110 0A50                     00000A50   777          LA    R1,OKPGMS          R1 --> Expected PGMCHKs table
+
+000009F8  9101 002F                     0000002F   779          TM    PGMOLD+8-1,X'01'   Test failure? (odd branch address?)
+000009FC  4780 0A14                     00000A14   780          BZ    PGMTAB             No, something else; check table
+
+00000A00  5810 002C                     0000002C   782          L     R1,PGMOLD+4        Yes, get program check address
+00000A04  4B10 0AB8                     00000AB8   783          SH    R1,=H'5'           Backup to failing branch instruction
+00000A08  5010 002C                     0000002C   784          ST    R1,PGMOLD+4        Put back into PGM OLD PSW
+00000A0C  47F0 0A44                     00000A44   785          B     PGMFAIL            Go load disabled wait PSW
+
+00000A10  4110 100C                     0000000C   787 PGMNEXT  LA    R1,12(,R1)         Bump to next entry
+00000A14  D50B 1000 0ACC      00000000  00000ACC   788 PGMTAB   CLC   0(12,R1),=12X'00'  End of table?
+00000A1A  4780 0A44                     00000A44   789          BE    PGMFAIL            Yes, bonafide program check!
+00000A1E  D501 1000 008E      00000000  0000008E   790          CLC   0(2,R1),PGMCODE+2  Expected Program Interrupt Code?
+00000A24  4770 0A10                     00000A10   791          BNE   PGMNEXT            No, try next entry
+00000A28  D503 1004 002C      00000004  0000002C   792          CLC   4(4,R1),PGMOLD+4   Expected Program Interrupt Address?
+00000A2E  4770 0A10                     00000A10   793          BNE   PGMNEXT            No, try next entry
+
+00000A32  D203 002C 1008      0000002C  00000008   795          MVC   PGMOLD+4(4),8(R1)  Yes! Move continue address into PSW
+00000A38  94FB 0028                     00000028   796          NI    PGMOLD,X'FF'-X'04' Turn off DAT in case it's on
+00000A3C  5810 0A70                     00000A70   797          L     R1,SAVER1          Restore original R1
+00000A40  8200 0028                     00000028   798          LPSW  PGMOLD             Ignore the crash and continue
+
+00000A44  9602 0029                     00000029   800 PGMFAIL  OI    PGMOLD+1,X'02'     Convert to disabled wait PSW
+00000A48  5810 0A70                     00000A70   801          L     R1,SAVER1          Restore original R1
+00000A4C  8200 0028                     00000028   802          LPSW  PGMOLD             Load disabled wait crash PSW
+
+
+
+00000A50                                           804 OKPGMS   DC    0D'0'              Table of allowable program checks
+00000A50  00010001 00000212                        805          DC   2AL2(PGM_OPERATION_EXCEPTION),A(RRBE_PC),A(NO_RRBE)
+00000A5C  00000000 00000000                        806          DC   2AL2(0),A(0),A(0)   End of table
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   808 ***********************************************************************
+                                                   809 *                      Working storage
+                                                   810 ***********************************************************************
+
+00000A68  00000000 00000000                        812 CPUID    DC    D'0'                         CPU Identification
+00000A70  00000000 00000000                        813 SAVER1   DC    D'0'                         Saved original R1 value
+                                                   814 *
+                              00000800  00000001   815 _2K      EQU   2048                         ("_2K" shorter than "_2K")
+                              00001000  00000001   816 _4K      EQU   4096                         ("_4K" shorter than "_4K")
+                                                   817 *
+                              00000040  00000001   818 CR0_2K   EQU   X'40'                        2K pages mode CR0 flag
+                              00000080  00000001   819 CR0_4K   EQU   X'80'                        4K pages mode CR0 flag
+                                                   820 *
+00000A78                                           821 CR0_1_2K DC    (0*2)F'0'                    CR0/CR1 for 2K pages mode
+00000A78  01400000                                 822          DC    AL1(CR0_SKEC),AL1(CR0_2K),AL2(0)
+00000A7C  00001000                                 823          DC    A(SEGTAB2K)
+                                                   824 *
+00000A80                                           825 CR0_1_4K DC    (0*2)F'0'                    CR0/CR1 for 4K pages mode
+00000A80  01800000                                 826          DC    AL1(CR0_SKEC),AL1(CR0_4K),AL2(0)
+00000A84  00001200                                 827          DC    A(SEGTAB4K)
+                                                   828 *
+                              00000001  00000001   829 CR0_SKEC EQU   X'01'                        Storage-Key Exception Ctl.
+00000A88  00                                       830 _4KBBF   DC    X'00'                        4K-Byte-Block Facility flag
+                                                   831 *                                           FF = installed, 00 = not
+00000A89  00                                       832 _NEW370  DC    X'00'                        SSKE/etc supported?
+                                                   833 *                                           FF = yes, 00 = not.
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000A8C                                           835          LTORG ,                            literals pool
+00000A8C  00019000                                 836                =A(50*_2K)
+00000A90  00019800                                 837                =A(51*_2K)
+00000A94  00003000                                 838                =A(6*_2K)
+00000A98  00003800                                 839                =A(7*_2K)
+00000A9C  00004000                                 840                =A(8*_2K)
+00000AA0  00003100                                 841                =A((6*_2K)+X'100')
+00000AA4  00003A00                                 842                =A((7*_2K)+X'200')
+00000AA8  00004300                                 843                =A((8*_2K)+X'300')
+00000AAC  00004C00                                 844                =A((9*_2K)+X'400')
+00000AB0  00005500                                 845                =A((10*_2K)+X'500')
+00000AB4  00005E00                                 846                =A((11*_2K)+X'600')
+00000AB8  0005                                     847                =H'5'
+00000ABA  F0                                       848                =X'F0'
+00000ABB  16                                       849                =X'16'
+00000ABC  24                                       850                =X'24'
+00000ABD  4C                                       851                =X'4C'
+00000ABE  12                                       852                =X'12'
+00000ABF  20                                       853                =X'20'
+00000AC0  48                                       854                =X'48'
+00000AC1  1C                                       855                =X'1C'
+00000AC2  26                                       856                =X'26'
+00000AC3  4E                                       857                =X'4E'
+00000AC4  22                                       858                =X'22'
+00000AC5  4A                                       859                =X'4A'
+00000AC6  6E                                       860                =X'6E'
+00000AC7  04                                       861                =X'04'
+00000AC8  00                                       862                =X'00'
+00000AC9  68                                       863                =X'68'
+00000ACA  10                                       864                =X'10'
+00000ACB  18                                       865                =X'18'
+00000ACC  00000000 00000000                        866                =12X'00'
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   868 ***********************************************************************
+                                                   869 *                      DAT tables
+                                                   870 ***********************************************************************
+
+00000AD8                      00000AD8  00001000   872          ORG   TEST+X'1000'
+
+00001000  F0001040                                 874 SEGTAB2K DC    AL1((16-1)*16),AL3(PAGTAB2K)
+00001004  00000001 00000001                        875          DC    15XL4'00000001'
+                                                   876 *
+00001040  0000                                     877 PAGTAB2K DC    AL2((0*_2K)/256)
+00001042  0008                                     878          DC    AL2((1*_2K)/256)
+00001044  0010                                     879          DC    AL2((2*_2K)/256)
+00001046  0018                                     880          DC    AL2((3*_2K)/256)
+00001048  0020                                     881          DC    AL2((4*_2K)/256)
+0000104A  0028                                     882          DC    AL2((5*_2K)/256)
+0000104C  0030                                     883          DC    AL2((6*_2K)/256)
+0000104E  0038                                     884          DC    AL2((7*_2K)/256)
+00001050  0040                                     885          DC    AL2((8*_2K)/256)
+00001052  0048                                     886          DC    AL2((9*_2K)/256)
+00001054  0050                                     887          DC    AL2((10*_2K)/256)
+00001056  0058                                     888          DC    AL2((11*_2K)/256)
+00001058  0060                                     889          DC    AL2((12*_2K)/256)
+0000105A  0068                                     890          DC    AL2((13*_2K)/256)
+0000105C  0070                                     891          DC    AL2((14*_2K)/256)
+0000105E  0078                                     892          DC    AL2((15*_2K)/256)
+
+
+
+00001060                      00001060  00001200   894          ORG   TEST+X'1200'
+
+00001200  F0001240                                 896 SEGTAB4K DC    AL1((16-1)*16),AL3(PAGTAB4K)
+00001204  00000001 00000001                        897          DC    15XL4'00000001'
+                                                   898 *
+00001240  0000                                     899 PAGTAB4K DC    AL2((0*_4K)/256)
+00001242  0010                                     900          DC    AL2((1*_4K)/256)
+00001244  0020                                     901          DC    AL2((2*_4K)/256)
+00001246  0030                                     902          DC    AL2((3*_4K)/256)
+00001248  0040                                     903          DC    AL2((4*_4K)/256)
+0000124A  0050                                     904          DC    AL2((5*_4K)/256)
+0000124C  0060                                     905          DC    AL2((6*_4K)/256)
+0000124E  0070                                     906          DC    AL2((7*_4K)/256)
+00001250  0080                                     907          DC    AL2((8*_4K)/256)
+00001252  0090                                     908          DC    AL2((9*_4K)/256)
+00001254  00A0                                     909          DC    AL2((10*_4K)/256)
+00001256  00B0                                     910          DC    AL2((11*_4K)/256)
+00001258  00C0                                     911          DC    AL2((12*_4K)/256)
+0000125A  00D0                                     912          DC    AL2((13*_4K)/256)
+0000125C  00E0                                     913          DC    AL2((14*_4K)/256)
+0000125E  00F0                                     914          DC    AL2((15*_4K)/256)
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   916 ***********************************************************************
+                                                   917 *                      Register equates
+                                                   918 ***********************************************************************
+
+                              00000000  00000001   920 R0       EQU   0
+                              00000001  00000001   921 R1       EQU   1
+                              00000002  00000001   922 R2       EQU   2
+                              00000003  00000001   923 R3       EQU   3
+                              00000004  00000001   924 R4       EQU   4
+                              00000005  00000001   925 R5       EQU   5
+                              00000006  00000001   926 R6       EQU   6
+                              00000007  00000001   927 R7       EQU   7
+                              00000008  00000001   928 R8       EQU   8
+                              00000009  00000001   929 R9       EQU   9
+                              0000000A  00000001   930 R10      EQU   10
+                              0000000B  00000001   931 R11      EQU   11
+                              0000000C  00000001   932 R12      EQU   12
+                              0000000D  00000001   933 R13      EQU   13
+                              0000000E  00000001   934 R14      EQU   14
+                              0000000F  00000001   935 R15      EQU   15
+
+
+                                        00000000   937          END   TEST
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    23
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+BEG4K               I    00027A       4   158  130
+BEGIN               I    000200       4    66   48
+BEGX4K              I    000246       4   136  128
+CPUID               D    000A68       8   812   66  318  465  612  759
+CR0_1_2K            F    000A78       4   821   88  120  144  166
+CR0_1_4K            F    000A80       4   825  136  158
+CR0_2K              U    000040       1   818  822
+CR0_4K              U    000080       1   819  826
+CR0_SKEC            U    000001       1   829  822  826
+GOODPSW             D    0002B8       8   181  180
+IMAGE               1    000000    4704     0
+IVSK2K              I    000966       4   731  172
+IVSK4K              I    00079A       4   584  164
+NO_RRBE             I    00021A       4    96  805
+OKPGMS              D    000A50       8   804  777
+PAGTAB2K            R    001040       2   877  874
+PAGTAB4K            R    001240       2   899  896
+PGMCHK              I    0009F0       4   776   55
+PGMCODE             F    00008C       4    58  790
+PGMFAIL             I    000A44       4   800  785  789
+PGMNEXT             I    000A10       4   787  791  793
+PGMOLD              U    000028       1    51  779  782  784  792  795  796  798  800  802
+PGMTAB              I    000A14       6   788  780
+PGM_OPERATION_EXCEPTION
+                    U    000001       1    60  805
+PGM_SPECIAL_OPERATION_EXCEPTION
+                    U    000013       1    62
+PGM_SPECIFICATION_EXCEPTION
+                    U    000006       1    61
+R0                  U    000000       1   920   88   90  120  136  144  158  166  263  266  269  320  324  410  413  416  467  471
+                                               557  560  563  614  618  704  707  710  761  765
+R1                  U    000001       1   921   88  120  121  123  125  127  136  144  158  166  188  190  191  193  194  196  199
+                                               200  203  204  207  208  222  223  226  227  230  231  239  241  242  244  245  247
+                                               250  251  254  255  258  259  273  274  277  278  281  282  290  292  295  297  300
+                                               302  303  305  308  310  312  313  315  322  326  335  337  338  340  341  343  346
+                                               347  350  351  354  355  369  370  373  374  377  378  386  388  389  391  392  394
+                                               397  398  401  402  405  406  420  421  424  425  428  429  437  439  442  444  447
+                                               449  450  452  455  457  459  460  462  469  473  482  484  485  487  488  490  493
+                                               494  497  498  501  502  516  517  520  521  524  525  533  535  536  538  539  541
+                                               544  545  548  549  552  553  567  568  571  572  575  576  584  586  589  591  594
+                                               596  597  599  602  604  606  607  609  616  620  629  631  632  634  635  637  640
+                                               641  644  645  648  649  663  664  667  668  671  672  680  682  683  685  686  688
+                                               691  692  695  696  699  700  714  715  718  719  722  723  731  733  736  738  741
+                                               743  744  746  749  751  753  754  756  763  767  776  777  782  783  784  787  788
+                                               790  792  795  797  801
+R10                 U    00000A       1   930
+R11                 U    00000B       1   931
+R12                 U    00000C       1   932
+R13                 U    00000D       1   933
+R14                 U    00000E       1   934  138  141  142  146  149  150  160  163  164  168  171  172  233  284  329  380  431
+                                               476  527  578  623  674  725  770
+R15                 U    00000F       1   935
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    24
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R2                  U    000002       1   922   89   90  122  123  124  125  189  190  192  193  195  196  198  199  202  203  206
+                                               207  211  212  214  215  217  218  221  222  225  226  229  230  240  241  243  244
+                                               246  247  249  250  253  254  257  258  262  263  265  266  268  269  272  273  276
+                                               277  280  281  291  292  295  301  302  304  305  307  308  311  312  314  315  321
+                                               322  325  326  336  337  339  340  342  343  345  346  349  350  353  354  358  359
+                                               361  362  364  365  368  369  372  373  376  377  387  388  390  391  393  394  396
+                                               397  400  401  404  405  409  410  412  413  415  416  419  420  423  424  427  428
+                                               438  439  442  448  449  451  452  454  455  458  459  461  462  468  469  472  473
+                                               483  484  486  487  489  490  492  493  496  497  500  501  505  506  508  509  511
+                                               512  515  516  519  520  523  524  534  535  537  538  540  541  543  544  547  548
+                                               551  552  556  557  559  560  562  563  566  567  570  571  574  575  585  586  589
+                                               595  596  598  599  601  602  605  606  608  609  615  616  619  620  630  631  633
+                                               634  636  637  639  640  643  644  647  648  652  653  655  656  658  659  662  663
+                                               666  667  670  671  681  682  684  685  687  688  690  691  694  695  698  699  703
+                                               704  706  707  709  710  713  714  717  718  721  722  732  733  736  742  743  745
+                                               746  748  749  752  753  755  756  762  763  766  767
+R3                  U    000003       1   923
+R4                  U    000004       1   924
+R5                  U    000005       1   925
+R6                  U    000006       1   926
+R7                  U    000007       1   927
+R8                  U    000008       1   928
+R9                  U    000009       1   929
+RRBE_PC             U    000212       1    91  805
+SAVER1              D    000A70       8   813  776  797  801
+SEGTAB2K            R    001000       1   874  823
+SEGTAB4K            R    001200       1   896  827
+SKIP2K              I    0002AA       4   174  170
+SKIP4K              I    000292       4   166  162
+SKIPX2K             I    000276       4   152  148
+SKIPX4K             I    00025E       4   144  140
+SKPTB2K             U    0009EE       1   769  760
+SKPTB4K             U    000822       1   622  613
+SSK2K               I    000824       4   629  168
+SSK4K               I    000658       4   482  160
+SSKE2K              I    0008BC       4   680  171
+SSKE4K              I    0006F0       4   533  163
+SUCCESS             I    0002AE       4   180  152  174
+TEST                J    000000    4704    43   46   50   53   57   64  872  894   44  937
+TEST370             I    000208       4    88   67
+TST4KBBF            I    000222       4   120   94   97
+XIVSK2K             I    0005CE       4   437  150
+XIVSK4K             I    000402       4   290  142
+XSKPTB2K            U    000656       1   475  466
+XSKPTB4K            U    00048A       1   328  319
+XSSK2K              I    00048C       4   335  146
+XSSK4K              I    0002C0       4   188  138
+XSSKE2K             I    000524       4   386  149
+XSSKE4K             I    000358       4   239  141
+_2K                 U    000800       1   815  122  124  189  192  195  240  243  246  291  321  325  877  878  879  880  881  882
+                                               883  884  885  886  887  888  889  890  891  892
+_4K                 U    001000       1   816  899  900  901  902  903  904  905  906  907  908  909  910  911  912  913  914
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    25
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+_4KBBF              X    000A88       1   830  129
+_NEW370             X    000A89       1   832   93   96  139  147  161  169
+=12X'00'            X    000ACC       1   866  788
+=A((10*_2K)+X'500')
+                    A    000AB0       4   845  321  468  615  762
+=A((11*_2K)+X'600')
+                    A    000AB4       4   846  325  472  619  766
+=A((6*_2K)+X'100')
+                    A    000AA0       4   841  240  249  262  272  303  387  396  409  419  450  534  543  556  566  597  681  690
+                                               703  713  744
+=A((7*_2K)+X'200')
+                    A    000AA4       4   842  243  253  265  276  390  400  412  423  537  547  559  570  684  694  706  717
+=A((8*_2K)+X'300')
+                    A    000AA8       4   843  246  257  268  280  393  404  415  427  540  551  562  574  687  698  709  721
+=A((9*_2K)+X'400')
+                    A    000AAC       4   844  291  438  585  732
+=A(50*_2K)          A    000A8C       4   836  122
+=A(51*_2K)          A    000A90       4   837  124
+=A(6*_2K)           A    000A94       4   838  189  198  211  221  301  311  313  336  345  358  368  448  458  460  483  492  505
+                                               515  595  605  607  630  639  652  662  742  752  754
+=A(7*_2K)           A    000A98       4   839  192  202  214  225  339  349  361  372  486  496  508  519  633  643  655  666
+=A(8*_2K)           A    000A9C       4   840  195  206  217  229  342  353  364  376  489  500  511  523  636  647  658  670
+=H'5'               H    000AB8       2   847  783
+=X'00'              X    000AC8       1   862  296  443  590  737
+=X'04'              X    000AC7       1   861  294  441  588  735
+=X'10'              X    000ACA       1   864  300  304  447  451  594  598  741  745
+=X'12'              X    000ABE       1   852  223  370
+=X'16'              X    000ABB       1   849  188  200  335  347  482  533  629  680
+=X'18'              X    000ACB       1   865  310  457  604  751
+=X'1C'              X    000AC1       1   855  239  386
+=X'20'              X    000ABF       1   853  227  307  314  374  454  461  517  521  568  572  601  608  664  668  715  719  748
+                                               755
+=X'22'              X    000AC4       1   858  274  278  421  425
+=X'24'              X    000ABC       1   850  191  204  338  351  485  494  498  536  545  549  632  641  645  683  692  696
+=X'26'              X    000AC2       1   856  242  251  255  389  398  402
+=X'48'              X    000AC0       1   854  231  378
+=X'4A'              X    000AC5       1   859  282  429  525  576  672  723
+=X'4C'              X    000ABD       1   851  194  208  341  355
+=X'4E'              X    000AC3       1   857  245  259  392  406  488  502  539  553  635  649  686  700
+=X'68'              X    000AC9       1   863  297  444  591  738
+=X'6E'              X    000AC6       1   860  290  437  584  731
+=X'F0'              X    000ABA       1   848  121  127
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    26
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    27
+
+   DESC    SYMBOL  SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE   4704  0000-125F  0000-125F
+  Region           4704  0000-125F  0000-125F
+    CSECT  TEST    4704  0000-125F  0000-125F
+ASMA Ver. 0.2.1                             Test S/370 STORAGE KEY Instructions                     17 Jun 2021 20:25:36  Page    28
+
+   STMT                                          FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\skey370\skey370.asm
+
+
+** NO ERRORS FOUND **
+
+
