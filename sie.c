@@ -22,6 +22,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "inline.h"
+#include "sie.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
@@ -493,7 +494,7 @@ int     i;                              /* (work)                    */
         GUESTREGS->sie_mso   =  0;
         GUESTREGS->mainstor  =  &sysblk.mainstor[mso];
         GUESTREGS->mainlim   =  msl - mso;
-        GUESTREGS->storkeys  =  &STORAGE_KEY( mso, &sysblk );
+        GUESTREGS->storkeys  =  ARCH_DEP( get_ptr_to_storekey )( mso );
         GUESTREGS->sie_xso   =  eso;
         GUESTREGS->sie_xsl   =  esl;
         GUESTREGS->sie_xso  *=  (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
@@ -568,6 +569,7 @@ int     i;                              /* (work)                    */
 
     /* System Control Area Origin */
     FETCH_FW( GUESTREGS->sie_scao, STATEBK->scao );
+    GUESTREGS->sie_scao &= SIEISCAM;
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     {
@@ -661,17 +663,20 @@ int     i;                              /* (work)                    */
 
 #endif /* defined( FEATURE_VIRTUAL_ARCHITECTURE_LEVEL ) */
 
-#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-
-    /* Reference and Change Preservation Origin */
+   /* Reference and Change Preservation (RCP) Origin if high-order
+      0x80 bit is off. Otherwise (high-order 0x80 bit is on, which
+      it usually is for VM/ESA and z/VM), then the field ACTUALLY
+      contains various Execution Control flags such as Storage Key
+      Assist (SKA), etc.
+   */
     FETCH_FW( GUESTREGS->sie_rcpo, STATEBK->rcpo );
+
     if (!GUESTREGS->sie_rcpo && !GUESTREGS->sie_pref)
     {
         SIE_SET_VI( SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_RCZER, GUESTREGS );
         STATEBK->c = SIE_C_VALIDITY;
         return;
     }
-#endif
 
     /* Load the CPU timer */
     FETCH_DW( dreg, STATEBK->cputimer );
@@ -1885,6 +1890,21 @@ U32    newgr1;
 }
 #endif /* defined( FEATURE_IO_ASSIST ) */
 #endif /* defined( FEATURE_SIE ) */
+
+
+#if defined( OPTION_USE_SKAIP_AS_LOCK )
+extern inline void ARCH_DEP( LockUnlockSKALock )( REGS* regs, bool lock );
+#endif
+extern inline void ARCH_DEP( LockUnlockRCPLock )( REGS* regs, RCPTE* rcpte, bool lock );
+extern inline void ARCH_DEP( LockUnlockKeyLock )( REGS* regs, PGSTE* pgste, RCPTE* rcpte, bool lock );
+
+
+extern inline PGSTE* ARCH_DEP( GetPGSTE           )( REGS* regs, U64 gabspage );
+extern inline PGSTE* ARCH_DEP( GetPGSTEFromPTE    )( REGS* regs, U64 pte );
+extern inline RCPTE* ARCH_DEP( GetOldRCP          )( REGS* regs, U64 gabspage );
+extern inline void   ARCH_DEP( GetPGSTE_and_RCPTE )( REGS* regs, U64 gabspage, PGSTE** ppPGSTE, RCPTE** ppRCPTE );
+
+
 #endif /* defined( _FEATURE_SIE ) */
 
 /*-------------------------------------------------------------------*/
@@ -1907,6 +1927,8 @@ U32    newgr1;
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
+
+#if defined( _FEATURE_SIE )
 
 #if defined( SIE_DEBUG )
 /*-------------------------------------------------------------------*/
@@ -1983,5 +2005,7 @@ static const char* sie_icode_2str( int icode )
     return name;
 }
 #endif /* defined( SIE_DEBUG ) */
+
+#endif /* defined( _FEATURE_SIE ) */
 
 #endif /*!defined(_GEN_ARCH)*/
