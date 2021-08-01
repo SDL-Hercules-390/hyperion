@@ -26,7 +26,6 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "inline.h"
 
 DISABLE_GCC_UNUSED_SET_WARNING;
 
