@@ -66,6 +66,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "ctc_ptp.h"
 #include "qeth.h"
 #include "cckddasd.h"
+#include "inline.h"
 
 //-------------------------------------------------------------------
 //                      ARCH_DEP() code
@@ -81,8 +82,98 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
-//      (we have no ARCH_DEP commands/functions at this time)
+/*-------------------------------------------------------------------*/
+/* f? command - display currently defined unusable storage range(s)  */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( fquest_cmd )()
+{
+    U64   aaddr, begbad = 0;
+    bool  looking4bad = true, bad, foundbad = false;
 
+    /* Scan all of defined storage to locate all bad frames */
+    OBTAIN_INTLOCK( NULL );
+    {
+        for (aaddr=0; aaddr < sysblk.mainsize; aaddr += STORAGE_KEY_PAGESIZE)
+        {
+            /* NOTE: we use the internal "_get_storage_key" function
+               here so we're returned the internal STORKEY_BADFRM bit.
+            */
+            bad = ARCH_DEP( _get_storage_key )( aaddr, SKEY_K ) & STORKEY_BADFRM;
+
+            if (looking4bad && bad)
+            {
+                foundbad = true;
+                begbad = aaddr;         /* Beginning of bad range */
+                looking4bad = false;
+            }
+            else if (!looking4bad && !bad)
+            {
+                // "Storage "F_RADR"-"F_RADR" set to unusable"
+                WRMSG( HHC02390, "I", begbad, aaddr - 1);
+                looking4bad = true;
+            }
+        }
+    }
+    RELEASE_INTLOCK( NULL );
+
+    if (!looking4bad)
+        // "Storage "F_RADR"-"F_RADR" set to unusable"
+        WRMSG( HHC02390, "I", begbad, aaddr - 1);
+    else if (!foundbad)
+        // "No unusable storage found"
+        WRMSG( HHC02391, "I" );
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* f- and f+ commands - mark page frame as -unusable or +usable      */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP( fonoff_cmd )( REGS* regs, char* cmdline )
+{
+    char*   cmd = cmdline;              /* Copy of panel command     */
+    U64     aaddr;                      /* Absolute storage address  */
+    U64     saddr, eaddr;               /* Range start/end addresses */
+    int     len;                        /* Number of bytes to alter  */
+    bool    plus_enable_on;             /* true == x+, false == x-   */
+    char    buf[64];                    /* Message buffer            */
+
+    plus_enable_on = (cmd[1] == '+');
+
+    /* Parse the range operand(s) */
+    if ((len = parse_range( cmd+2, sysblk.mainsize-1, &saddr, &eaddr, NULL )) < 0)
+        return 0; /* (error message already issued) */
+
+    /* Round start/end address to page boundary */
+    saddr &= STORAGE_KEY_PAGEMASK;
+    eaddr &= STORAGE_KEY_PAGEMASK;
+
+    /* Mark all frames in range as usable or unusable */
+    for (aaddr = saddr; aaddr <= eaddr; aaddr += STORAGE_KEY_PAGESIZE)
+    {
+        if (aaddr > regs->mainlim)
+        {
+            MSGBUF( buf, F_RADR, aaddr);
+            // "Invalid argument %s%s"
+            WRMSG( HHC02205, "E", buf, "" );
+            return -1;
+        }
+
+        /* Note: we must use the internal "_xxx_storage_key"
+           functions to be able to directly set/clear the
+           internal STORKEY_BADFRM bit.
+        */
+        if (plus_enable_on)
+            ARCH_DEP( _and_storage_key )( aaddr, STORKEY_BADFRM, SKEY_K );
+        else
+            ARCH_DEP( _or_storage_key )(  aaddr, STORKEY_BADFRM, SKEY_K );
+    }
+
+    MSGBUF( buf, "Storage "F_RADR"-"F_RADR, saddr, aaddr - 1 );
+    // "%-14s set to %s"
+    WRMSG( HHC02204, "I", buf, plus_enable_on ? "usable" : "unusable" );
+    return 0;
+}
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
@@ -7194,12 +7285,19 @@ REGS *regs;
         WRMSG(HHC00816, "W", PTYPSTR(sysblk.pcpu), sysblk.pcpu, "online");
         return 0;
     }
+
     regs = sysblk.regs[sysblk.pcpu];
 
     if (argc < 3 || '*' == *(loadaddr = argv[2]))
     {
-        for (aaddr = 0; aaddr < sysblk.mainsize &&
-            !(STORAGE_KEY(aaddr, regs) & STORKEY_CHANGE); aaddr += 4096)
+        /* Locate the first modified (changed) page */
+        for
+        (
+            aaddr = 0;
+            aaddr < sysblk.mainsize
+                && !(ARCH_DEP( get_4K_storage_key )( aaddr ) & STORKEY_CHANGE);
+            aaddr += STORAGE_KEY_4K_PAGESIZE
+        )
         {
             ;   /* (nop) */
         }
@@ -7222,13 +7320,18 @@ REGS *regs;
 
     if (argc < 4 || '*' == *(loadaddr = argv[3]))
     {
-        for (aaddr2 = sysblk.mainsize - 4096; aaddr2 > 0 &&
-            !(STORAGE_KEY(aaddr2, regs) & STORKEY_CHANGE); aaddr2 -= 4096)
+        /* Locate the last modified (changed) page */
+        for
+        (
+            aaddr2 = sysblk.mainsize - STORAGE_KEY_4K_PAGESIZE;
+            aaddr2 > 0
+              && !(ARCH_DEP( get_4K_storage_key )( aaddr2 ) & STORKEY_CHANGE);
+            aaddr2 -= STORAGE_KEY_4K_PAGESIZE)
         {
             ;   /* (nop) */
         }
 
-        if ( STORAGE_KEY(aaddr2, regs) & STORKEY_CHANGE )
+        if (ARCH_DEP( get_4K_storage_key )( aaddr2 ) & STORKEY_CHANGE)
             aaddr2 |= 0xFFF;
         else
         {
@@ -7498,48 +7601,49 @@ int delsym_cmd( int argc, char* argv[], char* cmdline )
 /*-------------------------------------------------------------------*/
 int fquest_cmd( int argc, char* argv[], char* cmdline )
 {
-    U64   aaddr, begbad = 0;
-    bool  looking4bad = true, bad, foundbad = false;
-    REGS* regs = sysblk.regs[ sysblk.pcpu ];
-
     UNREFERENCED( argc );
     UNREFERENCED( argv );
     UNREFERENCED( cmdline );
 
-    /* Scan all of defined storage to locate all bad frames */
-    OBTAIN_INTLOCK( NULL );
+    switch (sysblk.arch_mode)
     {
-        for (aaddr=0; aaddr < sysblk.mainsize; aaddr += _4K)
-        {
-            /* NOTE: we use the internal "_get_storage_key" function
-               here so we're returned the internal STORKEY_BADFRM bit.
-            */
-            bad = STORAGE_KEY( aaddr, regs ) & STORKEY_BADFRM;
-
-            if (looking4bad && bad)
-            {
-                foundbad = true;
-                begbad = aaddr;         /* Beginning of bad range */
-                looking4bad = false;
-            }
-            else if (!looking4bad && !bad)
-            {
-                // "Frames "F_RADR"-"F_RADR" are currently set to unusable"
-                WRMSG( HHC02390, "I", begbad, aaddr - 1);
-                looking4bad = true;
-            }
-        }
+#if defined(     _370 )
+        case ARCH_370_IDX:
+          return s370_fquest_cmd();
+#endif
+#if defined(     _390 )
+        case ARCH_390_IDX:
+          return s390_fquest_cmd();
+#endif
+#if defined(     _900 )
+        case ARCH_900_IDX:
+          return z900_fquest_cmd();
+#endif
     }
-    RELEASE_INTLOCK( NULL );
+    UNREACHABLE_CODE( return -1 );
+}
 
-    if (!looking4bad)
-        // "Frames "F_RADR"-"F_RADR" are currently set to unusable"
-        WRMSG( HHC02390, "I", begbad, aaddr - 1);
-    else if (!foundbad)
-        // "No unusable storage found"
-        WRMSG( HHC02391, "I" );
-
-    return 0;
+/*-------------------------------------------------------------------*/
+/* f- and f+ commands - mark page frame as -unusable or +usable      */
+/*-------------------------------------------------------------------*/
+static int fonoff_cmd( REGS* regs, char* cmdline )
+{
+    switch (sysblk.arch_mode)
+    {
+#if defined(     _370 )
+        case ARCH_370_IDX:
+          return s370_fonoff_cmd( regs, cmdline );
+#endif
+#if defined(     _390 )
+        case ARCH_390_IDX:
+          return s390_fonoff_cmd( regs, cmdline );
+#endif
+#if defined(     _900 )
+        case ARCH_900_IDX:
+          return z900_fonoff_cmd( regs, cmdline );
+#endif
+    }
+    UNREACHABLE_CODE( return -1 );
 }
 
 /*-------------------------------------------------------------------*/
@@ -7550,7 +7654,6 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
     char*   cmd = cmdline;              /* Copy of panel command     */
     bool    plus_enable_on;             /* true == x+, false == x-   */
     char*   onoroff;                    /* x+ == "on", x- == "off"   */
-    RADR    aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
     U16     lcss;
@@ -7586,48 +7689,9 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
 
     if (cmd[0] == 'f')
     {
-        U64   saddr, eaddr;             /* Range start/end addresses */
-        int   len;                      /* Number of bytes to alter  */
-        char  buf[64];                  /* Message buffer            */
-
-        /* Parse the range operand(s) */
-        if ((len = parse_range( cmd+2, sysblk.mainsize-1, &saddr, &eaddr, NULL )) < 0)
-        {
-            RELEASE_INTLOCK( NULL );
-            return 0; /* (error message already issued) */
-        }
-
-        /* Round start/end address to page boundary */
-        saddr &= 0xFFFFFFFFFFFFF000ULL;
-        eaddr &= 0xFFFFFFFFFFFFF000ULL;
-
-        /* Mark all frames in range as usable or unusable */
-        for (aaddr = saddr; aaddr <= eaddr; aaddr += _4K)
-        {
-            if (aaddr > regs->mainlim)
-            {
-                RELEASE_INTLOCK( NULL );
-                MSGBUF( buf, F_RADR, aaddr);
-                // "Invalid argument %s%s"
-                WRMSG( HHC02205, "E", buf, "" );
-                return -1;
-            }
-
-            /* Note: we must use the internal "_xxx_storage_key"
-               functions to be able to directly set/clear the
-               internal STORKEY_BADFRM bit.
-            */
-            if (plus_enable_on)
-                STORAGE_KEY( aaddr, regs ) &= ~STORKEY_BADFRM;
-            else
-                STORAGE_KEY( aaddr, regs ) |=  STORKEY_BADFRM;
-        }
-
+        int rc = fonoff_cmd( regs, cmdline );
         RELEASE_INTLOCK( NULL );
-        MSGBUF( buf, "Frames "F_RADR"-"F_RADR, saddr, eaddr + 0x00000FFF );
-        // "%-14s set to %s"
-        WRMSG( HHC02204, "I", buf, plus_enable_on ? "usable" : "unusable" );
-        return 0;
+        return rc;
     }
 
 #if defined( OPTION_CKD_KEY_TRACING )
