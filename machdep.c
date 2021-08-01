@@ -214,7 +214,7 @@
    || defined( __pentiumpro__ ) \
    || defined( __pentium4__   ) \
    || defined( __athlon__     ) \
-   || defined( __athlon       ) 
+   || defined( __athlon       )
 
     #define _ext_ia32
 
