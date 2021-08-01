@@ -1638,20 +1638,33 @@ typedef struct MBK  MBK;
 /*-------------------------------------------------------------------*/
 /* Perform Frame Management Function definitions */
 
-#define PFMF_FMFI            0x000f0000
-#define PFMF_FMFI_RESV       0x000c0000 /* Reserved must be zero     */
+#define PFMF_RESV            0xFFF00000 /* Reserved must be zero     */
+#define PFMF_FMFI            0x000F0000 /* Frame Mgmt. Function Ind. */
+#define PFMF_FMFI_RESV       0x000C0000 /* Reserved must be zero     */
 #define PFMF_FMFI_SK         0x00020000 /* Set-Key Control           */
 #define PFMF_FMFI_CF         0x00010000 /* Clear-Frame Control       */
-#define PFMF_FMFI_UI         0x00008000 /* Usage Indication          */
-#define PFMF_FMFI_FSC        0x00007000 /* Frame-Size Code           */
-#define PFMF_FMFI_FSC_4K     0x00000000 /* 4K                        */
-#define PFMF_FMFI_FSC_1M     0x00001000 /* 1M                        */
-#define PFMF_FMFI_FSC_RESV   0x00006000 /* Reserved                  */
-#define PFMF_FMFI_NQ         0x00000800 /* Quiesce (SK must be one)  */
-#define PFMF_FMFI_MR         0x00000400 /* Reference Bit Update Mask */
-#define PFMF_FMFI_MC         0x00000200 /* Change Bit Update Mask    */
-#define PFMF_FMFI_KEY        0x000000F7 /* Storage Key               */
-#define PFMF_RESERVED        0xFFF00101 /* Reserved                  */
+#define PFMF_UI              0x00008000 /* Usage Indication          */
+#define PFMF_FSC             0x00007000 /* Frame-Size Code           */
+#define PFMF_FSC_4K          (0 << 12)  /* 4K Frame                  */
+#define PFMF_FSC_1M          (1 << 12)  /* 1M Frame                  */
+#define PFMF_FSC_2G          (2 << 12)  /* 2G Frame                  */
+/*                           (3 << 12)     Reserved                  */
+/*                           (4 << 12)     Reserved                  */
+/*                           (5 << 12)     Reserved                  */
+/*                           (6 << 12)     Reserved                  */
+/*                           (7 << 12)     Reserved                  */
+#define PFMF_M3_NQ           0x00000800 /* Ignored or Reserved       */
+#define PFMF_M3_MR           0x00000400 /* Reference-Bit-Update Mask */
+#define PFMF_M3_MC           0x00000200 /* Change-Bit-Update Mask    */
+#define PFMF_M3_RESV         0x00000100 /* Reserved must be zero     */
+#define PFMF_KEY             0x000000F7 /* Storage Key Bits          */
+#define PFMF_KEY_RESV        0x00000001 /* Reserved must be zero     */
+#define PFMF_RESERVED       (0          /* All PFMF Reserved Bits */  \
+                             | PFMF_RESV                              \
+                             | PFMF_FMFI_RESV                         \
+                             | PFMF_M3_RESV                           \
+                             | PFMF_KEY_RESV                          \
+                            )
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for the Vector Facility */

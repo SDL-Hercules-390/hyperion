@@ -31,6 +31,7 @@
 #include "opcode.h"
 #include "inline.h"
 #include "clock.h"
+#include "sie.h"
 
 /* When an operation code has unused operand(s) (IPK, e.g.), it will */
 /* attract  a diagnostic for a set, but unused variable.  Fixing the */
@@ -978,7 +979,7 @@ U64     new;                            /* new value                 */
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs) && regs->sie_scao)
     {
-        STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
+        ARCH_DEP( or_storage_key )( regs->sie_scao, STORKEY_REF );
         if(regs->mainstor[regs->sie_scao] & 0x80)
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
     }
@@ -1075,7 +1076,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs) && regs->sie_scao)
     {
-        STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
+        ARCH_DEP( or_storage_key )( regs->sie_scao, STORKEY_REF );
         if(regs->mainstor[regs->sie_scao] & 0x80)
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
     }
@@ -5624,206 +5625,156 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 /*-------------------------------------------------------------------*/
 /* B9AE RRBM  - Reset Reference Bits Multiple                  [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(reset_reference_bits_multiple)
+DEF_INST( reset_reference_bits_multiple )
 {
+U64     bitmap;                         /* Bitmap returned in r1     */
+RADR    r2_pageaddr;                    /* Operand-2 page address    */
+RADR    pageaddr;                       /* Working page address      */
 int     r1, r2;                         /* Register values           */
-RADR    a;                              /* Abs frame addr stor key   */
-RADR    n;
-BYTE    storkey;                        /* Storage key               */
 int     i;
-U64     bitmap;                         /* Bitmap to be ret in r1    */
+BYTE    oldkey;                         /* Original Storage key      */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    /* Load 4K block address from R2 register */
-    a = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
+    /* Load 4K block address from r2 register */
+    r2_pageaddr = regs->GR(r2) & ADDRESS_MAXWRAP( regs );
 
     /* Addressing exception if block is outside main storage */
-    if ( a > regs->mainlim )
+    if (r2_pageaddr > regs->mainlim)
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Ignore bits 46-63 of the 2nd operand */
-    a &= ~0x3ffffULL;
+    r2_pageaddr &= ~0x3ffffULL;
 
 #if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs) && (SIE_STATE_BIT_ON(regs, IC2, RRBE)))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+    if (SIE_MODE( regs ) && (SIE_STATE_BIT_ON( regs, IC2, RRBE )))
+        SIE_INTERCEPT( regs );
 #endif
 
     /* For each frame... */
-    for(i =0 , bitmap = 0; i < 64; i++, a+= PAGEFRAME_PAGESIZE)
+    for (i=0, bitmap=0; i < 64; i++, r2_pageaddr += STORAGE_KEY_4K_PAGESIZE)
     {
-        n = a;
+        pageaddr = r2_pageaddr;
 
-#if defined(_FEATURE_SIE)
-        if(SIE_MODE(regs))
+#if defined( _FEATURE_SIE )
+        if (SIE_MODE( regs ))
         {
-            SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
+            SIE_TRANSLATE( &pageaddr, ACCTYPE_SIE, regs );
 
             if (!regs->sie_pref)
             {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
-                  || (HOSTREGS->arch_mode == ARCH_900_IDX)
+#if defined( _FEATURE_STORAGE_KEY_ASSIST )
+                if (1
+                    && (0
+                        || SIE_STATE_BIT_ON( regs, RCPO0, ASIST )
+#if defined( _FEATURE_ZSIE )
+                        // SKA is always active for z/VM
+                        || ARCH_900_IDX == HOSTREGS->arch_mode
 #endif
-                  ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
+                       )
+                    && SIE_STATE_BIT_ON( regs, RCPO2, RCPBY )
+                )
                 {
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                    storkey = STORAGE_KEY(n, regs);
-#else
-                    storkey = STORAGE_KEY1(n, regs)
-                            | (STORAGE_KEY2(n, regs) & (STORKEY_REF))
-#endif
-                                                                    ;
-                        /* Reset the reference bit in the storage key */
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                    STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
-#else
-                    STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
-                    STORAGE_KEY2(n, regs) &= ~(STORKEY_REF);
-#endif
+                    /* When "bypass use of RCP table" is requested
+                       the guest page is assumed to be accessible.
+                    */
+                    /* Translate guest absolute to host absolute */
+                    // (already done further above)
+                    //SIE_TRANSLATE( &pageaddr, ACCTYPE_SIE, regs );
+
+                    /* Save a copy of the original storage key */
+                    oldkey = ARCH_DEP( get_storage_key )( pageaddr );
+
+                    /* Reset the reference bit in the storage key */
+                    ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
                 }
-                else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
+                else // use RCP...(and possibly PGSTE)
+#endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
                 {
-                BYTE rcpkey, realkey;
-                RADR ra;
-                RADR rcpa;
+                    PGSTE* pgste;
+                    RCPTE* rcpte;
 
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                    if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
-                      || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif
-                    )
+                    ARCH_DEP( GetPGSTE_and_RCPTE )( regs, pageaddr, &pgste, &rcpte );
+
+                    OBTAIN_KEYLOCK( pgste, rcpte, regs );
                     {
-                        /* guest absolute to host PTE addr */
-                        if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                                HOSTREGS, ACCTYPE_PTE))
-                            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+                        int sr;
+                        BYTE realkey;
 
-                        /* Convert real address to absolute address */
-                        rcpa = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
+                        /* Translate guest absolute address to host real.
+                           Note that the RCP table MUST be locked BEFORE
+                           we try to access the real page!
+                        */
+                        sr = SIE_TRANSLATE_ADDR( regs->sie_mso + pageaddr,
+                                                 USE_PRIMARY_SPACE,
+                                                 HOSTREGS, ACCTYPE_SIE );
+                        if (sr == 0)
+                        {
+                            /* Translate host real to host absolute */
+                            pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
-                        /* For ESA/390 the RCP byte entry is at offset 1 in a
-                           four byte entry directly beyond the page table,
-                           for ESAME mode, this entry is eight bytes long */
-                        rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
+                            /* Save original key before modifying */
+                            realkey = ARCH_DEP( get_storage_key )( pageaddr );
+                        }
+                        else
+                            realkey = 0;
+
+                        /* Save the page's real R/C bits by OR'ing them
+                           into the host's R/C set in the RCP byte */
+                        rcpte->rcpbyte |= ((realkey << 4) & RCPHOST);
+
+                        /* Get the 'OR' of the real page's R/C bits and
+                           the guest's R/C bits from the RCP area byte */
+                        oldkey = realkey | (rcpte->rcpbyte & RCPGUEST);
+
+                        /* Update the guest RCP bits */
+                        rcpte->rcpbyte &= ~(         RCPGUEST);
+                        rcpte->rcpbyte |=  (oldkey & RCPGUEST);
+
+                        /* Reset the reference bit in the guest RCP set */
+                        rcpte->rcpbyte &= ~RCPGREF;
+
+                        /* Reset the reference bit in the real page */
+                        if (sr == 0)
+                            ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
                     }
-                    else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-                    {
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                        if(SIE_STATE_BIT_ON(regs, MX, XC))
-                            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif
-                        /* Obtain address of the RCP area from the state desc */
-                        rcpa = regs->sie_rcpo &= 0x7FFFF000;
-
-                        /* frame index as byte offset to 4K keys in RCP area */
-                        rcpa += n >> 12;
-
-                        /* host primary to host absolute */
-                        rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                                   HOSTREGS, ACCTYPE_SIE, 0);
-                    }
-
-                    /* fetch the RCP key */
-                    rcpkey = regs->mainstor[rcpa];
-                    STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
-
-                    if (!SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                                             HOSTREGS, ACCTYPE_SIE))
-                    {
-                        ra = APPLY_PREFIXING(HOSTREGS->dat.raddr, HOSTREGS->PX);
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                        realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF);
-#else
-                        realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
-                                  & (STORKEY_REF);
-#endif
-                        /* Reset the reference and change bits in
-                           the real machine storage key */
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                        STORAGE_KEY(ra, regs) &= ~(STORKEY_REF);
-#else
-                        STORAGE_KEY1(ra, regs) &= ~(STORKEY_REF);
-                        STORAGE_KEY2(ra, regs) &= ~(STORKEY_REF);
-#endif
-                    }
-                    else
-                        realkey = 0;
-
-                    /* The storage key is obtained by logical or
-                       or the real and guest RCP bits */
-                    storkey = realkey | (rcpkey & (STORKEY_REF));
-
-                    /* or with host set */
-                    rcpkey |= realkey << 4;
-
-                    /* Put storage key in guest set */
-                    rcpkey |= storkey;
-
-                    /* reset the reference bit */
-                    rcpkey &= ~(STORKEY_REF);
-                    regs->mainstor[rcpa] = rcpkey;
-                    STORAGE_KEY(rcpa, regs) |= (STORKEY_REF);
+                    RELEASE_KEYLOCK( pgste, rcpte, regs );
                 }
             }
-            else
+            else /* regs->sie_pref */
             {
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                storkey = STORAGE_KEY(n, regs);
-#else
-                storkey = STORAGE_KEY1(n, regs)
-                          | (STORAGE_KEY2(n, regs) & (STORKEY_REF))
-#endif
-                                    ;
+                /* Save a copy of the original storage key */
+                oldkey = ARCH_DEP( get_storage_key )( pageaddr );
+
                 /* Reset the reference bit in the storage key */
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
-#else
-                STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
-                STORAGE_KEY2(n, regs) &= ~(STORKEY_REF);
-#endif
+                ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
             }
         }
         else /* !SIE_MODE */
-#endif /*defined(_FEATURE_SIE)*/
+#endif /* defined( _FEATURE_SIE ) */
         {
             /* Save a copy of the original storage key */
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-            storkey = STORAGE_KEY(n, regs);
-#else
-            storkey = STORAGE_KEY1(n, regs)
-                    | (STORAGE_KEY2(n, regs) & (STORKEY_REF))
-#endif
-                                                             ;
+            oldkey = ARCH_DEP( get_storage_key )( pageaddr );
+
             /* Reset the reference bit in the storage key */
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-        STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
-#else
-        STORAGE_KEY1(n, regs) &= ~(STORKEY_REF);
-        STORAGE_KEY2(n, regs) &= ~(STORKEY_REF);
-#endif
+            ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
         }
 
         /* Insert the original state of the reference bit
            in the bitmap */
         bitmap <<= 1;
-        bitmap |= (storkey & STORKEY_REF) ? 0x01ULL : 0;
+        bitmap |= (oldkey & STORKEY_REF) ? 0x01ULL : 0;
 
         /* If the storage key had the REF bit on then perform
          * accelerated lookup invalidations on all CPUs
          * so that the REF bit will be set when referenced next.
          */
-        if (storkey & STORKEY_REF)
-            STORKEY_INVALIDATE(regs, n);
+        if (oldkey & STORKEY_REF)
+            STORKEY_INVALIDATE( regs, pageaddr );
 
     } /* end for each frame... */
 
@@ -5834,301 +5785,130 @@ U64     bitmap;                         /* Bitmap to be ret in r1    */
 
 
 #if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
-/*-------------------------------------------------------------------*/
-/* SUBROUTINE TO PERFORM CONDITIONAL KEY PROCESSING is deleted       */
-/*                                                                   */
-/* Note  that  there  is nothing conditional about PFMF key setting; */
-/* the  only  option  is  whether clear sets change and/or reference */
-/* bits.                                                             */
-/*-------------------------------------------------------------------*/
+
+// (PFMF helper function; refer to control.c for implementation)
+extern void ARCH_DEP( sske_or_pfmf_procedure )
+(
+    bool   sske,            /* true = SSKE call, false = PFMF        */
+    REGS*  regs,            /* Registers context                     */
+    U64    abspage,         /* Absolute address of 4K page frame     */
+    int    r1,              /* Operand-1 register number (SSKE)      */
+    int    m3,              /* Mask field from SSKE instruction,
+                               or PFMF register r1 bits 52-55.       */
+    BYTE   r1key            /* Frame's POTENTIALLY new key value     */
+);
 
 /*-------------------------------------------------------------------*/
 /* B9AF PFMF  - Perform Frame Management Function              [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(perform_frame_management_function)
+DEF_INST( perform_frame_management_function )
 {
-int     r1, r2;                         /* Register values           */
-int     fc = 1;                         /* Frame count               */
-RADR    addr, aaddr;
-int     page_offset;                    /* Low order bits of R2      */
+int     r1, r2;                         /* Operand register numbers  */
+int     m3;                             /* Conditional-SSKE mask     */
+int     fc;                             /* Frame count (multi-block) */
+RADR    pageaddr;                       /* Working abs page address  */
+BYTE    r1key;                          /* Key value to set from r1  */
+bool    multi_block = false;            /* Work (simplifies things)  */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    if((regs->GR_L(r1) & (PFMF_RESERVED|PFMF_FMFI_RESV|PFMF_FMFI_FSC_RESV))
-      || (!FACILITY_ENABLED( 014_NONQ_KEY_SET, regs ) && (regs->GR_L(r1) & PFMF_FMFI_NQ)))
-        regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+    /* Check for specification exception */
+    if (0
+        || (regs->GR(r1) & PFMF_RESERVED)
+        || (1
+            && (regs->GR(r1) & PFMF_M3_NQ)
+            && !FACILITY_ENABLED( 014_NONQ_KEY_SET, regs )
+           )
+    )
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Save key to MAYBE be set */
+    r1key = regs->GR_LHLCL(r1);
+
+    /* Load real or absolute page address from r2 register */
+    pageaddr = regs->GR(r2);
+
+    /* Save the operand-1 MR/MC option bits (which are
+       luckily in the same position as SSKE's m3 field) */
+    m3 = regs->GR_LHLCH(r1) & 0x06;
+
+    /* Determine frame count from requested frame size */
+    switch (regs->GR(r1) & PFMF_FSC)
+    {
+#if defined( FEATURE_078_ENHANCED_DAT_FACILITY_2 )
+
+        case PFMF_FSC_2G:
+        {
+            U64  low_end_of_range  =  (regs->GR(r2) & STORAGE_KEY_4K_PAGEMASK);
+            U64  hi_end_of_range   =  ROUND_UP( low_end_of_range+1,
+                                                (2*ONE_GIGABYTE) );
+            fc = (hi_end_of_range - low_end_of_range) / _4K;
+            multi_block = true;
+
+            if (!FACILITY_ENABLED( 078_EDAT_2, regs ))
+                regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+
+            break;
+        }
+#endif /* defined( FEATURE_078_ENHANCED_DAT_FACILITY_2 ) */
+
+        case PFMF_FSC_1M:
+        {
+            U64  low_end_of_range  =  (regs->GR(r2) & STORAGE_KEY_4K_PAGEMASK);
+            U64  hi_end_of_range   =  ROUND_UP( low_end_of_range+1,
+                                                ONE_MEGABYTE );
+            fc = (hi_end_of_range - low_end_of_range) / _4K;
+            multi_block = true;
+            break;
+        }
+
+        case PFMF_FSC_4K:
+        {
+            /* Convert real address to absolute address */
+            pageaddr = APPLY_PREFIXING( pageaddr, regs->PX );
+            fc = 1;
+            break;
+        }
+
+        default:
+        {
+            regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
+            fc = 1; // (to keep compiler happy)
+            break;  // (purely for consistency; not actually needed)
+        }
+    }
 
     /* Wrap address according to addressing mode */
-    aaddr = addr = ADDRESS_MAXWRAP(regs) & regs->GR_G(r2) & PAGEFRAME_PAGEMASK;
-    page_offset = regs->GR_G(r2) & PAGEFRAME_BYTEMASK;
+    pageaddr &= ADDRESS_MAXWRAP( regs );
 
-    /* Convert real address to absolute address */
-
-    switch (PFMF_FMFI_FSC & regs->GR_L(r1)) {
-    case PFMF_FMFI_FSC_1M:
-        /* Prefixing is not applied in multipage mode */
-        fc = 0x100 - ((regs->GR_L(r2) & 0xFF000) >> 12);
-        break;
-    /* Code for 2G pages goes here */
-    default:
-        /* should have been catched by PFMF_FMFI_FSC_RESV bits being nonzero */
-        ASSERT(0);
-        break;
-    case PFMF_FMFI_FSC_4K:
-        /* Prefixing is applied in single frame operation */
-        aaddr = addr = APPLY_PREFIXING (addr, regs->PX);
-        fc = 1;
-        break;
-    }
-
-    /* Note that real hardware does not update R2 for each page, only on
-       interrupt or at completion. Nor does it reference R1 more than once.
-       This has implications for the case of R1 == R2.
-       The low order 12 bits of R2 must remain unchanged. */
-    for( ; fc--; )
+    /* Process all pages within requested frame... */
+    while (fc--)
     {
-        /* Addressing exception if block is outside main storage */
-        if ( addr > regs->mainlim )
-            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+        ARCH_DEP( sske_or_pfmf_procedure )
+        (
+            false,      /* true = SSKE call, false = PFMF     */
+            regs,       /* Registers context                  */
+            pageaddr,   /* Absolute address of 4K page frame  */
+            r1,         /* Operand-1 register number          */
+            m3,         /* Mask field from SSKE instruction,
+                           or PFMF register r1 bits 52-55.    */
+            r1key       /* Frame's POTENTIALLY new key value  */
+        );
 
-        if(regs->GR_L(r1) & PFMF_FMFI_CF)
-            SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, regs);
-
-        /* Set Key Control */
-        if(regs->GR_L(r1) & PFMF_FMFI_SK)
+        if (multi_block)
         {
-        BYTE sk = regs->GR_L(r1) & PFMF_FMFI_KEY;
-        RADR n = addr;
-        BYTE rck = 0;
+            regs->GR(r2) += STORAGE_KEY_4K_PAGESIZE;
+            pageaddr     += STORAGE_KEY_4K_PAGESIZE;
 
-            /* Ref Bit must be updated */
-            if(!(regs->GR_L(r1) & PFMF_FMFI_MR))
-                rck |= STORKEY_REF;
-
-            /* Change Bit must be updated */
-            if((regs->GR_L(r1) & PFMF_FMFI_MC))
-                rck |= STORKEY_CHANGE;
-
-            /* Mask out R/C bits to be bypassed */
-            sk &= ~rck;
-
-            /* Addressing exception if block is outside main storage */
-            if ( aaddr > regs->mainlim )
-                ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-
-#if defined(_FEATURE_SIE)
-            if(SIE_MODE(regs))
-            {
-                if(SIE_STATE_BIT_ON(regs, IC2, SSKE))
-                    longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-
-                if(!regs->sie_pref)
-                {
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                    if ((SIE_STATE_BIT_ON(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
-                      || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
-                      ) && SIE_STATE_BIT_ON(regs, RCPO2, RCPBY))
-                        { SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, regs); }
-                    else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-                    {
-                    int  sr;
-                    BYTE realkey,
-                         rcpkey,
-                         protkey;
-                    RADR rcpa;
-
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                        if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
-                          || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
-                                                                     )
-                        {
-                            /* guest absolute to host PTE addr */
-                            if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr, USE_PRIMARY_SPACE,
-                                                    HOSTREGS, ACCTYPE_PTE))
-                                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-
-                            /* Convert real address to absolute address */
-                            rcpa = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
-
-                            /* For ESA/390 the RCP byte entry is at offset 1 in a
-                               four byte entry directly beyond the page table,
-                               for ESAME mode, this entry is eight bytes long */
-                            rcpa += HOSTREGS->arch_mode == ARCH_900_IDX ? 2049 : 1025;
-                        }
-                        else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-                        {
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                            if(SIE_STATE_BIT_ON(regs, MX, XC))
-                                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-
-                            /* Obtain address of the RCP area from the state desc */
-                            rcpa = regs->sie_rcpo &= 0x7FFFF000;
-
-                            /* frame index as byte offset to 4K keys in RCP area */
-                            rcpa += aaddr >> 12;
-
-                            /* host primary to host absolute */
-                            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                               HOSTREGS, ACCTYPE_SIE, 0);
-                        }
-
-                        /* guest absolute to host real */
-                        sr = SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr, USE_PRIMARY_SPACE,
-                                                 HOSTREGS, ACCTYPE_SIE);
-
-                        if (sr
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                          && !(SIE_FEAT_BIT_ON(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
-                            || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
-                                                                      )
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-                           )
-                            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-
-                        /* fetch the RCP key */
-                        rcpkey = regs->mainstor[rcpa];
-                        /* set the reference bit in the RCP key */
-                        STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                        if(sr)
-                        {
-                            realkey = 0;
-                            protkey = rcpkey & (STORKEY_REF | STORKEY_CHANGE);
-                            /* rcpa-1 is correct here - would have been SIE Intercepted otherwise */
-                            protkey |= regs->mainstor[rcpa-1] & (STORKEY_KEY | STORKEY_FETCH);
-                        }
-                        else
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-                        {
-                            /* host real to host absolute */
-                            n = APPLY_PREFIXING(HOSTREGS->dat.raddr, HOSTREGS->PX);
-
-                            protkey =
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                                      STORAGE_KEY(n, regs)
-#else
-                                      (STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs))
-#endif
-                                                                                      ;
-                            realkey = protkey & (STORKEY_REF | STORKEY_CHANGE);
-                        }
-
-                        /* or with host set */
-                        rcpkey |= realkey << 4;
-                        /* insert new settings of the guest set */
-                        rcpkey &= ~(STORKEY_REF | STORKEY_CHANGE);
-                        rcpkey |= sk & (STORKEY_REF | STORKEY_CHANGE);
-                        regs->mainstor[rcpa] = rcpkey;
-                        STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
-#if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                        /* Insert key in new storage key */
-                        if(SIE_STATE_BIT_ON(regs, RCPO0, SKA)
-#if defined(_FEATURE_ZSIE)
-                            || (HOSTREGS->arch_mode == ARCH_900_IDX)
-#endif /*defined(_FEATURE_ZSIE)*/
-                                                                      )
-                            regs->mainstor[rcpa-1] = sk
-                                                    & (STORKEY_KEY | STORKEY_FETCH);
-                        if(!sr)
-#endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-                        {
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                            STORAGE_KEY(aaddr, regs) &= STORKEY_BADFRM;
-                            STORAGE_KEY(aaddr, regs) |= sk
-                                            & (STORKEY_KEY | STORKEY_FETCH);
-#else
-                            STORAGE_KEY1(aaddr, regs) &= STORKEY_BADFRM;
-                            STORAGE_KEY1(aaddr, regs) |= sk
-                                             & (STORKEY_KEY | STORKEY_FETCH);
-                            STORAGE_KEY2(aaddr, regs) &= STORKEY_BADFRM;
-                            STORAGE_KEY2(aaddr, regs) |= sk
-                                             & (STORKEY_KEY | STORKEY_FETCH);
-#endif
-                        }
-                    }
-                }
-                else
-                {
-                    /* Update the storage key from R1 register bits 24-30 */
-#if !defined( _FEATURE_2K_STORAGE_KEYS )
-                    STORAGE_KEY(aaddr, regs) &= STORKEY_BADFRM;
-                    STORAGE_KEY(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
-#else
-                    STORAGE_KEY1(aaddr, regs) &= STORKEY_BADFRM;
-                    STORAGE_KEY1(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
-                    STORAGE_KEY2(aaddr, regs) &= STORKEY_BADFRM;
-                    STORAGE_KEY2(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
-#endif
-                }
-            }
-            else
-#endif /*defined(_FEATURE_SIE)*/
-            {
-
-                /* Update the storage key from R1 register bits 24-30 */
-#if defined( FEATURE_4K_STORAGE_KEYS ) && !defined( _FEATURE_2K_STORAGE_KEYS )
-                STORAGE_KEY(aaddr, regs) &= STORKEY_BADFRM;
-                STORAGE_KEY(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
-#else
-                STORAGE_KEY1(aaddr, regs) &= STORKEY_BADFRM;
-                STORAGE_KEY1(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
-                STORAGE_KEY2(aaddr, regs) &= STORKEY_BADFRM;
-                STORAGE_KEY2(aaddr, regs) |= sk & ~(STORKEY_BADFRM);
-#endif
-            }
-
-            /* Quiesce */
-            if(!(regs->GR_L(r1) & PFMF_FMFI_NQ))
-            {
-                /* Perform serialization and checkpoint-synchronization */
-                PERFORM_SERIALIZATION (regs);
-                PERFORM_CHKPT_SYNC (regs);
-            }
-
-            /* Invalidate AIA/AEA so that the REF and CHANGE bits will be set
-               when referenced next */
-            STORKEY_INVALIDATE(regs, n);
-
+            regs->GR(r2) &= ADDRESS_MAXWRAP_E( regs );
+            pageaddr     &= ADDRESS_MAXWRAP_E( regs );
         }
 
-        /* Clear Frame Control */
-        if(regs->GR_L(r1) & PFMF_FMFI_CF)
-            memset(regs->mainstor + aaddr, 0, PAGEFRAME_PAGESIZE);
-
-        /* Update r2 - point to the next frame */
-        switch (PFMF_FMFI_FSC & regs->GR_L(r1)) {
-        case PFMF_FMFI_FSC_1M:
-            aaddr = addr += 0x1000;
-            SET_GR_A(r2, regs, (addr & ADDRESS_MAXWRAP(regs)) + page_offset);
-            break;
-        /* Code for 2G pages goes here */
-        default:
-            break;
-        case PFMF_FMFI_FSC_4K:
-            /* Leave R2 unchanged */
-            break;
-        }
-
-#if 0
-        /* Usage Indication */
-        if(regs->GR_L(r1) & PFMF_FMFI_UI)
-            { }
-#endif
-
-    }
+    } // end while...
 
 } /* end DEF_INST( perform_frame_management_function ) */
 #endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
@@ -6156,7 +5936,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     PTT_INF("STFL",b2,(U32)(effective_addr2 & 0xffffffff),regs->psw.IA_L);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    ARCH_DEP( or_storage_key )( regs->PX, (STORKEY_REF | STORKEY_CHANGE) );
 
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);
