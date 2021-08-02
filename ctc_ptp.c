@@ -26,7 +26,10 @@
 #include "herc_getopt.h"    /* getopt dynamic linking kludge */
 
 #if !defined( OPTION_W32_CTCI )
-#include <ifaddrs.h>
+  #include <ifaddrs.h>
+  #if defined( __sun__ )
+    #include <sys/sockio.h>
+  #endif
 #endif
 
 DISABLE_GCC_UNUSED_SET_WARNING;

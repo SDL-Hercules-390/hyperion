@@ -110,7 +110,10 @@ struct hifr
 };
 typedef struct hifr hifr;
 
-#if defined( __APPLE__ ) || defined( FREEBSD_OR_NETBSD )
+#if defined( __APPLE__ )          \
+ || defined( __sun__ )            \
+ || defined( FREEBSD_OR_NETBSD )
+
   #define  hifr_name       ifreq.ifr_name
 #else
   #define  hifr_name       ifreq.ifr_ifrn.ifrn_name

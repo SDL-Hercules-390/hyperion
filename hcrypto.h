@@ -20,7 +20,7 @@
     #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
   #endif
 
-#elif defined( BSD )
+#elif defined( BSD ) || defined( __sun__ )
 
   #define USE_ARC4RANDOM            // (use 'arc4random_buf()' API)
 

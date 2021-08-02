@@ -51,6 +51,10 @@
 
 #include "hercules.h"
 
+#if defined( __sun__ )
+#include <sys/fileio.h>     // (need FIONBIO and FIONREAD)
+#endif
+
 #include "tcpip.h"
 
 static u_int find_slot ( U_LONG_PTR address ) {

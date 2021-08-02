@@ -1683,13 +1683,16 @@ static bool have_regexp = false;
 
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
 
-static regex_t     regex;
+// PROGRAMMING NOTE: using a variable named "regex" conflicts with
+// <libgen.h> on Solaris, so we use variable name "regexp" instead.
+
+static regex_t     regexp;      // (see above PROGRAMMING NOTE)
 static regmatch_t  regmatch;
 
 static void init_HHC_regexp()
 {
     // "HHC99999S"
-    have_regexp = (0 == regcomp( &regex, "(HHC[0-9][0-9][0-9][0-9][0-9]\\S)", REG_EXTENDED ))
+    have_regexp = (0 == regcomp( &regexp, "(HHC[0-9][0-9][0-9][0-9][0-9]\\S)", REG_EXTENDED ))
         ? true : false;
 }
 #endif // defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
@@ -1702,7 +1705,7 @@ static int msg_sev( const char* msg )
 #if defined(HAVE_REGEX_H) || defined(HAVE_PCRE)
     if (have_regexp)
     {
-        if (regexec( &regex, msg, 1, &regmatch, 0 ) == 0)
+        if (regexec( &regexp, msg, 1, &regmatch, 0 ) == 0)
             return (int)(msg[ regmatch.rm_so + 8 ]);
     }
     else
