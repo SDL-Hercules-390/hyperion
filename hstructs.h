@@ -858,15 +858,6 @@ atomic_update64( &sysblk.txf_stats[ contran ? 1 : 0 ].txf_ ## ctr, +1 )
                 stape_query_status_tod; /* TOD of last status query  */
 #endif // defined( OPTION_SCSI_TAPE )
 
-
-        /*-----------------------------------------------------------*/
-        /*      Control Units                                        */
-        /*-----------------------------------------------------------*/
-
-        U16     cuhigh;                 /* Highest used CU number    */
-       CHAINBLK cuchain;                /* -> CU chain               */
-
-
         /*-----------------------------------------------------------*/
         /*      Devices                                              */
         /*-----------------------------------------------------------*/
@@ -1132,22 +1123,6 @@ struct IOINT {                          /* I/O interrupt queue entry */
 #endif // defined( OPTION_SCSI_TAPE )
 
 /*-------------------------------------------------------------------*/
-/* Control Unit configuration block                                  */
-/*-------------------------------------------------------------------*/
-
-typedef struct _CUBLK {                 /* CU configuration block    */
-        CHAIN   chain;                  /* Block chain               */
-        U16     cunum;                  /* CU number                 */
-        void   *cudesc;                 /* CU descriptor             */
-        U8      maxssid;                /* Maximum number of SSIDs   */
-        U8      ssidcount;              /* Number of associated SSID */
-       CHAINBLK sschain;                /* Associated SSIDs          */
-        U16     maxdev;                 /* Maximum associated dev    */
-        U16     devcount;               /* Number of associated dev  */
-} CUBLK;
-
-
-/*-------------------------------------------------------------------*/
 /* tdparms loader types (ACL mode)                                   */
 /*-------------------------------------------------------------------*/
 enum type_loader {  LDR_MANUAL, /* No automation             */
@@ -1155,23 +1130,6 @@ enum type_loader {  LDR_MANUAL, /* No automation             */
                     LDR_SILO,   /* Use LOAD DISPLAY          */
                     LDR_QUEUE   /* Like AUTO                 */
                  };
-
-/*-------------------------------------------------------------------*/
-/* Subsystem ID configuration block                                  */
-/*-------------------------------------------------------------------*/
-
-typedef struct _SSBLK {                 /* Subsystem ID block        */
-        CHAIN   chain;                  /* Block chain               */
-        CUBLK  *cu;                     /* Owning CU                 */
-        U16     ssid;                   /* Subsystem ID (if present) */
-        LOCK    lock;                   /* Update lock               */
-        void   *cudesc;                 /* CU descriptor             */
-        U16     maxdev;                 /* Maximum associated dev    */
-        U8      devcount;               /* Number of associated dev  */
-        DEVBLK *dev[256];               /* Associated devblocks      */
-        void   *stats;                  /* Associated statistics     */
-} SSBLK;
-
 
 /*-------------------------------------------------------------------*/
 /* Channel Path config block                                         */
@@ -1240,8 +1198,6 @@ struct DEVBLK {                         /* Device configuration block*/
         int     allocated;              /* Device block free/in use  */
 
         /*  device identification                                    */
-        CUBLK  *cu;                     /* -> Control Unit block     */
-        SSBLK  *ssidblk;                /* -> Subsystem ID block     */
         U16     ssid;                   /* Subsystem ID incl. lcssid */
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */

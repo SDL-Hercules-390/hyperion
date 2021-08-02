@@ -6,6 +6,9 @@
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
+/* The emulated hardware clock is based on the host clock, adjusted  */
+/* by means of an offset and a steering rate.                        */
+
 /* --------------------------------------------------------------------
                     z/Architecture Clock Formats
    --------------------------------------------------------------------

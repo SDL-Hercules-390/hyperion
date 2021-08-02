@@ -1061,7 +1061,6 @@
     <ClInclude Include="cckddasd.h" />
     <ClInclude Include="ccnowarn.h" />
     <ClInclude Include="ccwarn.h" />
-    <ClInclude Include="chain.h" />
     <ClInclude Include="chsc.h" />
     <ClInclude Include="clock.h" />
     <ClInclude Include="cmdtab.h" />

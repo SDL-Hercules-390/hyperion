@@ -908,7 +908,6 @@ noinst_HEADERS =          \
   cckddasd.h              \
   ccnowarn.h              \
   ccwarn.h                \
-  chain.h                 \
   chsc.h                  \
   clock.h                 \
   cmdtab.h                \

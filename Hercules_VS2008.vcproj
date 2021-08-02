@@ -1236,10 +1236,6 @@
 							>
 						</File>
 						<File
-							RelativePath=".\chain.h"
-							>
-						</File>
-						<File
 							RelativePath=".\chsc.h"
 							>
 						</File>
