@@ -776,8 +776,8 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 am__noinst_HEADERS_DIST = archlvl.h cache.h ccfixme.h cckd.h cckd64.h \
-	cckddasd.h ccnowarn.h ccwarn.h chain.h chsc.h clock.h cmdtab.h \
-	cmpsc.h cmpscbit.h cmpscdbg.h cmpscdct.h cmpscget.h cmpscmem.h \
+	cckddasd.h ccnowarn.h ccwarn.h chsc.h clock.h cmdtab.h cmpsc.h \
+	cmpscbit.h cmpscdbg.h cmpscdct.h cmpscget.h cmpscmem.h \
 	cmpscput.h cnsllogo.h codepage.h comm3705.h commadpt.h \
 	tcpnje.h cpuint.h ctc_ptp.h ctcadpt.h dasdblks.h dasdtab.h \
 	dat.h dbgtrace.h devtype.h ecpsvm.h esa390.h esa390io.h \
@@ -1780,7 +1780,6 @@ noinst_HEADERS = \
   cckddasd.h              \
   ccnowarn.h              \
   ccwarn.h                \
-  chain.h                 \
   chsc.h                  \
   clock.h                 \
   cmdtab.h                \
