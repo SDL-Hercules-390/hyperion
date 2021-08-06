@@ -195,11 +195,21 @@ Install netcat (which is useful for innumerable other things as well)
 and use:
 <p>
 <blockquote>
-    <code>nc -w1 localhost 1234 &lt; dummy.jcl</code>
+    <code>nc -N localhost 1234 &lt; dummy.jcl</code>
 </blockquote>
 <p>
+It is important to use the <code>-N</code> option to prevent the Hercules
+card reader from hanging due to netcat failing to close its connection.
+The <code>-N</code> option tells netcat to close the socket connection
+once EOF is reached on stdin (i.e. once the entire file has been sent
+to Hercules).
+<p>
+If your version of netcat does not support the <code>-N</code> option,
+then, as an alternative, the <code>-q</code> option should be used. If
+your version of netcat does not support either option, then you should
+probably <i><u>not</u></i> be using netcat to submit jobs to Hercules.
+<p>
 For more information, type &nbsp;<code>man nc</code>.
-
 
 <p><center><hr width=15% noshade>
 <a href="##" onclick="history.go(-1)"><img src="images/back.gif" border=0 alt="back"></a>
