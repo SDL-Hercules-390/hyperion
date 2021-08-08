@@ -2727,6 +2727,10 @@ DEF_INST( nontransactional_store );
 DEF_INST( transaction_begin );
 #endif
 
+#if defined( FEATURE_074_STORE_HYPER_INFO_FACILITY )
+DEF_INST( store_hypervisor_information );
+#endif
+
 #if defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 DEF_INST( perform_cryptographic_key_management_operation );
 #endif
@@ -3348,6 +3352,10 @@ DEF_INST( branch_in_subspace_group );
 
 #if defined( FEATURE_TCPIP_EXTENSION )
 DEF_INST( tcpip );
+#endif
+
+#if defined( FEATURE_ZVM_ESSA )
+DEF_INST( extract_and_set_storage_attributes );
 #endif
 
 /*-------------------------------------------------------------------*/

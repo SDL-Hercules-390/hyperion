@@ -596,6 +596,10 @@
  #define    _FEATURE_TCPIP_EXTENSION
 #endif
 
+#if defined( FEATURE_ZVM_ESSA )
+ #define    _FEATURE_ZVM_ESSA
+#endif
+
 /*-------------------------------------------------------------------*/
 /*                     PROGRAMMING NOTE                              */
 /*-------------------------------------------------------------------*/

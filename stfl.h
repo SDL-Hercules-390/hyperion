@@ -467,8 +467,9 @@
 #define STFL_HERC_TXF_RESTRICT_1         ( STFL_HERC_FIRST_BIT  +  18 ) // CIPHER/CMPSC/COMPUTE/CONVERT/DEFLATE/PERFORM
 #define STFL_HERC_TXF_RESTRICT_2         ( STFL_HERC_FIRST_BIT  +  19 ) // PFDRL/STCMH
 #define STFL_HERC_TXF_RESTRICT_3         ( STFL_HERC_FIRST_BIT  +  20 ) // EXTRACT/CLOCK
+#define STFL_HERC_ZVM_ESSA               ( STFL_HERC_FIRST_BIT  +  21 ) // z/VM B9AB ESSA Extract and Set Storage Attributes
 
-#define STFL_HERC_LAST_BIT               ( STFL_HERC_FIRST_BIT  +  20 )
+#define STFL_HERC_LAST_BIT               ( STFL_HERC_FIRST_BIT  +  21 )
 
 #define STFL_HERC_BY_SIZE       (ROUND_UP( STFL_HERC_LAST_BIT, 8 ) / 8)
 #define STFL_HERC_DW_SIZE       (ROUND_UP( STFL_HERC_BY_SIZE, sizeof( DW )) / sizeof( DW ))

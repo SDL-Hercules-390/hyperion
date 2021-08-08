@@ -652,6 +652,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
   UNDEF_INST( extract_transaction_nesting_depth )
 #endif
 
+#if !defined( FEATURE_074_STORE_HYPER_INFO_FACILITY )
+ UNDEF_INST( store_hypervisor_information )
+#endif
+
 #if !defined( FEATURE_076_MSA_EXTENSION_FACILITY_3 ) || defined( DYNINST_076_MSA_EXTENSION_FACILITY_3 )
  UNDEF_INST( perform_cryptographic_key_management_operation )
 #endif
@@ -1295,6 +1299,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 
 #if !defined( FEATURE_TCPIP_EXTENSION )
  UNDEF_INST( tcpip )
+#endif
+
+#if !defined( FEATURE_ZVM_ESSA )
+ UNDEF_INST( extract_and_set_storage_attributes )
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -2732,7 +2740,7 @@ static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
  /*B253*/ GENx___x___x___ ,
  /*B254*/ GENx___x390x900 ( "MVPG"      , RRE  , ASMFMT_RRE      , move_page                                           ),
  /*B255*/ GENx37Xx390x900 ( "MVST"      , RRE  , ASMFMT_RRE      , move_string                                         ),
- /*B256*/ GENx___x___x___ , /* STHYI - Store Hypervisor Information */
+ /*B256*/ GENx___x___x900 ( "STHYI"     , RRE  , ASMFMT_RRE      , store_hypervisor_information                        ),
  /*B257*/ GENx37Xx390x900 ( "CUSE"      , RRE  , ASMFMT_RRE      , compare_until_substring_equal                       ),
  /*B258*/ GENx___x390x900 ( "BSG"       , RRE  , ASMFMT_RRE      , branch_in_subspace_group                            ),
  /*B259*/ GENx___x390x900 ( "IESBE"     , RRE  , ASMFMT_RRE      , invalidate_expanded_storage_block_entry             ),
@@ -3337,7 +3345,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9A8*/ GENx___x___x___ ,
  /*B9A9*/ GENx___x___x___ ,
  /*B9AA*/ GENx___x___x900 ( "LPTEA"     , RRF_b, ASMFMT_RRF_RM   , load_page_table_entry_address                       ),
- /*B9AB*/ GENx___x___x___ , /* ESSA - Extract and Set Storage Attributes */
+ /*B9AB*/ GENx___x___x900 ( "ESSA "     , RRF_c, ASMFMT_RRF_M    , extract_and_set_storage_attributes                  ),
  /*B9AC*/ GENx___x___x___ ,
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x900 ( "RRBM"      , RRE  , ASMFMT_RRE      , reset_reference_bits_multiple                       ),

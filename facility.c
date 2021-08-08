@@ -474,7 +474,7 @@ FT( Z900, NONE, NONE, 073_TRANSACT_EXEC )
 #endif
 
 #if defined(  FEATURE_074_STORE_HYPER_INFO_FACILITY )
-FT( NONE, NONE, NONE, 074_STORE_HYPER_INFO )
+FT( Z900, Z900, NONE, 074_STORE_HYPER_INFO )
 #endif
 
 #if defined(  FEATURE_075_ACC_EX_FS_INDIC_FACILITY )
@@ -787,6 +787,10 @@ FT( Z900, NONE, NONE, HERC_TXF_RESTRICT_1 ) // CIPHER/CMPSC/COMPUTE/CONVERT/DEFL
 FT( Z900, NONE, NONE, HERC_TXF_RESTRICT_2 ) // PFDRL/STCMH
 FT( Z900, NONE, NONE, HERC_TXF_RESTRICT_3 ) // EXTRACT/CLOCK
 #endif
+
+#if defined( FEATURE_ZVM_ESSA )
+FT( Z900, Z900, NONE, HERC_ZVM_ESSA ) // z/VM STHYI Store Hypervisor Information
+#endif
 };
 
 /*-------------------------------------------------------------------*/
@@ -894,6 +898,7 @@ static void instr66  ( int arch, bool enable );
 static void instr67  ( int arch, bool enable );
 static void instr68  ( int arch, bool enable );
 static void instr73  ( int arch, bool enable );
+static void instr74  ( int arch, bool enable );
 static void instr76  ( int arch, bool enable );
 static void instr77  ( int arch, bool enable );
 static void instr78  ( int arch, bool enable );
@@ -911,6 +916,7 @@ static void hercmvcin( int arch, bool enable );
 static void hercsvs  ( int arch, bool enable );
 static void herc37X  ( int arch, bool enable );
 static void herctcp  ( int arch, bool enable );
+static void hercessa ( int arch, bool enable );
 
 /*-------------------------------------------------------------------*/
 /* The ACTUAL facilities table, initialized by init_facilities_lists */
@@ -1012,7 +1018,7 @@ FT2( NULL,      NULL,      070_IBM_INTERNAL,           "Assigned to IBM internal
 FT2( NULL,      NULL,      071_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( NULL,      NULL,      072_IBM_INTERNAL,           "Assigned to IBM internal use" )
 FT2( modtrans,  instr73,   073_TRANSACT_EXEC,          "Transactional-Execution Facility" )
-FT2( NULL,      NULL,      074_STORE_HYPER_INFO,       "Store-Hypervisor-Information Facility" )
+FT2( NULL,      instr74,   074_STORE_HYPER_INFO,       "Store-Hypervisor-Information Facility" )
 FT2( NULL,      NULL,      075_ACC_EX_FS_INDIC,        "Access-Exception-Fetch/Store-Indication Facility" )
 FT2( modmsa,    instr76,   076_MSA_EXTENSION_3,        "Message-Security-Assist Extension 3" )
 FT2( NULL,      instr77,   077_MSA_EXTENSION_4,        "Message-Security-Assist Extension 4" )
@@ -1165,6 +1171,7 @@ FT2( modtcp,    NULL,      HERC_TCPIP_PROB_STATE,      "Hercules Enable X'75' As
 FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_1,        "Hercules TXF restrict CIPHER/CONVERT/et al. instructions" )
 FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_2,        "Hercules TXF restrict PFDRL/STCMH instructions" )
 FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_3,        "Hercules TXF restrict EXTRACT/CLOCK instructions" )
+FT2( NULL,      hercessa,  HERC_ZVM_ESSA,              "Hercules z/VM STHYI Store Hypervisor Information instruction" )
 };
 
 /*-------------------------------------------------------------------*/
@@ -3172,6 +3179,14 @@ END_DIS_FAC_INS_FUNC()
 
 /*-------------------------------------------------------------------*/
 
+BEG_DIS_FAC_INS_FUNC( instr74 )
+{
+    DIS_FAC_INS( B256, "STHYI   B256  STORE HYPERVISOR INFORMATION" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
 BEG_DIS_FAC_INS_FUNC( instr76 )
 {
     DIS_FAC_INS( B928, "PCKMO   B928  PERFORM CRYPTOGRAPHIC KEY MGMT. OPERATIONS" );
@@ -3455,6 +3470,14 @@ END_DIS_FAC_INS_FUNC()
 BEG_DIS_FAC_INS_FUNC( hercsvs )
 {
     DIS_FAC_INS( B265, "SVS B265 Set Vector Summary" );
+}
+END_DIS_FAC_INS_FUNC()
+
+/*-------------------------------------------------------------------*/
+
+BEG_DIS_FAC_INS_FUNC( hercessa )
+{
+    DIS_FAC_INS( B9AB, "ESSA    B9AB  EXTRACT AND SET STORAGE ATTRIBUTES" );
 }
 END_DIS_FAC_INS_FUNC()
 

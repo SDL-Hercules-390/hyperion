@@ -1889,6 +1889,36 @@ U32    newgr1;
     release_lock (&dev->lock);
 }
 #endif /* defined( FEATURE_IO_ASSIST ) */
+
+
+#if defined( FEATURE_074_STORE_HYPER_INFO_FACILITY )
+/*-------------------------------------------------------------------*/
+/* B256 STHYI - Store Hypervisor Information                   [RRE] */
+/*-------------------------------------------------------------------*/
+/* Ref: page 895 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
+/*-------------------------------------------------------------------*/
+DEF_INST( store_hypervisor_information )
+{
+    int r1, r2;
+    RRE( inst, regs, r1, r2 );
+    SIE_INTERCEPT( regs );
+}
+#endif
+
+
+#if defined( FEATURE_ZVM_ESSA )
+/*-------------------------------------------------------------------*/
+/* B9AB ESSA  - Extract and Set Storage Attributes           [RRF-c] */
+/*-------------------------------------------------------------------*/
+/* Ref: page 870 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
+/*-------------------------------------------------------------------*/
+DEF_INST( extract_and_set_storage_attributes )
+{
+    int r1, r2, m3;
+    RRF_M( inst, regs, r1, r2, m3 );
+    SIE_INTERCEPT( regs );
+}
+#endif
 #endif /* defined( FEATURE_SIE ) */
 
 
