@@ -24,7 +24,7 @@ loadcore    $(testpath)/stfl.core
 #----------------------------------------------------------------------
 defsym    FW1   F3F4FFFB    # Facilities 000-031
 defsym    FW2   FCFDCC24    # Facilities 032-063
-defsym    FW3   201C4000    # Facilities 064-095
+defsym    FW3   203C4000    # Facilities 064-095
 #----------------------------------------------------------------------
 
 runtest
