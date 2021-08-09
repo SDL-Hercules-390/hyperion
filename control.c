@@ -2371,7 +2371,7 @@ CREG    pte;                            /* Page Table Entry          */
     n2 = regs->GR(r2) & ADDRESS_MAXWRAP( regs );
 
     /* Access to PTE must be serialized */
-    OBTAIN_MAINLOCK( regs );
+    OBTAIN_MAINLOCK_UNCONDITIONAL( regs );
 
     /* Return condition code 3 if translation exception */
     if (ARCH_DEP( translate_addr )( n2, r2, regs, ACCTYPE_PTE ) == 0)
@@ -2394,7 +2394,7 @@ CREG    pte;                            /* Page Table Entry          */
                 if (ARCH_DEP( translate_addr )( n2, r2, regs, ACCTYPE_LRA ))
                 {
                     regs->psw.cc = 3;
-                    RELEASE_MAINLOCK( regs );
+                    RELEASE_MAINLOCK_UNCONDITIONAL( regs );
                     return;
                 }
 
@@ -2431,7 +2431,7 @@ CREG    pte;                            /* Page Table Entry          */
     else
         regs->psw.cc = 3;
 
-    RELEASE_MAINLOCK( regs );
+    RELEASE_MAINLOCK_UNCONDITIONAL( regs );
 
 } /* end DEF_INST(lock_page) */
 #endif /* defined( FEATURE_LOCK_PAGE ) */

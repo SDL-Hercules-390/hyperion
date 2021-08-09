@@ -253,7 +253,7 @@ int     acc_mode = 0;                   /* access mode to use        */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_MAINLOCK_UNCONDITIONAL(regs);
 
     if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
@@ -313,7 +313,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     }
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
+    RELEASE_MAINLOCK_UNCONDITIONAL(regs);
 
 } /* end function release_local_lock */
 
@@ -459,7 +459,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     lock_arn = 11;
 
     /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
+    OBTAIN_MAINLOCK_UNCONDITIONAL(regs);
 
     if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
@@ -514,7 +514,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     }
 
     /* Release main-storage access lock */
-    RELEASE_MAINLOCK(regs);
+    RELEASE_MAINLOCK_UNCONDITIONAL(regs);
 
 } /* end function release_cms_lock */
 
