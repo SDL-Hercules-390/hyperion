@@ -8,6 +8,8 @@
 /*              (c) Copyright Bernard van der Helm, 2009-2011        */
 /*              Noordwijkerhout, The Netherlands                     */
 
+/*              (C) Copyright Bob Wood, 2018-2021                    */
+
 /*-------------------------------------------------------------------*/
 /* This module implements the Perform Floating Point Operation       */
 /* instruction described in the manual SA22-7832-05.                 */
