@@ -11,6 +11,7 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
+#include "inline.h"
 
 /*-------------------------------------------------------------------*/
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
