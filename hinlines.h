@@ -59,7 +59,8 @@ static inline U64 round_to_hostpagesize(U64 n)
 
 /*-------------------------------------------------------------------*/
 
-#if defined(_GCC_SSE2_)
+/* #if defined(_GCC_SSE2_) */
+#if 0
 
 static inline void __clear_page( void *addr, size_t pgszmod64 )
 {
