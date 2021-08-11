@@ -65,7 +65,7 @@ static inline void __clear_page( void* addr, size_t pgszmod64 )
 
     /* Clear requested page WITHOUT polluting our cache */
 
-    for (i = 0; i < pgszmod64; i++)
+    for (i = 0; i < pgszmod64; i++, addr = (size_t)addr + 64)
         asm volatile("\n\t"
             "movntps %%xmm0,   (%0)\n\t"
             "movntps %%xmm0, 16(%0)\n\t"
