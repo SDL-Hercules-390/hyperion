@@ -667,6 +667,10 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( perform_cryptographic_computation )
 #endif
 
+#if !defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+ UNDEF_INST( insert_reference_bits_multiple )
+#endif
+
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */
 /*-------------------------------------------------------------------*/
@@ -3346,7 +3350,7 @@ static INSTR_FUNC gen_opcode_b9xx[256][NUM_INSTR_TAB_PTRS] =
  /*B9A9*/ GENx___x___x___ ,
  /*B9AA*/ GENx___x___x900 ( "LPTEA"     , RRF_b, ASMFMT_RRF_RM   , load_page_table_entry_address                       ),
  /*B9AB*/ GENx___x___x900 ( "ESSA "     , RRF_c, ASMFMT_RRF_M    , extract_and_set_storage_attributes                  ),
- /*B9AC*/ GENx___x___x___ ,
+ /*B9AC*/ GENx___x___x900 ( "IRBM"      , RRE  , ASMFMT_RRE      , insert_reference_bits_multiple                      ),
  /*B9AD*/ GENx___x___x___ ,
  /*B9AE*/ GENx___x___x900 ( "RRBM"      , RRE  , ASMFMT_RRE      , reset_reference_bits_multiple                       ),
  /*B9AF*/ GENx___x___x900 ( "PFMF"      , RRE  , ASMFMT_RRE      , perform_frame_management_function                   ),

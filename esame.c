@@ -5621,11 +5621,13 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
 #endif /* defined( FEATURE_011_CONFIG_TOPOLOGY_FACILITY ) */
 
 
-#if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
+#if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY ) \
+ || defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+
 /*-------------------------------------------------------------------*/
-/* B9AE RRBM  - Reset Reference Bits Multiple                  [RRE] */
+/*      Common processing function for RRBM/IRBM instruction         */
 /*-------------------------------------------------------------------*/
-DEF_INST( reset_reference_bits_multiple )
+void ARCH_DEP( RRBM_or_IRBM_instruction )( BYTE inst[], REGS* regs, bool RRBM )
 {
 U64     bitmap;                         /* Bitmap returned in r1     */
 RADR    r2_pageaddr;                    /* Operand-2 page address    */
@@ -5648,10 +5650,15 @@ BYTE    oldkey;                         /* Original Storage key      */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Ignore bits 46-63 of the 2nd operand */
-    r2_pageaddr &= ~0x3ffffULL;
+    r2_pageaddr &= ~0x3ffffULL; // (256K boundary)
 
 #if defined(_FEATURE_SIE)
-    if (SIE_MODE( regs ) && (SIE_STATE_BIT_ON( regs, IC2, RRBE )))
+    if (SIE_MODE( regs ) &&
+       (0
+        || ( RRBM && SIE_STATE_BIT_ON( regs, IC2, RRBE ))
+        || (!RRBM && SIE_STATE_BIT_ON( regs, IC2, ISKE ))
+       )
+    )
         SIE_INTERCEPT( regs );
 #endif
 
@@ -5663,6 +5670,7 @@ BYTE    oldkey;                         /* Original Storage key      */
 #if defined( _FEATURE_SIE )
         if (SIE_MODE( regs ))
         {
+            /* Translate guest absolute to host absolute */
             SIE_TRANSLATE( &pageaddr, ACCTYPE_SIE, regs );
 
             if (!regs->sie_pref)
@@ -5689,8 +5697,11 @@ BYTE    oldkey;                         /* Original Storage key      */
                     /* Save a copy of the original storage key */
                     oldkey = ARCH_DEP( get_storage_key )( pageaddr );
 
-                    /* Reset the reference bit in the storage key */
-                    ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+                    if (RRBM)
+                    {
+                        /* Reset the reference bit in the storage key */
+                        ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+                    }
                 }
                 else // use RCP...(and possibly PGSTE)
 #endif /* defined( _FEATURE_STORAGE_KEY_ASSIST ) */
@@ -5735,12 +5746,15 @@ BYTE    oldkey;                         /* Original Storage key      */
                         rcpte->rcpbyte &= ~(         RCPGUEST);
                         rcpte->rcpbyte |=  (oldkey & RCPGUEST);
 
-                        /* Reset the reference bit in the guest RCP set */
-                        rcpte->rcpbyte &= ~RCPGREF;
+                        if (RRBM)
+                        {
+                            /* Reset the reference bit in the guest RCP set */
+                            rcpte->rcpbyte &= ~RCPGREF;
 
-                        /* Reset the reference bit in the real page */
-                        if (sr == 0)
-                            ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+                            /* Reset the reference bit in the real page */
+                            if (sr == 0)
+                                ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+                        }
                     }
                     RELEASE_KEYLOCK( pgste, rcpte, regs );
                 }
@@ -5750,8 +5764,11 @@ BYTE    oldkey;                         /* Original Storage key      */
                 /* Save a copy of the original storage key */
                 oldkey = ARCH_DEP( get_storage_key )( pageaddr );
 
-                /* Reset the reference bit in the storage key */
-                ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+                if (RRBM)
+                {
+                    /* Reset the reference bit in the storage key */
+                    ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+                }
             }
         }
         else /* !SIE_MODE */
@@ -5760,8 +5777,11 @@ BYTE    oldkey;                         /* Original Storage key      */
             /* Save a copy of the original storage key */
             oldkey = ARCH_DEP( get_storage_key )( pageaddr );
 
-            /* Reset the reference bit in the storage key */
-            ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+            if (RRBM)
+            {
+                /* Reset the reference bit in the storage key */
+                ARCH_DEP( and_storage_key )( pageaddr, STORKEY_REF );
+            }
         }
 
         /* Insert the original state of the reference bit
@@ -5779,13 +5799,34 @@ BYTE    oldkey;                         /* Original Storage key      */
     } /* end for each frame... */
 
     regs->GR_G(r1) = bitmap;
+}
 
-} /* end DEF_INST( reset_reference_bits_multiple ) */
-#endif /* defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY ) */
+
+#if defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY )
+/*-------------------------------------------------------------------*/
+/* B9AE RRBM  - Reset Reference Bits Multiple                  [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( reset_reference_bits_multiple )
+{
+    ARCH_DEP( RRBM_or_IRBM_instruction )( inst, regs, true );
+}
+#endif
+
+
+#if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+/*-------------------------------------------------------------------*/
+/* B9AC IRBM  - Insert Reference Bits Multiple                 [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( insert_reference_bits_multiple )
+{
+    ARCH_DEP( RRBM_or_IRBM_instruction )( inst, regs, false );
+}
+#endif
+#endif /* defined( FEATURE_066_RES_REF_BITS_MULT_FACILITY
+       || defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY) */
 
 
 #if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
-
 // (PFMF helper function; refer to control.c for implementation)
 extern void ARCH_DEP( sske_or_pfmf_procedure )
 (

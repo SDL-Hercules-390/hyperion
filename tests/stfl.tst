@@ -16,7 +16,7 @@ sysclear
 archmode    z/Arch
 loadcore    $(testpath)/stfl.core
 
-##*Program    6       # (Specification Exception expected)
+# (Specification Exception expected)
 *Program    6
 
 #----------------------------------------------------------------------
@@ -25,9 +25,11 @@ loadcore    $(testpath)/stfl.core
 defsym    FW1   F3F4FFFB    # Facilities 000-031
 defsym    FW2   FCFDCC24    # Facilities 032-063
 defsym    FW3   203C4000    # Facilities 064-095
+defsym    FW4   00000000    # Facilities 096-127
+defsym    FW5   00004000    # Facilities 128-159
 #----------------------------------------------------------------------
 
-runtest
+runtest 0.1
 
 *Compare
 
@@ -38,10 +40,10 @@ r 200.10
 *Want "First two doublewords of truncated facilities list" $(FW1) $(FW2) 00000000 00000000
 
 r 210.10
-*Want "First two doublewords of extended facilities list"  $(FW1) $(FW2) $(FW3) 00000000
+*Want "First two doublewords of extended facilities list"  $(FW1) $(FW2) $(FW3) $(FW4)
 
 r 220.10
-*Want "Double words two and three" 00000000 00000000 00000000 00000000
+*Want "Double words two and three" $(FW5) 00000000 00000000 00000000
 
 r 230.10
 *Want "Double words four and five" 00000000 00000000 00000000 00000000
@@ -51,9 +53,9 @@ r 240.10
 
 gpr
 *Gpr 2 30000000
-*Gpr 3 1
+*Gpr 3 2
 *Gpr 4 0
-*Gpr 5 1
+*Gpr 5 2
 
 *Done
 

@@ -1607,9 +1607,6 @@ bool    need_realkey = true;            /* (get from real page)      */
         /* SIE_MODE and not sie_pref and SKA and not RCP bypass... */
         int sr;
 
-        /* (sanity check) */
-        ASSERT( SIE_STATE_BIT_ON( regs, RCPO0, SKA ));
-
         /* Convert guest abs to host abs (sr=0) or PTE abs (sr=2) */
         sr = SIE_TRANSLATE_ADDR( regs->sie_mso + pageaddr,
                                  USE_PRIMARY_SPACE,

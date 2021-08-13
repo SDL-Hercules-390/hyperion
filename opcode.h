@@ -2742,6 +2742,10 @@ DEF_INST( cipher_message_with_output_feedback );
 DEF_INST( cipher_message_with_counter );
 #endif
 
+#if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
+DEF_INST( insert_reference_bits_multiple );
+#endif
+
 /*-------------------------------------------------------------------*/
 /*      FEATUREs that DON'T have any facility bits defined           */
 /*-------------------------------------------------------------------*/

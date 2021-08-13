@@ -490,10 +490,25 @@ SKIPTBZ  EQU   *
          ISKE  R1,R2
          CLM   R1,B'0001',=X'F4'    (spot check)
          BNE   *+1
-                                                                SPACE 5
+                                                                EJECT
 ***********************************************************************
 *                     IRBM, RRBM (z/Arch mode)
 ***********************************************************************
+                                                                SPACE
+*  We must skip IRBM and RRBM tests if we're running under VM due to
+*  unreliability under z/VM. Refer to the PROGRAMMING NOTES for the
+*  IRBM, ISKE, RRBE and RRBM instructions on page 10-30, 10-31, 10-119
+*  and 10-120 of the SA22-7832-12 Principles of Operation manual where
+*  it clearly states in no uncertain terms that the results of these
+*  instructions are, amazingly, UNRELIABLE!
+*
+*  When the intruction is executed NATIVELY by Hercules, it ensures
+*  the results are always consistent and reliable, but when z/VM
+*  intercepts and simulates the instruction itself, the results are
+*  unfortunately ALWAYS completely and totally inaccurate! (WTF?!)
+                                                                SPACE
+         CLI   CPUID,X'FF'                  Are we running under VM?
+         BE    SKIPRRBM                     Yes, then skip both tests
                                                                 SPACE
          TM    FACLIST+IRBMBYT,IRBMBIT      Is facility available?
          BZ    SKIPIRBM                     No, then skip this test
@@ -502,7 +517,13 @@ SKIPTBZ  EQU   *
          IRBM  R1,R2
          CG    R1,=XL8'FFFFFFFFFFFFFFFF'
          BNE   *+1
-*****************************************
+                                                                SPACE
+*  For some odd reason, z/VM never indicates to the guest that the
+*  RRBM facility is available even when it actually is! That is to say,
+*  when the RRBM facility actually *IS* available to the host (i.e. to
+*  z/VM itself), z/VM always lies to the guest and tells it that it's
+*  *NOT* available! (WTF?!)
+                                                                SPACE
 SKIPIRBM TM    FACLIST+RRBMBYT,RRBMBIT      Is facility available?
          BZ    SKIPRRBM                     No, then skip this test
          SLGR  R1,R1
@@ -530,6 +551,15 @@ GOODPSWZ DC    0D'0',XL4'00020001'    z/Arch SUCCESS disabled wait PSW
          DC    XL4'80000000'          z/Arch SUCCESS disabled wait PSW
          DC    XL4'00000000'          z/Arch SUCCESS disabled wait PSW
          DC    A(0)                   z/Arch SUCCESS disabled wait PSW
+                                                                SPACE 2 
+FAILZ    LPSWE FAILPSWZ               Load FAILURE disabled wait PSW
+*                                     (currently unused but available
+*                                      for future debugging purposes)
+                                                                SPACE 3
+FAILPSWZ DC    0D'0',XL4'00020001'    z/Arch FAILURE disabled wait PSW
+         DC    XL4'80000000'          z/Arch FAILURE disabled wait PSW
+         DC    XL4'00000000'          z/Arch FAILURE disabled wait PSW
+         DC    XL4'EEEEEEEE'          z/Arch FAILURE disabled wait PSW
                                                                 EJECT
 ***********************************************************************
 *                 ESA/390 PROGRAM CHECK ROUTINE
