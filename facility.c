@@ -1171,7 +1171,7 @@ FT2( modtcp,    NULL,      HERC_TCPIP_PROB_STATE,      "Hercules Enable X'75' As
 FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_1,        "Hercules TXF restrict CIPHER/CONVERT/et al. instructions" )
 FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_2,        "Hercules TXF restrict PFDRL/STCMH instructions" )
 FT2( modtrans,  NULL,      HERC_TXF_RESTRICT_3,        "Hercules TXF restrict EXTRACT/CLOCK instructions" )
-FT2( NULL,      hercessa,  HERC_ZVM_ESSA,              "Hercules z/VM STHYI Store Hypervisor Information instruction" )
+FT2( NULL,      hercessa,  HERC_ZVM_ESSA,              "Hercules z/VM ESSA Extract and Set Storage Attributes instruction" )
 };
 
 /*-------------------------------------------------------------------*/
