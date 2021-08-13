@@ -1893,8 +1893,16 @@ U32    newgr1;
 
 #if defined( FEATURE_074_STORE_HYPER_INFO_FACILITY )
 /*-------------------------------------------------------------------*/
-/* B256 STHYI - Store Hypervisor Information                   [RRE] */
+/* B256 STHYI - CP Store Hypervisor Information                [RRE] */
 /*-------------------------------------------------------------------*/
+/* This instruction is part of z/VM's "CMMA" (Collaborative Memory   */
+/* Management) facility/feature. It is NOT a valid z/Architecture    */
+/* instruction and will always cause a program check when attempted  */
+/* to be executed natively. It is a z/VM-ONLY instruction that can   */
+/* only be used (executed) by guests running under z/VM via z/VM     */
+/* instruction interception and simulation. An operation execption   */
+/* program interrupt will always occur if this instruction is not    */
+/* intercepted by z/VM.                                              */ 
 /* Ref: page 895 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
 /*-------------------------------------------------------------------*/
 DEF_INST( store_hypervisor_information )
@@ -1902,14 +1910,23 @@ DEF_INST( store_hypervisor_information )
     int r1, r2;
     RRE( inst, regs, r1, r2 );
     SIE_INTERCEPT( regs );
+    ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 }
 #endif
 
 
 #if defined( FEATURE_ZVM_ESSA )
 /*-------------------------------------------------------------------*/
-/* B9AB ESSA  - Extract and Set Storage Attributes           [RRF-c] */
+/* B9AB ESSA  - CP Extract and Set Storage Attributes        [RRF-c] */
 /*-------------------------------------------------------------------*/
+/* This instruction is part of z/VM's "CMMA" (Collaborative Memory   */
+/* Management) facility/feature. It is NOT a valid z/Architecture    */
+/* instruction and will always cause a program check when attempted  */
+/* to be executed natively. It is a z/VM-ONLY instruction that can   */
+/* only be used (executed) by guests running under z/VM via z/VM     */
+/* instruction interception and simulation. An operation execption   */
+/* program interrupt will always occur if this instruction is not    */
+/* intercepted by z/VM.                                              */ 
 /* Ref: page 870 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
 /*-------------------------------------------------------------------*/
 DEF_INST( extract_and_set_storage_attributes )
@@ -1917,6 +1934,7 @@ DEF_INST( extract_and_set_storage_attributes )
     int r1, r2, m3;
     RRF_M( inst, regs, r1, r2, m3 );
     SIE_INTERCEPT( regs );
+    ARCH_DEP( program_interrupt )( regs, PGM_OPERATION_EXCEPTION );
 }
 #endif
 #endif /* defined( FEATURE_SIE ) */
