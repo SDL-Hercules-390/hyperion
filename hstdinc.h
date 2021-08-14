@@ -90,7 +90,6 @@
 #ifdef _MSVC_
   #include <math.h>             // Must come BEFORE <intrin.h> due to
                                 // MS VC Bug ID 381422
-  #include <xmmintrin.h>
   #include <tchar.h>
   #include <wincon.h>
   #include <conio.h>
@@ -102,6 +101,11 @@
   #include <intrin.h>
 #else
   #include <libgen.h>
+#endif
+
+#if defined( __GNUC__) && defined( __SSE2__ ) && ( __SSE2__ == 1 )
+  #include <x86intrin.h>
+  #define _GCC_SSE2_
 #endif
 
 #include <stddef.h>             // (ptrdiff_t, size_t, offsetof, etc)
