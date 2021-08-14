@@ -29,62 +29,21 @@
 
 /*-------------------------------------------------------------------*/
 
-#if defined( __GNUC__) && defined( __SSE2__ ) && ( __SSE2__ == 1 )
-  #define _GCC_SSE2_
-#elif defined ( _MSVC_ )
-  #if defined( _M_X64 )
+#if defined ( _MSVC_ ) && defined( _M_X64 )
     /*
         Microsoft x64: "On the x64 platform, __faststorefence
         generates an instruction that is a faster store fence
         than the sfence instruction. Use this intrinsic instead
         of _mm_sfence on the x64 platform."
     */
-    #define  SFENCE  __faststorefence
-  #else
-    #define  SFENCE  _mm_sfence
-  #endif
+  #define  SFENCE  __faststorefence
+#else
+  #define  SFENCE  _mm_sfence
 #endif
 
 /*-------------------------------------------------------------------*/
 
-#if defined( _GCC_SSE2_ )
-
-static inline void __clear_page( void* addr, size_t pgszmod64 )
-{
-    unsigned char xmm_save[16];
-    unsigned int i;
-
-    asm volatile("": : :"memory");      /* barrier */
-
-    /* Init work reg to 0 */
-
-    asm volatile("\n\t"
-        "movups %%xmm0, (%0)\n\t"
-        "xorps  %%xmm0, %%xmm0"
-        : : "r" (xmm_save));
-
-    /* Clear requested page WITHOUT polluting our cache */
-
-    for (i = 0; i < pgszmod64; i++, addr = (size_t)addr + 64)
-        asm volatile("\n\t"
-            "movntps %%xmm0,   (%0)\n\t"
-            "movntps %%xmm0, 16(%0)\n\t"
-            "movntps %%xmm0, 32(%0)\n\t"
-            "movntps %%xmm0, 48(%0)"
-            : : "r"(addr) : "memory");
-
-    /* An SFENCE guarantees that every preceding store
-       is globally visible before any subsequent store. */
-
-    asm volatile("\n\t"
-        "sfence\n\t"
-        "movups (%0), %%xmm0"
-        : : "r" (xmm_save) : "memory");
-}
-
-/*-------------------------------------------------------------------*/
-
-#elif defined ( _MSVC_ )
+#if defined( _GCC_SSE2_ ) || defined ( _MSVC_ )
 
 static inline void __clear_page( void* addr, size_t pgszmod64 )
 {
@@ -95,24 +54,33 @@ static inline void __clear_page( void* addr, size_t pgszmod64 )
     // directly. You can, however, see these types in the debugger.
 
     unsigned int i;                 /* (work var for loop) */
+    float* locaddr;                 /* local copy of addr  */
     __m128 xmm0;                    /* (work XMM register) */
 
     /* Init work reg to 0 */
     xmm0 = _mm_setzero_ps();        // (suppresses C4700; will be optimized out)
     _mm_xor_ps( xmm0, xmm0 );
 
+    /* Copy addr */
+    locaddr = addr;
+
     /* Clear requested page WITHOUT polluting our cache */
-    for (i=0; i < pgszmod64; i++, (float*) addr += 16)
+    for (i=0; i < pgszmod64; i++, locaddr += 16)
     {
-        _mm_stream_ps( (float*) addr+ 0, xmm0 );
-        _mm_stream_ps( (float*) addr+ 4, xmm0 );
-        _mm_stream_ps( (float*) addr+ 8, xmm0 );
-        _mm_stream_ps( (float*) addr+12, xmm0 );
+        _mm_stream_ps( locaddr+ 0, xmm0 );
+        _mm_stream_ps( locaddr+ 4, xmm0 );
+        _mm_stream_ps( locaddr+ 8, xmm0 );
+        _mm_stream_ps( locaddr+12, xmm0 );
     }
+
+    /* Copy addr back */
+    addr = locaddr;
 
     /* An SFENCE guarantees that every preceding store
        is globally visible before any subsequent store. */
     SFENCE();
+
+    return;
 }
 #else /* (all others) */
   #define  __clear_page( _addr, _pgszmod64 )    memset( (void*)(_addr), 0, ((size_t)(_pgszmod64)) << 6 )
