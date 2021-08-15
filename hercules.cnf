@@ -6,17 +6,6 @@
 # MODPATH   /usr/local/lib/hercules   # Where to search for modules
 
 
-#-------------------------------------------------------------------------------
-#                 Advanced Hercules Performance Tailoring
-#-------------------------------------------------------------------------------
-
-# CPUPRIO     2                 # CPU thread(s) run at the Lowest priority
-# DEVPRIO     3                 # Device thread(s) run at Below Normal priority
-# SRVPRIO     4                 # TCP/IP Server Thread(s), HTTP, CONSOLE, etc.
-# HERCPRIO    5                 # Hercules main runs at Normal priority
-# TODPRIO     7                 # TOD Clock and timer thread are Time Critical
-
-
 #------------------------------------------------------------------------------
 #                      Guest CPU Configuration
 #------------------------------------------------------------------------------
@@ -46,7 +35,7 @@
 #       Hercules Service Processor and Hercules Application Window
 #------------------------------------------------------------------------------
 
-  CODEPAGE  default                     # CodePage conversion table
+  CODEPAGE  819/1047                    # CodePage conversion table
   SHCMDOPT  disable  nodiag8            # No shell commands from Herc cmdline
   DIAG8CMD  disable  noecho             # OS may not issue commands via DIAG 8
 
@@ -54,7 +43,7 @@
 # HTTP      ROOT  /usr/local/share/hercules/  # HTTP root directory
 # HTTP      START                             # HTTP Start Server
 
-  PANRATE   FAST                        # Panel refresh rate
+  PANOPT    MSGCOLOR=DARK RATE=FAST     # Panel options
 
 #-------------------------------------------------------------------------------
 #                   Integrated Hercules I/O Controller
