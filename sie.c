@@ -671,12 +671,15 @@ int     i;                              /* (work)                    */
    */
     FETCH_FW( GUESTREGS->sie_rcpo, STATEBK->rcpo );
 
+#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
     if (!GUESTREGS->sie_rcpo && !GUESTREGS->sie_pref)
     {
         SIE_SET_VI( SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT, SIE_VI_WHY_RCZER, GUESTREGS );
         STATEBK->c = SIE_C_VALIDITY;
         return;
     }
+#endif
 
     /* Load the CPU timer */
     FETCH_DW( dreg, STATEBK->cputimer );
