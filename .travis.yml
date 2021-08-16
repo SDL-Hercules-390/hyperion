@@ -29,10 +29,10 @@ jobs:
       dist: focal
       env: MATRIX_EVAL="CC=gcc"
 
-    - name: "Ubuntu 20.04 -- Clang 11"
-      os: linux
-      dist: focal
-      env: MATRIX_EVAL="CC=clang-11"
+#   - name: "Ubuntu 20.04 -- Clang 11"
+#     os: linux
+#     dist: focal
+#     env: MATRIX_EVAL="CC=clang-11"
 
 #
 before_install:
@@ -41,7 +41,7 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo $TRAVIS_DIST                                 ; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y regina-rexx libregina3-dev; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install -y binutils binutils-dev     ; fi
-  - 'if [ "$TRAVIS_DIST"   = "focal" ]; then sudo apt install -y clang-11; fi'
+# - 'if [ "$TRAVIS_DIST"   = "focal" ]; then sudo apt install -y clang-11; fi'
 
 #
 before_script:
