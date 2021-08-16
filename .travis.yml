@@ -50,6 +50,7 @@ before_script:
   - util/bldlvlck
   - ./autogen.sh
   - ./configure --enable-regina-rexx
+  - ./config.status --config
 
 #
 script:
