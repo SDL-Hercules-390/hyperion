@@ -2432,9 +2432,8 @@ CKD_RECHDR*  rechdr;                    /* Pointer to record header  */
 }
 
 /*-------------------------------------------------------------------*/
-/* Dasd image file classification functions                          */
+/*  Return the devid string to be placed into the device header      */
 /*-------------------------------------------------------------------*/
-
 DLL_EXPORT const char* dh_devid_str( U32 typmsk )
 {
 #define RETURN_DEVHDRID_STR( typ )      \
@@ -2446,7 +2445,7 @@ DLL_EXPORT const char* dh_devid_str( U32 typmsk )
     RETURN_DEVHDRID_STR( CKD_C370 );    // "CKD_C370" (C=Compressed)
     RETURN_DEVHDRID_STR( CKD_S370 );    // "CKD_S370" (S=Shadow)
 
-    RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370" (same for FBA)
+//  RETURN_DEVHDRID_STR( FBA_P370 );    // "FBA_P370" (same for FBA)
     RETURN_DEVHDRID_STR( FBA_C370 );    // "FBA_C370"        "
     RETURN_DEVHDRID_STR( FBA_S370 );    // "FBA_S370"        "
 
@@ -2454,13 +2453,20 @@ DLL_EXPORT const char* dh_devid_str( U32 typmsk )
     RETURN_DEVHDRID_STR( CKD_C064 );    // "CKD_C064"        "
     RETURN_DEVHDRID_STR( CKD_S064 );    // "CKD_S064"        "
 
-    RETURN_DEVHDRID_STR( FBA_P064 );    // "FBA_P064" (same for FBA)
+//  RETURN_DEVHDRID_STR( FBA_P064 );    // "FBA_P064" (same for FBA)
     RETURN_DEVHDRID_STR( FBA_C064 );    // "FBA_C064"        "
     RETURN_DEVHDRID_STR( FBA_S064 );    // "FBA_S064"        "
 
-    return NULL;
+    // Normal FBA images do not have device headers, so
+    // if they asked us to return them an FBA devid string,
+    // then that's an error since there is no such thing!
+
+    return NULL;  // (unknown or invalid typmsk passed)
 }
 
+/*-------------------------------------------------------------------*/
+/*  Determine devid type based on the device header's devid string   */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
 {
 #define RETURN_DEVHDRID_TYP( typ )          \
@@ -2472,7 +2478,7 @@ DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
     RETURN_DEVHDRID_TYP( CKD_C370 );    // "CKD_C370" (C=Compressed)
     RETURN_DEVHDRID_TYP( CKD_S370 );    // "CKD_S370" (S=Shadow)
 
-    RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370" (same for FBA)
+//  RETURN_DEVHDRID_TYP( FBA_P370 );    // "FBA_P370" (same for FBA)
     RETURN_DEVHDRID_TYP( FBA_C370 );    // "FBA_C370"        "
     RETURN_DEVHDRID_TYP( FBA_S370 );    // "FBA_S370"        "
 
@@ -2480,13 +2486,20 @@ DLL_EXPORT U32 dh_devid_typ( BYTE* dh_devid )
     RETURN_DEVHDRID_TYP( CKD_C064 );    // "CKD_C064"        "
     RETURN_DEVHDRID_TYP( CKD_S064 );    // "CKD_S064"        "
 
-    RETURN_DEVHDRID_TYP( FBA_P064 );    // "FBA_P064" (same for FBA)
+//  RETURN_DEVHDRID_TYP( FBA_P064 );    // "FBA_P064" (same for FBA)
     RETURN_DEVHDRID_TYP( FBA_C064 );    // "FBA_C064"        "
     RETURN_DEVHDRID_TYP( FBA_S064 );    // "FBA_S064"        "
 
-    return 0;
+    // Since normal FBA/FBA64 images do not have device headers,
+    // if the pased dh_devid doesn't match any of the above, we
+    // presume it is a normal FBA dasd image type.
+
+    return FBA_P370_TYP;  // (presumed if none of the above)
 }
 
+/*-------------------------------------------------------------------*/
+/*  Determine if device header matches ANY of the requested types    */
+/*-------------------------------------------------------------------*/
 DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
 {
 #define RETURN_IS_DEVHDRID( typ )               \
@@ -2501,7 +2514,7 @@ DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
     RETURN_IS_DEVHDRID( CKD_C370 );     // "CKD_C370" (C=Compressed)
     RETURN_IS_DEVHDRID( CKD_S370 );     // "CKD_S370" (S=Shadow)
 
-    RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370" (same for FBA)
+//  RETURN_IS_DEVHDRID( FBA_P370 );     // "FBA_P370" (same for FBA)
     RETURN_IS_DEVHDRID( FBA_C370 );     // "FBA_C370"        "
     RETURN_IS_DEVHDRID( FBA_S370 );     // "FBA_S370"        "
 
@@ -2509,9 +2522,39 @@ DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
     RETURN_IS_DEVHDRID( CKD_C064 );     // "CKD_C064"        "
     RETURN_IS_DEVHDRID( CKD_S064 );     // "CKD_S064"        "
 
-    RETURN_IS_DEVHDRID( FBA_P064 );     // "FBA_P064" (same for FBA)
+//  RETURN_IS_DEVHDRID( FBA_P064 );     // "FBA_P064" (same for FBA)
     RETURN_IS_DEVHDRID( FBA_C064 );     // "FBA_C064"        "
     RETURN_IS_DEVHDRID( FBA_S064 );     // "FBA_S064"        "
 
-    return false;
+    // Since normal FBA/FBA64 images do not have device headers,
+    // if they're asking whether the passed devid matches that
+    // of an FBA type, we must first check to see whether it matches
+    // the devid of any of the OTHER known types first, before we're
+    // able to positively conclude whether it's an FBA type or not.
+    //
+    // If it matches any of the other known types, then it obviously
+    // is NOT an FBA type. Otherwise, if it's NOT any of the other
+    // known types, we must unfortunately presume it's an FBA type.
+
+    if (0
+        || !(typmsk & (FBA_P370_TYP | FBA_P064_TYP))
+        || memcmp( dh_devid, "CKD_P370", 8 ) == 0
+        || memcmp( dh_devid, "CKD_C370", 8 ) == 0
+        || memcmp( dh_devid, "CKD_S370", 8 ) == 0
+                              
+//      || memcmp( dh_devid, "FBA_P370", 8 ) == 0
+        || memcmp( dh_devid, "FBA_C370", 8 ) == 0
+        || memcmp( dh_devid, "FBA_S370", 8 ) == 0
+                              
+        || memcmp( dh_devid, "CKD_P064", 8 ) == 0
+        || memcmp( dh_devid, "CKD_C064", 8 ) == 0
+        || memcmp( dh_devid, "CKD_S064", 8 ) == 0
+                              
+//      || memcmp( dh_devid, "FBA_P064", 8 ) == 0
+        || memcmp( dh_devid, "FBA_C064", 8 ) == 0
+        || memcmp( dh_devid, "FBA_S064", 8 ) == 0
+    )
+        return false;   // (definitely NOT their requested type)
+    else
+        return true;    // (PRESUMED to be a normal FBA device)
 }
