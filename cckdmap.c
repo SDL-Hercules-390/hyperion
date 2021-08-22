@@ -231,6 +231,8 @@ char            track_range [32];       /* Work area for fmt_S64     */
 off_t           curpos;                 /* Work: saved file position */
 
 CKDDEV*         ckdtab     = NULL;      /* Device table entry        */
+FBADEV*         fbatab     = NULL;      /* Device table entry        */
+
 CKD_DEVHDR      devhdr     = {0};       /* CKD device header         */
 SPCTAB64        spc        = {0};       /* Space table entry         */
 char            ser[12+1]  = {0};       /* Serial number             */
@@ -357,11 +359,11 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         return -1;
     }
 
-    /* Remember whether input is CCKD or CCKD64 */
+    /* Remember whether input is CCKD/CFBA or CCKD64/CFBA64 */
     if (imgtyp & ANY64_CMP_OR_SF_TYP)
         cckd64 = true;
 
-    /* Remember whether input is FBA or CKD */
+    /* Remember whether input is CFBA/CFBA64 or CCKD/CCKD64 */
     if (imgtyp & FBA_CMP_OR_SF_TYP)
         fba = true;
 
@@ -381,6 +383,8 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     /* Read the compressed device header */
     if (cckd64)
     {
+        // 64-bit CCKD64/CFBA64
+
         size = (U32) sizeof( cdevhdr );
         if ((curpos = lseek( fd, CCKD64_DEVHDR_POS, SEEK_SET )) < 0)
         {
@@ -395,8 +399,10 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             return -1;
         }
     }
-    else // (32-bit CCKD)
+    else
     {
+        // 32-bit CCKD/CFBA
+
         size32 = (U32) sizeof( cdevhdr32 );
         if ((curpos = lseek( fd, CCKD_DEVHDR_POS, SEEK_SET )) < 0)
         {
@@ -411,7 +417,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             return -1;
         }
 
-        /* Convert 32-bit CCKD compressed device header to 64-bit CCKD64 */
+        /* Convert 32-bit CCKD/CFBA device header to 64-bit CCKD64/CFBA64 */
         cdevhdr_to_64();
     }
 
@@ -437,37 +443,76 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     FETCH_LE_FW( trksize, devhdr.dh_trksize );
     FETCH_LE_FW( cyls,   cdevhdr.cdh_cyls   );
 
-    tracks = cyls * heads;
+    if (fba)
+        // (for fba, cyls is total sectors and tracks is blkgrps)
+        tracks = (cyls + CFBA_BLKS_PER_GRP - 1) / CFBA_BLKS_PER_GRP;
+    else
+        tracks = cyls * heads;
 
-    /* Locate the CKD dasd table entry */
-    if (!(ckdtab = dasd_lookup( DASD_CKDDEV, NULL, devtype, cyls )))
+    /* Locate the CKD/FBA dasd table entry */
+    if (fba)
     {
-        // "Device type %4.4X not found in dasd table"
-        FWRMSG( stderr, HHC03005, "E", devtype );
-        return -1;
+        if (!(fbatab = dasd_lookup( DASD_FBADEV, NULL, devtype, cyls )))
+        {
+            // "Device type %4.4X not found in dasd table"
+            FWRMSG( stderr, HHC03005, "E", devtype );
+            return -1;
+        }
+    }
+    else
+    {
+        if (!(ckdtab = dasd_lookup( DASD_CKDDEV, NULL, devtype, cyls )))
+        {
+            // "Device type %4.4X not found in dasd table"
+            FWRMSG( stderr, HHC03005, "E", devtype );
+            return -1;
+        }
     }
 
     /* Report the dasd device header fields */
 
-    // dh_devid:      %s        (%s-bit C%s%s %s)
-    // dh_heads:      %u
-    // dh_trksize:    %u
-    // dh_devtyp:     0x%02.2X            (%s)
-    // dh_fileseq:    0x%02.2X
-    // dh_highcyl:    %u
-    // dh_serial:     %s
-
     memcpy( ser, devhdr.dh_serial, sizeof( devhdr.dh_serial ));
 
-    WRMSG( HHC03022, "I", dh_devid_str( imgtyp ),
-        cckd64 ? "64"          : "32",
-        fba    ? "FBA"         : "CKD",
-        cckd64 ? "64"          : "",
-        shadow ? "shadow file" : "base image",
-        heads, trksize,
-        devhdr.dh_devtyp, ckdtab->name, devhdr.dh_fileseq,
-        fetch_hw( devhdr.dh_highcyl ),
-        ser );
+    if (fba)
+    {
+        // dh_devid:      %s        (%s-bit C%s%s %s)
+        // dh_heads:      %u         (total sectors)
+        // dh_trksize:    %u             (sector size)
+        // dh_devtyp:     0x%02.2X            (%s)
+        // dh_fileseq:    0x%02.2X
+        // dh_highcyl:    %u
+        // dh_serial:     %s
+        WRMSG( HHC03048, "I", dh_devid_str( imgtyp ),
+            cckd64 ? "64"          : "32",
+                     "FBA",
+            cckd64 ? "64"          : "",
+            shadow ? "shadow file" : "base image",
+            heads, trksize,
+            devhdr.dh_devtyp, fbatab->name,
+            devhdr.dh_fileseq,
+            fetch_hw( devhdr.dh_highcyl ),
+            ser );
+    }
+    else
+    {
+        // dh_devid:      %s        (%s-bit C%s%s %s)
+        // dh_heads:      %u
+        // dh_trksize:    %u
+        // dh_devtyp:     0x%02.2X            (%s)
+        // dh_fileseq:    0x%02.2X
+        // dh_highcyl:    %u
+        // dh_serial:     %s
+        WRMSG( HHC03022, "I", dh_devid_str( imgtyp ),
+            cckd64 ? "64"          : "32",
+                     "CKD",
+            cckd64 ? "64"          : "",
+            shadow ? "shadow file" : "base image",
+            heads, trksize,
+            devhdr.dh_devtyp, ckdtab->name,
+            devhdr.dh_fileseq,
+            fetch_hw( devhdr.dh_highcyl ),
+            ser );
+    }
 
     /* Report the compressed device header fields */
 
@@ -477,48 +522,96 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
     len_total   = fmt_S64( str_total,   (S64) cdevhdr.free_total   );
     len_largest = fmt_S64( str_largest, (S64) cdevhdr.free_largest );
 
-    // cdh_vrm:       %u.%u.%u
-    // cdh_opts:      0x%02.2X
-    // num_L1tab:     %"PRId32
-    // num_L2tab:     %"PRId32
-    // cdh_cyls:      %"PRIu32"            (%"PRIu32" tracks)
-    // cdh_size:      0x%10.10"PRIX64"    (%*s bytes)
-    // cdh_used:      0x%10.10"PRIX64"    (%*s bytes)
-    // free_off:      0x%10.10"PRIX64
-    // free_total:    0x%10.10"PRIX64"    (%*s bytes)
-    // free_largest:  0x%10.10"PRIX64"    (%*s bytes)
-    // free_num:      %"PRId64
-    // free_imbed:    %"PRIu64
-    // cdh_nullfmt:   %u               (%s)
-    // cmp_algo:      %u               (%s)
-    // cmp_parm:      %"PRId16"              %s(%s)
+    if (fba)
+    {
+        // cdh_vrm:       %u.%u.%u
+        // cdh_opts:      0x%02.2X
+        // num_L1tab:     %"PRId32
+        // num_L2tab:     %"PRId32
+        // cdh_cyls:      %"PRIu32"            (%"PRIu32" groups)
+        // cdh_size:      0x%10.10"PRIX64"    (%*s bytes)
+        // cdh_used:      0x%10.10"PRIX64"    (%*s bytes)
+        // free_off:      0x%10.10"PRIX64
+        // free_total:    0x%10.10"PRIX64"    (%*s bytes)
+        // free_largest:  0x%10.10"PRIX64"    (%*s bytes)
+        // free_num:      %"PRId64
+        // free_imbed:    %"PRIu64
+        // cdh_nullfmt:   %u               (%s)
+        // cmp_algo:      %u               (%s)
+        // cmp_parm:      %"PRId16"              %s(%s)
 
-    WRMSG( HHC03023, "I"
-        , (U32) cdevhdr.cdh_vrm[0], (U32) cdevhdr.cdh_vrm[1], (U32) cdevhdr.cdh_vrm[2]
-        , cdevhdr.cdh_opts
-        , cdevhdr.num_L1tab
-        , cdevhdr.num_L2tab
-        , cyls, tracks
-        , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
-        , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
-        , cdevhdr.free_off
-        , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
-        , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
-        , cdevhdr.free_num
-        , cdevhdr.free_imbed
-        , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :
-                                     cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT1 ? "ha r0" :
-                                     cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
-        , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
-                                    (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
-                                    (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
-        , cdevhdr.cmp_parm
-        , cdevhdr.cmp_parm <  0 ? ""        : " "
-        , cdevhdr.cmp_parm <  0 ? "default" :
-          cdevhdr.cmp_parm == 0 ? "none"    :
-          cdevhdr.cmp_parm <= 3 ? "low"     :
-          cdevhdr.cmp_parm <= 6 ? "medium"  : "high"
-    );
+        WRMSG( HHC03024, "I"
+            , (U32) cdevhdr.cdh_vrm[0], (U32) cdevhdr.cdh_vrm[1], (U32) cdevhdr.cdh_vrm[2]
+            , cdevhdr.cdh_opts
+            , cdevhdr.num_L1tab
+            , cdevhdr.num_L2tab
+            , cyls, tracks
+            , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
+            , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
+            , cdevhdr.free_off
+            , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
+            , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
+            , cdevhdr.free_num
+            , cdevhdr.free_imbed
+            , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT1 ? "ha r0" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
+            , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
+            , cdevhdr.cmp_parm
+            , cdevhdr.cmp_parm <  0 ? ""        : " "
+            , cdevhdr.cmp_parm <  0 ? "default" :
+              cdevhdr.cmp_parm == 0 ? "none"    :
+              cdevhdr.cmp_parm <= 3 ? "low"     :
+              cdevhdr.cmp_parm <= 6 ? "medium"  : "high"
+        );
+    }
+    else
+    {
+        // cdh_vrm:       %u.%u.%u
+        // cdh_opts:      0x%02.2X
+        // num_L1tab:     %"PRId32
+        // num_L2tab:     %"PRId32
+        // cdh_cyls:      %"PRIu32"            (%"PRIu32" tracks)
+        // cdh_size:      0x%10.10"PRIX64"    (%*s bytes)
+        // cdh_used:      0x%10.10"PRIX64"    (%*s bytes)
+        // free_off:      0x%10.10"PRIX64
+        // free_total:    0x%10.10"PRIX64"    (%*s bytes)
+        // free_largest:  0x%10.10"PRIX64"    (%*s bytes)
+        // free_num:      %"PRId64
+        // free_imbed:    %"PRIu64
+        // cdh_nullfmt:   %u               (%s)
+        // cmp_algo:      %u               (%s)
+        // cmp_parm:      %"PRId16"              %s(%s)
+
+        WRMSG( HHC03023, "I"
+            , (U32) cdevhdr.cdh_vrm[0], (U32) cdevhdr.cdh_vrm[1], (U32) cdevhdr.cdh_vrm[2]
+            , cdevhdr.cdh_opts
+            , cdevhdr.num_L1tab
+            , cdevhdr.num_L2tab
+            , cyls, tracks
+            , cdevhdr.cdh_size, (int) max( len_size, len_used ), str_size
+            , cdevhdr.cdh_used, (int) max( len_used, len_size ), str_used
+            , cdevhdr.free_off
+            , cdevhdr.free_total,   (int) max( len_total, len_largest ), str_total
+            , cdevhdr.free_largest, (int) max( len_total, len_largest ), str_largest
+            , cdevhdr.free_num
+            , cdevhdr.free_imbed
+            , (U32) cdevhdr.cdh_nullfmt, cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT0 ? "ha r0 EOF" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT1 ? "ha r0" :
+                                         cdevhdr.cdh_nullfmt == CKD_NULLTRK_FMT2 ? "linux" : "???"
+            , (U32) cdevhdr.cmp_algo,   !cdevhdr.cmp_algo                        ? "none"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_ZLIB)  ? "zlib"  :
+                                        (cdevhdr.cmp_algo & CCKD_COMPRESS_BZIP2) ? "bzip2" : "INVALID"
+            , cdevhdr.cmp_parm
+            , cdevhdr.cmp_parm <  0 ? ""        : " "
+            , cdevhdr.cmp_parm <  0 ? "default" :
+              cdevhdr.cmp_parm == 0 ? "none"    :
+              cdevhdr.cmp_parm <= 3 ? "low"     :
+              cdevhdr.cmp_parm <= 6 ? "medium"  : "high"
+        );
+    }
 
     /* Save the number of L1 table entries */
     num_L1tab = cdevhdr.num_L1tab;
@@ -755,13 +848,26 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
 
     /* Print the map... */
 
-    // ""
-    // "         File offset    Size (hex)    Size (dec)   track(s)"
-    // ""
-    WRMSG( HHC03020, "I" );
-    WRMSG( HHC03020, "I" );
-    WRMSG( HHC03040, "I" );
-    WRMSG( HHC03020, "I" );
+    if (fba)
+    {
+        // ""
+        // "         File offset    Size (hex)         Size  group(s)"
+        // ""
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03047, "I" );
+        WRMSG( HHC03020, "I" );
+    }
+    else
+    {
+        // ""
+        // "         File offset    Size (hex)         Size  track(s)"
+        // ""
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03040, "I" );
+        WRMSG( HHC03020, "I" );
+    }
 
     for (i=0; i < numspace; ++i)
     {
@@ -795,7 +901,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
             RTRIM( track_range ));
     }
 
-    /* Calculate average distance from each L2 table to its tracks */
+    /* Calculate average distance from each L2 table to its tracks (or blkgrps) */
 
     seek_total    = 0;
     active_tracks = 0;
@@ -835,14 +941,28 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
         }
     }
 
-    // ""
-    // "Total active tracks      = %"PRIu32" tracks"
-    // "Average L2-to-track seek = %.3f MB"
-    // ""
-    WRMSG( HHC03020, "I" );
-    WRMSG( HHC03043, "I", active_tracks );
-    WRMSG( HHC03044, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
-    WRMSG( HHC03020, "I" );
+    if (fba)
+    {
+        // ""
+        // "Total active blkgrps     = %"PRIu32" tracks"
+        // "Average L2-to-group seek = %.3f MB"
+        // ""
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03045, "I", active_tracks );
+        WRMSG( HHC03046, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+        WRMSG( HHC03020, "I" );
+    }
+    else
+    {
+        // ""
+        // "Total active tracks      = %"PRIu32" tracks"
+        // "Average L2-to-track seek = %.3f MB"
+        // ""
+        WRMSG( HHC03020, "I" );
+        WRMSG( HHC03043, "I", active_tracks );
+        WRMSG( HHC03044, "I", (((double) seek_total)/((double) active_tracks)) / (1024.0 * 1024.0) );
+        WRMSG( HHC03020, "I" );
+    }
 
     /* DONE! */
     return 0;

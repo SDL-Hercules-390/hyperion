@@ -2239,7 +2239,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC03022I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \
        "HHC03022I   dh_heads:      %u"                                      "\n" \
        "HHC03022I   dh_trksize:    %u"                                      "\n" \
-       "HHC03022I   dh_devtyp:     0x%2.2X             (%s)"                "\n" \
+       "HHC03022I   dh_devtyp:     0x%2.2X            (%s)"                 "\n" \
        "HHC03022I   dh_fileseq:    0x%2.2X"                                 "\n" \
        "HHC03022I   dh_highcyl:    %u"                                      "\n" \
        "HHC03022I   dh_serial:     %s"
@@ -2259,13 +2259,39 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC03023I   cdh_nullfmt:   %u               (%s)"                   "\n" \
        "HHC03023I   cmp_algo:      %u               (%s)"                   "\n" \
        "HHC03023I   cmp_parm:      %"PRId16"              %s(%s)"
-//efine HHC03024 - HHC03039 (available)
+#define HHC03024                                                            "\n" \
+       "HHC03023I   cdh_vrm:       %u.%u.%u"                                "\n" \
+       "HHC03023I   cdh_opts:      0x%2.2X"                                 "\n" \
+       "HHC03023I   num_L1tab:     %"PRId32                                 "\n" \
+       "HHC03023I   num_L2tab:     %"PRId32                                 "\n" \
+       "HHC03023I   cdh_cyls:      %"PRIu32"            (%"PRIu32" groups)" "\n" \
+       "HHC03023I   cdh_size:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   cdh_used:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   free_off:      0x%10.10"PRIX64                          "\n" \
+       "HHC03023I   free_total:    0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   free_largest:  0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03023I   free_num:      %"PRId64                                 "\n" \
+       "HHC03023I   free_imbed:    %"PRIu64                                 "\n" \
+       "HHC03023I   cdh_nullfmt:   %u               (%s)"                   "\n" \
+       "HHC03023I   cmp_algo:      %u               (%s)"                   "\n" \
+       "HHC03023I   cmp_parm:      %"PRId16"              %s(%s)"
 #define HHC03040 "         File offset    Size (hex)         Size  track(s)"
 #define HHC03041 "***********************************************************"
 #define HHC03042 "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
 #define HHC03043 "Total active tracks      = %"PRIu32" tracks"
 #define HHC03044 "Average L2-to-track seek = %.3f MB"
-//efine HHC03045 - HHC03099 (available)
+#define HHC03045 "Total active blkgrps     = %"PRIu32" groups"
+#define HHC03046 "Average L2-to-group seek = %.3f MB"
+#define HHC03047 "         File offset    Size (hex)         Size  group(s)"
+#define HHC03048                                                            "\n" \
+       "HHC03022I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \
+       "HHC03022I   dh_heads:      %u         (total sectors)"              "\n" \
+       "HHC03022I   dh_trksize:    %u             (sector size)"            "\n" \
+       "HHC03022I   dh_devtyp:     0x%2.2X            (%s)"                 "\n" \
+       "HHC03022I   dh_fileseq:    0x%2.2X"                                 "\n" \
+       "HHC03022I   dh_highcyl:    %u"                                      "\n" \
+       "HHC03022I   dh_serial:     %s"
+//efine HHC03049 - HHC03099 (available)
 
 // dasdser
 #define HHC03100 "Usage: %s  image  [serial]"                               "\n" \
