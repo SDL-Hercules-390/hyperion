@@ -362,14 +362,14 @@ void fba_dasd_query_device (DEVBLK *dev, char **devclass,
 /*-------------------------------------------------------------------*/
 /* Calculate length of an FBA block group                            */
 /*-------------------------------------------------------------------*/
-static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
+static int fba_blkgrp_len (DEVBLK *dev, S64 blkgrp)
 {
 off_t   offset;                         /* Offset of block group     */
 
     offset = blkgrp *          CFBA_BLKGRP_SIZE;
 
     if (dev->fbaend - offset < CFBA_BLKGRP_SIZE)
-        return (int)(dev->fbaend - offset);
+         return (int)(dev->fbaend - offset);
     else
         return                 CFBA_BLKGRP_SIZE;
 }
