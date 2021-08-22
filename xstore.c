@@ -156,39 +156,39 @@ size_t  xoffs;                          /* Byte offset into xpndstor */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
+#if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && defined( FEATURE_EXPANDED_STORAGE )
 /*-------------------------------------------------------------------*/
 /* B259 IESBE - Invalidate Expanded Storage Block Entry        [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(invalidate_expanded_storage_block_entry)
+DEF_INST( invalidate_expanded_storage_block_entry )
 {
-int     r1, r2;                         /* Values of R fields        */
+int     r1, r2;                         /* Operand register numbers  */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     TRAN_INSTR_CHECK( regs );
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATE_BIT_OFF(regs, EC0, MVPG))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-#endif /*defined(_FEATURE_SIE)*/
+#if defined( _FEATURE_SIE )
+    if (SIE_STATE_BIT_OFF( regs, EC0, MVPG ))
+        SIE_INTERCEPT( regs );
+#endif
 
-    /* Perform serialization before operation */
-    PERFORM_SERIALIZATION (regs);
-    OBTAIN_INTLOCK(regs);
-    SYNCHRONIZE_CPUS(regs);
+    PERFORM_SERIALIZATION( regs );
+    {
+        OBTAIN_INTLOCK( regs );
+        {
+            SYNCHRONIZE_CPUS( regs );
 
-    /* Invalidate page table entry */
-    ARCH_DEP( invalidate_pte )( inst[1], regs->GR_G(r1), regs->GR_L(r2), regs );
+            /* Invalidate page table entry */
+            ARCH_DEP( invalidate_pte )( inst[1], regs->GR_G( r1 ), regs->GR( r2 ), regs );
+        }
+        RELEASE_INTLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
 
-    RELEASE_INTLOCK(regs);
-
-    /* Perform serialization after operation */
-    PERFORM_SERIALIZATION (regs);
-
-} /* end DEF_INST(invalidate_expanded_storage_block_entry) */
-#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
+} /* end DEF_INST( invalidate_expanded_storage_block_entry ) */
+#endif /* defined( FEATURE_EXPANDED_STORAGE ) */
 
 
 #if defined(_MSVC_)
