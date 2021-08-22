@@ -274,23 +274,32 @@ TB (16,000 GB).
 
 <tr><td>  &nbsp;  <td> &nbsp;&nbsp;&nbsp; </tr>
 
-<tr><td> CKD_P370 <td> &nbsp;&nbsp;&nbsp; Normal (plain) CKD dasd image </tr>
+<tr><td> CKD_P370 <td> &nbsp;&nbsp;&nbsp; Normal <i>(uncompressed)</i> CKD dasd image </tr>
 <tr><td> CKD_C370 <td> &nbsp;&nbsp;&nbsp; Compressed CKD dasd image </tr>
 <tr><td> CKD_S370 <td> &nbsp;&nbsp;&nbsp; Compressed CKD dasd Shadow file </tr>
-<tr><td> FBA_P370 <td> &nbsp;&nbsp;&nbsp; Normal (plain) FBA dasd image </tr>
+<tr><td> <center>n/a*</center><td> &nbsp;&nbsp;&nbsp; Normal <i>(uncompressed)</i> FBA<b>**</b> dasd image </tr>
 <tr><td> FBA_C370 <td> &nbsp;&nbsp;&nbsp; Compressed FBA dasd image </tr>
 <tr><td> FBA_S370 <td> &nbsp;&nbsp;&nbsp; Compressed FBA dasd Shadow file </tr>
 
 <tr><td>  &nbsp;  <td> &nbsp;&nbsp;&nbsp; </tr>
 
-<tr><td> CKD_P064 <td> &nbsp;&nbsp;&nbsp; Normal (plain) CKD64 dasd image </tr>
+<tr><td> CKD_P064 <td> &nbsp;&nbsp;&nbsp; Normal <i>(uncompressed)</i> CKD64 dasd image </tr>
 <tr><td> CKD_C064 <td> &nbsp;&nbsp;&nbsp; Compressed CKD64 dasd image </tr>
 <tr><td> CKD_S064 <td> &nbsp;&nbsp;&nbsp; Compressed CKD64 dasd Shadow file </tr>
-<tr><td> FBA_P064 <td> &nbsp;&nbsp;&nbsp; Normal (plain) FBA64 dasd image </tr>
+<tr><td> <center>n/a*</center><td> &nbsp;&nbsp;&nbsp; Normal <i>(uncompressed)</i> FBA64<b>**</b> dasd image </tr>
 <tr><td> FBA_C064 <td> &nbsp;&nbsp;&nbsp; Compressed FBA64 dasd image </tr>
 <tr><td> FBA_S064 <td> &nbsp;&nbsp;&nbsp; Compressed FBA64 dasd Shadow file </tr>
 </table>
-</blockquote></blockquote>
+</blockquote>
+<i>(*)&nbsp; Normal (uncompressed) FBA/FBA64 dasd image files do not have device headers.
+The first 512 bytes of a normal (uncompressed) FBA/FBA64 dasd image file
+is the actual first sector of the emulated FBA dasd device itself.</i>
+<p>
+<i>(**)&nbsp; Normal (uncompressed) FBA64 dasd image files
+are exactly identical to normal (uncompressed) FBA dasd image files.
+There is absolutely no distinction between the two types. Their formats
+are exactly identical.
+</blockquote>
 
 <p><br>
 
