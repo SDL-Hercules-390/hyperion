@@ -359,8 +359,8 @@ CKD_DEVHDR      devhdr;                 /* Device header             */
     else if (imgtyp & CKD_S370_TYP) memcpy(   devhdr.dh_devid,
         dh_devid_str( CKD_S064_TYP ), sizeof( devhdr.dh_devid ));
 
-    else if (imgtyp & FBA_S370_TYP) memcpy(   devhdr.dh_devid,
-        dh_devid_str( FBA_S064_TYP ), sizeof( devhdr.dh_devid ));
+    else if (imgtyp & FBA_C370_TYP) memcpy(   devhdr.dh_devid,
+        dh_devid_str( FBA_C064_TYP ), sizeof( devhdr.dh_devid ));
 
     else if (imgtyp & FBA_S370_TYP) memcpy(   devhdr.dh_devid,
         dh_devid_str( FBA_S064_TYP ), sizeof( devhdr.dh_devid ));
