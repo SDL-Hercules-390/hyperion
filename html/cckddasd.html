@@ -298,15 +298,16 @@ is the actual first sector of the emulated FBA dasd device itself.</i>
 <i>(**)&nbsp; Normal (uncompressed) FBA64 dasd image files
 are exactly identical to normal (uncompressed) FBA dasd image files.
 There is absolutely no distinction between the two types. Their formats
-are exactly identical.
+are exactly identical.</i>
 </blockquote>
 
 <p><br>
 
-The device type and file size information is also specified in this header.
-Except for the eye-catcher (or device-id), this header is identical for both
-CCKD and CCKD64 and is identical to the header used for uncompressed CKD files
-as well:
+The device type and file size information is specified in this header
+and, except for the eye-catcher (or device-id), this header is identical
+for both compressed CCKD/CCKD64 and compressed CFBA/CFBA64 images as well as for
+uncompressed CKD/CKD64 images. As mentioned just above however, it is <i>not</i>
+used for uncompressed FBA/FBA64 images.
 
 <p>
 
@@ -339,7 +340,7 @@ as well:
 </table>
 <p>
 
-The <i>dh_heads</i>, <i>dh_trksize</i> and <i>dh_highcyl</i> values, being numeric, are always kept in little endian format.
+The <i>dh_heads</i>, <i>dh_trksize</i> and <i>dh_highcyl</i> values, being numeric, are always kept in little endian format.</i>
 
 <p>
 
@@ -349,8 +350,13 @@ The <i>dh_heads</i>, <i>dh_trksize</i> and <i>dh_highcyl</i> values, being numer
 
 The next 512 bytes contains the <b>compressed device header</b>.
 <p>
-The compressed device header contains file usage information
-such as the amount of free space in the file:
+The compressed device header contains file usage information,
+such as the amount of free space in the file.
+<p>
+Note that even though this control block is labeled "CCKD_DEVHDR"
+(or "CCKD64_DEVHDR" for 64-bit images), it actually applies to
+(is used for) compressed FBA images (CFBA/CFBA64) too, as well as
+for compressed CKD images (CCKD/CCKD64).
 
 <p>
 
