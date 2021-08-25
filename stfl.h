@@ -58,7 +58,7 @@
                                                is installed              */
 #define STFL_007_STFL_EXTENDED         7    /* Store facility list
                                                extended is installed     */
-#define STFL_008_EDAT_1                8    /* Enhanced-DAT facility
+#define STFL_008_EDAT_1                8    /* Enhanced-DAT facility 1
                                                is installed              */
 #define STFL_009_SENSE_RUN_STATUS      9    /* Sense running status
                                                facility is installed     */
@@ -234,7 +234,9 @@
                                                Extension 3 installed     */
 #define STFL_077_MSA_EXTENSION_4      77    /* Message Security Assist
                                                Extension 4 installed     */
-#define STFL_078_EDAT_2               78    /* Enhanced-DAT-2            */
+#define STFL_078_EDAT_2               78    /* Enhanced-DAT facility 2
+                                               is installed. Bit 8 is also
+                                               one when bit 78 is one.   */
 
 #define STFL_079_UNDEFINED            79    /* Undefined                 */
 

@@ -855,6 +855,7 @@ static  bool  modfpx    ( bool enable, int bitno, int archnum, const char* actio
 static  bool  moddfp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modtcp    ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 static  bool  modmie3   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
+static  bool  modedat   ( bool enable, int bitno, int archnum, const char* action, const char* actioning, const char* target_facname );
 
 /*-------------------------------------------------------------------*/
 /*   Facility Update Opcode Table Functions forward references       */
@@ -939,7 +940,7 @@ FT2( modidte,   NULL,      004_IDTE_SC_SEGTAB,         "IDTE selective clearing 
 FT2( modidte,   NULL,      005_IDTE_SC_REGTAB,         "IDTE selective clearing when region-table invalidated" )
 FT2( NULL,      instr6,    006_ASN_LX_REUSE,           "ASN-and-LX-Reuse Facility" )
 FT2( mod0or7,   instr7,    007_STFL_EXTENDED,          "Store-Facility-List-Extended Facility" )
-FT2( NULL,      instr8,    008_EDAT_1,                 "Enhanced-DAT Facility 1" )
+FT2( modedat,   instr8,    008_EDAT_1,                 "Enhanced-DAT Facility 1" )
 FT2( NULL,      NULL,      009_SENSE_RUN_STATUS,       "Sense-Running-Status Facility" )
 FT2( NULL,      NULL,      010_CONDITIONAL_SSKE,       "Conditional-SSKE Facility" )
 FT2( NULL,      instr11,   011_CONFIG_TOPOLOGY,        "Configuration-Topology Facility" )
@@ -1022,7 +1023,7 @@ FT2( NULL,      instr74,   074_STORE_HYPER_INFO,       "Store-Hypervisor-Informa
 FT2( NULL,      NULL,      075_ACC_EX_FS_INDIC,        "Access-Exception-Fetch/Store-Indication Facility" )
 FT2( modmsa,    instr76,   076_MSA_EXTENSION_3,        "Message-Security-Assist Extension 3" )
 FT2( NULL,      instr77,   077_MSA_EXTENSION_4,        "Message-Security-Assist Extension 4" )
-FT2( NULL,      instr78,   078_EDAT_2,                 "Enhanced-DAT Facility 2" )
+FT2( modedat,   instr78,   078_EDAT_2,                 "Enhanced-DAT Facility 2" )
 FT2( NULL,      NULL,      079_UNDEFINED,              "Undefined" )
 FT2( moddfp,    instr80,   080_DFP_PACK_CONV,          "Decimal-Floating-Point-Packed-Conversion Facility" )
 FT2( modtrans,  NULL,      081_PPA_IN_ORDER,           "PPA-in-order Facility" )
@@ -2259,6 +2260,33 @@ FAC_MOD_OK_FUNC             ( modmie3 )
         {
             if (FACILITY_ENABLED_ARCH( 061_MISC_INSTR_EXT_3, archnum ))
                 return HHC00890E( STFL_061_MISC_INSTR_EXT_3 );
+        }
+    }
+
+    return true;
+}
+
+/*-------------------------------------------------------------------*/
+/*                            modedat                                */
+/*-------------------------------------------------------------------*/
+/*               Bit 8 is also one when bit 78 is one.               */
+/*-------------------------------------------------------------------*/
+FAC_MOD_OK_FUNC             ( modedat )
+{
+    if (enable)
+    {
+        if (bitno == STFL_078_EDAT_2)
+        {
+            if (!FACILITY_ENABLED_ARCH( 008_EDAT_1, archnum ))
+                return HHC00890E(  STFL_008_EDAT_1 );
+        }
+    }
+    else // disabling
+    {
+        if (bitno == STFL_008_EDAT_1)
+        {
+            if (FACILITY_ENABLED_ARCH( 078_EDAT_2, archnum ))
+                return HHC00890E( STFL_078_EDAT_2 );
         }
     }
 
