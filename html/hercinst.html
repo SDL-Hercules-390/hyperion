@@ -94,6 +94,7 @@ from <a href="http://www.softdevlabs.com">SoftDevLabs</a>.
 </ol>
 
 <h3>Building from source - Mac OS X</h3>
+<p><em><b>Important - Not Recently Tested.  May be obsolete.</b></em>
 <ol>
 
 <li>Install <b>Xcode</b> from the
@@ -112,14 +113,18 @@ at <a href="http://brew.sh/">http://brew.sh/</a>
 <br />
 <br />
 
-<li>Proceed with <i>Building from source - Linux and Mac OS X</i> below.<br /><br />
+<li>Proceed with <i>Building from source - Linux and MacOS</i> below.<br /><br />
 </ol>
 
 <a name="instnixmac"></a>
-<h3>Building from source - Linux and Mac OS X</h3>
+<h3>Building from source - Linux and MacOS (High Sierra and newer)</h3>
+
+<p>
+<em><b>Important: Please read everything before doing anything.  Don't be bashful about asking for help. </b></em>
+<p>
 
 <em><b>Important:</b></em>
-You must use at least version 3.00 of the gcc compiler and the glibc2 library.
+You must use at least version 4.6.2 of the gcc compiler and associated glibc2 library.
 Refer to the <a href="hercfaq.html#3.04">
 Hercules Frequently-Asked Questions</a> page for required
 compiler and other software levels.<br />
@@ -130,7 +135,9 @@ compiler and other software levels.<br />
 <a href="https://github.com/sdl-hercules-390/hyperion/archive/master.zip">source code .ZIP file</a>
 from Github, or even better, <b><a href="https://github.com/sdl-hercules-390/hyperion">clone the repository</a>.</b>
 (Note: building from the source code .zip file is <i><u>strongly discouraged</u></i>. Instead,
-it is <i><u>highly recommended</u></i> that you clone the git repository and build from that instead.)
+it is <i><u>highly recommended</u></i> that you clone the git repository and build from that instead.
+This allows the exact version of the source code to be determined, which is very helpful should
+a problem need to be diagnosed.)
 
 <p><pre>
     git clone  https://github.com/SDL-Hercules-390/hyperion.git  &lt;directory-name&gt;
@@ -145,8 +152,92 @@ with every new release, which contains important late-breaking information about
 <br />
 <br />
 
-<li>Verify you have all of the correct versions of all of the
-required packages installed:
+<li>Install the required packages appropriate for your system.
+
+  <p><ul>
+    <li>Debian / Ubuntu / Mint / etc
+    <p><code>
+        sudo apt-get -y install git wget time<br>
+        sudo apt-get -y install build-essential cmake flex gawk m4 autoconf automake libtool libltdl-dev<br>
+        sudo apt-get -y install libbz2-dev zlib1g-dev<br>
+    sudo apt-get -y install libcap2-bin
+    </code>
+
+    <p><i>Note: For Regina REXX to run the included tests:</i>
+    <p><code>
+        sudo apt-get -y install libregina3-dev
+    </code>
+
+    <li>Arch / Manjaro
+    <p><code>
+        sudo apt-get -y install git wget<br>
+        sudo apt-get -y install base-devel make cmake flex gawk m4 autoconf automake<br>
+        sudo apt-get -y install bzip2 zlib
+    </code>
+
+    <li>Fedora
+    <p><code>
+        sudo apt-get -y install git wget<br>
+        sudo apt-get -y install gcc make cmake flex gawk m4 autoconf automake libtool-ltdl-devel<br>
+        sudo apt-get -y install bzip2-devel zlib-devel
+    </code>
+
+    <li>AlmaLinux / CentOS 8
+    <p><code>
+        sudo yum -y install git wget<br>
+        sudo yum -y install gcc make cmake flex gawk m4 autoconf automake libtool-ltdl-devel<br>
+        sudo yum -y install bzip2-devel zlib-devel
+    </code>
+
+    <li>CentOS 7
+    <p><code>
+        sudo yum -y install git wget<br>
+        sudo yum -y install gcc make flex gawk m4 autoconf automake libtool-ltdl-devel<br>
+        sudo yum -y install bzip2-devel zlib-devel
+    </code>
+
+    <p><i>Note: On CentOS 7, there is no package for CMAKE 3.x, must be built from source.</i>
+
+    <li>openSUSE (15.1)
+    <p><code>
+    sudo apt-get -y install git<br>
+    sudo apt-get -y install devel_basis autoconf automake cmake flex gawk m4 libtool<br>
+    sudo apt-get -y install bzip2 libz1 zlib-devel<br>
+    sudo apt-get -y install libcap-progs
+    </code>
+
+    <li>Apple Darwin (MacOS High Sierra, Mojave, Catalina, Big Sur) with Homebrew
+    <p><code>
+        xcode-select --install<br>
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"<br>
+        <p>
+        brew install wget gsed<br>
+        brew install cmake autoconf automake libtool<br>
+        <!-- ( flex gawk m4 bzip2 zlib ) -->
+    </code>
+
+    <li>Apple Darwin (MacOS Big Sur) with MacPorts
+        <p>Information on installing MacPorts may be found 
+        <a href="https://guide.macports.org/chunked/installing.macports.html">here</a>.
+    <p><code>
+        sudo port install wget gsed<br>
+        sudo port install cmake autoconf automake libtool
+    </code>
+
+    <p><i>Note: So configure/make will find ltdl.h and libltdl:</i>
+    <p><code>
+        export CFLAGS=-I/opt/local/include LDFLAGS=-L/opt/local/lib
+    </code>
+
+    <li>FreeBSD
+    <p><code>
+        sudo apt-get -y install git wget<br>
+        sudo apt-get -y install gmake autoconf automake cmake flex gawk m4<br>
+        sudo apt-get -y install bzip2
+    </code>
+  </ul>
+
+<li>Verify you have all of the correct versions of the more important packages installed:
 
     <p><code>./util/bldlvlck</code>
 
@@ -213,6 +304,12 @@ document.
     configure, or specify your own optimization flags with
     <code><nobr>--enable-optimization=FLAGS</nobr></code>. For additional configuration
     options, run: <code>./configure <nobr>--help=short</nobr></code>.
+
+    <p>For Apple MacOS, these additional configure switches are recommended:
+    <p><code>
+        --disable-getoptwrapper<br>
+        --without-included-ltdl
+    </code>
 
 <br />
 
