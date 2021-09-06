@@ -177,9 +177,9 @@ with every new release, which contains important late-breaking information about
 
     <li>Fedora
     <p><code>
-        sudo apt-get -y install git wget<br>
-        sudo apt-get -y install gcc make cmake flex gawk m4 autoconf automake libtool-ltdl-devel<br>
-        sudo apt-get -y install bzip2-devel zlib-devel
+        sudo dnf -y install git wget<br>
+        sudo dnf -y install gcc make cmake flex gawk m4 autoconf automake libtool-ltdl-devel<br>
+        sudo dnf -y install bzip2-devel zlib-devel
     </code>
 
     <li>AlmaLinux / CentOS 8
@@ -200,10 +200,10 @@ with every new release, which contains important late-breaking information about
 
     <li>openSUSE (15.1)
     <p><code>
-    sudo apt-get -y install git<br>
-    sudo apt-get -y install devel_basis autoconf automake cmake flex gawk m4 libtool<br>
-    sudo apt-get -y install bzip2 libz1 zlib-devel<br>
-    sudo apt-get -y install libcap-progs
+    sudo zypper install -y git<br>
+    sudo zypper install -y -t pattern devel_basis autoconf automake cmake flex gawk m4 libtool<br>
+    sudo zypper install -y -t pattern bzip2 libz1 zlib-devel<br>
+    sudo zypper install -y libcap-progs
     </code>
 
     <li>Apple Darwin (MacOS High Sierra, Mojave, Catalina, Big Sur) with Homebrew
@@ -231,9 +231,9 @@ with every new release, which contains important late-breaking information about
 
     <li>FreeBSD
     <p><code>
-        sudo apt-get -y install git wget<br>
-        sudo apt-get -y install gmake autoconf automake cmake flex gawk m4<br>
-        sudo apt-get -y install bzip2
+        sudo pkg install -y git wget<br>
+        sudo pkg install -y gmake autoconf automake cmake flex gawk m4<br>
+        sudo pkg install -y bzip2
     </code>
   </ul>
 
