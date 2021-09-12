@@ -9,6 +9,7 @@
 .DS_Store
 .deps/
 .libs/
+build/
 Makefile
 autogen.log
 config.log
