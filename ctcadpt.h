@@ -138,7 +138,6 @@ extern void     CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
                             U32*    pResidual );
 
 extern int      LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] );
-extern void     LCS_Assist( PLCSPORT pLCSPORT );
 extern int      LCS_Close( DEVBLK* pDEVBLK );
 extern void     LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
                            int     iBufLen, char*  pBuffer );
@@ -148,13 +147,6 @@ extern void     LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
                                 int     iCCWSeq, BYTE* pIOBuf,
                                 BYTE*   pMore,   BYTE* pUnitStat,
                                 U32*    pResidual );
-
-extern void     LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
-                          BYTE*   pIOBuf,    BYTE* UnitStat,
-                          U32*    pResidual, BYTE* pMore );
-extern void     LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
-                           BYTE*   pIOBuf,    BYTE* UnitStat,
-                           U32*    pResidual );
 
 extern void     packet_trace( BYTE *addr, int len, BYTE dir );
 
