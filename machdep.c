@@ -174,7 +174,7 @@
 
       #define fetch_dw_noswap(_p) fetch_dw_x86_noswap((_p))
       // (must follow cmpxchg8 since it uses it)
-      extern inline U64 __fastcall fetch_dw_x86_noswap ( volatile const void* ptr )
+      extern inline U64 __fastcall fetch_dw_x86_noswap ( volatile const void* ptr );
 
       #define store_dw_noswap(_p, _v) store_dw_x86_noswap( (_p), (_v))
       // (must follow cmpxchg8 since it uses it)
