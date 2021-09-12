@@ -678,7 +678,6 @@ void  LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     UNREFERENCED( bPrevCode );
     UNREFERENCED( iCCWSeq   );
 
-
     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
     if (!pLCSDEV)
     {
@@ -4612,8 +4611,6 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
 //
 void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2 pLCSBAF2, U16 hwLenBaf1, U16 hwLenBaf2)
 {
-    UNREFERENCED( pLCSHDR   );
-    UNREFERENCED( hwLenBaf1 );
 //                   Token
 //  000F0D1000426002 40000240 00FF00
 //  0 1 2 3 4 5 6 7  8 9 A B  C D E
@@ -4634,6 +4631,8 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     BYTE      frame[1600];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( pLCSHDR   );
+    UNREFERENCED( hwLenBaf1 );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
@@ -4722,12 +4721,6 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //
 void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2 pLCSBAF2, U16 hwLenBaf1, U16 hwLenBaf2)
 {
-    UNREFERENCED( pLCSDEV   );
-    UNREFERENCED( pLCSHDR   );
-    UNREFERENCED( pLCSBAF1  );
-    UNREFERENCED( pLCSBAF2  );
-    UNREFERENCED( hwLenBaf1 );
-    UNREFERENCED( hwLenBaf2 );
 //                   Token
 //  000F0D00001A6002 40000240 000000
 //  0 1 2 3 4 5 6 7  8 9 A B  C D E
@@ -4745,6 +4738,12 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     BYTE        frame[64];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( pLCSDEV   );
+    UNREFERENCED( pLCSHDR   );
+    UNREFERENCED( pLCSBAF1  );
+    UNREFERENCED( pLCSBAF2  );
+    UNREFERENCED( hwLenBaf1 );
+    UNREFERENCED( hwLenBaf2 );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
@@ -4812,10 +4811,6 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //
 void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2 pLCSBAF2, U16 hwLenBaf1, U16 hwLenBaf2)
 {
-    UNREFERENCED( pLCSHDR   );
-    UNREFERENCED( pLCSBAF1  );
-    UNREFERENCED( hwLenBaf1 );
-    UNREFERENCED( hwLenBaf2 );
 //                   Token
 //  000C8C0B00036002 40000240
 //  0 1 2 3 4 5 6 7  8 9 A B
@@ -4833,6 +4828,11 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     BYTE        frame[64];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( pLCSHDR   );
+    UNREFERENCED( pLCSBAF1  );
+    UNREFERENCED( hwLenBaf1 );
+    UNREFERENCED( hwLenBaf2 );
+    UNREFERENCED( pLCSBAF2  );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
@@ -4911,11 +4911,6 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //
 void Process_0C0A (PLCSDEV pLCSDEV, PLCSHDR pOutHDR, PLCSBAF1 pOutBAF1, PLCSBAF2 pOutBAF2, U16 hwLenOutBaf1, U16 hwLenOutBaf2)
 {
-    UNREFERENCED( pOutHDR      );
-    UNREFERENCED( pOutBAF1     );
-    UNREFERENCED( hwLenOutBaf1 );
-    UNREFERENCED( hwLenOutBaf2 );
-
 #define INBOUND_CC0A_SIZE 36
 static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
                  {
@@ -4937,6 +4932,10 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
     U16         hwLenInBaf1;
 //  U16         hwLenInBaf2;
 
+    UNREFERENCED( pOutHDR      );
+    UNREFERENCED( pOutBAF1     );
+    UNREFERENCED( hwLenOutBaf1 );
+    UNREFERENCED( hwLenOutBaf2 );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];                                    /* FixMe! Remove! */
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
@@ -5051,10 +5050,6 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
 //
 void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2 pLCSBAF2, U16 hwLenBaf1, U16 hwLenBaf2)
 {
-    UNREFERENCED( pLCSHDR   );
-    UNREFERENCED( pLCSBAF1  );
-    UNREFERENCED( hwLenBaf1 );
-    UNREFERENCED( hwLenBaf2 );
 //                   Token
 //  000D0C25001B6004 400000DC 00
 //  0 1 2 3 4 5 6 7  8 9 A B  C
@@ -5072,6 +5067,10 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     BYTE      frame[64];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( pLCSHDR   );
+    UNREFERENCED( pLCSBAF1  );
+    UNREFERENCED( hwLenBaf1 );
+    UNREFERENCED( hwLenBaf2 );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
@@ -5136,9 +5135,6 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //
 void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2 pLCSBAF2, U16 hwLenBaf1, U16 hwLenBaf2)
 {
-    UNREFERENCED( pLCSHDR   );
-    UNREFERENCED( pLCSBAF1  );
-    UNREFERENCED( hwLenBaf1 );
 //                   Token
 //  000D0C22001A6004 400000DC 00
 //  0 1 2 3 4 5 6 7  8 9 A B  C
@@ -5159,6 +5155,9 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     BYTE      frame[512];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( pLCSHDR   );
+    UNREFERENCED( pLCSBAF1  );
+    UNREFERENCED( hwLenBaf1 );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
@@ -5249,11 +5248,6 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //
 void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2 pLCSBAF2, U16 hwLenBaf1, U16 hwLenBaf2)
 {
-    UNREFERENCED( pLCSHDR   );
-    UNREFERENCED( pLCSBAF1  );
-    UNREFERENCED( pLCSBAF2  );
-    UNREFERENCED( hwLenBaf1 );
-    UNREFERENCED( hwLenBaf2 );
 //                   Token
 //  00108D00001A6002 40000240 00000000
 //  0 1 2 3 4 5 6 7  8 9 A B  C D E F
@@ -5271,6 +5265,11 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     BYTE      frame[64];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( pLCSHDR   );
+    UNREFERENCED( pLCSBAF1  );
+    UNREFERENCED( pLCSBAF2  );
+    UNREFERENCED( hwLenBaf1 );
+    UNREFERENCED( hwLenBaf2 );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
@@ -5341,10 +5340,6 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //
 void Process_0C0B (PLCSDEV pLCSDEV, PLCSHDR pOutHDR, PLCSBAF1 pOutBAF1, PLCSBAF2 pOutBAF2, U16 hwLenOutBaf1, U16 hwLenOutBaf2)
 {
-    UNREFERENCED( pOutHDR      );
-    UNREFERENCED( pOutBAF1     );
-    UNREFERENCED( hwLenOutBaf1 );
-    UNREFERENCED( hwLenOutBaf2 );
 //                   Token
 //  00110C0B00076002 40000240 0000000000
 //  0 1 2 3 4 5 6 7  8 9 A B  C
@@ -5370,6 +5365,10 @@ static const BYTE Inbound_CC0B[INBOUND_CC0B_SIZE] =
     U16         hwLenInBaf1;
 //  U16         hwLenInBaf2;
 
+    UNREFERENCED( pOutHDR      );
+    UNREFERENCED( pOutBAF1     );
+    UNREFERENCED( hwLenOutBaf1 );
+    UNREFERENCED( hwLenOutBaf2 );
 
     // Find the connection block.
     // I wish I knew what bByte07 == 0x02 or 0x04 actually meant!
@@ -5429,11 +5428,6 @@ static const BYTE Inbound_CC0B[INBOUND_CC0B_SIZE] =
 //
 void Process_0C99 (PLCSDEV pLCSDEV, PLCSHDR pOutHDR, PLCSBAF1 pOutBAF1, PLCSBAF2 pOutBAF2, U16 hwLenOutBaf1, U16 hwLenOutBaf2)
 {
-    UNREFERENCED( pOutHDR      );
-    UNREFERENCED( pOutBAF1     );
-    UNREFERENCED( hwLenOutBaf1 );
-    UNREFERENCED( hwLenOutBaf2 );
-
 #define INBOUND_CC99_SIZE 50
 static const BYTE Inbound_CC99[INBOUND_CC99_SIZE] =
                  {
@@ -5456,6 +5450,10 @@ static const BYTE Inbound_CC99[INBOUND_CC99_SIZE] =
 //  U16         hwLenInBaf2;
     BYTE*       pInMAC;
 
+    UNREFERENCED( pOutHDR      );
+    UNREFERENCED( pOutBAF1     );
+    UNREFERENCED( hwLenOutBaf1 );
+    UNREFERENCED( hwLenOutBaf2 );
 
     pLCSBLK = pLCSDEV->pLCSBLK;
     pLCSPORT = &pLCSBLK->Port[ pLCSDEV->bPort ];
@@ -5497,11 +5495,6 @@ static const BYTE Inbound_CC99[INBOUND_CC99_SIZE] =
 //
 void Process_0C0D (PLCSDEV pLCSDEV, PLCSHDR pOutHDR, PLCSBAF1 pOutBAF1, PLCSBAF2 pOutBAF2, U16 hwLenOutBaf1, U16 hwLenOutBaf2)
 {
-    UNREFERENCED( pOutHDR      );
-    UNREFERENCED( pOutBAF1     );
-    UNREFERENCED( hwLenOutBaf1 );
-    UNREFERENCED( hwLenOutBaf2 );
-
 #define INBOUND_CC0D_SIZE 56
 static const BYTE Inbound_CC0D[INBOUND_CC0D_SIZE] =
                  {
@@ -5522,6 +5515,10 @@ static const BYTE Inbound_CC0D[INBOUND_CC0D_SIZE] =
     U16         hwLenInBaf1;
 //  U16         hwLenInBaf2;
 
+    UNREFERENCED( pOutHDR      );
+    UNREFERENCED( pOutBAF1     );
+    UNREFERENCED( hwLenOutBaf1 );
+    UNREFERENCED( hwLenOutBaf2 );
 
     pLCSIBH = alloc_lcs_buffer( pLCSDEV, ( INBOUND_CC0D_SIZE * 2 ) );
 
@@ -5554,11 +5551,6 @@ static const BYTE Inbound_CC0D[INBOUND_CC0D_SIZE] =
 //
 void Process_0C0E (PLCSDEV pLCSDEV, PLCSHDR pOutHDR, PLCSBAF1 pOutBAF1, PLCSBAF2 pOutBAF2, U16 hwLenOutBaf1, U16 hwLenOutBaf2)
 {
-    UNREFERENCED( pOutHDR      );
-    UNREFERENCED( pOutBAF1     );
-    UNREFERENCED( hwLenOutBaf1 );
-    UNREFERENCED( hwLenOutBaf2 );
-
 #define INBOUND_CC0E_SIZE 32
 static const BYTE Inbound_CC0E[INBOUND_CC0E_SIZE] =
                  {
@@ -5576,6 +5568,10 @@ static const BYTE Inbound_CC0E[INBOUND_CC0E_SIZE] =
     U16         hwLenInBaf1;
 //  U16         hwLenInBaf2;
 
+    UNREFERENCED( pOutHDR      );
+    UNREFERENCED( pOutBAF1     );
+    UNREFERENCED( hwLenOutBaf1 );
+    UNREFERENCED( hwLenOutBaf2 );
 
     pLCSIBH = alloc_lcs_buffer( pLCSDEV, ( INBOUND_CC0E_SIZE * 2 ) );
 
@@ -5608,11 +5604,6 @@ static const BYTE Inbound_CC0E[INBOUND_CC0E_SIZE] =
 //
 void Process_0C98 (PLCSDEV pLCSDEV, PLCSHDR pOutHDR, PLCSBAF1 pOutBAF1, PLCSBAF2 pOutBAF2, U16 hwLenOutBaf1, U16 hwLenOutBaf2)
 {
-    UNREFERENCED( pOutHDR      );
-    UNREFERENCED( pOutBAF1     );
-    UNREFERENCED( hwLenOutBaf1 );
-    UNREFERENCED( hwLenOutBaf2 );
-
 #define INBOUND_CC98_SIZE 32
 static const BYTE Inbound_CC98[INBOUND_CC98_SIZE] =
                  {
@@ -5630,6 +5621,10 @@ static const BYTE Inbound_CC98[INBOUND_CC98_SIZE] =
     U16         hwLenInBaf1;
 //  U16         hwLenInBaf2;
 
+    UNREFERENCED( pOutHDR      );
+    UNREFERENCED( pOutBAF1     );
+    UNREFERENCED( hwLenOutBaf1 );
+    UNREFERENCED( hwLenOutBaf2 );
 
     pLCSIBH = alloc_lcs_buffer( pLCSDEV, ( INBOUND_CC98_SIZE * 2 ) );
 
@@ -5904,8 +5899,6 @@ static void  LCS_UnsuppCmd_SNA( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdL
 // ====================================================================
 static void LCS_ProcessAccepted_SNA ( PLCSPORT pLCSPORT, PLCSDEV pLCSDEV, BYTE* pData, size_t iSize )
 {
-    UNREFERENCED( iSize );
-
 #define Inbound_4D10_Size  33
 static const BYTE Inbound_4D10[Inbound_4D10_Size] =
                  {
@@ -6007,6 +6000,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
     BYTE        frameout[64];
           char    tmp[256];                                                        /* FixMe! Remove! */
 
+    UNREFERENCED( iSize );
 
     pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
     pLCSBLK = pLCSDEV->pLCSBLK;
