@@ -64,25 +64,6 @@ extern inline bool ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, R
 
 extern inline BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey );
 
-/*-------------------------------------------------------------------*/
-/*  The below two specialized SIE functions must both be defined at  */
-/*  the same time since the "logical_to_main_l" function might need  */
-/*  to apply prefixing for a host architecture which is differernt   */
-/*  from the architecture currently executing "logical_to_main_l".   */
-/*-------------------------------------------------------------------*/
-#if defined( _FEATURE_SIE )
-
-  #ifndef DID_SIE_APPLY_PREFIXING
-  #define DID_SIE_APPLY_PREFIXING
-
-    extern inline U64 sie_apply_s390_host_prefixing( U64 raddr, U64 px );
-    extern inline U64 sie_apply_z900_host_prefixing( U64 raddr, U64 px );
-
-  #endif // DID_SIE_APPLY_PREFIXING
-
-#endif // _FEATURE_SIE
-
-
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* Translate ASN to produce address-space control parameters         */
@@ -2179,7 +2160,6 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     if(SIE_MODE(regs)) HOSTREGS->dat.protect = 0;
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
-
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
                     (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
                     HOSTREGS, ACCTYPE_SIE))
@@ -2209,17 +2189,17 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Convert host real address to host absolute address */
         /* ISW 20181005 */
         /* Use the Prefixing logic of the SIE host (not the guest) */
-        switch(HOSTREGS->arch_mode)
+        switch (HOSTREGS->arch_mode)
         {
             case ARCH_390_IDX:
                 HOSTREGS->dat.aaddr = aaddr =
-                        sie_apply_s390_host_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
-                apfra = sie_apply_s390_host_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
+                        APPLY_390_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX_L );
+                apfra = APPLY_390_PREFIXING( HOSTREGS->dat.rpfra, HOSTREGS->PX_L );
                 break;
             case ARCH_900_IDX:
                 HOSTREGS->dat.aaddr = aaddr =
-                        sie_apply_z900_host_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
-                apfra = sie_apply_z900_host_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
+                        APPLY_900_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX_G );
+                apfra = APPLY_900_PREFIXING( HOSTREGS->dat.rpfra, HOSTREGS->PX_G );
                 break;
             /* No S/370 or any other SIE host exist */
             default:

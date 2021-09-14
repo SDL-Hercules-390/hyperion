@@ -243,29 +243,6 @@ auth_addr_excp:
 }
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
-/*-------------------------------------------------------------------*/
-/*  The below two specialized SIE functions must both be defined at  */
-/*  the same time since the "logical_to_main_l" function might need  */
-/*  to apply prefixing for a host architecture which is differernt   */
-/*  from the architecture currently executing "logical_to_main_l".   */
-/*-------------------------------------------------------------------*/
-#if defined( _FEATURE_SIE )
-  #ifndef SIE_APPLY_PREFIXING_DEFINED
-  #define SIE_APPLY_PREFIXING_DEFINED
-
-    inline U64 sie_apply_s390_host_prefixing( U64 raddr, U64 px )
-    {
-        return APPLY_PREFIXING( raddr, px );
-    }
-
-    inline U64 sie_apply_z900_host_prefixing( U64 raddr, U64 px )
-    {
-        return APPLY_PREFIXING( raddr, px );
-    }
-
-  #endif // SIE_APPLY_PREFIXING_DEFINED
-#endif // _FEATURE_SIE
-
 
 /*-------------------------------------------------------------------*/
 /*                           maddr_l                                 */
