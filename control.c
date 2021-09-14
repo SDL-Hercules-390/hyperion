@@ -846,16 +846,22 @@ VADR    n = 0;                          /* Work area                 */
 #endif /* defined( FEATURE_LINKAGE_STACK ) */
 
 
-#if defined( FEATURE_BROADCASTED_PURGING )
+#if defined( FEATURE_BROADCASTED_PURGING ) \
+ || defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 )
 /*-------------------------------------------------------------------*/
-/* B250 CSP   - Compare and Swap and Purge                     [RRE] */
+/*      Common processing function for CSP/CSPG instructions         */
 /*-------------------------------------------------------------------*/
-DEF_INST( compare_and_swap_and_purge )
+void ARCH_DEP( compare_and_swap_and_purge_instruction )( BYTE inst[], REGS* regs, bool CSPG )
 {
 int     r1, r2;                         /* Values of R fields        */
-U64     n2;                             /* virtual address of op2    */
-BYTE   *main2;                          /* mainstor address of op2   */
-U32     old;                            /* old value                 */
+U64     n2;                             /* Virtual address of op2    */
+BYTE*   main2;                          /* Mainstor address of op2   */
+
+U32     old32;                          /* Old value (CSP)           */
+U32     new32;                          /* New value (CSP)           */
+
+U64     old64;                          /* Old value (CSPG)          */
+U64     new64;                          /* New value (CSPG)          */
 
     RRE( inst, regs, r1, r2 );
 
@@ -864,47 +870,70 @@ U32     old;                            /* old value                 */
     ODD_CHECK( r1, regs );
 
 #if defined( _FEATURE_SIE )
-    if (SIE_STATE_BIT_ON( regs,IC0, IPTECSP ))
-        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
-#endif
-
-#if defined( _FEATURE_SIE )
-    if (SIE_MODE( regs ) && regs->sie_scao)
-    {
-        ARCH_DEP( or_storage_key )( regs->sie_scao, STORKEY_REF );
-        if (regs->mainstor[regs->sie_scao] & 0x80)
-            longjmp( regs->progjmp, SIE_INTERCEPT_INST );
-    }
+    if (SIE_STATE_BIT_ON( regs, IC0, IPTECSP ))
+        SIE_INTERCEPT( regs );
 #endif
 
     PERFORM_SERIALIZATION( regs );
     {
-        /* Obtain 2nd operand address from r2 */
-        n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP( regs );
-        main2 = MADDR( n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey );
-
-        old = CSWAP32( regs->GR_L( r1 ));
-
-        OBTAIN_MAINLOCK( regs );
+        OBTAIN_INTLOCK( regs );
         {
-            /* Attempt to exchange the values */
-            regs->psw.cc = cmpxchg4( &old, CSWAP32( regs->GR_L( r1+1 )), main2 );
-        }
-        RELEASE_MAINLOCK( regs );
+            SYNCHRONIZE_CPUS( regs );
 
-        if (regs->psw.cc == 0)
-        {
-            /* Perform requested funtion specified as per request code in r2 */
-            if (regs->GR_L(r2) & 3)
+#if defined( _FEATURE_SIE )
+            if (SIE_MODE( regs ) && regs->sie_scao)
             {
-                /* Purge the TLB and/or ALB as requested */
-                OBTAIN_INTLOCK( regs );
+                /* Try to obtain the SCA IPTE interlock. If successfully
+                   obtained, then continue normally. Otherwise ask z/VM
+                   to please intercept & execute this instruction itself.
+                */
+                if (!TRY_OBTAIN_SCALOCK( regs ))
                 {
-                    SYNCHRONIZE_CPUS( regs );
+                    RELEASE_INTLOCK( regs );
+                    SIE_INTERCEPT( regs );
+                }
+            }
+#endif
+            /* Obtain 2nd operand address from r2 */
+            if (CSPG)
+            {
+                n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFF8ULL & ADDRESS_MAXWRAP( regs );
+                main2 = MADDRL( n2, 8, r2, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
+                old64 = CSWAP64( regs->GR_G( r1   ));
+                new64 = CSWAP64( regs->GR_G( r1+1 ));
+            }
+            else
+            {
+                n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP( regs );
+                main2 = MADDRL( n2, 4, r2, regs, ACCTYPE_WRITE, regs->psw.pkey );
+
+                old32 = CSWAP32( regs->GR_L( r1   ));
+                new32 = CSWAP32( regs->GR_L( r1+1 ));
+            }
+
+            /* MAINLOCK may be required if cmpxchg assists unavailable */
+            OBTAIN_MAINLOCK( regs );
+            {
+                /* Attempt to exchange the values */
+                if (CSPG)
+                    regs->psw.cc = cmpxchg8( &old64, new64, main2 );
+                else
+                    regs->psw.cc = cmpxchg4( &old32, new32, main2 );
+            }
+            RELEASE_MAINLOCK( regs );
+
+            if (regs->psw.cc == 0)
+            {
+                /* Perform requested function as per request-code in r2 */
+                if (regs->GR_L(r2) & 3)
+                {
+                    /* Purge the TLB and/or ALB as requested */
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
                     if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
-                        txf_abort_all( regs->cpuad, TXF_WHY_CSP_INSTR, PTT_LOC );
+                        txf_abort_all( regs->cpuad,
+                            CSPG ? TXF_WHY_CSPG_INSTR
+                                 : TXF_WHY_CSP_INSTR, PTT_LOC );
 #endif
                     if (regs->GR_L(r2) & 1)
                         ARCH_DEP( purge_tlb_all )();
@@ -912,23 +941,51 @@ U32     old;                            /* old value                 */
                     if (regs->GR_L(r2) & 2)
                         ARCH_DEP( purge_alb_all )();
                 }
-                RELEASE_INTLOCK( regs );
             }
+
+#if defined( _FEATURE_SIE )
+            /* Release the SCA lock */
+            if (SIE_MODE( regs ) && regs->sie_scao)
+                RELEASE_SCALOCK( regs );
+#endif
+        }
+        RELEASE_INTLOCK( regs );
+    }
+    PERFORM_SERIALIZATION( regs );
+
+    /* "Yield" if the swap failed, so as to give the
+       guest's retry a better chance of succeeding.
+    */
+    if (regs->psw.cc != 0)
+    {
+        if (CSPG)
+        {
+            PTT_CSF( "*CSPG", regs->GR_G(r1), regs->GR_G(r2), regs->psw.IA_G );
+            regs->GR_G(r1) = CSWAP64( old64 );
         }
         else
         {
             PTT_CSF( "*CSP", regs->GR_L(r1) ,regs->GR_L(r2), regs->psw.IA_L );
-
-            /* Otherwise yield */
-            regs->GR_L(r1) = CSWAP32( old );
-
-            if (sysblk.cpus > 1)
-                sched_yield();
+            regs->GR_L(r1) = CSWAP32( old32 );
         }
-    }
-    PERFORM_SERIALIZATION( regs );
 
-} /* end DEF_INST(compare_and_swap_and_purge) */
+        if (sysblk.cpus > 1)
+            sched_yield();
+    }
+
+} /* end compare_and_swap_and_purge_instruction */
+#endif /* defined( FEATURE_BROADCASTED_PURGING )
+       || defined( FEATURE_003_DAT_ENHANCE_FACILITY_1 ) */
+
+
+#if defined( FEATURE_BROADCASTED_PURGING )
+/*-------------------------------------------------------------------*/
+/* B250 CSP   - Compare and Swap and Purge                     [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST( compare_and_swap_and_purge )
+{
+    ARCH_DEP( compare_and_swap_and_purge_instruction )( inst, regs, false );
+}
 #endif /* defined( FEATURE_BROADCASTED_PURGING ) */
 
 
@@ -1663,13 +1720,17 @@ bool    need_realkey = true;            /* (get from real page)      */
 /*-------------------------------------------------------------------*/
 DEF_INST( invalidate_page_table_entry )
 {
-int     r1, r2;                         /* Values of R fields        */
-RADR    op1;
-U32     op2;
+int     r1, r2;                         /* Operand register numbers  */
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
-int     r3;
-int     op3;
-#endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
+int     r3;                             /* Operand-3 register number */
+#endif
+RADR    pto;                            /* Page Table Origin         */
+VADR    vaddr;                          /* Virtual Address of first or
+                                           only page to invalidate   */
+int     pageidx;                        /* Starting page index       */
+int     pages;                          /* Total Pages to invalidate */
+int     i;                              /* work (for loop iterator)  */
+bool    do_range;                       /* helper flag               */
 
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
     RRR( inst, regs, r1, r2, r3 );
@@ -1680,20 +1741,22 @@ int     op3;
     TRAN_MISC_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
-    op1 = regs->GR(r1);
-    op2 = regs->GR_L(r2);
+    pto = regs->GR(r1);
+    vaddr = regs->GR(r2);
+    pageidx = (vaddr >> SHIFT_4K) & 0xFF;
+    pages = 1;
+    do_range = false;
 
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
     if (FACILITY_ENABLED( 013_IPTE_RANGE, regs ) && r3)
     {
-        op3 = regs->GR_LHLCL(r3);
-
-        if (op3 + ((op2 >> 12) & 0xFF) > 0xFF)
+        int additional_pages = regs->GR_LHLCL( r3 );
+        if ((pageidx + additional_pages) > 255)
             ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+        pages += additional_pages;
+        do_range = true;
     }
-    else
-        op3 = 0;
-#endif /* defined( FEATURE_013_IPTE_RANGE_FACILITY ) */
+#endif
 
 #if defined( _FEATURE_SIE )
     if (SIE_STATE_BIT_ON( regs, IC0, IPTECSP ))
@@ -1708,38 +1771,43 @@ int     op3;
         SYNCHRONIZE_CPUS( regs );
 
 #if defined( _FEATURE_SIE )
+
+        /* Try to obtain the SCA IPTE interlock. If successfully
+           obtained, then continue normally. Otherwise ask z/VM
+           to please intercept & execute this instruction itself.
+        */
         if (SIE_MODE( regs ) && regs->sie_scao)
         {
-            ARCH_DEP( or_storage_key )( regs->sie_scao, STORKEY_REF );
-            if (regs->mainstor[ regs->sie_scao ] & 0x80)
+            if (!TRY_OBTAIN_SCALOCK( regs ))
             {
                 RELEASE_INTLOCK( regs );
-                longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+                SIE_INTERCEPT( regs );
             }
-            regs->mainstor[ regs->sie_scao ] |= 0x80;
-            ARCH_DEP( or_storage_key )( regs->sie_scao, (STORKEY_REF | STORKEY_CHANGE) );
         }
-#endif /* defined( _FEATURE_SIE ) */
+#endif
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+        /* Abort any/all active transactions beforehand */
         if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
             txf_abort_all( regs->cpuad, TXF_WHY_IPTE_INSTR, PTT_LOC );
 #endif
+        /* Now invalidate all of the requested Page Table Entries */
+        for (i=0; i < pages; ++i, vaddr += _4K)
+            ARCH_DEP( invalidate_pte )( inst[1], pto, vaddr, regs );
 
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
-        /* Invalidate the additional ptes as specfied by op3 */
-        for ( ; op3; op3--, op2 += 0x1000)
-           ARCH_DEP( invalidate_pte )( inst[1], op1, op2, regs );
+        /* Update registers if range was specified */
+        if (do_range)
+        {
+            regs->GR(r2) = vaddr;
+            regs->GR_LHLCL(r3) -= pages;
+        }
 #endif
-        /* Invalidate page table entry */
-        ARCH_DEP( invalidate_pte )( inst[1], op1, op2, regs );
 
 #if defined( _FEATURE_SIE )
+        /* Release the SCA lock if we obtained it */
         if (SIE_MODE( regs ) && regs->sie_scao)
-        {
-            regs->mainstor[ regs->sie_scao ] &= 0x7F;
-            ARCH_DEP( or_storage_key )( regs->sie_scao, (STORKEY_REF | STORKEY_CHANGE) );
-        }
+            RELEASE_SCALOCK (regs );
 #endif
     }
     RELEASE_INTLOCK( regs );

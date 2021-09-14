@@ -239,7 +239,78 @@ typedef struct PGSTE PGSTE;
 //-------------------------------------------------------------------
 
 /*-------------------------------------------------------------------*/
+/*                    LockUnlockSCALock                              */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                     *** IMPORTANT! ***                            */
+/*                                                                   */
+/*  If the instruction calling this function requires obtaining      */
+/*  INTLOCK (e.g. SYNCHRONIZE_CPUS), then it must do so BEFORE       */
+/*  calling this function! If the instruction is incorrectly         */
+/*  coded to try obtaining INTLOCK *after* calling this function,    */
+/*  then a DEADLOCK can very easily occur! YOU HAVE BEEN WARNED!     */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+inline bool ARCH_DEP( LockUnlockSCALock )( REGS* regs, bool lock, bool trylock )
+{
+    BYTE new;
+    bool obtained = false;
+    SCABK* scabk = (SCABK*) &regs->mainstor[ regs->sie_scao ];
+
+    if (lock)
+    {
+        BYTE old = scabk->scaiplk0;
+
+        // MAINLOCK may be required if cmpxchg assists unavailable
+        OBTAIN_MAINLOCK( regs );
+        {
+            // If not TRY call, keep looping until we obtain it.
+            // Otherwise TRY just once, and return success or not.
+            do
+            {
+                old &= ~SCAIPLKH;       // Want bit to be initially off
+                new = (old | SCAIPLKH); // And *WE* want to turn it on!
+            }
+            while (!(obtained = (0 == cmpxchg1( &old, new, &scabk->scaiplk0 ))) && !trylock);
+        }
+        RELEASE_MAINLOCK( regs );
+    }
+    else // (unlock)
+    {
+        // Atomically 'and' the lock bit off
+        new = (BYTE)(~SCAIPLKH);
+        (void) H_ATOMIC_OP( &scabk->scaiplk0, new, and, And, & );
+    }
+
+    // Set Reference and Change bit for the byte we just modified
+    {
+        U64 abspage = (U64) (&scabk->scaiplk0 - regs->mainstor);
+        ARCH_DEP( or_4K_storage_key )( abspage, (STORKEY_REF | STORKEY_CHANGE) );
+    }
+
+    return obtained;
+}
+
+#undef  OBTAIN_SCALOCK
+#undef  TRY_OBTAIN_SCALOCK
+#undef  RELEASE_SCALOCK
+
+#define OBTAIN_SCALOCK(     regs )  ARCH_DEP( LockUnlockSCALock )( (regs), true,  false )
+#define TRY_OBTAIN_SCALOCK( regs )  ARCH_DEP( LockUnlockSCALock )( (regs), true,  true  )
+#define RELEASE_SCALOCK(    regs )  ARCH_DEP( LockUnlockSCALock )( (regs), false, false )
+
+/*-------------------------------------------------------------------*/
 /*                     LockUnlockRCPLock                             */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                     *** IMPORTANT! ***                            */
+/*                                                                   */
+/*  If the instruction calling this function requires obtaining      */
+/*  INTLOCK (e.g. SYNCHRONIZE_CPUS), then it must do so BEFORE       */
+/*  calling this function! If the instruction is incorrectly         */
+/*  coded to try obtaining INTLOCK *after* calling this function,    */
+/*  then a DEADLOCK can very easily occur! YOU HAVE BEEN WARNED!     */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 inline void ARCH_DEP( LockUnlockRCPLock )( REGS* regs, RCPTE* rcpte, bool lock )
 {
@@ -279,7 +350,17 @@ inline void ARCH_DEP( LockUnlockRCPLock )( REGS* regs, RCPTE* rcpte, bool lock )
 
 #if defined( OPTION_USE_SKAIP_AS_LOCK )
 /*-------------------------------------------------------------------*/
-/*                      LockUnlockSKALock                            */
+/*                    LockUnlockSKALock                              */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                     *** IMPORTANT! ***                            */
+/*                                                                   */
+/*  If the instruction calling this function requires obtaining      */
+/*  INTLOCK (e.g. SYNCHRONIZE_CPUS), then it must do so BEFORE       */
+/*  calling this function! If the instruction is incorrectly         */
+/*  coded to try obtaining INTLOCK *after* calling this function,    */
+/*  then a DEADLOCK can very easily occur! YOU HAVE BEEN WARNED!     */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 inline void ARCH_DEP( LockUnlockSKALock )( REGS* regs, bool lock )
 {
@@ -342,7 +423,7 @@ inline void ARCH_DEP( LockUnlockSKALock )( REGS* regs, bool lock )
 /*                                                                   */
 #endif // defined( OPTION_USE_SKAIP_AS_LOCK )
 /*                                                                   */
-/*                      ***  CRITICAL! ***                           */
+/*                     *** IMPORTANT! ***                            */
 /*                                                                   */
 /*  If the instruction calling this function requires obtaining      */
 /*  INTLOCK (e.g. SYNCHRONIZE_CPUS), then it must do so BEFORE       */
