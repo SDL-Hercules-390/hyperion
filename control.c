@@ -5359,6 +5359,7 @@ bool ARCH_DEP( conditional_sske_procedure )( bool sske, REGS* regs,
 void ARCH_DEP( sske_or_pfmf_procedure )
 (
     bool   sske,            /* true = SSKE call, false = PFMF        */
+    bool   intlocked,       /* true = INTLOCK held; false otherwise  */
     REGS*  regs,            /* Registers context                     */
     U64    abspage,         /* Absolute address of 4K page frame     */
     int    r1,              /* Operand-1 register number             */
@@ -5555,7 +5556,10 @@ void ARCH_DEP( sske_or_pfmf_procedure )
     {
         /* Invalidate AIA/AEA so that the REF and CHANGE bits
            will be set when referenced next */
-        STORKEY_INVALIDATE( regs, abspage );
+        if (intlocked)
+            STORKEY_INVALIDATE_LOCKED( regs, abspage );
+        else
+            STORKEY_INVALIDATE( regs, abspage );
     }
 } /* end ARCH_DEP( sske_or_pfmf_procedure ) */
 
@@ -5576,6 +5580,7 @@ int     fc;                             /* Frame count (multi-block) */
 bool    multi_block = false;            /* Work (simplifies things)  */
 BYTE    original_cc = regs->psw.cc;     /* (in case of multi-block)  */
 #endif
+bool    quiesce = false;                /* Set Key should quiesce    */
 
     RRF_M( inst, regs, r1, r2, m3 );
 
@@ -5615,6 +5620,20 @@ BYTE    original_cc = regs->psw.cc;     /* (in case of multi-block)  */
     PERFORM_SERIALIZATION( regs );
     PERFORM_CHKPT_SYNC( regs );
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* TXF Key Quiescing support */
+    quiesce = FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ) &&
+    (0
+        || !FACILITY_ENABLED( 014_NONQ_KEY_SET, regs )
+        || !(m3 & SSKE_MASK_NQ)
+    );
+    if (quiesce)
+    {
+        OBTAIN_INTLOCK( regs );
+        SYNCHRONIZE_CPUS( regs );
+    }
+#endif
+
 #if defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 )
 
     /* Process all pages within requested frame... */
@@ -5625,6 +5644,7 @@ BYTE    original_cc = regs->psw.cc;     /* (in case of multi-block)  */
         ARCH_DEP( sske_or_pfmf_procedure )
         (
             true,       /* true = SSKE call, false = PFMF     */
+            quiesce,    /* true = INTLOCK held; else false    */
             regs,       /* Registers context                  */
             pageaddr,   /* Absolute address of 4K page frame  */
             r1,         /* Operand-1 register number          */
@@ -5663,6 +5683,15 @@ BYTE    original_cc = regs->psw.cc;     /* (in case of multi-block)  */
     }
 
 #endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* TXF Key Quiescing support */
+    if (quiesce)
+    {
+        txf_abort_all( regs->cpuad, TXF_WHY_STORKEY, PTT_LOC );
+        RELEASE_INTLOCK( regs );
+    }
+#endif
 
     PERFORM_SERIALIZATION( regs );
     PERFORM_CHKPT_SYNC( regs );

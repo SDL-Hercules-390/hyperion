@@ -349,7 +349,7 @@ void txf_set_timerint( bool txf_enabled_or_enabling_txf );
 #define TXF_WHY_TRAN_SET_ADDRESSING_MODE    0x00000080    // 25
 #define TXF_WHY_TRAN_MISC_INSTR             0x00000040    // 26
 #define TXF_WHY_NESTING                     0x00000020    // 27
-//efine TXF_WHY_XXXXXXXXXX                  0x00000010    // 28
+#define TXF_WHY_STORKEY                     0x00000010    // 28
 #define TXF_WHY_IPTE_INSTR                  0x00000008    // 29
 #define TXF_WHY_IDTE_INSTR                  0x00000004    // 30
 #define TXF_WHY_CONSTRAINT_4                0x00000002    // 31

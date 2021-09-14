@@ -1374,13 +1374,17 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     SIE_PERFMON( SIE_PERF_EXIT   );
     SIE_PERFMON( SIE_PERF_PGMINT );
 
-    /* Indicate we have left SIE mode */
-    PTT_SIE( "sie_xit a=0", 0, 0, 0  );
-    OBTAIN_INTLOCK( regs );
     {
+        /* Obtain INTLOCK (unless we already own it) */
+        REGS* realregs = GUEST( sysblk.regs[ regs->cpuad ]);
+        if (sysblk.intowner != realregs->cpuad)
+            OBTAIN_INTLOCK( regs );
+
+        /* Indicate we have left SIE mode */
+        PTT_SIE( "sie_xit a=0", 0, 0, 0  );
         regs->sie_active = 0;
+        RELEASE_INTLOCK( regs );
     }
-    RELEASE_INTLOCK( regs );
 
     /* Zeroize interception status */
     STATEBK->f = 0;
@@ -1943,6 +1947,7 @@ DEF_INST( extract_and_set_storage_attributes )
 #endif /* defined( FEATURE_SIE ) */
 
 
+extern inline bool ARCH_DEP( LockUnlockSCALock )( REGS* regs, bool lock, bool trylock );
 #if defined( OPTION_USE_SKAIP_AS_LOCK )
 extern inline void ARCH_DEP( LockUnlockSKALock )( REGS* regs, bool lock );
 #endif

@@ -5748,6 +5748,7 @@ DEF_INST( insert_reference_bits_multiple )
 extern void ARCH_DEP( sske_or_pfmf_procedure )
 (
     bool   sske,            /* true = SSKE call, false = PFMF        */
+    bool   intlocked,       /* true = INTLOCK held; false otherwise  */
     REGS*  regs,            /* Registers context                     */
     U64    abspage,         /* Absolute address of 4K page frame     */
     int    r1,              /* Operand-1 register number (SSKE)      */
@@ -5766,6 +5767,7 @@ int     m3;                             /* Conditional-SSKE mask     */
 int     fc;                             /* Frame count (multi-block) */
 RADR    pageaddr;                       /* Working abs page address  */
 BYTE    r1key;                          /* Key value to set from r1  */
+bool    quiesce = false;                /* Set Key should quiesce    */
 bool    multi_block = false;            /* Work (simplifies things)  */
 
     RRE( inst, regs, r1, r2 );
@@ -5843,12 +5845,28 @@ bool    multi_block = false;            /* Work (simplifies things)  */
     /* Wrap address according to addressing mode */
     pageaddr &= ADDRESS_MAXWRAP( regs );
 
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* TXF Key Quiescing support */
+    quiesce =
+    (1
+        && FACILITY_ENABLED( 073_TRANSACT_EXEC, regs )
+        && (regs->GR(r1) & PFMF_FMFI_SK)
+        && !FACILITY_ENABLED( 014_NONQ_KEY_SET, regs )
+    );
+    if (quiesce)
+    {
+        OBTAIN_INTLOCK( regs );
+        SYNCHRONIZE_CPUS( regs );
+    }
+#endif
+
     /* Process all pages within requested frame... */
     while (fc--)
     {
         ARCH_DEP( sske_or_pfmf_procedure )
         (
             false,      /* true = SSKE call, false = PFMF     */
+            quiesce,    /* true = INTLOCK held; else false    */
             regs,       /* Registers context                  */
             pageaddr,   /* Absolute address of 4K page frame  */
             r1,         /* Operand-1 register number          */
@@ -5867,6 +5885,15 @@ bool    multi_block = false;            /* Work (simplifies things)  */
         }
 
     } // end while...
+
+#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
+    /* TXF Key Quiescing support */
+    if (quiesce)
+    {
+        txf_abort_all( regs->cpuad, TXF_WHY_STORKEY, PTT_LOC );
+        RELEASE_INTLOCK( regs );
+    }
+#endif
 
 } /* end DEF_INST( perform_frame_management_function ) */
 #endif /* defined( FEATURE_008_ENHANCED_DAT_FACILITY_1 ) */

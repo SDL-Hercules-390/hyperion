@@ -1860,7 +1860,7 @@ TPAGEMAP*  pmap = regs->txf_pagesmap;
 }
 
 /*-------------------------------------------------------------------*/
-/*   Delay-Abort all active transactions due to CSP/CSPG/IPTE/IDTE   */
+/*             Delay-Abort all active transactions                   */
 /*-------------------------------------------------------------------*/
 void txf_abort_all( U16 cpuad, int why, const char* location )
 {
@@ -2243,7 +2243,7 @@ const char* txf_why_str( char* buffer, int buffsize, int why )
         , TXF_WHY_FORMAT( TXF_WHY_TRAN_SET_ADDRESSING_MODE ) // 25
         , TXF_WHY_FORMAT( TXF_WHY_TRAN_MISC_INSTR          ) // 26
         , TXF_WHY_FORMAT( TXF_WHY_NESTING                  ) // 27
-        , ""                                                 // 28
+        , TXF_WHY_FORMAT( TXF_WHY_STORKEY                  ) // 28
         , TXF_WHY_FORMAT( TXF_WHY_IPTE_INSTR               ) // 29
         , TXF_WHY_FORMAT( TXF_WHY_IDTE_INSTR               ) // 30
         , TXF_WHY_FORMAT( TXF_WHY_CONSTRAINT_4             ) // 31

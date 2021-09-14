@@ -1391,7 +1391,7 @@ do {                                                                  \
  * FIXME: Synchronization, esp for the CHANGE bit, should
  * be tighter than what is provided here.
  */
-#define STORKEY_INVALIDATE( _regs, _n )                               \
+#define STORKEY_INVALIDATE_LOCKED( _regs, _n )                        \
  do                                                                   \
  {                                                                    \
    BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);       \
@@ -1401,8 +1401,6 @@ do {                                                                  \
    if (sysblk.cpus > 1)                                               \
    {                                                                  \
      int cpu;                                                         \
-                                                                      \
-     OBTAIN_INTLOCK( (_regs) );                                       \
                                                                       \
      for (cpu=0; cpu < sysblk.hicpu; cpu++)                           \
      {                                                                \
@@ -1428,9 +1426,18 @@ do {                                                                  \
          }                                                            \
        }                                                              \
      }                                                                \
-                                                                      \
-     RELEASE_INTLOCK((_regs));                                        \
    }                                                                  \
+ }                                                                    \
+ while (0)
+
+#define STORKEY_INVALIDATE( _regs, _n )                               \
+ do                                                                   \
+ {                                                                    \
+   OBTAIN_INTLOCK( (_regs) );                                         \
+   {                                                                  \
+      STORKEY_INVALIDATE_LOCKED( (_regs), (_n) );                     \
+   }                                                                  \
+   RELEASE_INTLOCK( (_regs) );                                        \
  }                                                                    \
  while (0)
 
