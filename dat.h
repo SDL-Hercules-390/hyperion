@@ -28,7 +28,7 @@
 void ARCH_DEP( purge_tlbe      )( REGS* regs, RADR pfra );
 void ARCH_DEP( invalidate_tlb  )( REGS* regs, BYTE  mask );
 void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main );
-void ARCH_DEP( invalidate_pte  )( BYTE ibyte, RADR op1, U32 op2, REGS* regs );
+void ARCH_DEP( invalidate_pte  )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs );
 
 #if defined( FEATURE_ACCESS_REGISTERS )
 U16  ARCH_DEP( translate_alet )( U32 alet, U16 eax, int acctype, REGS* regs, U32* asteo, U32 aste[] );
@@ -40,12 +40,12 @@ U16 ARCH_DEP( translate_asn )( U16 asn, REGS* regs, U32* asteo, U32 aste[] );
 
 /*-------------------------------------------------------------------*/
 /*  All 3 build architecture variants of the below function must     */
-/*  all be defined at once (we cannot wait for them to be defined    */
+/*  all be declared at once (we cannot wait for them to be declared  */
 /*  later on a subsequent pass when the next build architecture is   */
 /*  eventually built) since some functions might need invoke the     */
 /*  "SIE_TRANSLATE_ADDR" macro, which might itself need to call      */
-/*  the "translate_addr" function for a build architecture that is   */
-/*  different than the one currently executing or being built.       */
+/*  the "translate_addr" function for a build architecture different */
+/*  from the one currently being built (or currently executing).     */
 /*-------------------------------------------------------------------*/
 #ifndef TRANSLATE_ADDR_DEFINED
 #define TRANSLATE_ADDR_DEFINED

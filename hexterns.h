@@ -398,9 +398,9 @@ int exec_cmd( int argc, char* argv[], char* cmdline );
 int suspend_cmd(int argc, char *argv[],char *cmdline);
 int resume_cmd(int argc, char *argv[],char *cmdline);
 
-/* Functions in ecpsvm.c that are not *direct* instructions */
-/* but support functions either used by other instruction   */
-/* functions or from somewhere else                         */
+/* Functions in module ecpsvm.c that are not *direct* instructions   */
+/* but rather are instead support functions used by either other     */
+/* instruction functions or elsewhere.                               */
 #if defined( _FEATURE_ECPSVM )
 int  ecpsvm_dosvc(REGS *regs, int svccode);
 int  ecpsvm_dossm(REGS *regs,int b,VADR ea);
@@ -422,12 +422,12 @@ HSYS_DLL_IMPORT int  (*debug_tt32_stats)   (int);
 HSYS_DLL_IMPORT bool (*debug_tt32_tracing) (int);
 #endif // defined(OPTION_W32_CTCI)
 
-/* Function in crypto.c */
+/* Functions in module crypto.c */
 #if defined( _FEATURE_076_MSA_EXTENSION_FACILITY_3 )
 void renew_wrapping_keys(void);
 #endif
 
-/* Function in getopt.c */
+/* Functions in module getopt.c */
 GOP_DLL_IMPORT int   opterr;    /* if error message should be printed */
 GOP_DLL_IMPORT int   optind;    /* index into parent argv vector */
 GOP_DLL_IMPORT int   optopt;    /* character checked for validity */
@@ -436,7 +436,7 @@ GOP_DLL_IMPORT char* optarg;    /* argument associated with option */
 GOP_DLL_IMPORT int   getopt      ( int nargc, char * const *nargv, const char *options );
 GOP_DLL_IMPORT int   getopt_long ( int nargc, char * const *nargv, const char *options, const struct option *long_options, int *idx );
 
-/* Function in channel.c */
+/* Functions in module channel.c */
                 void shared_iowait (DEVBLK *dev);
 CHAN_DLL_IMPORT int  device_attention (DEVBLK *dev, BYTE unitstat);
 CHAN_DLL_IMPORT int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);

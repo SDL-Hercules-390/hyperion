@@ -322,7 +322,7 @@ inline int mult_logical_long( U64* high, U64* lo, U64 md, U64 mr )
 /*                      logical_to_main_l                            */
 /*-------------------------------------------------------------------*/
 /*  All 3 build architecture variants of the below function must     */
-/*  be defined at once (we cannot wait for them to be defined later  */
+/*  be declared at once (we can't wait for them to be declared later */
 /*  on a subsequent pass when the next build architecture is built)  */
 /*  since some of the below inline functions might need invoke the   */
 /*  "SIE_TRANSLATE" macro, which invokes the "SIE_LOGICAL_TO_ABS"    */

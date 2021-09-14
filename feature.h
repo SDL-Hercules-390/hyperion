@@ -157,6 +157,8 @@
 #include  "featchk.h"                   // (featchk pass 2: sanity checks)
 
 /*-------------------------------------------------------------------*/
+/*         Architecture DEPENDENT macros and constants               */
+/*-------------------------------------------------------------------*/
 /*  The following are the various constants and macros which vary    */
 /*  by build architecture.  When __GEN_ARCH == 370, #defines for     */
 /*  the S/370 architecture are made, etc.  Constants and macros      */
@@ -216,7 +218,6 @@
 #undef STORE_W
 #undef FETCH_W
 #undef AIV
-#undef VIE
 #undef SIEBK
 #undef ZPB
 #undef TLB_REAL_ASD
@@ -294,12 +295,12 @@
 #define PX_MASK 0x7FFFF000
 #define RSTOLD  iplccw1
 #define RSTNEW  iplpsw
-#if !defined(_FEATURE_ZSIE)
-#define RADR    U32
-#define F_RADR  "%8.8"PRIX32
+#if !defined( _FEATURE_ZSIE )
+  #define RADR    U32
+  #define F_RADR  "%8.8"PRIX32
 #else
-#define RADR    U64
-#define F_RADR  "%16.16"PRIX64
+  #define RADR    U64
+  #define F_RADR  "%16.16"PRIX64
 #endif
 #define VADR    U32
 #define VADR_L  VADR
@@ -397,7 +398,7 @@
 #define LSED_UET_HDR    S_LSED_UET_HDR
 #define LSED_UET_TLR    S_LSED_UET_TLR
 #define LSED_UET_BAKR   S_LSED_UET_BAKR
-#define LSED_UET_PC S_LSED_UET_PC
+#define LSED_UET_PC     S_LSED_UET_PC
 #define CR12_BRTRACE    S_CR12_BRTRACE
 #define CR12_TRACEEA    S_CR12_TRACEEA
 
@@ -418,12 +419,12 @@
 #define PX_MASK 0x7FFFF000
 #define RSTNEW  iplpsw
 #define RSTOLD  iplccw1
-#if !defined(_FEATURE_ZSIE)
-#define RADR    U32
-#define F_RADR  "%8.8"PRIX32
+#if !defined( _FEATURE_ZSIE )
+  #define RADR    U32
+  #define F_RADR  "%8.8"PRIX32
 #else
-#define RADR    U64
-#define F_RADR  "%16.16"PRIX64
+  #define RADR    U64
+  #define F_RADR  "%16.16"PRIX64
 #endif
 #define VADR    U32
 #define VADR_L  VADR
@@ -532,7 +533,7 @@
 #define LSED_UET_HDR    Z_LSED_UET_HDR
 #define LSED_UET_TLR    Z_LSED_UET_TLR
 #define LSED_UET_BAKR   Z_LSED_UET_BAKR
-#define LSED_UET_PC Z_LSED_UET_PC
+#define LSED_UET_PC     Z_LSED_UET_PC
 #define CR12_BRTRACE    Z_CR12_BRTRACE
 #define CR12_TRACEEA    Z_CR12_TRACEEA
 
