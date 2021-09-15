@@ -52,7 +52,7 @@
 #include "hercules.h"
 
 #if defined( __sun__ )
-#include <sys/fileio.h>     // (need FIONBIO and FIONREAD)
+#include <sys/filio.h>      // (need FIONBIO and FIONREAD)
 #endif
 
 #include "tcpip.h"
