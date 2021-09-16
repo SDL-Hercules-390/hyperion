@@ -12,6 +12,47 @@
 //      The <config.h> header and other required headers are
 //      presumed to have already been #included ahead of it...
 
+//---------------------------------------------------------------------
+//             *** IMPORTANT PROGRAMMING NOTE ***
+//---------------------------------------------------------------------
+//
+//  Normally, using any type of architecturally dependent constant
+//  in any of the below REGS, SYSBLK or DEVBLK structures (such as
+//  RADR) would be considered a serious error, since the width of
+//  such constants varies depending on which architecture is being
+//  built at the time. RADR for example is 32-bits wide (U32) for
+//  the S370 and S390 architectures (__GEN_ARCH == 370 or 390) but
+//  is 64-bits wide (U64) for z/Arch (__GEN_ARCH == 900), which
+//  would result in a different size/layout for each struct (REGS,
+//  SYSBLK and DEVBLK), which needless to say would be VERY BAD!
+//
+//  Our "RADR" constant however (which is used in several different
+//  places in the below structures) is an exception to the rule. It
+//  is completely safe to use RADR in the below structs because it
+//  is always #defined as a 64-bit wide U64 whenever build support
+//  for z/Architecture SIE is defined (i.e. _FEATURE_ZSIE), which
+//  forces RADR to always be #defined as U64 regardless of which
+//  build architecture is being built. When the 370 or 390 build
+//  architectures are being built for example, RADR -- which would
+//  normally be #defined as U32 for 370 and 390 -- is nevertheless
+//  defined as U64 instead via the following code in "feature.h":
+//
+//          #if !defined( _FEATURE_ZSIE )
+//            #define RADR    U32
+//            #define F_RADR  "%8.8"PRIX32
+//          #else
+//            #define RADR    U64
+//            #define F_RADR  "%16.16"PRIX64
+//          #endif
+//
+//  Thus it is safe to use 'RADR' in any of the below structures
+//  since it should thus *always* end up being defined as a U64.
+//
+//  Using any OTHER type of build architecture dependent constant
+//  in any of the below strutures however would be a SERIOUS ERROR!
+//
+//---------------------------------------------------------------------
+
 #ifndef _HSTRUCTS_H
 #define _HSTRUCTS_H
 

@@ -614,7 +614,7 @@
   #define     _FEATURE_SIE    // (370/390/900 SIE)
 
   #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    #define   _FEATURE_ZSIE   // (z/Arch-only SIE)
+    #define   _FEATURE_ZSIE   // (900 SIE)
   #endif
 
   #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL )

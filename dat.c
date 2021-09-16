@@ -64,25 +64,6 @@ extern inline bool ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, R
 
 extern inline BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey );
 
-/*-------------------------------------------------------------------*/
-/*  The below two specialized SIE functions must both be defined at  */
-/*  the same time since the "logical_to_main_l" function might need  */
-/*  to apply prefixing for a host architecture which is differernt   */
-/*  from the architecture currently executing "logical_to_main_l".   */
-/*-------------------------------------------------------------------*/
-#if defined( _FEATURE_SIE )
-
-  #ifndef DID_SIE_APPLY_PREFIXING
-  #define DID_SIE_APPLY_PREFIXING
-
-    extern inline U64 sie_apply_s390_host_prefixing( U64 raddr, U64 px );
-    extern inline U64 sie_apply_z900_host_prefixing( U64 raddr, U64 px );
-
-  #endif // DID_SIE_APPLY_PREFIXING
-
-#endif // _FEATURE_SIE
-
-
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
 /* Translate ASN to produce address-space control parameters         */
@@ -1888,134 +1869,179 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
 
 
 /*-------------------------------------------------------------------*/
-/* Invalidate page table entry                                       */
+/*                Invalidate Page Table Entry                        */
+/*-------------------------------------------------------------------*/
 /*                                                                   */
-/* Input:                                                            */
-/*      ibyte   0x21=IPTE instruction, 0x59=IESBE instruction        */
-/*      r1      First operand register number                        */
-/*      r2      Second operand register number                       */
+/*  This function is called by the IPTE and IESBE instructions. It   */
+/*  either sets the PAGETAB_INVALID bit (for IPTE instruction) or    */
+/*  resets the PAGETAB_ESVALID bit (for IESBE instruction) for the   */
+/*  Page Table Entry addressed by the passed Page Table Origin value */
+/*  plus the Virtual Address's page index value, and clears the TLB  */
+/*  of all entries with a Page Frame Real Address matching the one   */
+/*  from the invalidated Page Table Entry.                           */
+/*                                                                   */
+/*  Input:                                                           */
+/*                                                                   */
+/*      ibyte   0x21 = IPTE instruction, 0x59 = IESBE instruction    */
+/*      pto     Real address of Page Table Origin identifying the    */
+/*              Page Table containing the Entry to be invalidated    */
+/*      vaddr   Virtual Address of page within specified Page Table  */
+/*              whose entry is to be invalidated                     */
 /*      regs    CPU register context                                 */
 /*                                                                   */
-/*      This function is called by the IPTE and IESBE instructions.  */
-/*      It sets the PAGETAB_INVALID bit (for IPTE) or resets the     */
-/*      PAGETAB_ESVALID bit (for IESBE) in the page table entry      */
-/*      addressed by the page table origin in the R1 register and    */
-/*      the page index in the R2 register.  It clears the TLB of     */
-/*      all entries whose PFRA matches the page table entry.         */
+/*                     *** IMPORTANT! ***                            */
 /*                                                                   */
-/* invalidate_pte should be called with the intlock held and         */
-/* SYNCHRONIZE_CPUS issued while intlock is held.                    */
+/*           This function expects INTLOCK to be held                */
+/*         and SYNCHRONIZE_CPUS to be called beforehand!             */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(invalidate_pte) (BYTE ibyte, RADR op1,
-                                                    U32 op2, REGS *regs)
+void ARCH_DEP( invalidate_pte )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs )
 {
-RADR    raddr;                          /* Addr of page table entry  */
-RADR    pte;
-RADR    pfra;
+RADR    raddr;                          /* Addr of Page Table Entry  */
+RADR    pte;                            /* Page Table Entry itself   */
+RADR    pfra;                           /* Page Frame Real Address   */
 
     UNREFERENCED_370( ibyte );
 
 #if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     {
+        // SYSTEM/370...
+
         /* Program check if translation format is invalid */
-        if ((((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_2K) &&
-           ((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_4K)) ||
-           (((regs->CR(0) & CR0_SEG_SIZE) != CR0_SEG_SZ_64K) &&
-           ((regs->CR(0) & CR0_SEG_SIZE) != CR0_SEG_SZ_1M)))
-            regs->program_interrupt (regs,
-                              PGM_TRANSLATION_SPECIFICATION_EXCEPTION);
+        if (0
+            || (((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_2K) && ((regs->CR(0) & CR0_PAGE_SIZE) != CR0_PAGE_SZ_4K))
+            || (((regs->CR(0) & CR0_SEG_SIZE)  != CR0_SEG_SZ_64K) && ((regs->CR(0) & CR0_SEG_SIZE)  != CR0_SEG_SZ_1M))
+        )
+            regs->program_interrupt( regs, PGM_TRANSLATION_SPECIFICATION_EXCEPTION );
 
-        /* Combine the page table origin in the R1 register with
-           the page index in the R2 register, ignoring carry, to
-           form the 31-bit real address of the page table entry */
-        raddr = (op1 & SEGTAB_370_PTO)
-                    + (((regs->CR(0) & CR0_SEG_SIZE) == CR0_SEG_SZ_1M) ?
-                      (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-                      ((op2 & 0x000FF000) >> 11) :
-                      ((op2 & 0x000FF800) >> 10)) :
-                      (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-                      ((op2 & 0x0000F000) >> 11) :
-                      ((op2 & 0x0000F800) >> 10)));
-        raddr &= 0x00FFFFFF;
+        /* Add the vaddr's page table entry index to the Page Table
+           Origin, ignoring any carry, to form the 24-bit real address
+           of the Page Table Entry to be invalidated, taking into account
+           that each Page Table Entry is 2 bytes wide (shift 1 less bit)
+        */
+        raddr = (pto & SEGTAB_370_PTO) +
+        (
+            ((regs->CR(0)  & CR0_SEG_SIZE)  == CR0_SEG_SZ_1M)
+            ?
+            (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
+            ((vaddr & 0x000FF000) >> (SHIFT_4K-1)) : ((vaddr & 0x000FF800) >> (SHIFT_2K-1)))
+            :
+            (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
+            ((vaddr & 0x0000F000) >> (SHIFT_4K-1)) : ((vaddr & 0x0000F800) >> (SHIFT_2K-1)))
+        );
+        raddr &= MAXADDRESS;
 
-        /* Fetch the page table entry from real storage, subject
-           to normal storage protection mechanisms */
-        pte = ARCH_DEP(vfetch2) ( raddr, USE_REAL_ADDR, regs );
+        /* Fetch the Page Table Entry from real storage,
+           subject to normal storage protection mechanisms
+        */
+        pte = ARCH_DEP( vfetch2 )( raddr, USE_REAL_ADDR, regs );
 
-        /* Set the page invalid bit in the page table entry,
-           again subject to storage protection mechansims */
-// /*debug*/ LOGMSG("dat.c: IPTE issued for entry %4.4X at %8.8X...\n"
-//                  "       page table %8.8X, page index %8.8X, cr0 %8.8X\n",
-//                  pte, raddr, regs->GR_L(r1), regs->GR_L(r2), regs->CR(0));
-        if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_2K)
-            pte |= PAGETAB_INV_2K;
-        else
-            pte |= PAGETAB_INV_4K;
-        ARCH_DEP(vstore2) ( pte, raddr, USE_REAL_ADDR, regs );
-        pfra = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
+#if 0 // debug 370 IPTE
+        LOGMSG
+        (
+            "dat.c: IPTE issued for entry %4.4X at %8.8X...\n"
+            "       pto %8.8X, vaddr %8.8X, cr0 %8.8X\n"
+
+            , pte, raddr
+            , pto, vaddr, regs->CR(0)
+        );
+#endif
+
+        /* Set the invalid bit in the Page Table Entry just fetched */
+        pte |= ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_2K)
+               ? PAGETAB_INV_2K : PAGETAB_INV_4K;
+
+        /* Store the now invalidated Page Table Entry back into
+           real storage where we originally got it from, subject
+           to the same storage protection mechanisms
+        */
+        ARCH_DEP( vstore2 )( pte, raddr, USE_REAL_ADDR, regs );
+
+        /* Extract the Page Frame Address from the Page Table Entry */
+        pfra = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+            ?
 #if defined( FEATURE_S370E_EXTENDED_ADDRESSING )
             (((U32)pte & PAGETAB_EA_4K) << 23) |
 #endif
-            (((U32)pte & PAGETAB_PFRA_4K) << 8) :
+            (((U32)pte & PAGETAB_PFRA_4K) << 8)
+            :
             (((U32)pte & PAGETAB_PFRA_2K) << 8);
     }
 #elif defined( FEATURE_S390_DAT )
     {
+        // SYSTEM/390...
+
         /* Program check if translation format is invalid */
         if ((regs->CR(0) & CR0_TRAN_FMT) != CR0_TRAN_ESA390)
-            regs->program_interrupt (regs,
-                              PGM_TRANSLATION_SPECIFICATION_EXCEPTION);
+            regs->program_interrupt( regs, PGM_TRANSLATION_SPECIFICATION_EXCEPTION );
 
-        /* Combine the page table origin in the R1 register with
-           the page index in the R2 register, ignoring carry, to
-           form the 31-bit real address of the page table entry */
-        raddr = (op1 & SEGTAB_PTO)
-                    + ((op2 & 0x000FF000) >> 10);
-        raddr &= 0x7FFFFFFF;
+        /* Add the vaddr's page table entry index to the Page Table
+           Origin, ignoring any carry, to form the 31-bit real address
+           of the Page Table Entry to be invalidated, taking into account
+           that each Page Table Entry is 4 bytes wide (shift 2 fewer bits)
+        */
+        raddr = (pto & SEGTAB_PTO) + ((vaddr & 0x000FF000) >> (PAGEFRAME_PAGESHIFT-2));
+        raddr &= MAXADDRESS;
 
-        /* Fetch the page table entry from real storage, subject
-           to normal storage protection mechanisms */
-        pte = ARCH_DEP(vfetch4) ( raddr, USE_REAL_ADDR, regs );
+        /* Fetch the Page Table Entry from real storage,
+           subject to normal storage protection mechanisms */
+        pte = ARCH_DEP( vfetch4 )( raddr, USE_REAL_ADDR, regs );
 
-        /* Set the page invalid bit in the page table entry,
-           again subject to storage protection mechansims */
+        /* Set the invalid bit in the Page Table Entry just fetched */
 #if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && defined( FEATURE_EXPANDED_STORAGE )
-        if(ibyte == 0x59)
+        if (ibyte == 0x59) // (IESBE instruction?)
             pte &= ~PAGETAB_ESVALID;
         else
 #endif
-            pte |= PAGETAB_INVALID;
-        ARCH_DEP(vstore4) ( pte, raddr, USE_REAL_ADDR, regs );
+            pte |= PAGETAB_INVALID; // (no, IPTE instruction)
+
+        /* Store the now invalidated Page Table Entry back into
+           real storage where we originally got it from, subject
+           to the same storage protection mechanisms
+        */
+        ARCH_DEP( vstore4 )( pte, raddr, USE_REAL_ADDR, regs );
+
+        /* Extract the Page Frame Address from the Page Table Entry */
         pfra = pte & PAGETAB_PFRA;
     }
 #else /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
     {
-        /* Combine the page table origin in the R1 register with
-           the page index in the R2 register, ignoring carry, to
-           form the 64-bit real address of the page table entry */
-        raddr = (op1 & ZSEGTAB_PTO)
-                    + ((op2 & 0x000FF000) >> 9);
+        // ESAME = z/Architecture...
 
-        /* Fetch the page table entry from real storage, subject
-           to normal storage protection mechanisms */
-        pte = ARCH_DEP(vfetch8) ( raddr, USE_REAL_ADDR, regs );
+        /* Add the vaddr's page table entry index to the Page Table
+           Origin, ignoring any carry, to form the 64-bit real address
+           of the Page Table Entry to be invalidated, taking into account
+           that each Page Table Entry is 8 bytes wide (shift 3 fewer bits)
+        */
+        raddr = (pto & ZSEGTAB_PTO) + ((vaddr & 0x000FF000) >> (PAGEFRAME_PAGESHIFT-3));
+        raddr &= MAXADDRESS;
 
-        /* Set the page invalid bit in the page table entry,
-           again subject to storage protection mechansims */
+        /* Fetch the Page Table Entry from real storage,
+           subject to normal storage protection mechanisms
+        */
+        pte = ARCH_DEP( vfetch8 )( raddr, USE_REAL_ADDR, regs );
+
+        /* Set the invalid bit in the Page Table Entry just fetched */
 #if defined( FEATURE_MOVE_PAGE_FACILITY_2 ) && defined( FEATURE_EXPANDED_STORAGE )
-        if(ibyte == 0x59)
+        if (ibyte == 0x59) // (IESBE instruction?)
             pte &= ~ZPGETAB_ESVALID;
         else
 #endif
-            pte |= ZPGETAB_I;
-        ARCH_DEP(vstore8) ( pte, raddr, USE_REAL_ADDR, regs );
+            pte |= ZPGETAB_I; // (no, IPTE instruction)
+
+        /* Store the now invalidated Page Table Entry back into
+           real storage where we originally got it from, subject
+           to the same storage protection mechanisms
+        */
+        ARCH_DEP( vstore8 )( pte, raddr, USE_REAL_ADDR, regs );
+
+        /* Extract the Page Frame Address from the Page Table Entry */
         pfra = pte & ZPGETAB_PFRA;
     }
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
-    /* Invalidate TLB entries */
-    ARCH_DEP(purge_tlbe_all) (pfra);
+    /* Invalidate all TLB entries for this Page Frame Real Address */
+    ARCH_DEP( purge_tlbe_all )( pfra );
 
 } /* end function invalidate_pte */
 
@@ -2134,7 +2160,6 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     if(SIE_MODE(regs)) HOSTREGS->dat.protect = 0;
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
-
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
                     (arn > 0 && MULTIPLE_CONTROLLED_DATA_SPACE(regs)) ? arn : USE_PRIMARY_SPACE,
                     HOSTREGS, ACCTYPE_SIE))
@@ -2164,17 +2189,17 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Convert host real address to host absolute address */
         /* ISW 20181005 */
         /* Use the Prefixing logic of the SIE host (not the guest) */
-        switch(HOSTREGS->arch_mode)
+        switch (HOSTREGS->arch_mode)
         {
             case ARCH_390_IDX:
                 HOSTREGS->dat.aaddr = aaddr =
-                        sie_apply_s390_host_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
-                apfra = sie_apply_s390_host_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
+                        APPLY_390_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX_L );
+                apfra = APPLY_390_PREFIXING( HOSTREGS->dat.rpfra, HOSTREGS->PX_L );
                 break;
             case ARCH_900_IDX:
                 HOSTREGS->dat.aaddr = aaddr =
-                        sie_apply_z900_host_prefixing( HOSTREGS->dat.raddr, HOSTREGS->PX );
-                apfra = sie_apply_z900_host_prefixing( HOSTREGS->dat.rpfra, HOSTREGS->PX );
+                        APPLY_900_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX_G );
+                apfra = APPLY_900_PREFIXING( HOSTREGS->dat.rpfra, HOSTREGS->PX_G );
                 break;
             /* No S/370 or any other SIE host exist */
             default:
