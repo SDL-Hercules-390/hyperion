@@ -2539,8 +2539,7 @@ static void*  LCS_PortThread( void* arg)
                     }
 
                     // If this is an exact match use it
-                    // otherwise look for primary and secondary
-                    // default devices
+                    // Primary and secondary default devicea are IP only
                     memcpy( &mac, pLCSPORT->MAC_Address, IFHWADDRLEN );
 #if !defined( OPTION_TUNTAP_LCS_SAME_ADDR )
                     mac[5]++;
@@ -2550,10 +2549,6 @@ static void*  LCS_PortThread( void* arg)
                         pMatchingLCSDEV = pLCSDev;
                         break;
                     }
-                    else if (pLCSDev->bType == LCSDEV_TYPE_PRIMARY)
-                        pPrimaryLCSDEV = pLCSDev;
-                    else if (pLCSDev->bType == LCSDEV_TYPE_SECONDARY)
-                        pSecondaryLCSDEV = pLCSDev;
                 }
             }
         }
@@ -3495,7 +3490,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 return -1;
             }
             /* The -x option was not specified, so the argument should be the  */
-            /* the name of the pre-configured TAP interface that LCS will use. */
+            /* name of the pre-configured TAP interface that LCS will use.     */
             STRLCPY( pLCSBLK->Port[0].szNetIfName, argv[0] );
             pLCSBLK->Port[0].fPreconfigured = TRUE;
 #endif /*defined(OPTION_W32_CTCI)*/
@@ -3549,10 +3544,11 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     char*       pszNetMask   = NULL;
     char*       strtok_str = NULL;
 
-    struct in_addr  addr;               // Work area for addresses
+    struct in_addr  addr;               // Work area for IPv4 addresses
     char        pathname[MAX_PATH];     // pszOATName in host path format
 
-    // Open the configuration file
+
+    // Open the OAT configuration file
     hostpath(pathname, pszOATName, sizeof(pathname));
     fp = fopen( pathname, "r" );
     if (!fp)
@@ -3569,8 +3565,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         // Read next record from the OAT file
         if (!ReadOAT( pszOATName, fp, szBuff ))
         {
-            fclose( fp );
-            return 0;
+            break;
         }
 
         if (pszStatement)
@@ -3707,6 +3702,40 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             pLCSRTE->pszNetAddr = pszNetAddr;
             pLCSRTE->pszNetMask = pszNetMask;
             pLCSRTE->pNext      = NULL;
+        }
+        else if (strcasecmp( pszKeyword, "IFNAME" ) == 0)
+        {
+            if (!pszOperand        ||
+                argc       >  2    ||
+                sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1)
+            {
+                // "CTC: invalid statement %s in file %s: %s"
+                WRMSG( HHC00954, "E", "HWADD", pszOATName, szBuff );
+                return -1;
+            }
+
+            pLCSPORT = &pLCSBLK->Port[sPort];
+
+            /* The argument should be the name of the          */
+            /* pre-configured TAP interface that LCS will use. */
+            STRLCPY( pLCSPORT->szNetIfName, argv[0] );
+            pLCSPORT->fPreconfigured = TRUE;
+
+            /* If NAMED has been specified the TAP interface   */
+            /* is not pre-configured, it is simply pre-named.  */
+            if (argc > 1)
+            {
+                if (strcasecmp( argv[1], "NAMED" ) == 0)
+                {
+                    pLCSPORT->fPreconfigured = FALSE;
+                }
+                else
+                {
+                    // "CTC: error in file %s: %s: invalid entry starting at %s"
+                    WRMSG( HHC00959, "E", pszOATName, szBuff, argv[1] );
+                    return -1;
+                }
+            }
         }
         else // (presumed OAT file device statement)
         {
@@ -3879,7 +3908,40 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
     } // end for (;;)
 
-    UNREACHABLE_CODE( return -1 );
+    // End of file, close OAT configuration file
+    fclose( fp );
+
+    // Check that there is at least one device block.
+    if (!pLCSBLK->pDevices)
+    {
+        return -1;
+    }
+
+    // If any of the ports have been defined as pre-configured, check
+    // that the port has not had any options specified that require
+    // configuration (i.e. TUNTAP_xxx) requests. In addition, check
+    // that the device using the port has not had any options specified
+    // that require configuration (i.e. TUNTAP_xxx) requests.
+    for (pLCSDev = pLCSBLK->pDevices; pLCSDev; pLCSDev = pLCSDev->pNext)
+    {
+        pLCSPORT = &pLCSBLK->Port[ pLCSDev->bPort ];
+        if (pLCSPORT->fPreconfigured)
+        {
+            if (pLCSPORT->szMACAddress[0] != 0 || pLCSPORT->pRoutes)
+            {
+                return -1;
+            }
+            if (pLCSDev->bMode == LCSDEV_MODE_IP)
+            {
+                if (pLCSDev->pszIPAddress[0] != 0)
+                {
+                    return -1;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 // ====================================================================
@@ -3977,17 +4039,10 @@ static void*  LCS_AttnThread( void* arg)
     /* --------------------------------------------------------------------- */
     int         interval;              /* interval between attempts  FixMe! Configurable? */
     int         dev_attn_rc;           /* device_attention RC    */
-//  int         attn_can;              /* = 1 : Atttention Cancelled */
     int         busy_waits;            /* Number of times waited for */
                                        /* a Busy condition to end    */
     /* --------------------------------------------------------------------- */
 
-
-//  {                                                                          /* FixMe! Remove! */
-//      char    tmp[256];                                                      /* FixMe! Remove! */
-//      snprintf( (char*)tmp, 256, "LCS_AttnThread activated" );               /* FixMe! Remove! */
-//      WRMSG(HHC03984, "D", tmp );                                            /* FixMe! Remove! */
-//  }                                                                          /* FixMe! Remove! */
 
     PTT_DEBUG( "ATTNTHRD: ENTRY", 000, 000, 000 );
 
@@ -4082,9 +4137,6 @@ static void*  LCS_AttnThread( void* arg)
             pLCSDEV = pLCSATTN->pDevice;
             pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
 
-//          if (pLCSBLK->fDebug)                                                                            /* FixMe! Remove! */
-//              net_data_trace( pDEVBLK, (BYTE*)pLCSATTN, sizeof( LCSATTN ), ' ', 'D', "LCSATTN out", 0 );  /* FixMe! Remove! */
-
             /* Only raise an Attention if there is at least one buffer waiting to be read. */
             if (pLCSDEV->pFirstLCSIBH)
             {
@@ -4093,10 +4145,8 @@ static void*  LCS_AttnThread( void* arg)
 
                 /* --------------------------------------------------------------------- */
 
-//              interval = 25;
                 interval = 100;
                 dev_attn_rc = 0;       /* device_attention RC    */
-//              attn_can = 0;          /* = 1 : Atttention Cancelled */
                 busy_waits = 0;        /* Number of times waited for */
                                        /* a Busy condition to end    */
 
@@ -4116,11 +4166,12 @@ static void*  LCS_AttnThread( void* arg)
                     dev_attn_rc = device_attention( pDEVBLK, CSW_ATTN );
                     PTT_DEBUG( "Raise Attn   ", 000, pDEVBLK->devnum, dev_attn_rc );
 
-    {                                                                                                        /* FixMe! Remove? */
-        char    tmp[256];                                                                                    /* FixMe! Remove? */
-        snprintf( (char*)tmp, 256, "device_attention rc=%d  %d  %d", dev_attn_rc, busy_waits, interval );    /* FixMe! Remove? */
-        WRMSG(HHC03991, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );          /* FixMe! Remove? */
-    }                                                                                                        /* FixMe! Remove? */
+                    if (pLCSDEV->pLCSBLK->fDebug)
+                    {
+                        char    tmp[256];
+                        snprintf( (char*)tmp, 256, "device_attention rc=%d  %d  %d", dev_attn_rc, busy_waits, interval );
+                        WRMSG(HHC03991, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, tmp );
+                    }
 
                     // ATTN RC=1 means a device busy status did
                     // appear so that the signal did not work.
@@ -4138,7 +4189,6 @@ static void*  LCS_AttnThread( void* arg)
                         break;
                     }
 
-//                  interval = interval * 2;
                     interval += 100;
 
                 }   // end for ( ; ; )
@@ -4629,7 +4679,7 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     int       iTHetcLen;
     int       iTraceLen;
     BYTE      frame[1600];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char      llcmsg[256];
 
     UNREFERENCED( pLCSHDR   );
     UNREFERENCED( hwLenBaf1 );
@@ -4644,7 +4694,7 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     pLCSCONN = find_connection_by_outbound_token( pLCSDEV, pLCSBAF1->bTokenA );
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -4694,10 +4744,8 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
                                  iTraceLen, (iEthLen - iTraceLen) );
         }
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC information frame sent: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame sent: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
+        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
     }
 
     // Write the Ethernet frame to the TAP device
@@ -4728,7 +4776,7 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //  01000300 00000000 00000000 00000000 00000000 00000000 0000
 //  0 1 2 3  4 5 6 7  8 9 A B  C ...
 
-    DEVBLK*     pDEVBLK;                                                                   /* FixMe! Remove! */
+    DEVBLK*     pDEVBLK;
     PLCSPORT    pLCSPORT;
     PLCSCONN    pLCSCONN;
     int         iLPDULen;
@@ -4736,7 +4784,7 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     PETHFRM     pEthFrame;
     int         iEthLen;
     BYTE        frame[64];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char        llcmsg[256];
 
     UNREFERENCED( pLCSDEV   );
     UNREFERENCED( pLCSHDR   );
@@ -4755,7 +4803,7 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     pLCSCONN = find_connection_by_outbound_token( pLCSDEV, pLCSBAF1->bTokenA );
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -4784,10 +4832,8 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "SABME" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "SABME" );
+        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
     }
 
     // Write the Ethernet frame to the TAP device
@@ -4818,7 +4864,7 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //  010000
 //  0 1 2
 
-    DEVBLK*     pDEVBLK;                                                                   /* FixMe! Remove! */
+    DEVBLK*     pDEVBLK;
     PLCSPORT    pLCSPORT;
     PLCSCONN    pLCSCONN;
     int         iLPDULen;
@@ -4826,7 +4872,7 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     PETHFRM     pEthFrame;
     int         iEthLen;
     BYTE        frame[64];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char        llcmsg[256];
 
     UNREFERENCED( pLCSHDR   );
     UNREFERENCED( pLCSBAF1  );
@@ -4844,7 +4890,7 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     pLCSCONN = find_connection_by_outbound_token( pLCSDEV, pLCSBAF1->bTokenA );
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -4871,10 +4917,8 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
+        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
@@ -4922,7 +4966,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
                    0x01, 0xff, 0xff, 0x00                            /* LCSBAF2 */
                  };
 
-    DEVBLK*     pDEVBLK;                                                                   /* FixMe! Remove! */
+    DEVBLK*     pDEVBLK;
     PLCSPORT    pLCSPORT;
     PLCSCONN    pLCSCONN;
     PLCSIBH     pLCSIBH;
@@ -4937,7 +4981,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
     UNREFERENCED( hwLenOutBaf1 );
     UNREFERENCED( hwLenOutBaf2 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];                                    /* FixMe! Remove! */
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
 
     // Find the connection block.
@@ -4960,9 +5004,11 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
         uToken += INCREMENT_TOKEN;
         release_lock( &TokenLock );
 
-        WRMSG( HHC03984, "I", "Created LCSCONN Outbound");
-        if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+        if (pLCSDEV->pLCSBLK->fDebug)
+        {
+            WRMSG( HHC03984, "I", "Created LCSCONN Outbound");
+            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+        }
 
         add_connection_to_chain( pLCSDEV, pLCSCONN );
     }
@@ -4970,9 +5016,11 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
     {
         if ( pLCSCONN->hwCreated == LCSCONN_CREATED_INBOUND )  // The existing LSCCONN is for an inbound connection.
         {
-            WRMSG( HHC03984, "I", "Found LCSCONN Inbound");
-            if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+            if (pLCSDEV->pLCSBLK->fDebug)
+            {
+                WRMSG( HHC03984, "I", "Found LCSCONN Inbound");
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+            }
 
             memcpy( &pLCSCONN->bInToken, &pOutBAF1->bTokenB, sizeof(pLCSCONN->bInToken) );  // Copy Inbound token
             obtain_lock( &TokenLock );
@@ -4980,15 +5028,19 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
             uToken += INCREMENT_TOKEN;
             release_lock( &TokenLock );
 
-            WRMSG( HHC03984, "I", "Updated LCSCONN Inbound");
-            if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+            if (pLCSDEV->pLCSBLK->fDebug)
+            {
+                WRMSG( HHC03984, "I", "Updated LCSCONN Inbound");
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+            }
         }
         else  // The existing LCSCONN is for an outbound connection.
         {
-            WRMSG( HHC03984, "E", "Found and released existing LCSCONN Outbound");
-            if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+            if (pLCSDEV->pLCSBLK->fDebug)
+            {
+                WRMSG( HHC03984, "E", "Found and released existing LCSCONN Outbound");
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+            }
 
             remove_connection_from_chain( pLCSDEV, pLCSCONN );
             free_connection( pLCSDEV, pLCSCONN );
@@ -5010,9 +5062,11 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
             uToken += INCREMENT_TOKEN;
             release_lock( &TokenLock );
 
-            WRMSG( HHC03984, "I", "Created LCSCONN Outbound");
-            if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+            if (pLCSDEV->pLCSBLK->fDebug)
+            {
+                WRMSG( HHC03984, "I", "Created LCSCONN Outbound");
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+            }
 
             add_connection_to_chain( pLCSDEV, pLCSCONN );
         }
@@ -5065,7 +5119,7 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     PETHFRM   pEthFrame;
     int       iEthLen;
     BYTE      frame[64];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char      llcmsg[256];
 
     UNREFERENCED( pLCSHDR   );
     UNREFERENCED( pLCSBAF1  );
@@ -5082,7 +5136,7 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     pLCSCONN = find_connection_by_remote_mac( pLCSDEV, (MAC*)&pLCSBAF2->bByte11 );
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -5108,10 +5162,8 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
+        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
@@ -5153,7 +5205,7 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     int       iXIDlen;
     int       iTraceLen;
     BYTE      frame[512];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char      llcmsg[256];
 
     UNREFERENCED( pLCSHDR   );
     UNREFERENCED( pLCSBAF1  );
@@ -5169,7 +5221,7 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     pLCSCONN = find_connection_by_remote_mac( pLCSDEV, (MAC*)&pLCSBAF2->bByte11 );
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -5219,10 +5271,8 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
                                  iTraceLen, (iEthLen - iTraceLen) );
         }
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "XID" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "XID" );
+        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
@@ -5263,7 +5313,7 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     int       iLPDULen;
     LLC       llc;
     BYTE      frame[64];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char      llcmsg[256];
 
     UNREFERENCED( pLCSHDR   );
     UNREFERENCED( pLCSBAF1  );
@@ -5281,7 +5331,7 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     pLCSCONN = find_connection_by_outbound_token( pLCSDEV, pLCSBAF1->bTokenA );
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -5310,10 +5360,8 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
+        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
@@ -5386,7 +5434,7 @@ static const BYTE Inbound_CC0B[INBOUND_CC0B_SIZE] =
     }
     if (!pLCSCONN)
     {
-        WRMSG( HHC03984, "E", "No LCSCONN found");
+        WRMSG( HHC03984, "W", "LCSCONN not found");
         /* FixMe! Need a proper error message here! */
         return;
     }
@@ -5998,7 +6046,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
     int         iLPDULenOut;
     LLC         llcout;
     BYTE        frameout[64];
-          char    tmp[256];                                                        /* FixMe! Remove! */
+    char        llcmsg[256];
 
     UNREFERENCED( iSize );
 
@@ -6029,16 +6077,16 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
     case Type_Information_Frame:
 
         if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC information frame received: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+        {
+          snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame received: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
+          WRMSG(HHC03984, "D", llcmsg );
+        }
 
         // Inbound TH etc, find the connection block.
         pLCSCONN = find_connection_by_remote_mac( pLCSDEV, &pEthFrame->bSrcMAC );
         if (!pLCSCONN)
         {
-            WRMSG( HHC03984, "E", "No LCSCONN found");
+            WRMSG( HHC03984, "W", "LCSCONN not found");
             /* FixMe! Need a proper error message here! */
             break;
         }
@@ -6116,17 +6164,17 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // Supervisory Frame: Receiver Ready.
         case SS_Receiver_Ready:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC supervisory frame received: CR=%u, SS=%s, PF=%u, NR=%u", llc.hwCR, "Receiver Ready", llc.hwPF, llc.hwNR );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame received: CR=%u, SS=%s, PF=%u, NR=%u", llc.hwCR, "Receiver Ready", llc.hwPF, llc.hwNR );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             // Find the connection block.
             pLCSCONN = find_connection_by_remote_mac( pLCSDEV, &pEthFrame->bSrcMAC );
             if (!pLCSCONN)
             {
-                WRMSG( HHC03984, "E", "No LCSCONN found");
+                WRMSG( HHC03984, "W", "LCSCONN not found");
                 /* FixMe! Need a proper error message here! */
                 break;
             }
@@ -6167,10 +6215,8 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
                 net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+                snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
+                WRMSG(HHC03984, "D", llcmsg );
             }
 
             // Write the Ethernet frame to the TAP device
@@ -6186,22 +6232,22 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // Supervisory Frame: Receiver Not Ready.
         case SS_Receiver_Not_Ready:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC supervisory frame received: CR=%u, SS=%s, PF=%u, NR=%u", llc.hwCR, "Receiver Not Ready", llc.hwPF, llc.hwNR );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame received: CR=%u, SS=%s, PF=%u, NR=%u", llc.hwCR, "Receiver Not Ready", llc.hwPF, llc.hwNR );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             break;
 
         // Supervisory Frame: Reject
         case SS_Reject:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC supervisory frame received: CR=%u, SS=%s, PF=%u, NR=%u", llc.hwCR, "Reject", llc.hwPF, llc.hwNR );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame received: CR=%u, SS=%s, PF=%u, NR=%u", llc.hwCR, "Reject", llc.hwPF, llc.hwNR );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             break;
 
@@ -6222,28 +6268,28 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // Unnumbered Frame: DM Response (B'00011', 0x03, 0x0F or 0x1F).
         case M_DM_Response:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "DM" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "DM" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             break;
 
         // Unnumbered Frame: DISC Command (B'01000', 0x10, 0x43 or 0x53).
         case M_DISC_Command:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "DISC" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "DISC" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             // Find the connection block.
             pLCSCONN = find_connection_by_remote_mac( pLCSDEV, &pEthFrame->bSrcMAC );
             if (!pLCSCONN)
             {
-                WRMSG( HHC03984, "E", "No LCSCONN found");
+                WRMSG( HHC03984, "W", "LCSCONN not found");
                 /* FixMe! Need a proper error message here! */
                 break;
             }
@@ -6273,17 +6319,17 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // Unnumbered Frame: UA Response (B'01100', 0x18, 0x63 or 0x73).
         case M_UA_Response:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "UA" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "UA" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             // Find the connection block.
             pLCSCONN = find_connection_by_remote_mac( pLCSDEV, &pEthFrame->bSrcMAC );
             if (!pLCSCONN)
             {
-                WRMSG( HHC03984, "E", "No LCSCONN found");
+                WRMSG( HHC03984, "W", "LCSCONN not found");
                 /* FixMe! Need a proper error message here! */
                 break;
             }
@@ -6318,17 +6364,17 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // Unnumbered Frame: SABME Command (B'01111', 0x1B, 0x6F or 0x7F).
         case M_SABME_Command:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "SABME" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "SABME" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             // Find the connection block.
             pLCSCONN = find_connection_by_remote_mac( pLCSDEV, &pEthFrame->bSrcMAC );
             if (!pLCSCONN)
             {
-                WRMSG( HHC03984, "E", "No LCSCONN found");
+                WRMSG( HHC03984, "W", "LCSCONN not found");
                 /* FixMe! Need a proper error message here! */
                 break;
             }
@@ -6385,11 +6431,11 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // or an I frame that has already been transmitted but not acknowledged.
         case M_FRMR_Response:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "FRMR" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "FRMR" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             break;
 
@@ -6404,11 +6450,11 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         //           which we will pass to VTAM.
         case M_XID_Command_or_Response:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "XID" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "XID" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             // Calculate the size of the XID0 or the XID3 and CV's.
             iDatasize = (iLLCandDatasize - illcsize);
@@ -6419,7 +6465,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
             {
                 if (!pLCSCONN)
                 {
-                    WRMSG( HHC03984, "E", "No LCSCONN found");
+                    WRMSG( HHC03984, "W", "LCSCONN not found");
                     /* FixMe! Need a proper error message here! */
                     break;
                 }
@@ -6430,7 +6476,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 {
                     if ( iDatasize > 0 )  // Is there an XID0 or an XID3 and CV's?
                     {
-                        WRMSG( HHC03984, "E", "No LCSCONN found");
+                        WRMSG( HHC03984, "W", "LCSCONN not found");
                         /* FixMe! Need a proper error message here! */
                         break;
                     }
@@ -6445,9 +6491,11 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
 #endif
                     memcpy( &pLCSCONN->bRemoteMAC, &pEthFrame->bSrcMAC, IFHWADDRLEN );
 
-                    WRMSG( HHC03984, "I", "Created LCSCONN Inbound");
-                    if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                        net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+                    if (pLCSDEV->pLCSBLK->fDebug)
+                    {
+                        WRMSG( HHC03984, "I", "Created LCSCONN Inbound");
+                        net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                    }
 
                     add_connection_to_chain( pLCSDEV, pLCSCONN );
                 }
@@ -6455,15 +6503,19 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 {
                     if ( pLCSCONN->hwCreated == LCSCONN_CREATED_INBOUND )  // The existing LSCCONN is for an inbound connection.
                     {
-                        WRMSG( HHC03984, "I", "Found LCSCONN Inbound");
-                        if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+                        if (pLCSDEV->pLCSBLK->fDebug)
+                        {
+                            WRMSG( HHC03984, "I", "Found LCSCONN Inbound");
+                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                        }
                     }
                     else  // The existing LCSCONN is for an outbound connection.
                     {
-                        WRMSG( HHC03984, "W", "Found existing LCSCONN Outbound, changed to LCSCONN Inbound");
-                        if (pLCSDEV->pLCSBLK->fDebug)                                                             /* FixMe! Remove! */
-                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );  /* FixMe! Remove! */
+                        if (pLCSDEV->pLCSBLK->fDebug)
+                        {
+                            WRMSG( HHC03984, "W", "Found existing LCSCONN Outbound, changed to LCSCONN Inbound");
+                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                        }
 
                         pLCSCONN->hwCreated = LCSCONN_CREATED_INBOUND;
                     }
@@ -6548,11 +6600,11 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // Unnumbered Frame: TEST Command or Response (B'11100, 0x38, 0xE3 or 0xF3).
         case M_TEST_Command_or_Response:
 
-        if (pLCSBLK->fDebug)
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "TEST" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+            if (pLCSBLK->fDebug)
+            {
+              snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "TEST" );
+              WRMSG(HHC03984, "D", llcmsg );
+            }
 
             if (llc.hwCR)  // Response. Tell VTAM the remote system has responded to VTAM's TEST.
             {
@@ -6561,7 +6613,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 pLCSCONN = find_connection_by_remote_mac( pLCSDEV, &pEthFrame->bSrcMAC );
                 if (!pLCSCONN)
                 {
-                    WRMSG( HHC03984, "E", "No LCSCONN found");
+                    WRMSG( HHC03984, "W", "LCSCONN not found");
                     /* FixMe! Need a proper error message here! */
                     break;
                 }
@@ -6622,10 +6674,8 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                     WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
                     net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, '>', 'D', "eth frame", 0 );
-        {                                                                          /* FixMe! Remove! */
-          snprintf( (char*)tmp, 256, "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
-          WRMSG(HHC03984, "D", tmp );                                              /* FixMe! Remove! */
-        }                                                                          /* FixMe! Remove! */
+                    snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
+                    WRMSG(HHC03984, "D", llcmsg );
                 }
 
                 // Write the Ethernet frame to the TAP device
