@@ -129,36 +129,31 @@ exists:
 	end
 
 	if _RXV = "REXX-Regina" then do
-		if stream(arg(1), "c", "query exists") \= "" then return 1
-		return 0
+		return stream(arg(1), "c", "query exists") \= ""
 	end
 
 	return 0
 
 isFile:
 	if _RXV = "REXX-ooRexx" then do
-		if SysIsFile(arg(1)) then return 1
-		return 0
+		return SysIsFile(arg(1))
 	end
 
 	if _RXV = "REXX-Regina" then do
 		_?fstat = stream(arg(1), "c", "fstat")
-		if wordpos("RegularFile",_?fstat) > 0 then return 1
-		return 0
+		return wordpos("RegularFile",_?fstat) > 0
 	end
 
 	return 0
 
 isPath:
 	if _RXV = "REXX-ooRexx" then do
-		if SysIsFileDirectory(arg(1)) then return 1
-		return 0
+		return SysIsFileDirectory(arg(1))
 	end
 
 	if _RXV = "REXX-Regina" then do
 		_?fstat = stream(arg(1), "c", "fstat")
-		if wordpos("Directory",_?fstat) > 0 then return 1
-		return 0
+		return wordpos("Directory",_?fstat) > 0
 	end
 
 	return 0
