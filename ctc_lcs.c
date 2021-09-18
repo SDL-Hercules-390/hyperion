@@ -3565,7 +3565,8 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         // Read next record from the OAT file
         if (!ReadOAT( pszOATName, fp, szBuff ))
         {
-            break;
+            fclose( fp );
+            return 0;
         }
 
         if (pszStatement)
@@ -3702,40 +3703,6 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             pLCSRTE->pszNetAddr = pszNetAddr;
             pLCSRTE->pszNetMask = pszNetMask;
             pLCSRTE->pNext      = NULL;
-        }
-        else if (strcasecmp( pszKeyword, "IFNAME" ) == 0)
-        {
-            if (!pszOperand        ||
-                argc       >  2    ||
-                sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1)
-            {
-                // "CTC: invalid statement %s in file %s: %s"
-                WRMSG( HHC00954, "E", "HWADD", pszOATName, szBuff );
-                return -1;
-            }
-
-            pLCSPORT = &pLCSBLK->Port[sPort];
-
-            /* The argument should be the name of the          */
-            /* pre-configured TAP interface that LCS will use. */
-            STRLCPY( pLCSPORT->szNetIfName, argv[0] );
-            pLCSPORT->fPreconfigured = TRUE;
-
-            /* If NAMED has been specified the TAP interface   */
-            /* is not pre-configured, it is simply pre-named.  */
-            if (argc > 1)
-            {
-                if (strcasecmp( argv[1], "NAMED" ) == 0)
-                {
-                    pLCSPORT->fPreconfigured = FALSE;
-                }
-                else
-                {
-                    // "CTC: error in file %s: %s: invalid entry starting at %s"
-                    WRMSG( HHC00959, "E", pszOATName, szBuff, argv[1] );
-                    return -1;
-                }
-            }
         }
         else // (presumed OAT file device statement)
         {
@@ -3908,40 +3875,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
     } // end for (;;)
 
-    // End of file, close OAT configuration file
-    fclose( fp );
-
-    // Check that there is at least one device block.
-    if (!pLCSBLK->pDevices)
-    {
-        return -1;
-    }
-
-    // If any of the ports have been defined as pre-configured, check
-    // that the port has not had any options specified that require
-    // configuration (i.e. TUNTAP_xxx) requests. In addition, check
-    // that the device using the port has not had any options specified
-    // that require configuration (i.e. TUNTAP_xxx) requests.
-    for (pLCSDev = pLCSBLK->pDevices; pLCSDev; pLCSDev = pLCSDev->pNext)
-    {
-        pLCSPORT = &pLCSBLK->Port[ pLCSDev->bPort ];
-        if (pLCSPORT->fPreconfigured)
-        {
-            if (pLCSPORT->szMACAddress[0] != 0 || pLCSPORT->pRoutes)
-            {
-                return -1;
-            }
-            if (pLCSDev->bMode == LCSDEV_MODE_IP)
-            {
-                if (pLCSDev->pszIPAddress[0] != 0)
-                {
-                    return -1;
-                }
-            }
-        }
-    }
-
-    return 0;
+    UNREACHABLE_CODE( return -1 );
 }
 
 // ====================================================================
