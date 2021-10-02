@@ -1669,6 +1669,7 @@ bool    need_realkey = true;            /* (get from real page)      */
                                  USE_PRIMARY_SPACE,
                                  HOSTREGS, ACCTYPE_SIE );
 
+        /* Translate host real to host absolute */
         pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
 
         /* Program Check if any unexpected translation error */

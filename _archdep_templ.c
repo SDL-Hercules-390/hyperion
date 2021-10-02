@@ -222,8 +222,6 @@ int feature_xxx_func( REGS* regs )
 {
     int rc;
 
-    //switch( sysblk.arch_mode )  // (switch based on RUN-TIME archmode)
-
     switch( regs->arch_mode )  // (switch based on RUN-TIME archmode)
     {
 
@@ -241,6 +239,7 @@ int feature_xxx_func( REGS* regs )
     case  ARCH_900_IDX:  rc = z900_foobar_func( regs, ... ); break;
 #endif
 
+    default: CRASH();
     }
 
     return rc;

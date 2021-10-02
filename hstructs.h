@@ -49,7 +49,8 @@
 //  since it should thus *always* end up being defined as a U64.
 //
 //  Using any OTHER type of build architecture dependent constant
-//  in any of the below strutures however would be a SERIOUS ERROR!
+//  in any of the below strutures would be a SERIOUS ARCHITECTURE
+//  DEPENDENCY VIOLATION!
 //
 //---------------------------------------------------------------------
 

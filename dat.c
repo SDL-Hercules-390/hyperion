@@ -1667,17 +1667,20 @@ int  i;
 RADR pte;
 RADR ptemask;
 
+// ARCH_370_IDX pte and ptemask...
 #if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     ptemask = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
               PAGETAB_PFRA_4K : PAGETAB_PFRA_2K;
     pte = ((pfra & 0xFFFFFF) >> 8) & ptemask;
 #endif
 
+// ARCH_390_IDX pte and ptemask...
 #if defined( FEATURE_S390_DAT )
     ptemask = PAGETAB_PFRA;
     pte = pfra & ptemask;
 #endif
 
+// ARCH_900_IDX pte and ptemask...
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     ptemask = (RADR)ZPGETAB_PFRA;
     pte = pfra & ptemask;
@@ -1821,6 +1824,7 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
         {
             regs->tlb.acc[i] = 0;
 #if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+            // ARCH_370_IDX
             if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                 regs->tlb.acc[i^1] = 0;
 #endif
@@ -1839,6 +1843,7 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
             {
                 GUESTREGS->tlb.acc[i] = 0;
 #if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+                // ARCH_370_IDX
                 if ((GUESTREGS->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                     GUESTREGS->tlb.acc[i^1] = 0;
 #endif
@@ -1857,6 +1862,7 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
             {
                 HOSTREGS->tlb.acc[i] = 0;
 #if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+                // ARCH_370_IDX
                 if ((HOSTREGS->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
                     HOSTREGS->tlb.acc[i^1] = 0;
 #endif

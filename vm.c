@@ -1475,7 +1475,7 @@ S64     stglen;                        /* Storage extent area length */
              ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
          }
 
-         /* Convert real addres to absolute address */
+         /* Convert real address to absolute address */
          stgarea=APPLY_PREFIXING(stgarea,regs->PX );
 
          /* Check to ensure extent information can be stored */

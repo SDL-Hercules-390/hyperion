@@ -663,13 +663,13 @@ int i, rc = 0;                          /* Array subscript           */
     ARCH_DEP( store_int_timer_locked )( regs );
 #endif
 
-   if(regs->host && GUESTREGS)
-   {
-        rc = ARCH_DEP(cpu_reset)(GUESTREGS);
+    if (regs->host && GUESTREGS)
+    {
+        rc = ARCH_DEP( cpu_reset )( GUESTREGS );
         /* CPU state of SIE copy cannot be controlled */
         GUESTREGS->opinterv = 0;
         GUESTREGS->cpustate = CPUSTATE_STARTED;
-   }
+    }
 
     /* Re-initialize the facilities list for this CPU */
     init_cpu_facilities( regs );
@@ -685,7 +685,7 @@ int i, rc = 0;                          /* Array subscript           */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 {
-    int rc1 = 0, rc;
+    int rc = 0;
 
     /* Clear reset pending indicators */
     regs->sigp_ini_reset = regs->sigp_reset = 0;
@@ -705,7 +705,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     regs->psa      = (PSA_3XX*)regs->mainstor;
 
     /* Perform a CPU reset (after setting PSA) */
-    rc1 = ARCH_DEP( cpu_reset )( regs );
+    rc = ARCH_DEP( cpu_reset )( regs );
 
     regs->todpr  = 0;
     regs->clkc   = 0;
@@ -752,10 +752,13 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 #endif
 
     if (regs->host && GUESTREGS)
-        if ((rc = ARCH_DEP( initial_cpu_reset )( GUESTREGS )) != 0)
-            rc1 = rc;
+    {
+        int rc2;
+        if ((rc2 = ARCH_DEP( initial_cpu_reset )( GUESTREGS )) != 0)
+            rc = rc2;
+    }
 
-    return rc1;
+    return rc;
 } /* end function initial_cpu_reset */
 
 /*-------------------------------------------------------------------*/

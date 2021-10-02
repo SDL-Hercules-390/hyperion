@@ -84,18 +84,19 @@ void ARCH_DEP(checkstop_cpu)(REGS *regs)
 
 /*-------------------------------------------------------------------*/
 /* Put all the CPUs in the configuration in check-stop state         */
+/* Caller *MUST* hold INTLOCK!                                       */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(checkstop_config)(void)
 {
-    int i;
-    for(i=0;i<sysblk.maxcpu;i++)
+    int  i;
+    for (i=0; i < sysblk.maxcpu; i++)
     {
-        if(IS_CPU_ONLINE(i))
+        if (IS_CPU_ONLINE(i))
         {
             ARCH_DEP(checkstop_cpu)(sysblk.regs[i]);
         }
     }
-    WAKEUP_CPUS_MASK(sysblk.waiting_mask);
+    WAKEUP_CPUS_MASK( sysblk.waiting_mask );
 }
 
 /*-------------------------------------------------------------------*/
