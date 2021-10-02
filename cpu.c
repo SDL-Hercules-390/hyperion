@@ -72,28 +72,23 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Put a CPU in check-stop state                                     */
-/* Must hold the system intlock                                      */
-/*-------------------------------------------------------------------*/
-void ARCH_DEP(checkstop_cpu)(REGS *regs)
-{
-    regs->cpustate=CPUSTATE_STOPPING;
-    regs->checkstop=1;
-    ON_IC_INTERRUPT(regs);
-}
-
-/*-------------------------------------------------------------------*/
 /* Put all the CPUs in the configuration in check-stop state         */
 /* Caller *MUST* hold INTLOCK!                                       */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(checkstop_config)(void)
+void ARCH_DEP( checkstop_all_cpus )( REGS* regs )
 {
     int  i;
+
+    if (!IS_INTLOCK_HELD( regs ))
+        CRASH();
+
     for (i=0; i < sysblk.maxcpu; i++)
     {
         if (IS_CPU_ONLINE(i))
         {
-            ARCH_DEP(checkstop_cpu)(sysblk.regs[i]);
+            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
+            sysblk.regs[i]->checkstop = 1;
+            ON_IC_INTERRUPT( sysblk.regs[i] );
         }
     }
     WAKEUP_CPUS_MASK( sysblk.waiting_mask );

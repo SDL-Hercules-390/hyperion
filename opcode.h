@@ -1873,7 +1873,7 @@ void z900_process_trace( REGS* regs, BYTE* dest );
 
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP( perform_io_interrupt ) (REGS *regs);
-void ARCH_DEP( checkstop_config )(void);
+void ARCH_DEP( checkstop_all_cpus )( REGS* regs );
 
 #if defined( FEATURE_PER3 )
 CPU_DLL_IMPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip );

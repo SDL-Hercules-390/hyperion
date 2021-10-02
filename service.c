@@ -1391,7 +1391,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         break;
 
 docheckstop:
-        ARCH_DEP( checkstop_config )();
+        ARCH_DEP( checkstop_all_cpus )( regs );
         RELEASE_INTLOCK( regs );
         longjmp( regs->progjmp, SIE_NO_INTERCEPT );
         UNREACHABLE_CODE( return );
