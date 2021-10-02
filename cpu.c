@@ -2482,6 +2482,7 @@ int i;
             regs->CR_G( CR_ASD_REAL ) = TLB_REAL_ASD_G;
             break;
 #endif
+        default: CRASH();
     }
 
     for (i=0; i < 16; i++)
@@ -2636,6 +2637,7 @@ int  arch_mode;
             z900_store_psw(&cregs, addr);
             break;
 #endif
+        default: CRASH();
     }
 } /* end function copy_psw */
 

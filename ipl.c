@@ -845,7 +845,7 @@ int load_ipl( U16 lcss, U16 devnum, int cpu, int clear )
         /* NOTE: z/Arch always starts out in ESA390 mode */
         case ARCH_900_IDX: rc = s390_load_ipl( lcss, devnum, cpu, clear ); break;
 #endif
-        default: rc = -1; break;
+        default: CRASH();
     }
 
     return rc;
@@ -890,7 +890,7 @@ int initial_cpu_reset( REGS* regs )
 #if defined(_900)
         case ARCH_900_IDX: rc = z900_initial_cpu_reset( regs ); break;
 #endif
-        default: rc = -1; break;
+        default: CRASH();
     }
 
     return rc;
@@ -914,7 +914,7 @@ int system_reset( const int target_mode, const bool clear, const bool ipl, const
 #if defined( _900 )
         case ARCH_900_IDX: rc = z900_system_reset( target_mode, clear, ipl, cpu ); break;
 #endif
-        default: rc = -1; break;
+        default: CRASH();
     }
 
     return rc;
@@ -944,9 +944,7 @@ int cpu_reset (REGS *regs)
             rc = z900_cpu_reset (regs);
             break;
 #endif
-        default:
-            rc = -1;
-            break;
+        default: CRASH();
     }
 
     return (rc);

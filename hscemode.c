@@ -577,8 +577,7 @@ int pr_cmd( int argc, char *argv[], char *cmdline )
     case ARCH_900_IDX:
         rc = z900_archdep_pr_cmd( regs, argc, argv ); break;
 #endif
-    default:
-        rc = -1; break;
+    default: CRASH();
     }
 
     release_lock( &sysblk.cpulock[ cpu ]);

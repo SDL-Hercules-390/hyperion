@@ -636,6 +636,7 @@ void store_status (REGS *ssreg, U64 aaddr)
             z900_store_status (ssreg, aaddr);
             break;
 #endif
+        default: CRASH();
     }
 }
 #endif /*!defined(_GEN_ARCH)*/

@@ -7619,6 +7619,7 @@ int fquest_cmd( int argc, char* argv[], char* cmdline )
         case ARCH_900_IDX:
           return z900_fquest_cmd();
 #endif
+        default: CRASH();
     }
     UNREACHABLE_CODE( return -1 );
 }
@@ -7642,6 +7643,7 @@ static int fonoff_cmd( REGS* regs, char* cmdline )
         case ARCH_900_IDX:
           return z900_fonoff_cmd( regs, cmdline );
 #endif
+        default: CRASH();
     }
     UNREACHABLE_CODE( return -1 );
 }

@@ -782,6 +782,7 @@ int      numconfdev=0;
                 rc = z900_load_psw(regs, (BYTE *)&buf);
                 break;
 #endif
+            default: CRASH();
             } /* switch (regs->arch_mode) */
             if (rc != 0 && memcmp(buf, zeros, len))
             {
@@ -1378,6 +1379,7 @@ int      numconfdev=0;
                                     z900_execute_ccw_chain, dev, "device thread");
                 break;
 #endif
+            default: CRASH();
             } /* switch (sysblk.arch_mode) */
             if (rc != 0)
             {

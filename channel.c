@@ -6012,6 +6012,10 @@ retry:
                     store_scsw_as_csw( regs, scsw );
                     break;
                 }
+
+                case ARCH_390_IDX: break;
+                case ARCH_900_IDX: break;
+                default: CRASH();
             }
 
             subchannel_interrupt_queue_cleanup( dev );
@@ -6219,6 +6223,7 @@ DLL_EXPORT int device_attention (DEVBLK *dev, BYTE unitstat)
 #if defined(_900)
         case ARCH_900_IDX: return z900_device_attention(dev, unitstat);
 #endif
+        default: CRASH();
     }
     return 3;   /* subchannel is not valid or not enabled */
 }
@@ -6236,6 +6241,7 @@ void call_execute_ccw_chain (int arch_mode, void* pDevBlk)
 #if defined(_900)
         case ARCH_900_IDX: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
 #endif
+        default: CRASH();
     }
 }
 

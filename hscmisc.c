@@ -2961,6 +2961,7 @@ void alter_display_real_or_abs (REGS *regs, int argc, char *argv[], char *cmdlin
         case ARCH_900_IDX:
             z900_alter_display_real_or_abs (regs, argc, argv, cmdline); break;
 #endif
+        default: CRASH();
     }
 
 } /* end function alter_display_real_or_abs */
@@ -2988,6 +2989,7 @@ void alter_display_virt (REGS *iregs, int argc, char *argv[], char *cmdline)
         case ARCH_900_IDX:
             z900_alter_display_virt (regs, argc, argv, cmdline); break;
 #endif
+        default: CRASH();
     }
 
     if (!iregs->ghostregs)
@@ -3020,6 +3022,7 @@ void disasm_stor(REGS *iregs, int argc, char *argv[], char *cmdline)
             z900_disasm_stor(regs, argc, argv, cmdline);
             break;
 #endif
+        default: CRASH();
     }
 
     if (!iregs->ghostregs)

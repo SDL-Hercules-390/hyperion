@@ -1042,6 +1042,7 @@ int load_boot (DEVBLK *dev, int cpu, int clear, int ldind)
             /* z/Arch always starts out in ESA390 mode */
             return s390_load_boot (dev, cpu, clear, ldind);
 #endif
+        default: CRASH();
     }
     return -1;
 }

@@ -948,6 +948,7 @@ int load_hmc (char *fname, int cpu, int clear)
             /* z/Arch always starts out in ESA390 mode */
             return s390_load_hmc (fname, cpu, clear);
 #endif
+        default: CRASH();
     }
     return -1;
 }
@@ -971,6 +972,7 @@ int load_main (char *fname, RADR startloc, int noisy)
         case ARCH_900_IDX:
             return z900_load_main (fname, startloc, noisy);
 #endif
+        default: CRASH();
     }
     return -1;
 }
