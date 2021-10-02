@@ -725,7 +725,7 @@ bool    intercept;                      /* False for virtual pgmint  */
     UPDATE_SYSBLK_INSTCOUNT( 1 );
 
     /* Release any locks */
-    if (sysblk.intowner == realregs->cpuad)
+    if (IS_INTLOCK_HELD( realregs ))
         RELEASE_INTLOCK( realregs );
 
     /* Unlock the main storage lock if held */

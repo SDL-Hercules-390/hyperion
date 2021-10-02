@@ -341,6 +341,7 @@ static inline void wakeup_cpus_mask( CPU_BITMAP mask, const char* location )
 #define OBTAIN_INTLOCK(r)       Obtain_Interrupt_Lock( r, PTT_LOC )
 #define RELEASE_INTLOCK(r)      Release_Interrupt_Lock( r, PTT_LOC )
 #define TRY_OBTAIN_INTLOCK(r)   Try_Obtain_Interrupt_Lock( r, PTT_LOC )
+#define IS_INTLOCK_HELD(r)      (sysblk.intowner == (r)->cpuad)
 
 static inline void Interrupt_Lock_Obtained( REGS* regs, const char* location )
 {

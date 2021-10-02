@@ -1097,7 +1097,7 @@ int        retry;           /* Actual retry code                     */
     }
 
     /* Obtain the interrupt lock if we don't already have it */
-    if (sysblk.intowner == regs->cpuad)
+    if (IS_INTLOCK_HELD( regs ))
         had_INTLOCK = true;
     else
     {

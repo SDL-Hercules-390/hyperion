@@ -1377,7 +1377,7 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     {
         /* Obtain INTLOCK (unless we already own it) */
         REGS* realregs = GUEST( sysblk.regs[ regs->cpuad ]);
-        if (sysblk.intowner != realregs->cpuad)
+        if (!IS_INTLOCK_HELD( realregs ))
             OBTAIN_INTLOCK( regs );
 
         /* Indicate we have left SIE mode */
