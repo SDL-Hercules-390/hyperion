@@ -20,6 +20,10 @@
 
 #define MAX_TRACE_LEN 128
 
+#define FROM_GUEST         '<'
+#define TO_GUEST           '>'
+#define NO_DIRECTION       ' '
+
 //-----------------------------------------------------------------------------
 //  DEBUGGING: use 'ENABLE_TRACING_STMTS' to activate the compile-time
 //  "TRACE" and "VERIFY" debug macros. Use 'NO_LCS_OPTIMIZE' to disable
@@ -988,7 +992,7 @@ void  LCS_EndChannelProgram( DEVBLK* pDEVBLK )
             pLCSATTN->pDevice = pLCSDEV;
 
 //          if (pLCSBLK->fDebug)                                                                         /* FixMe! Remove! */
-//            net_data_trace( pDEVBLK, (BYTE*)pLCSATTN, sizeof( LCSATTN ), ' ', 'D', "LCSATTN in", 0 );  /* FixMe! Remove! */
+//            net_data_trace( pDEVBLK, (BYTE*)pLCSATTN, sizeof( LCSATTN ), NO_DIRECTION, 'D', "LCSATTN in", 0 );  /* FixMe! Remove! */
 
             /* Add LCSATTN block to start of chain */
             PTT_DEBUG( "GET  AttnLock", 000, pDEVBLK->devnum, 000 );
@@ -1315,7 +1319,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (int)(sCount - iTraceLen) );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, '>', 'D', "data", 0 );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
     }
 
     // Process each frame in the buffer...
@@ -1386,7 +1390,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                     WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          iTraceLen, (iEthLen - iTraceLen) );
                 }
-                net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, '>', 'D', "eth frame", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
             }
 
             // Write the Ethernet frame to the TAP device
@@ -1421,7 +1425,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
             {
                 // "%1d:%04X CTC: lcs command packet received"
                 WRMSG( HHC00922, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
-                net_data_trace( pDEVBLK, (BYTE*)pCmdFrame, iLength, '<', 'D', "command", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pCmdFrame, iLength, FROM_GUEST, 'D', "command", 0 );
             }
 
             // Ignore packets that appear to be inbound and not outbound.
@@ -2132,7 +2136,7 @@ static void LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t iS
     {
         // HHC00923 "%1d:%04X CTC: lcs command reply enqueue"
         WRMSG( HHC00923, "D", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum );
-        net_data_trace( pDEVBLK, (BYTE*)pReply, iSize, '>', 'D', "reply", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pReply, iSize, TO_GUEST, 'D', "reply", 0 );
     }
 
     PTT_DEBUG( "ENQ RepFrame ENTRY", pReply->bCmdCode, pDEVBLK->devnum, bPort );
@@ -2392,7 +2396,7 @@ static void*  LCS_PortThread( void* arg)
 //!!                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
 //!!                                     iTraceLen, (iLength - iTraceLen) );
 //!!            }
-//!!            net_data_trace( pDEVBLK, szBuff, iTraceLen, '>', 'D', "eth frame", 0 );
+//!!            net_data_trace( pDEVBLK, szBuff, iTraceLen, TO_GUEST, 'D', "eth frame", 0 );
             bReported = 0;
         }
 
@@ -2589,9 +2593,16 @@ static void*  LCS_PortThread( void* arg)
         if (!pMatchingLCSDEV)
         {
             if (pLCSPORT->pLCSBLK->fDebug)
+            {
                 // "CTC: lcs device port %2.2X: no match found, discarding frame"
                 WRMSG( HHC00951, "D", pLCSPORT->bPort );
-
+                iTraceLen = iLength;
+                if (iTraceLen > 64)
+                {
+                    iTraceLen = 64;
+                }
+                net_data_trace( pDEVBLK, szBuff, iTraceLen, NO_DIRECTION, 'D', "discarding", 0 );
+            }
             continue;
         }
 
@@ -2604,8 +2615,16 @@ static void*  LCS_PortThread( void* arg)
             if (!pMatchingLCSDEV->fAcceptPackets || !bHas8022 || bHas8022Snap )
             {
                 if (pLCSPORT->pLCSBLK->fDebug)
+                {
                     // "CTC: lcs device port %2.2X: no match found, discarding frame"
                     WRMSG( HHC00951, "D", pLCSPORT->bPort );
+                    iTraceLen = iLength;
+                    if (iTraceLen > 64)
+                    {
+                        iTraceLen = 64;
+                    }
+                    net_data_trace( pDEVBLK, szBuff, iTraceLen, NO_DIRECTION, 'D', "discarding", 0 );
+                }
                 continue;
             }
         }
@@ -2634,7 +2653,7 @@ static void*  LCS_PortThread( void* arg)
                 WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      iTraceLen, (iLength - iTraceLen) );
             }
-            net_data_trace( pDEVBLK, szBuff, iTraceLen, '>', 'D', "eth frame", 0 );
+            net_data_trace( pDEVBLK, szBuff, iTraceLen, TO_GUEST, 'D', "eth frame", 0 );
         }
 
         // Match was found. Enqueue frame on buffer.
@@ -3028,7 +3047,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
             WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (int)(iLength - iTraceLen) );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, '<', 'D', "data", 0 );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
     }
 
     // Reset frame buffer to empty...
@@ -4217,7 +4236,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
             WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (int)(sCount - iTraceLen) );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, '>', 'D', "data", 0 );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
     }
 
     // Process each frame in the buffer...
@@ -4666,7 +4685,7 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
             WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (iEthLen - iTraceLen) );
         }
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, '>', 'D', "eth frame", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
         snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame sent: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
         WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
     }
@@ -4754,7 +4773,7 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
         snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "SABME" );
         WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
     }
@@ -4839,7 +4858,7 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
         snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
         WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
@@ -4930,7 +4949,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
         if (pLCSDEV->pLCSBLK->fDebug)
         {
             WRMSG( HHC03984, "I", "Created LCSCONN Outbound");
-            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
         }
 
         add_connection_to_chain( pLCSDEV, pLCSCONN );
@@ -4942,7 +4961,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
             if (pLCSDEV->pLCSBLK->fDebug)
             {
                 WRMSG( HHC03984, "I", "Found LCSCONN Inbound");
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
             }
 
             memcpy( &pLCSCONN->bInToken, &pOutBAF1->bTokenB, sizeof(pLCSCONN->bInToken) );  // Copy Inbound token
@@ -4954,7 +4973,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
             if (pLCSDEV->pLCSBLK->fDebug)
             {
                 WRMSG( HHC03984, "I", "Updated LCSCONN Inbound");
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
             }
         }
         else  // The existing LCSCONN is for an outbound connection.
@@ -4962,7 +4981,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
             if (pLCSDEV->pLCSBLK->fDebug)
             {
                 WRMSG( HHC03984, "E", "Found and released existing LCSCONN Outbound");
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
             }
 
             remove_connection_from_chain( pLCSDEV, pLCSCONN );
@@ -4988,7 +5007,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
             if (pLCSDEV->pLCSBLK->fDebug)
             {
                 WRMSG( HHC03984, "I", "Created LCSCONN Outbound");
-                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
             }
 
             add_connection_to_chain( pLCSDEV, pLCSCONN );
@@ -5084,7 +5103,7 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
         snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
         WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
@@ -5193,7 +5212,7 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
             WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (iEthLen - iTraceLen) );
         }
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, '>', 'D', "eth frame", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
         snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "XID" );
         WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
@@ -5282,7 +5301,7 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, '>', 'D', "eth frame", 0 );
+        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
         snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
         WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
@@ -5985,9 +6004,9 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
     // Extract the bits and bytes from the 802.2 LLC.
     illcsize = ExtractLLC( &llc, pLLCandData, iLLCandDatasize );
 
-//??    net_data_trace( pDEVBLK, pLLCandData, iLLCandDatasize, ' ', 'D', "LLC and data", 0 );
-//??    net_data_trace( pDEVBLK, &illcsize, sizeof(illcsize), ' ', 'D', "illcsize", 0 );
-//??    net_data_trace( pDEVBLK, &llc, sizeof(LLC), ' ', 'D', "llc", 0 );
+//??    net_data_trace( pDEVBLK, pLLCandData, iLLCandDatasize, NO_DIRECTION, 'D', "LLC and data", 0 );
+//??    net_data_trace( pDEVBLK, &illcsize, sizeof(illcsize), NO_DIRECTION, 'D', "illcsize", 0 );
+//??    net_data_trace( pDEVBLK, &llc, sizeof(LLC), NO_DIRECTION, 'D', "llc", 0 );
 
     // Discard the frame if the 802.2 LLC appears to be questionable.
     if ( !illcsize ) goto msg970_return;
@@ -6103,7 +6122,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
             // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
             WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
-            net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, '>', 'D', "eth frame", 0 );
+            net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, FROM_GUEST, 'D', "eth frame", 0 );
             snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
             WRMSG(HHC03984, "D", llcmsg );
         }
@@ -6177,7 +6196,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
                 WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
-                net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, '>', 'D', "eth frame", 0 );
+                net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, FROM_GUEST, 'D', "eth frame", 0 );
                 snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
                 WRMSG(HHC03984, "D", llcmsg );
             }
@@ -6392,11 +6411,33 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         // The Z bit indicates that the NR that the control field carries
         // indicated in bytes 0 and 1 does not refer to either the next I frame
         // or an I frame that has already been transmitted but not acknowledged.
+        //   Note: It is all right to receive the the same NR count multiple
+        //   times.
+        //   The NR count is only invalid if the count references an I frame
+        //   that has already been acknowledged or if the count skips ahead to
+        //   one that has not been transmitted yet. The former is the most
+        //   common case of this type of error. When you see this type of error,
+        //   it usually means frames were received out of sequence, and you
+        //   should look for the network that delivers frames out of order. It
+        //   is possible that the sending link station transmitted them out of
+        //   order, but very unlikely.
+        // The Y bit indicates that the length of the I field in the received
+        // LPDU exceeded the available buffer capacity. If this situation
+        // occurs, look for problems in the end stations, not the network.
+        // The X bit indicates that the LPDU contained an I field when it must
+        // not have, or a FRMR response was received that did not contain 5
+        // bytes. This appears to be an end station problem, not a network
+        // problem.
+        // The W bit indicates that an unsupported LPDU was received. This is an
+        // end station problem.
         case M_FRMR_Response:
 
             if (pLCSBLK->fDebug)
             {
               snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "FRMR" );
+              WRMSG(HHC03984, "D", llcmsg );
+              snprintf( llcmsg, sizeof(llcmsg), "     CF=%4.4X, NS=%u, NR=%u, V=%u, Z=%u, Y=%u, X=%u, W=%u",
+                                          llc.hwCF, llc.hwNS, llc.hwNR, llc.hwV, llc.hwZ, llc.hwY, llc.hwX, llc.hwW );
               WRMSG(HHC03984, "D", llcmsg );
             }
 
@@ -6457,7 +6498,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                     if (pLCSDEV->pLCSBLK->fDebug)
                     {
                         WRMSG( HHC03984, "I", "Created LCSCONN Inbound");
-                        net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                        net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
                     }
 
                     add_connection_to_chain( pLCSDEV, pLCSCONN );
@@ -6469,7 +6510,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                         if (pLCSDEV->pLCSBLK->fDebug)
                         {
                             WRMSG( HHC03984, "I", "Found LCSCONN Inbound");
-                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
                         }
                     }
                     else  // The existing LCSCONN is for an outbound connection.
@@ -6477,7 +6518,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                         if (pLCSDEV->pLCSBLK->fDebug)
                         {
                             WRMSG( HHC03984, "W", "Found existing LCSCONN Outbound, changed to LCSCONN Inbound");
-                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), ' ', 'D', "LCSCONN", 0 );
+                            net_data_trace( pDEVBLK, (BYTE*)pLCSCONN, sizeof(LCSCONN), NO_DIRECTION, 'D', "LCSCONN", 0 );
                         }
 
                         pLCSCONN->hwCreated = LCSCONN_CREATED_INBOUND;
@@ -6636,7 +6677,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                     // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
                     WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
-                    net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, '>', 'D', "eth frame", 0 );
+                    net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, FROM_GUEST, 'D', "eth frame", 0 );
                     snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
                     WRMSG(HHC03984, "D", llcmsg );
                 }
@@ -6953,7 +6994,7 @@ void  LCS_Read_SNA( DEVBLK* pDEVBLK,   U32   sCount,
             WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  iTraceLen, (int)(iLength - iTraceLen) );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, '<', 'D', "data", 0 );
+        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
     }
 
     // Reset frame buffer to empty...
@@ -7126,6 +7167,16 @@ int  ExtractLLC( PLLC pLLC, BYTE* pStart, int iSize )
             }
             memcpy( pLLC->bInfo, (BYTE*)pLPDU + 3, 5);
             pLLC->hwInfoSize = 5;
+
+            pLLC->hwNS = (pLLC->bInfo[2] >> 1);
+            pLLC->hwNR = (pLLC->bInfo[3] >> 1);
+            pLLC->hwV  = ((pLLC->bInfo[4] & 0x80) >> 4);
+            pLLC->hwZ  = ((pLLC->bInfo[4] & 0x08) >> 3);
+            pLLC->hwY  = ((pLLC->bInfo[4] & 0x04) >> 2);
+            pLLC->hwX  = ((pLLC->bInfo[4] & 0x02) >> 1);
+            pLLC->hwW  = (pLLC->bInfo[4] & 0x01);
+            FETCH_HW( pLLC->hwCF, pLLC->bInfo );
+
             iLPDUsize = 8;
         }
         else
@@ -7158,6 +7209,7 @@ int  BuildLLC( PLLC pLLC, BYTE* pStart )
 {
     PLPDU     pLPDU;
     int       iLPDUsize;
+    char      bInfo[6];
 
 
     pLPDU = (PLPDU)pStart;
@@ -7186,7 +7238,15 @@ int  BuildLLC( PLLC pLLC, BYTE* pStart )
 
         if (pLLC->hwM == M_FRMR_Response)
         {
-            memcpy( (BYTE*)pLPDU + 3, pLLC->bInfo, 5);
+            STORE_HW( bInfo, pLLC->hwCF );
+            bInfo[2] =  (pLLC->hwNS << 1);
+            bInfo[3] =  (pLLC->hwNR << 1);
+            bInfo[4] =  (pLLC->hwV << 4);
+            bInfo[4] |= (pLLC->hwZ << 3);
+            bInfo[4] |= (pLLC->hwY << 2);
+            bInfo[4] |= (pLLC->hwX << 1);
+            bInfo[4] |= (pLLC->hwW);
+            memcpy( (BYTE*)pLPDU + 3, bInfo, 5);
             iLPDUsize = 8;
         }
         else

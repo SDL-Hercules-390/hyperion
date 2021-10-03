@@ -1136,18 +1136,24 @@ struct  _LPDU
 struct  _LLC
 {
     LPDU        bLpdu;                 // LLC PDU DSAP, SSAP & Control
-    BYTE        bInfo[8];              // LLC PDU Information
+    BYTE        bInfo[6];              // LLC PDU Information
     U16         hwLpduSize;            // Size = 3 or 4
-    U16         hwInfoSize;            // Size = 0 or more, maximum 5.
+    U16         hwInfoSize;            // Size = 0 or 5.
     U16         hwDSAP;                // DSAP (Destination Service Access Point)
     U16         hwIG;                  // Individual or Group bit
     U16         hwSSAP;                // SSAP (Source Service Access Point)
     U16         hwCR;                  // Command or Response bit
     U16         hwNS;                  // NS count
     U16         hwNR;                  // NR count
-    U16         hwPF;                  // P or F bit
+    U16         hwPF;                  // Poll or Final bit
     U16         hwSS;                  // S bits, i.e. type of Supervisory
     U16         hwM;                   // M bits, i.e. type of Unnumbered
+    U16         hwV;                   // FRMR V bit
+    U16         hwZ;                   // FRMR Z bit
+    U16         hwY;                   // FRMR Y bit
+    U16         hwX;                   // FRMR X bit
+    U16         hwW;                   // FRMR W bit
+    U16         hwCF;                  // FRMR Control Field that caused reject
     U16         hwType;
 };
 #define SS_Receiver_Ready           0    // B'00'
