@@ -546,7 +546,7 @@ char buf[384];
 int pr_cmd( int argc, char *argv[], char *cmdline )
 {
     REGS  *regs;
-    int    cpu, rc;
+    int    cpu, rc = 0;
 
     UNREFERENCED( cmdline );
 

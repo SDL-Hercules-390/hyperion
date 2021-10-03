@@ -831,7 +831,7 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
 
 int load_ipl( U16 lcss, U16 devnum, int cpu, int clear )
 {
-    int rc;
+    int rc = 0;
 
     switch ( sysblk.arch_mode )
     {
@@ -877,7 +877,7 @@ void initial_cpu_reset_all()
 /*-------------------------------------------------------------------*/
 int initial_cpu_reset( REGS* regs )
 {
-    int rc;
+    int rc = 0;
 
     switch ( regs->arch_mode )
     {
@@ -901,7 +901,7 @@ int initial_cpu_reset( REGS* regs )
 /*-------------------------------------------------------------------*/
 int system_reset( const int target_mode, const bool clear, const bool ipl, const int cpu )
 {
-    int rc;
+    int rc = 0;
 
     switch ( sysblk.arch_mode )
     {
@@ -925,7 +925,7 @@ int system_reset( const int target_mode, const bool clear, const bool ipl, const
 /*-------------------------------------------------------------------*/
 int cpu_reset (REGS *regs)
 {
-    int rc;
+    int rc = 0;
 
     switch (regs->arch_mode)
     {
