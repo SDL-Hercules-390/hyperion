@@ -18,7 +18,7 @@
 #include "opcode.h"
 #include "herc_getopt.h"
 
-#define MAX_TRACE_LEN 256
+#define MAX_TRACE_LEN 128
 
 //-----------------------------------------------------------------------------
 //  DEBUGGING: use 'ENABLE_TRACING_STMTS' to activate the compile-time
@@ -4201,6 +4201,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
     U16         hwTypeBaf;
     int         iTraceLen;
     char        buf[32];
+    char        unsupmsg[256];
 
 
     // Display up to MAX_TRACE_LEN bytes of the data coming from the guest, if debug is active
@@ -4228,14 +4229,15 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
     pLCSDEV->iTuntapErrno = 0;
 
     // Check whether the Write CCW is the second of three CCW's in the
-    // WCTL channel program. The channel program contains Control
-    // (0x17), Write (0x01) and Read (0x02) CCW's.
-    // The first, or only, 8-bytes of the Write data are an LCSOCTL.
-    if (pLCSDEV->bFlipFlop == WCTL)
+    // WCTL or SCB channel programs. The channel program contains Control
+    // (0x17) or Sense Command Byte (0x14), Write (0x01) and Read (0x02)
+    // CCW's. The first, or only, 8-bytes of the Write data are an LCSOCTL.
+    if (pLCSDEV->bFlipFlop)
     {
 
         // The following is an example of the data written by a Write
-        // CCW in the WCTL channel program.
+        // CCW in the WCTL channel program, and occasionally in the
+        // SCB channel program.
         //    +0000< 00160000 00000000 00140400 000C0C99  ................ ...............r
         //    +0010< 0003C000 00000000 01000000 0000      ..............   ..{...........
         // The first 8-bytes are the LCSOCTL. The next 20-bytes are an
@@ -4367,6 +4369,9 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                         break;
 
                     default:
+                        PTT_DEBUG( "*BAF=Unsupported! ", hwTypeBaf, pDEVBLK->devnum, -1 );
+                        snprintf( unsupmsg, sizeof(unsupmsg), "LCS: lcs write: unsupported baffle type 0x%4.4X", hwTypeBaf );
+                        WRMSG(HHC03984, "W", unsupmsg );  /* FixMe! Proper message number! */
                         break;
 
                     } // End of  switch (hwTypeBaf)
@@ -4381,12 +4386,14 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
 
                     switch (pCmdFrame->bCmdCode)
                     {
-                        //  HHC00933  =  "%1d:%04X CTC: executing command %s"
 
                     case LCS_CMD_STOPLAN_SNA:   // Stop LAN SNA
                         PTT_DEBUG( "CMD=Stop LAN SNA  ", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                         if (pLCSBLK->fDebug)
+                        {
+                            // "%1d:%04X CTC: executing command %s"
                             WRMSG( HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "stop lan sna" );
+                        }
                         LCS_StopLan_SNA( pLCSDEV, pCmdFrame, (int)hwLength );
                         pLCSDEV->fAttnRequired = TRUE;
                         break;
@@ -4433,25 +4440,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
 
         }
 
-    }   // End of  if (pLCSDEV->bFlipFlop == WCTL)
-
-    // Check whether the Write CCW is the second of three CCW's in the
-    // SCB channel program. The channel program contains Sense Command
-    // Byte (0x14), Write (0x01) and Read (0x02) CCW's.
-    // The 8-bytes of the Write data are an LCSOCTL.
-    else if (pLCSDEV->bFlipFlop == SCB)
-    {
-
-        // Copy the OCTL that has just arrived
-        pLCSDEV->hwOctlSize = sizeof(LCSOCTL);
-        memcpy( &pLCSDEV->Octl, pIOBuf, sizeof(LCSOCTL) );
-
-        // Point to whatever follows the OCTL
-        pIOBufStart = &pIOBuf[sizeof(LCSOCTL)];
-        pIOBufEnd = pIOBuf + sCount;
-
-
-    }   // End of  else if (pLCSDEV->bFlipFlop == SCB)
+    }   // End of  if (pLCSDEV->bFlipFlop)
 
     // The Write CCW is the only CCW in the channel program. This
     // is the normal state while the Start LAN and LAN Stats
@@ -6086,6 +6075,46 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
         add_lcs_buffer_to_chain( pLCSDEV, pLCSIBH );
 
         fAttnRequired = TRUE;
+
+        // We have done everything to let VTAM know that data has arrived,
+        // now we need to let the remote end know the data has arrived.
+        memset( frameout, 0, sizeof(frameout) );       // Clear area for ethernet fram
+        pEthFrameOut = (PETHFRM)&frameout[0];
+        iEthLenOut = 60;                               // Minimum ethernet frame length
+
+        //
+        memset( &llcout, 0, sizeof(LLC) );
+        llcout.hwDSAP    = llc.hwSSAP;                 // Copy LLC inbound SSAP as outbound DSAP
+        llcout.hwSSAP    = llc.hwDSAP;                 // Copy LLC inbound DSAP as outbound SSAP
+        llcout.hwCR      = 1;
+        llcout.hwNR      = ((pLCSCONN->hwRemoteNS + 1) & 0x7F);
+        llcout.hwSS      = SS_Receiver_Ready;
+        llcout.hwType    = Type_Supervisory_Frame;
+
+        // Construct Ethernet frame
+        memcpy( &pEthFrameOut->bDestMAC, &pEthFrame->bSrcMAC, IFHWADDRLEN );  // Copy destination MAC address
+        memcpy( &pEthFrameOut->bSrcMAC, &pEthFrame->bDestMAC, IFHWADDRLEN );  // Copy source MAC address
+        iLPDULenOut = BuildLLC( &llcout, pEthFrameOut->bData);                // Build LLC PDU
+        STORE_HW( pEthFrameOut->hwEthernetType, (U16)iLPDULenOut );           // Set data length
+
+        // Trace Ethernet frame before sending to TAP device
+        if (pLCSBLK->fDebug)
+        {
+            // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
+            WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                 pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
+            net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, '>', 'D', "eth frame", 0 );
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
+            WRMSG(HHC03984, "D", llcmsg );
+        }
+
+        // Write the Ethernet frame to the TAP device
+        if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) != iEthLenOut)
+        {
+//??        pLCSDEV->iTuntapErrno = errno;
+//??        pLCSDEV->fTuntapError = TRUE;
+            PTT_TIMING( "*WRITE ERR", 0, iEthLenOut, 1 );
+        }
 
         break;
 
