@@ -425,6 +425,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         initialize_condition( &pLCSDev->DevEvent );
         initialize_lock( &pLCSDev->LCSIBHChainLock );
         initialize_lock( &pLCSDev->LCSCONNChainLock );
+        initialize_lock( &pLCSDev->InOutLock );
 
         // Create the TAP interface (if not already created by a
         // previous pass. More than one interface can exist on a port.
@@ -4280,6 +4281,11 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
             PTT_DEBUG( "WSNA: OCTL & data ", -1, pDEVBLK->devnum, -1 );
 
             //
+            PTT_DEBUG(       "GET  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+            obtain_lock( &pLCSDEV->InOutLock   );
+            PTT_DEBUG(       "GOT  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+
+            //
             while (1)
             {
                 // Save current offset so we can tell how big the next frame is.
@@ -4437,6 +4443,8 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                     PTT_DEBUG( "*WRIT Unsupp frame", pCmdFrame->bCmdCode, pDEVBLK->devnum, -1 );
                     // "%1d:%04X CTC: lcs write: unsupported frame type 0x%2.2X"
                     WRMSG( HHC00937, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pLCSHDR->bType );
+                    PTT_DEBUG(        "REL  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+                    release_lock( &pLCSDEV->InOutLock   );
                     ASSERT( FALSE );
                     pDEVBLK->sense[0] = SENSE_EC;
                     *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
@@ -4448,6 +4456,10 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                 }   // End of  switch (pLCSHDR->bType)
 
             } // end while (1)
+
+            //
+            PTT_DEBUG(        "REL  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+            release_lock( &pLCSDEV->InOutLock   );
 
         }
         else
@@ -4686,12 +4698,18 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
                                  iTraceLen, (iEthLen - iTraceLen) );
         }
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
-        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame sent: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
-        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
     }
 
     // Write the Ethernet frame to the TAP device
-    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) != iEthLen)
+    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) == iEthLen)
+    {
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame sent: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
+            WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
+        }
+    }
+    else
     {
         pLCSDEV->iTuntapErrno = errno;
         pLCSDEV->fTuntapError = TRUE;
@@ -4774,12 +4792,18 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
-        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "SABME" );
-        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
     }
 
     // Write the Ethernet frame to the TAP device
-    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) != iEthLen)
+    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) == iEthLen)
+    {
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "SABME" );
+            WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
+        }
+    }
+    else
     {
         pLCSDEV->iTuntapErrno = errno;
         pLCSDEV->fTuntapError = TRUE;
@@ -4859,12 +4883,18 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
-        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
-        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
-    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) != iEthLen)
+    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) == iEthLen)
+    {
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
+            WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
+        }
+    }
+    else
     {
         pLCSDEV->iTuntapErrno = errno;
         pLCSDEV->fTuntapError = TRUE;
@@ -5104,12 +5134,18 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
-        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
-        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
-    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) != iEthLen)
+    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) == iEthLen)
+    {
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
+            WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
+        }
+    }
+    else
     {
         pLCSDEV->iTuntapErrno = errno;
         pLCSDEV->fTuntapError = TRUE;
@@ -5213,12 +5249,18 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
                                  iTraceLen, (iEthLen - iTraceLen) );
         }
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
-        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "XID" );
-        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
-    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) != iEthLen)
+    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) == iEthLen)
+    {
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "XID" );
+            WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
+        }
+    }
+    else
     {
         pLCSDEV->iTuntapErrno = errno;
         pLCSDEV->fTuntapError = TRUE;
@@ -5302,12 +5344,18 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
         net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iEthLen, FROM_GUEST, 'D', "eth frame", 0 );
-        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
-        WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
     }
 
     // Write the Ethernet frame to the TAP device
-    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) != iEthLen)
+    if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrame, iEthLen ) == iEthLen)
+    {
+        if (pLCSPORT->pLCSBLK->fDebug)
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "UA" );
+            WRMSG(HHC03984, "D", llcmsg );  /* FixMe! */
+        }
+    }
+    else
     {
         pLCSDEV->iTuntapErrno = errno;
         pLCSDEV->fTuntapError = TRUE;
@@ -6033,6 +6081,11 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
             break;
         }
 
+        //
+        PTT_DEBUG(       "GET  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+        obtain_lock( &pLCSDEV->InOutLock   );
+        PTT_DEBUG(       "GOT  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+
         pLCSCONN->fIframe = TRUE;
 
         // Check that the remote NS value has incremented by one.
@@ -6123,17 +6176,27 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
             WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                  pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
             net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, FROM_GUEST, 'D', "eth frame", 0 );
-            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
-            WRMSG(HHC03984, "D", llcmsg );
         }
 
         // Write the Ethernet frame to the TAP device
-        if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) != iEthLenOut)
+        if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) == iEthLenOut)
+        {
+            if (pLCSPORT->pLCSBLK->fDebug)
+            {
+                snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
+                WRMSG(HHC03984, "D", llcmsg );
+            }
+        }
+        else
         {
 //??        pLCSDEV->iTuntapErrno = errno;
 //??        pLCSDEV->fTuntapError = TRUE;
             PTT_TIMING( "*WRITE ERR", 0, iEthLenOut, 1 );
         }
+
+        //
+        PTT_DEBUG(        "REL  InOutLock    ", 000, pDEVBLK->devnum, -1 );
+        release_lock( &pLCSDEV->InOutLock   );
 
         break;
 
@@ -6197,12 +6260,18 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                 WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
                 net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, FROM_GUEST, 'D', "eth frame", 0 );
-                snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
-                WRMSG(HHC03984, "D", llcmsg );
             }
 
             // Write the Ethernet frame to the TAP device
-            if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) != iEthLenOut)
+            if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) == iEthLenOut)
+            {
+                if (pLCSPORT->pLCSBLK->fDebug)
+                {
+                    snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC supervisory frame sent: CR=%u, SS=%s, PF=%u, NR=%u", llcout.hwCR, "Receiver Ready", llcout.hwPF, llcout.hwNR );
+                    WRMSG(HHC03984, "D", llcmsg );
+                }
+            }
+            else
             {
 //??            pLCSDEV->iTuntapErrno = errno;
 //??            pLCSDEV->fTuntapError = TRUE;
@@ -6678,12 +6747,18 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
                     WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                          pLCSDEV->bPort, iEthLenOut, "802.3 SNA", pLCSPORT->szNetIfName );
                     net_data_trace( pDEVBLK, (BYTE*)pEthFrameOut, iEthLenOut, FROM_GUEST, 'D', "eth frame", 0 );
-                    snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
-                    WRMSG(HHC03984, "D", llcmsg );
                 }
 
                 // Write the Ethernet frame to the TAP device
-                if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) != iEthLenOut)
+                if (TUNTAP_Write( pDEVBLK->fd, (BYTE*)pEthFrameOut, iEthLenOut ) == iEthLenOut)
+                {
+                    if (pLCSPORT->pLCSBLK->fDebug)
+                    {
+                        snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame sent: CR=%u, M=%s", llc.hwCR, "TEST" );
+                        WRMSG(HHC03984, "D", llcmsg );
+                    }
+                }
+                else
                 {
     //??            pLCSDEV->iTuntapErrno = errno;
     //??            pLCSDEV->fTuntapError = TRUE;

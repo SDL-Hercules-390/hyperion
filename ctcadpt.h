@@ -683,7 +683,6 @@ struct  _LCSDEV
     U32         lIPAddress;             // IP Address (binary)
                                         // (network byte order)
 
-    LOCK        DevDataLock;            // Data LOCK
     LOCK        DevEventLock;           // Condition LOCK
     COND        DevEvent;               // Condition signal
 
@@ -721,6 +720,12 @@ struct  _LCSDEV
 
     LOCK        LCSCONNChainLock;       // SNA LCSCONN Chain LOCK
     PLCSCONN    pFirstLCSCONN;          // SNA First LCSCONN in chain
+
+    LOCK        InOutLock;              // SNA Inbound Outbound LOCK
+
+    LOCK        DevDataLock;            // Data LOCK. This lock is used to
+                                        // serialize data being added to or
+                                        // removed from bFrameBuffer.
 
     U16         iFrameOffset;           // Curr Offset into Buffer
     U16         iMaxFrameBufferSize;    // Device Buffer Size
