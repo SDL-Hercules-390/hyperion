@@ -747,7 +747,6 @@ bool    intercept;                      /* False for virtual pgmint  */
         if (GUEST( realregs )->psw.ilc == 0 && !GUEST( realregs )->psw.zeroilc)
         {
             sie_ilc = likely( !GUEST( realregs )->execflag) ? 2 : GUEST( realregs )->exrl ? 6 : 4;
-            GUEST( realregs )->psw.IA  += sie_ilc; /* IanWorthington regression restored from 20081205 */
             GUEST( realregs )->psw.ilc  = sie_ilc;
         }
 
