@@ -232,11 +232,16 @@ with every new release, which contains important late-breaking information about
     <li>FreeBSD
     <p><code>
         sudo pkg install -y bash git wget<br>
-        sudo pkg install -y gmake autoconf automake cmake flex gawk m4<br>
+        sudo pkg install -y gmake autoconf automake cmake flex gawk m4 libltdl<br>
         sudo pkg install -y bzip2
     </code>
 
     <p><i>Note: Bash is required by parts of the build apparatus.</i>
+
+    <p><i>Note: So configure/make will find ltdl.h and libltdl:</i>
+    <p><code>
+        export CFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib
+    </code>
   </ul>
 
 <li>Verify you have all of the correct versions of the more important packages installed:
