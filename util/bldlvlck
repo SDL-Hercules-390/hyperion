@@ -28,6 +28,7 @@ use strict;
 my @req = qw(
      autoconf    2.64   0  http://www.gnu.org/directory/autoconf.html
      automake    1.9    0  http://www.gnu.org/directory/automake.html
+     bash        3.2    0  http://www.gnu.org/directory/bash.html
      cmake       3.2    0  https://cmake.org
      flex        2.5    0  http://www.gnu.org/directory/flex.html
      gawk        3.0    0  http://www.gnu.org/directory/gawk.html
@@ -62,6 +63,11 @@ for (my $i = 0; $i < @req; $i += 4) {
       $facility = 'gsed';
     }
 
+    if ($^O eq 'freebsd') {
+      print "FreeBSD ==> custom version parsing!\n" ;
+      $special = 1;
+    }
+
     if ($^O eq 'netbsd') {
       print "NetBSD ==> custom version parsing!\n" ;
       $special = 1;
@@ -74,10 +80,23 @@ for (my $i = 0; $i < @req; $i += 4) {
       $special = 1;
     }
 
+    if ($^O eq 'freebsd') {
+      print "FreeBSD ==> custom version parsing!\n" ;
+      $special = 1;
+    }
+
     if ($^O eq 'netbsd') {
       print "NetBSD ==> custom version parsing!\n" ;
       $special = 1;
       $level = $m4_netbsd_required;
+    }
+  }
+
+  if ($facility eq 'make') {
+    if ($^O eq 'freebsd') {
+      print "FreeBSD ==> substituting gmake for make.\n" ;
+      # $special = 1;
+      $facility = 'gmake';
     }
   }
 
@@ -128,7 +147,9 @@ sub weird {
   if ($facility eq 'm4') {      # m4 --version: GNU m4 1.4o
     if (present($facility, $url)) {
       my $resp;
-      if ($^O eq 'netbsd') {
+      if ($^O eq 'freebsd') {
+        $resp = `m4 --version 2>&1`;
+      } elsif ($^O eq 'netbsd') {
         $resp = `m4 --version 2>&1`;
       } else {
         $resp = `m4 --version`;
@@ -144,6 +165,11 @@ sub weird {
         $instversion = "$1.$2" if defined $1 && defined $2;
         $instversion = "$1.$2.$3" if defined $1 && defined $2 && defined $3;
         $msg = ckvers($level, $instversion);
+      }
+
+      if ($^O eq 'freebsd' && $resp =~ /m4: illegal/) {
+        $msg = 'm4';
+        print "m4\t$facility version is unavailable on FreeBSD\n";
       }
 
       if ($^O eq 'netbsd' && $resp =~ /m4 version (\d{8})/) {
@@ -184,6 +210,21 @@ sub weird {
 
   if ($facility eq 'sed') {
     if (present($facility, $url)) {
+      if ($^O eq 'freebsd') {
+        my @resp = `sed --version 2>&1`;
+        chomp $resp[0];
+        my $msg = 'HUH?   ';
+        my $instversion = "DUNNO";
+
+        print "\t$resp[0]\n";
+        if ($resp[0] =~ /sed: unknown option/) {
+          # print "netbsd: \n";
+	}
+
+        print "$msg\t$facility requires $level, found $instversion\n";
+        print "\tURL: $url\n" if $msg eq 'UPGRADE';
+      }
+
       if ($^O eq 'netbsd') {
         my @resp = `sed --version 2>&1`;
         chomp $resp[0];
