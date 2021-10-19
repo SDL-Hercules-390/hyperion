@@ -300,7 +300,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 (HOSTREGS->program_interrupt) (HOSTREGS, HOSTREGS->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr2 = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
+            raddr2 = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
         } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -396,7 +396,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 (HOSTREGS->program_interrupt) (HOSTREGS, HOSTREGS->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr1 = APPLY_PREFIXING (HOSTREGS->dat.raddr, HOSTREGS->PX);
+            raddr1 = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
         } /* SIE_MODE */
 #endif /*defined(_FEATURE_SIE)*/
 

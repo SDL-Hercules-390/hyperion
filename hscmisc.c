@@ -838,7 +838,7 @@ char    regs_msg_buf[4*512] = {0};
     n = 0;
     buf[0] = '\0';
 
-    /* Get a working copy of the REGS */
+    /* Get a working (modifiable) copy of the REGS */
     if (iregs->ghostregs)
         regs = iregs;
     else if (!(regs = copy_regs( iregs )))
@@ -1143,6 +1143,29 @@ void ARCH_DEP( display_inst )( REGS* iregs, BYTE* inst )
 void ARCH_DEP( display_pgmint_inst )( REGS* iregs, BYTE* inst )
 {
     ARCH_DEP( display_inst_adj )( iregs, inst, true );
+}
+
+/*-------------------------------------------------------------------*/
+/*                    display_guest_inst                             */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( display_guest_inst )( REGS* regs, BYTE* inst )
+{
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
+        ARCH_DEP( display_inst )( regs, inst );
+    }
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_display_inst( GUESTREGS, inst ); break;
+        case ARCH_390_IDX: s390_display_inst( GUESTREGS, inst ); break;
+        case ARCH_900_IDX: z900_display_inst( GUESTREGS, inst ); break;
+        default: CRASH();
+        }
+    }
 }
 
 /*-------------------------------------------------------------------*/

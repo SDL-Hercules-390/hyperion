@@ -665,7 +665,17 @@ int i, rc = 0;                          /* Array subscript           */
 
     if (regs->host && GUESTREGS)
     {
-        rc = ARCH_DEP( cpu_reset )( GUESTREGS );
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            rc = ARCH_DEP( cpu_reset )( GUESTREGS );
+        }
+        else // Different architectures! Special handling required!
+        {
+            rc = cpu_reset( GUESTREGS );
+        }
+
         /* CPU state of SIE copy cannot be controlled */
         GUESTREGS->opinterv = 0;
         GUESTREGS->cpustate = CPUSTATE_STARTED;
@@ -754,8 +764,19 @@ int ARCH_DEP( initial_cpu_reset )( REGS* regs )
     if (regs->host && GUESTREGS)
     {
         int rc2;
-        if ((rc2 = ARCH_DEP( initial_cpu_reset )( GUESTREGS )) != 0)
-            rc = rc2;
+
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            if ((rc2 = ARCH_DEP( initial_cpu_reset )( GUESTREGS )) != 0)
+                rc = rc2;
+        }
+        else // Different architectures! Special handling required!
+        {
+            if ((rc2 = initial_cpu_reset( GUESTREGS )) != 0)
+                rc = rc2;
+        }
     }
 
     return rc;

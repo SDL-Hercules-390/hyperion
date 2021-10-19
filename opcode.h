@@ -1398,6 +1398,7 @@ do {                                                                  \
  {                                                                    \
    BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);       \
                                                                       \
+    /* Do it for the current architecture first */                    \
    ARCH_DEP( invalidate_tlbe )( (_regs), abs );                       \
                                                                       \
    if (sysblk.cpus > 1)                                               \
@@ -1410,9 +1411,28 @@ do {                                                                  \
        {                                                              \
          if (sysblk.waiting_mask & CPU_BIT( cpu ))                    \
          {                                                            \
-           ARCH_DEP( invalidate_tlbe )( sysblk.regs[cpu], abs );      \
+            /* Check if our architecture is same as the this CPU's */                       \
+            if ((_regs)->arch_mode == sysblk.regs[cpu]->arch_mode)                          \
+            {                                                                               \
+              /* Identical architectures; No special handling needed */                     \
+              ARCH_DEP( invalidate_tlbe )( sysblk.regs[cpu], abs );                         \
+            }                                                                               \
+            else /* Different architectures! Special handling required! */                  \
+            {                                                                               \
+              BYTE* abs370 = (_regs)->mainstor + ((_n) & PAGEFRAME_370_PAGEMASK);           \
+              BYTE* abs390 = (_regs)->mainstor + ((_n) & PAGEFRAME_390_PAGEMASK);           \
+              BYTE* abs900 = (_regs)->mainstor + ((_n) & PAGEFRAME_900_PAGEMASK);           \
+                                                                                            \
+              switch (sysblk.regs[cpu]->arch_mode)                                          \
+              {                                                                             \
+              case ARCH_370_IDX: s370_invalidate_tlbe( sysblk.regs[cpu], abs370 ); break;   \
+              case ARCH_390_IDX: s390_invalidate_tlbe( sysblk.regs[cpu], abs390 ); break;   \
+              case ARCH_900_IDX: z900_invalidate_tlbe( sysblk.regs[cpu], abs900 ); break;   \
+              default: CRASH();                                                             \
+              }                                                                             \
+            }                                                                               \
          }                                                            \
-         else                                                         \
+         else /* !(sysblk.waiting_mask & CPU_BIT( cpu )) */           \
          {                                                            \
            ON_IC_INTERRUPT( sysblk.regs[cpu] );                       \
                                                                       \
@@ -1879,20 +1899,10 @@ void ARCH_DEP( checkstop_all_cpus )( REGS* regs );
 CPU_DLL_IMPORT void ARCH_DEP( Set_BEAR_Reg )( U64* bear, REGS* regs, BYTE* ip );
 #endif
 
-CPU_DLL_IMPORT void ARCH_DEP( SuccessfulBranch )        ( REGS* regs, VADR vaddr );
-CPU_DLL_IMPORT void ARCH_DEP( SuccessfulRelativeBranch )( REGS* regs, S64 offset );
-
-#if defined( _FEATURE_SIE )
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt) (REGS *regs, int code);
-#endif
-
-#if defined( _FEATURE_ZSIE )
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt) (REGS *regs, int code);
-#endif
-
-CPU_DLL_IMPORT void (ATTR_REGPARM(2) ARCH_DEP( program_interrupt ))        ( REGS* regs, int code );
-CPU_DLL_IMPORT int                   ARCH_DEP( fix_program_interrupt_PSW ) ( REGS* regs );
-CPU_DLL_IMPORT void                  ARCH_DEP( trace_program_interrupt )   ( REGS* regs, int pcode, int ilc );
+CPU_DLL_IMPORT void ARCH_DEP( SuccessfulBranch          )( REGS* regs, VADR vaddr );
+CPU_DLL_IMPORT void ARCH_DEP( SuccessfulRelativeBranch  )( REGS* regs, S64 offset );
+CPU_DLL_IMPORT int  ARCH_DEP( fix_program_interrupt_PSW )( REGS* regs );
+CPU_DLL_IMPORT void ARCH_DEP( trace_program_interrupt   )( REGS* regs, int pcode, int ilc );
 
 void *cpu_thread (void *cpu);
 DLL_EXPORT void copy_psw (REGS *regs, BYTE *addr);

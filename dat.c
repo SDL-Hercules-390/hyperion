@@ -48,21 +48,264 @@
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
-extern inline void ARCH_DEP( purge_tlb )( REGS* regs );
 extern inline void ARCH_DEP( purge_tlb_all )();
-
-#if defined( FEATURE_ACCESS_REGISTERS )
-extern inline void ARCH_DEP( purge_alb )( REGS* regs );
-extern inline void ARCH_DEP( purge_alb_all )();
-#endif
-
 extern inline void ARCH_DEP( purge_tlbe_all )( RADR pfra );
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
+extern inline void ARCH_DEP( purge_alb_all )();
 extern inline bool ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, REGS* regs );
 #endif
 
 extern inline BYTE* ARCH_DEP( maddr_l )( VADR addr, size_t len, const int arn, REGS* regs, const int acctype, const BYTE akey );
+
+/*-------------------------------------------------------------------*/
+/*                     update_psw_ia                                 */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( update_psw_ia )( REGS* regs, int n )
+{
+    regs->psw.IA += n;
+    regs->psw.IA &= ADDRESS_MAXWRAP( regs );
+    PTT_PGM( "PGM IA+-sie", regs->psw.IA, regs->instinvalid, n );
+}
+
+/*-------------------------------------------------------------------*/
+/*                     update_guest_psw_ia                           */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( update_guest_psw_ia )( REGS* regs, int n )
+{
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
+        ARCH_DEP( update_psw_ia )( regs, n );
+    }
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_update_psw_ia( GUESTREGS, n ); break;
+        case ARCH_390_IDX: s390_update_psw_ia( GUESTREGS, n ); break;
+        case ARCH_900_IDX: z900_update_psw_ia( GUESTREGS, n ); break;
+        default: CRASH();
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   set_aea_common                                  */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_aea_common )( REGS* regs )
+{
+    SET_AEA_COMMON( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/*                   set_guest_aea_common                            */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_guest_aea_common )( REGS* regs )
+{
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
+        ARCH_DEP( set_aea_common )( GUESTREGS );
+    }
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_set_aea_common( GUESTREGS ); break;
+        case ARCH_390_IDX: s390_set_aea_common( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_set_aea_common( GUESTREGS ); break;
+        default: CRASH();
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                     invalidate_aia                                */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( invalidate_aia )( REGS* regs )
+{
+    INVALIDATE_AIA( regs );
+}
+/*-------------------------------------------------------------------*/
+/*                     set_ic_mask                                   */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_ic_mask )( REGS* regs )
+{
+    SET_IC_MASK( regs );
+}
+/*-------------------------------------------------------------------*/
+/*                     set_aea_mode                                  */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_aea_mode )( REGS* regs )
+{
+    SET_AEA_MODE( regs );
+}
+
+/*-------------------------------------------------------------------*/
+/*                   invalidate_guest_aia                            */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( invalidate_guest_aia )( REGS* regs )
+{
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
+        ARCH_DEP( invalidate_aia )( GUESTREGS );
+    }
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_invalidate_aia( GUESTREGS ); break;
+        case ARCH_390_IDX: s390_invalidate_aia( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_invalidate_aia( GUESTREGS ); break;
+        default: CRASH();
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   set_guest_ic_mask                               */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_guest_ic_mask )( REGS* regs )
+{
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
+        ARCH_DEP( set_ic_mask )( GUESTREGS );
+    }
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_set_ic_mask( GUESTREGS ); break;
+        case ARCH_390_IDX: s390_set_ic_mask( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_set_ic_mask( GUESTREGS ); break;
+        default: CRASH();
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                   set_guest_aea_mode                              */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( set_guest_aea_mode )( REGS* regs )
+{
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
+        ARCH_DEP( set_aea_mode )( GUESTREGS );
+    }
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_set_aea_mode( GUESTREGS ); break;
+        case ARCH_390_IDX: s390_set_aea_mode( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_set_aea_mode( GUESTREGS ); break;
+        default: CRASH();
+        }
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/*                      do_purge_tlb                                 */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( do_purge_tlb )( REGS* regs )
+{
+    INVALIDATE_AIA( regs );
+
+    if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
+    {
+        memset( &regs->tlb.vaddr, 0, TLBN * sizeof( DW ));
+        regs->tlbID = 1;
+    }
+}
+
+/*-------------------------------------------------------------------*/
+/* Purge entire translation lookaside buffer for this CPU            */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( purge_tlb )( REGS* regs )
+{
+    /* Do it for the current architecture first */
+    ARCH_DEP( do_purge_tlb )( regs );
+
+#if defined( _FEATURE_SIE )
+
+    /* Also clear the guest registers in the SIE copy */
+    if (regs->host && GUESTREGS)
+    {
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_purge_tlb )( GUESTREGS );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUESTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: s370_do_purge_tlb( GUESTREGS ); break;
+            case ARCH_390_IDX: s390_do_purge_tlb( GUESTREGS ); break;
+            case ARCH_900_IDX: z900_do_purge_tlb( GUESTREGS ); break;
+            default: CRASH();
+            }
+        }
+    }
+#endif // defined( _FEATURE_SIE )
+}
+
+
+#if defined( FEATURE_ACCESS_REGISTERS )
+/*-------------------------------------------------------------------*/
+/*                 purge_alb helper function                         */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( do_purge_alb )( REGS* regs )
+{
+    int  i;
+    for (i=1; i < 16; i++)
+        if (regs->AEA_AR(i) >= CR_ALB_OFFSET)
+            regs->AEA_AR(i) = 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Purge the ART lookaside buffer for this CPU                       */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( purge_alb )( REGS* regs )
+{
+    /* Do it for the current architecture first */
+    ARCH_DEP( do_purge_alb )( regs );
+
+#if defined( _FEATURE_SIE )
+    /* Also clear the guest registers in the SIE copy */
+    if (regs->host && GUESTREGS)
+    {
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_purge_alb )( GUESTREGS );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUESTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: /* No access regs for 370! */   break;
+            case ARCH_390_IDX: s390_do_purge_alb( GUESTREGS ); break;
+            case ARCH_900_IDX: z900_do_purge_alb( GUESTREGS ); break;
+            default: CRASH();
+            }
+        }
+    }
+#endif // defined( _FEATURE_SIE )
+}
+#endif /* defined( FEATURE_ACCESS_REGISTERS ) */
+
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 /*-------------------------------------------------------------------*/
@@ -1659,74 +1902,136 @@ tran_excp_addr:
 
 
 /*-------------------------------------------------------------------*/
-/* Purge a specific translation lookaside buffer entry               */
+/*                      is_tlbe_match                                */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP( purge_tlbe )( REGS* regs, RADR pfra )
+bool ARCH_DEP( is_tlbe_match )( REGS* regs, REGS* host_regs, U64 pfra, int i )
 {
-int  i;
 RADR pte;
 RADR ptemask;
+bool match = false;
 
-// ARCH_370_IDX pte and ptemask...
 #if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     ptemask = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
               PAGETAB_PFRA_4K : PAGETAB_PFRA_2K;
     pte = ((pfra & 0xFFFFFF) >> 8) & ptemask;
 #endif
-
-// ARCH_390_IDX pte and ptemask...
 #if defined( FEATURE_S390_DAT )
     ptemask = PAGETAB_PFRA;
     pte = pfra & ptemask;
 #endif
-
-// ARCH_900_IDX pte and ptemask...
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     ptemask = (RADR)ZPGETAB_PFRA;
     pte = pfra & ptemask;
 #endif
 
-    INVALIDATE_AIA(regs);
+    if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)
+        match = true;
+    else if (!host_regs)
+        match = false;
+    else switch (host_regs->arch_mode)
+    {
+    case ARCH_370_IDX: match = s370_is_tlbe_match( host_regs, NULL, pfra, i ); break;
+    case ARCH_390_IDX: match = s390_is_tlbe_match( host_regs, NULL, pfra, i ); break;
+    case ARCH_900_IDX: match = z900_is_tlbe_match( host_regs, NULL, pfra, i ); break;
+    default: CRASH();
+    }
 
-    for (i = 0; i < TLBN; i++)
-        if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)
+    return match;
+}
+
+/*-------------------------------------------------------------------*/
+/*                      do_purge_tlbe                                */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( do_purge_tlbe )( REGS* regs, REGS* host_regs, U64 pfra )
+{
+int  i;
+
+    INVALIDATE_AIA( regs );
+
+    for (i=0; i < TLBN; i++)
+        if (ARCH_DEP( is_tlbe_match )( regs, host_regs, pfra, i ))
             regs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
+}
+
+/*-------------------------------------------------------------------*/
+/* Purge a specific translation lookaside buffer entry               */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( purge_tlbe )( REGS* regs, U64 pfra )
+{
+    /* Do it for the current architecture first */
+    ARCH_DEP( do_purge_tlbe )( regs, NULL, pfra );
 
 #if defined( _FEATURE_SIE )
-    /* Also clear the guest registers in the SIE copy */
+
+    /* Also clear the GUEST registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
-        INVALIDATE_AIA(GUESTREGS);
-
         /*************************************************************/
-        /* The guest registers in the SIE copy TLB PTE entries for   */
-        /* DAT-OFF guests like CMS do NOT actually contain the PTE   */
-        /* (but rather the host primary virtual address, both masked */
-        /* with TBLID_PAGEMASK).  In order to check if such guest    */
-        /* TLB entry needs to be cleared, one needs to check the     */
-        /* parallel host registers TLB PTE entry.  Hence that the    */
-        /* if-test that follows needed to be expanded.  Originally   */
-        /* it was just:                                              */
         /*                                                           */
-        /*     if ((GUESTREGS->tlb.TLB_PTE(i) & ptemask) == pte)     */
+        /*                   PROGRAMMING NOTE                        */
         /*                                                           */
-        /* but is now expanded with the additional test as below.    */
+        /* The SIE guest's TLB PTE entries for DAT-OFF guests like   */
+        /* CMS do NOT actually contain the PTE, but rather contain   */
+        /* the host primary virtual address. Both are masked with    */
+        /* TBLID_PAGEMASK however. Therefore in order to properly    */
+        /* check if such a guest TLB PTE entry needs to be cleared,  */
+        /* one needs to also check the host's TLB PTE for a match    */
+        /* as well. In other words, instead of just doing:           */
+        /*                                                           */
+        /*    if ((GUESTREGS->tlb.TLB_PTE(i) & ptemask) == pte)      */
+        /*         GUESTREGS->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;    */
+        /*                                                           */
+        /* we need to essentially do the following instead:          */
+        /*                                                           */
+        /*    if ((GUESTREGS->tlb.TLB_PTE(i) & ptemask) == pte ||    */
+        /*         (HOSTREGS->tlb.TLB_PTE(i) & ptemask) == pte)      */
+        /*         GUESTREGS->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;    */
         /*                                                           */
         /*                         (Peter J. Jansen, 29-Jul-2016)    */
+        /*                                                           */
+        /* This is accomplished by also passing the host's registers */
+        /* to the "do_purge_tlbe" function so it can know to also    */
+        /* check the host's TLB PTE entry for a match as well.       */
+        /*                                                           */
+        /*                    "Fish" (David B. Trout), 07-Oct-2021   */
+        /*                                                           */
         /*************************************************************/
 
-        for (i = 0; i < TLBN; i++)
-            if ((GUESTREGS->tlb.TLB_PTE(i) & ptemask) == pte ||
-                 (HOSTREGS->tlb.TLB_PTE(i) & ptemask) == pte)
-                GUESTREGS->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
+        /* Check if guest architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_purge_tlbe )( GUESTREGS, regs, pfra );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUESTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: s370_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
+            case ARCH_390_IDX: s390_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
+            case ARCH_900_IDX: z900_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
+            default: CRASH();
+            }
+        }
     }
-    else if (regs->guest)  /* For guests, clear any host entries */
+    else if (regs->guest)  /* For guests, also clear HOST entries */
     {
-        INVALIDATE_AIA(HOSTREGS);
-
-        for (i = 0; i < TLBN; i++)
-            if ((HOSTREGS->tlb.TLB_PTE(i) & ptemask) == pte)
-                HOSTREGS->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
+        /* Check if host architecture is same as ours */
+        if (HOSTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_purge_tlbe )( HOSTREGS, NULL, pfra );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (HOSTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: s370_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
+            case ARCH_390_IDX: s390_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
+            case ARCH_900_IDX: z900_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
+            default: CRASH();
+            }
+        }
     }
 #endif /* defined( _FEATURE_SIE ) */
 
@@ -1734,48 +2039,109 @@ RADR ptemask;
 
 
 /*-------------------------------------------------------------------*/
+/*                 invalidate_tlb helper                             */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( do_invalidate_tlb )( REGS* regs, BYTE mask )
+{
+int  i;
+
+    INVALIDATE_AIA( regs );
+    if (mask == 0)
+        memset( &regs->tlb.acc, 0, TLBN );
+    else
+        for (i=0; i < TLBN; i++)
+            if ((regs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->tlbID)
+                regs->tlb.acc[i] &= mask;
+}
+
+/*-------------------------------------------------------------------*/
 /* Invalidate one or more translation lookaside buffer entries       */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( invalidate_tlb )( REGS* regs, BYTE mask )
 {
-int  i;
-
-    INVALIDATE_AIA(regs);
-    if (mask == 0)
-        memset(&regs->tlb.acc, 0, TLBN);
-    else
-        for (i = 0; i < TLBN; i++)
-            if ((regs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->tlbID)
-                regs->tlb.acc[i] &= mask;
-
+    /* Do it for the current architecture first */
+    ARCH_DEP( do_invalidate_tlb )( regs, mask );
+    
 #if defined( _FEATURE_SIE )
-    /* Also invalidate the guest registers in the SIE copy */
-    if(regs->host && GUESTREGS)
+    /* Also invalidate the GUEST registers in the SIE copy */
+    if (regs->host && GUESTREGS)
     {
-        INVALIDATE_AIA(GUESTREGS);
-        if (mask == 0)
-            memset(&GUESTREGS->tlb.acc, 0, TLBN);
-        else
-            for (i = 0; i < TLBN; i++)
-                if ((GUESTREGS->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == GUESTREGS->tlbID)
-                    GUESTREGS->tlb.acc[i] &= mask;
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_invalidate_tlb )( GUESTREGS, mask );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUESTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: s370_do_invalidate_tlb( GUESTREGS, mask ); break;
+            case ARCH_390_IDX: s390_do_invalidate_tlb( GUESTREGS, mask ); break;
+            case ARCH_900_IDX: z900_do_invalidate_tlb( GUESTREGS, mask ); break;
+            default: CRASH();
+            }
+        }
     }
-    else
-    /* Also invalidate the guest registers in the SIE copy */
-    if(regs->guest)
+    else if (regs->guest)  /* For guests, also clear HOST entries */
     {
-        INVALIDATE_AIA(HOSTREGS);
-        if (mask == 0)
-            memset(&HOSTREGS->tlb.acc, 0, TLBN);
-        else
-            for (i = 0; i < TLBN; i++)
-                if ((HOSTREGS->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == HOSTREGS->tlbID)
-                    HOSTREGS->tlb.acc[i] &= mask;
+        /* Check if host's architecture is same as ours */
+        if (HOSTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_invalidate_tlb )( HOSTREGS, mask );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (HOSTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: s370_do_invalidate_tlb( HOSTREGS, mask ); break;
+            case ARCH_390_IDX: s390_do_invalidate_tlb( HOSTREGS, mask ); break;
+            case ARCH_900_IDX: z900_do_invalidate_tlb( HOSTREGS, mask ); break;
+            default: CRASH();
+            }
+        }
     }
-
 #endif /* defined( _FEATURE_SIE ) */
 } /* end function invalidate_tlb */
 
+
+/*-------------------------------------------------------------------*/
+/*                 invalidate_tlbe helper                            */
+/*-------------------------------------------------------------------*/
+void ARCH_DEP( do_invalidate_tlbe )( REGS* regs, BYTE* main )
+{
+    int     i;                          /* index into TLB            */
+    int     shift;                      /* Number of bits to shift   */
+    BYTE*   mainwid;                    /* mainstore with tlbid      */
+
+    if (!main)
+    {
+        ARCH_DEP( invalidate_tlb )( regs, 0 );
+        return;
+    }
+
+    mainwid = main + regs->tlbID;
+
+    INVALIDATE_AIA_MAIN( regs, main );
+
+    shift = (regs->arch_mode == ARCH_370_IDX) ? 11 : 12;
+
+    for (i=0; i < TLBN; i++)
+    {
+        if (MAINADDR( regs->tlb.main[i], (regs->tlb.TLB_VADDR(i) | (i << shift)) ) == mainwid)
+        {
+            regs->tlb.acc[i] = 0;
+
+            // 370?
+#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
+
+            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                regs->tlb.acc[i^1] = 0;
+#endif
+        }
+    }
+}
 
 /*-------------------------------------------------------------------*/
 /* Invalidate matching translation lookaside buffer entries          */
@@ -1803,72 +2169,49 @@ int  i;
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
 {
-    int     i;                          /* index into TLB            */
-    int     shift;                      /* Number of bits to shift   */
-    BYTE    *mainwid;                   /* mainstore with tlbid      */
-
-    if (main == NULL)
-    {
-        ARCH_DEP(invalidate_tlb)(regs, 0);
-        return;
-    }
-
-    mainwid = main + regs->tlbID;
-
-    INVALIDATE_AIA_MAIN(regs, main);
-    shift = regs->arch_mode == ARCH_370_IDX ? 11 : 12;
-    for (i = 0; i < TLBN; i++)
-        if (MAINADDR(regs->tlb.main[i],
-                     (regs->tlb.TLB_VADDR(i) | (i << shift)))
-                     == mainwid)
-        {
-            regs->tlb.acc[i] = 0;
-#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-            // ARCH_370_IDX
-            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-                regs->tlb.acc[i^1] = 0;
-#endif
-        }
+    /* Do it for the current architecture first */
+    ARCH_DEP( do_invalidate_tlbe )( regs, main );
 
 #if defined( _FEATURE_SIE )
-    /* Also clear the guest registers in the SIE copy */
+    /* Also clear the GUEST registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
-        INVALIDATE_AIA_MAIN(GUESTREGS, main);
-        shift = GUESTREGS->arch_mode == ARCH_370_IDX ? 11 : 12;
-        for (i = 0; i < TLBN; i++)
-            if (MAINADDR(GUESTREGS->tlb.main[i],
-                         (GUESTREGS->tlb.TLB_VADDR(i) | (i << shift)))
-                         == mainwid)
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_invalidate_tlbe )( GUESTREGS, main );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUESTREGS->arch_mode)
             {
-                GUESTREGS->tlb.acc[i] = 0;
-#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-                // ARCH_370_IDX
-                if ((GUESTREGS->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-                    GUESTREGS->tlb.acc[i^1] = 0;
-#endif
+            case ARCH_370_IDX: s370_do_invalidate_tlbe( GUESTREGS, main ); break;
+            case ARCH_390_IDX: s390_do_invalidate_tlbe( GUESTREGS, main ); break;
+            case ARCH_900_IDX: z900_do_invalidate_tlbe( GUESTREGS, main ); break;
+            default: CRASH();
             }
+        }
     }
-
-    /* Also clear the host registers in the SIE copy */
-    if (regs->guest)
+    else if (regs->guest)  /* For guests, also clear HOST entries */
     {
-        INVALIDATE_AIA_MAIN(HOSTREGS, main);
-        shift = HOSTREGS->arch_mode == ARCH_370_IDX ? 11 : 12;
-        for (i = 0; i < TLBN; i++)
-            if (MAINADDR(HOSTREGS->tlb.main[i],
-                         (HOSTREGS->tlb.TLB_VADDR(i) | (i << shift)))
-                         == mainwid)
+        /* Check if host's architecture is same as ours */
+        if (HOSTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( do_invalidate_tlbe )( HOSTREGS, main );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (HOSTREGS->arch_mode)
             {
-                HOSTREGS->tlb.acc[i] = 0;
-#if !defined( FEATURE_S390_DAT ) && !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-                // ARCH_370_IDX
-                if ((HOSTREGS->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-                    HOSTREGS->tlb.acc[i^1] = 0;
-#endif
+            case ARCH_370_IDX: s370_do_invalidate_tlbe( HOSTREGS, main ); break;
+            case ARCH_390_IDX: s390_do_invalidate_tlbe( HOSTREGS, main ); break;
+            case ARCH_900_IDX: z900_do_invalidate_tlbe( HOSTREGS, main ); break;
+            default: CRASH();
             }
+        }
     }
-
 #endif /* defined( _FEATURE_SIE ) */
 
 } /* end function invalidate_tlbe */
@@ -2192,26 +2535,13 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             regs->aea_aleprot[arn] = HOSTREGS->dat.protect & 2;
         }
 
-        /* Convert host real address to host absolute address */
-        /* ISW 20181005 */
-        /* Use the Prefixing logic of the SIE host (not the guest) */
-        switch (HOSTREGS->arch_mode)
-        {
-            case ARCH_390_IDX:
-                HOSTREGS->dat.aaddr = aaddr =
-                        APPLY_390_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX_L );
-                apfra = APPLY_390_PREFIXING( HOSTREGS->dat.rpfra, HOSTREGS->PX_L );
-                break;
-            case ARCH_900_IDX:
-                HOSTREGS->dat.aaddr = aaddr =
-                        APPLY_900_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX_G );
-                apfra = APPLY_900_PREFIXING( HOSTREGS->dat.rpfra, HOSTREGS->PX_G );
-                break;
-            /* No S/370 or any other SIE host exist */
-            default:
-            case ARCH_370_IDX:
-                CRASH();
-        }
+        /* Convert host real address to host absolute address.
+           Use the Prefixing logic of the SIE host, not the guest!
+                                               -- ISW 20181005
+        */
+        HOSTREGS->dat.aaddr =
+        aaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+        apfra = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.rpfra );
 
         if (HOSTREGS->dat.aaddr > HOSTREGS->mainlim)
             goto vabs_addr_excp;
@@ -2300,9 +2630,11 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     return regs->mainstor + aaddr;
 
 vabs_addr_excp:
+
     regs->program_interrupt (regs, PGM_ADDRESSING_EXCEPTION);
 
 vabs_prot_excp:
+
 #if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
     regs->TEA = addr & STORAGE_KEY_PAGEMASK;
     if (regs->dat.protect && (acctype & (ACC_WRITE|ACC_CHECK)) )
@@ -2318,24 +2650,43 @@ vabs_prot_excp:
 #endif /* defined( FEATURE_SUPPRESSION_ON_PROTECTION ) */
 
 #if defined( _FEATURE_PROTECTION_INTERCEPTION_CONTROL )
-    if(SIE_MODE(regs) && HOSTREGS->dat.protect)
+    if (SIE_MODE( regs ) && HOSTREGS->dat.protect)
     {
 #if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
-        HOSTREGS->TEA = regs->TEA;
+
+        /* Check if host's architecture is same as ours */
+        if (HOSTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            HOSTREGS->TEA = regs->TEA;
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (HOSTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: HOSTREGS->TEA_370 = regs->TEA; break;
+            case ARCH_390_IDX: HOSTREGS->TEA_390 = regs->TEA; break;
+            case ARCH_900_IDX: HOSTREGS->TEA_900 = regs->TEA; break;
+            default: CRASH();
+            }
+        }
+
         HOSTREGS->excarid = regs->excarid;
-#endif
-        (HOSTREGS->program_interrupt) (HOSTREGS, PGM_PROTECTION_EXCEPTION);
+
+#endif /* defined( FEATURE_SUPPRESSION_ON_PROTECTION ) */
+
+        HOSTREGS->program_interrupt( HOSTREGS, PGM_PROTECTION_EXCEPTION );
     }
     else
 #endif /* defined( _FEATURE_PROTECTION_INTERCEPTION_CONTROL ) */
         regs->program_interrupt (regs, PGM_PROTECTION_EXCEPTION);
 
 vabs_prog_check:
+
     regs->program_interrupt (regs, regs->dat.xcode);
 
     return NULL; /* prevent warning from compiler */
 } /* end function ARCH_DEP(logical_to_main_l) */
-
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */
@@ -2365,6 +2716,17 @@ vabs_prog_check:
 /*  given feature was defined for *ANY* of the build architectures.  */
 /*-------------------------------------------------------------------*/
 
-// (we have no non-ARCH_DEP code to place here -- yet!)
+RADR apply_host_prefixing( REGS* regs, RADR raddr )
+{
+    RADR aaddr = 0;
+    switch (HOSTREGS->arch_mode)
+    {
+    case ARCH_370_IDX: aaddr = APPLY_370_PREFIXING( raddr, HOSTREGS->PX_370 ); break;
+    case ARCH_390_IDX: aaddr = APPLY_390_PREFIXING( raddr, HOSTREGS->PX_390 ); break;
+    case ARCH_900_IDX: aaddr = APPLY_900_PREFIXING( raddr, HOSTREGS->PX_900 ); break;
+    default: CRASH();
+    }
+    return aaddr;
+}
 
 #endif /* !defined( _GEN_ARCH ) */

@@ -483,7 +483,7 @@ inline PGSTE* ARCH_DEP( GetPGSTE )( REGS* regs, U64 gabspage )
         SIE_INTERCEPT( regs );
 
     // Convert host real address to host absolute address
-    pte = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
+    pte = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
 
     // Convert host abs PTE to PGSTE
     pgste = ARCH_DEP( GetPGSTEFromPTE )( regs, pte );

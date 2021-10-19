@@ -1417,8 +1417,8 @@ RADR    pageaddr;                       /* Working abs page address  */
                     if (sr == 0)
                     {
                         /* Translate host real to host absolute */
-                        pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr,
-                                                    HOSTREGS->PX );
+                        pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+
                         /* Save the original key */
                         oldkey = ARCH_DEP( get_4K_storage_key )( pageaddr );
 
@@ -1554,8 +1554,8 @@ RADR    pageaddr;                       /* Working abs page address  */
                     if (sr == 0)
                     {
                         /* Translate host real to host absolute */
-                        pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr,
-                                                    HOSTREGS->PX );
+                        pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+
                         /* Save the original key */
                         oldkey = ARCH_DEP( get_4K_storage_key )( pageaddr );
 
@@ -1670,11 +1670,28 @@ bool    need_realkey = true;            /* (get from real page)      */
                                  HOSTREGS, ACCTYPE_SIE );
 
         /* Translate host real to host absolute */
-        pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
+        pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
 
         /* Program Check if any unexpected translation error */
         if (sr != 0 && sr != 2)
-            ARCH_DEP( program_interrupt )( HOSTREGS, HOSTREGS->dat.xcode );
+        {
+            /* Check if host's architecture is same as ours's */
+            if (HOSTREGS->arch_mode == ARCH_IDX)
+            {
+                // Identical architectures; No special handling needed...
+                ARCH_DEP( program_interrupt )( HOSTREGS, HOSTREGS->dat.xcode );
+            }
+            else // Different architectures! Special handling required!
+            {
+                switch (HOSTREGS->arch_mode)
+                {
+                case ARCH_370_IDX: s370_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
+                case ARCH_390_IDX: s390_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
+                case ARCH_900_IDX: z900_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
+                default: CRASH();
+                }
+            }
+        }
 
         if (sr != 0)
         {
@@ -4340,8 +4357,7 @@ BYTE    oldkey;                         /* Original Storage key      */
                     if (sr == 0)
                     {
                         /* Translate host real to host absolute */
-                        pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr,
-                                                    HOSTREGS->PX );
+                        pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
 
                         /* Save original key before modifying */
                         realkey = ARCH_DEP( get_2K_storage_key )( pageaddr );
@@ -4491,8 +4507,7 @@ BYTE    oldkey;                         /* Original Storage key      */
                     if (sr == 0)
                     {
                         /* Translate host real to host absolute */
-                        pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr,
-                                                    HOSTREGS->PX );
+                        pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
 
                         /* Save original key before modifying */
                         realkey = ARCH_DEP( get_4K_storage_key )( pageaddr );
@@ -5181,8 +5196,8 @@ BYTE    r1key;                          /* Key value to set from r1  */
                     if (sr == 0)
                     {
                         /* Translate host real to host absolute */
-                        pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr,
-                                                    HOSTREGS->PX );
+                        pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+
                         /* Save the original key */
                         oldkey = ARCH_DEP( get_4K_storage_key )( pageaddr );
 
@@ -5433,8 +5448,8 @@ void ARCH_DEP( sske_or_pfmf_procedure )
                     if (sr == 0)
                     {
                         /* Translate host real to host absolute */
-                        abspage = APPLY_PREFIXING( HOSTREGS->dat.raddr,
-                                                   HOSTREGS->PX );
+                        abspage = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
+
                         if (set_key)
                         {
                             /* Save the original key */
@@ -6336,7 +6351,7 @@ static char *ordername[] = {
                             INVALIDATE_AIA( regs );
                             regs->captured_zpsw = regs->psw;
                             regs->psw.states |= BIT( PSW_NOTESAME_BIT );
-                            regs->PX_L &= 0x7FFFE000;
+                            regs->PX &= PX_900_MASK;
 
                             for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                             {
@@ -6346,7 +6361,7 @@ static char *ordername[] = {
                                     INVALIDATE_AIA( sysblk.regs[ cpu ]);
                                     sysblk.regs[ cpu ]->captured_zpsw = sysblk.regs[cpu]->psw;
                                     sysblk.regs[ cpu ]->psw.states |= BIT( PSW_NOTESAME_BIT );
-                                    sysblk.regs[ cpu ]->PX_L &= 0x7FFFE000;
+                                    sysblk.regs[ cpu ]->PX &= PX_900_MASK;
                                 }
                             }
                         }
@@ -6364,7 +6379,7 @@ static char *ordername[] = {
                             INVALIDATE_AIA( regs );
                             regs->psw.states &= ~BIT( PSW_NOTESAME_BIT );
                             regs->psw.IA_H = 0;
-                            regs->PX_G &= 0x7FFFE000;
+                            regs->PX &= PX_900_MASK;
 
                             for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                             {
@@ -6374,7 +6389,7 @@ static char *ordername[] = {
                                     INVALIDATE_AIA( sysblk.regs[ cpu ]);
                                     sysblk.regs[ cpu ]->psw.states &= ~BIT( PSW_NOTESAME_BIT );
                                     sysblk.regs[ cpu ]->psw.IA_H = 0;
-                                    sysblk.regs[ cpu ]->PX_G &= 0x7FFFE000;
+                                    sysblk.regs[ cpu ]->PX &= PX_900_MASK;
                                 }
                             }
                         }
@@ -6392,7 +6407,7 @@ static char *ordername[] = {
                             INVALIDATE_AIA( regs );
                             regs->psw.states &= ~BIT( PSW_NOTESAME_BIT );
                             regs->psw.IA_H = 0;
-                            regs->PX_G &= 0x7FFFE000;
+                            regs->PX &= PX_900_MASK;
 
                             for (cpu = 0; cpu < sysblk.maxcpu; cpu++)
                             {
@@ -6401,7 +6416,7 @@ static char *ordername[] = {
                                 {
                                     INVALIDATE_AIA( sysblk.regs[ cpu ]);
                                     sysblk.regs[ cpu ]->psw = sysblk.regs[cpu]->captured_zpsw;
-                                    sysblk.regs[ cpu ]->PX_G &= 0x7FFFE000;
+                                    sysblk.regs[ cpu ]->PX &= ARCH_900_IDX;
                                 }
                             }
                         }
@@ -7681,7 +7696,7 @@ BYTE    akey;                           /* Access key                */
             longjmp( regs->progjmp, SIE_INTERCEPT_INST );
 
         /* Convert host real address to host absolute address */
-        aaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
+        aaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
 
         if (aaddr > HOSTREGS->mainlim)
             ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );

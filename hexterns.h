@@ -455,4 +455,98 @@ CHAN_DLL_IMPORT void Update_IC_IOPENDING_QLocked  ();
 #define UPDATE_IC_IOPENDING()                     (void)Update_IC_IOPENDING()
 #define UPDATE_IC_IOPENDING_QLOCKED()             (void)Update_IC_IOPENDING_QLocked()
 
+/* Functions in module dat.c */
+
+void s370_invalidate_aia( REGS* regs );
+void s390_invalidate_aia( REGS* regs );
+void z900_invalidate_aia( REGS* regs );
+
+void s370_set_ic_mask( REGS* regs );
+void s390_set_ic_mask( REGS* regs );
+void z900_set_ic_mask( REGS* regs );
+
+void s370_set_aea_mode( REGS* regs );
+void s390_set_aea_mode( REGS* regs );
+void z900_set_aea_mode( REGS* regs );
+
+void s370_invalidate_guest_aia( REGS* regs );
+void s390_invalidate_guest_aia( REGS* regs );
+void z900_invalidate_guest_aia( REGS* regs );
+
+void s370_set_guest_ic_mask( REGS* regs );
+void s390_set_guest_ic_mask( REGS* regs );
+void z900_set_guest_ic_mask( REGS* regs );
+
+void s370_set_guest_aea_mode( REGS* regs );
+void s390_set_guest_aea_mode( REGS* regs );
+void z900_set_guest_aea_mode( REGS* regs );
+
+void s370_set_aea_common( REGS* regs );
+void s390_set_aea_common( REGS* regs );
+void z900_set_aea_common( REGS* regs );
+
+void s370_set_guest_aea_common( REGS* regs );
+void s390_set_guest_aea_common( REGS* regs );
+void z900_set_guest_aea_common( REGS* regs );
+
+void s370_do_purge_tlb( REGS* regs );
+void s390_do_purge_tlb( REGS* regs );
+void z900_do_purge_tlb( REGS* regs );
+
+void s370_purge_tlb( REGS* regs );
+void s390_purge_tlb( REGS* regs );
+void z900_purge_tlb( REGS* regs );
+
+void s390_do_purge_alb( REGS* regs );
+void z900_do_purge_alb( REGS* regs );
+
+void s390_purge_alb( REGS* regs );
+void z900_purge_alb( REGS* regs );
+
+void s370_do_invalidate_tlb( REGS* regs, BYTE mask );
+void s390_do_invalidate_tlb( REGS* regs, BYTE mask );
+void z900_do_invalidate_tlb( REGS* regs, BYTE mask );
+
+bool s370_is_tlbe_match( REGS* regs, REGS* host_regs, U64 pfra, int i );
+bool s390_is_tlbe_match( REGS* regs, REGS* host_regs, U64 pfra, int i );
+bool z900_is_tlbe_match( REGS* regs, REGS* host_regs, U64 pfra, int i );
+
+void s370_do_purge_tlbe( REGS* regs, REGS* host_regs, U64 pfra );
+void s390_do_purge_tlbe( REGS* regs, REGS* host_regs, U64 pfra );
+void z900_do_purge_tlbe( REGS* regs, REGS* host_regs, U64 pfra );
+
+void s370_purge_tlbe( REGS* regs, U64 pfra );
+void s390_purge_tlbe( REGS* regs, U64 pfra );
+void z900_purge_tlbe( REGS* regs, U64 pfra );
+
+void s370_do_invalidate_tlbe( REGS* regs, BYTE* main );
+void s390_do_invalidate_tlbe( REGS* regs, BYTE* main );
+void z900_do_invalidate_tlbe( REGS* regs, BYTE* main );
+
+void s370_invalidate_tlbe( REGS* regs, BYTE* main );
+void s390_invalidate_tlbe( REGS* regs, BYTE* main );
+void z900_invalidate_tlbe( REGS* regs, BYTE* main );
+
+RADR apply_host_prefixing( REGS* regs, RADR raddr );
+
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) s370_program_interrupt)( REGS* regs, int code );
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) s390_program_interrupt)( REGS* regs, int code );
+CPU_DLL_IMPORT void (ATTR_REGPARM(2) z900_program_interrupt)( REGS* regs, int code );
+
+void s370_display_inst( REGS* iregs, BYTE* inst );
+void s390_display_inst( REGS* iregs, BYTE* inst );
+void z900_display_inst( REGS* iregs, BYTE* inst );
+
+void s370_display_guest_inst( REGS* iregs, BYTE* inst );
+void s390_display_guest_inst( REGS* iregs, BYTE* inst );
+void z900_display_guest_inst( REGS* iregs, BYTE* inst );
+
+void s370_update_psw_ia( REGS* regs, int n );
+void s390_update_psw_ia( REGS* regs, int n );
+void z900_update_psw_ia( REGS* regs, int n );
+
+void s370_update_guest_psw_ia( REGS* regs, int n );
+void s390_update_guest_psw_ia( REGS* regs, int n );
+void z900_update_guest_psw_ia( REGS* regs, int n );
+
 #endif // _HEXTERNS_H

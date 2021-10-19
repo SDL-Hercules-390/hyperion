@@ -5643,7 +5643,7 @@ BYTE    oldkey;                         /* Original Storage key      */
                         if (sr == 0)
                         {
                             /* Translate host real to host absolute */
-                            pageaddr = APPLY_PREFIXING( HOSTREGS->dat.raddr, HOSTREGS->PX );
+                            pageaddr = apply_host_prefixing( HOSTREGS, HOSTREGS->dat.raddr );
 
                             /* Save original key before modifying */
                             realkey = ARCH_DEP( get_storage_key )( pageaddr );

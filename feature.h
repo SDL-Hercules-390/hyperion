@@ -196,12 +196,18 @@
 #undef PSA_SIZE
 #undef IA
 #undef PX
+#undef PX_370
+#undef PX_390
+#undef PX_900
 #undef CR
 #undef GR
 #undef GR_A
 #undef SET_GR_A
 #undef MONCODE
 #undef TEA
+#undef TEA_370
+#undef TEA_390
+#undef TEA_900
 #undef DXC
 #undef ET
 #undef PX_MASK
@@ -227,6 +233,9 @@
 #undef TLB_ASD
 #undef TLB_VADDR
 #undef TLB_PTE
+#undef TLB_370_PTE
+#undef TLB_390_PTE
+#undef TLB_900_PTE
 #undef TLB_PAGEMASK
 #undef TLB_BYTEMASK
 #undef TLB_PAGESHIFT
@@ -236,113 +245,135 @@
 #undef PER_SB
 #undef CHANNEL_MASKS
 
-#define APPLY_370_PREFIXING( addr, pfx )                                        \
-                                                                                \
-    ( ((U32)(addr) & 0x7FFFF000) == 0 ||                                        \
-      ((U32)(addr) & 0x7FFFF000) == (pfx) ? (U32)(addr) ^ (pfx) : (addr)        \
+#undef PX_370_MASK
+#undef PX_390_MASK
+#undef PX_900_MASK
+#undef PREFIXING_HIGHBITS
+
+#define PX_370_MASK         (0x         ## 7FFFF000       )
+#define PX_390_MASK         (0x         ## 7FFFF000       )
+#define PX_900_MASK         (0x         ## 7FFFE000       )
+#define PREFIXING_HIGHBITS  (0xFFFFFFFF ## 80000000 ## ULL)
+
+#undef PREFIXING_370_MASK
+#undef PREFIXING_390_MASK
+#undef PREFIXING_900_MASK
+
+#define PREFIXING_370_MASK  (PREFIXING_HIGHBITS | PX_370_MASK)
+#define PREFIXING_390_MASK  (PREFIXING_HIGHBITS | PX_390_MASK)
+#define PREFIXING_900_MASK  (PREFIXING_HIGHBITS | PX_900_MASK)
+
+#define APPLY_370_PREFIXING( addr, pfx )                                            \
+                                                                                    \
+    ( ((U32)(addr) & PREFIXING_370_MASK) == 0 ||                                    \
+      ((U32)(addr) & PREFIXING_370_MASK) == (pfx) ? (U32)(addr) ^ (pfx) : (addr)    \
     )
 
-#define APPLY_390_PREFIXING( addr, pfx )                                        \
-                                                                                \
-    ( ((U32)(addr) & 0x7FFFF000) == 0 ||                                        \
-      ((U32)(addr) & 0x7FFFF000) == (pfx) ? (U32)(addr) ^ (pfx) : (addr)        \
+#define APPLY_390_PREFIXING( addr, pfx )                                            \
+                                                                                    \
+    ( ((U32)(addr) & PREFIXING_390_MASK) == 0 ||                                    \
+      ((U32)(addr) & PREFIXING_390_MASK) == (pfx) ? (U32)(addr) ^ (pfx) : (addr)    \
     )
 
-#define APPLY_900_PREFIXING( addr, pfx )                                        \
-                                                                                \
-    ( (U64)((addr) & 0xFFFFFFFFFFFFE000ULL) == (U64)0 ||                        \
-      (U64)((addr) & 0xFFFFFFFFFFFFE000ULL) == (pfx) ? (addr) ^ (pfx) : (addr)  \
+#define APPLY_900_PREFIXING( addr, pfx )                                            \
+                                                                                    \
+    ( (U64)((addr) & PREFIXING_900_MASK) == (U64)0 ||                               \
+      (U64)((addr) & PREFIXING_900_MASK) == (pfx) ? (addr) ^ (pfx) : (addr)         \
     )
+
+#define PX_370              PX_L
+#define PX_390              PX_L
+#define PX_900              PX_G
+
+#define TEA_370             EA_L
+#define TEA_390             EA_L
+#define TEA_900             EA_G
+
+#define TLB_370_PTE(_n)     TLB_PTE_L(_n)
+#define TLB_390_PTE(_n)     TLB_PTE_L(_n)
+#define TLB_900_PTE(_n)     TLB_PTE_G(_n)
 
 /*----------------------------------------------------------------------------*/
 #if __GEN_ARCH == 370
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_IDX            ARCH_370_IDX
-#define ARCH_DEP(_name)     s370_ ## _name
+#define ARCH_IDX                                ARCH_370_IDX
+#define ARCH_DEP(_name)                         s370_ ## _name
 
-#define APPLY_PREFIXING( addr, pfx )    APPLY_370_PREFIXING( (addr), (pfx) )
-#define AMASK   AMASK_L
+#define APPLY_PREFIXING( addr, pfx )            APPLY_370_PREFIXING((addr),(pfx))
+#define AMASK                                   AMASK_L
 
-#define ADDRESS_MAXWRAP(_register_context) \
-    (AMASK24)
+#define ADDRESS_MAXWRAP(_register_context)      (AMASK24)
+#define ADDRESS_MAXWRAP_E(_register_context)    (AMASK31)
 
-#define ADDRESS_MAXWRAP_E(_register_context) \
-    (AMASK31)
-
-#define REAL_MODE(p) \
-    (!ECMODE(p) || ((p)->sysmask & PSW_DATMODE)==0)
+#define REAL_MODE(p)            (!ECMODE(p) || ((p)->sysmask & PSW_DATMODE)==0)
 
 #if defined(_FEATURE_SIE)
-#define PER_MODE(_regs) \
-        ( (ECMODE(&(_regs)->psw) && ((_regs)->psw.sysmask & PSW_PERMODE)) \
-          || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
+#define PER_MODE(_regs)         (0                                                                  \
+                                 || (ECMODE(&(_regs)->psw) && ((_regs)->psw.sysmask & PSW_PERMODE)) \
+                                 || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE))          \
+                                )
 #else
-#define PER_MODE(_regs) \
-        (ECMODE(&(_regs)->psw) && ((_regs)->psw.sysmask & PSW_PERMODE))
+#define PER_MODE(_regs)         (ECMODE(&(_regs)->psw) && ((_regs)->psw.sysmask & PSW_PERMODE))
 #endif
 
-#define ASF_ENABLED(_regs)  0 /* ASF is never enabled for S/370 */
+#define ASF_ENABLED(_regs)               0  /* ASF is never enabled for S/370 */
+#define ASN_AND_LX_REUSE_ENABLED(_regs)  0  /* never enabled for S/370 */
 
-#define ASN_AND_LX_REUSE_ENABLED(_regs) 0 /* never enabled for S/370 */
+#define ASTE_AS_DESIGNATOR(_aste)   ((_aste)[2])
+#define ASTE_LT_DESIGNATOR(_aste)   ((_aste)[3])
 
-#define ASTE_AS_DESIGNATOR(_aste) \
-    ((_aste)[2])
+#define SAEVENT_BIT             STD_SAEVENT
+#define SSEVENT_BIT             STD_SSEVENT
+#define SSGROUP_BIT             STD_GROUP
 
-#define ASTE_LT_DESIGNATOR(_aste) \
-    ((_aste)[3])
-
-#define SAEVENT_BIT STD_SAEVENT
-#define SSEVENT_BIT STD_SSEVENT
-#define SSGROUP_BIT STD_GROUP
-
-#define PSA PSA_3XX
-#define PSA_SIZE 4096
-#define IA  IA_L
-#define PX  PX_L
-#define CR(_r)  CR_L(_r)
-#define GR(_r)  GR_L(_r)
-#define GR_A(_r, _regs) ((_regs)->GR_L((_r)))
-#define SET_GR_A(_r, _regs,_v) ((_regs)->GR_L((_r))=(_v))
-#define MONCODE MC_L
-#define TEA EA_L
-#define DXC     tea
-#define ET  ET_L
-#define PX_MASK 0x7FFFF000
-#define RSTOLD  iplccw1
-#define RSTNEW  iplpsw
+#define PSA                     PSA_3XX
+#define PSA_SIZE                4096
+#define IA                      IA_L
+#define PX                      PX_370
+#define CR(_r)                  CR_L(_r)
+#define GR(_r)                  GR_L(_r)
+#define GR_A(_r, _regs)         ((_regs)->GR_L((_r)))
+#define SET_GR_A(_r, _regs,_v)  ((_regs)->GR_L((_r))=(_v))
+#define MONCODE                 MC_L
+#define TEA                     TEA_370
+#define DXC                     tea
+#define ET                      ET_L
+#define PX_MASK                 PX_370_MASK
+#define RSTOLD                  iplccw1
+#define RSTNEW                  iplpsw
 #if !defined( _FEATURE_ZSIE )
-  #define RADR    U32
-  #define F_RADR  "%8.8"PRIX32
+  #define RADR                  U32
+  #define F_RADR                "%8.8"PRIX32
 #else
-  #define RADR    U64
-  #define F_RADR  "%16.16"PRIX64
+  #define RADR                  U64
+  #define F_RADR                "%16.16"PRIX64
 #endif
-#define VADR    U32
-#define VADR_L  VADR
-#define F_VADR  "%8.8"PRIX32
-#define GREG    U32
-#define F_GREG  "%8.8"PRIX32
-#define CREG    U32
-#define F_CREG  "%8.8"PRIX32
-#define AREG    U32
-#define F_AREG  "%8.8"PRIX32
-#define STORE_W STORE_FW
-#define FETCH_W FETCH_FW
-#define AIV     AIV_L
+#define VADR                    U32
+#define VADR_L                  VADR
+#define F_VADR                  "%8.8"PRIX32
+#define GREG                    U32
+#define F_GREG                  "%8.8"PRIX32
+#define CREG                    U32
+#define F_CREG                  "%8.8"PRIX32
+#define AREG                    U32
+#define F_AREG                  "%8.8"PRIX32
+#define STORE_W                 STORE_FW
+#define FETCH_W                 FETCH_FW
+#define AIV                     AIV_L
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
-#define TLB_REAL_ASD  TLB_REAL_ASD_L
-#define TLB_ASD(_n)   TLB_ASD_L(_n)
-#define TLB_VADDR(_n) TLB_VADDR_L(_n)
-#define TLB_PTE(_n)   TLB_PTE_L(_n)
-#define TLB_PAGEMASK  0x00FFF800
-#define TLB_BYTEMASK  0x000007FF
-#define TLB_PAGESHIFT 11
-#define TLBID_PAGEMASK  0x00E00000
-#define TLBID_BYTEMASK  0x001FFFFF
-#define ASD_PRIVATE   SEGTAB_370_CMN
-#define CHANNEL_MASKS(_regs) ((_regs)->CR(2))
+#define TLB_REAL_ASD            TLB_REAL_ASD_L
+#define TLB_ASD(_n)             TLB_ASD_L(_n)
+#define TLB_VADDR(_n)           TLB_VADDR_L(_n)
+#define TLB_PTE(_n)             TLB_370_PTE(_n)
+#define TLB_PAGEMASK            0x00FFF800
+#define TLB_BYTEMASK            0x000007FF
+#define TLB_PAGESHIFT           11
+#define TLBID_PAGEMASK          0x00E00000
+#define TLBID_BYTEMASK          0x001FFFFF
+#define ASD_PRIVATE             SEGTAB_370_CMN
+#define CHANNEL_MASKS(_regs)    ((_regs)->CR(2))
 
 // 370
 
@@ -368,103 +399,94 @@
 #elif __GEN_ARCH == 390
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_IDX            ARCH_390_IDX
-#define ARCH_DEP(_name)     s390_ ## _name
+#define ARCH_IDX                                ARCH_390_IDX
+#define ARCH_DEP(_name)                         s390_ ## _name
 
-#define APPLY_PREFIXING( addr, pfx )    APPLY_390_PREFIXING( (addr), (pfx) )
-#define AMASK   AMASK_L
+#define APPLY_PREFIXING( addr, pfx )            APPLY_390_PREFIXING( (addr), (pfx) )
+#define AMASK                                   AMASK_L
 
-#define ADDRESS_MAXWRAP(_register_context) \
-    ((_register_context)->psw.AMASK)
+#define ADDRESS_MAXWRAP(_register_context)      ((_register_context)->psw.AMASK)
+#define ADDRESS_MAXWRAP_E(_register_context)    ((_register_context)->psw.AMASK)
 
-#define ADDRESS_MAXWRAP_E(_register_context) \
-    ((_register_context)->psw.AMASK)
-
-#define REAL_MODE(p) \
-    (((p)->sysmask & PSW_DATMODE)==0)
+#define REAL_MODE(p)            (((p)->sysmask & PSW_DATMODE)==0)
 
 #if defined(_FEATURE_SIE)
-#define PER_MODE(_regs) \
-        ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
+#define PER_MODE(_regs)         (0                                                          \
+                                 || ((_regs)->psw.sysmask & PSW_PERMODE)                    \
+                                 || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE))  \
+                                )
 #else
-#define PER_MODE(_regs) \
-        ((_regs)->psw.sysmask & PSW_PERMODE)
+#define PER_MODE(_regs)         ((_regs)->psw.sysmask & PSW_PERMODE)
 #endif
 
-#define ASF_ENABLED(_regs)  ((_regs)->CR(0) & CR0_ASF)
+#define ASF_ENABLED(_regs)                  ((_regs)->CR(0) & CR0_ASF)
+#define ASN_AND_LX_REUSE_ENABLED(_regs)  0  /* never enabled in ESA/390 */
 
-#define ASN_AND_LX_REUSE_ENABLED(_regs) 0 /* never enabled in ESA/390 */
+#define ASTE_AS_DESIGNATOR(_aste)   ((_aste)[2])
+#define ASTE_LT_DESIGNATOR(_aste)   ((_aste)[3])
 
-#define ASTE_AS_DESIGNATOR(_aste) \
-    ((_aste)[2])
+#define SAEVENT_BIT             STD_SAEVENT
+#define SSEVENT_BIT             STD_SSEVENT
+#define SSGROUP_BIT             STD_GROUP
 
-#define ASTE_LT_DESIGNATOR(_aste) \
-    ((_aste)[3])
+#define LSED_UET_HDR            S_LSED_UET_HDR
+#define LSED_UET_TLR            S_LSED_UET_TLR
+#define LSED_UET_BAKR           S_LSED_UET_BAKR
+#define LSED_UET_PC             S_LSED_UET_PC
+#define CR12_BRTRACE            S_CR12_BRTRACE
+#define CR12_TRACEEA            S_CR12_TRACEEA
+#define CHM_GPR2_RESV           S_CHM_GPR2_RESV
 
-#define SAEVENT_BIT STD_SAEVENT
-#define SSEVENT_BIT STD_SSEVENT
-#define SSGROUP_BIT STD_GROUP
-
-#define LSED_UET_HDR    S_LSED_UET_HDR
-#define LSED_UET_TLR    S_LSED_UET_TLR
-#define LSED_UET_BAKR   S_LSED_UET_BAKR
-#define LSED_UET_PC     S_LSED_UET_PC
-#define CR12_BRTRACE    S_CR12_BRTRACE
-#define CR12_TRACEEA    S_CR12_TRACEEA
-
-#define CHM_GPR2_RESV   S_CHM_GPR2_RESV
-
-#define PSA PSA_3XX
-#define PSA_SIZE 4096
-#define IA  IA_L
-#define PX  PX_L
-#define CR(_r)  CR_L(_r)
-#define GR(_r)  GR_L(_r)
-#define GR_A(_r, _regs) ((_regs)->GR_L((_r)))
-#define SET_GR_A(_r, _regs,_v) ((_regs)->GR_L((_r))=(_v))
-#define MONCODE MC_L
-#define TEA EA_L
-#define DXC     tea
-#define ET  ET_L
-#define PX_MASK 0x7FFFF000
-#define RSTNEW  iplpsw
-#define RSTOLD  iplccw1
+#define PSA                     PSA_3XX
+#define PSA_SIZE                4096
+#define IA                      IA_L
+#define PX                      PX_390
+#define CR(_r)                  CR_L(_r)
+#define GR(_r)                  GR_L(_r)
+#define GR_A(_r, _regs)         ((_regs)->GR_L((_r)))
+#define SET_GR_A(_r, _regs,_v)  ((_regs)->GR_L((_r))=(_v))
+#define MONCODE                 MC_L
+#define TEA                     TEA_390
+#define DXC                     tea
+#define ET                      ET_L
+#define PX_MASK                 PX_390_MASK
+#define RSTNEW                  iplpsw
+#define RSTOLD                  iplccw1
 #if !defined( _FEATURE_ZSIE )
-  #define RADR    U32
-  #define F_RADR  "%8.8"PRIX32
+  #define RADR                  U32
+  #define F_RADR                "%8.8"PRIX32
 #else
-  #define RADR    U64
-  #define F_RADR  "%16.16"PRIX64
+  #define RADR                  U64
+  #define F_RADR                "%16.16"PRIX64
 #endif
-#define VADR    U32
-#define VADR_L  VADR
-#define F_VADR  "%8.8"PRIX32
-#define GREG    U32
-#define F_GREG  "%8.8"PRIX32
-#define CREG    U32
-#define F_CREG  "%8.8"PRIX32
-#define AREG    U32
-#define F_AREG  "%8.8"PRIX32
-#define STORE_W STORE_FW
-#define FETCH_W FETCH_FW
-#define AIV     AIV_L
+#define VADR                    U32
+#define VADR_L                  VADR
+#define F_VADR                  "%8.8"PRIX32
+#define GREG                    U32
+#define F_GREG                  "%8.8"PRIX32
+#define CREG                    U32
+#define F_CREG                  "%8.8"PRIX32
+#define AREG                    U32
+#define F_AREG                  "%8.8"PRIX32
+#define STORE_W                 STORE_FW
+#define FETCH_W                 FETCH_FW
+#define AIV                     AIV_L
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
-#define TLB_REAL_ASD  TLB_REAL_ASD_L
-#define TLB_ASD(_n)   TLB_ASD_L(_n)
-#define TLB_VADDR(_n) TLB_VADDR_L(_n)
-#define TLB_PTE(_n)   TLB_PTE_L(_n)
-#define TLB_PAGEMASK  0x7FFFF000
-#define TLB_BYTEMASK  0x00000FFF
-#define TLB_PAGESHIFT 12
-#define TLBID_PAGEMASK  0x7FC00000
-#define TLBID_BYTEMASK  0x003FFFFF
-#define ASD_PRIVATE   STD_PRIVATE
+#define TLB_REAL_ASD            TLB_REAL_ASD_L
+#define TLB_ASD(_n)             TLB_ASD_L(_n)
+#define TLB_VADDR(_n)           TLB_VADDR_L(_n)
+#define TLB_PTE(_n)             TLB_390_PTE(_n)
+#define TLB_PAGEMASK            0x7FFFF000
+#define TLB_BYTEMASK            0x00000FFF
+#define TLB_PAGESHIFT           12
+#define TLBID_PAGEMASK          0x7FC00000
+#define TLBID_BYTEMASK          0x003FFFFF
+#define ASD_PRIVATE             STD_PRIVATE
 #ifdef FEATURE_ACCESS_REGISTERS
- #define CHANNEL_MASKS(_regs) 0xFFFFFFFF
+ #define CHANNEL_MASKS(_regs)   0xFFFFFFFF
 #else
- #define CHANNEL_MASKS(_regs) ((_regs)->CR(2))
+ #define CHANNEL_MASKS(_regs)   ((_regs)->CR(2))
 #endif /* FEATURE_ACCESS_REGISTERS */
 
 // 390
@@ -491,118 +513,112 @@
 #elif __GEN_ARCH == 900
 /*----------------------------------------------------------------------------*/
 
-#define ARCH_IDX            ARCH_900_IDX
-#define ARCH_DEP(_name)     z900_ ## _name
+#define ARCH_IDX                                ARCH_900_IDX
+#define ARCH_DEP(_name)                         z900_ ## _name
 
-#define APPLY_PREFIXING( addr, pfx )    APPLY_900_PREFIXING( (addr), (pfx) )
-#define AMASK   AMASK_G
+#define APPLY_PREFIXING( addr, pfx )            APPLY_900_PREFIXING( (addr), (pfx) )
+#define AMASK                                   AMASK_G
 
-#define ADDRESS_MAXWRAP(_register_context) \
-    ((_register_context)->psw.AMASK)
+#define ADDRESS_MAXWRAP(_register_context)      ((_register_context)->psw.AMASK)
+#define ADDRESS_MAXWRAP_E(_register_context)    ((_register_context)->psw.AMASK)
 
-#define ADDRESS_MAXWRAP_E(_register_context) \
-    ((_register_context)->psw.AMASK)
-
-#define REAL_MODE(p) \
-    (((p)->sysmask & PSW_DATMODE)==0)
+#define REAL_MODE(p)            (((p)->sysmask & PSW_DATMODE)==0)
 
 #if defined(_FEATURE_SIE)
-#define PER_MODE(_regs) \
-        ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
+#define PER_MODE(_regs)         (0                                                          \
+                                 || ((_regs)->psw.sysmask & PSW_PERMODE)                    \
+                                 || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE))  \
+                                )
 #else
-#define PER_MODE(_regs) \
-        ((_regs)->psw.sysmask & PSW_PERMODE)
+#define PER_MODE(_regs)         ((_regs)->psw.sysmask & PSW_PERMODE)
 #endif
 
-#define ASF_ENABLED(_regs)  1 /* ASF is always enabled for ESAME */
+#define ASF_ENABLED(_regs)      1   /* ASF is always enabled for ESAME */
 
 /* ASN-and-LX-reuse is enabled if the ASN-and-LX-reuse
-   facility is installed and CR0 bit 44 is 1 */
+   facility is installed and CR0 bit 44 is 1
+*/
 #if defined(FEATURE_006_ASN_LX_REUSE_FACILITY)
   #define ASN_AND_LX_REUSE_ENABLED(_regs) \
       (FACILITY_ENABLED( 006_ASN_LX_REUSE, (_regs) ) && ((_regs)->CR_L(0) & CR0_ASN_LX_REUS))
-#else /* !defined(FEATURE_006_ASN_LX_REUSE_FACILITY) */
-  #define ASN_AND_LX_REUSE_ENABLED(_regs) 0
-#endif /* !defined(FEATURE_006_ASN_LX_REUSE_FACILITY) */
-
-#define ASTE_AS_DESIGNATOR(_aste) \
-    (((U64)((_aste)[2])<<32)|(U64)((_aste)[3]))
-
-#define ASTE_LT_DESIGNATOR(_aste) \
-    ((_aste)[6])
-
-#define SAEVENT_BIT ASCE_S
-#define SSEVENT_BIT ASCE_X
-#define SSGROUP_BIT ASCE_G
-
-#define LSED_UET_HDR    Z_LSED_UET_HDR
-#define LSED_UET_TLR    Z_LSED_UET_TLR
-#define LSED_UET_BAKR   Z_LSED_UET_BAKR
-#define LSED_UET_PC     Z_LSED_UET_PC
-#define CR12_BRTRACE    Z_CR12_BRTRACE
-#define CR12_TRACEEA    Z_CR12_TRACEEA
-
-#define CHM_GPR2_RESV   Z_CHM_GPR2_RESV
-
-#define PSA PSA_900
-#define PSA_SIZE 8192
-#define IA  IA_G
-#define PX  PX_G
-#define CR(_r)  CR_G(_r)
-#define GR(_r)  GR_G(_r)
-#define GR_A(_r, _regs) ((_regs)->psw.amode64 ? (_regs)->GR_G((_r)) : (_regs)->GR_L((_r)))
-#define SET_GR_A(_r, _regs,_v)  \
-    do  { \
-        if((_regs)->psw.amode64) { \
-            ((_regs)->GR_G((_r))=(_v)); \
-        } else { \
-            ((_regs)->GR_L((_r))=(_v)); \
-        } \
-    } while(0)
-
-#define MONCODE MC_G
-#define TEA EA_G
-#define DXC     dataexc
-#define ET  ET_G
-#define PX_MASK 0x7FFFE000
-#define RSTOLD  rstold
-#define RSTNEW  rstnew
-#define RADR    U64
-#define F_RADR  "%16.16"PRIX64
-#define VADR    U64
-#if SIZEOF_INT == 4
-#define VADR_L  U32
 #else
-#define VADR_L  VADR
+  #define ASN_AND_LX_REUSE_ENABLED(_regs) 0
 #endif
-#define F_VADR  "%16.16"PRIX64
-#define GREG    U64
-#define F_GREG  "%16.16"PRIX64
-#define CREG    U64
-#define F_CREG  "%16.16"PRIX64
-#define AREG    U32
-#define F_AREG  "%8.8"PRIX32
-#define STORE_W STORE_DW
-#define FETCH_W FETCH_DW
-#define AIV     AIV_G
+
+#define ASTE_AS_DESIGNATOR(_aste)   (((U64)((_aste)[2])<<32)|(U64)((_aste)[3]))
+#define ASTE_LT_DESIGNATOR(_aste)   ((_aste)[6])
+
+#define SAEVENT_BIT             ASCE_S
+#define SSEVENT_BIT             ASCE_X
+#define SSGROUP_BIT             ASCE_G
+
+#define LSED_UET_HDR            Z_LSED_UET_HDR
+#define LSED_UET_TLR            Z_LSED_UET_TLR
+#define LSED_UET_BAKR           Z_LSED_UET_BAKR
+#define LSED_UET_PC             Z_LSED_UET_PC
+#define CR12_BRTRACE            Z_CR12_BRTRACE
+#define CR12_TRACEEA            Z_CR12_TRACEEA
+#define CHM_GPR2_RESV           Z_CHM_GPR2_RESV
+
+#define PSA                     PSA_900
+#define PSA_SIZE                8192
+#define IA                      IA_G
+#define PX                      PX_900
+#define CR(_r)                  CR_G(_r)
+#define GR(_r)                  GR_G(_r)
+#define GR_A(_r, _regs)         ((_regs)->psw.amode64 ? (_regs)->GR_G((_r)) : (_regs)->GR_L((_r)))
+#define SET_GR_A(_r, _regs, _v)         \
+  do                                    \
+  {                                     \
+    if ((_regs)->psw.amode64)           \
+        ((_regs)->GR_G((_r)) = (_v));   \
+    else                                \
+        ((_regs)->GR_L((_r)) = (_v));   \
+  }                                     \
+  while(0)
+
+#define MONCODE                 MC_G
+#define TEA                     TEA_900
+#define DXC                     dataexc
+#define ET                      ET_G
+#define PX_MASK                 PX_900_MASK
+#define RSTOLD                  rstold
+#define RSTNEW                  rstnew
+#define RADR                    U64
+#define F_RADR                  "%16.16"PRIX64
+#define VADR                    U64
+#if SIZEOF_INT == 4
+  #define VADR_L                U32
+#else
+  #define VADR_L                VADR
+#endif
+#define F_VADR                  "%16.16"PRIX64
+#define GREG                    U64
+#define F_GREG                  "%16.16"PRIX64
+#define CREG                    U64
+#define F_CREG                  "%16.16"PRIX64
+#define AREG                    U32
+#define F_AREG                  "%8.8"PRIX32
+#define STORE_W                 STORE_DW
+#define FETCH_W                 FETCH_DW
+#define AIV                     AIV_G
 #define SIEBK                   SIE2BK
 #define ZPB                     ZPB2
-#define TLB_REAL_ASD  TLB_REAL_ASD_G
-#define TLB_ASD(_n)   TLB_ASD_G(_n)
-#define TLB_VADDR(_n) TLB_VADDR_G(_n)
-#define TLB_PTE(_n)   TLB_PTE_G(_n)
-#define TLB_PAGEMASK  0xFFFFFFFFFFFFF000ULL
-#define TLB_BYTEMASK  0x0000000000000FFFULL
-#define TLB_PAGESHIFT 12
-#define TLBID_PAGEMASK  0xFFFFFFFFFFC00000ULL
-#define TLBID_BYTEMASK  0x00000000003FFFFFULL
-#define ASD_PRIVATE   (ASCE_P|ASCE_R)
+#define TLB_REAL_ASD            TLB_REAL_ASD_G
+#define TLB_ASD(_n)             TLB_ASD_G(_n)
+#define TLB_VADDR(_n)           TLB_VADDR_G(_n)
+#define TLB_PTE(_n)             TLB_900_PTE(_n)
+#define TLB_PAGEMASK            0xFFFFFFFFFFFFF000ULL
+#define TLB_BYTEMASK            0x0000000000000FFFULL
+#define TLB_PAGESHIFT           12
+#define TLBID_PAGEMASK          0xFFFFFFFFFFC00000ULL
+#define TLBID_BYTEMASK          0x00000000003FFFFFULL
+#define ASD_PRIVATE             (ASCE_P|ASCE_R)
 #ifdef FEATURE_ACCESS_REGISTERS
- #define CHANNEL_MASKS(_regs) 0xFFFFFFFF
+ #define CHANNEL_MASKS(_regs)   0xFFFFFFFF
 #else
- #define CHANNEL_MASKS(_regs) ((_regs) -> CR(2))
-#endif /* FEATURE_ACCESS_REGISTERS */
+ #define CHANNEL_MASKS(_regs)   ((_regs) -> CR(2))
+#endif
 
 // 900
 
@@ -646,25 +662,34 @@
 #undef PAGEFRAME_PAGESHIFT
 #undef PAGEFRAME_BYTEMASK
 #undef PAGEFRAME_PAGEMASK
+
+#undef PAGEFRAME_370_PAGEMASK
+#undef PAGEFRAME_390_PAGEMASK
+#undef PAGEFRAME_900_PAGEMASK
+
+#define PAGEFRAME_370_PAGEMASK      0x7FFFF800
+#define PAGEFRAME_390_PAGEMASK      0x7FFFF000
+#define PAGEFRAME_900_PAGEMASK      0xFFFFFFFFFFFFF000ULL
+
 #undef MAXADDRESS
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
   #define PAGEFRAME_PAGESIZE        4096
   #define PAGEFRAME_PAGESHIFT       12
   #define PAGEFRAME_BYTEMASK        0x00000FFF
-  #define PAGEFRAME_PAGEMASK        0xFFFFFFFFFFFFF000ULL
+  #define PAGEFRAME_PAGEMASK        PAGEFRAME_900_PAGEMASK
   #define MAXADDRESS                0xFFFFFFFFFFFFFFFFULL
 #elif defined( FEATURE_S390_DAT )
   #define PAGEFRAME_PAGESIZE        4096
   #define PAGEFRAME_PAGESHIFT       12
   #define PAGEFRAME_BYTEMASK        0x00000FFF
-  #define PAGEFRAME_PAGEMASK        0x7FFFF000
+  #define PAGEFRAME_PAGEMASK        PAGEFRAME_390_PAGEMASK
   #define MAXADDRESS                0x7FFFFFFF
 #else // 370
   #define PAGEFRAME_PAGESIZE        2048
   #define PAGEFRAME_PAGESHIFT       11
   #define PAGEFRAME_BYTEMASK        0x000007FF
-  #define PAGEFRAME_PAGEMASK        0x7FFFF800
+  #define PAGEFRAME_PAGEMASK        PAGEFRAME_370_PAGEMASK
   #if defined(FEATURE_370E_EXTENDED_ADDRESSING)
     #define MAXADDRESS              0x03FFFFFF
   #else

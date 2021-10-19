@@ -27,7 +27,6 @@
 
 void ARCH_DEP( purge_tlbe      )( REGS* regs, RADR pfra );
 void ARCH_DEP( invalidate_tlb  )( REGS* regs, BYTE  mask );
-void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main );
 void ARCH_DEP( invalidate_pte  )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs );
 
 #if defined( FEATURE_ACCESS_REGISTERS )
@@ -62,34 +61,6 @@ U16 ARCH_DEP( translate_asn )( U16 asn, REGS* regs, U32* asteo, U32 aste[] );
 /*********************************************************************/
 /*********************************************************************/
 
-/*-------------------------------------------------------------------*/
-/* Purge entire translation lookaside buffer for this CPU            */
-/*-------------------------------------------------------------------*/
-inline void ARCH_DEP( purge_tlb )( REGS* regs )
-{
-    INVALIDATE_AIA( regs );
-
-    if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
-    {
-        memset( &regs->tlb.vaddr, 0, TLBN * sizeof( DW ));
-        regs->tlbID = 1;
-    }
-
-#if defined( _FEATURE_SIE )
-    /* Also clear the guest registers in the SIE copy */
-    if (regs->host && GUESTREGS)
-    {
-        INVALIDATE_AIA( GUESTREGS );
-
-        if (((++GUESTREGS->tlbID) & TLBID_BYTEMASK) == 0)
-        {
-            memset( &GUESTREGS->tlb.vaddr, 0, TLBN * sizeof( DW ));
-            GUESTREGS->tlbID = 1;
-        }
-    }
-#endif
-}
-
 
 /*-------------------------------------------------------------------*/
 /* Purge all translation lookaside buffers for all CPUs              */
@@ -98,12 +69,30 @@ inline void ARCH_DEP( purge_tlb_all )()
 {
     int  cpu;
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+    {
         if (1
             && IS_CPU_ONLINE(cpu)
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
         )
-            ARCH_DEP( purge_tlb )( sysblk.regs[cpu] );
-
+        {
+            /* Check if this CPU's architecture is same as ours */
+            if (sysblk.regs[ cpu ]->arch_mode == ARCH_IDX)
+            {
+                // Identical architectures; No special handling needed...
+                ARCH_DEP( purge_tlb )( sysblk.regs[ cpu ]);
+            }
+            else // Different architectures! Special handling required!
+            {
+                switch (sysblk.regs[ cpu ]->arch_mode)
+                {
+                case ARCH_370_IDX: s370_purge_tlb( sysblk.regs[ cpu ]); break;
+                case ARCH_390_IDX: s390_purge_tlb( sysblk.regs[ cpu ]); break;
+                case ARCH_900_IDX: z900_purge_tlb( sysblk.regs[ cpu ]); break;
+                default: CRASH();
+                }
+            }
+        }
+    }
 }
 
 
@@ -114,33 +103,34 @@ inline void ARCH_DEP( purge_tlbe_all )( RADR pfra )
 {
     int  cpu;
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+    {
         if (1
             && IS_CPU_ONLINE(cpu)
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
         )
-            ARCH_DEP( purge_tlbe )( sysblk.regs[cpu], pfra );
-
+        {
+            /* Check if this CPU's architecture is same as ours */
+            if (sysblk.regs[ cpu ]->arch_mode == ARCH_IDX)
+            {
+                // Identical architectures; No special handling needed...
+                ARCH_DEP( purge_tlbe )( sysblk.regs[cpu], pfra );
+            }
+            else // Different architectures! Special handling required!
+            {
+                switch (sysblk.regs[ cpu ]->arch_mode)
+                {
+                case ARCH_370_IDX: s370_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
+                case ARCH_390_IDX: s390_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
+                case ARCH_900_IDX: z900_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
+                default: CRASH();
+                }
+            }
+        }
+    }
 }
 
 
 #if defined( FEATURE_ACCESS_REGISTERS )
-/*-------------------------------------------------------------------*/
-/* Purge the ART lookaside buffer for this CPU                       */
-/*-------------------------------------------------------------------*/
-inline void ARCH_DEP( purge_alb )( REGS* regs )
-{
-    int  i;
-    for (i=1; i < 16; i++)
-        if (regs->AEA_AR(i) >= CR_ALB_OFFSET)
-            regs->AEA_AR(i) = 0;
-
-    if (regs->host && GUESTREGS)
-        for(i=1; i < 16; i++)
-            if (GUESTREGS->AEA_AR(i) >= CR_ALB_OFFSET)
-                GUESTREGS->AEA_AR(i) = 0;
-}
-
-
 /*-------------------------------------------------------------------*/
 /* Purge the ART lookaside buffer for all CPUs                       */
 /*-------------------------------------------------------------------*/
@@ -148,11 +138,29 @@ inline void ARCH_DEP( purge_alb_all )()
 {
     int  cpu;
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
+    {
         if (1
             && IS_CPU_ONLINE(cpu)
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
         )
-            ARCH_DEP( purge_alb )( sysblk.regs[cpu] );
+        {
+            /* Check if this CPU's architecture is same as ours */
+            if (sysblk.regs[ cpu ]->arch_mode == ARCH_IDX)
+            {
+                // Identical architectures; No special handling needed...
+                ARCH_DEP( purge_alb )( sysblk.regs[cpu] );
+            }
+            else // Different architectures! Special handling required!
+            {
+                switch (sysblk.regs[ cpu ]->arch_mode)
+                {
+                case ARCH_390_IDX: s390_purge_alb( sysblk.regs[ cpu ]); break;
+                case ARCH_900_IDX: z900_purge_alb( sysblk.regs[ cpu ]); break;
+                default: CRASH(); // (370 doesn't have access registers)
+                }
+            }
+        }
+    }
 }
 #endif /* defined( FEATURE_ACCESS_REGISTERS ) */
 

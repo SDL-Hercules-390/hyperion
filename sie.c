@@ -324,6 +324,22 @@ int     i;                              /* (work)                    */
 #endif
 #endif
 
+    //-----------------------------------------------------------
+    //             IMPORTANT SIE PROGRAMMING NOTE!
+    //-----------------------------------------------------------
+    // NOTE: Our execution architectural mode is that of the SIE
+    // HOST and our 'regs' variable is pointing the the HOST's
+    // registers. Since the GUEST could be running in a completely
+    // different architecture from the HOST, if you need to call
+    // a ARCH_DEP function for the GUEST (passing it GUESTREGS),
+    // you must TAKE SPECIAL CARE to ensure the correct version
+    // of that function is called! You cannot simply call the
+    // "ARCH_DEP" version of that function as they are for the
+    // architectue of the HOST, not the GUEST! (i.e. you cannot
+    // call a "z900_xxx" function expecting it to work correctly
+    // if the GUEST is supposed to call "s390_xxx" functions!)
+    //-----------------------------------------------------------
+
     S( inst, regs, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -345,11 +361,15 @@ int     i;                              /* (work)                    */
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 
-        || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == 0
-        || (effective_addr2 & 0xFFFFFFFFFFFFF000ULL) == regs->PX
+        || (effective_addr2 & PREFIXING_900_MASK) == 0
+        || (effective_addr2 & PREFIXING_900_MASK) == regs->PX_900
+
+#elif defined( FEATURE_S390_DAT )
+        || (effective_addr2 & PREFIXING_390_MASK) == 0
+        || (effective_addr2 & PREFIXING_390_MASK) == regs->PX_390
 #else
-        || (effective_addr2 & 0x7FFFF000) == 0
-        || (effective_addr2 & 0x7FFFF000) == regs->PX
+        || (effective_addr2 & PREFIXING_370_MASK) == 0
+        || (effective_addr2 & PREFIXING_370_MASK) == regs->PX_370
 #endif
     )
         ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
@@ -398,7 +418,7 @@ int     i;                              /* (work)                    */
     /* Direct pointer to state descriptor block */
     GUESTREGS->siebk = (void*)(regs->mainstor + effective_addr2);
 
-    /* Load the guest's PSW */
+    /* Set the guest's execution arch_mode and load its PSW */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (STATEBK->mx & SIE_MX_ESAME)
     {
@@ -443,14 +463,9 @@ int     i;                              /* (work)                    */
     /* Prefered guest indication */
     GUESTREGS->sie_pref = (STATEBK->m & SIE_M_VR) ? 1 : 0;
 
-    /* Load prefix from state descriptor */
-    FETCH_FW( GUESTREGS->PX, STATEBK->prefix );
-    GUESTREGS->PX &=
-#if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-                     PX_MASK;
-#else
-                     (GUESTREGS->arch_mode == ARCH_900_IDX) ? PX_MASK : 0x7FFFF000;
-#endif
+    /* Load prefix from state descriptor... (Using 'PX_L' is okay
+       since prefix is always a FWORD regardless of architecture) */
+    FETCH_FW( GUESTREGS->PX_L, STATEBK->prefix );
 
 #if defined( FEATURE_REGION_RELOCATE )
 
@@ -723,36 +738,70 @@ int     i;                              /* (work)                    */
     SIE_STATE( GUESTREGS ) = effective_addr2;
     STORE_HW( STATEBK->lhcpu, regs->cpuad );
 
+    /*----------------------------------------*/
+    /* Maybe purge the guest's TLB/ALB or not */
+    /*----------------------------------------*/
 #if !defined( OPTION_SIE_PURGE_DAT_ALWAYS )
     /*
-     * If this is not the same last host cpu that dispatched this state
-     * descriptor then clear the guest TLB entries.
+     *   If this is not the same last host cpu that dispatched
+     *   this state descriptor then clear the guest TLB entries.
      */
     if (!same_cpu || !same_state)
     {
         SIE_PERFMON( SIE_PERF_ENTER_F );
 
         /* Purge guest TLB entries */
+
+        /* Check if guest's architecture is same as ours */
+        if (GUESTREGS->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            ARCH_DEP( purge_tlb )( GUESTREGS );
+            ARCH_DEP( purge_alb )( GUESTREGS );
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUESTREGS->arch_mode)
+            {
+            case ARCH_370_IDX: s370_purge_tlb( GUESTREGS );                              break;
+            case ARCH_390_IDX: s390_purge_tlb( GUESTREGS ); s390_purge_alb( GUESTREGS ); break;
+            case ARCH_900_IDX: z900_purge_tlb( GUESTREGS ); z900_purge_alb( GUESTREGS ); break;
+            default: CRASH();
+            }
+        }
+    }
+#else // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
+    /*
+     *   ALWAYS purge guest TLB entries (Ivan 2016-07-30)
+     */
+    /* Check if guest's architecture is same as ours */
+    if (GUESTREGS->arch_mode == ARCH_IDX)
+    {
+        // Identical architectures; No special handling needed...
         ARCH_DEP( purge_tlb )( GUESTREGS );
         ARCH_DEP( purge_alb )( GUESTREGS );
     }
-
-#else // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
-
-    /* Always purge guest TLB entries */
-    ARCH_DEP( purge_tlb )( GUESTREGS );
-    ARCH_DEP( purge_alb )( GUESTREGS );
-#endif
+    else // Different architectures! Special handling required!
+    {
+        switch (GUESTREGS->arch_mode)
+        {
+        case ARCH_370_IDX: s370_purge_tlb( GUESTREGS );                              break;
+        case ARCH_390_IDX: s390_purge_tlb( GUESTREGS ); s390_purge_alb( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_purge_tlb( GUESTREGS ); z900_purge_alb( GUESTREGS ); break;
+        default: CRASH();
+        }
+    }
+#endif // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
 
     /* Initialize interrupt mask and state */
-    SET_IC_MASK( GUESTREGS );
+    ARCH_DEP( set_guest_ic_mask )( GUESTREGS );
     SET_IC_INITIAL_STATE( GUESTREGS );
     SET_IC_PER( GUESTREGS );
 
     /* Initialize accelerated address lookup values */
-    SET_AEA_MODE( GUESTREGS );
-    SET_AEA_COMMON( GUESTREGS );
-    INVALIDATE_AIA( GUESTREGS );
+    ARCH_DEP( set_guest_aea_mode   )( GUESTREGS );
+    ARCH_DEP( set_guest_aea_common )( GUESTREGS );
+    ARCH_DEP( invalidate_guest_aia )( GUESTREGS );
 
     GUESTREGS->breakortrace = regs->breakortrace;
 
@@ -784,6 +833,9 @@ int     i;                              /* (work)                    */
             /* NOTE: longjmp(progjmp) for addressing exception is possible
                here. Thus the need for doing setjmp(progjmp) further above.
             */
+            /* Translate where this SIE guest's absolute storage begins
+               (which is a host virtual address) to a host real address.
+            */
             if (ARCH_DEP( translate_addr )( GUESTREGS->sie_mso + GUESTREGS->PX,
                                             USE_PRIMARY_SPACE, regs, ACCTYPE_SIE ))
             {
@@ -800,7 +852,7 @@ int     i;                              /* (work)                    */
             }
 
             /* Convert host real address to host absolute address */
-            GUESTREGS->sie_px = APPLY_PREFIXING( regs->dat.raddr, regs->PX );
+            GUESTREGS->sie_px = apply_host_prefixing( regs, regs->dat.raddr );
 
             if (regs->dat.protect || GUESTREGS->sie_px > regs->mainlim)
             {
@@ -916,6 +968,52 @@ static int ARCH_DEP( run_sie )( REGS* regs )
     int    icode;   /* SIE longjmp intercept code */
     int    i;
     const INSTR_FUNC*  current_opcode_table;
+
+    //---------------------------------------------------------
+    //              CRITICAL SIE PROGRAMMING NOTE!
+    //---------------------------------------------------------
+    //
+    //  Our 'regs' variable always points the HOST's regs (i.e.
+    //  regs == HOSTREGS && regs->host is always true), even though
+    //  we are actually RUNNING (executing) in GUEST architecture
+    //  mode!!
+    //
+    //  That is to say, if the host is, for example, z900 (z/VM)
+    //  but the guest it wants to execute is a 390 guest, the above
+    //  "start_interpretive_execution" instruction function calls
+    //  the "s390_run_sie" function (because it wants to execute
+    //  the guest in 390 mode), but it passed its own HOST regs to
+    //  this function!
+    //
+    //  So even though our function's build architecture is 390
+    //  (i.e. even though our function's build architecture is that
+    //  of the GUEST's), our 'regs' pointer is nevertheless still
+    //  pointing to the z/VM HOST's registers!! GUESTREGS must be
+    //  used to access the GUEST's register context!!
+    //
+    //  What this means is that SPECIAL CARE must be taken when
+    //  invoking macros or calling functions on behalf of the HOST
+    //  (i.e. when using 'regs' or HOSTREGS instead of GUESTREGS)
+    //  since many of our macros and functions are architecture
+    //  dependent, relying on the regs they were called with to
+    //  always match that of the current build architecture, which,
+    //  as explained, is NOT necessarily always true in our case!!
+    //
+    //---------------------------------------------------------
+
+    //-----------------------------------------------------------
+    //               IMPORTANT SIE PROGRAMMING NOTE!
+    //-----------------------------------------------------------
+    // NOTE: Our execution architectural mode is that of the SIE
+    // GUEST, not the HOST! If you need to call a function on
+    // behalf of the HOST (passing it 'regs'), you must be careful
+    // to ensure the correct version of that function is called!
+    // You cannot simply call the "ARCH_DEP" version of a function
+    // as they are for the architectue of the GUEST, not the HOST!
+    // (e.g. you cannot call a "s390_xxxx" function expecting it
+    // to work correctly if the HOST function that SHOULD have been
+    // called should have been "z900_xxxx"!) YOU HAVE BEEN WARNED!
+    //-----------------------------------------------------------
 
     PTT_SIE( "run_sie h,g,a", regs->host, regs->guest, regs->sie_active );
 
@@ -1309,13 +1407,26 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
     BYTE txf_tnd = 0;
 #endif
 
+    //-----------------------------------------------------------
+    //              IMPORTANT SIE PROGRAMMING NOTE!
+    //-----------------------------------------------------------
+    // NOTE: Our execution architectural mode is that of the SIE
+    // HOST, not the GUEST! If you need to call a function on
+    // behalf of the GUEST (passing it 'GUESTREGS'), you must be
+    // careful to ensure the correct version of that function is
+    // called! You cannot simply call the "ARCH_DEP" version of
+    // a function as they are for the architectue of the HOST,
+    // not the GUEST! (e.g. you can't call a "z900_xxx" function
+    // and expect it to work correctly if the GUEST is actually
+    // supposed to be run in s390 mode!) YOU HAVE BEEN WARNED!
+    //-----------------------------------------------------------
+
     PTT_SIE( "sie_xit i,h,g", icode, regs->host, regs->guest );
 
+    /* PTT trace the SIE Exit... */
     if (pttclass & PTT_CL_SIE)
     {
-        // PTT trace SIE Exit...
-
-        // Include in the trace entry some instruction information...
+        // (include some instruction information in the trace entry)
 
         U32    nt1  = 0;        // First 2 or 4 bytes of instruction.
                                 // If ilc > 4 then last 2 bytes are
@@ -1364,11 +1475,12 @@ void ARCH_DEP( sie_exit )( REGS* regs, int icode )
         }
 
         PTT_SIE( "sie_xit inst", icode, nt1, nt2  );
-    }
+
+    } // end PTT trace of SIE exit
 
 #if defined( SIE_DEBUG )
     LOGMSG( "SIE: interception code %d = %s\n", icode, sie_icode_2str( icode ));
-    ARCH_DEP( display_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : GUESTREGS->ip );
+    ARCH_DEP( display_guest_inst )( GUESTREGS, GUESTREGS->instinvalid ? NULL : GUESTREGS->ip );
 #endif
 
     SIE_PERFMON( SIE_PERF_EXIT   );

@@ -732,7 +732,7 @@ bool    intercept;                      /* False for virtual pgmint  */
 
 #if defined( FEATURE_SIE )
     if (realregs->sie_active)
-        INVALIDATE_AIA( GUEST( realregs ));
+        ARCH_DEP( invalidate_guest_aia )( GUEST( realregs ));
 #endif
 
     /* Fix PSW and get instruction length (ilc) */
@@ -743,7 +743,7 @@ bool    intercept;                      /* False for virtual pgmint  */
 #if defined( FEATURE_SIE )
     if (realregs->sie_active)
     {
-        sie_ilc = GUEST( realregs )->psw.zeroilc ? 0 : REAL_ILC( GUEST(realregs ));
+        sie_ilc = GUEST( realregs )->psw.zeroilc ? 0 : REAL_ILC( GUEST( realregs ));
         if (GUEST( realregs )->psw.ilc == 0 && !GUEST( realregs )->psw.zeroilc)
         {
             sie_ilc = likely( !GUEST( realregs )->execflag) ? 2 : GUEST( realregs )->exrl ? 6 : 4;
@@ -864,7 +864,23 @@ bool    intercept;                      /* False for virtual pgmint  */
 #if defined( SIE_DEBUG )
         LOGMSG( "program_int() passing to guest code=%4.4X\n", pcode );
 #endif
-        GUEST( realregs )->TEA = realregs->TEA;
+        /* Check if guest's architecture is same as ours's */
+        if (GUEST( realregs )->arch_mode == ARCH_IDX)
+        {
+            // Identical architectures; No special handling needed...
+            GUEST( realregs )->TEA = realregs->TEA;
+        }
+        else // Different architectures! Special handling required!
+        {
+            switch (GUEST( realregs )->arch_mode)
+            {
+            case ARCH_370_IDX: GUEST( realregs )->TEA_370 = realregs->TEA; break;
+            case ARCH_390_IDX: GUEST( realregs )->TEA_390 = realregs->TEA; break;
+            case ARCH_900_IDX: GUEST( realregs )->TEA_900 = realregs->TEA; break;
+            default: CRASH();
+            }
+        }
+
         GUEST( realregs )->excarid = realregs->excarid;
         GUEST( realregs )->opndrid = realregs->opndrid;
 
@@ -926,12 +942,7 @@ bool    intercept;                      /* False for virtual pgmint  */
            causing this host exception must also be nullified
         */
         if (realregs->sie_active && !GUEST( realregs )->instinvalid)
-        {
-            GUEST( realregs )->psw.IA -= sie_ilc;
-            GUEST( realregs )->psw.IA &= ADDRESS_MAXWRAP( GUEST( realregs ));
-
-            PTT_PGM( "PGM IA-sie", GUEST( realregs )->psw.IA, GUEST( realregs )->instinvalid, sie_ilc );
-        }
+            ARCH_DEP( update_guest_psw_ia )( GUEST( realregs ), -sie_ilc );
 #endif
     }
 
