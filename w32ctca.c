@@ -134,7 +134,7 @@ BOOL tt32_loaddll(); // (fwd ref)
 bool  enable_tt32_debug_tracing( int enable )
 {
     // Pass to TunTap32 DLL a pointer to the function it can use to
-    // display debug messages with. This function of our's (that we
+    // display debug messages with. This function of ours (that we
     // are passing it a pointer to) will then display its debugging
     // message (string) on the Hercules console so we can see it.
 

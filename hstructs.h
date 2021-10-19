@@ -65,6 +65,15 @@
 #include "cckd.h"           // Need CCKD structs
 #include "transact.h"       // Need Transactional Execution Facility
 
+#if !defined( _FEATURE_SIE )
+  /*------------------------------------------------------------*/
+  /* FIXME: all RADR fields should be changed to U64 instead!   */
+  /* Refer to *** IMPORTANT PROGRAMMING NOTE *** further above! */
+  /*------------------------------------------------------------*/
+  #error RADR struct use causes arch dep violation for non-SIE builds!
+#endif
+
+
 /*-------------------------------------------------------------------*/
 /*              Typedefs for CPU bitmap fields                       */
 /*-------------------------------------------------------------------*/
