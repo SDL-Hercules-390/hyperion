@@ -27,7 +27,7 @@
 
 void ARCH_DEP( purge_tlbe      )( REGS* regs, RADR pfra );
 void ARCH_DEP( invalidate_tlb  )( REGS* regs, BYTE  mask );
-void ARCH_DEP( invalidate_pte  )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs );
+void ARCH_DEP( invalidate_pte  )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs, bool local );
 
 #if defined( FEATURE_ACCESS_REGISTERS )
 U16  ARCH_DEP( translate_alet )( U32 alet, U16 eax, int acctype, REGS* regs, U32* asteo, U32 aste[] );
@@ -65,14 +65,22 @@ U16 ARCH_DEP( translate_asn )( U16 asn, REGS* regs, U32* asteo, U32 aste[] );
 /*-------------------------------------------------------------------*/
 /* Purge all translation lookaside buffers for all CPUs              */
 /*-------------------------------------------------------------------*/
-inline void ARCH_DEP( purge_tlb_all )()
+inline void ARCH_DEP( purge_tlb_all )( REGS* regs, U16 cpuad )
 {
     int  cpu;
+
+    if (0xFFFF == cpuad && !IS_INTLOCK_HELD( regs ))  // (sanity check)
+        CRASH();                                      // (logic error!)
+
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
     {
         if (1
             && IS_CPU_ONLINE(cpu)
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
+            && (0
+                || 0xFFFF == cpuad
+                || sysblk.regs[ cpu ]->cpuad == cpuad
+               )
         )
         {
             switch (sysblk.regs[ cpu ]->arch_mode)
@@ -90,14 +98,22 @@ inline void ARCH_DEP( purge_tlb_all )()
 /*-------------------------------------------------------------------*/
 /* Purge specific translation lookaside buffer entry from all CPUs   */
 /*-------------------------------------------------------------------*/
-inline void ARCH_DEP( purge_tlbe_all )( RADR pfra )
+inline void ARCH_DEP( purge_tlbe_all )( REGS* regs, RADR pfra, U16 cpuad )
 {
     int  cpu;
+
+    if (0xFFFF == cpuad && !IS_INTLOCK_HELD( regs ))  // (sanity check)
+        CRASH();                                      // (logic error!)
+
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
     {
         if (1
             && IS_CPU_ONLINE(cpu)
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
+            && (0
+                || 0xFFFF == cpuad
+                || sysblk.regs[ cpu ]->cpuad == cpuad
+               )
         )
         {
             switch (sysblk.regs[ cpu ]->arch_mode)
@@ -116,9 +132,13 @@ inline void ARCH_DEP( purge_tlbe_all )( RADR pfra )
 /*-------------------------------------------------------------------*/
 /* Purge the ART lookaside buffer for all CPUs                       */
 /*-------------------------------------------------------------------*/
-inline void ARCH_DEP( purge_alb_all )()
+inline void ARCH_DEP( purge_alb_all )( REGS* regs )
 {
     int  cpu;
+
+    if (!IS_INTLOCK_HELD( regs ))   // (sanity check)
+        CRASH();                    // (logic error!)
+
     for (cpu=0; cpu < sysblk.maxcpu; cpu++)
     {
         if (1

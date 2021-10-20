@@ -399,7 +399,7 @@ FT( Z900, NONE, NONE, 050_CONSTR_TRANSACT )
 #endif
 
 #if defined(  FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
-FT( NONE, NONE, NONE, 051_LOCAL_TLB_CLEARING )
+FT( Z900, Z900, NONE, 051_LOCAL_TLB_CLEARING )
 #endif
 
 /*-------------------------------------------------------------------*/

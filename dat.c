@@ -48,8 +48,14 @@
 // test for FEATURE_XXX. (WITHOUT the underscore)
 //-------------------------------------------------------------------
 
-extern inline void ARCH_DEP( purge_tlb_all )();
-extern inline void ARCH_DEP( purge_tlbe_all )( RADR pfra );
+extern inline void ARCH_DEP( purge_tlb )( REGS* regs );
+extern inline void ARCH_DEP( purge_tlb_all )( REGS* regs, U16 cpuad );
+extern inline void ARCH_DEP( purge_tlbe_all )( REGS* regs, RADR pfra, U16 cpuad );
+
+#if defined( FEATURE_ACCESS_REGISTERS )
+extern inline void ARCH_DEP( purge_alb )( REGS* regs );
+extern inline void ARCH_DEP( purge_alb_all )( REGS* regs );
+#endif
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
 extern inline void ARCH_DEP( purge_alb_all )();
@@ -2120,6 +2126,7 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
 /*      vaddr   Virtual Address of page within specified Page Table  */
 /*              whose entry is to be invalidated                     */
 /*      regs    CPU register context                                 */
+/*      local   true = clear only local TLB entry, else all CPUs     */
 /*                                                                   */
 /*                     *** IMPORTANT! ***                            */
 /*                                                                   */
@@ -2127,7 +2134,7 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
 /*         and SYNCHRONIZE_CPUS to be called beforehand!             */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP( invalidate_pte )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs )
+void ARCH_DEP( invalidate_pte )( BYTE ibyte, RADR pto, VADR vaddr, REGS* regs, bool local )
 {
 RADR    raddr;                          /* Addr of Page Table Entry  */
 RADR    pte;                            /* Page Table Entry itself   */
@@ -2273,7 +2280,7 @@ RADR    pfra;                           /* Page Frame Real Address   */
 #endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
 
     /* Invalidate all TLB entries for this Page Frame Real Address */
-    ARCH_DEP( purge_tlbe_all )( pfra );
+    ARCH_DEP( purge_tlbe_all )( regs, pfra, local ? regs->cpuad : 0xFFFF );
 
 } /* end function invalidate_pte */
 

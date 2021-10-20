@@ -972,15 +972,22 @@ DEF_INST( compare_and_swap_and_purge_long )
 DEF_INST( invalidate_dat_table_entry )
 {
 int     r1, r2, r3;                     /* Values of R fields        */
-int     m4;                             /* Unused mask field         */
+int     m4;                             /* Operand-4 mask field      */
 U64     asceto;                         /* ASCE table origin         */
 int     ascedt;                         /* ASCE designation type     */
 int     count;                          /* Invalidation counter      */
 int     eiindx;                         /* Eff. invalidation index   */
 U64     asce;                           /* Contents of ASCE          */
 BYTE   *mn;                             /* Mainstor address of ASCE  */
+bool    local = false;                  /* true == m4 bit 3 is on    */
 
     RRF_RM( inst, regs, r1, r2, r3, m4 );
+
+    if (1
+        && FACILITY_ENABLED( 051_LOCAL_TLB_CLEARING, regs )
+        && m4 & 0x01 /* LC == Local Clearing bit on? */
+    )
+        local = true;
 
     TRAN_MISC_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
@@ -997,9 +1004,9 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
 
     PERFORM_SERIALIZATION( regs );
     {
-        OBTAIN_INTLOCK( regs );
+        if (!local) OBTAIN_INTLOCK( regs );
         {
-            SYNCHRONIZE_CPUS( regs );
+            if (!local) SYNCHRONIZE_CPUS( regs );
 
 #if defined( _FEATURE_SIE )
             if (SIE_MODE( regs ) && regs->sie_scao)
@@ -1010,7 +1017,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
                 */
                 if (!TRY_OBTAIN_SCALOCK( regs ))
                 {
-                    RELEASE_INTLOCK( regs );
+                    if (!local) RELEASE_INTLOCK( regs );
                     SIE_INTERCEPT( regs );
                 }
             }
@@ -1084,7 +1091,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
             if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
                 txf_abort_all( regs->cpuad, TXF_WHY_IDTE_INSTR, PTT_LOC );
 #endif
-            ARCH_DEP( purge_tlb_all )();
+            ARCH_DEP( purge_tlb_all )( regs, local ? regs->cpuad : 0xFFFF );
 
 #if defined( _FEATURE_SIE )
             /* Release the SCA lock */
@@ -1092,7 +1099,7 @@ BYTE   *mn;                             /* Mainstor address of ASCE  */
                 RELEASE_SCALOCK (regs );
 #endif
         }
-        RELEASE_INTLOCK( regs );
+        if (!local) RELEASE_INTLOCK( regs );
     }
     PERFORM_SERIALIZATION( regs );
 

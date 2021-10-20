@@ -936,10 +936,10 @@ U64     new64;                          /* New value (CSPG)          */
                                  : TXF_WHY_CSP_INSTR, PTT_LOC );
 #endif
                     if (regs->GR_L(r2) & 1)
-                        ARCH_DEP( purge_tlb_all )();
+                        ARCH_DEP( purge_tlb_all )( regs, 0xFFFF );
 
                     if (regs->GR_L(r2) & 2)
-                        ARCH_DEP( purge_alb_all )();
+                        ARCH_DEP( purge_alb_all )( regs );
                 }
             }
 
@@ -1730,8 +1730,10 @@ bool    need_realkey = true;            /* (get from real page)      */
 DEF_INST( invalidate_page_table_entry )
 {
 int     r1, r2;                         /* Operand register numbers  */
-#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY ) || \
+    defined( FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
 int     r3;                             /* Operand-3 register number */
+int     m4;                             /* Operand-4 mask field      */
 #endif
 RADR    pto;                            /* Page Table Origin         */
 VADR    vaddr;                          /* Virtual Address of first or
@@ -1740,9 +1742,18 @@ int     pageidx;                        /* Starting page index       */
 int     pages;                          /* Total Pages to invalidate */
 int     i;                              /* work (for loop iterator)  */
 bool    do_range;                       /* helper flag               */
+bool    local = false;                  /* true == m4 bit 3 is on    */
 
-#if defined( FEATURE_013_IPTE_RANGE_FACILITY )
-    RRR( inst, regs, r1, r2, r3 );
+#if defined( FEATURE_013_IPTE_RANGE_FACILITY ) || \
+    defined( FEATURE_051_LOCAL_TLB_CLEARING_FACILITY )
+
+    RRF_RM( inst, regs, r1, r2, r3, m4 );
+
+    if (1
+        && FACILITY_ENABLED( 051_LOCAL_TLB_CLEARING, regs )
+        && m4 & 0x01 /* LC == Local Clearing bit on? */
+    )
+        local = true;
 #else
     RRE( inst, regs, r1, r2 );
 #endif
@@ -1775,9 +1786,9 @@ bool    do_range;                       /* helper flag               */
     /* Perform serialization before operation */
     PERFORM_SERIALIZATION( regs );
 
-    OBTAIN_INTLOCK( regs );
+    if (!local) OBTAIN_INTLOCK( regs );
     {
-        SYNCHRONIZE_CPUS( regs );
+        if (!local) SYNCHRONIZE_CPUS( regs );
 
 #if defined( _FEATURE_SIE )
 
@@ -1789,7 +1800,7 @@ bool    do_range;                       /* helper flag               */
         {
             if (!TRY_OBTAIN_SCALOCK( regs ))
             {
-                RELEASE_INTLOCK( regs );
+                if (!local) RELEASE_INTLOCK( regs );
                 SIE_INTERCEPT( regs );
             }
         }
@@ -1802,7 +1813,7 @@ bool    do_range;                       /* helper flag               */
 #endif
         /* Now invalidate all of the requested Page Table Entries */
         for (i=0; i < pages; ++i, vaddr += _4K)
-            ARCH_DEP( invalidate_pte )( inst[1], pto, vaddr, regs );
+            ARCH_DEP( invalidate_pte )( inst[1], pto, vaddr, regs, local );
 
 #if defined( FEATURE_013_IPTE_RANGE_FACILITY )
         /* Update registers if range was specified */
@@ -1819,7 +1830,7 @@ bool    do_range;                       /* helper flag               */
             RELEASE_SCALOCK (regs );
 #endif
     }
-    RELEASE_INTLOCK( regs );
+    if (!local) RELEASE_INTLOCK( regs );
 
 } /* DEF_INST(invalidate_page_table_entry) */
 

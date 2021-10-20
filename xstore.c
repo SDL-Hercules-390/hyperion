@@ -181,7 +181,7 @@ int     r1, r2;                         /* Operand register numbers  */
             SYNCHRONIZE_CPUS( regs );
 
             /* Invalidate page table entry */
-            ARCH_DEP( invalidate_pte )( inst[1], regs->GR_G( r1 ), regs->GR( r2 ), regs );
+            ARCH_DEP( invalidate_pte )( inst[1], regs->GR_G( r1 ), regs->GR( r2 ), regs, false );
         }
         RELEASE_INTLOCK( regs );
     }
