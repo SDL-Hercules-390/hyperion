@@ -1675,21 +1675,12 @@ bool    need_realkey = true;            /* (get from real page)      */
         /* Program Check if any unexpected translation error */
         if (sr != 0 && sr != 2)
         {
-            /* Check if host's architecture is same as ours's */
-            if (HOSTREGS->arch_mode == ARCH_IDX)
+            switch (HOSTREGS->arch_mode)
             {
-                // Identical architectures; No special handling needed...
-                ARCH_DEP( program_interrupt )( HOSTREGS, HOSTREGS->dat.xcode );
-            }
-            else // Different architectures! Special handling required!
-            {
-                switch (HOSTREGS->arch_mode)
-                {
-                case ARCH_370_IDX: s370_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
-                case ARCH_390_IDX: s390_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
-                case ARCH_900_IDX: z900_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
-                default: CRASH();
-                }
+            case ARCH_370_IDX: s370_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
+            case ARCH_390_IDX: s390_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
+            case ARCH_900_IDX: z900_program_interrupt( HOSTREGS, HOSTREGS->dat.xcode ); break;
+            default: CRASH();
             }
         }
 

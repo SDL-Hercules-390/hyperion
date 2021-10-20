@@ -864,21 +864,12 @@ bool    intercept;                      /* False for virtual pgmint  */
 #if defined( SIE_DEBUG )
         LOGMSG( "program_int() passing to guest code=%4.4X\n", pcode );
 #endif
-        /* Check if guest's architecture is same as ours's */
-        if (GUEST( realregs )->arch_mode == ARCH_IDX)
+        switch (GUEST( realregs )->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            GUEST( realregs )->TEA = realregs->TEA;
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUEST( realregs )->arch_mode)
-            {
-            case ARCH_370_IDX: GUEST( realregs )->TEA_370 = realregs->TEA; break;
-            case ARCH_390_IDX: GUEST( realregs )->TEA_390 = realregs->TEA; break;
-            case ARCH_900_IDX: GUEST( realregs )->TEA_900 = realregs->TEA; break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: GUEST( realregs )->TEA_370 = realregs->TEA; break;
+        case ARCH_390_IDX: GUEST( realregs )->TEA_390 = realregs->TEA; break;
+        case ARCH_900_IDX: GUEST( realregs )->TEA_900 = realregs->TEA; break;
+        default: CRASH();
         }
 
         GUEST( realregs )->excarid = realregs->excarid;

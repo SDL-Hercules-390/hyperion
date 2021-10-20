@@ -75,21 +75,12 @@ inline void ARCH_DEP( purge_tlb_all )()
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
         )
         {
-            /* Check if this CPU's architecture is same as ours */
-            if (sysblk.regs[ cpu ]->arch_mode == ARCH_IDX)
+            switch (sysblk.regs[ cpu ]->arch_mode)
             {
-                // Identical architectures; No special handling needed...
-                ARCH_DEP( purge_tlb )( sysblk.regs[ cpu ]);
-            }
-            else // Different architectures! Special handling required!
-            {
-                switch (sysblk.regs[ cpu ]->arch_mode)
-                {
-                case ARCH_370_IDX: s370_purge_tlb( sysblk.regs[ cpu ]); break;
-                case ARCH_390_IDX: s390_purge_tlb( sysblk.regs[ cpu ]); break;
-                case ARCH_900_IDX: z900_purge_tlb( sysblk.regs[ cpu ]); break;
-                default: CRASH();
-                }
+            case ARCH_370_IDX: s370_purge_tlb( sysblk.regs[ cpu ]); break;
+            case ARCH_390_IDX: s390_purge_tlb( sysblk.regs[ cpu ]); break;
+            case ARCH_900_IDX: z900_purge_tlb( sysblk.regs[ cpu ]); break;
+            default: CRASH();
             }
         }
     }
@@ -109,21 +100,12 @@ inline void ARCH_DEP( purge_tlbe_all )( RADR pfra )
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
         )
         {
-            /* Check if this CPU's architecture is same as ours */
-            if (sysblk.regs[ cpu ]->arch_mode == ARCH_IDX)
+            switch (sysblk.regs[ cpu ]->arch_mode)
             {
-                // Identical architectures; No special handling needed...
-                ARCH_DEP( purge_tlbe )( sysblk.regs[cpu], pfra );
-            }
-            else // Different architectures! Special handling required!
-            {
-                switch (sysblk.regs[ cpu ]->arch_mode)
-                {
-                case ARCH_370_IDX: s370_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
-                case ARCH_390_IDX: s390_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
-                case ARCH_900_IDX: z900_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
-                default: CRASH();
-                }
+            case ARCH_370_IDX: s370_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
+            case ARCH_390_IDX: s390_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
+            case ARCH_900_IDX: z900_purge_tlbe( sysblk.regs[ cpu ], pfra ); break;
+            default: CRASH();
             }
         }
     }
@@ -144,20 +126,11 @@ inline void ARCH_DEP( purge_alb_all )()
             && (sysblk.regs[ cpu ]->cpubit & sysblk.started_mask)
         )
         {
-            /* Check if this CPU's architecture is same as ours */
-            if (sysblk.regs[ cpu ]->arch_mode == ARCH_IDX)
+            switch (sysblk.regs[ cpu ]->arch_mode)
             {
-                // Identical architectures; No special handling needed...
-                ARCH_DEP( purge_alb )( sysblk.regs[cpu] );
-            }
-            else // Different architectures! Special handling required!
-            {
-                switch (sysblk.regs[ cpu ]->arch_mode)
-                {
-                case ARCH_390_IDX: s390_purge_alb( sysblk.regs[ cpu ]); break;
-                case ARCH_900_IDX: z900_purge_alb( sysblk.regs[ cpu ]); break;
-                default: CRASH(); // (370 doesn't have access registers)
-                }
+            case ARCH_390_IDX: s390_purge_alb( sysblk.regs[ cpu ]); break;
+            case ARCH_900_IDX: z900_purge_alb( sysblk.regs[ cpu ]); break;
+            default: CRASH(); // (370 doesn't have access registers)
             }
         }
     }

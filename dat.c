@@ -73,21 +73,12 @@ void ARCH_DEP( update_psw_ia )( REGS* regs, int n )
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( update_guest_psw_ia )( REGS* regs, int n )
 {
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
+    switch (GUESTREGS->arch_mode)
     {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( update_psw_ia )( regs, n );
-    }
-    else // Different architectures! Special handling required!
-    {
-        switch (GUESTREGS->arch_mode)
-        {
-        case ARCH_370_IDX: s370_update_psw_ia( GUESTREGS, n ); break;
-        case ARCH_390_IDX: s390_update_psw_ia( GUESTREGS, n ); break;
-        case ARCH_900_IDX: z900_update_psw_ia( GUESTREGS, n ); break;
-        default: CRASH();
-        }
+    case ARCH_370_IDX: s370_update_psw_ia( GUESTREGS, n ); break;
+    case ARCH_390_IDX: s390_update_psw_ia( GUESTREGS, n ); break;
+    case ARCH_900_IDX: z900_update_psw_ia( GUESTREGS, n ); break;
+    default: CRASH();
     }
 }
 
@@ -104,21 +95,12 @@ void ARCH_DEP( set_aea_common )( REGS* regs )
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( set_guest_aea_common )( REGS* regs )
 {
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
+    switch (GUESTREGS->arch_mode)
     {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( set_aea_common )( GUESTREGS );
-    }
-    else // Different architectures! Special handling required!
-    {
-        switch (GUESTREGS->arch_mode)
-        {
-        case ARCH_370_IDX: s370_set_aea_common( GUESTREGS ); break;
-        case ARCH_390_IDX: s390_set_aea_common( GUESTREGS ); break;
-        case ARCH_900_IDX: z900_set_aea_common( GUESTREGS ); break;
-        default: CRASH();
-        }
+    case ARCH_370_IDX: s370_set_aea_common( GUESTREGS ); break;
+    case ARCH_390_IDX: s390_set_aea_common( GUESTREGS ); break;
+    case ARCH_900_IDX: z900_set_aea_common( GUESTREGS ); break;
+    default: CRASH();
     }
 }
 
@@ -149,21 +131,12 @@ void ARCH_DEP( set_aea_mode )( REGS* regs )
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( invalidate_guest_aia )( REGS* regs )
 {
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
+    switch (GUESTREGS->arch_mode)
     {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( invalidate_aia )( GUESTREGS );
-    }
-    else // Different architectures! Special handling required!
-    {
-        switch (GUESTREGS->arch_mode)
-        {
-        case ARCH_370_IDX: s370_invalidate_aia( GUESTREGS ); break;
-        case ARCH_390_IDX: s390_invalidate_aia( GUESTREGS ); break;
-        case ARCH_900_IDX: z900_invalidate_aia( GUESTREGS ); break;
-        default: CRASH();
-        }
+    case ARCH_370_IDX: s370_invalidate_aia( GUESTREGS ); break;
+    case ARCH_390_IDX: s390_invalidate_aia( GUESTREGS ); break;
+    case ARCH_900_IDX: z900_invalidate_aia( GUESTREGS ); break;
+    default: CRASH();
     }
 }
 
@@ -172,21 +145,12 @@ void ARCH_DEP( invalidate_guest_aia )( REGS* regs )
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( set_guest_ic_mask )( REGS* regs )
 {
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
+    switch (GUESTREGS->arch_mode)
     {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( set_ic_mask )( GUESTREGS );
-    }
-    else // Different architectures! Special handling required!
-    {
-        switch (GUESTREGS->arch_mode)
-        {
-        case ARCH_370_IDX: s370_set_ic_mask( GUESTREGS ); break;
-        case ARCH_390_IDX: s390_set_ic_mask( GUESTREGS ); break;
-        case ARCH_900_IDX: z900_set_ic_mask( GUESTREGS ); break;
-        default: CRASH();
-        }
+    case ARCH_370_IDX: s370_set_ic_mask( GUESTREGS ); break;
+    case ARCH_390_IDX: s390_set_ic_mask( GUESTREGS ); break;
+    case ARCH_900_IDX: z900_set_ic_mask( GUESTREGS ); break;
+    default: CRASH();
     }
 }
 
@@ -195,21 +159,12 @@ void ARCH_DEP( set_guest_ic_mask )( REGS* regs )
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( set_guest_aea_mode )( REGS* regs )
 {
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
+    switch (GUESTREGS->arch_mode)
     {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( set_aea_mode )( GUESTREGS );
-    }
-    else // Different architectures! Special handling required!
-    {
-        switch (GUESTREGS->arch_mode)
-        {
-        case ARCH_370_IDX: s370_set_aea_mode( GUESTREGS ); break;
-        case ARCH_390_IDX: s390_set_aea_mode( GUESTREGS ); break;
-        case ARCH_900_IDX: z900_set_aea_mode( GUESTREGS ); break;
-        default: CRASH();
-        }
+    case ARCH_370_IDX: s370_set_aea_mode( GUESTREGS ); break;
+    case ARCH_390_IDX: s390_set_aea_mode( GUESTREGS ); break;
+    case ARCH_900_IDX: z900_set_aea_mode( GUESTREGS ); break;
+    default: CRASH();
     }
 }
 
@@ -240,21 +195,12 @@ void ARCH_DEP( purge_tlb )( REGS* regs )
     /* Also clear the guest registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
-        /* Check if guest's architecture is same as ours */
-        if (GUESTREGS->arch_mode == ARCH_IDX)
+        switch (GUESTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_purge_tlb )( GUESTREGS );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUESTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_purge_tlb( GUESTREGS ); break;
-            case ARCH_390_IDX: s390_do_purge_tlb( GUESTREGS ); break;
-            case ARCH_900_IDX: z900_do_purge_tlb( GUESTREGS ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_purge_tlb( GUESTREGS ); break;
+        case ARCH_390_IDX: s390_do_purge_tlb( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_do_purge_tlb( GUESTREGS ); break;
+        default: CRASH();
         }
     }
 #endif // defined( _FEATURE_SIE )
@@ -285,21 +231,12 @@ void ARCH_DEP( purge_alb )( REGS* regs )
     /* Also clear the guest registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
-        /* Check if guest's architecture is same as ours */
-        if (GUESTREGS->arch_mode == ARCH_IDX)
+        switch (GUESTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_purge_alb )( GUESTREGS );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUESTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: /* No access regs for 370! */   break;
-            case ARCH_390_IDX: s390_do_purge_alb( GUESTREGS ); break;
-            case ARCH_900_IDX: z900_do_purge_alb( GUESTREGS ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: /* No access regs for 370! */   break;
+        case ARCH_390_IDX: s390_do_purge_alb( GUESTREGS ); break;
+        case ARCH_900_IDX: z900_do_purge_alb( GUESTREGS ); break;
+        default: CRASH();
         }
     }
 #endif // defined( _FEATURE_SIE )
@@ -1997,40 +1934,22 @@ void ARCH_DEP( purge_tlbe )( REGS* regs, U64 pfra )
         /*                                                           */
         /*************************************************************/
 
-        /* Check if guest architecture is same as ours */
-        if (GUESTREGS->arch_mode == ARCH_IDX)
+        switch (GUESTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_purge_tlbe )( GUESTREGS, regs, pfra );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUESTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
-            case ARCH_390_IDX: s390_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
-            case ARCH_900_IDX: z900_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
+        case ARCH_390_IDX: s390_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
+        case ARCH_900_IDX: z900_do_purge_tlbe( GUESTREGS, regs, pfra ); break;
+        default: CRASH();
         }
     }
     else if (regs->guest)  /* For guests, also clear HOST entries */
     {
-        /* Check if host architecture is same as ours */
-        if (HOSTREGS->arch_mode == ARCH_IDX)
+        switch (HOSTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_purge_tlbe )( HOSTREGS, NULL, pfra );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (HOSTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
-            case ARCH_390_IDX: s390_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
-            case ARCH_900_IDX: z900_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
+        case ARCH_390_IDX: s390_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
+        case ARCH_900_IDX: z900_do_purge_tlbe( HOSTREGS, NULL, pfra ); break;
+        default: CRASH();
         }
     }
 #endif /* defined( _FEATURE_SIE ) */
@@ -2066,40 +1985,22 @@ void ARCH_DEP( invalidate_tlb )( REGS* regs, BYTE mask )
     /* Also invalidate the GUEST registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
-        /* Check if guest's architecture is same as ours */
-        if (GUESTREGS->arch_mode == ARCH_IDX)
+        switch (GUESTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_invalidate_tlb )( GUESTREGS, mask );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUESTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_invalidate_tlb( GUESTREGS, mask ); break;
-            case ARCH_390_IDX: s390_do_invalidate_tlb( GUESTREGS, mask ); break;
-            case ARCH_900_IDX: z900_do_invalidate_tlb( GUESTREGS, mask ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_invalidate_tlb( GUESTREGS, mask ); break;
+        case ARCH_390_IDX: s390_do_invalidate_tlb( GUESTREGS, mask ); break;
+        case ARCH_900_IDX: z900_do_invalidate_tlb( GUESTREGS, mask ); break;
+        default: CRASH();
         }
     }
     else if (regs->guest)  /* For guests, also clear HOST entries */
     {
-        /* Check if host's architecture is same as ours */
-        if (HOSTREGS->arch_mode == ARCH_IDX)
+        switch (HOSTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_invalidate_tlb )( HOSTREGS, mask );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (HOSTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_invalidate_tlb( HOSTREGS, mask ); break;
-            case ARCH_390_IDX: s390_do_invalidate_tlb( HOSTREGS, mask ); break;
-            case ARCH_900_IDX: z900_do_invalidate_tlb( HOSTREGS, mask ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_invalidate_tlb( HOSTREGS, mask ); break;
+        case ARCH_390_IDX: s390_do_invalidate_tlb( HOSTREGS, mask ); break;
+        case ARCH_900_IDX: z900_do_invalidate_tlb( HOSTREGS, mask ); break;
+        default: CRASH();
         }
     }
 #endif /* defined( _FEATURE_SIE ) */
@@ -2176,40 +2077,22 @@ void ARCH_DEP( invalidate_tlbe )( REGS* regs, BYTE* main )
     /* Also clear the GUEST registers in the SIE copy */
     if (regs->host && GUESTREGS)
     {
-        /* Check if guest's architecture is same as ours */
-        if (GUESTREGS->arch_mode == ARCH_IDX)
+        switch (GUESTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_invalidate_tlbe )( GUESTREGS, main );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUESTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_invalidate_tlbe( GUESTREGS, main ); break;
-            case ARCH_390_IDX: s390_do_invalidate_tlbe( GUESTREGS, main ); break;
-            case ARCH_900_IDX: z900_do_invalidate_tlbe( GUESTREGS, main ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_invalidate_tlbe( GUESTREGS, main ); break;
+        case ARCH_390_IDX: s390_do_invalidate_tlbe( GUESTREGS, main ); break;
+        case ARCH_900_IDX: z900_do_invalidate_tlbe( GUESTREGS, main ); break;
+        default: CRASH();
         }
     }
     else if (regs->guest)  /* For guests, also clear HOST entries */
     {
-        /* Check if host's architecture is same as ours */
-        if (HOSTREGS->arch_mode == ARCH_IDX)
+        switch (HOSTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( do_invalidate_tlbe )( HOSTREGS, main );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (HOSTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_do_invalidate_tlbe( HOSTREGS, main ); break;
-            case ARCH_390_IDX: s390_do_invalidate_tlbe( HOSTREGS, main ); break;
-            case ARCH_900_IDX: z900_do_invalidate_tlbe( HOSTREGS, main ); break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: s370_do_invalidate_tlbe( HOSTREGS, main ); break;
+        case ARCH_390_IDX: s390_do_invalidate_tlbe( HOSTREGS, main ); break;
+        case ARCH_900_IDX: z900_do_invalidate_tlbe( HOSTREGS, main ); break;
+        default: CRASH();
         }
     }
 #endif /* defined( _FEATURE_SIE ) */
@@ -2654,21 +2537,12 @@ vabs_prot_excp:
     {
 #if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
 
-        /* Check if host's architecture is same as ours */
-        if (HOSTREGS->arch_mode == ARCH_IDX)
+        switch (HOSTREGS->arch_mode)
         {
-            // Identical architectures; No special handling needed...
-            HOSTREGS->TEA = regs->TEA;
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (HOSTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: HOSTREGS->TEA_370 = regs->TEA; break;
-            case ARCH_390_IDX: HOSTREGS->TEA_390 = regs->TEA; break;
-            case ARCH_900_IDX: HOSTREGS->TEA_900 = regs->TEA; break;
-            default: CRASH();
-            }
+        case ARCH_370_IDX: HOSTREGS->TEA_370 = regs->TEA; break;
+        case ARCH_390_IDX: HOSTREGS->TEA_390 = regs->TEA; break;
+        case ARCH_900_IDX: HOSTREGS->TEA_900 = regs->TEA; break;
+        default: CRASH();
         }
 
         HOSTREGS->excarid = regs->excarid;

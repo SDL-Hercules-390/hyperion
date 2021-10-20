@@ -752,37 +752,6 @@ int     i;                              /* (work)                    */
 
         /* Purge guest TLB entries */
 
-        /* Check if guest's architecture is same as ours */
-        if (GUESTREGS->arch_mode == ARCH_IDX)
-        {
-            // Identical architectures; No special handling needed...
-            ARCH_DEP( purge_tlb )( GUESTREGS );
-            ARCH_DEP( purge_alb )( GUESTREGS );
-        }
-        else // Different architectures! Special handling required!
-        {
-            switch (GUESTREGS->arch_mode)
-            {
-            case ARCH_370_IDX: s370_purge_tlb( GUESTREGS );                              break;
-            case ARCH_390_IDX: s390_purge_tlb( GUESTREGS ); s390_purge_alb( GUESTREGS ); break;
-            case ARCH_900_IDX: z900_purge_tlb( GUESTREGS ); z900_purge_alb( GUESTREGS ); break;
-            default: CRASH();
-            }
-        }
-    }
-#else // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
-    /*
-     *   ALWAYS purge guest TLB entries (Ivan 2016-07-30)
-     */
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
-    {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( purge_tlb )( GUESTREGS );
-        ARCH_DEP( purge_alb )( GUESTREGS );
-    }
-    else // Different architectures! Special handling required!
-    {
         switch (GUESTREGS->arch_mode)
         {
         case ARCH_370_IDX: s370_purge_tlb( GUESTREGS );                              break;
@@ -790,6 +759,17 @@ int     i;                              /* (work)                    */
         case ARCH_900_IDX: z900_purge_tlb( GUESTREGS ); z900_purge_alb( GUESTREGS ); break;
         default: CRASH();
         }
+    }
+#else // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
+    /*
+     *   ALWAYS purge guest TLB entries (Ivan 2016-07-30)
+     */
+    switch (GUESTREGS->arch_mode)
+    {
+    case ARCH_370_IDX: s370_purge_tlb( GUESTREGS );                              break;
+    case ARCH_390_IDX: s390_purge_tlb( GUESTREGS ); s390_purge_alb( GUESTREGS ); break;
+    case ARCH_900_IDX: z900_purge_tlb( GUESTREGS ); z900_purge_alb( GUESTREGS ); break;
+    default: CRASH();
     }
 #endif // defined( OPTION_SIE_PURGE_DAT_ALWAYS )
 

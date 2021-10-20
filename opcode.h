@@ -1393,74 +1393,86 @@ do {                                                                  \
  * FIXME: Synchronization, esp. for the CHANGE bit, should be
  * tighter than what is provided here.
  */
-#define STORKEY_INVALIDATE_LOCKED( _regs, _n )                        \
- do                                                                   \
- {                                                                    \
-   BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);       \
-                                                                      \
-    /* Do it for the current architecture first */                    \
-   ARCH_DEP( invalidate_tlbe )( (_regs), abs );                       \
-                                                                      \
-   if (sysblk.cpus > 1)                                               \
-   {                                                                  \
-     int cpu;                                                         \
-                                                                      \
-     for (cpu=0; cpu < sysblk.hicpu; cpu++)                           \
-     {                                                                \
-       if (IS_CPU_ONLINE( cpu ) && cpu != (_regs)->cpuad)             \
-       {                                                              \
-         if (sysblk.waiting_mask & CPU_BIT( cpu ))                    \
-         {                                                            \
-            /* Check if our architecture is same as the this CPU's */                       \
-            if ((_regs)->arch_mode == sysblk.regs[cpu]->arch_mode)                          \
-            {                                                                               \
-              /* Identical architectures; No special handling needed */                     \
-              ARCH_DEP( invalidate_tlbe )( sysblk.regs[cpu], abs );                         \
-            }                                                                               \
-            else /* Different architectures! Special handling required! */                  \
-            {                                                                               \
-              BYTE* abs370 = (_regs)->mainstor + ((_n) & PAGEFRAME_370_PAGEMASK);           \
-              BYTE* abs390 = (_regs)->mainstor + ((_n) & PAGEFRAME_390_PAGEMASK);           \
-              BYTE* abs900 = (_regs)->mainstor + ((_n) & PAGEFRAME_900_PAGEMASK);           \
-                                                                                            \
-              switch (sysblk.regs[cpu]->arch_mode)                                          \
-              {                                                                             \
-              case ARCH_370_IDX: s370_invalidate_tlbe( sysblk.regs[cpu], abs370 ); break;   \
-              case ARCH_390_IDX: s390_invalidate_tlbe( sysblk.regs[cpu], abs390 ); break;   \
-              case ARCH_900_IDX: z900_invalidate_tlbe( sysblk.regs[cpu], abs900 ); break;   \
-              default: CRASH();                                                             \
-              }                                                                             \
-            }                                                                               \
-         }                                                            \
-         else /* !(sysblk.waiting_mask & CPU_BIT( cpu )) */           \
-         {                                                            \
-           ON_IC_INTERRUPT( sysblk.regs[cpu] );                       \
-                                                                      \
-           if (!sysblk.regs[cpu]->invalidate)                         \
-           {                                                          \
-             sysblk.regs[cpu]->invalidate = 1;                        \
-             sysblk.regs[cpu]->invalidate_main = abs;                 \
-           }                                                          \
-           else                                                       \
-           {                                                          \
-             sysblk.regs[cpu]->invalidate_main = NULL;                \
-           }                                                          \
-         }                                                            \
-       }                                                              \
-     }                                                                \
-   }                                                                  \
- }                                                                    \
+#define STORKEY_INVALIDATE_LOCKED( _regs, _n )                          \
+ do                                                                     \
+ {                                                                      \
+   BYTE* abs = (_regs)->mainstor + ((_n) & PAGEFRAME_PAGEMASK);         \
+                                                                        \
+   /* Do it for the current CPU first */                                \
+   ARCH_DEP( invalidate_tlbe )( (_regs), abs );                         \
+                                                                        \
+   if (sysblk.cpus > 1)                                                 \
+   {                                                                    \
+     int cpu;        /* CPU being examined */                           \
+     REGS* cregs;    /* register context for CPU being examined */      \
+                                                                        \
+     /* Do invalidate for all of the other online CPUs too */           \
+     for (cpu=0; cpu < sysblk.hicpu; cpu++)                             \
+     {                                                                  \
+       /* Skip our own CPU and CPUs which aren't online */              \
+       if (IS_CPU_ONLINE( cpu ) && cpu != (_regs)->cpuad)               \
+       {                                                                \
+         cregs = sysblk.regs[cpu];                                      \
+                                                                        \
+         /* Is this CPU waiting for an interrupt? */                    \
+         if (sysblk.waiting_mask & CPU_BIT( cpu ))                      \
+         {                                                              \
+           /* Yes, then we can do the invalidate right now... */        \
+           switch (cregs->arch_mode)                                    \
+           {                                                            \
+             case ARCH_370_IDX:                                         \
+             {                                                          \
+               abs = cregs->mainstor + ((_n) & PAGEFRAME_370_PAGEMASK); \
+               s370_invalidate_tlbe( cregs, abs );                      \
+               break;                                                   \
+             }                                                          \
+             case ARCH_390_IDX:                                         \
+             {                                                          \
+               abs = cregs->mainstor + ((_n) & PAGEFRAME_390_PAGEMASK); \
+               s390_invalidate_tlbe( cregs, abs );                      \
+               break;                                                   \
+             }                                                          \
+             case ARCH_900_IDX:                                         \
+             {                                                          \
+               abs = cregs->mainstor + ((_n) & PAGEFRAME_900_PAGEMASK); \
+               z900_invalidate_tlbe( cregs, abs );                      \
+               break;                                                   \
+             }                                                          \
+             default:                                                   \
+             {                                                          \
+               CRASH();                                                 \
+             }                                                          \
+           }                                                            \
+         }                                                              \
+         else /* Otherwise we need to schedule it ... */                \
+         {                                                              \
+           ON_IC_INTERRUPT( cregs );                                    \
+                                                                        \
+           if (!cregs->invalidate)                                      \
+           {                                                            \
+             cregs->invalidate = 1;                                     \
+             cregs->invalidate_main = abs;                              \
+           }                                                            \
+           else                                                         \
+           {                                                            \
+             cregs->invalidate_main = NULL;                             \
+           }                                                            \
+         }                                                              \
+       }                                                                \
+     }                                                                  \
+   }                                                                    \
+ }                                                                      \
  while (0)
 
-#define STORKEY_INVALIDATE( _regs, _n )                               \
- do                                                                   \
- {                                                                    \
-   OBTAIN_INTLOCK( (_regs) );                                         \
-   {                                                                  \
-      STORKEY_INVALIDATE_LOCKED( (_regs), (_n) );                     \
-   }                                                                  \
-   RELEASE_INTLOCK( (_regs) );                                        \
- }                                                                    \
+#define STORKEY_INVALIDATE( _regs, _n )                                 \
+ do                                                                     \
+ {                                                                      \
+   OBTAIN_INTLOCK( (_regs) );                                           \
+   {                                                                    \
+      STORKEY_INVALIDATE_LOCKED( (_regs), (_n) );                       \
+   }                                                                    \
+   RELEASE_INTLOCK( (_regs) );                                          \
+ }                                                                      \
  while (0)
 
 #if defined( INLINE_STORE_FETCH_ADDR_CHECK )

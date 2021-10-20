@@ -1150,21 +1150,12 @@ void ARCH_DEP( display_pgmint_inst )( REGS* iregs, BYTE* inst )
 /*-------------------------------------------------------------------*/
 void ARCH_DEP( display_guest_inst )( REGS* regs, BYTE* inst )
 {
-    /* Check if guest's architecture is same as ours */
-    if (GUESTREGS->arch_mode == ARCH_IDX)
+    switch (GUESTREGS->arch_mode)
     {
-        // Identical architectures; No special handling needed...
-        ARCH_DEP( display_inst )( regs, inst );
-    }
-    else // Different architectures! Special handling required!
-    {
-        switch (GUESTREGS->arch_mode)
-        {
-        case ARCH_370_IDX: s370_display_inst( GUESTREGS, inst ); break;
-        case ARCH_390_IDX: s390_display_inst( GUESTREGS, inst ); break;
-        case ARCH_900_IDX: z900_display_inst( GUESTREGS, inst ); break;
-        default: CRASH();
-        }
+    case ARCH_370_IDX: s370_display_inst( GUESTREGS, inst ); break;
+    case ARCH_390_IDX: s390_display_inst( GUESTREGS, inst ); break;
+    case ARCH_900_IDX: z900_display_inst( GUESTREGS, inst ); break;
+    default: CRASH();
     }
 }
 
