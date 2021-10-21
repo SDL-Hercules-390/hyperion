@@ -34,6 +34,46 @@ jobs:
 #     dist: focal
 #     env: MATRIX_EVAL="CC=clang-11"
 
+    - name: "macOS XCode 12.5 -- clang" # macOS 11.3
+      os: osx
+      osx_image: xcode12.5
+      env: MATRIX_EVAL="CC=clang"
+
+    - name: "macOS XCode 12.5 -- gcc" # macOS 11.3
+      os: osx
+      osx_image: xcode12.5
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "macOS XCode 11.6 -- clang" # macOS 10.15.5
+      os: osx
+      osx_image: xcode11.6
+      env: MATRIX_EVAL="CC=clang"
+
+    - name: "macOS XCode 11.6 -- gcc" # macOS 10.15.5
+      os: osx
+      osx_image: xcode11.6
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "macOS XCode 10.3 -- clang" # macOS 10.14.4
+      os: osx
+      osx_image: xcode10.3
+      env: MATRIX_EVAL="CC=clang"
+    
+    - name: "macOS XCode 10.3 -- gcc" # macOS 10.14.4
+      os: osx
+      osx_image: xcode10.3
+      env: MATRIX_EVAL="CC=gcc"
+
+    - name: "macOS XCode 9.4 -- clang" # macOS 10.13
+      os: osx
+      osx_image: xcode9.4
+      env: MATRIX_EVAL="CC=clang"
+
+    - name: "macOS XCode 9.4 -- gcc" # macOS 10.13
+      os: osx
+      osx_image: xcode9.4
+      env: MATRIX_EVAL="CC=gcc"
+
 #
 before_install:
   - echo $TRAVIS_OS_NAME
