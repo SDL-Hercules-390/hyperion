@@ -389,16 +389,7 @@
   )
 
   ::  Dump environment variables...
-
   call :dump_env
-
-  echo.
-  echo ------------------------------ WIN32.MAK -------------------------------
-  echo.
-  echo  ^<win32.mak^> will be !INCLUDEd from "%win32_mak_dir%"...
-  echo.
-  echo --------------------------------- MAKE ---------------------------------
-  echo.
 
   ::  Additional nmake arguments (for reference):
   ::
@@ -576,51 +567,12 @@
 
   set "opath=%path%"
   set "path=%opath%;%include%"
-  call :fullpath "win32.mak"
-  set "path=%opath%"
-  set "opath="
-
-  if not defined fullpath (
-    goto :missing_win32_makefile
-  )
-
-  set "win32_mak_path=%fullpath%"
-  for %%i in ("%win32_mak_path%") do (set "win32_mak_dir=%%~di%%~pi")
   %return%
 
 :missing_herc_makefile
 
   echo.
   echo %~nx0^(1^) : error C9999 : makefile "%makefile_name%" not found
-  set "rc=1"
-  %return%
-
-:missing_win32_makefile
-
-  echo.
-  echo %~nx0^(1^) : error C9999 : .
-  echo %~nx0^(1^) : error C9999 : ^<win32.mak^> not found!
-
-  echo %~nx0^(1^) : warning C9999 : .
-  echo %~nx0^(1^) : warning C9999 : You need to have the Windows 7.1 SDK installed which has ^<win32.mak^>.
-  echo %~nx0^(1^) : warning C9999 : Neither the Windows 8 SDK nor the Windows 10 SDK has ^<win32.mak^>.
-  echo %~nx0^(1^) : warning C9999 : Only the Windows 7.1 or older SDK will have ^<win32.mak^>.
-
-  if %vsver% GEQ %vs2015% (
-
-  echo %~nx0^(1^) : warning C9999 : .
-  echo %~nx0^(1^) : warning C9999 : When you install Visual Studio %vsname% Community Edition, you
-  echo %~nx0^(1^) : warning C9999 : must also select the "Windows XP Support for C++" option in the
-  echo %~nx0^(1^) : warning C9999 : "Visual C++" section of the "Programming Languages" feature,
-  echo %~nx0^(1^) : warning C9999 : which is the option that installs the Windows 7.1 SDK.
-
-  )
-
-  echo %~nx0^(1^) : warning C9999 : .
-  echo %~nx0^(1^) : warning C9999 : You need to add the 7.1A SDK "Include" directory to the "INCLUDE"
-  echo %~nx0^(1^) : warning C9999 : environment variable and retry your build of Hercules.
-  echo %~nx0^(1^) : warning C9999 : .
-
   set "rc=1"
   %return%
 
