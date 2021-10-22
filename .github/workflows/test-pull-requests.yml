@@ -1,0 +1,55 @@
+name: Test that hercules successfully builds
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "master"
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os:
+        - macos-10.15
+        - macos-11
+        - ubuntu-18.04
+        - ubuntu-20.04
+        compiler:
+        - gcc
+        - clang
+        exclude:
+        - os: ubuntu-20.04
+          compiler: clang
+        include:
+        - os: windows-latest
+      fail-fast: false
+    runs-on: ${{matrix.os}}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Ubuntu dependencies
+      if: ${{ runner.os == 'Linux' }}
+      run: |
+        sudo apt-get install -y regina-rexx libregina3-dev
+        sudo apt-get install -y binutils binutils-dev
+    - name: Install macOS dependencies
+      if: ${{ runner.os == 'macOS' }}
+      run: |
+        brew install gsed automake regina-rexx
+    - name: Build
+      if: ${{ runner.os != 'Windows' }}
+      run: |
+        export CC="${{ matrix.compiler }}"
+        if [ "${{ runner.os }}" = "macOS" ]; then
+          export CC="$CC -arch x86_64"
+        fi
+        util/bldlvlck
+        ./autogen.sh
+        ./configure --enable-regina-rexx --enable-setuid-hercifc
+        ./config.status --config
+        make -j$(nproc)
+        make check
+    - name: Build
+      if: ${{ runner.os == 'Windows' }}
+      run: ./makefile.bat DEBUG-X64 makefile.msvc 8
