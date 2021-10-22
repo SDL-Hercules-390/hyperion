@@ -1466,6 +1466,7 @@ static INSTR_FUNC gen_opcode_cc_x[16][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_e3xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_e5xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_e6xx[256][NUM_INSTR_TAB_PTRS];
+static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_ecxx[256][NUM_INSTR_TAB_PTRS];
 static INSTR_FUNC gen_opcode_edxx[256][NUM_INSTR_TAB_PTRS];
@@ -1521,6 +1522,7 @@ static INSTR_FUNC gen_opcode_E3_0______24[1][NUM_INSTR_TAB_PTRS];
 #define execute_opcode_e4xx     operation_exception
 #define execute_opcode_e5xx     operation_exception
 #define execute_opcode_e6xx     operation_exception
+#define execute_opcode_e7xx     operation_exception
 
 /*----------------------------------------------------------------------------*/
 /*                   Instruction Disassembly Functions                        */
@@ -4364,6 +4366,266 @@ static INSTR_FUNC gen_opcode_e6xx[256][NUM_INSTR_TAB_PTRS] =
  /*E6FF*/ GENx___x___x___
 };
 
+static INSTR_FUNC gen_opcode_e7xx[256][NUM_INSTR_TAB_PTRS] =
+{
+ /*E700*/ GENx___x___x___ , /* VLEB */
+ /*E701*/ GENx___x___x___ , /* VLEH */
+ /*E702*/ GENx___x___x___ , /* VLEG */
+ /*E703*/ GENx___x___x___ , /* VLEF */
+ /*E704*/ GENx___x___x___ , /* VLLEZ */
+ /*E705*/ GENx___x___x___ , /* VLREP */
+ /*E706*/ GENx___x___x___ , /* VL */
+ /*E707*/ GENx___x___x___ , /* VLBB */
+ /*E708*/ GENx___x___x___ , /* VSTEB */
+ /*E709*/ GENx___x___x___ , /* VSTEH */
+ /*E70A*/ GENx___x___x___ , /* VSTEG */
+ /*E70B*/ GENx___x___x___ , /* VSTEF */
+ /*E70C*/ GENx___x___x___ ,
+ /*E70D*/ GENx___x___x___ ,
+ /*E70E*/ GENx___x___x___ , /* VST */
+ /*E70F*/ GENx___x___x___ ,
+ /*E710*/ GENx___x___x___ ,
+ /*E711*/ GENx___x___x___ ,
+ /*E712*/ GENx___x___x___ , /* VGEG */
+ /*E713*/ GENx___x___x___ , /* VGEF */
+ /*E714*/ GENx___x___x___ ,
+ /*E715*/ GENx___x___x___ ,
+ /*E716*/ GENx___x___x___ ,
+ /*E717*/ GENx___x___x___ ,
+ /*E718*/ GENx___x___x___ ,
+ /*E719*/ GENx___x___x___ ,
+ /*E71A*/ GENx___x___x___ , /* VSCEG */
+ /*E71B*/ GENx___x___x___ , /* VSCEF */
+ /*E71C*/ GENx___x___x___ ,
+ /*E71D*/ GENx___x___x___ ,
+ /*E71E*/ GENx___x___x___ ,
+ /*E71F*/ GENx___x___x___ ,
+ /*E720*/ GENx___x___x___ ,
+ /*E721*/ GENx___x___x___ , /* VLGV */
+ /*E722*/ GENx___x___x___ , /* VLVG */
+ /*E723*/ GENx___x___x___ ,
+ /*E724*/ GENx___x___x___ ,
+ /*E725*/ GENx___x___x___ ,
+ /*E726*/ GENx___x___x___ ,
+ /*E727*/ GENx___x___x___ , /* LCBB (?) */
+ /*E728*/ GENx___x___x___ ,
+ /*E729*/ GENx___x___x___ ,
+ /*E72A*/ GENx___x___x___ ,
+ /*E72B*/ GENx___x___x___ ,
+ /*E72C*/ GENx___x___x___ ,
+ /*E72D*/ GENx___x___x___ ,
+ /*E72E*/ GENx___x___x___ ,
+ /*E72F*/ GENx___x___x___ ,
+ /*E730*/ GENx___x___x___ , /* VESL */
+ /*E731*/ GENx___x___x___ ,
+ /*E732*/ GENx___x___x___ ,
+ /*E733*/ GENx___x___x___ , /* VERLL */
+ /*E734*/ GENx___x___x___ ,
+ /*E735*/ GENx___x___x___ ,
+ /*E736*/ GENx___x___x___ , /* VLM */
+ /*E737*/ GENx___x___x___ , /* VLL */
+ /*E738*/ GENx___x___x___ , /* VESRL */
+ /*E739*/ GENx___x___x___ ,
+ /*E73A*/ GENx___x___x___ , /* VESRA */
+ /*E73B*/ GENx___x___x___ ,
+ /*E73C*/ GENx___x___x___ ,
+ /*E73D*/ GENx___x___x___ ,
+ /*E73E*/ GENx___x___x___ , /* VSTM */
+ /*E73F*/ GENx___x___x___ , /* VSTL */
+ /*E740*/ GENx___x___x___ , /* VLEIB */
+ /*E741*/ GENx___x___x___ , /* VLEIH */
+ /*E742*/ GENx___x___x___ , /* VLEIG */
+ /*E743*/ GENx___x___x___ , /* VLEIF */
+ /*E744*/ GENx___x___x___ , /* VGBM */
+ /*E745*/ GENx___x___x___ , /* VREPI */
+ /*E746*/ GENx___x___x___ , /* VGM */
+ /*E747*/ GENx___x___x___ ,
+ /*E748*/ GENx___x___x___ ,
+ /*E749*/ GENx___x___x___ ,
+ /*E74A*/ GENx___x___x___ , /* VFTCI */
+ /*E74B*/ GENx___x___x___ ,
+ /*E74C*/ GENx___x___x___ ,
+ /*E74D*/ GENx___x___x___ , /* VREP */
+ /*E74E*/ GENx___x___x___ ,
+ /*E74F*/ GENx___x___x___ ,
+ /*E750*/ GENx___x___x___ , /* VPOPCT */
+ /*E751*/ GENx___x___x___ ,
+ /*E752*/ GENx___x___x___ , /* VCTZ */
+ /*E753*/ GENx___x___x___ , /* VCLZ */
+ /*E754*/ GENx___x___x___ ,
+ /*E755*/ GENx___x___x___ ,
+ /*E756*/ GENx___x___x___ , /* VLR */
+ /*E757*/ GENx___x___x___ ,
+ /*E758*/ GENx___x___x___ ,
+ /*E759*/ GENx___x___x___ ,
+ /*E75A*/ GENx___x___x___ ,
+ /*E75B*/ GENx___x___x___ ,
+ /*E75C*/ GENx___x___x___ , /* VISTR */
+ /*E75D*/ GENx___x___x___ ,
+ /*E75E*/ GENx___x___x___ ,
+ /*E75F*/ GENx___x___x___ , /* VSEG */
+ /*E760*/ GENx___x___x___ , /* VMRL */
+ /*E761*/ GENx___x___x___ , /* VMRH */
+ /*E762*/ GENx___x___x___ , /* VLVGP */
+ /*E763*/ GENx___x___x___ ,
+ /*E764*/ GENx___x___x___ , /* VSUM */
+ /*E765*/ GENx___x___x___ , /* VSUMG */
+ /*E766*/ GENx___x___x___ , /* VCKSM */
+ /*E767*/ GENx___x___x___ , /* VSUMQ */
+ /*E768*/ GENx___x___x___ , /* VN */
+ /*E769*/ GENx___x___x___ , /* VNC */
+ /*E76A*/ GENx___x___x___ , /* VO */
+ /*E76B*/ GENx___x___x___ , /* VNO */
+ /*E76C*/ GENx___x___x___ , /* VNX */
+ /*E76D*/ GENx___x___x___ , /* VX */
+ /*E76E*/ GENx___x___x___ , /* VNN */
+ /*E76F*/ GENx___x___x___ , /* VOC */
+ /*E770*/ GENx___x___x___ , /* VESLV */
+ /*E771*/ GENx___x___x___ ,
+ /*E772*/ GENx___x___x___ , /* VERIM */
+ /*E773*/ GENx___x___x___ , /* VERLLV */
+ /*E774*/ GENx___x___x___ , /* VSL */
+ /*E775*/ GENx___x___x___ , /* VSLB */
+ /*E776*/ GENx___x___x___ ,
+ /*E777*/ GENx___x___x___ , /* VSLDB */
+ /*E778*/ GENx___x___x___ , /* VESRLV */
+ /*E779*/ GENx___x___x___ ,
+ /*E77A*/ GENx___x___x___ , /* VESRAV */
+ /*E77B*/ GENx___x___x___ ,
+ /*E77C*/ GENx___x___x___ , /* VSRL */
+ /*E77D*/ GENx___x___x___ , /* VSRLB */
+ /*E77E*/ GENx___x___x___ , /* VSRA */
+ /*E77F*/ GENx___x___x___ , /* VSRAB */
+ /*E780*/ GENx___x___x___ , /* VFEE */
+ /*E781*/ GENx___x___x___ , /* VFENE */
+ /*E782*/ GENx___x___x___ , /* VFAE */
+ /*E783*/ GENx___x___x___ ,
+ /*E784*/ GENx___x___x___ , /* VPDI */
+ /*E785*/ GENx___x___x___ , /* VBPERM */
+ /*E786*/ GENx___x___x___ ,
+ /*E787*/ GENx___x___x___ ,
+ /*E788*/ GENx___x___x___ ,
+ /*E789*/ GENx___x___x___ ,
+ /*E78A*/ GENx___x___x___ , /* VSTRC */
+ /*E78B*/ GENx___x___x___ ,
+ /*E78C*/ GENx___x___x___ , /* VPERM */
+ /*E78D*/ GENx___x___x___ , /* VSEL */
+ /*E78E*/ GENx___x___x___ , /* VFMS */
+ /*E78F*/ GENx___x___x___ , /* VFMA */
+ /*E790*/ GENx___x___x___ ,
+ /*E791*/ GENx___x___x___ ,
+ /*E792*/ GENx___x___x___ ,
+ /*E793*/ GENx___x___x___ ,
+ /*E794*/ GENx___x___x___ , /* VPK */
+ /*E795*/ GENx___x___x___ , /* VPKLS */
+ /*E796*/ GENx___x___x___ ,
+ /*E797*/ GENx___x___x___ , /* VPKS */
+ /*E798*/ GENx___x___x___ ,
+ /*E799*/ GENx___x___x___ ,
+ /*E79A*/ GENx___x___x___ ,
+ /*E79B*/ GENx___x___x___ ,
+ /*E79C*/ GENx___x___x___ ,
+ /*E79D*/ GENx___x___x___ ,
+ /*E79E*/ GENx___x___x___ , /* VFNMS */
+ /*E79F*/ GENx___x___x___ , /* VFNMA */
+ /*E7A0*/ GENx___x___x___ ,
+ /*E7A1*/ GENx___x___x___ , /* VMLH */
+ /*E7A2*/ GENx___x___x___ , /* VML */
+ /*E7A3*/ GENx___x___x___ , /* VMH */
+ /*E7A4*/ GENx___x___x___ , /* VMLE */
+ /*E7A5*/ GENx___x___x___ , /* VMLO */
+ /*E7A6*/ GENx___x___x___ , /* VME */
+ /*E7A7*/ GENx___x___x___ , /* VMO */
+ /*E7A8*/ GENx___x___x___ ,
+ /*E7A9*/ GENx___x___x___ , /* VMALH */
+ /*E7AA*/ GENx___x___x___ , /* VMAL */
+ /*E7AB*/ GENx___x___x___ , /* VMAH */
+ /*E7AC*/ GENx___x___x___ , /* VMALE */
+ /*E7AD*/ GENx___x___x___ , /* VMALO */
+ /*E7AE*/ GENx___x___x___ , /* VMAE */
+ /*E7AF*/ GENx___x___x___ , /* VMAO */
+ /*E7B0*/ GENx___x___x___ ,
+ /*E7B1*/ GENx___x___x___ ,
+ /*E7B2*/ GENx___x___x___ ,
+ /*E7B3*/ GENx___x___x___ ,
+ /*E7B4*/ GENx___x___x___ , /* VGFM */
+ /*E7B5*/ GENx___x___x___ ,
+ /*E7B6*/ GENx___x___x___ ,
+ /*E7B7*/ GENx___x___x___ ,
+ /*E7B8*/ GENx___x___x___ , /* VMSL */
+ /*E7B9*/ GENx___x___x___ , /* VACCC */
+ /*E7BA*/ GENx___x___x___ ,
+ /*E7BB*/ GENx___x___x___ , /* VAC */
+ /*E7BC*/ GENx___x___x___ , /* VGFMA */
+ /*E7BD*/ GENx___x___x___ , /* VSBCBI */
+ /*E7BE*/ GENx___x___x___ ,
+ /*E7BF*/ GENx___x___x___ , /* VSBI */
+ /*E7C0*/ GENx___x___x___ , /* VCLGD */
+ /*E7C1*/ GENx___x___x___ , /* VCDLG */
+ /*E7C2*/ GENx___x___x___ , /* VCGD */
+ /*E7C3*/ GENx___x___x___ , /* VCDG */
+ /*E7C4*/ GENx___x___x___ , /* VFLL */
+ /*E7C5*/ GENx___x___x___ , /* VFLR */
+ /*E7C6*/ GENx___x___x___ ,
+ /*E7C7*/ GENx___x___x___ , /* VFI */
+ /*E7C8*/ GENx___x___x___ ,
+ /*E7C9*/ GENx___x___x___ ,
+ /*E7CA*/ GENx___x___x___ , /* WFK */
+ /*E7CB*/ GENx___x___x___ , /* WFC */
+ /*E7CC*/ GENx___x___x___ , /* VFPSO */
+ /*E7CD*/ GENx___x___x___ ,
+ /*E7CE*/ GENx___x___x___ , /* VFSQ */
+ /*E7CF*/ GENx___x___x___ ,
+ /*E7D0*/ GENx___x___x___ ,
+ /*E7D1*/ GENx___x___x___ ,
+ /*E7D2*/ GENx___x___x___ ,
+ /*E7D3*/ GENx___x___x___ ,
+ /*E7D4*/ GENx___x___x___ , /* VUPLL */
+ /*E7D5*/ GENx___x___x___ , /* VUPLH */
+ /*E7D6*/ GENx___x___x___ , /* VUPL */
+ /*E7D7*/ GENx___x___x___ , /* VUPH */
+ /*E7D8*/ GENx___x___x___ , /* VTM */
+ /*E7D9*/ GENx___x___x___ , /* VECL */
+ /*E7DA*/ GENx___x___x___ ,
+ /*E7DB*/ GENx___x___x___ , /* VEC */
+ /*E7DC*/ GENx___x___x___ ,
+ /*E7DD*/ GENx___x___x___ ,
+ /*E7DE*/ GENx___x___x___ , /* VLC */
+ /*E7DF*/ GENx___x___x___ , /* VLP */
+ /*E7E0*/ GENx___x___x___ ,
+ /*E7E1*/ GENx___x___x___ ,
+ /*E7E2*/ GENx___x___x___ , /* VFS */
+ /*E7E3*/ GENx___x___x___ , /* VFA */
+ /*E7E4*/ GENx___x___x___ ,
+ /*E7E5*/ GENx___x___x___ , /* VFD */
+ /*E7E6*/ GENx___x___x___ ,
+ /*E7E7*/ GENx___x___x___ , /* VFM */
+ /*E7E8*/ GENx___x___x___ , /* VFCE */
+ /*E7E9*/ GENx___x___x___ ,
+ /*E7EA*/ GENx___x___x___ , /* VGCHE */
+ /*E7EB*/ GENx___x___x___ , /* VFCH */
+ /*E7EC*/ GENx___x___x___ ,
+ /*E7ED*/ GENx___x___x___ ,
+ /*E7EE*/ GENx___x___x___ , /* VFMIN */
+ /*E7EF*/ GENx___x___x___ , /* VFMAX */
+ /*E7F0*/ GENx___x___x___ , /* VAVGL */
+ /*E7F1*/ GENx___x___x___ , /* VACC */
+ /*E7F2*/ GENx___x___x___ , /* VAVG */
+ /*E7F3*/ GENx___x___x___ , /* VA */
+ /*E7F4*/ GENx___x___x___ ,
+ /*E7F5*/ GENx___x___x___ , /* VSCBI */
+ /*E7F6*/ GENx___x___x___ ,
+ /*E7F7*/ GENx___x___x___ , /* VS */
+ /*E7F8*/ GENx___x___x___ , /* VCEQ */
+ /*E7F9*/ GENx___x___x___ , /* VCHL */
+ /*E7FA*/ GENx___x___x___ ,
+ /*E7FB*/ GENx___x___x___ , /* VCH */
+ /*E7FC*/ GENx___x___x___ , /* VMNL */
+ /*E7FD*/ GENx___x___x___ , /* VMXL */
+ /*E7FE*/ GENx___x___x___ , /* VMN */
+ /*E7FF*/ GENx___x___x___ /* VMXX */
+};
+
 static INSTR_FUNC gen_opcode_ebxx[256][NUM_INSTR_TAB_PTRS] =
 {
  /*EB00*/ GENx___x___x___ ,
@@ -6820,6 +7082,7 @@ void init_runtime_opcode_tables()
 
       replace_opcode_xxxx(arch, gen_opcode_e5xx[i][arch], 0xe5, i);
       replace_opcode_xxxx(arch, gen_opcode_e6xx[i][arch], 0xe6, i);
+      replace_opcode_xxxx(arch, gen_opcode_e7xx[i][arch], 0xe7, i);
       replace_opcode_xx________xx(arch, gen_opcode_ebxx[i][arch], 0xeb, i);
       replace_opcode_xx________xx(arch, gen_opcode_ecxx[i][arch], 0xec, i);
       replace_opcode_xx________xx(arch, gen_opcode_edxx[i][arch], 0xed, i);
