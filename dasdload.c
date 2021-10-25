@@ -682,7 +682,7 @@ int             keylen;                 /* Key length                */
 int             datalen;                /* Data length               */
 int             maxtrks = 1;            /* Maximum track count       */
 DATABLK        *datablk;                /* -> data block             */
-BYTE            buf[32768];             /* Buffer for data block     */
+BYTE            buf[sizeof(DATABLK)];   /* Buffer for data block     */
 
     /* For 2311, the complete IPL text doesn't fit on track 0 record 4
        so the IPL2 text is adjusted further below to load from track 1
