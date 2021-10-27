@@ -410,6 +410,7 @@ libhercu_la_SOURCES = \
   hthreads.c          \
   logger.c            \
   logmsg.c            \
+  machdep.c           \
   memrchr.c           \
   parser.c            \
   pttrace.c           \

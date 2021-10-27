@@ -11,6 +11,7 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
+#include "inline.h"
 
 /*-------------------------------------------------------------------*/
 /*   ARCH_DEP section: compiled multiple times, once for each arch.  */
@@ -123,4 +124,11 @@ extern inline BYTE ARCH_DEP(  _get_dev_storage_key  )( DEVBLK* dev, U64 abs,    
   extern inline bool bypass_skey_update( REGS* regs, BYTE m3, BYTE oldkey, BYTE r1key );
 #endif
 
+  extern inline BYTE* _get_storekey_ptr( U64 abs, BYTE K );
+  extern inline BYTE* _get_dev_storekey_ptr( DEVBLK* dev, U64 abs, BYTE K );
+  extern inline BYTE* _get_storekey1_ptr( U64 abs );
+  extern inline BYTE* _get_storekey2_ptr( U64 abs );
+  extern inline BYTE* _get_dev_storekey1_ptr( DEVBLK* dev, U64 abs );
+  extern inline BYTE* _get_dev_storekey2_ptr( DEVBLK* dev, U64 abs );
+  
 #endif /*!defined( _GEN_ARCH )*/

@@ -346,16 +346,16 @@ libherct_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 libhercu_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	libhercs.la
 am__libhercu_la_SOURCES_DIST = codepage.c hdl.c hexdumpe.c hostinfo.c \
-	hscutl.c hsocket.c hthreads.c logger.c logmsg.c memrchr.c \
-	parser.c pttrace.c version.c fthreads.c ltdl.c
+	hscutl.c hsocket.c hthreads.c logger.c logmsg.c machdep.c \
+	memrchr.c parser.c pttrace.c version.c fthreads.c ltdl.c
 am__objects_2 = fthreads.lo
 @BUILD_FTHREADS_TRUE@am__objects_3 = $(am__objects_2)
 @BUILD_APPLE_M1_FALSE@am__objects_4 = ltdl.lo
 @BUILD_APPLE_M1_FALSE@am__objects_5 = $(am__objects_4)
 am_libhercu_la_OBJECTS = codepage.lo hdl.lo hexdumpe.lo hostinfo.lo \
 	hscutl.lo hsocket.lo hthreads.lo logger.lo logmsg.lo \
-	memrchr.lo parser.lo pttrace.lo version.lo $(am__objects_3) \
-	$(am__objects_5)
+	machdep.lo memrchr.lo parser.lo pttrace.lo version.lo \
+	$(am__objects_3) $(am__objects_5)
 libhercu_la_OBJECTS = $(am_libhercu_la_OBJECTS)
 libhercu_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -1332,6 +1332,7 @@ libhercu_la_SOURCES = \
   hthreads.c          \
   logger.c            \
   logmsg.c            \
+  machdep.c           \
   memrchr.c           \
   parser.c            \
   pttrace.c           \
