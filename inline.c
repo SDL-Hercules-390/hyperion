@@ -21,6 +21,7 @@
 #define _HENGINE_DLL_
 
 #include "hercules.h"
+#include "opcode.h"
 #include "inline.h"
 
 /*-------------------------------------------------------------------*/
