@@ -58,7 +58,6 @@ extern inline void ARCH_DEP( purge_alb_all )( REGS* regs );
 #endif
 
 #if defined( FEATURE_DUAL_ADDRESS_SPACE )
-extern inline void ARCH_DEP( purge_alb_all )();
 extern inline bool ARCH_DEP( authorize_asn )( U16 ax, U32 aste[], int atemask, REGS* regs );
 #endif
 
