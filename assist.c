@@ -146,7 +146,7 @@ DEF_INST(obtain_local_lock)
                                            interface table           */
     U32     lcpa;                       /* Logical CPU address       */
     VADR    newia;                      /* Unsuccessful branch addr  */
-    BYTE   *main;                       /* mainstor address          */
+    BYTE   *mainstor;                   /* mainstor address          */
     U32     old;                        /* old value                 */
     U32     new;                        /* new value                 */
     int     acc_mode = 0;               /* access mode to use        */
@@ -177,7 +177,7 @@ DEF_INST(obtain_local_lock)
         lcpa = ARCH_DEP(vfetch4) ( effective_addr2 - 4, acc_mode, regs );
 
         /* Get mainstor address of ASCBLOCK word */
-        main = MADDRL (ascb_addr + ASCBLOCK, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        mainstor = MADDRL (ascb_addr + ASCBLOCK, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
         /* The lock word should contain 0; use this as our compare value.
            Swap in the CPU address in lpca */
@@ -185,7 +185,7 @@ DEF_INST(obtain_local_lock)
         new = CSWAP32(lcpa);
 
         /* Try exchanging values; cmpxchg4 returns 0=success, !0=failure */
-        if (!cmpxchg4( &old, new, main ))
+        if (!cmpxchg4( &old, new, mainstor ))
         {
             /* Store the unchanged value into the second operand to
             ensure suppression in the event of an access exception */
@@ -334,7 +334,7 @@ DEF_INST(obtain_cms_lock)
     int     lock_arn;                   /* Lock access register      */
     U32     lock;                       /* Lock value                */
     VADR    newia;                      /* Unsuccessful branch addr  */
-    BYTE   *main;                       /* mainstor address          */
+    BYTE   *mainstor;                   /* mainstor address          */
     U32     old;                        /* old value                 */
     U32     new;                        /* new value                 */
     U32     locked = 0;                 /* status of cmpxchg4 result */
@@ -377,7 +377,7 @@ DEF_INST(obtain_cms_lock)
             && (hlhi_word & (PSALCLLI | PSACMSLI)) == PSALCLLI)
         {
             /* Get mainstor address of lock word */
-            main = MADDRL (lock_addr, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+            mainstor = MADDRL (lock_addr, 4, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
             /* The lock word should contain 0; use this as our compare value.
             Swap in the ASCB address from instruction operand 1            */
@@ -385,7 +385,7 @@ DEF_INST(obtain_cms_lock)
             new = CSWAP32(ascb_addr);
 
             /* Try exchanging values; cmpxchg4 returns 0=success, !0=failure */
-            locked = !cmpxchg4( &old, new, main );
+            locked = !cmpxchg4( &old, new, mainstor );
         }
 
         if (locked)
