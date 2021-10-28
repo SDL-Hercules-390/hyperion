@@ -21635,25 +21635,41 @@ esac
 
         # Dynamically inline small block string operations
         # (subroutine calls still made for large area calls)
-        #
-        # Note: option introduced in GCC 4.3 Release Series, but it
-        # is unclear which 4.3 version so we test for 4.4 or greater.
-        # See:  https://gcc.gnu.org/gcc-4.3/changes.html
+        # But only if the compiler supports it
 
-        if test "$hc_cv_is_apple" != "yes"; then
-           as_arg_v1=$hc_gcc_level
-as_arg_v2="4.4.0"
-awk "$as_awk_strverscmp" v1="$as_arg_v1" v2="$as_arg_v2" /dev/null
-case $? in #(
-  1) :
-    hc_cv_optimization_flags="$hc_cv_optimization_flags" ;; #(
-  0) :
-    hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically" ;; #(
-  2) :
-    hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"  ;; #(
-  *) :
-     ;;
-esac
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for -minline-stringops-dynamically flag" >&5
+$as_echo_n "checking for -minline-stringops-dynamically flag... " >&6; }
+if ${hc_cv_have_inline_stringops_dynamically+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+                hc_temp="$CFLAGS"
+                CFLAGS="-minline-stringops-dynamically"
+
+                cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+                    int main(void) { return 0; }
+
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  hc_cv_have_inline_stringops_dynamically=yes
+else
+  hc_cv_have_inline_stringops_dynamically=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+                CFLAGS="$hc_temp"
+
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $hc_cv_have_inline_stringops_dynamically" >&5
+$as_echo "$hc_cv_have_inline_stringops_dynamically" >&6; }
+
+        if test "$hc_cv_have_inline_stringops_dynamically" = "yes"; then
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"
+        else
+            hc_cv_optimization_flags="$hc_cv_optimization_flags"
         fi
 
         if test "$hc_cv_builtin_alloca_broke" != "yes" &&

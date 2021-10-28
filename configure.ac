@@ -2854,15 +2854,30 @@ if test "$hc_cv_auto_optimize" = "yes"; then
 
         # Dynamically inline small block string operations
         # (subroutine calls still made for large area calls)
-        #
-        # Note: option introduced in GCC 4.3 Release Series, but it
-        # is unclear which 4.3 version so we test for 4.4 or greater.
-        # See:  https://gcc.gnu.org/gcc-4.3/changes.html
+        # But only if the compiler supports it
 
-        if test "$hc_cv_is_apple" != "yes"; then
-           AS_VERSION_COMPARE( $hc_gcc_level, "4.4.0", [hc_cv_optimization_flags="$hc_cv_optimization_flags"],
-                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"],
-                                                       [hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"] )
+        AC_CACHE_CHECK( [for -minline-stringops-dynamically flag],
+
+            [hc_cv_have_inline_stringops_dynamically],
+            [
+                hc_temp="$CFLAGS"
+                CFLAGS="-minline-stringops-dynamically"
+
+                AC_COMPILE_IFELSE(
+                [
+                    int main(void) { return 0; }
+                ],
+                [hc_cv_have_inline_stringops_dynamically=yes],
+                [hc_cv_have_inline_stringops_dynamically=no] )
+
+                CFLAGS="$hc_temp"
+            ]
+        )
+
+        if test "$hc_cv_have_inline_stringops_dynamically" = "yes"; then
+            hc_cv_optimization_flags="$hc_cv_optimization_flags -minline-stringops-dynamically"
+        else
+            hc_cv_optimization_flags="$hc_cv_optimization_flags"
         fi
 
         if test "$hc_cv_builtin_alloca_broke" != "yes" &&
