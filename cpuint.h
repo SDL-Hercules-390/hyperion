@@ -67,10 +67,11 @@
 // Intel assembler bit manipulation instructions (since Intel is still
 // the predominant host architecture platform for Hercules)
 
-/* The BIT() macro should only be used for bit numbers
-   strictly less than 32 */
+/* WARNING! The BIT() macro should only be used for bit numbers
+   which are strictly less than 32!
+*/
 #ifndef    BIT
-  #define  BIT(nr)  ( 1 << (nr) )         // (bit# counting from the right)
+  #define  BIT(nr)  (((U32)1) << (nr))  // (bit# counting from the right)
 #endif
 
 /* The CPU_BIT macro is solely for manipulating

@@ -315,8 +315,8 @@ static void sha1_getcv(SHA1_CTX *ctx, BYTE icv[20])
   {
     icv[j++] = (ctx->state[i] & 0xff000000) >> 24;
     icv[j++] = (ctx->state[i] & 0x00ff0000) >> 16;
-    icv[j++] = (ctx->state[i] & 0x0000ff00) >> 8;
-    icv[j++] = (ctx->state[i] & 0x000000ff);
+    icv[j++] = (ctx->state[i] & 0x0000ff00) >>  8;
+    icv[j++] = (ctx->state[i] & 0x000000ff) >>  0;
   }
 }
 
@@ -329,10 +329,10 @@ static void sha1_seticv(SHA1_CTX *ctx, BYTE icv[20])
 
   for(i = 0, j = 0; i < 5; i++)
   {
-    ctx->state[i] = icv[j++] << 24;
-    ctx->state[i] |= icv[j++] << 16;
-    ctx->state[i] |= icv[j++] << 8;
-    ctx->state[i] |= icv[j++];
+    ctx->state[i]  = (((U32)icv[j++]) << 24);
+    ctx->state[i] |= (((U32)icv[j++]) << 16);
+    ctx->state[i] |= (((U32)icv[j++]) <<  8);
+    ctx->state[i] |= (((U32)icv[j++]) <<  0);
   }
 }
 
@@ -347,8 +347,8 @@ static void sha256_getcv(SHA2_CTX *ctx, BYTE icv[32])
   {
     icv[j++] = (ctx->state.st32[i] & 0xff000000) >> 24;
     icv[j++] = (ctx->state.st32[i] & 0x00ff0000) >> 16;
-    icv[j++] = (ctx->state.st32[i] & 0x0000ff00) >> 8;
-    icv[j++] = (ctx->state.st32[i] & 0x000000ff);
+    icv[j++] = (ctx->state.st32[i] & 0x0000ff00) >>  8;
+    icv[j++] = (ctx->state.st32[i] & 0x000000ff) >>  0;
   }
 }
 
@@ -361,10 +361,10 @@ static void sha256_seticv(SHA2_CTX *ctx, BYTE icv[32])
 
   for(i = 0, j = 0; i < 8; i++)
   {
-    ctx->state.st32[i]  = icv[j++] << 24;
-    ctx->state.st32[i] |= icv[j++] << 16;
-    ctx->state.st32[i] |= icv[j++] << 8;
-    ctx->state.st32[i] |= icv[j++];
+    ctx->state.st32[i]  = (((U32)icv[j++]) << 24);
+    ctx->state.st32[i] |= (((U32)icv[j++]) << 16);
+    ctx->state.st32[i] |= (((U32)icv[j++]) <<  8);
+    ctx->state.st32[i] |= (((U32)icv[j++]) <<  0);
   }
 }
 
@@ -383,8 +383,8 @@ static void sha512_getcv(SHA2_CTX *ctx, BYTE icv[64])
     icv[j++] = (ctx->state.st64[i] & 0x000000ff00000000LL) >> 32;
     icv[j++] = (ctx->state.st64[i] & 0x00000000ff000000LL) >> 24;
     icv[j++] = (ctx->state.st64[i] & 0x0000000000ff0000LL) >> 16;
-    icv[j++] = (ctx->state.st64[i] & 0x000000000000ff00LL) >> 8;
-    icv[j++] = (ctx->state.st64[i] & 0x00000000000000ffLL);
+    icv[j++] = (ctx->state.st64[i] & 0x000000000000ff00LL) >>  8;
+    icv[j++] = (ctx->state.st64[i] & 0x00000000000000ffLL) >>  0;
   }
 }
 
@@ -397,14 +397,14 @@ static void sha512_seticv(SHA2_CTX *ctx, BYTE icv[64])
 
   for(i = 0, j = 0; i < 8; i++)
   {
-    ctx->state.st64[i]  = (U64) icv[j++] << 56;
-    ctx->state.st64[i] |= (U64) icv[j++] << 48;
-    ctx->state.st64[i] |= (U64) icv[j++] << 40;
-    ctx->state.st64[i] |= (U64) icv[j++] << 32;
-    ctx->state.st64[i] |= (U64) icv[j++] << 24;
-    ctx->state.st64[i] |= (U64) icv[j++] << 16;
-    ctx->state.st64[i] |= (U64) icv[j++] << 8;
-    ctx->state.st64[i] |= (U64) icv[j++];
+    ctx->state.st64[i]  = (((U64)icv[j++]) << 56);
+    ctx->state.st64[i] |= (((U64)icv[j++]) << 48);
+    ctx->state.st64[i] |= (((U64)icv[j++]) << 40);
+    ctx->state.st64[i] |= (((U64)icv[j++]) << 32);
+    ctx->state.st64[i] |= (((U64)icv[j++]) << 24);
+    ctx->state.st64[i] |= (((U64)icv[j++]) << 16);
+    ctx->state.st64[i] |= (((U64)icv[j++]) <<  8);
+    ctx->state.st64[i] |= (((U64)icv[j++]) <<  0);
   }
 }
 

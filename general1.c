@@ -487,11 +487,12 @@ VADR    effective_addr2;                /* Effective address         */
         regs->GR_G(r1) = PSW_IA64(regs, 4);
     else
 #endif
-    regs->GR_L(r1) =
-        ( regs->psw.amode )
-          ? (0x80000000                 | PSW_IA31(regs, 4))
-          : ((4 << 29)                  | (regs->psw.cc << 28)
-          |  (regs->psw.progmask << 24) | PSW_IA24(regs, 4));
+    regs->GR_L(r1) = regs->psw.amode ? (0x80000000 | PSW_IA31( regs, 4 ))
+        : (   (((U32)4)                  << 29)
+            | (((U32)regs->psw.cc)       << 28)
+            | (((U32)regs->psw.progmask) << 24)
+            | PSW_IA24( regs, 4 )
+          );
 
     SUCCESSFUL_BRANCH( regs, effective_addr2 );
 

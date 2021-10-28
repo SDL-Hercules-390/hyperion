@@ -379,12 +379,12 @@ static INLINE U32 float32_class( float32_t op )
                                     /* Set FPCR IEEE flags from the softfloat_exceptionFlags                */
                                     /* Flags are set only if the corresponding mask is set to non-trap.     */
 #define SET_FPC_FLAGS_FROM_SF(regs) regs->fpc |=                                                            \
-                        (softfloat_exceptionFlags << 19) &  /* Align softfloat flags with flags in FPCR */  \
+                        (((U32)softfloat_exceptionFlags) << 19) &  /* Align softfloat flags with flags in FPCR */  \
                         ~(regs->fpc >> 8) & 0x00F80000;     /* ..and suppress those that could trap     */
 
                                     /* Save detected exceptions that are trap-enabled                   */
 #define IEEE_EXCEPTION_TEST_TRAPS(_regs, _ieee_trap_conds, _exceptions)                                     \
-      _ieee_trap_conds = (_regs->fpc & FPC_MASK) & (softfloat_exceptionFlags << 27) & (_exceptions)
+      _ieee_trap_conds = (_regs->fpc & FPC_MASK) & (((U32)softfloat_exceptionFlags) << 27) & (_exceptions)
 
 /* ****           End of Softfloat architecture-dependent code                               **** */
 

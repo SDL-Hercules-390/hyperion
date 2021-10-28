@@ -95,81 +95,37 @@ void ARCH_DEP( checkstop_all_cpus )( REGS* regs )
 }
 
 /*-------------------------------------------------------------------*/
-/* Store current PSW at a specified address in main storage          */
+/* Store current PSW at a specified absolute address in main storage */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
+void ARCH_DEP( store_psw )( REGS* regs, BYTE* addr )
 {
     /* Ensure psw.IA is set */
     if (!regs->psw.zeroilc)
-        MAYBE_SET_PSW_IA_FROM_IP(regs);
+        MAYBE_SET_PSW_IA_FROM_IP( regs );
 
 #if defined( FEATURE_BCMODE )
-    if ( ECMODE(&regs->psw) ) {
+    if (ECMODE( &regs->psw ))
 #endif
+        // 390 or 370 EC-mode
+
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-        STORE_FW ( addr,
-                   ( (regs->psw.sysmask << 24)
-                   | ((regs->psw.pkey | regs->psw.states) << 16)
-                   | ( ( (regs->psw.asc)
-                       | (regs->psw.cc << 4)
-                       | (regs->psw.progmask)
-                       ) << 8
-                     )
-                   | regs->psw.zerobyte
-                   )
-                 );
-        if(unlikely(regs->psw.zeroilc))
-            STORE_FW ( addr + 4, regs->psw.IA | (regs->psw.amode ? 0x80000000 : 0) );
-        else
-            STORE_FW ( addr + 4,
-                   ( (regs->psw.IA & ADDRESS_MAXWRAP(regs)) | (regs->psw.amode ? 0x80000000 : 0) )
-                 );
-#endif /* !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+        STORE_DW( addr, make_psw64( regs, 390, false ));
+#endif
+
 #if defined( FEATURE_BCMODE )
-    } else {
-        STORE_FW ( addr,
-                   ( (regs->psw.sysmask << 24)
-                   | ((regs->psw.pkey | regs->psw.states) << 16)
-                   | (regs->psw.intcode)
-                   )
-                 );
-        if(unlikely(regs->psw.zeroilc))
-            STORE_FW ( addr + 4,
-                   ( ( (REAL_ILC(regs) << 5)
-                     | (regs->psw.cc << 4)
-                     | regs->psw.progmask
-                     ) << 24
-                   ) | regs->psw.IA
-                 );
-        else
-            STORE_FW ( addr + 4,
-                   ( ( (REAL_ILC(regs) << 5)
-                     | (regs->psw.cc << 4)
-                     | regs->psw.progmask
-                     ) << 24
-                   ) | (regs->psw.IA & ADDRESS_MAXWRAP(regs))
-                 );
-    }
+
+    else    // 370 BC-mode
+
+        STORE_DW( addr, make_psw64( regs, 370, true ));
+
 #elif defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-        STORE_FW ( addr,
-                   ( (regs->psw.sysmask << 24)
-                   | ((regs->psw.pkey | regs->psw.states) << 16)
-                   | ( ( (regs->psw.asc)
-                       | (regs->psw.cc << 4)
-                       | (regs->psw.progmask)
-                       ) << 8
-                     )
-                   | (regs->psw.amode64 ? 0x01 : 0)
-                   | regs->psw.zerobyte
-                   )
-                 );
-        STORE_FW ( addr + 4,
-                   ( (regs->psw.amode ? 0x80000000 : 0 )
-                   | regs->psw.zeroword
-                   )
-                 );
-        STORE_DW ( addr + 8, regs->psw.IA_G );
-#endif /* defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) */
+
+    // 64-bit z/Architecture mode
+
+    STORE_DW( addr + 0, make_psw64( regs, 900, false ));
+    STORE_DW( addr + 8, regs->psw.IA_G );
+
+#endif
 } /* end function ARCH_DEP(store_psw) */
 
 /*-------------------------------------------------------------------*/
@@ -2762,6 +2718,189 @@ void do_automatic_tracing()
         // "Automatic tracing stopped at instrcount %"PRIu64" (AMT+%"PRIu64")"
         WRMSG( HHC02371, "I", inst_count, too_much );
     }
+}
+
+/*-------------------------------------------------------------------*/
+/*                        make_psw64                                 */
+/*-------------------------------------------------------------------*/
+U64 make_psw64( REGS* regs, int arch /*370/390/900*/, bool bc )
+{
+    /* Return first/only 64-bit DWORD of the PSW -- IN HOST FORMAT!
+
+       Caller is responsible for doing the STORE_DW on the returned
+       value, which does a CSWAP to place it into guest storage in
+       proper big endian format. The 900 mode caller (i.e. z/Arch)
+       is also responsible for doing the store of the second DWORD
+       of the 16-byte z/Arch PSW = the 64-bit instruction address.
+    */
+
+    BYTE  b0, b1, b2, b3, b4;
+    U16   b23;
+    U32   b567, b4567;
+    U64   psw64 = 0;
+
+    switch (arch)
+    {
+        case 370:
+
+        if (bc) {
+            //                      370 BC-mode
+            //
+            //     +---------------+---+-----+------+---------------+----
+            //     | channel masks | E | key | 0MWP | interupt code | ..
+            //     +---------------+---+-----+------+---------------+----
+            //     0               7   8     12     16             31
+
+            //  ---+-----+----+------+------------------------------+
+            //   ..| ilc | cc | mask |     instruction address      |
+            //  ---+-----+----+------+------------------------------+
+            //     32    34   36     40                            63
+
+            b0 = regs->psw.sysmask;
+
+            b1 = 0
+                 | regs->psw.pkey
+                 | regs->psw.states
+                 ;
+
+            b23 = regs->psw.intcode;
+
+            b4 = 0
+                 | (REAL_ILC( regs ) << 6)
+                 | (regs->psw.cc     << 4)
+                 |  regs->psw.progmask
+                 ;
+
+            b567 = regs->psw.IA_L;
+
+            if (!regs->psw.zeroilc)
+                b567 &= AMASK24;
+
+            psw64 = 0
+                    | ( (U64) b0   << (64-(1*8)) )
+                    | ( (U64) b1   << (64-(2*8)) )
+                    | ( (U64) b23  << (64-(4*8)) )
+                    | ( (U64) b4   << (64-(5*8)) )
+                    | ( (U64) b567 << (64-(8*8)) )
+                    ;
+            break;
+        }
+
+        /* Not 370 BC-mode = 370 EC-mode. Fall through to the 390 case,
+           which handles both ESA/390 mode and S/370 EC-mode PSWs too.
+
+           The below special "FALLTHRU" comment lets GCC know that we are
+           purposely falling through to the next switch case and is needed
+           in order to suppress the warning that GCC would otherwise issue.
+        */
+        /* FALLTHRU */
+
+        case 390:
+            //                      370 EC-mode
+            //
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     | 0R00 | 0TIE | key | 1MWP | S0 | cc | mask | 00000000 | ..
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     0      4      8     12     16   18   20     24
+
+            //  ---+----------+-------------------------------------------+
+            //   ..| 00000000 |       instruction address                 |  (370)
+            //  ---+----------+-------------------------------------------+
+            //     32         40                                         63
+            //
+            //                        ESA/390
+            //
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     | 0R00 | 0TIE | key | 1MWP | AS | cc | mask | 00000000 | ..
+            //     +------+------+-----+------+----+----+------+----------+---
+            //     0      4      8     12     16   18   20     24
+            //
+            //  ---+---+--------------------------------------------------+
+            //   ..| A |              instruction address                 |  (390)
+            //  ---+---+--------------------------------------------------+
+            //     32  33                                                63
+
+            b0 = regs->psw.sysmask;
+
+            b1 = 0
+                 | regs->psw.pkey
+                 | regs->psw.states
+                 ;
+
+            b2 = 0
+                 |  regs->psw.asc           // (S0 or AS)
+                 | (regs->psw.cc << 4)
+                 |  regs->psw.progmask
+                 ;
+
+            b3 = regs->psw.zerobyte;
+
+            b4567 = regs->psw.IA_L;
+
+            if (!regs->psw.zeroilc)
+                b4567 &= regs->psw.amode ? AMASK31 : AMASK24;
+
+            if (regs->psw.amode)
+                b4567 |= 0x80000000;
+
+            psw64 = 0
+                    | ( (U64) b0    << (64-(1*8)) )
+                    | ( (U64) b1    << (64-(2*8)) )
+                    | ( (U64) b2    << (64-(3*8)) )
+                    | ( (U64) b3    << (64-(4*8)) )
+                    | ( (U64) b4567 << (64-(8*8)) )
+                    ;
+            break;
+
+        case 900:
+            //                      z/Architecture
+            //
+            //     +------+------+-----+------+----+----+------+-----------+---
+            //     | 0R00 | 0TIE | key | 0MWP | AS | cc | mask | 0000 000E | ..
+            //     +------+------+-----+------+----+----+------+-----------+---
+            //     0      4      8     12     16   18   20     24         31
+            //
+            //  ---+---+---------------------------------------------------+
+            //   ..| B | 0000000000000000000000000000000000000000000000000 |
+            //  ---+---+---------------------------------------------------+
+            //     32  33                                                 63
+
+            b0 = regs->psw.sysmask;
+
+            b1 = 0
+                 | regs->psw.pkey
+                 | regs->psw.states
+                 ;
+
+            b2 = 0
+                 |  regs->psw.asc
+                 | (regs->psw.cc << 4)
+                 |  regs->psw.progmask
+                 ;
+
+            b3 = regs->psw.zerobyte;
+
+            if (regs->psw.amode64)
+                b3 |= 0x01;
+
+            b4567 = regs->psw.zeroword;
+
+            if (regs->psw.amode)
+                b4567 |= 0x80000000;
+
+            psw64 = 0
+                    | ( (U64) b0    << (64-(1*8)) )
+                    | ( (U64) b1    << (64-(2*8)) )
+                    | ( (U64) b2    << (64-(3*8)) )
+                    | ( (U64) b3    << (64-(4*8)) )
+                    | ( (U64) b4567 << (64-(8*8)) )
+                    ;
+            break;
+
+        default:        // LOGIC ERROR!
+            CRASH();    // LOGIC ERROR!
+    }
+    return psw64;
 }
 
 #endif /*!defined(_GEN_ARCH)*/
