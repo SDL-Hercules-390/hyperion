@@ -1709,48 +1709,61 @@ do {                                                                  \
 /*                 SIE address translation macros                    */
 /*-------------------------------------------------------------------*/
 
-#undef SIE_TRANSLATE
 #undef SIE_LOGICAL_TO_ABS
 #undef SIE_TRANSLATE_ADDR
+#undef SIE_TRANSLATE
 
 #if defined( _FEATURE_SIE )
 
   //-------------------------------------------------------------------
-  //  SIE_TRANSLATE:       SIE guest abs  -->  SIE host abs    (?nop)
-  //  SIE_LOGICAL_TO_ABS:  SIE host virt  -->  SIE host abs
-  //  SIE_TRANSLATE_ADDR:  SIE host virt  -->  SIE host real   (rc)
+  //   SIE_LOGICAL_TO_ABS:   SIE host virt  -->  SIE host abs
+  //   SIE_TRANSLATE_ADDR:   SIE host virt  -->  SIE host real; rc
   //-------------------------------------------------------------------
 
-  #define SIE_TRANSLATE( _addr, _acctype, _regs )                                       \
-                                                                                        \
-    do {                                                                                \
-      if (SIE_MODE( (_regs) ) && !(_regs)->sie_pref)                                    \
-        *(_addr) = SIE_LOGICAL_TO_ABS( (_regs)->sie_mso + *(_addr),                     \
-                                        USE_PRIMARY_SPACE,                              \
-                                        HOST(_regs),                                    \
-                                        (_acctype), 0 );                                \
-    } while (0)
+  // --------------------------------------------------------------------------------
+  //          z/Arch running under z/VM, or ESA/390 running under VM/ESA
+  // --------------------------------------------------------------------------------
 
-  #if __GEN_ARCH == 370 && defined( _FEATURE_SIE )
+  #if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
+
+    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
+      (                                                                                 \
+        ARCH_DEP( logical_to_main_l )( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ), \
+        (_regs)->dat.aaddr   /* THIS IS THE ACTUAL VALUE THE MACRO RETURNS! */          \
+      )
+
+    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
+                                                                                        \
+        ARCH_DEP( translate_addr )( (_addr), (_arn), (_regs), (_acctype) )
+
+  // --------------------------------------------------------------------------------
+  //                      S/370 running under VM/ESA
+  // --------------------------------------------------------------------------------
+
+  #elif __GEN_ARCH == 370 && defined( _FEATURE_SIE )
 
     #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
       (                                                                                 \
         s390_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ),     \
-        (_regs)->dat.aaddr /*  <-----<<<  this is what is returned */                   \
+        (_regs)->dat.aaddr   /* THIS IS THE ACTUAL VALUE THE MACRO RETURNS! */          \
       )
 
     #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
                                                                                         \
         s390_translate_addr( (_addr), (_arn), (_regs), (_acctype) )
 
-  #elif __GEN_ARCH == 390 && defined( _FEATURE_ZSIE )
+  // --------------------------------------------------------------------------------
+  //                      ESA/390 running under z/VM
+  // --------------------------------------------------------------------------------
+
+  #else /* __GEN_ARCH == 390 && defined( _FEATURE_ZSIE ) */
 
     #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
       (                                                                                 \
         ((ARCH_390_IDX == (_regs)->arch_mode)                                           \
         ? s390_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 )    \
         : z900_logical_to_main_l( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 )),  \
-        (_regs)->dat.aaddr /*  <-----<<<  this is what is returned */                   \
+        (_regs)->dat.aaddr   /* THIS IS THE ACTUAL VALUE THE MACRO RETURNS! */          \
       )
 
     #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
@@ -1760,25 +1773,28 @@ do {                                                                  \
         : z900_translate_addr( (_addr), (_arn), (_regs), (_acctype) )                   \
       )
 
-  #else // __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined( _FEATURE_ZSIE ))
-
-    #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )                   \
-      (                                                                                 \
-        ARCH_DEP( logical_to_main_l )( (_addr), (_arn), (_regs), (_acctype), (_akey), 1 ), \
-        (_regs)->dat.aaddr /*  <-----<<<  this is what is returned */                   \
-      )
-
-    #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )                          \
-                                                                                        \
-        ARCH_DEP( translate_addr )( (_addr), (_arn), (_regs), (_acctype) )
-
   #endif // __GEN_ARCH == ...
+
+  // --------------------------------------------------------------------------------
+  //  SIE_TRANSLATE:  SIE guest abs  -->  SIE host abs   (or nop if not in SIE mode)
+  // --------------------------------------------------------------------------------
+
+  #define SIE_TRANSLATE( _addr, _acctype, _regs )                     \
+                                                                      \
+    do {                                                              \
+      if (SIE_MODE( (_regs) ) && !(_regs)->sie_pref) /* SIE mode? */  \
+        *(_addr) = SIE_LOGICAL_TO_ABS(  /* host virt --> host abs */  \
+           (_regs)->sie_mso + *(_addr), /* guest abs is host virt */  \
+           USE_PRIMARY_SPACE,           /* host primary virtual   */  \
+           HOST(_regs),                 /* host register context  */  \
+           (_acctype), 0 );             /* access type and skey   */  \
+    } while (0)
 
 #else // !defined( _FEATURE_SIE )
 
-  #define SIE_TRANSLATE( _addr, _acctype, _regs )
-  #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )
   #define SIE_TRANSLATE_ADDR( _addr, _arn, _regs, _acctype )
+  #define SIE_LOGICAL_TO_ABS( _addr, _arn, _regs, _acctype, _akey )
+  #define SIE_TRANSLATE( _addr, _acctype, _regs )
 
 #endif // defined( _FEATURE_SIE )
 
