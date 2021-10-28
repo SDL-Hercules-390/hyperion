@@ -239,7 +239,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00014 "select: %s"
 #define HHC00015 "keyboard read: %s"
 //efine HHC00016 (available)
-//efine HHC00017 (available)
+#define HHC00017 "Crash dumps NOT enabled"
 #define HHC00018 "Hercules is %srunning in elevated mode"
 #define HHC00019 "Hercules IS running in test mode"
 

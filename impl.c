@@ -1038,6 +1038,18 @@ int     rc;
     display_build_options ( stdout, 0 );
     display_extpkg_vers   ( stdout, 0 );
 
+    /* Warn if crash dumps aren't enabled */
+#if !defined( _MSVC_ )
+    {
+        struct rlimit  core_limit;
+        if (getrlimit( RLIMIT_CORE, &core_limit ) == 0)
+            sysblk.ulimit_unlimited = (RLIM_INFINITY == core_limit.rlim_cur);
+        if (!sysblk.ulimit_unlimited)
+            // "Crash dumps NOT enabled"
+            WRMSG( HHC00017, "W" );
+    }
+#endif
+
     /* Report whether Hercules is running in "elevated" mode or not */
     // HHC00018 "Hercules is %srunning in elevated mode"
     if (are_elevated())

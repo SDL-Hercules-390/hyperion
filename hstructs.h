@@ -639,6 +639,7 @@ struct SYSBLK {
   const char  **bld_opts;               /* Build options             */
   const char  **extpkg_vers;            /* External Package versions */
 
+        bool    ulimit_unlimited;       /* ulimit -c unlimited       */
         pid_t   hercules_pid;           /* Process Id of Hercules    */
         time_t  impltime;               /* TOD system was IMPL'ed    */
         LOCK    bindlock;               /* Sockdev bind lock         */

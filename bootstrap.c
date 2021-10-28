@@ -90,11 +90,23 @@ static void log_crashed_msg( FILE* stream )
         "\n"
         "Hercules has crashed! (%s)\n"
         "\n"
-        "Creating crash dump... This may take a while...\n"
-        "\n"
 
         , strsignal( crash_signo )
     );
+    if (sysblk.ulimit_unlimited)
+        fprintf
+        (
+            stream,
+            "Creating crash dump... This will take a while...\n"
+            "\n"
+        );
+    else
+        fprintf
+        (
+            stream,
+            "Crash dump NOT created due to ulimit setting...\n"
+            "\n"
+        );
     fflush( stream );
 }
 
