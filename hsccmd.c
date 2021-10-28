@@ -4979,9 +4979,11 @@ int shrdport_cmd( int argc, char* argv[], char* cmdline )
     }
 
     if (MLVL( VERBOSE ))
-        // "%-14s set to %s"
+    {
         MSGBUF( buf, "%hu", sysblk.shrdport );
+        // "%-14s set to %s"
         WRMSG( HHC02204, "I", argv[0], buf );
+    }
 
     return 0;
 }

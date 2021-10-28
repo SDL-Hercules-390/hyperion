@@ -834,9 +834,12 @@ int             is3590 = 0;             /* 1 == 3590, 0 == 3480/3490 */
             ASSERT(blkcount);
 
             if (!extgui)
+            {
+                char msgbuf[100];
                 // "File No. %u: Block %u"
-                WRMSG( HHC02723, "I", fileno, blkcount );
-                printf("\r");
+                MSGBUF( msgbuf, MSG_C( HHC02723, "I", fileno, blkcount ));
+                printf( "%s\r", msgbuf );
+            }
         }
 
         /* Write block to output file */
