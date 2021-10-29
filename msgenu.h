@@ -1536,7 +1536,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC02405I Return code is 0 if successful or 1 if any errors."
 #define HHC02406 "Member '%s' not found in dataset '%s' on volume '%s'"
 #define HHC02407 "%s/%s/%-8s %8s bytes from %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32" to %4.4"PRIX32"%2.2"PRIX32"%2.2"PRIX32
-//efine HHC02408 (available)
+#define HHC02408 "Error in function %s: %s"
 //efine HHC02409 (available)
 
 // dasdconv.c
@@ -2368,7 +2368,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03998 "%1d:%04X %s: %s inconsistent with %s"
 //efine HHC03999 (available)
 
-// range 04000 - 04099 available
+// reserve 040xx for tcpnje related messages
+#define HHC04000 "Error in function %s: %s"
+//efine HHC040xx - HHC04099 (available)
 
 // reserve 041xx for windows specific component messages (w32xxxx.c)
 #define HHC04100 "%s version %s initiated"

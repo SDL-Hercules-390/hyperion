@@ -698,7 +698,11 @@ static int     tcpnje_initiate_userdial(struct TCPNJE *tn)
 /*-------------------------------------------------------------------*/
 static void tcpnje_wakeup(struct TCPNJE *tn, BYTE code)
 {
-    write_pipe(tn->pipe[1], &code, 1);
+    if (write_pipe( tn->pipe[1], &code, 1 ) < 0)
+    {
+        // "Error in function %s: %s"
+        WRMSG( HHC04000, "W", "write_pipe", strerror( errno ));
+    }
 }
 /*-------------------------------------------------------------------*/
 /* TCPNJE close connection to remote link partner                    */
@@ -2814,7 +2818,11 @@ static int tcpnje_init_handler(DEVBLK *dev, int argc, char *argv[])
         initialize_condition(&tn->ipc_halt);
 
         /* Allocate I/O -> Thread signaling pipe */
-        create_pipe(tn->pipe);
+        if (create_pipe( tn->pipe ) < 0)
+        {
+            // "Error in function %s: %s"
+            WRMSG( HHC04000, "W", "create_pipe", strerror( errno ));
+        }
 
 #if !defined(HYPERION_DEVHND_FORMAT)
         /* Point to the halt routine for HDV/HIO/HSCH handling */
