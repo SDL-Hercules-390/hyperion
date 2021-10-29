@@ -1778,6 +1778,9 @@ char     trcmsg[32];
         sysblk.shrdcount++;
         SHRDTRACE( "server request active id=%d", id );
 
+        /* Increment excp count */
+        dev->excps++;
+
         release_lock(&dev->lock);
 
         /* Call the i/o start or resume exit */
