@@ -120,6 +120,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "ctcadpt.h"
 #include "hercifc.h"
 #include "qeth.h"
+#include "opcode.h"
 #include "inline.h"
 
 

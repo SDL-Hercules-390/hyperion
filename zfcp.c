@@ -40,6 +40,7 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
 #include "devtype.h"
 #include "chsc.h"
 #include "zfcp.h"
+#include "opcode.h"
 #include "inline.h"
 
 /*-------------------------------------------------------------------*/
