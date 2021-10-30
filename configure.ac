@@ -3216,24 +3216,36 @@ if test -z "${hc_cv_extpkg_dir}"; then
                             crypto_libdir="${dir}"
                       found_crypto="yes"
         fi
+
+        LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
+        LDFLAGS="$LDFLAGS -L${crypto_libdir}"
       fi
       if test -z   "${found_decnumber}"; then
         if test -r ${dir}/${decnumber_libname}; then
                             decnumber_libdir="${dir}"
                       found_decnumber="yes"
         fi
+        
+        LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
+        LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
       fi
       if test -z   "${found_softfloat}"; then
         if test -r ${dir}/${softfloat_libname}; then
                             softfloat_libdir="${dir}"
                       found_softfloat="yes"
         fi
+        
+        LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
+        LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
       fi
       if test -z   "${found_telnet}"; then
         if test -r ${dir}/${telnet_libname}; then
                             telnet_libdir="${dir}"
                       found_telnet="yes"
         fi
+        
+        LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
+        LDFLAGS="$LDFLAGS -L${telnet_libdir}"
       fi
     fi
 
@@ -3247,6 +3259,16 @@ if test -z "${hc_cv_extpkg_dir}"; then
   done <<END
 ${LIBRARY_PATH}:
 END
+else
+
+    LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
+    LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
+    LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
+    LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
+    LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+    LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
+    LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+    LDFLAGS="$LDFLAGS -L${telnet_libdir}"
 fi
 
 ###############################################################################
@@ -3263,10 +3285,11 @@ extpkg_headers="${crypto_headers}       \
                 ${softfloat_headers}    \
                 ${telnet_headers}"
 
-extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
-              ${decnumber_libdir}/${decnumber_libname}    \
-              ${softfloat_libdir}/${softfloat_libname}    \
-              ${telnet_libdir}/${telnet_libname}"
+# extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
+#               ${decnumber_libdir}/${decnumber_libname}    \
+#               ${softfloat_libdir}/${softfloat_libname}    \
+#               ${telnet_libdir}/${telnet_libname}"
+extpkg_ldadd=
 
 ##----------------------------------------------------------------
 ##                         DEBUGGING
