@@ -1,19 +1,8 @@
-#
 language: c
 
 #
 jobs:
   include:
-    - name: "Ubuntu 16.04 -- gcc 5.4.0"
-      os: linux
-      dist: xenial
-      env: MATRIX_EVAL="CC=gcc"
-
-    - name: "Ubuntu 16.04 -- clang 7.0.0"
-      os: linux
-      dist: xenial
-      env: MATRIX_EVAL="CC=clang"
-
     - name: "Ubuntu 18.04 -- gcc 7.5.0"
       os: linux
       dist: bionic
@@ -89,8 +78,11 @@ before_script:
   - bash -c '${CC} --version'
   - util/bldlvlck
   - ./autogen.sh
-  - ./configure --enable-regina-rexx
+  - mkdir build
+  - cd build
+  - ../configure --enable-regina-rexx
   - ./config.status --config
+  - bash -c '${CC} --version'
 
 #
 script:
