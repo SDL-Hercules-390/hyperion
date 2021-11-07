@@ -3217,18 +3217,21 @@ if test -z "${hc_cv_extpkg_dir}"; then
                       found_crypto="yes"
         fi
       fi
+
       if test -z   "${found_decnumber}"; then
         if test -r ${dir}/${decnumber_libname}; then
                             decnumber_libdir="${dir}"
                       found_decnumber="yes"
         fi
       fi
+
       if test -z   "${found_softfloat}"; then
         if test -r ${dir}/${softfloat_libname}; then
                             softfloat_libdir="${dir}"
                       found_softfloat="yes"
         fi
       fi
+
       if test -z   "${found_telnet}"; then
         if test -r ${dir}/${telnet_libname}; then
                             telnet_libdir="${dir}"
@@ -3249,6 +3252,19 @@ ${LIBRARY_PATH}:
 END
 fi
 
+LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+
+LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
+
+
+LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+
+LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
 ###############################################################################
@@ -3263,10 +3279,11 @@ extpkg_headers="${crypto_headers}       \
                 ${softfloat_headers}    \
                 ${telnet_headers}"
 
-extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
-              ${decnumber_libdir}/${decnumber_libname}    \
-              ${softfloat_libdir}/${softfloat_libname}    \
-              ${telnet_libdir}/${telnet_libname}"
+# extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
+#               ${decnumber_libdir}/${decnumber_libname}    \
+#               ${softfloat_libdir}/${softfloat_libname}    \
+#               ${telnet_libdir}/${telnet_libname}"
+extpkg_ldadd=
 
 ##----------------------------------------------------------------
 ##                         DEBUGGING
@@ -3275,6 +3292,10 @@ extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
 ## AC_MSG_NOTICE( [Using decnumber_libdir = ${decnumber_libdir}] )
 ## AC_MSG_NOTICE( [Using softfloat_libdir = ${softfloat_libdir}] )
 ## AC_MSG_NOTICE( [Using telnet_libdir    = ${telnet_libdir}]    )
+
+## AC_MSG_NOTICE( [LIBS    = ${LIBS}]    )
+## AC_MSG_NOTICE( [LDFLAGS = ${LDFLAGS}]    )
+## AC_MSG_NOTICE( [extpkg_incdirs = ${extpkg_incdirs}]    )
 
 EXTPKG_INCDIRS="${extpkg_incdirs}"
 AC_SUBST(EXTPKG_INCDIRS)

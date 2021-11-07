@@ -2961,12 +2961,7 @@ program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 if test x"${MISSING+set}" != xset; then
-  case $am_aux_dir in
-  *\ * | *\	*)
-    MISSING="\${SHELL} \"$am_aux_dir/missing\"" ;;
-  *)
-    MISSING="\${SHELL} $am_aux_dir/missing" ;;
-  esac
+  MISSING="\${SHELL} '$am_aux_dir/missing'"
 fi
 # Use eval to expand $SHELL
 if eval "$MISSING --is-lightweight"; then
@@ -22393,18 +22388,21 @@ if test -z "${hc_cv_extpkg_dir}"; then
                       found_crypto="yes"
         fi
       fi
+
       if test -z   "${found_decnumber}"; then
         if test -r ${dir}/${decnumber_libname}; then
                             decnumber_libdir="${dir}"
                       found_decnumber="yes"
         fi
       fi
+
       if test -z   "${found_softfloat}"; then
         if test -r ${dir}/${softfloat_libname}; then
                             softfloat_libdir="${dir}"
                       found_softfloat="yes"
         fi
       fi
+
       if test -z   "${found_telnet}"; then
         if test -r ${dir}/${telnet_libname}; then
                             telnet_libdir="${dir}"
@@ -22425,6 +22423,19 @@ ${LIBRARY_PATH}:
 END
 fi
 
+LIBS="$LIBS -l${crypto_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${crypto_libdir}"
+
+LIBS="$LIBS -l${decnumber_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${decnumber_libdir}"
+
+
+LIBS="$LIBS -l${softfloat_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${softfloat_libdir}"
+
+LIBS="$LIBS -l${telnet_pkgname}${hc_cv_pkg_lib_suffix}"
+LDFLAGS="$LDFLAGS -L${telnet_libdir}"
+
 ###############################################################################
 #          Pass values to other subdirectory Makefile.am files
 ###############################################################################
@@ -22439,10 +22450,11 @@ extpkg_headers="${crypto_headers}       \
                 ${softfloat_headers}    \
                 ${telnet_headers}"
 
-extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
-              ${decnumber_libdir}/${decnumber_libname}    \
-              ${softfloat_libdir}/${softfloat_libname}    \
-              ${telnet_libdir}/${telnet_libname}"
+# extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
+#               ${decnumber_libdir}/${decnumber_libname}    \
+#               ${softfloat_libdir}/${softfloat_libname}    \
+#               ${telnet_libdir}/${telnet_libname}"
+extpkg_ldadd=
 
 ##----------------------------------------------------------------
 ##                         DEBUGGING
@@ -22451,6 +22463,10 @@ extpkg_ldadd="${crypto_libdir}/${crypto_libname}          \
 ## AC_MSG_NOTICE( [Using decnumber_libdir = ${decnumber_libdir}] )
 ## AC_MSG_NOTICE( [Using softfloat_libdir = ${softfloat_libdir}] )
 ## AC_MSG_NOTICE( [Using telnet_libdir    = ${telnet_libdir}]    )
+
+## AC_MSG_NOTICE( [LIBS    = ${LIBS}]    )
+## AC_MSG_NOTICE( [LDFLAGS = ${LDFLAGS}]    )
+## AC_MSG_NOTICE( [extpkg_incdirs = ${extpkg_incdirs}]    )
 
 EXTPKG_INCDIRS="${extpkg_incdirs}"
 
@@ -24305,7 +24321,9 @@ $as_echo X/"$am_mf" |
     { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "Something went wrong bootstrapping makefile fragments
-    for automatic dependency tracking.  Try re-running configure with the
+    for automatic dependency tracking.  If GNU make was not used, consider
+    re-running the configure script with MAKE=\"gmake\" (or whatever is
+    necessary).  You can also try re-running configure with the
     '--disable-dependency-tracking' option to at least be able to build
     the package (albeit without support for automatic dependency tracking).
 See \`config.log' for more details" "$LINENO" 5; }
