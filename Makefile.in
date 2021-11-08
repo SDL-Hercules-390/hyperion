@@ -124,7 +124,8 @@ am__aclocal_m4_deps = $(top_srcdir)/autoconf/hercules.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
-	$(am__configure_deps) $(noinst_HEADERS) $(am__DIST_COMMON)
+	$(am__configure_deps) $(am__noinst_HEADERS_DIST) \
+	$(am__DIST_COMMON)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
@@ -309,6 +310,13 @@ am_libherc_la_OBJECTS = _archdep_templ.lo archlvl.lo assist.lo \
 	script.lo service.lo sie.lo skey.lo sr.lo stack.lo \
 	strsignal.lo tcpip.lo timer.lo trace.lo transact.lo vector.lo \
 	vm.lo vmd250.lo vstore.lo x75.lo xstore.lo $(am__objects_1)
+am__EXTRA_libherc_la_SOURCES_DIST = ltdl.c memrchr.c dyncrypt.c \
+	dyngui.c hdteq.c awstape.c cardpch.c cardrdr.c comm3705.c \
+	commadpt.c tcpnje.c con1052c.c console.c ctc_ctci.c ctc_lcs.c \
+	ctc_ptp.c ctcadpt.c faketape.c ftlib.c hchan.c hetlib.c \
+	hettape.c mpc.c netsupp.c omatape.c printer.c qeth.c resolve.c \
+	scsitape.c sllib.c sockdev.c tapeccws.c tapedev.c tuntap.c \
+	dummydev.c zfcp.c fthreads.c
 libherc_la_OBJECTS = $(am_libherc_la_OBJECTS)
 libherc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -339,13 +347,15 @@ libhercu_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	libhercs.la
 am__libhercu_la_SOURCES_DIST = codepage.c hdl.c hexdumpe.c hostinfo.c \
 	hscutl.c hsocket.c hthreads.c logger.c logmsg.c machdep.c \
-	memrchr.c parser.c pttrace.c version.c fthreads.c
+	memrchr.c parser.c pttrace.c version.c fthreads.c ltdl.c
 am__objects_2 = fthreads.lo
 @BUILD_FTHREADS_TRUE@am__objects_3 = $(am__objects_2)
+@BUILD_APPLE_M1_FALSE@am__objects_4 = ltdl.lo
+@BUILD_APPLE_M1_FALSE@am__objects_5 = $(am__objects_4)
 am_libhercu_la_OBJECTS = codepage.lo hdl.lo hexdumpe.lo hostinfo.lo \
 	hscutl.lo hsocket.lo hthreads.lo logger.lo logmsg.lo \
 	machdep.lo memrchr.lo parser.lo pttrace.lo version.lo \
-	$(am__objects_3)
+	$(am__objects_3) $(am__objects_5)
 libhercu_la_OBJECTS = $(am_libhercu_la_OBJECTS)
 libhercu_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -653,20 +663,20 @@ am__depfiles_remade = ./$(DEPDIR)/_archdep_templ.Plo \
 	./$(DEPDIR)/inline.Plo ./$(DEPDIR)/io.Plo ./$(DEPDIR)/ipl.Plo \
 	./$(DEPDIR)/loadmem.Plo ./$(DEPDIR)/loadparm.Plo \
 	./$(DEPDIR)/logger.Plo ./$(DEPDIR)/logmsg.Plo \
-	./$(DEPDIR)/losc.Plo ./$(DEPDIR)/machchk.Plo \
-	./$(DEPDIR)/machdep.Plo ./$(DEPDIR)/maketape.Po \
-	./$(DEPDIR)/memrchr.Plo ./$(DEPDIR)/mpc.Plo \
-	./$(DEPDIR)/netsupp.Plo ./$(DEPDIR)/omatape.Plo \
-	./$(DEPDIR)/opcode.Plo ./$(DEPDIR)/panel.Plo \
-	./$(DEPDIR)/parser.Plo ./$(DEPDIR)/pfpo.Plo \
-	./$(DEPDIR)/plo.Plo ./$(DEPDIR)/printer.Plo \
-	./$(DEPDIR)/pttrace.Plo ./$(DEPDIR)/qdio.Plo \
-	./$(DEPDIR)/qeth.Plo ./$(DEPDIR)/resolve.Plo \
-	./$(DEPDIR)/scedasd.Plo ./$(DEPDIR)/scescsi.Plo \
-	./$(DEPDIR)/script.Plo ./$(DEPDIR)/scsitape.Plo \
-	./$(DEPDIR)/scsiutil.Plo ./$(DEPDIR)/service.Plo \
-	./$(DEPDIR)/shared.Plo ./$(DEPDIR)/sie.Plo \
-	./$(DEPDIR)/skey.Plo ./$(DEPDIR)/sllib.Plo \
+	./$(DEPDIR)/losc.Plo ./$(DEPDIR)/ltdl.Plo \
+	./$(DEPDIR)/machchk.Plo ./$(DEPDIR)/machdep.Plo \
+	./$(DEPDIR)/maketape.Po ./$(DEPDIR)/memrchr.Plo \
+	./$(DEPDIR)/mpc.Plo ./$(DEPDIR)/netsupp.Plo \
+	./$(DEPDIR)/omatape.Plo ./$(DEPDIR)/opcode.Plo \
+	./$(DEPDIR)/panel.Plo ./$(DEPDIR)/parser.Plo \
+	./$(DEPDIR)/pfpo.Plo ./$(DEPDIR)/plo.Plo \
+	./$(DEPDIR)/printer.Plo ./$(DEPDIR)/pttrace.Plo \
+	./$(DEPDIR)/qdio.Plo ./$(DEPDIR)/qeth.Plo \
+	./$(DEPDIR)/resolve.Plo ./$(DEPDIR)/scedasd.Plo \
+	./$(DEPDIR)/scescsi.Plo ./$(DEPDIR)/script.Plo \
+	./$(DEPDIR)/scsitape.Plo ./$(DEPDIR)/scsiutil.Plo \
+	./$(DEPDIR)/service.Plo ./$(DEPDIR)/shared.Plo \
+	./$(DEPDIR)/sie.Plo ./$(DEPDIR)/skey.Plo ./$(DEPDIR)/sllib.Plo \
 	./$(DEPDIR)/sockdev.Plo ./$(DEPDIR)/sr.Plo \
 	./$(DEPDIR)/stack.Plo ./$(DEPDIR)/strsignal.Plo \
 	./$(DEPDIR)/tapeccws.Plo ./$(DEPDIR)/tapecopy-scsiutil.Po \
@@ -735,7 +745,7 @@ DIST_SOURCES = $(dyncrypt_la_SOURCES) $(dyngui_la_SOURCES) \
 	$(hdtptp_la_SOURCES) $(hdtqeth_la_SOURCES) \
 	$(hdttcpnje_la_SOURCES) $(hdtzfcp_la_SOURCES) \
 	$(libhdt3420_not_mod_la_SOURCES) $(libherc_la_SOURCES) \
-	$(EXTRA_libherc_la_SOURCES) $(libhercd_la_SOURCES) \
+	$(am__EXTRA_libherc_la_SOURCES_DIST) $(libhercd_la_SOURCES) \
 	$(libhercs_la_SOURCES) $(libherct_la_SOURCES) \
 	$(am__libhercu_la_SOURCES_DIST) $(cckdcdsk_SOURCES) \
 	$(cckdcdsk64_SOURCES) $(cckdcomp_SOURCES) \
@@ -765,6 +775,27 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+am__noinst_HEADERS_DIST = archlvl.h cache.h ccfixme.h cckd.h cckd64.h \
+	cckddasd.h ccnowarn.h ccwarn.h chsc.h clock.h cmdtab.h cmpsc.h \
+	cmpscbit.h cmpscdbg.h cmpscdct.h cmpscget.h cmpscmem.h \
+	cmpscput.h cnsllogo.h codepage.h comm3705.h commadpt.h \
+	tcpnje.h cpuint.h ctc_ptp.h ctcadpt.h dasdblks.h dasdtab.h \
+	dat.h dbgtrace.h devtype.h ecpsvm.h esa390.h esa390io.h \
+	extstring.h facility.h feat370.h feat390.h feat900.h featall.h \
+	featchk.h feature.h fillfnam.h fthreads.h ftlib.h getopt.h \
+	hatomic.h hbyteswp.h hchan.h hconsole.h hconsts.h hcrypto.h \
+	hdiagf18.h hdl.h herc_getopt.h hercifc.h hercules.h hercwind.h \
+	herror.h hetlib.h hexdumpe.h hexterns.h hifr.h hinlines.h \
+	history.h hmacros.h hmalloc.h hostinfo.h hostopts.h hqadefs.h \
+	hqainc.h hqawarn.h hRexx.h hRexxapi.c hscutl.h hsocket.h \
+	hstdinc.h hstructs.h hthreads.h httpmisc.h htypes.h impexp.h \
+	inline.h instfmts.h linklist.h logger.h ltdl.h machdep.h \
+	memrchr.h mpc.h msgenu.h netsupp.h opcode.h parser.h \
+	printfmt.h pttrace.h qdio.h qeth.h resolve.h scsitape.h \
+	scsiutil.h service.h shared.h sie.h skey.h sllib.h sockdev.h \
+	sr.h stfl.h tapedev.h targetver.h tcpip.h transact.h tt32api.h \
+	tt32if.h tuntap.h version.h vmd250.h vstore.h w32ctca.h \
+	w32dl.h w32mtio.h w32stape.h w32util.h x75.h zfcp.h
 HEADERS = $(noinst_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
@@ -1116,6 +1147,9 @@ dyndev_SRC = \
 #-----------------------------------------------------------------
 XSTATIC = 
 DYNSRC = 
+
+# LTDL    =  ltdl.c
+@BUILD_APPLE_M1_FALSE@LTDL = ltdl.c
 DYNMOD_LD_FLAGS = \
   -module           \
   -no-undefined     \
@@ -1284,10 +1318,12 @@ libhercd_la_LIBADD = \
   libhercs.la        \
   libhercu.la
 
+@BUILD_APPLE_M1_FALSE@libhercu_la_SOURCES_M1 = $(LTDL)
 
 #--------------------------------------------
 # Pure Utility functions
 #--------------------------------------------
+@BUILD_APPLE_M1_TRUE@libhercu_la_SOURCES_M1 = 
 libhercu_la_SOURCES = \
   codepage.c          \
   hdl.c               \
@@ -1303,7 +1339,8 @@ libhercu_la_SOURCES = \
   parser.c            \
   pttrace.c           \
   version.c           \
-  $(FTHREADS)
+  $(FTHREADS)         \
+  $(libhercu_la_SOURCES_M1)
 
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD = \
@@ -1419,7 +1456,10 @@ libherc_la_SOURCES = \
   xstore.c           \
   $(DYNSRC)
 
+@BUILD_APPLE_M1_FALSE@EXTRA_libherc_la_SOURCES_M1 = ltdl.c
+@BUILD_APPLE_M1_TRUE@EXTRA_libherc_la_SOURCES_M1 = 
 EXTRA_libherc_la_SOURCES = \
+  $(EXTRA_libherc_la_SOURCES_M1) \
   memrchr.c          \
   $(dynamic_SRC)     \
   $(dyndev_SRC)      \
@@ -1728,10 +1768,12 @@ EXTRA_DIST = \
   util/CMPSC.txt              \
   $(extpkg_headers)
 
+@BUILD_APPLE_M1_FALSE@noinst_HEADERS_M1 = ltdl.h
 
 #------------------------------------------------------------------------------
 # Source Header files. No 'build' for those
 #------------------------------------------------------------------------------
+@BUILD_APPLE_M1_TRUE@noinst_HEADERS_M1 = 
 noinst_HEADERS = \
   archlvl.h               \
   cache.h                 \
@@ -1819,6 +1861,7 @@ noinst_HEADERS = \
   instfmts.h              \
   linklist.h              \
   logger.h                \
+  $(noinst_HEADERS_M1)    \
   machdep.h               \
   memrchr.h               \
   mpc.h                   \
@@ -2400,6 +2443,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logger.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logmsg.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/losc.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltdl.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/machchk.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/machdep.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/maketape.Po@am__quote@ # am--include-marker
@@ -2999,6 +3043,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/logger.Plo
 	-rm -f ./$(DEPDIR)/logmsg.Plo
 	-rm -f ./$(DEPDIR)/losc.Plo
+	-rm -f ./$(DEPDIR)/ltdl.Plo
 	-rm -f ./$(DEPDIR)/machchk.Plo
 	-rm -f ./$(DEPDIR)/machdep.Plo
 	-rm -f ./$(DEPDIR)/maketape.Po
@@ -3231,6 +3276,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/logger.Plo
 	-rm -f ./$(DEPDIR)/logmsg.Plo
 	-rm -f ./$(DEPDIR)/losc.Plo
+	-rm -f ./$(DEPDIR)/ltdl.Plo
 	-rm -f ./$(DEPDIR)/machchk.Plo
 	-rm -f ./$(DEPDIR)/machdep.Plo
 	-rm -f ./$(DEPDIR)/maketape.Po

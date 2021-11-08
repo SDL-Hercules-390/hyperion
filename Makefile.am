@@ -147,6 +147,12 @@ dyndev_SRC =  \
 XSTATIC =
 DYNSRC  =
 
+if BUILD_APPLE_M1
+# LTDL    =  ltdl.c
+else
+LTDL    =  ltdl.c
+endif
+
 DYNMOD_LD_FLAGS =   \
   -module           \
   -no-undefined     \
@@ -388,6 +394,12 @@ libhercd_la_LIBADD = \
 # Pure Utility functions
 #--------------------------------------------
 
+if BUILD_APPLE_M1
+  libhercu_la_SOURCES_M1 =
+else
+  libhercu_la_SOURCES_M1 = $(LTDL)
+endif
+
 libhercu_la_SOURCES = \
   codepage.c          \
   hdl.c               \
@@ -403,7 +415,8 @@ libhercu_la_SOURCES = \
   parser.c            \
   pttrace.c           \
   version.c           \
-  $(FTHREADS)
+  $(FTHREADS)         \
+  $(libhercu_la_SOURCES_M1)
 
 libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 libhercu_la_LIBADD =  \
@@ -518,7 +531,14 @@ libherc_la_SOURCES = \
   xstore.c           \
   $(DYNSRC)
 
+if BUILD_APPLE_M1
+EXTRA_libherc_la_SOURCES_M1 =
+else
+EXTRA_libherc_la_SOURCES_M1 = ltdl.c
+endif
+
 EXTRA_libherc_la_SOURCES = \
+  $(EXTRA_libherc_la_SOURCES_M1) \
   memrchr.c          \
   $(dynamic_SRC)     \
   $(dyndev_SRC)      \
@@ -874,6 +894,12 @@ EXTRA_DIST =                  \
 # Source Header files. No 'build' for those
 #------------------------------------------------------------------------------
 
+if BUILD_APPLE_M1
+noinst_HEADERS_M1 =
+else
+noinst_HEADERS_M1 = ltdl.h
+endif
+
 noinst_HEADERS =          \
   archlvl.h               \
   cache.h                 \
@@ -961,6 +987,7 @@ noinst_HEADERS =          \
   instfmts.h              \
   linklist.h              \
   logger.h                \
+  $(noinst_HEADERS_M1)    \
   machdep.h               \
   memrchr.h               \
   mpc.h                   \
