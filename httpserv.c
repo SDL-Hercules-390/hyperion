@@ -747,6 +747,7 @@ char *http_root()
             else
                 MSGBUF(msgbuf, "'%s'", http_serv.httproot);
 
+            // "HTTP server: invalid root directory: %s: %s"
             WRMSG(HHC01801, "E", p, strerror(errno));
 
             release_lock( &http_lock_root );
@@ -768,22 +769,21 @@ char *http_root()
                 p = msgbuf;
             }
 
+            // "HTTP server: invalid root directory: %s: %s"
             WRMSG(HHC01801, "E", p, strerror(errno));
 
             release_lock( &http_lock_root );
 
-            return p;
+            return NULL;
         }
+
         /* Append trailing [back]slash, but only if needed */
         rc = (int)strlen(absolute_httproot_path);
 
         if (absolute_httproot_path[rc-1] != *HTTP_PS)
             STRLCAT( absolute_httproot_path, HTTP_PS );
 
-        /* Save the absolute path */
-        free(http_serv.httproot);
-
-        if (strlen(absolute_httproot_path) > MAX_PATH )
+        if (strlen(absolute_httproot_path) >= MAX_PATH )
         {
             char msgbuf[MAX_PATH+3] = { 0 };
             char *p = msgbuf;
@@ -793,6 +793,7 @@ char *http_root()
             else
                 MSGBUF(msgbuf, "'%s'", absolute_httproot_path);
 
+            // "HTTP server: invalid root directory: %s: %s"
             WRMSG(HHC01801, "E", p, "path length too long");
 
             release_lock( &http_lock_root );
@@ -801,13 +802,15 @@ char *http_root()
         }
         else
         {
-            char    pathname[MAX_PATH];     /* working pathname          */
+            char pathname[MAX_PATH];    /* working pathname          */
             char msgbuf[MAX_PATH+3];
             char *p = msgbuf;
 
             memset(msgbuf,0,sizeof(msgbuf));
 
+            /* Save the absolute path */
             hostpath(pathname, absolute_httproot_path, sizeof(pathname));
+            free(http_serv.httproot);
             http_serv.httproot = strdup(pathname);
 
             if ( strchr( http_serv.httproot, SPACE ) == NULL )
@@ -815,6 +818,7 @@ char *http_root()
             else
                 MSGBUF(msgbuf, "'%s'", http_serv.httproot);
 
+            // "HTTP server using root directory %s"
             WRMSG(HHC01802, "I", p);
         }
     }
