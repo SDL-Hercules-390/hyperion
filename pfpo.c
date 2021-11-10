@@ -251,7 +251,7 @@ void arraydiv(unsigned int *ltab,int divisor,int ntab,unsigned int *rem)
     dividend = work1 / divisort;
     ltab[i] = (unsigned int)(dividend & 0x00000000ffffffffll);
     temp1 = work1 % divisort;
-    if (i < ntab)
+    if ((i + 1 ) < ntab)
       work1 = (temp1 << 32) + (unsigned long long)ltab[i + 1];
   }
   *rem = (unsigned int)temp1;
