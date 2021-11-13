@@ -122,7 +122,7 @@ typedef struct hifr hifr;
   #define  hifr_netmask    ifreq.ifr_ifru.ifru_netmask
   #define  hifr_broadaddr  ifreq.ifr_ifru.ifru_broadaddr
   #define  hifr_hwaddr     ifreq.ifr_ifru.ifru_hwaddr
-#if defined( FREEBSD_OR_NETBSD )
+#if defined( __FreeBSD__ )
   /* short   ifru_flags[2];                                          */
   #define  hifr_flags      ifreq.ifr_ifru.ifru_flags[0]
 #else
