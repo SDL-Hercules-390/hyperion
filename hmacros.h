@@ -597,8 +597,8 @@ typedef int CMPFUNC(const void*, const void*);
           {                                                                         \
               VERIFY( getresuid( &sysblk.ruid, &sysblk.euid, &sysblk.suid ) == 0 ); \
               VERIFY( getresgid( &sysblk.rgid, &sysblk.egid, &sysblk.sgid ) == 0 ); \
-              VERIFY( setresuid(  sysblk.ruid,  sysblk.ruid,  sysblk.euid ) == 0 ); \
               VERIFY( setresgid(  sysblk.rgid,  sysblk.rgid,  sysblk.egid ) == 0 ); \
+              VERIFY( setresuid(  sysblk.ruid,  sysblk.ruid,  sysblk.euid ) == 0 ); \
           }                                                                         \
           while(0)
 
@@ -625,8 +625,8 @@ typedef int CMPFUNC(const void*, const void*);
                                                                                     \
           do                                                                        \
           {                                                                         \
-              VERIFY( setresuid( sysblk.ruid, sysblk.ruid, sysblk.ruid ) == 0 );    \
               VERIFY( setresgid( sysblk.rgid, sysblk.rgid, sysblk.rgid ) == 0 );    \
+              VERIFY( setresuid( sysblk.ruid, sysblk.ruid, sysblk.ruid ) == 0 );    \
           }                                                                         \
           while(0)
 
@@ -641,8 +641,8 @@ typedef int CMPFUNC(const void*, const void*);
               sysblk.rgid = getgid();                               \
               sysblk.egid = getegid();                              \
                                                                     \
-              VERIFY( setreuid( sysblk.euid, sysblk.ruid ) == 0 );  \
               VERIFY( setregid( sysblk.egid, sysblk.rgid ) == 0 );  \
+              VERIFY( setreuid( sysblk.euid, sysblk.ruid ) == 0 );  \
           }                                                         \
           while(0)
 
@@ -651,8 +651,8 @@ typedef int CMPFUNC(const void*, const void*);
                                                                     \
           do                                                        \
           {                                                         \
-              VERIFY( setreuid( sysblk.ruid, sysblk.euid ) == 0 );  \
               VERIFY( setregid( sysblk.rgid, sysblk.egid ) == 0 );  \
+              VERIFY( setreuid( sysblk.ruid, sysblk.euid ) == 0 );  \
           }                                                         \
           while(0)
 
@@ -671,8 +671,8 @@ typedef int CMPFUNC(const void*, const void*);
                                                                     \
           do                                                        \
           {                                                         \
-              VERIFY( setuid( sysblk.ruid ) == 0 );                 \
               VERIFY( setgid( sysblk.rgid ) == 0 );                 \
+              VERIFY( setuid( sysblk.ruid ) == 0 );                 \
           }                                                         \
           while(0)
 
