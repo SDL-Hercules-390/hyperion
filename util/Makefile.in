@@ -310,8 +310,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 bin_SCRIPTS = \
-    dasdlist        \
-    voldsext.cmd
+    dasdlist
 
 dist_pkgdata_DATA = \
     awssl-v19g      \
@@ -329,6 +328,7 @@ EXTRA_DIST = \
     bldlvlck        \
     configure.ac    \
     dasdlist.bat    \
+    voldsext.cmd    \
     Makefile.am
 
 all: all-am
