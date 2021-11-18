@@ -1001,12 +1001,12 @@ struct  _LCSLSSFRM                      // LAN Statistics for SNA
 {
     LCSCMDHDR   bLCSCmdHdr;             //  +0  LCS Command Frame header
 
-    BYTE        bUnknown1;              //  +C  The following bytes are
+    BYTE        bUnknown1;              //  +C  The bytes from +D to +19 are
                                         //      probably a structure, and
                                         //      this byte contains a count
                                         //      of the structures.
-    BYTE        bUnknown2;              //  +D
-    BYTE        bUnknown3;              //  +E
+    BYTE        bUnknown2;              //  +D   Adaptor type?  0x04 = Ethernet  0x02 = Token Ring
+    BYTE        bUnknown3;              //  +E   Adaptor number?  i.e. port
     BYTE        bUnknown4;              //  +F
     BYTE        _unused1[2];            // +10
     BYTE        bMACsize;               // +12  Length of MAC Address.
