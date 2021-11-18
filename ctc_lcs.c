@@ -4675,6 +4675,12 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     iTHetcLen = ( hwLenBaf2 - 5 );                                        // Calculate length of TH etc
     if ( iTHetcLen > 0 )                                                  // Any TH etc?
     {
+        if ( iTHetcLen > 1493 )                                           // 1493 = 0x5D5
+        {
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: Truncating %d bytes to 1493 bytes!!!", iTHetcLen );
+            WRMSG(HHC03984, "W", llcmsg );  /* FixMe! Proper message number! */
+            iTHetcLen = 1493;
+        }
         STORE_HW( pEthFrame->hwEthernetType, (U16)(iLPDULen + iTHetcLen) );     // Set LLC and TH etc length
         memcpy( &pEthFrame->bData[iLPDULen], &pLCSBAF2->bByte05, iTHetcLen );   // Copy TH etc
         if ( iEthLen < ((IFHWADDRLEN * 2) + 2 + iLPDULen + iTHetcLen) )
@@ -5475,7 +5481,7 @@ static const BYTE Inbound_CC99[INBOUND_CC99_SIZE] =
                    0x00, 0x00, 0x20, 0x1E, 0x00, 0x00, 0x00, 0x00,
                    0x01, 0xff, 0xff, 0x00, 0x00, 0x03, 0x00, 0x00,   /* LCSBAF2 */
                    0x06, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00,
-                   0x00, 0x05, 0xD5, 0x00, 0x00, 0x00
+                   0x00, 0x05, 0xD5, 0x00, 0x00, 0x00                               /* 0x5D5 = 1493 */
                  };
 
     PLCSBLK     pLCSBLK;
