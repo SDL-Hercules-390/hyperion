@@ -263,7 +263,7 @@ AC_DEFUN([_HC_CHECK_NEED_GETOPT_WRAPPER],
 
     else
 
-        if test $(./libtool --features | fgrep "enable shared libraries" | wc -l) -ne 1; then
+        if test $(libtool --features | fgrep "enable shared libraries" | wc -l) -ne 1; then
 
             #  Libtool doesn't support shared libraries,
             #  and thus our wrapper kludge is not needed.
@@ -327,11 +327,11 @@ DUPGETOPT1
                 }
 DUPGETOPT2
 
-            ./libtool --mode=compile ${CC-cc} conftest1.c -c -o conftest1.lo > /dev/null 2>&1
-            ./libtool --mode=compile ${CC-cc} conftest2.c -c -o conftest2.lo > /dev/null 2>&1
+            libtool --mode=compile ${CC-cc} conftest1.c -c -o conftest1.lo > /dev/null 2>&1
+            libtool --mode=compile ${CC-cc} conftest2.c -c -o conftest2.lo > /dev/null 2>&1
 
-            ./libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest1.lo                 -o libconftest1.la > /dev/null 2>&1
-            ./libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest2.lo libconftest1.la -o libconftest2.la > /dev/null 2>&1
+            libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest1.lo                 -o libconftest1.la > /dev/null 2>&1
+            libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest2.lo libconftest1.la -o libconftest2.la > /dev/null 2>&1
 
             if test $? = 0; then
 

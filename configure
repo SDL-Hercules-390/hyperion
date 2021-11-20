@@ -15326,6 +15326,22 @@ fi
 
 done
 
+
+for ac_header in dirent.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "dirent.h" "ac_cv_header_dirent_h" "$ac_includes_default"
+if test "x$ac_cv_header_dirent_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_DIRENT_H 1
+_ACEOF
+ hc_cv_have_dirent_h=yes
+else
+  hc_cv_have_dirent_h=no
+fi
+
+done
+
+
 for ac_header in dlfcn.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "dlfcn.h" "ac_cv_header_dlfcn_h" "$ac_includes_default"
@@ -20977,7 +20993,7 @@ $as_echo_n "checking whether getopt wrapper kludge is necessary... " >&6; }
 
     else
 
-        if test $(./libtool --features | fgrep "enable shared libraries" | wc -l) -ne 1; then
+        if test $(libtool --features | fgrep "enable shared libraries" | wc -l) -ne 1; then
 
             #  Libtool doesn't support shared libraries,
             #  and thus our wrapper kludge is not needed.
@@ -21041,11 +21057,11 @@ DUPGETOPT1
                 }
 DUPGETOPT2
 
-            ./libtool --mode=compile ${CC-cc} conftest1.c -c -o conftest1.lo > /dev/null 2>&1
-            ./libtool --mode=compile ${CC-cc} conftest2.c -c -o conftest2.lo > /dev/null 2>&1
+            libtool --mode=compile ${CC-cc} conftest1.c -c -o conftest1.lo > /dev/null 2>&1
+            libtool --mode=compile ${CC-cc} conftest2.c -c -o conftest2.lo > /dev/null 2>&1
 
-            ./libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest1.lo                 -o libconftest1.la > /dev/null 2>&1
-            ./libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest2.lo libconftest1.la -o libconftest2.la > /dev/null 2>&1
+            libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest1.lo                 -o libconftest1.la > /dev/null 2>&1
+            libtool --mode=link ${CC-cc} -shared -rpath /lib -no-undefined conftest2.lo libconftest1.la -o libconftest2.la > /dev/null 2>&1
 
             if test $? = 0; then
 
