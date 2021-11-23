@@ -1,0 +1,9 @@
+//.....   JOB .....
+//*
+//* Replace `<prefix>' with a sane value
+//*
+//LOAD   EXEC PGM=CCKDLOAD,PARM=xxxx
+//STEPLIB  DD DISP=SHR,DSN=<prefix>.CCKD.LOAD
+//SYSPRINT DD SYSOUT=*
+//SYSUT1   DD DISP=SHR,DSN=<prefix>.dumpvol.DSK
+//*

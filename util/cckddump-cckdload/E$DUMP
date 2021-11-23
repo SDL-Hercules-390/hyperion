@@ -1,0 +1,13 @@
+//.....   JOB .....
+//*
+//* Replace `<prefix>' with a sane value
+//*
+//*UMP   EXEC PGM=CCKDDUMP
+//DUMP64 EXEC PGM=CCKDDU64
+//STEPLIB  DD DISP=SHR,DSN=<prefix>.CCKD.LOAD
+//SYSPRINT DD SYSOUT=*,RECFM=VB,LRECL=255,BLKSIZE=4096
+//SYSUT1   DD DISP=OLD,UNIT=SYSDA,VOL=SER=dumpvol
+//SYSUT2   DD DISP=(,CATLG),DSN=<prefix>.dumpvol.DSK,
+//            UNIT=SYSDA,SPACE=(TRK,(7500,1500),RLSE),
+//            LRECL=16384,BLKSIZE=16384,RECFM=F,DSNTYPE=LARGE
+//*

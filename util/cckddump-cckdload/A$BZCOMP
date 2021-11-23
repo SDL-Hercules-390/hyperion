@@ -1,0 +1,52 @@
+//CCKDJOB1 JOB acctinfo,'CCKD - A$BZCOMP',CLASS=A,MSGCLASS=A,
+//            REGION=0M,NOTIFY=&SYSUID
+//*
+//* Replace '<prefix>' with a sane value
+//*
+//*CC   JCLLIB ORDER=(CBC.SCBCPRC)   z/os c/c++
+//XLC  JCLLIB ORDER=(CBC.SCCNPRC)   xl c/c++
+//*
+//*     Note: for z/os c/c++ use OPT(2) instead of OPT(3)
+//*
+//BLKSRT  EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(BLKSRT)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(BLKSRT),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*
+//BZLIB   EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(BZLIB)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(BZLIB),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*
+//COMPRESS EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(COMPRESS)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(COMPRESS),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*
+//CRCTABLE EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(CRCTABLE)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(CRCTABLE),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*
+//DECOMPR EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(DECOMPR)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(DECOMPR),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*
+//HUFFMAN EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(HUFFMAN)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(HUFFMAN),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*
+//RANDTAB EXEC EDCC,INFILE='<prefix>.CCKD.BZLIB106.C(RANDTAB)',
+// CPARM='DEF(BZ2_bzBuffToBuffDecompress=bzBuffD),LO,OPT(3),LIST,SO,
+//             ARCH(5)',
+// OUTFILE='<prefix>.CCKD.BZLIB106.OBJ(RANDTAB),DISP=SHR'
+//USERLIB   DD DISP=SHR,DSN=<prefix>.CCKD.BZLIB106.H
+//*

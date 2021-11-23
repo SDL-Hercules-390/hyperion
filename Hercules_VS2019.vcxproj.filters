@@ -229,6 +229,36 @@
     <Filter Include="Other Files\DOC\README\images">
       <UniqueIdentifier>{959cf32d-895f-4258-b529-320fdeeeac1f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload">
+      <UniqueIdentifier>{f7b55ad5-31ab-4b3f-b496-3e153ec40476}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24BZC">
+      <UniqueIdentifier>{61f66903-b4ba-4dea-85fc-3494d0b321b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24BZH">
+      <UniqueIdentifier>{ede5c9bb-3688-4b70-ba72-e0c090fe2471}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24BZO">
+      <UniqueIdentifier>{b5729610-7d34-42cf-b3b7-41405ddf5acb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24CCKDA">
+      <UniqueIdentifier>{8b5c9a94-b4c4-43e3-86fa-1f8dd7207207}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24CCKDL">
+      <UniqueIdentifier>{f5ce2eff-6e81-450c-a093-6038de5c1c86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24CCKDO">
+      <UniqueIdentifier>{88307f92-4435-40e1-99bd-ba306035fa1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24ZC">
+      <UniqueIdentifier>{041bbf35-c4b1-45f6-9eab-865e9d1ec673}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24ZH">
+      <UniqueIdentifier>{2199cdac-39e0-496f-becf-a2ff60cd5e96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Other Files\Utilities\cckddump-cckdload\X%24ZO">
+      <UniqueIdentifier>{fc1c6b49-cbef-4a26-9e7b-5c67fc80b1f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cckdcdsk.c">
@@ -700,9 +730,6 @@
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="losc.c">
-      <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ltdl.c">
       <Filter>Source Files\Hercules\Emulation\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="machchk.c">
@@ -1557,15 +1584,6 @@
       <Filter>Other Files\Utilities</Filter>
     </None>
     <None Include="util\awswrite.jcl">
-      <Filter>Other Files\Utilities</Filter>
-    </None>
-    <None Include="util\cckddump.hla">
-      <Filter>Other Files\Utilities</Filter>
-    </None>
-    <None Include="util\cckddu64.hla">
-      <Filter>Other Files\Utilities</Filter>
-    </None>
-    <None Include="util\cckdload.hla">
       <Filter>Other Files\Utilities</Filter>
     </None>
     <None Include="util\configure.ac">
@@ -2549,6 +2567,261 @@
     <None Include="tests\text2tst.rexx">
       <Filter>Other Files\tests</Filter>
     </None>
+    <None Include="util\cckddump-cckdload\$$README">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\$$RECEIV">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\A$BZCOMP">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\A$ZCOMP">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\B$PRLK">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\C$ASM">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\D$LKED">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\E$DUMP">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\E$LOAD">
+      <Filter>Other Files\Utilities\cckddump-cckdload</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\ADLER32">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\COMPRESS">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\CRC32">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\DEFLATE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\EXAMPLE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\GZCLOSE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\GZLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\GZREAD">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\GZWRITE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\INFBLOCK">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\INFCODES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\INFLATE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\INFTREES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\TREES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\UNCOMPR">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZO\ZUTIL">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\CRC32">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\DEFLATE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\GZGUTS">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\INFFAST">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\INFFIXED">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\INFLATE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\INFTREES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\TREES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\ZCONF">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\ZCONF%40IN">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\ZLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZH\ZUTIL">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\ADLER32">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\COMPRESS">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\CRC32">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\DEFLATE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\EXAMPLE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\GZCLOSE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\GZLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\GZREAD">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\GZWRITE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\INFBACK">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\INFFAST">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\INFLATE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\INFTREES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\MINIGZIP">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\README">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\TREES">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\UNCOMPR">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$ZC\ZUTIL">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24ZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDO\CCKDDU64">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDO\CCKDDUMP">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDO\CCKDLOAD">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDO\COMPLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDL\CCKDDU64">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDL</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDL\CCKDDUMP">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDL</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDL\CCKDLOAD">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDL</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDA\CCKDDU64">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDA</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDA\CCKDDUMP">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDA</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$CCKDA\CCKDLOAD">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24CCKDA</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\BLKSRT">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\BZLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\COMPRESS">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\CRCTABLE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\DECOMPR">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\HUFFMAN">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZO\RANDTAB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZO</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZH\BZLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZH\BZLIB%40PR">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZH\LICENSE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZH\README">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZH</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\BLKSRT">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\BZLIB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\COMPRESS">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\CRCTABLE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\DECOMPR">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\HUFFMAN">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\LICENSE">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\RANDTAB">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
+    <None Include="util\cckddump-cckdload\X$BZC\README">
+      <Filter>Other Files\Utilities\cckddump-cckdload\X%24BZC</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crypto\include\crypto.h">
@@ -2867,9 +3140,6 @@
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="logger.h">
-      <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ltdl.h">
       <Filter>Source Files\Hercules\Emulation\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="machdep.h">
