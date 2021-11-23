@@ -22,8 +22,8 @@
  * 1.2.beta2    4 Dec 2002
  * - Change external routine names to reduce potential conflicts
  * - Correct filename to inffixed.h for fixed tables in inflate.c
- * - Make hbuf›® unsigned char to match parameter type in inflate.c
- * - Change strm->next_out›-state->offset® to *(strm->next_out - state->offset)
+ * - Make hbuf[] unsigned char to match parameter type in inflate.c
+ * - Change strm->next_out[-state->offset] to *(strm->next_out - state->offset)
  *   to avoid negation problem on Alphas (64 bit) in inflate.c
  *
  * 1.2.beta3    22 Dec 2002
@@ -201,7 +201,7 @@ int stream_size;
     int ret;
     struct inflate_state FAR *state;
 
-    if (version == Z_NULL || version›0® != ZLIB_VERSION›0® ||
+    if (version == Z_NULL || version[0] != ZLIB_VERSION[0] ||
         stream_size != (int)(sizeof(z_stream)))
         return Z_VERSION_ERROR;
     if (strm == Z_NULL) return Z_STREAM_ERROR;
@@ -281,7 +281,7 @@ struct inflate_state FAR *state;
 #ifdef BUILDFIXED
     static int virgin = 1;
     static code *lenfix, *distfix;
-    static code fixed›544®;
+    static code fixed[544];
 
     /* build fixed huffman tables if first call (may not be thread safe) */
     if (virgin) {
@@ -290,10 +290,10 @@ struct inflate_state FAR *state;
 
         /* literal/length table */
         sym = 0;
-        while (sym < 144) state->lens›sym++® = 8;
-        while (sym < 256) state->lens›sym++® = 9;
-        while (sym < 280) state->lens›sym++® = 7;
-        while (sym < 288) state->lens›sym++® = 8;
+        while (sym < 144) state->lens[sym++] = 8;
+        while (sym < 256) state->lens[sym++] = 9;
+        while (sym < 280) state->lens[sym++] = 7;
+        while (sym < 288) state->lens[sym++] = 8;
         next = fixed;
         lenfix = next;
         bits = 9;
@@ -301,7 +301,7 @@ struct inflate_state FAR *state;
 
         /* distance table */
         sym = 0;
-        while (sym < 32) state->lens›sym++® = 5;
+        while (sym < 32) state->lens[sym++] = 5;
         distfix = next;
         bits = 5;
         inflate_table(DISTS, state->lens, 32, &(next), &(bits), state->work);
@@ -355,23 +355,23 @@ void makefixed()
     puts("     */");
     puts("");
     size = 1U << 9;
-    printf("    static const code lenfix›%u® = {", size);
+    printf("    static const code lenfix[%u] = {", size);
     low = 0;
     for (;;) {
         if ((low % 7) == 0) printf("\n        ");
-        printf("{%u,%u,%d}", (low & 127) == 99 ? 64 : state.lencode›low®.op,
-               state.lencode›low®.bits, state.lencode›low®.val);
+        printf("{%u,%u,%d}", (low & 127) == 99 ? 64 : state.lencode[low].op,
+               state.lencode[low].bits, state.lencode[low].val);
         if (++low == size) break;
         putchar(',');
     }
     puts("\n    };");
     size = 1U << 5;
-    printf("\n    static const code distfix›%u® = {", size);
+    printf("\n    static const code distfix[%u] = {", size);
     low = 0;
     for (;;) {
         if ((low % 6) == 0) printf("\n        ");
-        printf("{%u,%u,%d}", state.distcode›low®.op, state.distcode›low®.bits,
-               state.distcode›low®.val);
+        printf("{%u,%u,%d}", state.distcode[low].op, state.distcode[low].bits,
+               state.distcode[low].val);
         if (++low == size) break;
         putchar(',');
     }
@@ -457,17 +457,17 @@ unsigned copy;
 #ifdef GUNZIP
 #  define CRC2(check, word) \
     do { \
-        hbuf›0® = (unsigned char)(word); \
-        hbuf›1® = (unsigned char)((word) >> 8); \
+        hbuf[0] = (unsigned char)(word); \
+        hbuf[1] = (unsigned char)((word) >> 8); \
         check = crc32(check, hbuf, 2); \
     } while (0)
 
 #  define CRC4(check, word) \
     do { \
-        hbuf›0® = (unsigned char)(word); \
-        hbuf›1® = (unsigned char)((word) >> 8); \
-        hbuf›2® = (unsigned char)((word) >> 16); \
-        hbuf›3® = (unsigned char)((word) >> 24); \
+        hbuf[0] = (unsigned char)(word); \
+        hbuf[1] = (unsigned char)((word) >> 8); \
+        hbuf[2] = (unsigned char)((word) >> 16); \
+        hbuf[3] = (unsigned char)((word) >> 24); \
         check = crc32(check, hbuf, 4); \
     } while (0)
 #endif
@@ -586,7 +586,7 @@ unsigned copy;
     case STATEw:
         while (want < need) {
             NEEDBITS(n);
-            keep›want++® = BITS(n);
+            keep[want++] = BITS(n);
             DROPBITS(n);
         }
         state = STATEx;
@@ -637,9 +637,9 @@ int flush;
     unsigned len;               /* length to copy for repeats, bits to drop */
     int ret;                    /* return code */
 #ifdef GUNZIP
-    unsigned char hbuf›4®;      /* buffer for gzip header crc calculation */
+    unsigned char hbuf[4];      /* buffer for gzip header crc calculation */
 #endif
-    static const unsigned short order›19® = /* permutation of code lengths */
+    static const unsigned short order[19] = /* permutation of code lengths */
         {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
 
     if (inflateStateCheck(strm) || strm->next_out == Z_NULL ||
@@ -780,11 +780,11 @@ int flush;
                 if (have == 0) goto inf_leave;
                 copy = 0;
                 do {
-                    len = (unsigned)(next›copy++®);
+                    len = (unsigned)(next[copy++]);
                     if (state->head != Z_NULL &&
                             state->head->name != Z_NULL &&
                             state->length < state->head->name_max)
-                        state->head->name›state->length++® = (Bytef)len;
+                        state->head->name[state->length++] = (Bytef)len;
                 } while (len && copy < have);
                 if ((state->flags & 0x0200) && (state->wrap & 4))
                     state->check = crc32(state->check, next, copy);
@@ -801,11 +801,11 @@ int flush;
                 if (have == 0) goto inf_leave;
                 copy = 0;
                 do {
-                    len = (unsigned)(next›copy++®);
+                    len = (unsigned)(next[copy++]);
                     if (state->head != Z_NULL &&
                             state->head->comment != Z_NULL &&
                             state->length < state->head->comm_max)
-                        state->head->comment›state->length++® = (Bytef)len;
+                        state->head->comment[state->length++] = (Bytef)len;
                 } while (len && copy < have);
                 if ((state->flags & 0x0200) && (state->wrap & 4))
                     state->check = crc32(state->check, next, copy);
@@ -887,7 +887,7 @@ int flush;
         case STORED:
             BYTEBITS();                         /* go to byte boundary */
             NEEDBITS(32);
-            if ((hold & 0xffff) != ((hold >> 16) ¨ 0xffff)) {
+            if ((hold & 0xffff) != ((hold >> 16) ^ 0xffff)) {
                 strm->msg = (char *)"invalid stored block lengths";
                 state->mode = BAD;
                 break;
@@ -938,11 +938,11 @@ int flush;
         case LENLENS:
             while (state->have < state->ncode) {
                 NEEDBITS(3);
-                state->lens›order›state->have++®® = (unsigned short)BITS(3);
+                state->lens[order[state->have++]] = (unsigned short)BITS(3);
                 DROPBITS(3);
             }
             while (state->have < 19)
-                state->lens›order›state->have++®® = 0;
+                state->lens[order[state->have++]] = 0;
             state->next = state->codes;
             state->lencode = (const code FAR *)(state->next);
             state->lenbits = 7;
@@ -959,13 +959,13 @@ int flush;
         case CODELENS:
             while (state->have < state->nlen + state->ndist) {
                 for (;;) {
-                    here = state->lencode›BITS(state->lenbits)®;
+                    here = state->lencode[BITS(state->lenbits)];
                     if ((unsigned)(here.bits) <= bits) break;
                     PULLBYTE();
                 }
                 if (here.val < 16) {
                     DROPBITS(here.bits);
-                    state->lens›state->have++® = here.val;
+                    state->lens[state->have++] = here.val;
                 }
                 else {
                     if (here.val == 16) {
@@ -976,7 +976,7 @@ int flush;
                             state->mode = BAD;
                             break;
                         }
-                        len = state->lens›state->have - 1®;
+                        len = state->lens[state->have - 1];
                         copy = 3 + BITS(2);
                         DROPBITS(2);
                     }
@@ -1000,7 +1000,7 @@ int flush;
                         break;
                     }
                     while (copy--)
-                        state->lens›state->have++® = (unsigned short)len;
+                        state->lens[state->have++] = (unsigned short)len;
                 }
             }
 
@@ -1008,7 +1008,7 @@ int flush;
             if (state->mode == BAD) break;
 
             /* check for end-of-block code (better have one) */
-            if (state->lens›256® == 0) {
+            if (state->lens[256] == 0) {
                 strm->msg = (char *)"invalid code -- missing end-of-block";
                 state->mode = BAD;
                 break;
@@ -1052,15 +1052,15 @@ int flush;
             }
             state->back = 0;
             for (;;) {
-                here = state->lencode›BITS(state->lenbits)®;
+                here = state->lencode[BITS(state->lenbits)];
                 if ((unsigned)(here.bits) <= bits) break;
                 PULLBYTE();
             }
             if (here.op && (here.op & 0xf0) == 0) {
                 last = here;
                 for (;;) {
-                    here = state->lencode›last.val +
-                            (BITS(last.bits + last.op) >> last.bits)®;
+                    here = state->lencode[last.val +
+                            (BITS(last.bits + last.op) >> last.bits)];
                     if ((unsigned)(last.bits + here.bits) <= bits) break;
                     PULLBYTE();
                 }
@@ -1102,15 +1102,15 @@ int flush;
             state->mode = DIST;
         case DIST:
             for (;;) {
-                here = state->distcode›BITS(state->distbits)®;
+                here = state->distcode[BITS(state->distbits)];
                 if ((unsigned)(here.bits) <= bits) break;
                 PULLBYTE();
             }
             if ((here.op & 0xf0) == 0) {
                 last = here;
                 for (;;) {
-                    here = state->distcode›last.val +
-                            (BITS(last.bits + last.op) >> last.bits)®;
+                    here = state->distcode[last.val +
+                            (BITS(last.bits + last.op) >> last.bits)];
                     if ((unsigned)(last.bits + here.bits) <= bits) break;
                     PULLBYTE();
                 }
@@ -1364,7 +1364,7 @@ gz_headerp head;
 }
 
 /*
-   Search buf›0..len-1® for the pattern: 0, 0, 0xff, 0xff.  Return when found
+   Search buf[0..len-1] for the pattern: 0, 0, 0xff, 0xff.  Return when found
    or when out of input.  When called, *have is the number of pattern bytes
    found in order so far, in 0..3.  On return *have is updated to the new
    state.  If on return *have equals four, then the pattern was found and the
@@ -1385,9 +1385,9 @@ unsigned len;
     got = *have;
     next = 0;
     while (next < len && got < 4) {
-        if ((int)(buf›next®) == (got < 2 ? 0 : 0xff))
+        if ((int)(buf[next]) == (got < 2 ? 0 : 0xff))
             got++;
-        else if (buf›next®)
+        else if (buf[next])
             got = 0;
         else
             got = 4 - got;
@@ -1402,7 +1402,7 @@ z_streamp strm;
 {
     unsigned len;               /* number of bytes to look at or looked at */
     unsigned long in, out;      /* temporary to save total_in and total_out */
-    unsigned char buf›4®;       /* to restore bit buffer to byte string */
+    unsigned char buf[4];       /* to restore bit buffer to byte string */
     struct inflate_state FAR *state;
 
     /* check parameters */
@@ -1417,7 +1417,7 @@ z_streamp strm;
         state->bits -= state->bits & 7;
         len = 0;
         while (state->bits >= 8) {
-            buf›len++® = (unsigned char)(state->hold);
+            buf[len++] = (unsigned char)(state->hold);
             state->hold >>= 8;
             state->bits -= 8;
         }

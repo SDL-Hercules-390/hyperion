@@ -46,7 +46,7 @@ static
 void bsFinishWrite ( EState* s )
 {
    while (s->bsLive > 0) {
-      s->zbits›s->numZ® = (UChar)(s->bsBuff >> 24);
+      s->zbits[s->numZ] = (UChar)(s->bsBuff >> 24);
       s->numZ++;
       s->bsBuff <<= 8;
       s->bsLive -= 8;
@@ -58,7 +58,7 @@ void bsFinishWrite ( EState* s )
 #define bsNEEDW(nz)                           \
 {                                             \
    while (s->bsLive >= 8) {                   \
-      s->zbits›s->numZ®                       \
+      s->zbits[s->numZ]                       \
          = (UChar)(s->bsBuff >> 24);          \
       s->numZ++;                              \
       s->bsBuff <<= 8;                        \
@@ -108,8 +108,8 @@ void makeMaps_e ( EState* s )
    Int32 i;
    s->nInUse = 0;
    for (i = 0; i < 256; i++)
-      if (s->inUse›i®) {
-         s->unseqToSeq›i® = s->nInUse;
+      if (s->inUse[i]) {
+         s->unseqToSeq[i] = s->nInUse;
          s->nInUse++;
       }
 }
@@ -119,7 +119,7 @@ void makeMaps_e ( EState* s )
 static
 void generateMTFValues ( EState* s )
 {
-   UChar   yy›256®;
+   UChar   yy[256];
    Int32   i, j;
    Int32   zPend;
    Int32   wr;
@@ -127,21 +127,21 @@ void generateMTFValues ( EState* s )
 
    /*
       After sorting (eg, here),
-         s->arr1 › 0 .. s->nblock-1 ® holds sorted order,
+         s->arr1 [ 0 .. s->nblock-1 ] holds sorted order,
          and
-         ((UChar*)s->arr2) › 0 .. s->nblock-1 ®
+         ((UChar*)s->arr2) [ 0 .. s->nblock-1 ]
          holds the original block data.
 
       The first thing to do is generate the MTF values,
       and put them in
-         ((UInt16*)s->arr1) › 0 .. s->nblock-1 ®.
+         ((UInt16*)s->arr1) [ 0 .. s->nblock-1 ].
       Because there are strictly fewer or equal MTF values
       than block values, ptr values in this area are overwritten
       with MTF values only when they are no longer needed.
 
       The final compressed bitstream is generated into the
       area starting at
-         (UChar*) (&((UChar*)s->arr2)›s->nblock®)
+         (UChar*) (&((UChar*)s->arr2)[s->nblock])
 
       These storage aliases are set up in bzCompressInit(),
       except for the last one, which is arranged in
@@ -154,20 +154,20 @@ void generateMTFValues ( EState* s )
    makeMaps_e ( s );
    EOB = s->nInUse+1;
 
-   for (i = 0; i <= EOB; i++) s->mtfFreq›i® = 0;
+   for (i = 0; i <= EOB; i++) s->mtfFreq[i] = 0;
 
    wr = 0;
    zPend = 0;
-   for (i = 0; i < s->nInUse; i++) yy›i® = (UChar) i;
+   for (i = 0; i < s->nInUse; i++) yy[i] = (UChar) i;
 
    for (i = 0; i < s->nblock; i++) {
       UChar ll_i;
       AssertD ( wr <= i, "generateMTFValues(1)" );
-      j = ptr›i®-1; if (j < 0) j += s->nblock;
-      ll_i = s->unseqToSeq›block›j®®;
+      j = ptr[i]-1; if (j < 0) j += s->nblock;
+      ll_i = s->unseqToSeq[block[j]];
       AssertD ( ll_i < s->nInUse, "generateMTFValues(2a)" );
 
-      if (yy›0® == ll_i) {
+      if (yy[0] == ll_i) {
          zPend++;
       } else {
 
@@ -175,11 +175,11 @@ void generateMTFValues ( EState* s )
             zPend--;
             while (True) {
                if (zPend & 1) {
-                  mtfv›wr® = BZ_RUNB; wr++;
-                  s->mtfFreq›BZ_RUNB®++;
+                  mtfv[wr] = BZ_RUNB; wr++;
+                  s->mtfFreq[BZ_RUNB]++;
                } else {
-                  mtfv›wr® = BZ_RUNA; wr++;
-                  s->mtfFreq›BZ_RUNA®++;
+                  mtfv[wr] = BZ_RUNA; wr++;
+                  s->mtfFreq[BZ_RUNA]++;
                }
                if (zPend < 2) break;
                zPend = (zPend - 2) / 2;
@@ -190,9 +190,9 @@ void generateMTFValues ( EState* s )
             register UChar  rtmp;
             register UChar* ryy_j;
             register UChar  rll_i;
-            rtmp  = yy›1®;
-            yy›1® = yy›0®;
-            ryy_j = &(yy›1®);
+            rtmp  = yy[1];
+            yy[1] = yy[0];
+            ryy_j = &(yy[1]);
             rll_i = ll_i;
             while ( rll_i != rtmp ) {
                register UChar rtmp2;
@@ -201,9 +201,9 @@ void generateMTFValues ( EState* s )
                rtmp   = *ryy_j;
                *ryy_j = rtmp2;
             };
-            yy›0® = rtmp;
-            j = ryy_j - &(yy›0®);
-            mtfv›wr® = j+1; wr++; s->mtfFreq›j+1®++;
+            yy[0] = rtmp;
+            j = ryy_j - &(yy[0]);
+            mtfv[wr] = j+1; wr++; s->mtfFreq[j+1]++;
          }
 
       }
@@ -213,11 +213,11 @@ void generateMTFValues ( EState* s )
       zPend--;
       while (True) {
          if (zPend & 1) {
-            mtfv›wr® = BZ_RUNB; wr++;
-            s->mtfFreq›BZ_RUNB®++;
+            mtfv[wr] = BZ_RUNB; wr++;
+            s->mtfFreq[BZ_RUNB]++;
          } else {
-            mtfv›wr® = BZ_RUNA; wr++;
-            s->mtfFreq›BZ_RUNA®++;
+            mtfv[wr] = BZ_RUNA; wr++;
+            s->mtfFreq[BZ_RUNA]++;
          }
          if (zPend < 2) break;
          zPend = (zPend - 2) / 2;
@@ -225,7 +225,7 @@ void generateMTFValues ( EState* s )
       zPend = 0;
    }
 
-   mtfv›wr® = EOB; wr++; s->mtfFreq›EOB®++;
+   mtfv[wr] = EOB; wr++; s->mtfFreq[EOB]++;
 
    s->nMTF = wr;
 }
@@ -243,18 +243,18 @@ void sendMTFValues ( EState* s )
    Int32 nGroups, nBytes;
 
    /*--
-   UChar  len ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
+   UChar  len [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
    is a global since the decoder also needs it.
 
-   Int32  code›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
-   Int32  rfreq›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
+   Int32  code[BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
+   Int32  rfreq[BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
    are also globals only used in this proc.
    Made global to keep stack frame size small.
    --*/
 
 
-   UInt16 cost›BZ_N_GROUPS®;
-   Int32  fave›BZ_N_GROUPS®;
+   UInt16 cost[BZ_N_GROUPS];
+   Int32  fave[BZ_N_GROUPS];
 
    UInt16* mtfv = s->mtfv;
 
@@ -266,7 +266,7 @@ void sendMTFValues ( EState* s )
    alphaSize = s->nInUse+2;
    for (t = 0; t < BZ_N_GROUPS; t++)
       for (v = 0; v < alphaSize; v++)
-         s->len›t®›v® = BZ_GREATER_ICOST;
+         s->len[t][v] = BZ_GREATER_ICOST;
 
    /*--- Decide how many coding tables to use ---*/
    AssertH ( s->nMTF > 0, 3001 );
@@ -289,26 +289,26 @@ void sendMTFValues ( EState* s )
          aFreq = 0;
          while (aFreq < tFreq && ge < alphaSize-1) {
             ge++;
-            aFreq += s->mtfFreq›ge®;
+            aFreq += s->mtfFreq[ge];
          }
 
          if (ge > gs
              && nPart != nGroups && nPart != 1
              && ((nGroups-nPart) % 2 == 1)) {
-            aFreq -= s->mtfFreq›ge®;
+            aFreq -= s->mtfFreq[ge];
             ge--;
          }
 
          if (s->verbosity >= 3)
-            VPrintf5( "      initial group %d, ›%d .. %d®, "
+            VPrintf5( "      initial group %d, [%d .. %d], "
                       "has %d syms (%4.1f%%)\n",
                       nPart, gs, ge, aFreq,
                       (100.0 * (float)aFreq) / (float)(s->nMTF) );
 
          for (v = 0; v < alphaSize; v++)
             if (v >= gs && v <= ge)
-               s->len›nPart-1®›v® = BZ_LESSER_ICOST; else
-               s->len›nPart-1®›v® = BZ_GREATER_ICOST;
+               s->len[nPart-1][v] = BZ_LESSER_ICOST; else
+               s->len[nPart-1][v] = BZ_GREATER_ICOST;
 
          nPart--;
          gs = ge+1;
@@ -321,11 +321,11 @@ void sendMTFValues ( EState* s )
    ---*/
    for (iter = 0; iter < BZ_N_ITERS; iter++) {
 
-      for (t = 0; t < nGroups; t++) fave›t® = 0;
+      for (t = 0; t < nGroups; t++) fave[t] = 0;
 
       for (t = 0; t < nGroups; t++)
          for (v = 0; v < alphaSize; v++)
-            s->rfreq›t®›v® = 0;
+            s->rfreq[t][v] = 0;
 
       /*---
         Set up an auxiliary length table which is used to fast-track
@@ -333,9 +333,9 @@ void sendMTFValues ( EState* s )
       ---*/
       if (nGroups == 6) {
          for (v = 0; v < alphaSize; v++) {
-            s->len_pack›v®›0® = (s->len›1®›v® << 16) | s->len›0®›v®;
-            s->len_pack›v®›1® = (s->len›3®›v® << 16) | s->len›2®›v®;
-            s->len_pack›v®›2® = (s->len›5®›v® << 16) | s->len›4®›v®;
+            s->len_pack[v][0] = (s->len[1][v] << 16) | s->len[0][v];
+            s->len_pack[v][1] = (s->len[3][v] << 16) | s->len[2][v];
+            s->len_pack[v][2] = (s->len[5][v] << 16) | s->len[4][v];
 	 }
       }
 
@@ -353,7 +353,7 @@ void sendMTFValues ( EState* s )
             Calculate the cost of this group as coded
             by each of the coding tables.
          --*/
-         for (t = 0; t < nGroups; t++) cost›t® = 0;
+         for (t = 0; t < nGroups; t++) cost[t] = 0;
 
          if (nGroups == 6 && 50 == ge-gs+1) {
             /*--- fast track the common case ---*/
@@ -362,10 +362,10 @@ void sendMTFValues ( EState* s )
             cost01 = cost23 = cost45 = 0;
 
 #           define BZ_ITER(nn)                \
-               icv = mtfv›gs+(nn)®;           \
-               cost01 += s->len_pack›icv®›0®; \
-               cost23 += s->len_pack›icv®›1®; \
-               cost45 += s->len_pack›icv®›2®; \
+               icv = mtfv[gs+(nn)];           \
+               cost01 += s->len_pack[icv][0]; \
+               cost23 += s->len_pack[icv][1]; \
+               cost45 += s->len_pack[icv][2]; \
 
             BZ_ITER(0);  BZ_ITER(1);  BZ_ITER(2);  BZ_ITER(3);  BZ_ITER(4);
             BZ_ITER(5);  BZ_ITER(6);  BZ_ITER(7);  BZ_ITER(8);  BZ_ITER(9);
@@ -380,15 +380,15 @@ void sendMTFValues ( EState* s )
 
 #           undef BZ_ITER
 
-            cost›0® = cost01 & 0xffff; cost›1® = cost01 >> 16;
-            cost›2® = cost23 & 0xffff; cost›3® = cost23 >> 16;
-            cost›4® = cost45 & 0xffff; cost›5® = cost45 >> 16;
+            cost[0] = cost01 & 0xffff; cost[1] = cost01 >> 16;
+            cost[2] = cost23 & 0xffff; cost[3] = cost23 >> 16;
+            cost[4] = cost45 & 0xffff; cost[5] = cost45 >> 16;
 
          } else {
 	    /*--- slow version which correctly handles all situations ---*/
             for (i = gs; i <= ge; i++) {
-               UInt16 icv = mtfv›i®;
-               for (t = 0; t < nGroups; t++) cost›t® += s->len›t®›icv®;
+               UInt16 icv = mtfv[i];
+               for (t = 0; t < nGroups; t++) cost[t] += s->len[t][icv];
             }
          }
 
@@ -398,10 +398,10 @@ void sendMTFValues ( EState* s )
          --*/
          bc = 999999999; bt = -1;
          for (t = 0; t < nGroups; t++)
-            if (cost›t® < bc) { bc = cost›t®; bt = t; };
+            if (cost[t] < bc) { bc = cost[t]; bt = t; };
          totc += bc;
-         fave›bt®++;
-         s->selector›nSelectors® = bt;
+         fave[bt]++;
+         s->selector[nSelectors] = bt;
          nSelectors++;
 
          /*--
@@ -410,7 +410,7 @@ void sendMTFValues ( EState* s )
          if (nGroups == 6 && 50 == ge-gs+1) {
             /*--- fast track the common case ---*/
 
-#           define BZ_ITUR(nn) s->rfreq›bt®› mtfv›gs+(nn)® ®++
+#           define BZ_ITUR(nn) s->rfreq[bt][ mtfv[gs+(nn)] ]++
 
             BZ_ITUR(0);  BZ_ITUR(1);  BZ_ITUR(2);  BZ_ITUR(3);  BZ_ITUR(4);
             BZ_ITUR(5);  BZ_ITUR(6);  BZ_ITUR(7);  BZ_ITUR(8);  BZ_ITUR(9);
@@ -428,7 +428,7 @@ void sendMTFValues ( EState* s )
          } else {
 	    /*--- slow version which correctly handles all situations ---*/
             for (i = gs; i <= ge; i++)
-               s->rfreq›bt®› mtfv›i® ®++;
+               s->rfreq[bt][ mtfv[i] ]++;
          }
 
          gs = ge+1;
@@ -437,7 +437,7 @@ void sendMTFValues ( EState* s )
          VPrintf2 ( "      pass %d: size is %d, grp uses are ",
                    iter+1, totc/8 );
          for (t = 0; t < nGroups; t++)
-            VPrintf1 ( "%d ", fave›t® );
+            VPrintf1 ( "%d ", fave[t] );
          VPrintf0 ( "\n" );
       }
 
@@ -447,7 +447,7 @@ void sendMTFValues ( EState* s )
       /* maxLen was changed from 20 to 17 in bzip2-1.0.3.  See
          comment in huffman.c for details. */
       for (t = 0; t < nGroups; t++)
-         BZ2_hbMakeCodeLengths ( &(s->len›t®›0®), &(s->rfreq›t®›0®),
+         BZ2_hbMakeCodeLengths ( &(s->len[t][0]), &(s->rfreq[t][0]),
                                  alphaSize, 17 /*20*/ );
    }
 
@@ -460,20 +460,20 @@ void sendMTFValues ( EState* s )
 
    /*--- Compute MTF values for the selectors. ---*/
    {
-      UChar pos›BZ_N_GROUPS®, ll_i, tmp2, tmp;
-      for (i = 0; i < nGroups; i++) pos›i® = i;
+      UChar pos[BZ_N_GROUPS], ll_i, tmp2, tmp;
+      for (i = 0; i < nGroups; i++) pos[i] = i;
       for (i = 0; i < nSelectors; i++) {
-         ll_i = s->selector›i®;
+         ll_i = s->selector[i];
          j = 0;
-         tmp = pos›j®;
+         tmp = pos[j];
          while ( ll_i != tmp ) {
             j++;
             tmp2 = tmp;
-            tmp = pos›j®;
-            pos›j® = tmp2;
+            tmp = pos[j];
+            pos[j] = tmp2;
          };
-         pos›0® = tmp;
-         s->selectorMtf›i® = j;
+         pos[0] = tmp;
+         s->selectorMtf[i] = j;
       }
    };
 
@@ -482,32 +482,32 @@ void sendMTFValues ( EState* s )
       minLen = 32;
       maxLen = 0;
       for (i = 0; i < alphaSize; i++) {
-         if (s->len›t®›i® > maxLen) maxLen = s->len›t®›i®;
-         if (s->len›t®›i® < minLen) minLen = s->len›t®›i®;
+         if (s->len[t][i] > maxLen) maxLen = s->len[t][i];
+         if (s->len[t][i] < minLen) minLen = s->len[t][i];
       }
       AssertH ( !(maxLen > 17 /*20*/ ), 3004 );
       AssertH ( !(minLen < 1),  3005 );
-      BZ2_hbAssignCodes ( &(s->code›t®›0®), &(s->len›t®›0®),
+      BZ2_hbAssignCodes ( &(s->code[t][0]), &(s->len[t][0]),
                           minLen, maxLen, alphaSize );
    }
 
    /*--- Transmit the mapping table. ---*/
    {
-      Bool inUse16›16®;
+      Bool inUse16[16];
       for (i = 0; i < 16; i++) {
-          inUse16›i® = False;
+          inUse16[i] = False;
           for (j = 0; j < 16; j++)
-             if (s->inUse›i * 16 + j®) inUse16›i® = True;
+             if (s->inUse[i * 16 + j]) inUse16[i] = True;
       }
 
       nBytes = s->numZ;
       for (i = 0; i < 16; i++)
-         if (inUse16›i®) bsW(s,1,1); else bsW(s,1,0);
+         if (inUse16[i]) bsW(s,1,1); else bsW(s,1,0);
 
       for (i = 0; i < 16; i++)
-         if (inUse16›i®)
+         if (inUse16[i])
             for (j = 0; j < 16; j++) {
-               if (s->inUse›i * 16 + j®) bsW(s,1,1); else bsW(s,1,0);
+               if (s->inUse[i * 16 + j]) bsW(s,1,1); else bsW(s,1,0);
             }
 
       if (s->verbosity >= 3)
@@ -519,7 +519,7 @@ void sendMTFValues ( EState* s )
    bsW ( s, 3, nGroups );
    bsW ( s, 15, nSelectors );
    for (i = 0; i < nSelectors; i++) {
-      for (j = 0; j < s->selectorMtf›i®; j++) bsW(s,1,1);
+      for (j = 0; j < s->selectorMtf[i]; j++) bsW(s,1,1);
       bsW(s,1,0);
    }
    if (s->verbosity >= 3)
@@ -529,11 +529,11 @@ void sendMTFValues ( EState* s )
    nBytes = s->numZ;
 
    for (t = 0; t < nGroups; t++) {
-      Int32 curr = s->len›t®›0®;
+      Int32 curr = s->len[t][0];
       bsW ( s, 5, curr );
       for (i = 0; i < alphaSize; i++) {
-         while (curr < s->len›t®›i®) { bsW(s,2,2); curr++; /* 10 */ };
-         while (curr > s->len›t®›i®) { bsW(s,2,3); curr--; /* 11 */ };
+         while (curr < s->len[t][i]) { bsW(s,2,2); curr++; /* 10 */ };
+         while (curr > s->len[t][i]) { bsW(s,2,3); curr--; /* 11 */ };
          bsW ( s, 1, 0 );
       }
    }
@@ -549,21 +549,21 @@ void sendMTFValues ( EState* s )
       if (gs >= s->nMTF) break;
       ge = gs + BZ_G_SIZE - 1;
       if (ge >= s->nMTF) ge = s->nMTF-1;
-      AssertH ( s->selector›selCtr® < nGroups, 3006 );
+      AssertH ( s->selector[selCtr] < nGroups, 3006 );
 
       if (nGroups == 6 && 50 == ge-gs+1) {
             /*--- fast track the common case ---*/
             UInt16 mtfv_i;
             UChar* s_len_sel_selCtr
-               = &(s->len›s->selector›selCtr®®›0®);
+               = &(s->len[s->selector[selCtr]][0]);
             Int32* s_code_sel_selCtr
-               = &(s->code›s->selector›selCtr®®›0®);
+               = &(s->code[s->selector[selCtr]][0]);
 
 #           define BZ_ITAH(nn)                      \
-               mtfv_i = mtfv›gs+(nn)®;              \
+               mtfv_i = mtfv[gs+(nn)];              \
                bsW ( s,                             \
-                     s_len_sel_selCtr›mtfv_i®,      \
-                     s_code_sel_selCtr›mtfv_i® )
+                     s_len_sel_selCtr[mtfv_i],      \
+                     s_code_sel_selCtr[mtfv_i] )
 
             BZ_ITAH(0);  BZ_ITAH(1);  BZ_ITAH(2);  BZ_ITAH(3);  BZ_ITAH(4);
             BZ_ITAH(5);  BZ_ITAH(6);  BZ_ITAH(7);  BZ_ITAH(8);  BZ_ITAH(9);
@@ -582,8 +582,8 @@ void sendMTFValues ( EState* s )
 	 /*--- slow version which correctly handles all situations ---*/
          for (i = gs; i <= ge; i++) {
             bsW ( s,
-                  s->len  ›s->selector›selCtr®® ›mtfv›i®®,
-                  s->code ›s->selector›selCtr®® ›mtfv›i®® );
+                  s->len  [s->selector[selCtr]] [mtfv[i]],
+                  s->code [s->selector[selCtr]] [mtfv[i]] );
          }
       }
 
@@ -605,7 +605,7 @@ void BZ2_compressBlock ( EState* s, Bool is_last_block )
 
       BZ_FINALISE_CRC ( s->blockCRC );
       s->combinedCRC = (s->combinedCRC << 1) | (s->combinedCRC >> 31);
-      s->combinedCRC ¨= s->blockCRC;
+      s->combinedCRC ^= s->blockCRC;
       if (s->blockNo > 1) s->numZ = 0;
 
       if (s->verbosity >= 2)
@@ -616,7 +616,7 @@ void BZ2_compressBlock ( EState* s, Bool is_last_block )
       BZ2_blockSort ( s );
    }
 
-   s->zbits = (UChar*) (&((UChar*)s->arr2)›s->nblock®);
+   s->zbits = (UChar*) (&((UChar*)s->arr2)[s->nblock]);
 
    /*-- If this is the first block, create the stream header. --*/
    if (s->blockNo == 1) {

@@ -327,7 +327,7 @@ void FAR *out_desc;
             /* get and verify stored block length */
             BYTEBITS();                         /* go to byte boundary */
             NEEDBITS(32);
-            if ((hold & 0xffff) != ((hold >> 16) ¬ 0xffff)) {
+            if ((hold & 0xffff) != ((hold >> 16) ^ 0xffff)) {
                 strm->msg = (char *)"invalid stored block lengths";
                 state->mode = BAD;
                 break;

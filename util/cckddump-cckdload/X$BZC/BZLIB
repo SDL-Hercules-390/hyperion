@@ -121,7 +121,7 @@ void prepare_new_block ( EState* s )
    s->numZ = 0;
    s->state_out_pos = 0;
    BZ_INITIALISE_CRC ( s->blockCRC );
-   for (i = 0; i < 256; i++) s->inUse›i® = False;
+   for (i = 0; i < 256; i++) s->inUse[i] = False;
    s->blockNo++;
 }
 
@@ -220,27 +220,27 @@ void add_pair_to_block ( EState* s )
    for (i = 0; i < s->state_in_len; i++) {
       BZ_UPDATE_CRC( s->blockCRC, ch );
    }
-   s->inUse›s->state_in_ch® = True;
+   s->inUse[s->state_in_ch] = True;
    switch (s->state_in_len) {
       case 1:
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
          break;
       case 2:
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
          break;
       case 3:
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
          break;
       default:
-         s->inUse›s->state_in_len-4® = True;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = (UChar)ch; s->nblock++;
-         s->block›s->nblock® = ((UChar)(s->state_in_len-4));
+         s->inUse[s->state_in_len-4] = True;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = (UChar)ch; s->nblock++;
+         s->block[s->nblock] = ((UChar)(s->state_in_len-4));
          s->nblock++;
          break;
    }
@@ -265,8 +265,8 @@ void flush_RL ( EState* s )
        zs->state_in_len == 1) {                   \
       UChar ch = (UChar)(zs->state_in_ch);        \
       BZ_UPDATE_CRC( zs->blockCRC, ch );          \
-      zs->inUse›zs->state_in_ch® = True;          \
-      zs->block›zs->nblock® = (UChar)ch;          \
+      zs->inUse[zs->state_in_ch] = True;          \
+      zs->block[zs->nblock] = (UChar)ch;          \
       zs->nblock++;                               \
       zs->state_in_ch = zchh;                     \
    }                                              \
@@ -344,7 +344,7 @@ Bool copy_output_until_stop ( EState* s )
       if (s->state_out_pos >= s->numZ) break;
 
       progress_out = True;
-      *(s->strm->next_out) = s->zbits›s->state_out_pos®;
+      *(s->strm->next_out) = s->zbits[s->state_out_pos];
       s->state_out_pos++;
       s->strm->avail_out--;
       s->strm->next_out++;
@@ -563,27 +563,27 @@ Bool unRLE_obuf_to_output_FAST ( DState* s )
          s->state_out_len = 1;
          s->state_out_ch = s->k0;
          BZ_GET_FAST(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          if (s->nblock_used == s->save_nblock+1) continue;
          if (k1 != s->k0) { s->k0 = k1; continue; };
 
          s->state_out_len = 2;
          BZ_GET_FAST(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          if (s->nblock_used == s->save_nblock+1) continue;
          if (k1 != s->k0) { s->k0 = k1; continue; };
 
          s->state_out_len = 3;
          BZ_GET_FAST(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          if (s->nblock_used == s->save_nblock+1) continue;
          if (k1 != s->k0) { s->k0 = k1; continue; };
 
          BZ_GET_FAST(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          s->state_out_len = ((Int32)k1) + 4;
          BZ_GET_FAST(s->k0); BZ_RAND_UPD_MASK;
-         s->k0 ¨= BZ_RAND_MASK; s->nblock_used++;
+         s->k0 ^= BZ_RAND_MASK; s->nblock_used++;
       }
 
    } else {
@@ -691,7 +691,7 @@ __inline__ Int32 BZ2_indexIntoF ( Int32 indx, Int32 *cftab )
    na = 256;
    do {
       mid = (nb + na) >> 1;
-      if (indx >= cftab›mid®) nb = mid; else na = mid;
+      if (indx >= cftab[mid]) nb = mid; else na = mid;
    }
    while (na - nb != 1);
    return nb;
@@ -733,27 +733,27 @@ Bool unRLE_obuf_to_output_SMALL ( DState* s )
          s->state_out_len = 1;
          s->state_out_ch = s->k0;
          BZ_GET_SMALL(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          if (s->nblock_used == s->save_nblock+1) continue;
          if (k1 != s->k0) { s->k0 = k1; continue; };
 
          s->state_out_len = 2;
          BZ_GET_SMALL(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          if (s->nblock_used == s->save_nblock+1) continue;
          if (k1 != s->k0) { s->k0 = k1; continue; };
 
          s->state_out_len = 3;
          BZ_GET_SMALL(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          if (s->nblock_used == s->save_nblock+1) continue;
          if (k1 != s->k0) { s->k0 = k1; continue; };
 
          BZ_GET_SMALL(k1); BZ_RAND_UPD_MASK;
-         k1 ¨= BZ_RAND_MASK; s->nblock_used++;
+         k1 ^= BZ_RAND_MASK; s->nblock_used++;
          s->state_out_len = ((Int32)k1) + 4;
          BZ_GET_SMALL(s->k0); BZ_RAND_UPD_MASK;
-         s->k0 ¨= BZ_RAND_MASK; s->nblock_used++;
+         s->k0 ^= BZ_RAND_MASK; s->nblock_used++;
       }
 
    } else {
@@ -826,13 +826,13 @@ int BZ_API(BZ2_bzDecompress) ( bz_stream *strm )
             if (s->verbosity >= 3)
                VPrintf2 ( " {0x%08x, 0x%08x}", s->storedBlockCRC,
                           s->calculatedBlockCRC );
-            if (s->verbosity >= 2) VPrintf0 ( "®" );
+            if (s->verbosity >= 2) VPrintf0 ( "]" );
             if (s->calculatedBlockCRC != s->storedBlockCRC)
                return BZ_DATA_ERROR;
             s->calculatedCombinedCRC
                = (s->calculatedCombinedCRC << 1) |
                     (s->calculatedCombinedCRC >> 31);
-            s->calculatedCombinedCRC ¨= s->calculatedBlockCRC;
+            s->calculatedCombinedCRC ^= s->calculatedBlockCRC;
             s->state = BZ_X_BLKHDR_1;
          } else {
             return BZ_OK;
@@ -892,7 +892,7 @@ int BZ_API(BZ2_bzDecompressEnd)  ( bz_stream *strm )
 typedef
    struct {
       FILE*     handle;
-      Char      buf›BZ_MAX_UNUSED®;
+      Char      buf[BZ_MAX_UNUSED];
       Int32     bufN;
       Bool      writing;
       bz_stream strm;
@@ -1122,7 +1122,7 @@ BZFILE* BZ_API(BZ2_bzReadOpen)
    bzf->strm.opaque   = NULL;
 
    while (nUnused > 0) {
-      bzf->buf›bzf->bufN® = *((UChar*)(unused)); bzf->bufN++;
+      bzf->buf[bzf->bufN] = *((UChar*)(unused)); bzf->bufN++;
       unused = ((void*)( 1 + ((UChar*)(unused))  ));
       nUnused--;
    }
@@ -1387,10 +1387,10 @@ BZFILE * bzopen_or_bzdopen
                  int open_mode)      /* bzopen: 0, bzdopen:1 */
 {
    int    bzerr;
-   char   unused›BZ_MAX_UNUSED®;
+   char   unused[BZ_MAX_UNUSED];
    int    blockSize100k = 9;
    int    writing       = 0;
-   char   mode2›10®     = "";
+   char   mode2[10]     = "";
    FILE   *fp           = NULL;
    BZFILE *bzfp         = NULL;
    int    verbosity     = 0;
@@ -1536,7 +1536,7 @@ void BZ_API(BZ2_bzclose) (BZFILE* b)
 /*--
    return last error code
 --*/
-static const char *bzerrorstrings›® = {
+static const char *bzerrorstrings[] = {
        "OK"
       ,"SEQUENCE_ERROR"
       ,"PARAM_ERROR"
@@ -1562,7 +1562,7 @@ const char * BZ_API(BZ2_bzerror) (BZFILE *b, int *errnum)
 
    if(err>0) err = 0;
    *errnum = err;
-   return bzerrorstrings›err*-1®;
+   return bzerrorstrings[err*-1];
 }
 #endif
 

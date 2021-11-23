@@ -497,7 +497,7 @@ ZEXTERN int ZEXPORT inflate OF((z_streamp strm, int flush));
   header is not retained unless inflateGetHeader() is used.  When processing
   gzip-wrapped deflate data, strm->adler32 is set to the CRC-32 of the output
   produced so far.  The CRC-32 is checked against the gzip trailer, as is the
-  uncompressed length, modulo 2¬32.
+  uncompressed length, modulo 2^32.
 
     inflate() returns Z_OK if some progress has been made (more input processed
   or more output produced), Z_STREAM_END if the end of the compressed data has

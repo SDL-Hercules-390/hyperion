@@ -128,7 +128,7 @@ extern void bz_internal_error ( int errcode );
 
 /*-- Stuff for randomising repetitive blocks. --*/
 
-extern Int32 BZ2_rNums›512®;
+extern Int32 BZ2_rNums[512];
 
 #define BZ_RAND_DECLS                          \
    Int32 rNToGo;                               \
@@ -142,7 +142,7 @@ extern Int32 BZ2_rNums›512®;
 
 #define BZ_RAND_UPD_MASK                       \
    if (s->rNToGo == 0) {                       \
-      s->rNToGo = BZ2_rNums›s->rTPos®;         \
+      s->rNToGo = BZ2_rNums[s->rTPos];         \
       s->rTPos++;                              \
       if (s->rTPos == 512) s->rTPos = 0;       \
    }                                           \
@@ -152,7 +152,7 @@ extern Int32 BZ2_rNums›512®;
 
 /*-- Stuff for doing CRCs. --*/
 
-extern UInt32 BZ2_crc32Table›256®;
+extern UInt32 BZ2_crc32Table[256];
 
 #define BZ_INITIALISE_CRC(crcVar)              \
 {                                              \
@@ -166,9 +166,9 @@ extern UInt32 BZ2_crc32Table›256®;
 
 #define BZ_UPDATE_CRC(crcVar,cha)              \
 {                                              \
-   crcVar = (crcVar << 8) ¨                    \
-            BZ2_crc32Table›(crcVar >> 24) ¨    \
-                           ((UChar)cha)®;      \
+   crcVar = (crcVar << 8) ^                    \
+            BZ2_crc32Table[(crcVar >> 24) ^    \
+                           ((UChar)cha)];      \
 }
 
 
@@ -234,8 +234,8 @@ typedef
 
       /* map of bytes used in block */
       Int32    nInUse;
-      Bool     inUse›256®;
-      UChar    unseqToSeq›256®;
+      Bool     inUse[256];
+      UChar    unseqToSeq[256];
 
       /* the buffer for bit stream creation */
       UInt32   bsBuff;
@@ -252,15 +252,15 @@ typedef
 
       /* stuff for coding the MTF values */
       Int32    nMTF;
-      Int32    mtfFreq    ›BZ_MAX_ALPHA_SIZE®;
-      UChar    selector   ›BZ_MAX_SELECTORS®;
-      UChar    selectorMtf›BZ_MAX_SELECTORS®;
+      Int32    mtfFreq    [BZ_MAX_ALPHA_SIZE];
+      UChar    selector   [BZ_MAX_SELECTORS];
+      UChar    selectorMtf[BZ_MAX_SELECTORS];
 
-      UChar    len     ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
-      Int32    code    ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
-      Int32    rfreq   ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
+      UChar    len     [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
+      Int32    code    [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
+      Int32    rfreq   [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
       /* second dimension: only 3 needed; 4 makes index calculations faster */
-      UInt32   len_pack›BZ_MAX_ALPHA_SIZE®›4®;
+      UInt32   len_pack[BZ_MAX_ALPHA_SIZE][4];
 
    }
    EState;
@@ -372,10 +372,10 @@ typedef
       Int32    origPtr;
       UInt32   tPos;
       Int32    k0;
-      Int32    unzftab›256®;
+      Int32    unzftab[256];
       Int32    nblock_used;
-      Int32    cftab›257®;
-      Int32    cftabCopy›257®;
+      Int32    cftab[257];
+      Int32    cftabCopy[257];
 
       /* for undoing the Burrows-Wheeler transform (FAST) */
       UInt32   *tt;
@@ -392,21 +392,21 @@ typedef
 
       /* map of bytes used in block */
       Int32    nInUse;
-      Bool     inUse›256®;
-      Bool     inUse16›16®;
-      UChar    seqToUnseq›256®;
+      Bool     inUse[256];
+      Bool     inUse16[16];
+      UChar    seqToUnseq[256];
 
       /* for decoding the MTF values */
-      UChar    mtfa   ›MTFA_SIZE®;
-      Int32    mtfbase›256 / MTFL_SIZE®;
-      UChar    selector   ›BZ_MAX_SELECTORS®;
-      UChar    selectorMtf›BZ_MAX_SELECTORS®;
-      UChar    len  ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
+      UChar    mtfa   [MTFA_SIZE];
+      Int32    mtfbase[256 / MTFL_SIZE];
+      UChar    selector   [BZ_MAX_SELECTORS];
+      UChar    selectorMtf[BZ_MAX_SELECTORS];
+      UChar    len  [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
 
-      Int32    limit  ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
-      Int32    base   ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
-      Int32    perm   ›BZ_N_GROUPS®›BZ_MAX_ALPHA_SIZE®;
-      Int32    minLens›BZ_N_GROUPS®;
+      Int32    limit  [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
+      Int32    base   [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
+      Int32    perm   [BZ_N_GROUPS][BZ_MAX_ALPHA_SIZE];
+      Int32    minLens[BZ_N_GROUPS];
 
       /* save area for scalars in the main decompress code */
       Int32    save_i;
@@ -444,33 +444,33 @@ typedef
 #define BZ_GET_FAST(cccc)                     \
     /* c_tPos is unsigned, hence test < 0 is pointless. */ \
     if (s->tPos >= (UInt32)100000 * (UInt32)s->blockSize100k) return True; \
-    s->tPos = s->tt›s->tPos®;                 \
+    s->tPos = s->tt[s->tPos];                 \
     cccc = (UChar)(s->tPos & 0xff);           \
     s->tPos >>= 8;
 
 #define BZ_GET_FAST_C(cccc)                   \
     /* c_tPos is unsigned, hence test < 0 is pointless. */ \
     if (c_tPos >= (UInt32)100000 * (UInt32)ro_blockSize100k) return True; \
-    c_tPos = c_tt›c_tPos®;                    \
+    c_tPos = c_tt[c_tPos];                    \
     cccc = (UChar)(c_tPos & 0xff);            \
     c_tPos >>= 8;
 
 #define SET_LL4(i,n)                                          \
    { if (((i) & 0x1) == 0)                                    \
-        s->ll4›(i) >> 1® = (s->ll4›(i) >> 1® & 0xf0) | (n); else    \
-        s->ll4›(i) >> 1® = (s->ll4›(i) >> 1® & 0x0f) | ((n) << 4);  \
+        s->ll4[(i) >> 1] = (s->ll4[(i) >> 1] & 0xf0) | (n); else    \
+        s->ll4[(i) >> 1] = (s->ll4[(i) >> 1] & 0x0f) | ((n) << 4);  \
    }
 
 #define GET_LL4(i)                             \
-   ((((UInt32)(s->ll4›(i) >> 1®)) >> (((i) << 2) & 0x4)) & 0xF)
+   ((((UInt32)(s->ll4[(i) >> 1])) >> (((i) << 2) & 0x4)) & 0xF)
 
 #define SET_LL(i,n)                          \
-   { s->ll16›i® = (UInt16)(n & 0x0000ffff);  \
+   { s->ll16[i] = (UInt16)(n & 0x0000ffff);  \
      SET_LL4(i, n >> 16);                    \
    }
 
 #define GET_LL(i) \
-   (((UInt32)s->ll16›i®) | (GET_LL4(i) << 16))
+   (((UInt32)s->ll16[i]) | (GET_LL4(i) << 16))
 
 #define BZ_GET_SMALL(cccc)                            \
     /* c_tPos is unsigned, hence test < 0 is pointless. */ \

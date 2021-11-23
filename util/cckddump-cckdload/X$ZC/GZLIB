@@ -33,7 +33,7 @@ local gzFile gz_open OF((const void *, int, const char *));
 char ZLIB_INTERNAL *gz_strwinerror (error)
      DWORD error;
 {
-    static char buf›1024®;
+    static char buf[1024];
 
     wchar_t *msgbuf;
     DWORD lasterr = GetLastError();
@@ -48,14 +48,14 @@ char ZLIB_INTERNAL *gz_strwinerror (error)
     if (chars != 0) {
         /* If there is an \r\n appended, zap it.  */
         if (chars >= 2
-            && msgbuf›chars - 2® == '\r' && msgbuf›chars - 1® == '\n') {
+            && msgbuf[chars - 2] == '\r' && msgbuf[chars - 1] == '\n') {
             chars -= 2;
-            msgbuf›chars® = 0;
+            msgbuf[chars] = 0;
         }
 
         if (chars > sizeof (buf) - 1) {
             chars = sizeof (buf) - 1;
-            msgbuf›chars® = 0;
+            msgbuf[chars] = 0;
         }
 
         wcstombs(buf, msgbuf, chars + 1);

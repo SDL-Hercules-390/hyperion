@@ -54,28 +54,28 @@ local uLong crc32_combine_ OF((uLong crc1, uLong crc2, z_off64_t len2));
 #ifdef DYNAMIC_CRC_TABLE
 
 local volatile int crc_table_empty = 1;
-local z_crc_t FAR crc_table›TBLS®›256®;
+local z_crc_t FAR crc_table[TBLS][256];
 local void make_crc_table OF((void));
 #ifdef MAKECRCH
    local void write_table OF((FILE *, const z_crc_t FAR *));
 #endif /* MAKECRCH */
 /*
   Generate tables for a byte-wise 32-bit CRC calculation on the polynomial:
-  x¨32+x¨26+x¨23+x¨22+x¨16+x¨12+x¨11+x¨10+x¨8+x¨7+x¨5+x¨4+x¨2+x+1.
+  x^32+x^26+x^23+x^22+x^16+x^12+x^11+x^10+x^8+x^7+x^5+x^4+x^2+x+1.
 
   Polynomials over GF(2) are represented in binary, one bit per coefficient,
   with the lowest powers in the most significant bit.  Then adding polynomials
   is just exclusive-or, and multiplying a polynomial by x is a right shift by
   one.  If we call the above polynomial p, and represent a byte as the
   polynomial q, also with the lowest power in the most significant bit (so the
-  byte 0xb1 is the polynomial x¨7+x¨3+x+1), then the CRC is (q*x¨32) mod p,
+  byte 0xb1 is the polynomial x^7+x^3+x+1), then the CRC is (q*x^32) mod p,
   where a mod b means the remainder after dividing a by b.
 
   This calculation is done using the shift-register method of multiplying and
   taking the remainder.  The register is initialized to zero, and for each
-  incoming bit, x¨32 is added mod p to the register if the bit is a one (where
-  x¨32 mod p is p+x¨32 = x¨26+...+1), and the register is multiplied mod p by
-  x (which is shifting right by one and adding x¨32 mod p if the bit shifted
+  incoming bit, x^32 is added mod p to the register if the bit is a one (where
+  x^32 mod p is p+x^32 = x^26+...+1), and the register is multiplied mod p by
+  x (which is shifting right by one and adding x^32 mod p if the bit shifted
   out is a one).  We start with the highest power (least significant bit) of
   q and repeat for all eight bits of q.
 
@@ -90,9 +90,9 @@ local void make_crc_table()
     z_crc_t c;
     int n, k;
     z_crc_t poly;                       /* polynomial exclusive-or pattern */
-    /* terms of polynomial defining this crc (except x¨32): */
+    /* terms of polynomial defining this crc (except x^32): */
     static volatile int first = 1;      /* flag to limit concurrent making */
-    static const unsigned char p›® = {0,1,2,4,5,7,8,10,11,12,16,22,23,26};
+    static const unsigned char p[] = {0,1,2,4,5,7,8,10,11,12,16,22,23,26};
 
     /* See if another task is already doing this (not thread-safe, but better
        than nothing -- significantly reduces duration of vulnerability in
@@ -103,26 +103,26 @@ local void make_crc_table()
         /* make exclusive-or pattern from polynomial (0xedb88320UL) */
         poly = 0;
         for (n = 0; n < (int)(sizeof(p)/sizeof(unsigned char)); n++)
-            poly |= (z_crc_t)1 << (31 - p›n®);
+            poly |= (z_crc_t)1 << (31 - p[n]);
 
         /* generate a crc for every 8-bit value */
         for (n = 0; n < 256; n++) {
             c = (z_crc_t)n;
             for (k = 0; k < 8; k++)
-                c = c & 1 ? poly ¨ (c >> 1) : c >> 1;
-            crc_table›0®›n® = c;
+                c = c & 1 ? poly ^ (c >> 1) : c >> 1;
+            crc_table[0][n] = c;
         }
 
 #ifdef BYFOUR
         /* generate crc for each value followed by one, two, and three zeros,
            and then the byte reversal of those as well as the first table */
         for (n = 0; n < 256; n++) {
-            c = crc_table›0®›n®;
-            crc_table›4®›n® = ZSWAP32(c);
+            c = crc_table[0][n];
+            crc_table[4][n] = ZSWAP32(c);
             for (k = 1; k < 4; k++) {
-                c = crc_table›0®›c & 0xff® ¨ (c >> 8);
-                crc_table›k®›n® = c;
-                crc_table›k + 4®›n® = ZSWAP32(c);
+                c = crc_table[0][c & 0xff] ^ (c >> 8);
+                crc_table[k][n] = c;
+                crc_table[k + 4][n] = ZSWAP32(c);
             }
         }
 #endif /* BYFOUR */
@@ -145,13 +145,13 @@ local void make_crc_table()
         fprintf(out, "/* crc32.h -- tables for rapid CRC calculation\n");
         fprintf(out, " * Generated automatically by crc32.c\n */\n\n");
         fprintf(out, "local const z_crc_t FAR ");
-        fprintf(out, "crc_table›TBLS®›256® =\n{\n  {\n");
-        write_table(out, crc_table›0®);
+        fprintf(out, "crc_table[TBLS][256] =\n{\n  {\n");
+        write_table(out, crc_table[0]);
 #  ifdef BYFOUR
         fprintf(out, "#ifdef BYFOUR\n");
         for (k = 1; k < 8; k++) {
             fprintf(out, "  },\n  {\n");
-            write_table(out, crc_table›k®);
+            write_table(out, crc_table[k]);
         }
         fprintf(out, "#endif\n");
 #  endif /* BYFOUR */
@@ -170,7 +170,7 @@ local void write_table(out, table)
 
     for (n = 0; n < 256; n++)
         fprintf(out, "%s0x%08lxUL%s", n % 5 ? "" : "    ",
-                (unsigned long)(table›n®),
+                (unsigned long)(table[n]),
                 n == 255 ? "\n" : (n % 5 == 4 ? ",\n" : ", "));
 }
 #endif /* MAKECRCH */
@@ -195,7 +195,7 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 }
 
 /* ========================================================================= */
-#define DO1 crc = crc_table›0®›((int)crc ¨ (*buf++)) & 0xff® ¨ (crc >> 8)
+#define DO1 crc = crc_table[0][((int)crc ^ (*buf++)) & 0xff] ^ (crc >> 8)
 #define DO8 DO1; DO1; DO1; DO1; DO1; DO1; DO1; DO1
 
 /* ========================================================================= */
@@ -222,7 +222,7 @@ unsigned long ZEXPORT crc32_z(crc, buf, len)
             return crc32_big(crc, buf, len);
     }
 #endif /* BYFOUR */
-    crc = crc ¨ 0xffffffffUL;
+    crc = crc ^ 0xffffffffUL;
     while (len >= 8) {
         DO8;
         len -= 8;
@@ -230,7 +230,7 @@ unsigned long ZEXPORT crc32_z(crc, buf, len)
     if (len) do {
         DO1;
     } while (--len);
-    return crc ¨ 0xffffffffUL;
+    return crc ^ 0xffffffffUL;
 }
 
 /* ========================================================================= */
@@ -257,9 +257,9 @@ unsigned long ZEXPORT crc32(crc, buf, len)
  */
 
 /* ========================================================================= */
-#define DOLIT4 c ¨= *buf4++; \
-        c = crc_table›3®›c & 0xff® ¨ crc_table›2®›(c >> 8) & 0xff® ¨ \
-            crc_table›1®›(c >> 16) & 0xff® ¨ crc_table›0®›c >> 24®
+#define DOLIT4 c ^= *buf4++; \
+        c = crc_table[3][c & 0xff] ^ crc_table[2][(c >> 8) & 0xff] ^ \
+            crc_table[1][(c >> 16) & 0xff] ^ crc_table[0][c >> 24]
 #define DOLIT32 DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4; DOLIT4
 
 /* ========================================================================= */
@@ -274,7 +274,7 @@ local unsigned long crc32_little(crc, buf, len)
     c = (z_crc_t)crc;
     c = ~c;
     while (len && ((ptrdiff_t)buf & 3)) {
-        c = crc_table›0®›(c ¨ *buf++) & 0xff® ¨ (c >> 8);
+        c = crc_table[0][(c ^ *buf++) & 0xff] ^ (c >> 8);
         len--;
     }
 
@@ -290,16 +290,16 @@ local unsigned long crc32_little(crc, buf, len)
     buf = (const unsigned char FAR *)buf4;
 
     if (len) do {
-        c = crc_table›0®›(c ¨ *buf++) & 0xff® ¨ (c >> 8);
+        c = crc_table[0][(c ^ *buf++) & 0xff] ^ (c >> 8);
     } while (--len);
     c = ~c;
     return (unsigned long)c;
 }
 
 /* ========================================================================= */
-#define DOBIG4 c ¨= *buf4++; \
-        c = crc_table›4®›c & 0xff® ¨ crc_table›5®›(c >> 8) & 0xff® ¨ \
-            crc_table›6®›(c >> 16) & 0xff® ¨ crc_table›7®›c >> 24®
+#define DOBIG4 c ^= *buf4++; \
+        c = crc_table[4][c & 0xff] ^ crc_table[5][(c >> 8) & 0xff] ^ \
+            crc_table[6][(c >> 16) & 0xff] ^ crc_table[7][c >> 24]
 #define DOBIG32 DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4; DOBIG4
 
 /* ========================================================================= */
@@ -314,7 +314,7 @@ local unsigned long crc32_big(crc, buf, len)
     c = ZSWAP32((z_crc_t)crc);
     c = ~c;
     while (len && ((ptrdiff_t)buf & 3)) {
-        c = crc_table›4®›(c >> 24) ¨ *buf++® ¨ (c << 8);
+        c = crc_table[4][(c >> 24) ^ *buf++] ^ (c << 8);
         len--;
     }
 
@@ -330,7 +330,7 @@ local unsigned long crc32_big(crc, buf, len)
     buf = (const unsigned char FAR *)buf4;
 
     if (len) do {
-        c = crc_table›4®›(c >> 24) ¨ *buf++® ¨ (c << 8);
+        c = crc_table[4][(c >> 24) ^ *buf++] ^ (c << 8);
     } while (--len);
     c = ~c;
     return (unsigned long)(ZSWAP32(c));
@@ -350,7 +350,7 @@ local unsigned long gf2_matrix_times(mat, vec)
     sum = 0;
     while (vec) {
         if (vec & 1)
-            sum ¨= *mat;
+            sum ^= *mat;
         vec >>= 1;
         mat++;
     }
@@ -365,7 +365,7 @@ local void gf2_matrix_square(square, mat)
     int n;
 
     for (n = 0; n < GF2_DIM; n++)
-        square›n® = gf2_matrix_times(mat, mat›n®);
+        square[n] = gf2_matrix_times(mat, mat[n]);
 }
 
 /* ========================================================================= */
@@ -376,18 +376,18 @@ local uLong crc32_combine_(crc1, crc2, len2)
 {
     int n;
     unsigned long row;
-    unsigned long even›GF2_DIM®;    /* even-power-of-two zeros operator */
-    unsigned long odd›GF2_DIM®;     /* odd-power-of-two zeros operator */
+    unsigned long even[GF2_DIM];    /* even-power-of-two zeros operator */
+    unsigned long odd[GF2_DIM];     /* odd-power-of-two zeros operator */
 
     /* degenerate case (also disallow negative lengths) */
     if (len2 <= 0)
         return crc1;
 
     /* put operator for one zero bit in odd */
-    odd›0® = 0xedb88320UL;          /* CRC-32 polynomial */
+    odd[0] = 0xedb88320UL;          /* CRC-32 polynomial */
     row = 1;
     for (n = 1; n < GF2_DIM; n++) {
-        odd›n® = row;
+        odd[n] = row;
         row <<= 1;
     }
 
@@ -420,7 +420,7 @@ local uLong crc32_combine_(crc1, crc2, len2)
     } while (len2 != 0);
 
     /* return combined crc */
-    crc1 ¨= crc2;
+    crc1 ^= crc2;
     return crc1;
 }
 

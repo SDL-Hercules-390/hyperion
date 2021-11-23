@@ -306,7 +306,7 @@ int ZEXPORT gzputc(file, c)
     int c;
 {
     unsigned have;
-    unsigned char bufÝ1¨;
+    unsigned char buf[1];
     gz_statep state;
     z_streamp strm;
 
@@ -334,7 +334,7 @@ int ZEXPORT gzputc(file, c)
             strm->next_in = state->in;
         have = (unsigned)((strm->next_in + strm->avail_in) - state->in);
         if (have < state->size) {
-            state->inÝhave¨ = (unsigned char)c;
+            state->in[have] = (unsigned char)c;
             strm->avail_in++;
             state->x.pos++;
             return c & 0xff;
@@ -342,7 +342,7 @@ int ZEXPORT gzputc(file, c)
     }
 
     /* no room in buffer or not initialized, use gz_write() */
-    bufÝ0¨ = (unsigned char)c;
+    buf[0] = (unsigned char)c;
     if (gz_write(state, buf, 1) != 1)
         return -1;
     return c & 0xff;
@@ -411,12 +411,12 @@ int ZEXPORTVA gzvprintf(gzFile file, const char *format, va_list va)
     if (strm->avail_in == 0)
         strm->next_in = state->in;
     next = (char *)(state->in + (strm->next_in - state->in) + strm->avail_in);
-    nextÝstate->size - 1¨ = 0;
+    next[state->size - 1] = 0;
 #ifdef NO_vsnprintf
 #  ifdef HAS_vsprintf_void
     (void)vsprintf(next, format, va);
     for (len = 0; len < state->size; len++)
-        if (nextÝlen¨ == 0) break;
+        if (next[len] == 0) break;
 #  else
     len = vsprintf(next, format, va);
 #  endif
@@ -430,7 +430,7 @@ int ZEXPORTVA gzvprintf(gzFile file, const char *format, va_list va)
 #endif
 
     /* check that printf() results fit in buffer */
-    if (len == 0 || (unsigned)len >= state->size || nextÝstate->size - 1¨ != 0)
+    if (len == 0 || (unsigned)len >= state->size || next[state->size - 1] != 0)
         return 0;
 
     /* update buffer and position, compress first half if past that */
@@ -505,13 +505,13 @@ int ZEXPORTVA gzprintf (file, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
     if (strm->avail_in == 0)
         strm->next_in = state->in;
     next = (char *)(strm->next_in + strm->avail_in);
-    nextÝstate->size - 1¨ = 0;
+    next[state->size - 1] = 0;
 #ifdef NO_snprintf
 #  ifdef HAS_sprintf_void
     sprintf(next, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
             a13, a14, a15, a16, a17, a18, a19, a20);
     for (len = 0; len < size; len++)
-        if (nextÝlen¨ == 0)
+        if (next[len] == 0)
             break;
 #  else
     len = sprintf(next, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11,
@@ -529,7 +529,7 @@ int ZEXPORTVA gzprintf (file, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
 #endif
 
     /* check that printf() results fit in buffer */
-    if (len == 0 || len >= state->size || nextÝstate->size - 1¨ != 0)
+    if (len == 0 || len >= state->size || next[state->size - 1] != 0)
         return 0;
 
     /* update buffer and position, compress first half if past that */

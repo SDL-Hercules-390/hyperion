@@ -51,7 +51,7 @@
 
 #include "deflate.h"
 
-const char deflate_copyright›® =
+const char deflate_copyright[] =
    " deflate 1.2.11 Copyright 1995-2017 Jean-loup Gailly and Mark Adler ";
 /*
   If you use the zlib library in a product, an acknowledgment is welcome
@@ -126,12 +126,12 @@ typedef struct config_s {
 } config;
 
 #ifdef FASTEST
-local const config configuration_table›2® = {
+local const config configuration_table[2] = {
 /*      good lazy nice chain */
 /* 0 */ {0,    0,  0,    0, deflate_stored},  /* store only */
 /* 1 */ {4,    4,  8,    4, deflate_fast}}; /* max speed, no lazy matches */
 #else
-local const config configuration_table›10® = {
+local const config configuration_table[10] = {
 /*      good lazy nice chain */
 /* 0 */ {0,    0,  0,    0, deflate_stored},  /* store only */
 /* 1 */ {4,    4,  8,    4, deflate_fast}, /* max speed, no lazy matches */
@@ -160,7 +160,7 @@ local const config configuration_table›10® = {
  *    characters, so that a running hash key can be computed from the previous
  *    key instead of complete recalculation each time.
  */
-#define UPDATE_HASH(s,h,c) (h = (((h)<<s->hash_shift) ¨ (c)) & s->hash_mask)
+#define UPDATE_HASH(s,h,c) (h = (((h)<<s->hash_shift) ^ (c)) & s->hash_mask)
 
 
 /* ===========================================================================
@@ -175,22 +175,22 @@ local const config configuration_table›10® = {
  */
 #ifdef FASTEST
 #define INSERT_STRING(s, str, match_head) \
-   (UPDATE_HASH(s, s->ins_h, s->window›(str) + (MIN_MATCH-1)®), \
-    match_head = s->head›s->ins_h®, \
-    s->head›s->ins_h® = (Pos)(str))
+   (UPDATE_HASH(s, s->ins_h, s->window[(str) + (MIN_MATCH-1)]), \
+    match_head = s->head[s->ins_h], \
+    s->head[s->ins_h] = (Pos)(str))
 #else
 #define INSERT_STRING(s, str, match_head) \
-   (UPDATE_HASH(s, s->ins_h, s->window›(str) + (MIN_MATCH-1)®), \
-    match_head = s->prev›(str) & s->w_mask® = s->head›s->ins_h®, \
-    s->head›s->ins_h® = (Pos)(str))
+   (UPDATE_HASH(s, s->ins_h, s->window[(str) + (MIN_MATCH-1)]), \
+    match_head = s->prev[(str) & s->w_mask] = s->head[s->ins_h], \
+    s->head[s->ins_h] = (Pos)(str))
 #endif
 
 /* ===========================================================================
  * Initialize the hash table (avoiding 64K overflow for 16 bit systems).
- * prev›® will be initialized on the fly.
+ * prev[] will be initialized on the fly.
  */
 #define CLEAR_HASH(s) \
-    s->head›s->hash_size-1® = NIL; \
+    s->head[s->hash_size-1] = NIL; \
     zmemzero((Bytef *)s->head, (unsigned)(s->hash_size-1)*sizeof(*s->head));
 
 /* ===========================================================================
@@ -206,18 +206,18 @@ local void slide_hash(s)
     uInt wsize = s->w_size;
 
     n = s->hash_size;
-    p = &s->head›n®;
+    p = &s->head[n];
     do {
         m = *--p;
         *p = (Pos)(m >= wsize ? m - wsize : NIL);
     } while (--n);
     n = wsize;
 #ifndef FASTEST
-    p = &s->prev›n®;
+    p = &s->prev[n];
     do {
         m = *--p;
         *p = (Pos)(m >= wsize ? m - wsize : NIL);
-        /* If n is not on any hash chain, prev›n® is garbage but
+        /* If n is not on any hash chain, prev[n] is garbage but
          * its value will never be used.
          */
     } while (--n);
@@ -250,14 +250,14 @@ int ZEXPORT deflateInit2_(strm, level, method, windowBits, memLevel, strategy,
 {
     deflate_state *s;
     int wrap = 1;
-    static const char my_version›® = ZLIB_VERSION;
+    static const char my_version[] = ZLIB_VERSION;
 
     ushf *overlay;
     /* We overlay pending_buf and d_buf+l_buf. This works since the average
      * output size for (length,distance) codes is <= 24 bits.
      */
 
-    if (version == Z_NULL || version›0® != my_version›0® ||
+    if (version == Z_NULL || version[0] != my_version[0] ||
         stream_size != sizeof(z_stream)) {
         return Z_VERSION_ERROR;
     }
@@ -418,11 +418,11 @@ int ZEXPORT deflateSetDictionary (strm, dictionary, dictLength)
         str = s->strstart;
         n = s->lookahead - (MIN_MATCH-1);
         do {
-            UPDATE_HASH(s, s->ins_h, s->window›str + MIN_MATCH-1®);
+            UPDATE_HASH(s, s->ins_h, s->window[str + MIN_MATCH-1]);
 #ifndef FASTEST
-            s->prev›str & s->w_mask® = s->head›s->ins_h®;
+            s->prev[str & s->w_mask] = s->head[s->ins_h];
 #endif
-            s->head›s->ins_h® = (Pos)str;
+            s->head[s->ins_h] = (Pos)str;
             str++;
         } while (--n);
         s->strstart = str;
@@ -584,9 +584,9 @@ int ZEXPORT deflateParams(strm, level, strategy)
     if (level < 0 || level > 9 || strategy < 0 || strategy > Z_FIXED) {
         return Z_STREAM_ERROR;
     }
-    func = configuration_table›s->level®.func;
+    func = configuration_table[s->level].func;
 
-    if ((strategy != s->strategy || func != configuration_table›level®.func) &&
+    if ((strategy != s->strategy || func != configuration_table[level].func) &&
         s->high_water) {
         /* Flush the last buffer: */
         int err = deflate(strm, Z_BLOCK);
@@ -604,10 +604,10 @@ int ZEXPORT deflateParams(strm, level, strategy)
             s->matches = 0;
         }
         s->level = level;
-        s->max_lazy_match   = configuration_table›level®.max_lazy;
-        s->good_match       = configuration_table›level®.good_length;
-        s->nice_match       = configuration_table›level®.nice_length;
-        s->max_chain_length = configuration_table›level®.max_chain;
+        s->max_lazy_match   = configuration_table[level].max_lazy;
+        s->good_match       = configuration_table[level].good_length;
+        s->nice_match       = configuration_table[level].nice_length;
+        s->max_chain_length = configuration_table[level].max_chain;
     }
     s->strategy = strategy;
     return Z_OK;
@@ -750,7 +750,7 @@ local void flush_pending(strm)
 }
 
 /* ===========================================================================
- * Update the header CRC with the bytes s->pending_buf›beg..s->pending - 1®.
+ * Update the header CRC with the bytes s->pending_buf[beg..s->pending - 1].
  */
 #define HCRC_UPDATE(beg) \
     do { \
@@ -938,7 +938,7 @@ int ZEXPORT deflate (strm, flush)
                     }
                     beg = 0;
                 }
-                val = s->gzhead->name›s->gzindex++®;
+                val = s->gzhead->name[s->gzindex++];
                 put_byte(s, val);
             } while (val != 0);
             HCRC_UPDATE(beg);
@@ -960,7 +960,7 @@ int ZEXPORT deflate (strm, flush)
                     }
                     beg = 0;
                 }
-                val = s->gzhead->comment›s->gzindex++®;
+                val = s->gzhead->comment[s->gzindex++];
                 put_byte(s, val);
             } while (val != 0);
             HCRC_UPDATE(beg);
@@ -1000,7 +1000,7 @@ int ZEXPORT deflate (strm, flush)
         bstate = s->level == 0 ? deflate_stored(s, flush) :
                  s->strategy == Z_HUFFMAN_ONLY ? deflate_huff(s, flush) :
                  s->strategy == Z_RLE ? deflate_rle(s, flush) :
-                 (*(configuration_table›s->level®.func))(s, flush);
+                 (*(configuration_table[s->level].func))(s, flush);
 
         if (bstate == finish_started || bstate == finish_done) {
             s->status = FINISH_STATE;
@@ -1200,10 +1200,10 @@ local void lm_init (s)
 
     /* Set the default configuration parameters:
      */
-    s->max_lazy_match   = configuration_table›s->level®.max_lazy;
-    s->good_match       = configuration_table›s->level®.good_length;
-    s->nice_match       = configuration_table›s->level®.nice_length;
-    s->max_chain_length = configuration_table›s->level®.max_chain;
+    s->max_lazy_match   = configuration_table[s->level].max_lazy;
+    s->good_match       = configuration_table[s->level].good_length;
+    s->nice_match       = configuration_table[s->level].nice_length;
+    s->max_chain_length = configuration_table[s->level].max_chain;
 
     s->strstart = 0;
     s->block_start = 0L;
@@ -1260,8 +1260,8 @@ local uInt longest_match(s, cur_match)
     register ush scan_end   = *(ushf*)(scan+best_len-1);
 #else
     register Bytef *strend = s->window + s->strstart + MAX_MATCH;
-    register Byte scan_end1  = scan›best_len-1®;
-    register Byte scan_end   = scan›best_len®;
+    register Byte scan_end1  = scan[best_len-1];
+    register Byte scan_end   = scan[best_len];
 #endif
 
     /* The code is optimized for HASH_BITS >= 8 and MAX_MATCH-2 multiple of 16.
@@ -1299,7 +1299,7 @@ local uInt longest_match(s, cur_match)
         if (*(ushf*)(match+best_len-1) != scan_end ||
             *(ushf*)match != scan_start) continue;
 
-        /* It is not necessary to compare scan›2® and match›2® since they are
+        /* It is not necessary to compare scan[2] and match[2] since they are
          * always equal when the other bytes match, given that the hash keys
          * are equal and that HASH_BITS >= 8. Compare 2 bytes at a time at
          * strstart+3, +5, ... up to strstart+257. We check for insufficient
@@ -1308,7 +1308,7 @@ local uInt longest_match(s, cur_match)
          * necessary to put more guard bytes at the end of the window, or
          * to check more often for insufficient lookahead.
          */
-        Assert(scan›2® == match›2®, "scan›2®?");
+        Assert(scan[2] == match[2], "scan[2]?");
         scan++, match++;
         do {
         } while (*(ushf*)(scan+=2) == *(ushf*)(match+=2) &&
@@ -1327,19 +1327,19 @@ local uInt longest_match(s, cur_match)
 
 #else /* UNALIGNED_OK */
 
-        if (match›best_len®   != scan_end  ||
-            match›best_len-1® != scan_end1 ||
+        if (match[best_len]   != scan_end  ||
+            match[best_len-1] != scan_end1 ||
             *match            != *scan     ||
-            *++match          != scan›1®)      continue;
+            *++match          != scan[1])      continue;
 
         /* The check at best_len-1 can be removed because it will be made
          * again later. (This heuristic is not always a win.)
-         * It is not necessary to compare scan›2® and match›2® since they
+         * It is not necessary to compare scan[2] and match[2] since they
          * are always equal when the other bytes match, given that
          * the hash keys are equal and that HASH_BITS >= 8.
          */
         scan += 2, match++;
-        Assert(*scan == *match, "match›2®?");
+        Assert(*scan == *match, "match[2]?");
 
         /* We check for insufficient lookahead only every 8th comparison;
          * the 256th check will be made at strstart+258.
@@ -1365,11 +1365,11 @@ local uInt longest_match(s, cur_match)
 #ifdef UNALIGNED_OK
             scan_end = *(ushf*)(scan+best_len-1);
 #else
-            scan_end1  = scan›best_len-1®;
-            scan_end   = scan›best_len®;
+            scan_end1  = scan[best_len-1];
+            scan_end   = scan[best_len];
 #endif
         }
-    } while ((cur_match = prev›cur_match & wmask®) > limit
+    } while ((cur_match = prev[cur_match & wmask]) > limit
              && --chain_length != 0);
 
     if ((uInt)best_len <= s->lookahead) return (uInt)best_len;
@@ -1404,16 +1404,16 @@ local uInt longest_match(s, cur_match)
 
     /* Return failure if the match length is less than 2:
      */
-    if (match›0® != scan›0® || match›1® != scan›1®) return MIN_MATCH-1;
+    if (match[0] != scan[0] || match[1] != scan[1]) return MIN_MATCH-1;
 
     /* The check at best_len-1 can be removed because it will be made
      * again later. (This heuristic is not always a win.)
-     * It is not necessary to compare scan›2® and match›2® since they
+     * It is not necessary to compare scan[2] and match[2] since they
      * are always equal when the other bytes match, given that
      * the hash keys are equal and that HASH_BITS >= 8.
      */
     scan += 2, match += 2;
-    Assert(*scan == *match, "match›2®?");
+    Assert(*scan == *match, "match[2]?");
 
     /* We check for insufficient lookahead only every 8th comparison;
      * the 256th check will be made at strstart+258.
@@ -1456,13 +1456,13 @@ local void check_match(s, start, match, length)
         fprintf(stderr, " start %u, match %u, length %d\n",
                 start, match, length);
         do {
-            fprintf(stderr, "%c%c", s->window›match++®, s->window›start++®);
+            fprintf(stderr, "%c%c", s->window[match++], s->window[start++]);
         } while (--length != 0);
         z_error("invalid match");
     }
     if (z_verbose > 1) {
-        fprintf(stderr,"\\›%d,%d®", start-match, length);
-        do { putc(s->window›start++®, stderr); } while (--length != 0);
+        fprintf(stderr,"\\[%d,%d]", start-match, length);
+        do { putc(s->window[start++], stderr); } while (--length != 0);
     }
 }
 #else
@@ -1537,17 +1537,17 @@ local void fill_window(s)
         /* Initialize the hash value now that we have some input: */
         if (s->lookahead + s->insert >= MIN_MATCH) {
             uInt str = s->strstart - s->insert;
-            s->ins_h = s->window›str®;
-            UPDATE_HASH(s, s->ins_h, s->window›str + 1®);
+            s->ins_h = s->window[str];
+            UPDATE_HASH(s, s->ins_h, s->window[str + 1]);
 #if MIN_MATCH != 3
             Call UPDATE_HASH() MIN_MATCH-3 more times
 #endif
             while (s->insert) {
-                UPDATE_HASH(s, s->ins_h, s->window›str + MIN_MATCH-1®);
+                UPDATE_HASH(s, s->ins_h, s->window[str + MIN_MATCH-1]);
 #ifndef FASTEST
-                s->prev›str & s->w_mask® = s->head›s->ins_h®;
+                s->prev[str & s->w_mask] = s->head[s->ins_h];
 #endif
-                s->head›s->ins_h® = (Pos)str;
+                s->head[s->ins_h] = (Pos)str;
                 str++;
                 s->insert--;
                 if (s->lookahead + s->insert < MIN_MATCH)
@@ -1604,13 +1604,13 @@ local void fill_window(s)
  */
 #define FLUSH_BLOCK_ONLY(s, last) { \
    _tr_flush_block(s, (s->block_start >= 0L ? \
-                   (charf *)&s->window›(unsigned)s->block_start® : \
+                   (charf *)&s->window[(unsigned)s->block_start] : \
                    (charf *)Z_NULL), \
                 (ulg)((long)s->strstart - s->block_start), \
                 (last)); \
    s->block_start = s->strstart; \
    flush_pending(s->strm); \
-   Tracev((stderr,"›FLUSH®")); \
+   Tracev((stderr,"[FLUSH]")); \
 }
 
 /* Same but force premature exit if necessary. */
@@ -1690,10 +1690,10 @@ local block_state deflate_stored(s, flush)
         _tr_stored_block(s, (char *)0, 0L, last);
 
         /* Replace the lengths in the dummy stored block with len. */
-        s->pending_buf›s->pending - 4® = len;
-        s->pending_buf›s->pending - 3® = len >> 8;
-        s->pending_buf›s->pending - 2® = ~len;
-        s->pending_buf›s->pending - 1® = ~len >> 8;
+        s->pending_buf[s->pending - 4] = len;
+        s->pending_buf[s->pending - 3] = len >> 8;
+        s->pending_buf[s->pending - 2] = ~len;
+        s->pending_buf[s->pending - 1] = ~len >> 8;
 
         /* Write the stored block header bytes. */
         flush_pending(s->strm);
@@ -1842,7 +1842,7 @@ local block_state deflate_fast(s, flush)
             if (s->lookahead == 0) break; /* flush the current block */
         }
 
-        /* Insert the string window›strstart .. strstart+2® in the
+        /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
         hash_head = NIL;
@@ -1889,8 +1889,8 @@ local block_state deflate_fast(s, flush)
             {
                 s->strstart += s->match_length;
                 s->match_length = 0;
-                s->ins_h = s->window›s->strstart®;
-                UPDATE_HASH(s, s->ins_h, s->window›s->strstart+1®);
+                s->ins_h = s->window[s->strstart];
+                UPDATE_HASH(s, s->ins_h, s->window[s->strstart+1]);
 #if MIN_MATCH != 3
                 Call UPDATE_HASH() MIN_MATCH-3 more times
 #endif
@@ -1900,8 +1900,8 @@ local block_state deflate_fast(s, flush)
             }
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c", s->window›s->strstart®));
-            _tr_tally_lit (s, s->window›s->strstart®, bflush);
+            Tracevv((stderr,"%c", s->window[s->strstart]));
+            _tr_tally_lit (s, s->window[s->strstart], bflush);
             s->lookahead--;
             s->strstart++;
         }
@@ -1945,7 +1945,7 @@ local block_state deflate_slow(s, flush)
             if (s->lookahead == 0) break; /* flush the current block */
         }
 
-        /* Insert the string window›strstart .. strstart+2® in the
+        /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
         hash_head = NIL;
@@ -2015,8 +2015,8 @@ local block_state deflate_slow(s, flush)
              * single literal. If there was a match but the current match
              * is longer, truncate the previous match to a single literal.
              */
-            Tracevv((stderr,"%c", s->window›s->strstart-1®));
-            _tr_tally_lit(s, s->window›s->strstart-1®, bflush);
+            Tracevv((stderr,"%c", s->window[s->strstart-1]));
+            _tr_tally_lit(s, s->window[s->strstart-1], bflush);
             if (bflush) {
                 FLUSH_BLOCK_ONLY(s, 0);
             }
@@ -2034,8 +2034,8 @@ local block_state deflate_slow(s, flush)
     }
     Assert (flush != Z_NO_FLUSH, "no flush?");
     if (s->match_available) {
-        Tracevv((stderr,"%c", s->window›s->strstart-1®));
-        _tr_tally_lit(s, s->window›s->strstart-1®, bflush);
+        Tracevv((stderr,"%c", s->window[s->strstart-1]));
+        _tr_tally_lit(s, s->window[s->strstart-1], bflush);
         s->match_available = 0;
     }
     s->insert = s->strstart < MIN_MATCH-1 ? s->strstart : MIN_MATCH-1;
@@ -2106,8 +2106,8 @@ local block_state deflate_rle(s, flush)
             s->match_length = 0;
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c", s->window›s->strstart®));
-            _tr_tally_lit (s, s->window›s->strstart®, bflush);
+            Tracevv((stderr,"%c", s->window[s->strstart]));
+            _tr_tally_lit (s, s->window[s->strstart], bflush);
             s->lookahead--;
             s->strstart++;
         }
@@ -2146,8 +2146,8 @@ local block_state deflate_huff(s, flush)
 
         /* Output a literal byte */
         s->match_length = 0;
-        Tracevv((stderr,"%c", s->window›s->strstart®));
-        _tr_tally_lit (s, s->window›s->strstart®, bflush);
+        Tracevv((stderr,"%c", s->window[s->strstart]));
+        _tr_tally_lit (s, s->window[s->strstart], bflush);
         s->lookahead--;
         s->strstart++;
         if (bflush) FLUSH_BLOCK(s, 0);
