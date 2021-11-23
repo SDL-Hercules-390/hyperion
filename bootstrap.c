@@ -14,9 +14,6 @@
 
 #include "hstdinc.h"
 #include "hercules.h"
-#if defined(HDL_USE_LIBTOOL)
-#include "ltdl.h"
-#endif
 #include "cckd.h"
 #include "cckddasd.h"
 

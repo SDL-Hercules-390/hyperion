@@ -214,14 +214,10 @@
 #ifdef HAVE_DIRENT_H
   #include <dirent.h>
 #endif
-#ifdef HDL_USE_LIBTOOL
-  #include "ltdl.h"
+#if defined(__MINGW__) || defined(_MSVC_)
+  #include "w32dl.h"
 #else
-  #if defined(__MINGW__) || defined(_MSVC_)
-    #include "w32dl.h"
-  #else
-    #include <dlfcn.h>
-  #endif
+  #include <dlfcn.h>
 #endif
 #ifdef HAVE_FENV_H
   #include <fenv.h>
