@@ -2518,6 +2518,7 @@ void defsym_TXF_models()
 void txf_model_warning( bool txf_enabled_or_enabling_txf )
 {
     if (1
+        && sysblk.arch_mode == ARCH_900_IDX
         && txf_enabled_or_enabling_txf
         && sysblk.config_processed
         && !is_TXF_model( sysblk.cpumodel )
@@ -2534,7 +2535,10 @@ void txf_model_warning( bool txf_enabled_or_enabling_txf )
 /*-------------------------------------------------------------------*/
 void txf_set_timerint( bool txf_enabled_or_enabling_txf )
 {
-    if (!sysblk.config_processed)
+    if (0
+        || !sysblk.config_processed
+        || sysblk.arch_mode != ARCH_900_IDX
+    )
         return;
 
     if (txf_enabled_or_enabling_txf)
