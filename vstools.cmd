@@ -35,7 +35,7 @@
   echo     NOTES
   echo.
   echo         Some flavor of Visual Studio must obviously be installed.
-  echo         Supported versions are Visual Studio 2005 through 2019.
+  echo         Supported versions are Visual Studio 2005 through 2022.
   echo.
   echo         The 'detect' call detects which version of Visual Studio
   echo         is installed and defines certain variables identifying
@@ -62,7 +62,7 @@
   echo              vstarget        The requested target architecture:
   echo                              "x86" if '32', "amd64" if '64'.
   echo.
-  echo              vs2019..vs2005  The Visual Studio version numbers
+  echo              vs2022..vs2005  The Visual Studio version numbers
   echo                              for each supported version of it
   echo                              (vs2019=160, vs2017=150, etc)
   echo.
@@ -77,7 +77,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.1     (November 28, 2019)
+  echo         3.2     (December 1, 2022)
 
   endlocal
   exit /b 1
@@ -99,8 +99,9 @@
   set "vs2015=140"
   set "vs2017=150"
   set "vs2019=160"
+  set "vs2022=170"
 
-  set "VSNAMES=vs2019 vs2017 vs2015 vs2013 vs2012 vs2010 vs2008 vs2005"
+  set "VSNAMES=vs2022 vs2019 vs2017 vs2015 vs2013 vs2012 vs2010 vs2008 vs2005"
   
   set "vsname="
   set "vsver="

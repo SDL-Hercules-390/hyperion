@@ -106,13 +106,16 @@ that file to the following Visual Studio project files:
 * [Hercules_VS2019.vcxproj](https://github.com/SDL-Hercules-390/hyperion/blob/master/Hercules_VS2019.vcxproj)
 * [Hercules_VS2019.vcxproj.filters](https://github.com/SDL-Hercules-390/hyperion/blob/master/Hercules_VS2019.vcxproj.filters)
 
+* [Hercules_VS2022.vcxproj](https://github.com/SDL-Hercules-390/hyperion/blob/master/Hercules_VS2022.vcxproj)
+* [Hercules_VS2022.vcxproj.filters](https://github.com/SDL-Hercules-390/hyperion/blob/master/Hercules_VS2022.vcxproj.filters)
+
 The change that you need to make to each of the above files should hopefully be obvious,
 and you should follow the same format that already exists.
 
 > _**NOTE:** &nbsp; The changes that need to be made to the above Visual Studio
-> 2015, 2017 and 2019 project files are all exactly identical. The easiest way
-> to make your changes is to first change the two 2015 files first, and then
-> simply copy those exact same changes over into the same 2017 and 2019 files.
+> 2015, 2017, 2019 and 2022 project files are all exactly identical. The easiest
+> way to make your changes is to first change the two 2015 files first, and then
+> simply copy those exact same changes over into the same 2017, 2019 and 2022 files.
 > Please also note that the VS2008 project file is an exception to the rule.
 > Its format is completely different, so be sure to make your  changes in the 
 > right place._

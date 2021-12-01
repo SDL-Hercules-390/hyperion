@@ -2954,6 +2954,22 @@
 							>
 						</File>
 					</Filter>
+					<Filter
+						Name="VS2022"
+						>
+						<File
+							RelativePath=".\Hercules_VS2022.sln"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2022.vcxproj"
+							>
+						</File>
+						<File
+							RelativePath=".\Hercules_VS2022.vcxproj.filters"
+							>
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="other"

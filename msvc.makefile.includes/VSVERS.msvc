@@ -23,6 +23,7 @@
 #
 #-------------------------------------------------------------------
 
+vers_vs2022=17
 vers_vs2019=16
 vers_vs2017=15
 vers_vs2015=14
@@ -32,7 +33,10 @@ vers_vs2010=10
 vers_vs2008=9
 vers_vs2005=8
 
-!IFDEF VS160COMNTOOLS
+!IFDEF VS170COMNTOOLS
+!MESSAGE Makefile presuming VS2022 (VS17 = _MSC_VER 1930)
+vsversion=$(vers_vs2022)
+!ELSEIFDEF VS160COMNTOOLS
 !MESSAGE Makefile presuming VS2019 (VS16 = _MSC_VER 1920)
 vsversion=$(vers_vs2019)
 !ELSEIFDEF VS150COMNTOOLS

@@ -489,6 +489,9 @@
     <None Include="Hercules_VS2019.sln" />
     <None Include="Hercules_VS2019.vcxproj" />
     <None Include="Hercules_VS2019.vcxproj.filters" />
+    <None Include="Hercules_VS2022.sln" />
+    <None Include="Hercules_VS2022.vcxproj" />
+    <None Include="Hercules_VS2022.vcxproj.filters" />
     <None Include="SoftFloat\lib\SoftFloat32.pdb" />
     <None Include="SoftFloat\lib\SoftFloat32d.pdb" />
     <None Include="SoftFloat\lib\SoftFloat64.pdb" />

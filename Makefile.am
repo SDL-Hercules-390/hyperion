@@ -781,6 +781,9 @@ EXTRA_DIST =                  \
   Hercules_VS2019.sln              \
   Hercules_VS2019.vcxproj          \
   Hercules_VS2019.vcxproj.filters  \
+  Hercules_VS2022.sln              \
+  Hercules_VS2022.vcxproj          \
+  Hercules_VS2022.vcxproj.filters  \
   hercver.rc2                 \
   INSTALL                     \
   license_dyn76.txt           \
