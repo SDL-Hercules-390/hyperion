@@ -7,6 +7,8 @@
 #  This perl script checks the user's system for the required levels of
 #  software needed to properly build Hercules from the source repository.
 #
+#  Updated 3 DEC 2021
+#
 #****************************************************************************
 
 PERLPROG=perl
@@ -35,6 +37,8 @@ my @req = qw(
      gcc         4.6.2  1  http://www.gnu.org/directory/gcc.html
      grep        1      0  http://www.gnu.org/directory/grep.html
      ld          2.22   0  http://www.gnu.org/directory/binutils.html
+     libtool     2.4.6  1  https://sdl-hercules-390.github.io/html/hercinst.html
+     libltdl     1      1  https://sdl-hercules-390.github.io/html/hercinst.html
      m4          1.4.6  0  http://www.gnu.org/directory/GNU/gnum4.html
      make        3.79   0  http://www.gnu.org/directory/make.html
      perl        5.6    1  http://www.gnu.org/directory/perl/html
@@ -74,9 +78,16 @@ for (my $i = 0; $i < @req; $i += 4) {
     }
   }
 
+  if ($facility eq 'ld') {
+    if ($^O eq 'darwin') {
+      # print "Apple/Darwin ==> custom version parsing!\n" ;
+      $special = 1;
+    }
+  }
+
   if ($facility eq 'm4') {
     if ($^O eq 'darwin') {
-      print "Apple/Darwin ==> custom version parsing!\n" ;
+      # print "Apple/Darwin ==> custom version parsing!\n" ;
       $special = 1;
     }
 
@@ -131,15 +142,65 @@ sub weird {
     return;
   }
 
+  if ($facility eq 'libltdl') {
+      my $status = system("echo '#include \"ltdl.h\"' | cc \$CPPFLAGS \$CFLAGS -dI -E -x c - >/dev/null 2>&1");
+
+      if ($? == -1) {
+        print "compiler couldn't execute: $!\n";
+      } elsif ($? & 127) {
+        printf "compiler process died with signal %d, %s coredump\n",
+          ($? & 127), ($? & 128) ? 'with' : 'without';
+      } else {
+        #printf "compiler process exited with value %d\n", $? >> 8;
+
+        if ($? >> 8 == 0) {
+          #print "return status 0 - include file was found\n";
+          print "OK\tltdl.h required include file, found\n";
+        } else {
+          print "ltdl.h required include file, NOT found.";
+          print "\tURL: $url\n";
+        }
+      }
+
+      #print "\t$resp[0]\n";
+      #chomp $resp[0];
+    return;
+  }
+
+  if ($facility eq 'ld') {
+    if (present($facility, $url)) {
+      if ($^O eq 'darwin') {
+        print "Apple/Darwin ==> ld has no version info!\n" ;
+        $msg = "OK";
+        print "$msg\t$facility required, found\n";
+      } else {
+        my @resp = `ld --version`;
+        #print "\t$resp[0]\n";
+        chomp $resp[0];
+        my $instversion = getvers($resp[0]);
+        my $msg = ckvers($level, $instversion);
+        print "$msg\t$facility requires $level, found $instversion\n";
+        print "\tURL: $url\n" if $msg eq 'UPGRADE';
+      }
+    }
+    return;
+  }
+
   if ($facility eq 'libtool') {
     if (present($facility, $url)) {
-      my @resp = `libtoolize --version`;
-      print "\t$resp[0]\n";
-      chomp $resp[0];
-      my $instversion = getvers($resp[0]);
-      my $msg = ckvers($level, $instversion);
-      print "$msg\t$facility requires $level, found $instversion\n";
-      print "\tURL: $url\n" if $msg eq 'UPGRADE';
+      if ($^O eq 'darwin') {
+        print "Apple/Darwin ==> libtool has no version info!\n" ;
+        $msg = "OK";
+        print "$msg\t$facility required, found\n";
+      } else {
+        my @resp = `libtool --version`;
+        #print "\t$resp[0]\n";
+        chomp $resp[0];
+        my $instversion = getvers($resp[0]);
+        my $msg = ckvers($level, $instversion);
+        print "$msg\t$facility requires $level, found $instversion\n";
+        print "\tURL: $url\n" if $msg eq 'UPGRADE';
+      }
     }
     return;
   }
@@ -189,6 +250,8 @@ sub weird {
       my @resp;
       if ($^O eq 'netbsd') {
         @resp = `$facility -dumpversion`;
+      } elsif ($^O eq 'darwin') {
+        @resp = `$facility --version 2>/dev/null`;
       } else {
         @resp = `$facility --version`;
       }
