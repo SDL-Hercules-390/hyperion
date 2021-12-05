@@ -208,20 +208,20 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     // New format has only one device statement for both addresses
     // We need to dynamically allocate the read device block
 
-    pDevCTCBLK->pDEVBLK[0] = pDEVBLK->group->memdev[0];
-    pDevCTCBLK->pDEVBLK[1] = pDEVBLK->group->memdev[1];
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ] = pDEVBLK->group->memdev[0];
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ] = pDEVBLK->group->memdev[1];
 
-    pDevCTCBLK->pDEVBLK[0]->dev_data = pDevCTCBLK;
-    pDevCTCBLK->pDEVBLK[1]->dev_data = pDevCTCBLK;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->dev_data = pDevCTCBLK;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->dev_data = pDevCTCBLK;
 
-    SetSIDInfo( pDevCTCBLK->pDEVBLK[0], 0x3088, 0x08, 0x3088, 0x01 );
-    SetSIDInfo( pDevCTCBLK->pDEVBLK[1], 0x3088, 0x08, 0x3088, 0x01 );
+    SetSIDInfo( pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ], 0x3088, 0x08, 0x3088, 0x01 );
+    SetSIDInfo( pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ], 0x3088, 0x08, 0x3088, 0x01 );
 
-    pDevCTCBLK->pDEVBLK[0]->ctctype  = CTC_CTCI;
-    pDevCTCBLK->pDEVBLK[0]->ctcxmode = 1;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->ctcxmode = 1;
 
-    pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
-    pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->ctcxmode = 1;
 
     pDevCTCBLK->sMTU                = atoi( pDevCTCBLK->szMTU );
     pDevCTCBLK->iMaxFrameBufferSize = sizeof(pDevCTCBLK->bFrameBuffer);
@@ -232,8 +232,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     // Give both Herc devices a reasonable name...
 
-    STRLCPY( pDevCTCBLK->pDEVBLK[0]->filename, pDevCTCBLK->szTUNCharDevName );
-    STRLCPY( pDevCTCBLK->pDEVBLK[1]->filename, pDevCTCBLK->szTUNCharDevName );
+    STRLCPY( pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->filename, pDevCTCBLK->szTUNCharDevName );
+    STRLCPY( pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->filename, pDevCTCBLK->szTUNCharDevName );
 
     /* It  might  be  tempting  to  add IFF_TUN_EXCL to the flags to */
     /* avoid  a  race,  but it does not work like open exclusive; it */
@@ -250,8 +250,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     if( rc < 0 ) return -1;
 
     // HHC00901 "%1d:%04X %s: interface %s, type %s opened"
-    WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                         pDevCTCBLK->pDEVBLK[0]->typname,
+    WRMSG(HHC00901, "I", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->ssid), pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum,
+                         pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->typname,
                          pDevCTCBLK->szTUNIfName, "TUN");
 
     if (!pDevCTCBLK->fPreconfigured)
@@ -269,8 +269,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SDEVBUFF, (char*)&tt32ctl ) != 0  )
             {
                 // "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                      pDevCTCBLK->pDEVBLK[0]->typname,
+                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->ssid), pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum,
+                      pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->typname,
                       "TT32SDEVBUFF", pDevCTCBLK->szTUNIfName, strerror( errno ) );
             }
 
@@ -278,8 +278,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             if( TUNTAP_IOCtl( pDevCTCBLK->fd, TT32SIOBUFF, (char*)&tt32ctl ) != 0  )
             {
                 // "%1d:%04X %s: ioctl '%s' failed for device '%s': '%s'"
-                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[0]->ssid), pDevCTCBLK->pDEVBLK[0]->devnum,
-                      pDevCTCBLK->pDEVBLK[0]->typname,
+                WRMSG(HHC00902, "W", SSID_TO_LCSS(pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->ssid), pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum,
+                      pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->typname,
                       "TT32SIOBUFF", pDevCTCBLK->szTUNIfName, strerror( errno ) );
             }
         }
@@ -309,7 +309,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         (
             "** CTCI_Init: %4.4X (%s): IP \"%s\"  -->  default MAC \"%s\"\n"
 
-            ,pDevCTCBLK->pDEVBLK[0]->devnum
+            ,pDevCTCBLK->pDEVBLK[CTC_READ_SUBCHANN]->devnum
             ,pDevCTCBLK->szTUNIfName
             ,pDevCTCBLK->szGuestIPAddr
             ,pDevCTCBLK->szMACAddress
@@ -338,8 +338,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     }
 
     // Copy the fd to make panel.c happy
-    pDevCTCBLK->pDEVBLK[0]->fd =
-    pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->fd =
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->fd = pDevCTCBLK->fd;
 
     MSGBUF(thread_name, "CTCI %4.4X ReadThread", pDEVBLK->devnum);
     rc = create_thread( &pDevCTCBLK->tid, JOINABLE, CTCI_ReadThread, pDevCTCBLK, thread_name );
@@ -349,8 +349,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
        WRMSG(HHC00102, "E", strerror(rc));
     }
 
-    pDevCTCBLK->pDEVBLK[0]->tid = pDevCTCBLK->tid;
-    pDevCTCBLK->pDEVBLK[1]->tid = pDevCTCBLK->tid;
+    pDevCTCBLK->pDEVBLK[ CTC_READ_SUBCHANN  ]->tid = pDevCTCBLK->tid;
+    pDevCTCBLK->pDEVBLK[ CTC_WRITE_SUBCHANN ]->tid = pDevCTCBLK->tid;
 
     return 0;
 }
@@ -1013,7 +1013,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
 static void*  CTCI_ReadThread( void* arg )
 {
     PCTCBLK  pCTCBLK = (PCTCBLK) arg;
-    DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[0];
+    DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[CTC_READ_SUBCHANN];
     int      iLength;
     BYTE     szBuff[2048];
 

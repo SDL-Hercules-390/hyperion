@@ -325,6 +325,9 @@ struct  _CTCBLK
     DEVBLK*     pDEVBLK[2];               // 0 - Read subchannel
                                           // 1 - Write subchannel
 
+#define CTC_READ_SUBCHANN    0            // 0 - Read subchannel
+#define CTC_WRITE_SUBCHANN   1            // 1 - Write cubchannel
+
     U16         iMaxFrameBufferSize;      // Device Buffer Size
     BYTE        bFrameBuffer[CTC_DEF_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
     U16         iFrameOffset;             // Curr Offset into Buffer
@@ -674,6 +677,9 @@ struct  _LCSDEV
     DEVBLK*     pDEVBLK[2];             // 0 - Read subchannel
                                         // 1 - Write cubchannel
 
+#define LCS_READ_SUBCHANN    0          // 0 - Read subchannel
+#define LCS_WRITE_SUBCHANN   1          // 1 - Write cubchannel
+
     U16         sAddr;                  // Device Base Address
     BYTE        bMode;                  // (see below #defines)
     BYTE        bPort;                  // Relative Adapter No.
@@ -731,10 +737,6 @@ struct  _LCSDEV
     U16         iMaxFrameBufferSize;    // Device Buffer Size
     BYTE        bFrameBuffer[CTC_DEF_FRAME_BUFFER_SIZE]; // (this really SHOULD be dynamically allocated!)
 };
-
-
-#define LCSDEV_READ_SUBCHANN    0       // 0 - Read subchannel
-#define LCSDEV_WRITE_SUBCHANN   1       // 1 - Write cubchannel
 
 
 #define LCSDEV_MODE_IP          0x01

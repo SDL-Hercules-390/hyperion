@@ -359,9 +359,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 
     for (pLCSDev = pLCSBLK->pDevices; pLCSDev; pLCSDev = pLCSDev->pNext)
     {
-        pLCSDev->pDEVBLK[0] = find_group_device( pDEVBLK->group, pLCSDev->sAddr );
+        pLCSDev->pDEVBLK[LCS_READ_SUBCHANN] = find_group_device( pDEVBLK->group, pLCSDev->sAddr );
 
-        if (!pLCSDev->pDEVBLK[0])
+        if (!pLCSDev->pDEVBLK[LCS_READ_SUBCHANN])
         {
             // "%1d:%04X CTC: lcs device %04X not in configuration"
             WRMSG( HHC00920, "E", SSID_TO_LCSS( pDEVBLK->group->memdev[0]->ssid ) ,
@@ -372,24 +372,24 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
         // Establish SENSE ID and Command Information Word data.
         // (In SNA mode VTAM checks the first four bytes of the
         // Sense ID for 0xFF308801, 0xFF308860 and 0xFF30881F.)
-        SetSIDInfo( pLCSDev->pDEVBLK[0], 0x3088, 0x60, 0x3088, 0x01 );
-//      SetCIWInfo( pLCSDev->pDEVBLK[0], 0, 0, 0x72, 0x0080 );
-//      SetCIWInfo( pLCSDev->pDEVBLK[0], 1, 1, 0x83, 0x0004 );
-//      SetCIWInfo( pLCSDev->pDEVBLK[0], 2, 2, 0x82, 0x0040 );
+        SetSIDInfo( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN], 0x3088, 0x60, 0x3088, 0x01 );
+//      SetCIWInfo( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN], 0, 0, 0x72, 0x0080 );
+//      SetCIWInfo( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN], 1, 1, 0x83, 0x0004 );
+//      SetCIWInfo( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN], 2, 2, 0x82, 0x0040 );
 
-        pLCSDev->pDEVBLK[0]->ctctype  = CTC_LCS;
-        pLCSDev->pDEVBLK[0]->ctcxmode = 1;
-        pLCSDev->pDEVBLK[0]->dev_data = pLCSDev;
+        pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->ctctype  = CTC_LCS;
+        pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->ctcxmode = 1;
+        pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->dev_data = pLCSDev;
         pLCSDev->pLCSBLK              = pLCSBLK;
-        STRLCPY( pLCSDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
+        STRLCPY( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->filename, pLCSBLK->pszTUNDevice );
 
         // If this is an IP Passthru address, we need a write address
         if (pLCSDev->bMode == LCSDEV_MODE_IP)
         {
             // (the write device is the inverse of the read device)
-            pLCSDev->pDEVBLK[1] = find_group_device( pDEVBLK->group, pLCSDev->sAddr ^ 1 );
+            pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN] = find_group_device( pDEVBLK->group, pLCSDev->sAddr ^ 1 );
 
-            if (!pLCSDev->pDEVBLK[1])
+            if (!pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN])
             {
                 // "%1d:%04X CTC: lcs device %04X not in configuration"
                 WRMSG( HHC00920, "E", SSID_TO_LCSS( pDEVBLK->group->memdev[0]->ssid ),
@@ -398,16 +398,16 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             }
 
             // Establish SENSE ID and Command Information Word data.
-            SetSIDInfo( pLCSDev->pDEVBLK[1], 0x3088, 0x60, 0x3088, 0x01 );
-//          SetCIWInfo( pLCSDev->pDEVBLK[1], 0, 0, 0x72, 0x0080 );
-//          SetCIWInfo( pLCSDev->pDEVBLK[1], 1, 1, 0x83, 0x0004 );
-//          SetCIWInfo( pLCSDev->pDEVBLK[1], 2, 2, 0x82, 0x0040 );
+            SetSIDInfo( pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN], 0x3088, 0x60, 0x3088, 0x01 );
+//          SetCIWInfo( pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN], 0, 0, 0x72, 0x0080 );
+//          SetCIWInfo( pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN], 1, 1, 0x83, 0x0004 );
+//          SetCIWInfo( pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN], 2, 2, 0x82, 0x0040 );
 
-            pLCSDev->pDEVBLK[1]->ctctype  = CTC_LCS;
-            pLCSDev->pDEVBLK[1]->ctcxmode = 1;
-            pLCSDev->pDEVBLK[1]->dev_data = pLCSDev;
+            pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN]->ctctype  = CTC_LCS;
+            pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN]->ctcxmode = 1;
+            pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN]->dev_data = pLCSDev;
 
-            STRLCPY( pLCSDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
+            STRLCPY( pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN]->filename, pLCSBLK->pszTUNDevice );
         }
 
         // Initialize the buffer size. See the programming note re
@@ -444,16 +444,16 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             if (rc < 0)
             {
                 // "%1d:%04X %s: error in function %s: %s"
-                WRMSG( HHC00900, "E", SSID_TO_LCSS( pLCSDev->pDEVBLK[0]->ssid),
-                    pLCSDev->pDEVBLK[0]->devnum, pLCSDev->pDEVBLK[0]->typname,
+                WRMSG( HHC00900, "E", SSID_TO_LCSS( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->ssid),
+                    pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->devnum, pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->typname,
                     "TUNTAP_CreateInterface", strerror( rc ));
                 return -1;
             }
 
             // "%1d:%04X %s: interface %s, type %s opened"
-            WRMSG( HHC00901, "I", SSID_TO_LCSS( pLCSDev->pDEVBLK[0]->ssid ),
-                                  pLCSDev->pDEVBLK[0]->devnum,
-                                  pLCSDev->pDEVBLK[0]->typname,
+            WRMSG( HHC00901, "I", SSID_TO_LCSS( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->ssid ),
+                                  pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->devnum,
+                                  pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->typname,
                                   pLCSPORT->szNetIfName, "TAP");
 
             //
@@ -484,9 +484,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 if (TUNTAP_IOCtl( pLCSPORT->fd, TT32SDEVBUFF, (char*) &tt32ctl ) != 0)
                 {
                     // "%1d:%04X %s: ioctl %s failed for device %s: %s"
-                    WRMSG( HHC00902, "W", SSID_TO_LCSS( pLCSDev->pDEVBLK[0]->ssid ),
-                          pLCSDev->pDEVBLK[0]->devnum,
-                          pLCSDev->pDEVBLK[0]->typname,
+                    WRMSG( HHC00902, "W", SSID_TO_LCSS( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->ssid ),
+                          pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->devnum,
+                          pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->typname,
                           "TT32SDEVBUFF", pLCSPORT->szNetIfName, strerror( errno ));
                 }
 
@@ -495,9 +495,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                 if (TUNTAP_IOCtl( pLCSPORT->fd, TT32SIOBUFF, (char*) &tt32ctl ) != 0)
                 {
                     // "%1d:%04X %s: ioctl %s failed for device %s: %s"
-                    WRMSG( HHC00902, "W", SSID_TO_LCSS( pLCSDev->pDEVBLK[0]->ssid ),
-                          pLCSDev->pDEVBLK[0]->devnum,
-                          pLCSDev->pDEVBLK[0]->typname,
+                    WRMSG( HHC00902, "W", SSID_TO_LCSS( pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->ssid ),
+                          pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->devnum,
+                          pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->typname,
                           "TT32SIOBUFF", pLCSPORT->szNetIfName, strerror( errno ) );
                 }
             }
@@ -516,8 +516,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             // Now create the port thread to read packets from tuntap
             // The thread name uses the read device address of the first device pair.
             MSGBUF( thread_name, "%s %4.4X Port %d Thread",
-                                 pLCSBLK->pDevices->pDEVBLK[0]->typname,
-                                 pLCSBLK->pDevices->pDEVBLK[0]->devnum,
+                                 pLCSBLK->pDevices->pDEVBLK[LCS_READ_SUBCHANN]->typname,
+                                 pLCSBLK->pDevices->pDEVBLK[LCS_READ_SUBCHANN]->devnum,
                                  pLCSPORT->bPort);
             rc = create_thread( &pLCSPORT->tid, JOINABLE,
                                 LCS_PortThread, pLCSPORT, thread_name );
@@ -528,17 +528,17 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             }
 
             // Identify thread ID with devices on which they're active
-            pLCSDev->pDEVBLK[0]->tid = pLCSPORT->tid;
-            if (pLCSDev->pDEVBLK[1])
-                pLCSDev->pDEVBLK[1]->tid = pLCSPORT->tid;
+            pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->tid = pLCSPORT->tid;
+            if (pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN])
+                pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN]->tid = pLCSPORT->tid;
         }
 
         // Add these devices to the ports device list.
         pLCSPORT->icDevices++;
-        pLCSDev->pDEVBLK[0]->fd = pLCSPORT->fd;
+        pLCSDev->pDEVBLK[LCS_READ_SUBCHANN]->fd = pLCSPORT->fd;
 
-        if (pLCSDev->pDEVBLK[1])
-            pLCSDev->pDEVBLK[1]->fd = pLCSPORT->fd;
+        if (pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN])
+            pLCSDev->pDEVBLK[LCS_WRITE_SUBCHANN]->fd = pLCSPORT->fd;
 
     }   // End of  for (pLCSDev = pLCSBLK->pDevices; pLCSDev; pLCSDev = pLCSDev->pNext)
 
@@ -551,8 +551,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             // Now create the attention required thread to present Attention interrupts to the guest(s).
             // The thread name uses the read device address of the first device pair.
             MSGBUF( thread_name, "%s %4.4X AttnThread",
-                                 pLCSBLK->pDevices->pDEVBLK[0]->typname,
-                                 pLCSBLK->pDevices->pDEVBLK[0]->devnum);
+                                 pLCSBLK->pDevices->pDEVBLK[LCS_READ_SUBCHANN]->typname,
+                                 pLCSBLK->pDevices->pDEVBLK[LCS_READ_SUBCHANN]->devnum);
             rc = create_thread( &pLCSBLK->AttnTid, JOINABLE,
                                 LCS_AttnThread, pLCSBLK, thread_name );
             if (rc)
@@ -1098,10 +1098,10 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             detach_thread( tid );
         }
 
-        if (pLCSDEV->pDEVBLK[0] && pLCSDEV->pDEVBLK[0]->fd >= 0)
-            pLCSDEV->pDEVBLK[0]->fd = -1;
-        if (pLCSDEV->pDEVBLK[1] && pLCSDEV->pDEVBLK[1]->fd >= 0)
-            pLCSDEV->pDEVBLK[1]->fd = -1;
+        if (pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN  ] && pLCSDEV->pDEVBLK[LCS_READ_SUBCHANN]->fd >= 0)
+            pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN  ]->fd = -1;
+        if (pLCSDEV->pDEVBLK[ LCS_WRITE_SUBCHANN ] && pLCSDEV->pDEVBLK[LCS_WRITE_SUBCHANN]->fd >= 0)
+            pLCSDEV->pDEVBLK[ LCS_WRITE_SUBCHANN ]->fd = -1;
 
         PTT_DEBUG( "CLOSE: closed     ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     }
@@ -1111,13 +1111,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
     PTT_DEBUG( "CLOSE: cleaning up", 000, pDEVBLK->devnum, pLCSPORT->bPort );
 
     // Housekeeping
-    if (pLCSDEV->pDEVBLK[0] == pDEVBLK)
-        pLCSDEV->pDEVBLK[0] = NULL;
-    if (pLCSDEV->pDEVBLK[1] == pDEVBLK)
-        pLCSDEV->pDEVBLK[1] = NULL;
+    if (pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN  ] == pDEVBLK)
+        pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN  ] = NULL;
+    if (pLCSDEV->pDEVBLK[ LCS_WRITE_SUBCHANN ] == pDEVBLK)
+        pLCSDEV->pDEVBLK[ LCS_WRITE_SUBCHANN ] = NULL;
 
-    if (!pLCSDEV->pDEVBLK[0] &&
-        !pLCSDEV->pDEVBLK[1])
+    if (!pLCSDEV->pDEVBLK[LCS_READ_SUBCHANN] &&
+        !pLCSDEV->pDEVBLK[LCS_WRITE_SUBCHANN])
     {
         // Remove this LCS Device from the chain...
 
@@ -1595,8 +1595,8 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
     if (pLCSDEV->iMaxFrameBufferSize > sizeof(pLCSDEV->bFrameBuffer))
     {
         // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
-        WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
-            pLCSDEV->pDEVBLK[1]->devnum,
+        WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[LCS_WRITE_SUBCHANN]->ssid),
+            pLCSDEV->pDEVBLK[LCS_WRITE_SUBCHANN]->devnum,
             pLCSDEV->iMaxFrameBufferSize,
             "LCS",
             (int)sizeof( pLCSDEV->bFrameBuffer ) );
@@ -1608,8 +1608,8 @@ static void  LCS_Startup( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
         if (pLCSDEV->iMaxFrameBufferSize < CTC_MIN_FRAME_BUFFER_SIZE)
         {
             // "%1d:%04X CTC: lcs startup: frame buffer size 0x%4.4X '%s' compiled size 0x%4.4X: ignored"
-            WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[1]->ssid),
-                pLCSDEV->pDEVBLK[1]->devnum,
+            WRMSG(HHC00939, "W", SSID_TO_LCSS(pLCSDEV->pDEVBLK[LCS_WRITE_SUBCHANN]->ssid),
+                pLCSDEV->pDEVBLK[LCS_WRITE_SUBCHANN]->devnum,
                 pLCSDEV->iMaxFrameBufferSize,
                 "LCS",
                 CTC_MIN_FRAME_BUFFER_SIZE );
@@ -1701,8 +1701,8 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
-    pDEVBLK  = pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
-    if (!pDEVBLK) pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
+    pDEVBLK  = pLCSDEV->pDEVBLK[ LCS_WRITE_SUBCHANN ];
+    if (!pDEVBLK) pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];  /* SNA has only one device */
 
     INIT_REPLY_FRAME( pLCSSTRTFRM, iReplyLen, pCmdFrame, iCmdLen );
 
@@ -1809,8 +1809,8 @@ static void  LCS_StopLan( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen )
 
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
-    pDEVBLK  =  pLCSDEV->pDEVBLK[ LCSDEV_WRITE_SUBCHANN ];
-    if (!pDEVBLK) pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
+    pDEVBLK  =  pLCSDEV->pDEVBLK[ LCS_WRITE_SUBCHANN ];
+    if (!pDEVBLK) pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];  /* SNA has only one device */
 
     INIT_REPLY_FRAME( pLCSSTDFRM, iReplyLen, pCmdFrame, iCmdLen );
 
@@ -2130,7 +2130,7 @@ static void LCS_EnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t iS
 
     bPort = pLCSDEV->bPort;
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ bPort ];
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
 
     // Trace command reply frame about to be enqueued...
     if (pLCSDEV->pLCSBLK->fDebug)
@@ -2202,7 +2202,7 @@ static int  LCS_DoEnqueueReplyFrame( PLCSDEV pLCSDEV, PLCSCMDHDR pReply, size_t 
     DEVBLK*     pDEVBLK;
     BYTE        bPort = pLCSDEV->bPort;
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
 
     PTT_DEBUG(       "GET  DevDataLock  ", 000, pDEVBLK->devnum, bPort );
     obtain_lock( &pLCSDEV->DevDataLock );
@@ -2289,7 +2289,7 @@ static void*  LCS_PortThread( void* arg)
     int         iTraceLen;
     MAC         mac;
 
-    pDEVBLK = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSPORT->pLCSBLK->pDevices->pDEVBLK[ LCS_READ_SUBCHANN ];
 
     pLCSPORT->pid = getpid();
 
@@ -2725,7 +2725,7 @@ static void LCS_EnqueueEthFrame( PLCSPORT pLCSPORT, PLCSDEV pLCSDEV, BYTE* pData
     time_t    t1, t2;
 
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     bPort   = pLCSPORT->bPort;
 
     PTT_DEBUG( "ENQ EthFrame ENTRY", 000, pDEVBLK->devnum, bPort );
@@ -2808,7 +2808,7 @@ static int  LCS_DoEnqueueEthFrame( PLCSPORT pLCSPORT, PLCSDEV pLCSDEV, BYTE* pDa
     BYTE        bPort;
 
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     bPort   = pLCSPORT->bPort;
 
     // Will frame NEVER fit into buffer??
@@ -4089,7 +4089,7 @@ static void*  LCS_AttnThread( void* arg)
 
             /* Point to the LCSDEV and the read DEVBLK for the command */
             pLCSDEV = pLCSATTN->pDevice;
-            pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+            pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
 
             /* Only raise an Attention if there is at least one buffer waiting to be read. */
             if (pLCSDEV->pFirstLCSIBH)
@@ -4638,7 +4638,7 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     UNREFERENCED( pLCSHDR   );
     UNREFERENCED( hwLenBaf1 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
     memset( frame, 0, sizeof(frame) );                               // Clear area for ethernet fram
     pEthFrame = (PETHFRM)&frame[0];
@@ -4759,7 +4759,7 @@ void Process_0D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     UNREFERENCED( hwLenBaf1 );
     UNREFERENCED( hwLenBaf2 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
     memset( frame, 0, sizeof(frame) );                               // Clear area for ethernet fram
     pEthFrame = (PETHFRM)&frame[0];
@@ -4852,7 +4852,7 @@ void Process_8C0B (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     UNREFERENCED( hwLenBaf2 );
     UNREFERENCED( pLCSBAF2  );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
     memset( frame, 0, sizeof(frame) );                               // Clear area for ethernet fram
     pEthFrame = (PETHFRM)&frame[0];
@@ -4959,7 +4959,7 @@ static const BYTE Inbound_CC0A[INBOUND_CC0A_SIZE] =
     UNREFERENCED( hwLenOutBaf1 );
     UNREFERENCED( hwLenOutBaf2 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
 
     // Find the connection block.
@@ -5104,7 +5104,7 @@ void Process_0C25 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     UNREFERENCED( hwLenBaf1 );
     UNREFERENCED( hwLenBaf2 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
     memset( frame, 0, sizeof(frame) );                               // Clear area for ethernet fram
     pEthFrame = (PETHFRM)&frame[0];
@@ -5195,7 +5195,7 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     UNREFERENCED( pLCSBAF1  );
     UNREFERENCED( hwLenBaf1 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
     memset( frame, 0, sizeof(frame) );                               // Clear area for ethernet fram
     pEthFrame = (PETHFRM)&frame[0];
@@ -5311,7 +5311,7 @@ void Process_8D00 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     UNREFERENCED( hwLenBaf1 );
     UNREFERENCED( hwLenBaf2 );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
     memset( frame, 0, sizeof(frame) );                               // Clear area for ethernet fram
     pEthFrame = (PETHFRM)&frame[0];
@@ -5707,7 +5707,7 @@ static void  LCS_StartLan_SNA( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLe
 
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[pLCSDEV->bPort];
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];  /* SNA has only one device */
 
     // Get a buffer to hold the reply.
     pLCSIBH = alloc_lcs_buffer( pLCSDEV, REPLY_STARTLAN_SNA_SIZE + 10 );
@@ -5843,7 +5843,7 @@ static void  LCS_StopLan_SNA( PLCSDEV pLCSDEV, PLCSCMDHDR pCmdFrame, int iCmdLen
 
 
     pLCSPORT = &pLCSDEV->pLCSBLK->Port[ pLCSDEV->bPort ];
-    pDEVBLK  =  pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
+    pDEVBLK  =  pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];  /* SNA has only one device */
 
     // Get a buffer to hold the reply.
     pLCSIBH = alloc_lcs_buffer( pLCSDEV, REPLY_STOPLAN_SNA_SIZE + 10 );
@@ -6046,7 +6046,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
 
     UNREFERENCED( iSize );
 
-    pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];  /* SNA has only one device */
+    pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];  /* SNA has only one device */
     pLCSBLK = pLCSDEV->pLCSBLK;
 
     // Point to the accepted Ethernet frame, point to the LLC
@@ -7407,7 +7407,7 @@ PLCSIBH  alloc_lcs_buffer( PLCSDEV pLCSDEV, int iSize )
     }
     else                               // ohdear, the allocate was not successful...
     {
-        pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+        pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
         // Report the bad news.
         MSGBUF( etext, "malloc(%d)", iBufLen );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
@@ -7536,7 +7536,7 @@ PLCSCONN  alloc_connection( PLCSDEV pLCSDEV )
     pLCSCONN = calloc( sizeof(LCSCONN), 1 );     // Allocate and clear the connection
     if (!pLCSCONN)                               // if the allocate was not successful...
     {
-        pDEVBLK = pLCSDEV->pDEVBLK[ LCSDEV_READ_SUBCHANN ];
+        pDEVBLK = pLCSDEV->pDEVBLK[ LCS_READ_SUBCHANN ];
         // Report the bad news.
         MSGBUF( etext, "malloc(%d)", (int)sizeof(LCSCONN) );
         // HHC00900 "%1d:%04X %s: error in function %s: %s"
