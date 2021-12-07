@@ -844,6 +844,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
     int        rc;                      // Return code
     BYTE       szStackID[33];           // VSE IP stack identity
     U32        iStackCmd;               // VSE IP stack command
+    U16        hwType;                  // Ethernet packet type
 
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
@@ -857,6 +858,14 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
         return;
     }
 
+    //
+    if( pCTCBLK->fDebug )
+    {
+        // HHC00981 "%1d:%04X %s: Accept data of size %d bytes from guest"
+        WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)sCount );
+        net_data_trace( pDEVBLK, pIOBuf, (int)sCount, '<', 'D', "data", 0 );
+    }
+
     // Fix-up frame pointer
     pFrame = (PCTCIHDR)pIOBuf;
 
@@ -864,26 +873,38 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U32   sCount,
     FETCH_HW( sOffset, pFrame->hwOffset );
 
     // Check for special VSE TCP/IP stack command packet
-    if( sOffset == 0 && sCount == 40 )
+    // The following example is from a VSE 5.1 system
+    //   +0000  00280026 C9E5E2C5 C3E3C3C1 F0F14BF0   ....IVSECTCA01.0
+    //   +0010  F540C640 F0F261F2 F661F0F8 F1F84BF2   5 F 02/26/0818.2
+    //   +0020  F4404040 09010001                     4   ....
+    if( sCount == 40 )
     {
-        // Extract the 32-byte stack identity string
-        for( i = 0;
-             i < sizeof( szStackID ) - 1 && i < sCount - 4;
-             i++)
-            szStackID[i] = guest_to_host( pIOBuf[i+4] );
-        szStackID[i] = '\0';
+        if( sOffset == 0 || sOffset == 40 )
+        {
+            pSegment = (PCTCISEG)(pIOBuf + sizeof( CTCIHDR ));
+            FETCH_HW( hwType, pSegment->hwType );
+            if (hwType != ETH_TYPE_IP)
+            {
+                // Extract the 32-byte stack identity string
+                for( i = 0;
+                     i < sizeof( szStackID ) - 1 && i < sCount - 4;
+                     i++)
+                    szStackID[i] = guest_to_host( pIOBuf[i+4] );
+                szStackID[i] = '\0';
 
-        // Extract the stack command word
-        FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
+                // Extract the stack command word
+                FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
-        // Display stack command and discard the packet
-        // "%1d:%04X CTC: interface command: '%s' %8.8X"
-        WRMSG(HHC00907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
+                // Display stack command and discard the packet
+                // "%1d:%04X CTC: interface command: '%s' %8.8X"
+                WRMSG(HHC00907, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, szStackID, iStackCmd );
 
-        *pUnitStat = CSW_CE | CSW_DE;
-        *pResidual = 0;
+                *pUnitStat = CSW_CE | CSW_DE;
+                *pResidual = 0;
 
-        return;
+                return;
+            }
+        }
     }
 
     // Check for special L/390 initialization packet
