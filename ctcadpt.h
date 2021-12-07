@@ -712,7 +712,7 @@ struct  _LCSDEV
     u_int       fChanProgActive:1;      // SNA Channel Program Active
     u_int       fAttnRequired:1;        // SNA Attention Required
     u_int       fPendingIctl:1;         // SNA Pending has LCSICTL structure
-    u_int       fAcceptPackets:1;       // SNA Accept Packets from Network
+    u_int       fReceiveFrames:1;       // SNA Receive Frames from Network
     u_int       fTuntapError:1;         // SNA TUNTAP_Write error
     int         iTuntapErrno;           // SNA TUNTAP_Write error number
     BYTE        bFlipFlop;              // SNA
@@ -837,12 +837,22 @@ struct  _LCSBLK
     char*       pszIPAddress;             // IP Address
 
     u_int       fDebug:1;
+    u_int       fCloseInProgress:1;       // Close in progress
 #if defined( OPTION_W32_CTCI )
     u_int       fNoMultiWrite:1;          // CTCI-WIN v3.3+ WinPCap v4.1+
 #endif
     int         icDevices;                // Number of devices
     int         iKernBuff;                // Kernel buffer in K bytes.
     int         iIOBuff;                  // I/O buffer in K bytes.
+    int         iTraceLen;                // Maximum data to be traced in bytes.
+#define LCS_TRACE_LEN_ZERO    0
+#define LCS_TRACE_LEN_MINIMUM 64
+#define LCS_TRACE_LEN_DEFAULT 128
+#define LCS_TRACE_LEN_MAXIMUM 65535
+    int         iDiscTrace;               // Maximum discard to be traced in bytes.
+#define LCS_DISC_TRACE_ZERO    0
+#define LCS_DISC_TRACE_MINIMUM 16
+#define LCS_DISC_TRACE_MAXIMUM 65535
 
     LOCK        AttnLock;                 // Attention LOCK
     PLCSATTN    pAttns;                   // -> Attention chain
@@ -852,8 +862,6 @@ struct  _LCSBLK
 
     TID         AttnTid;                  // Attention Thread ID
     pid_t       AttnPid;                  // Attention Thread pid
-
-    u_int       fCloseInProgress:1;       // Close in progress
 
     PLCSDEV     pDevices;                 // -> Device chain
     LCSPORT     Port[LCS_MAX_PORTS];      // Port Blocks

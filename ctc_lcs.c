@@ -261,6 +261,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
             return -1;
         }
         memset( pLCSBLK, 0, sizeof( LCSBLK ));
+        pLCSBLK->iTraceLen = LCS_TRACE_LEN_DEFAULT;
 
         // Initialize locking and event mechanisms
         initialize_lock( &pLCSBLK->AttnLock );
@@ -1304,23 +1305,26 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
     int         nEthBytes    = 0;
     int         iTraceLen;
     char        buf[32];
-    char        cPktType[16];
+    char        cPktType[24];
 
 
-    // Display up to MAX_TRACE_LEN bytes of the data coming from the guest, if debug is active
+    // Display up to pLCSBLK->iTraceLen bytes of the data coming from the guest, if debug is active
     if (pLCSBLK->fDebug)
     {
         // "%1d:%04X %s: Accept data of size %d bytes from guest"
         WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)sCount );
-        iTraceLen = sCount;
-        if (iTraceLen > MAX_TRACE_LEN)
+        if (pLCSBLK->iTraceLen)
         {
-            iTraceLen = MAX_TRACE_LEN;
-            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 iTraceLen, (int)(sCount - iTraceLen) );
+            iTraceLen = sCount;
+            if (iTraceLen > pLCSBLK->iTraceLen)
+            {
+                iTraceLen = pLCSBLK->iTraceLen;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     iTraceLen, (int)(sCount - iTraceLen) );
+            }
+            net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
     }
 
     // Process each frame in the buffer...
@@ -1383,15 +1387,18 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U32   sCount,
                 WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                      pLCSHDR->bSlot, iEthLen, cPktType,
                                      pLCSPORT->szNetIfName );
-                iTraceLen = iEthLen;
-                if (iTraceLen > MAX_TRACE_LEN)
+                if (pLCSBLK->iTraceLen)
                 {
-                    iTraceLen = MAX_TRACE_LEN;
-                    // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                    WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                         iTraceLen, (iEthLen - iTraceLen) );
+                    iTraceLen = iEthLen;
+                    if (iTraceLen > pLCSBLK->iTraceLen)
+                    {
+                        iTraceLen = pLCSBLK->iTraceLen;
+                        // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                        WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                             iTraceLen, (iEthLen - iTraceLen) );
+                    }
+                    net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
                 }
-                net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
             }
 
             // Write the Ethernet frame to the TAP device
@@ -2282,7 +2289,7 @@ static void*  LCS_PortThread( void* arg)
     BYTE        szBuff[2048];
     char        bReported = 0;
     char        bStartReported = 0;
-    char        cPktType[16];
+    char        cPktType[24];
     U16         hwEthernetType;
     BYTE        bHas8022;
     BYTE        bHas8022Snap;
@@ -2389,15 +2396,18 @@ static void*  LCS_PortThread( void* arg)
             // "%1d:%04X %s: port %2.2X: Receive frame of size %d bytes (with %s packet) from device %s"
             WRMSG( HHC00984, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                                   pLCSPORT->bPort, iLength, cPktType, pLCSPORT->szNetIfName );
-//!!            iTraceLen = iLength;
-//!!            if (iTraceLen > MAX_TRACE_LEN)
+//!!            if (pLCSPORT->pLCSBLK->iTraceLen)
 //!!            {
-//!!                iTraceLen = MAX_TRACE_LEN;
-//!!                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-//!!                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-//!!                                     iTraceLen, (iLength - iTraceLen) );
+//!!                iTraceLen = iLength;
+//!!                if (iTraceLen > pLCSPORT->pLCSBLK->iTraceLen)
+//!!                {
+//!!                    iTraceLen = pLCSPORT->pLCSBLK->iTraceLen;
+//!!                    // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+//!!                    WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+//!!                                         iTraceLen, (iLength - iTraceLen) );
+//!!                }
+//!!                net_data_trace( pDEVBLK, szBuff, iTraceLen, TO_GUEST, 'D', "eth frame", 0 );
 //!!            }
-//!!            net_data_trace( pDEVBLK, szBuff, iTraceLen, TO_GUEST, 'D', "eth frame", 0 );
             bReported = 0;
         }
 
@@ -2597,34 +2607,39 @@ static void*  LCS_PortThread( void* arg)
             {
                 // "CTC: lcs device port %2.2X: no match found, discarding frame"
                 WRMSG( HHC00951, "D", pLCSPORT->bPort );
-                iTraceLen = iLength;
-                if (iTraceLen > 64)
+                if (pLCSPORT->pLCSBLK->iDiscTrace)
                 {
-                    iTraceLen = 64;
+                    iTraceLen = iLength;
+                    if (iTraceLen > pLCSPORT->pLCSBLK->iDiscTrace)
+                    {
+                        iTraceLen = pLCSPORT->pLCSBLK->iDiscTrace;
+                    }
+                    net_data_trace( pDEVBLK, szBuff, iTraceLen, NO_DIRECTION, 'D', "discarding", 0 );
                 }
-                net_data_trace( pDEVBLK, szBuff, iTraceLen, NO_DIRECTION, 'D', "discarding", 0 );
             }
             continue;
         }
 
-        //
+        // Discard frame if the SNA device isn't receiving frames, or
+        // the frames payload does not begin with an 802.2 LLC, or
+        // the frames payload begins with an 802.2 LLC and SNAP.
         if (pMatchingLCSDEV->bMode == LCSDEV_MODE_SNA)
         {
-            // Discard frame if the SNA device isn't accepting frames, or
-            // the frames payload does not begin with an 802.2 LLC, or
-            // the frames payload begins with an 802.2 LLC and SNAP.
-            if (!pMatchingLCSDEV->fAcceptPackets || !bHas8022 || bHas8022Snap )
+            if (!pMatchingLCSDEV->fReceiveFrames || !bHas8022 || bHas8022Snap )
             {
                 if (pLCSPORT->pLCSBLK->fDebug)
                 {
                     // "CTC: lcs device port %2.2X: no match found, discarding frame"
                     WRMSG( HHC00951, "D", pLCSPORT->bPort );
-                    iTraceLen = iLength;
-                    if (iTraceLen > 64)
+                    if (pLCSPORT->pLCSBLK->iDiscTrace)
                     {
-                        iTraceLen = 64;
+                        iTraceLen = iLength;
+                        if (iTraceLen > pLCSPORT->pLCSBLK->iDiscTrace)
+                        {
+                            iTraceLen = pLCSPORT->pLCSBLK->iDiscTrace;
+                        }
+                        net_data_trace( pDEVBLK, szBuff, iTraceLen, NO_DIRECTION, 'D', "discarding", 0 );
                     }
-                    net_data_trace( pDEVBLK, szBuff, iTraceLen, NO_DIRECTION, 'D', "discarding", 0 );
                 }
                 continue;
             }
@@ -2646,15 +2661,18 @@ static void*  LCS_PortThread( void* arg)
 
         if (pLCSPORT->pLCSBLK->fDebug)
         {
-            iTraceLen = iLength;
-            if (iTraceLen > MAX_TRACE_LEN)
+            if (pLCSPORT->pLCSBLK->iTraceLen)
             {
-                iTraceLen = MAX_TRACE_LEN;
-                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                     iTraceLen, (iLength - iTraceLen) );
+                iTraceLen = iLength;
+                if (iTraceLen > pLCSPORT->pLCSBLK->iTraceLen)
+                {
+                    iTraceLen = pLCSPORT->pLCSBLK->iTraceLen;
+                    // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                    WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                         iTraceLen, (iLength - iTraceLen) );
+                }
+                net_data_trace( pDEVBLK, szBuff, iTraceLen, TO_GUEST, 'D', "eth frame", 0 );
             }
-            net_data_trace( pDEVBLK, szBuff, iTraceLen, TO_GUEST, 'D', "eth frame", 0 );
         }
 
         // Match was found. Enqueue frame on buffer.
@@ -3035,20 +3053,23 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
     memcpy( pIOBuf, pLCSDEV->bFrameBuffer, iLength );
 
-    // Display up to Max_TRACE_LEN bytes of the data going to the guest, if debug is active
+    // Display up to pLCSBLK->iTraceLen bytes of the data going to the guest, if debug is active
     if (pLCSDEV->pLCSBLK->fDebug)
     {
         // "%1d:%04X %s: Present data of size %d bytes to guest"
         WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, (int)iLength );
-        iTraceLen = iLength;
-        if (iTraceLen > MAX_TRACE_LEN)
+        if (pLCSDEV->pLCSBLK->iTraceLen)
         {
-            iTraceLen = MAX_TRACE_LEN;
-            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 iTraceLen, (int)(iLength - iTraceLen) );
+            iTraceLen = iLength;
+            if (iTraceLen > pLCSDEV->pLCSBLK->iTraceLen)
+            {
+                iTraceLen = pLCSDEV->pLCSBLK->iTraceLen;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     iTraceLen, (int)(iLength - iTraceLen) );
+            }
+            net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
     }
 
     // Reset frame buffer to empty...
@@ -3097,12 +3118,12 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 //  Organizationally Unique Identifier (OUI), and a 2-byte protocol
 //  ID.
 //
-//  The cPktType area must be 14 or more characters in length.
+//  The cPktType area should be 24 or more characters in length.
 //
 
 void  GetFrameInfo( PETHFRM pEthFrame, char* pPktType, U16* pEthType, BYTE* pHas8022, BYTE* pHas8022Snap )
 {
-    char  pkttyp[16];
+    char  pkttyp[24];
     U32   oui;
     U16   ethtyp;
     BYTE  ieee, snap, dsap, ssap, ctl;
@@ -3131,6 +3152,7 @@ void  GetFrameInfo( PETHFRM pEthFrame, char* pPktType, U16* pEthType, BYTE* pHas
         if ( dsap == LSAP_SNAP  &&  ssap == LSAP_SNAP  &&  ctl == 0x03  &&  !oui )
         {
           snap = TRUE;
+                                              STRLCAT( pkttyp, "SNAP "  );
           FETCH_HW(ethtyp, pEthFrame->bData+6 );
                if (ethtyp == ETH_TYPE_IP   )  STRLCAT( pkttyp, "IPv4"    );
           else if (ethtyp == ETH_TYPE_IPV6 )  STRLCAT( pkttyp, "IPv6"    );
@@ -3253,6 +3275,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     struct in_addr  addr;               // Work area for addresses
     MAC             mac;
     int             i;
+    int             iDiscTrace;
+    int             iTraceLen;
 #if defined(OPTION_W32_CTCI)
     int             iKernBuff;
     int             iIOBuff;
@@ -3297,9 +3321,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         int     c;
 
 #if defined( OPTION_W32_CTCI )
-  #define  LCS_OPTSTRING    "e:n:m:o:dk:i:w"
+  #define  LCS_OPTSTRING    "e:n:m:o:s:t:dk:i:w"
 #else
-  #define  LCS_OPTSTRING    "e:n:x:m:o:d"
+  #define  LCS_OPTSTRING    "e:n:x:m:o:s:t:d"
 #endif
 #if defined( HAVE_GETOPT_LONG )
         int     iOpt;
@@ -3313,6 +3337,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 #endif /*!defined(OPTION_W32_CTCI)*/
             { "mac",    required_argument, NULL, 'm' },
             { "oat",    required_argument, NULL, 'o' },
+            { "distrc", required_argument, NULL, 's' },
+            { "maxtrc", required_argument, NULL, 't' },
             { "debug",  no_argument,       NULL, 'd' },
 #if defined( OPTION_W32_CTCI )
             { "kbuff",  required_argument, NULL, 'k' },
@@ -3405,6 +3431,36 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
             pLCSBLK->pszOATFilename = strdup( optarg );
             saw_conf = 1;
+            break;
+
+        case 's':     // Size to be traced when discarding a frame. Default is 0.
+
+            iDiscTrace = atoi( optarg );
+
+            if ((iDiscTrace < LCS_DISC_TRACE_MINIMUM || iDiscTrace > LCS_DISC_TRACE_MAXIMUM) && iDiscTrace != LCS_DISC_TRACE_ZERO)
+            {
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "discard trace size", optarg );
+                return -1;
+            }
+
+            pLCSBLK->iDiscTrace = iDiscTrace;
+            break;
+
+        case 't':     // Size to be traced of structures or frames. Default is LCS_TRACE_LEN_DEFAULT, i.e. 128.
+
+            iTraceLen = atoi( optarg );
+
+            if ((iTraceLen < LCS_TRACE_LEN_MINIMUM || iTraceLen > LCS_TRACE_LEN_MAXIMUM) && iTraceLen != LCS_TRACE_LEN_ZERO)
+            {
+                // "%1d:%04X CTC: option %s value %s invalid"
+                WRMSG( HHC00916, "E", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                       "maximum trace size", optarg );
+                return -1;
+            }
+
+            pLCSBLK->iTraceLen = iTraceLen;
             break;
 
         case 'd':
@@ -4224,20 +4280,23 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
     char        unsupmsg[256];
 
 
-    // Display up to MAX_TRACE_LEN bytes of the data coming from the guest, if debug is active
+    // Display up to pLCSBLK->iTraceLen bytes of the data coming from the guest, if debug is active
     if (pLCSBLK->fDebug)
     {
         // "%1d:%04X %s: Accept data of size %d bytes from guest"
         WRMSG(HHC00981, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum,  pDEVBLK->typname, (int)sCount );
-        iTraceLen = sCount;
-        if (iTraceLen > MAX_TRACE_LEN)
+        if (pLCSBLK->iTraceLen)
         {
-            iTraceLen = MAX_TRACE_LEN;
-            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 iTraceLen, (int)(sCount - iTraceLen) );
+            iTraceLen = sCount;
+            if (iTraceLen > pLCSBLK->iTraceLen)
+            {
+                iTraceLen = pLCSBLK->iTraceLen;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     iTraceLen, (int)(sCount - iTraceLen) );
+            }
+            net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, FROM_GUEST, 'D', "data", 0 );
     }
 
     // Process each frame in the buffer...
@@ -4542,7 +4601,7 @@ void  LCS_Write_SNA( DEVBLK* pDEVBLK,   U32   sCount,
                         WRMSG( HHC00933, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "lan statistics sna" );
                     LCS_LanStats_SNA( pLCSDEV, pCmdFrame, (int)hwLength );
                     pLCSDEV->fAttnRequired = TRUE;
-                    pLCSDEV->fAcceptPackets = TRUE;
+                    pLCSDEV->fReceiveFrames = TRUE;
                     break;
 
                 default:
@@ -4695,15 +4754,18 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
-        iTraceLen = iEthLen;
-        if (iTraceLen > MAX_TRACE_LEN)
+        if (pLCSPORT->pLCSBLK->iTraceLen)
         {
-            iTraceLen = MAX_TRACE_LEN;
-            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 iTraceLen, (iEthLen - iTraceLen) );
+            iTraceLen = iEthLen;
+            if (iTraceLen > pLCSPORT->pLCSBLK->iTraceLen)
+            {
+                iTraceLen = pLCSPORT->pLCSBLK->iTraceLen;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     iTraceLen, (iEthLen - iTraceLen) );
+            }
+            net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
         }
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
     }
 
     // Write the Ethernet frame to the TAP device
@@ -4711,7 +4773,7 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
     {
         if (pLCSPORT->pLCSBLK->fDebug)
         {
-            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame sent: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame sent: CR=%u, NR=%u, NS=%u", llc.hwCR, llc.hwNR, llc.hwNS );
             WRMSG(HHC03984, "D", llcmsg );  /* FixMe! Proper message number! */
         }
     }
@@ -5246,15 +5308,18 @@ void Process_0C22 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
         // "%1d:%04X %s: port %2.2X: Send frame of size %d bytes (with %s packet) to device %s"
         WRMSG(HHC00983, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
                              pLCSDEV->bPort, iEthLen, "802.3 SNA", pLCSPORT->szNetIfName );
-        iTraceLen = iEthLen;
-        if (iTraceLen > MAX_TRACE_LEN)
+        if (pLCSPORT->pLCSBLK->iTraceLen)
         {
-            iTraceLen = MAX_TRACE_LEN;
-            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 iTraceLen, (iEthLen - iTraceLen) );
+            iTraceLen = iEthLen;
+            if (iTraceLen > pLCSPORT->pLCSBLK->iTraceLen)
+            {
+                iTraceLen = pLCSPORT->pLCSBLK->iTraceLen;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     iTraceLen, (iEthLen - iTraceLen) );
+            }
+            net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
         }
-        net_data_trace( pDEVBLK, (BYTE*)pEthFrame, iTraceLen, FROM_GUEST, 'D', "eth frame", 0 );
     }
 
     // Write the Ethernet frame to the TAP device
@@ -6074,7 +6139,7 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
 
         if (pLCSBLK->fDebug)
         {
-          snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame received: CR=%u, NS=%u, NR=%u", llc.hwCR, llc.hwNS, llc.hwNR );
+          snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC information frame received: CR=%u, NR=%u, NS=%u", llc.hwCR, llc.hwNR, llc.hwNS );
           WRMSG(HHC03984, "D", llcmsg );
         }
 
@@ -6511,8 +6576,8 @@ static const BYTE Inbound_CD00[INBOUND_CD00_SIZE] =
             {
               snprintf( llcmsg, sizeof(llcmsg), "LCS: LLC unnumbered frame received: CR=%u, M=%s", llc.hwCR, "FRMR" );
               WRMSG(HHC03984, "D", llcmsg );
-              snprintf( llcmsg, sizeof(llcmsg), "     CF=%4.4X, NS=%u, NR=%u, V=%u, Z=%u, Y=%u, X=%u, W=%u",
-                                          llc.hwCF, llc.hwNS, llc.hwNR, llc.hwV, llc.hwZ, llc.hwY, llc.hwX, llc.hwW );
+              snprintf( llcmsg, sizeof(llcmsg), "     CF=%4.4X, NR=%u, NS=%u, V=%u, Z=%u, Y=%u, X=%u, W=%u",
+                                          llc.hwCF, llc.hwNR, llc.hwNS, llc.hwV, llc.hwZ, llc.hwY, llc.hwX, llc.hwW );
               WRMSG(HHC03984, "D", llcmsg );
             }
 
@@ -7062,20 +7127,23 @@ void  LCS_Read_SNA( DEVBLK* pDEVBLK,   U32   sCount,
 
     memcpy( pIOBuf, pLCSDEV->bFrameBuffer, iLength );
 
-    // Display up to MAX_TRACE_LEN bytes of the data going to the guest, if debug is active
+    // Display up to pLCSBLK->iTraceLen bytes of the data going to the guest, if debug is active
     if (pLCSDEV->pLCSBLK->fDebug)
     {
         // "%1d:%04X %s: Present data of size %d bytes to guest"
         WRMSG(HHC00982, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname, (int)iLength );
-        iTraceLen = iLength;
-        if (iTraceLen > MAX_TRACE_LEN)
+        if (pLCSDEV->pLCSBLK->iTraceLen)
         {
-            iTraceLen = MAX_TRACE_LEN;
-            // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
-            WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
-                                 iTraceLen, (int)(iLength - iTraceLen) );
+            iTraceLen = iLength;
+            if (iTraceLen > pLCSDEV->pLCSBLK->iTraceLen)
+            {
+                iTraceLen = pLCSDEV->pLCSBLK->iTraceLen;
+                // HHC00980 "%1d:%04X %s: Data of size %d bytes displayed, data of size %d bytes not displayed"
+                WRMSG(HHC00980, "D", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname,
+                                     iTraceLen, (int)(iLength - iTraceLen) );
+            }
+            net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
         }
-        net_data_trace( pDEVBLK, pIOBuf, iTraceLen, TO_GUEST, 'D', "data", 0 );
     }
 
     // Reset frame buffer to empty...

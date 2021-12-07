@@ -2135,9 +2135,14 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
     LCSBLK*  pLCSBLK;
     U16      lcss;
     U16      devnum;
-    BYTE     onoff;
-    BYTE     startup;
-    u_int    mask;
+    u_int    mask = 0;
+    BYTE     onoff = FALSE;
+    BYTE     startup = FALSE;
+    BYTE     all = FALSE;
+    BYTE     invalid = FALSE;
+    int      iTraceLen = LCS_TRACE_LEN_DEFAULT;
+    int      iDiscTrace = LCS_DISC_TRACE_ZERO;
+    int      i;
 
     UNREFERENCED( cmdline );
 
@@ -2145,34 +2150,125 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
 
     // Format:  "ctc  debug  { on | off }  [ <devnum> | ALL ]"
 
-    if (0
-        || argc < 3
-        || !CMD(argv[1],debug,5)
-        || (1
-            && !CMD(argv[2],on,2)
-            && !CMD(argv[2],off,3)
-            && !CMD(argv[2],startup,7)
-           )
-        || argc > 4
-        || (1
-            && argc == 4
-            && !CMD(argv[3],ALL,3)
-            && parse_single_devnum( argv[3], &lcss, &devnum) < 0
-           )
-    )
+    /* Check that there are at least two tokens */
+    if (argc < 2)
     {
+        invalid = TRUE;
+    }
+
+    /* Check the second token is debug. */
+    if (argc >= 2)
+    {
+        if (!CMD(argv[1],debug,5))
+        {
+            invalid = TRUE;
+        }
+    }
+
+    /* Check the third token is startup, on or off. */
+    if (argc >= 3)
+    {
+        if (CMD(argv[2],startup,7))
+        {
+            startup = TRUE;
+        }
+        else if (CMD(argv[2],on,2))
+        {
+            onoff = TRUE;
+        }
+        else if (!CMD(argv[2],off,3))
+        {
+            invalid = TRUE;
+        }
+    }
+
+    /* Check whether there is a fourth token. If there isn't, assume the fourth token is all.  */
+    if (argc < 4)
+    {
+        all = TRUE;
+    }
+
+    /* Check the fourth token is all or a device address. */
+    if (argc >= 4)
+    {
+        if (CMD(argv[3],ALL,3))
+        {
+            all = TRUE;
+        }
+        else if (parse_single_devnum( argv[3], &lcss, &devnum) != 0)
+        {
+            invalid = TRUE;
+        }
+    }
+
+    /* Check the fifth and later keyword and value tokens that are optional with on. */
+    if (argc >= 5)
+    {
+        if( onoff )
+        {
+            for ( i = 4; i < argc; i++ )
+            {
+                if (CMD(argv[i],trace,2))
+                {
+                    if ( (i + 1) < argc )
+                    {
+                        i++;
+                        iTraceLen = atoi( argv[i] );
+                        if ((iTraceLen < LCS_TRACE_LEN_MINIMUM || iTraceLen > LCS_TRACE_LEN_MAXIMUM) && iTraceLen != LCS_TRACE_LEN_ZERO)
+                        {
+                            invalid = TRUE;
+                        }
+                    }
+                    else
+                    {
+                        invalid = TRUE;
+                    }
+                }
+                else if (CMD(argv[i],discard,3))
+                {
+                    if ( (i + 1) < argc )
+                    {
+                        i++;
+                        iDiscTrace = atoi( argv[i] );
+                        if ((iDiscTrace < LCS_DISC_TRACE_MINIMUM || iDiscTrace > LCS_DISC_TRACE_MAXIMUM) && iDiscTrace != LCS_DISC_TRACE_ZERO)
+                        {
+                            invalid = TRUE;
+                        }
+                    }
+                    else
+                    {
+                        invalid = TRUE;
+                    }
+                }
+                else
+                {
+                    invalid = TRUE;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            invalid = TRUE;
+        }
+    }
+
+    /* Check whether the entered command is invalid. */
+    if (invalid)
+    {
+        /* HHC02299 "Invalid command usage. Type 'help %s' for assistance." */
         WRMSG( HHC02299, "E", argv[0] );
         return -1;
     }
 
-    onoff = ( CMD(argv[2],on,2) );
-    startup = ( CMD(argv[2],startup,7) );
+    /* Prepare the default debug mask for CTC_PTP devices with on. */
     if( onoff )
+    {
         mask = DBGPTPPACKET;
-    else
-        mask = 0;
+    }
 
-    if (argc < 4 || CMD(argv[3],ALL,3) )
+    /* */
+    if (all)
     {
         for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
         {
@@ -2193,6 +2289,8 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pLCSDEV = dev->dev_data;
                 pLCSBLK = pLCSDEV->pLCSBLK;
                 pLCSBLK->fDebug = onoff;
+                pLCSBLK->iTraceLen = iTraceLen;
+                pLCSBLK->iDiscTrace = iDiscTrace;
             }
             else // (CTC_PTP == dev->ctctype)
             {
@@ -2202,6 +2300,7 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
             }
         }
 
+        /* HHC02204 "%-14s set to %s" */
         WRMSG(HHC02204, "I", "CTC DEBUG", startup ? "startup ALL" : onoff ? "on ALL" : "off ALL");
     }
     else
@@ -2238,6 +2337,8 @@ int ctc_cmd( int argc, char *argv[], char *cmdline )
                 pLCSDEV = pDEVBLK->dev_data;
                 pLCSBLK = pLCSDEV->pLCSBLK;
                 pLCSBLK->fDebug = onoff;
+                pLCSBLK->iTraceLen = iTraceLen;
+                pLCSBLK->iDiscTrace = iDiscTrace;
                 acount = pDEVGRP->acount;
             }
         }
