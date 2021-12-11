@@ -34,7 +34,7 @@ my @req = qw(
      cmake       3.2    0  https://cmake.org
      flex        2.5    0  http://www.gnu.org/directory/flex.html
      gawk        3.0    0  http://www.gnu.org/directory/gawk.html
-     gcc         4.6.2  1  http://www.gnu.org/directory/gcc.html
+     gcc         7.5.0  1  http://www.gnu.org/directory/gcc.html
      grep        1      0  http://www.gnu.org/directory/grep.html
      ld          2.22   0  http://www.gnu.org/directory/binutils.html
      libtool     2.4.6  1  https://sdl-hercules-390.github.io/html/hercinst.html
