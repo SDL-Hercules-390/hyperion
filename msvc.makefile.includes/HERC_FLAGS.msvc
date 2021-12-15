@@ -65,24 +65,9 @@ cflags = $(cflags) /wd4996
 
 ldebug = $(ldebug) /MANIFEST
 
-# Because Level 4 warnings will be disabled (see immediately below), we need
-# to specifically request the following (IMHO) important warning be treated
+# Specifically request the following (IMHO) important warning be treated
 # as a Level 1 warning instead of a Level 4 warning (which is its default):
-# "C4296: warning: expression is always false".  (We do it both before/after
-# disabling Level 4 warnings just to be safe)
-cflags = $(cflags) /w14296
-
-# WIN64 builds set level-4 diagnostics which are too intense for our liking,
-# resulting in far too many uninteresting warning messages. Thus we override
-# win32.mak's options for WIN64 to reinstate the default level-3 diagnostics
-cflags = $(cflags:-W4=-W3)
-cflags = $(cflags:/W4=/W3)
-
-# Because Level-4 warnings are now disabled (see immediately above), we need
-# to specifically re-enable the following (IMHO) important warning:
-# "C4296: warning: expression is always false". Note the /w option being used
-# requests warning 4296 be treated as a Level 1 warning instead of Level 4.
-# (We do it both before/after disabling Level 4 warnings just to be safe)
+# "C4296: warning: expression is always false".
 cflags = $(cflags) /w14296
 
 # Convert the following warnings into errors
