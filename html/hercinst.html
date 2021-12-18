@@ -409,7 +409,7 @@ href="cckddasd.html">this page</a>.
 To start Hercules enter this command at the host's command prompt:
 <blockquote><code><pre>
     hercules  [ -f <em>filename</em> ]           |  [ --config=<em>filename</em> ]
-              [ -o <em>logfile</em>]             |  [ --output=<em>logfile</em> ]
+              [ -o <em>logfile</em>]             |  [ --output=<em>logfile</em> ]&nbsp;&nbsp;|&nbsp;&nbsp;[ --logfile=<em>logfile</em> ]
               [ -r <em>rcfile</em> ]             |  [ --rcfile=<em>rcfile</em> ]
               [ -b <em>logofile</em> ]           |  [ --herclogo=<em>logofile</em> ]
               [ -d ]                    |  [ --daemon ]
@@ -437,11 +437,11 @@ where:
         <p>
         <dt><code><em>logfile</em></code><p><dd>
 
-            is the name of the optional <i>(but highly recommended!)</i> log file.
-            The log file receives a copy of all messages displayed on the
-            control panel and is extremely important to have for problem
-            analysis and bug reporting. This option can also be specified
-            using "--logfile=".
+            is the name of the optional log file. A log file receives a copy
+            of all messages displayed on the Hercules control panel.
+            <i><b>PLEASE NOTE:</b> providing a logfile is extremely important
+            for bug reporting and problem analysis purposes! It is <b>strongly
+            recommended</b> that you <u>always</u> specify this option!</i>
         <p>
         <dt><code><em>rcfile</em></code><p><dd>
 

@@ -1704,21 +1704,28 @@
   "Specifies the internal timers update interval, in microseconds.\n"           \
   "This parameter specifies how frequently Hercules's internal\n"               \
   "timers-update thread updates the TOD Clock, CPU Timer, and other\n"          \
-  "architectural related clock/timer values. The default interval\n"            \
-  "is 50 microseconds, which strikes a reasonable balance between\n"            \
-  "clock accuracy and overall host performance. The minimum allowed\n"          \
-  "value is 1 microsecond and the maximum is 1000000 microseconds\n"            \
-  "(i.e. one second). Also note that due to host system limitations\n"          \
-  "and/or design, some hosts may end up rounding or coalescing such\n"          \
-  "short intervals to a longer millisecond interval instead.\n"                 \
+  "architectural related clock/timer values.\n"                                 \
   "\n"                                                                          \
-  "CAUTION! While lower TIMERINT values may help increase the accuracy\n"       \
-  "of your guest's TOD Clock and CPU Timer values, it may also have\n"          \
-  "a SEVERE NEGATIVE IMPACT on host operating system performance. This\n"       \
-  "is especially true when a low TIMERINT value is coupled with a high\n"       \
-  "HERCPRIO and TODPRIO priority setting. You should exercise EXTREME\n"        \
-  "CAUTION when choosing your desired TIMERINT value in relationship\n"         \
-  "to your chosen HERCPRIO and TODPRIO priority settings.\n"
+  "When the z/Arch Transactional-Execution Facility (073_TRANSACT_EXEC)\n"      \
+  "is not installed or enabled, the minimum and default intervals are 1\n"      \
+  "and 50 microseconds respectively, which strikes a reasonable balance\n"      \
+  "between clock accuracy and overall host performance.\n"                      \
+  "\n"                                                                          \
+  "When the z/Arch Transactional-Execution Facility *is* installed and\n"       \
+  "enabled the minimum and default intervals are 200 and 400 microseconds.\n"   \
+  "\n"                                                                          \
+  "The maximum allowed interval is 1000000 microseconds (one second).\n"        \
+  "\n"                                                                          \
+  "Also note that due to host system limitations and/or design, some\n"         \
+  "hosts may round up and/or coalesce short microsecond intervals to a\n"       \
+  "much longer millisecond interval instead.\n"                                 \
+  "\n"                                                                          \
+  "CAUTION! While lower TIMERINT values MAY help increase the accuracy\n"       \
+  "of your guest's TOD Clock and CPU Timer values, it could also have a\n"      \
+  "SEVERE NEGATIVE IMPACT on host operating system performance as well.\n"      \
+  "You should exercise EXTREME CAUTION when choosing your TIMERINT value\n"     \
+  "in relationship to the actual process priority (nice value) of the\n"        \
+  "Hercules process itself.\n"
 
 #define tlb_cmd_desc            "Display TLB tables"
 #define toddrag_cmd_desc        "Display or set TOD clock drag factor"

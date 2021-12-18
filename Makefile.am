@@ -851,6 +851,7 @@ EXTRA_DIST =                  \
   readme/README.RXVT4APL.md       \
   readme/README.S37X.md           \
   readme/README.SETUID.md         \
+  readme/README.SNA.md            \
   readme/README.SUN.md            \
   readme/README.TAPE.md           \
   readme/README.TCPIP.md          \

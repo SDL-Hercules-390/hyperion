@@ -709,6 +709,7 @@
     <None Include="readme\README.RXVT4APL.md" />
     <None Include="readme\README.S37X.md" />
     <None Include="readme\README.SETUID.md" />
+    <None Include="readme\README.SNA.md" />
     <None Include="readme\README.SUN.md" />
     <None Include="readme\README.TAPE.md" />
     <None Include="readme\README.TCPIP.md" />

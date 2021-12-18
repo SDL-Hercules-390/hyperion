@@ -2179,6 +2179,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\readme\README.SNA.md"
+						>
+					</File>
+					<File
 						RelativePath=".\readme\README.SUN.md"
 						>
 					</File>

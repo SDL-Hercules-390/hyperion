@@ -48,7 +48,7 @@
   Remove all "#if defined(__APPLE__) || defined(__FreeBSD__)" statements.
 
   You should NOT test for specific platforms. Instead, create a configure.ac
-  test for specific functionality or for feature a specific that your code
+  test for specific functionality or for a specific feature that your code
   requires, and then #define HAVE_FEATURE_ABCXYZ if a platform supports it.
   Then simply use #if defined(HAVE_FEATURE_ABCXYZ) in your Hercules code.
 
@@ -102,10 +102,6 @@
 
 --------------------------------------------------------------------------------
 
-  Maxrates off: reset/disable automatic maxrates
-
---------------------------------------------------------------------------------
-
   Design a way for users to define command synonyms. (dynmod?)
 
 --------------------------------------------------------------------------------
@@ -117,10 +113,6 @@
 
   Full 2540 reader/punch support! mode=1 (normal), mode=2 (binary/"card image")
                                   hopper selection, etc.
-
---------------------------------------------------------------------------------
-
-  Ability to specify highlighting for console messages via regex pattern.
 
 --------------------------------------------------------------------------------
 

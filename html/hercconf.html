@@ -158,8 +158,10 @@ a real System/390.  The configuration file is an ASCII text file.
     0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
     0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
     0430.2    <a href="#CTCI">CTCI</a>    tun0
+    #0E40      <a href="#LCS">LCS</a>     -e <a href="#SNA">SNA</a>  tap0
     0E40      <a href="#CTCE">CTCE</a>    31880  192.168.1.202  32880
     0E41      <a href="#CTCE">CTCE</a>    31882  192.168.1.202  32882
+
     0E42.2    <a href="#CTCE">CTCE</a>         1=192.168.1.202            
     0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
     0470.2    <a href="#PTP">PTP</a>     tun0
@@ -656,15 +658,62 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="CPUMODEL"></a>
-<dt><code>CPUMODEL &nbsp; <u>0586</u> &#124; <em>xxxx</em></code>
+<dt><code>CPUMODEL &nbsp; <u>0586</u> &#124; <em>xxxx</em> &#124; <em>$(symbol)</em></code>
 <dd><p>
     Specifies the 4 hexadecimal digit CPU machine type number (known prior
     to ESA/390 as the model number) stored by the STIDP instruction.
     <p>
-    <i><b>Note:</b></i> Hercules makes no attempt to emulate all aspects of,
+    To make it easier to specify the model number for certain known models,
+    the following <a href="#DEFSYM">symbols</a> symbols are now automatically
+    predefined starting with Hercules version 4.4:
+    <p>
+        <table style="width:25%">
+          <tr>
+            <th>Symbol</th>
+            <th>Model</th>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>zPDT</code></td>
+            <td style="text-align:center"><code>1090</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>EC12</code></td>
+            <td style="text-align:center"><code>2827</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>BC12</code></td>
+            <td style="text-align:center"><code>2828</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z13</code></td>
+            <td style="text-align:center"><code>2964</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z13s</code></td>
+            <td style="text-align:center"><code>2965</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z14</code></td>
+            <td style="text-align:center"><code>3906</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z14ZR1</code></td>
+            <td style="text-align:center"><code>3907</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z15</code></td>
+            <td style="text-align:center"><code>8561</code></td>
+          </tr>
+          <tr>
+            <td style="text-align:center"><code>z15T02</code></td>
+            <td style="text-align:center"><code>8562</code></td>
+          </tr>
+        </table>
+    <p>
+    <i><b>Note:</b> Hercules makes no attempt to emulate all aspects of,
     or features of, a given CPU model. The CPUMODEL statement defines a purely
     cosmetic value only. It defines only the value that the STIDP (Store CPU
-    ID) instruction stores, and nothing more.
+    ID) instruction stores, and nothing more.</i>
     <p>
 
 <a name="CPUSERIAL"></a>
@@ -1328,9 +1377,9 @@ a real System/390.  The configuration file is an ASCII text file.
     and 'I' (informational) messages are colorized. Any message not detected
     as a Hercules "HHCnnnnnX" format message are not colorized. The colors
     are currently hard coded and cannot be changed. <code><u>NO</u></code> is the
-    default but <code>DARK</code> or <code>LIGHT</code> (as appropriate for your system)
-    is encouraged as it makes error and warning messages more noticeable
-    and less likely to be missed.
+    default, <i>but <code>DARK</code> or <code>LIGHT</code> (as appropriate for your system)
+    is <b>strongly encouraged</b> as it makes error and warning messages more noticeable
+    and less likely to be missed.</i>
     <p>
     <code>TITLE=xxx</code> defines an optional console window title-bar string
     to be used in place of the default supplied by the windowing system, and allows
@@ -1489,23 +1538,32 @@ a real System/390.  The configuration file is an ASCII text file.
 <a name="TIMERINT"></a>
 <dt><code>TIMERINT &nbsp; DEFAULT &#124; <em>nnnn</em></code>
 <dd><p>
-    Specifies the internal timers update interval, in microseconds.  This
-    parameter specifies how frequently Hercules's internal timers-update thread
-    updates the TOD Clock, CPU Timer, and other architectural related
-    clock/timer values.  The default interval is 50 microseconds, which
-    strikes a reasonable balance between clock accuracy and overall host
-    performance. For performance reasons, the minimum allowed value is also
-    50 microsecond as well. The maximum value is 1000000 microseconds
-    (i.e. one second). Also note that due to host system limitations and/or
-    design, some host operating systems might round or
-    <a href="https://en.wikipedia.org/wiki/Timer_coalescing">coalesce</a>
-    microsecond wait intervals up to a longer millisecond interval instead.
+    Specifies the internal timers update interval, in microseconds.
+    This parameter specifies how frequently Hercules's internal
+    timers-update thread updates the TOD Clock, CPU Timer, and other
+    architectural related clock/timer values.
     <p>
-    <i><b>CAUTION!</b> &nbsp;While a lower TIMERINT value may help
-    increase the accuracy of your guest's TOD Clock and CPU Timer values,
-    it could also have a <u>severe negative impact</u> on the overall performance
-    of your host operating system depending on the priority (or 'nice' value)
-    assigned to the Hercules process itself!
+    When the z/Architecure Transactional-Execution Facility (073_TRANSACT_EXEC)
+    is not installed or enabled, the minimum and default intervals are 1
+    and 50 microseconds respectively, which strikes a reasonable balance
+    between clock accuracy and overall host performance.
+    <p>
+    When the z/Architecure Transactional-Execution Facility <i><u>is</u></i> installed and
+    enabled, the minimum and default intervals are 200 and 400 microseconds.
+    <p>
+    The maximum allowed interval is 1000000 microseconds (one second).
+    <p>
+    Also note that due to host system limitations and/or design, some
+    hosts may round up and/or
+    <a href="https://en.wikipedia.org/wiki/Timer_coalescing">coalesce</a>
+    short microsecond intervals to a much longer millisecond interval instead.
+    <p>
+    <i><b><u>CAUTION!</u></b> &nbsp;While lower TIMERINT values <u>may</u> help increase the accuracy
+    of your guest's TOD Clock and CPU Timer values, it could also have a
+    <b>severe negative impact</b> on host operating system performance as well.
+    You should exercise <u>extreme caution</u> when choosing your TIMERINT value
+    in relationship to the actual process priority (nice value) of the
+    Hercules process itself.
     </i>
     <p>
 
@@ -3645,9 +3703,16 @@ a real System/390.  The configuration file is an ASCII text file.
 
         <p>
 
-        The LCS device is a "grouped" device that requires 2 (two) device
-        addresses (device numbers) to be defined per LCS group, with the
-        first device of the group being an even numbered device:
+        Beginning with SDL Hyperion version 4.4, an LCS device is now also capable of
+        providing <a href="#SNA">SNA</a> support as well. Refer to the
+        <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.SNA.md">README.SNA</a>
+        document for details.
+
+        <p>
+
+        Except when defined as an <a href="#SNA">SNA</a> device, the LCS device is a "grouped" device
+        that requires 2 (two) device addresses (device numbers) to be defined per
+        LCS group, with the first device of the group being an even numbered device:
 
             <blockquote>
             <code>0E20<b>.2</b> &nbsp; LCS &nbsp;<i>[arguments]</i></code>
@@ -3762,6 +3827,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
             The syntax for the OSA Address Table (OAT) is as follows:
             <p>
+<a name="SNA"></a>
 <table border=1 cellpadding=20><tr><td>
 <pre><code>*****************************************************
 * Dev    Mode   Port    Entry specific information  *
@@ -3792,7 +3858,12 @@ ROUTE  00  172.21.3.32  255.255.255.224
                     <dt><code><em>Mode</em></code>
                     <dd>is the operation mode: IP or SNA.
                         <p>
-                        <i><b>Note:</b> &nbsp;the SNA operation mode is not currently implemented.</i>
+                        <i><b>Note:</b> &nbsp;the SNA operation mode is currently
+                        not implemented via the OAT file. Rather, a separate LCS
+                        device with the <code>-e SNA</code> device option must be
+                        specified instead. Refer to the
+                        <a href="https://github.com/sdl-hercules-390/hyperion/blob/master/readme/README.SNA.md">README.SNA</a>
+                        document for details.</i>
                         <p>
 
                     <dt><code><em>Port</em></code>

@@ -1037,6 +1037,9 @@
     <None Include="readme\README.SETUID.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
+    <None Include="readme\README.SNA.md">
+      <Filter>Other Files\DOC\README</Filter>
+    </None>
     <None Include="readme\README.SUN.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>

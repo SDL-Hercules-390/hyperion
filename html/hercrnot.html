@@ -16,31 +16,102 @@ Hercules: Release Notes
 <hr noshade>
 
 <h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.4">SDL Hyperion 4.4</a>
-&nbsp; &nbsp; <small><i>(in development)</i></small>
 </h2>
 
 <p>
 <dl>
 
 
-  <dt>Title...
+  <dt>New <code>-o</code>, <code>--output</code> and <code>--logfile</code> command-line options
   <dd>
   <p>
-    Description...
+    New command-line options are now available to make the creation of a log file much easier
+    and less error prone, which is important for bug reporting and problem analysis purposes.
+    Refer to the
+    "<a href="hercinst.html#arguments"><b>Command line arguments</b></a>"
+    section of the
+    "<a href="hercinst.html">Installation and Operation</a>"
+    web page for more information.
   </p>
 
 
-  <dt>Title...
+  <dt>Unreliable operation may occur in certain circumstances when Hercules is built with some versions of the GCC compiler
   <dd>
   <p>
-    Description...
+    During development of Hercules Version 4.4 it was noticed Hercules would sometimes
+    experience unreliable operation under certain conditions when built with certain
+    versions of the gcc compiler. The unreliability <i><u>seems</u></i> to most typically
+    occur <i>(but may not be limited to)</i> when a z/Architecture or ESA/390 guest is IPLed
+    under a z/Architecture or ESA/390 VM (i.e. z/VM or VM/ESA). We believe the problem
+    has since been resolved, but are not 100% certain about that.
+  </p>
+  <p>
+    <i>Therefore,</i> if you plan to run an SIE operating system (e.g. VM/ESA or z/VM) as
+    your primary guest under Hercules, we recommend, purely as a precaution, that you build
+    Hercules using the <b>clang</b> compiler and <i>not</i> gcc.
+  </p>
+  <p>
+    Please refer to
+    <a href="https://github.com/SDL-Hercules-390/hyperion/issues/437">GitHub Issue #437</a>
+    for the latest status regarding this particular issue.
   </p>
 
 
-  <dt>Title...
+  <dt>Improvements to building Hercules on non-Windows platforms
   <dd>
   <p>
-    Description...
+    Significant efforts have been made to make building Hercules on non-Windows systems
+    (e.g. Linux) easier and more reliable. Please refer to the README for Bill Lewis's
+    highly recommended "<b><a href="https://github.com/wrljet/hercules-helper">Hercules-Helper</a></b>"
+    repository for more information.
+  </p>
+
+
+  <dt>Unresolved bug in PFPO instruction
+  <dd>
+  <p>
+    The PFPO (Perform Floating Point Operation) instruction contains a (minor?)
+    unresolved bug in its handling of the EXTENDED DFP TO LONG HFP operation
+    that <i><u>seems</u></i> to only occur when the value being converted has more
+    than 31 digits in its fractional component. Refer to
+    <a href="https://github.com/SDL-Hercules-390/hyperion/issues/407#issuecomment-892830186">GitHub Issue #407</a>
+    for more information.
+  </p>
+  <p>
+    This bug is currently the only one known to exist in the PFPO instruction, but given
+    that a comprehensive test suite still does not exist yet for the PFPO instruction
+    (such a test suite is still in development), other undiscovered bugs may also exist.
+    Until such time as a thorough PFPO test suite can be completed, the PFPO instruction
+    should be considered experimental.
+  </p>
+
+
+  <dt>TXF (Transactional-Execution Facility) support is now mostly complete
+  <dd>
+  <p>
+    While <u>still considered experimental</u> <i>(since it is not yet 100% complete)</i>,
+    the Hercules implementation of the z/Architecture "Transactional-Execution Facility" feature
+    is largely complete and considered to be reliable. There are still a few items that
+    have not been implemented yet (such as tracing (i.e. PER) support), but on the whole,
+    extensive testing has demonstrated it to be reliable enough for most everyday purposes.
+  </p>
+  <p>
+    Also note that while it is still considered experimental and incomplete, any
+    "<code>FACILITY ENABLE 073_TRANSACT_EXEC</code>" and/or
+    "<code>FACILITY ENABLE 050_CONSTR_TRANSACT</code>" configuration file statements
+    that you may currently have in your Hercules configuration file, are now no longer
+    needed. Beginning with Hercules version 4.4, both facilities are now enabled by default.
+  </p>
+
+
+  <dt>Preliminary SNA support
+  <dd>
+  <p>
+    Significant enhancements have been made to LCS device functionality to support
+    the SNA protocol. Preliminary documentation regarding its configuration and use
+    can be found in our
+    <a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.SNA.md">README.SNA</a>
+    readme document.
   </p>
 
 

@@ -3630,7 +3630,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     if (!fp)
     {
         char msgbuf[MAX_PATH+80];
-        MSGBUF( msgbuf, "fopen(%s, \"r\")", pathname);
+        MSGBUF( msgbuf, "fopen( \"%s\", \"r\" )", pathname);
         // "CTC: error in function %s: %s"
         WRMSG( HHC00940, "E", msgbuf, strerror( errno ) );
         return -1;
