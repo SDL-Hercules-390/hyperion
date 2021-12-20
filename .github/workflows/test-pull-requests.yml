@@ -41,8 +41,11 @@ jobs:
       if: ${{ runner.os != 'Windows' }}
       run: |
         export CC="${{ matrix.compiler }}"
+        export CXX="${{ matrix.compiler }}++"
         if [ "${{ runner.os }}" = "macOS" ]; then
           export CC="$(xcrun --find $CC) -arch x86_64"
+          export CXX="$(xcrun --find $CXX) -arch x86_64"
+          export SDKROOT="$(xcrun --show-sdk-path)"
         fi
         util/bldlvlck
         ./autogen.sh
