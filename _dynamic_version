@@ -164,9 +164,9 @@ else
   # Count the number of commits and use that as our "build" number
 
   # PROGRAMMING NOTE: we purposely do NOT use the simpler, newer, easier,
-  # slightly faster and harder to get wrong rev-list "--count" technique
-  # since the git that comes with some still in use older distros likely
-  # doesn't understand the "--count" option.  Thus, we use the slightly
+  # slightly faster and harder to get wrong "rev-list --count" technique
+  # since older gits that comes with some still in use older distros likely
+  # don't understand the "--count" option.  Thus, we use the slightly
   # slower, older, more complex and much easier to get wrong technique
   # of piping the output of "log --pretty..." into "wc -l".  Please also
   # note that, unlike many broken implementations that are out there, we
@@ -174,6 +174,21 @@ else
 
   VERS_BLD=$(($(git log --pretty=tformat:'' | wc -l)))
 
+  if test "$VERS_BLD" == "0"; then
+
+    # Try "format" instead of "tformat"...
+    VERS_BLD=$(($(git log --pretty=format:'' | wc -l)))
+
+    if test "$VERS_BLD" != "0"; then
+
+      # increment by 1 (because "format" was used, not "tformat")
+      VERS_BLD=$((++VERS_BLD))
+
+    else
+      # Last chance: use new "rev-list --count" method
+      VERS_BLD=$(($(git rev-list --count HEAD)))
+    fi
+  fi
 fi
 
 
