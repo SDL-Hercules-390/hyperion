@@ -68,9 +68,9 @@ jobs:
           export CC="clang"
           export CXX="clang++"
         fi
-        export CFLAGS="-I/usr/local/include -I/usr/local/include/libltdl"
-        export CXXFLAGS="-I/usr/local/include -I/usr/local/include/libltdl"
-        export LDFLAGS="-L/usr/local/lib"
+        export CFLAGS="-I/usr/local/include -I$(find $(brew --cellar libtool) -type d -name "include" | sort -n | tail -n 1)"
+        export CXXFLAGS="-I/usr/local/include -I$(find $(brew --cellar libtool) -type d -name "include" | sort -n | tail -n 1)"
+        export LDFLAGS="-L/usr/local/lib -L$(find $(brew --cellar libtool) -type d -name "lib" | sort -n | tail -n 1)"
 
         git clone https://github.com/SDL-Hercules-390/gists.git extpkgs
         cd ./extpkgs
