@@ -529,7 +529,7 @@
   call "%~dp0_dynamic_version.cmd"
   set "rc=%errorlevel%"
 
-  echo VERSION = %VERSION%  (%VERS_MAJ%.%VERS_INT%.%VERS_MIN%.%VERS_BLD%)
+  echo VERSION = %VERSION%
 
   if defined CUSTOM_BUILD_STRING (
     echo CUSTOM_BUILD_STRING = %CUSTOM_BUILD_STRING%

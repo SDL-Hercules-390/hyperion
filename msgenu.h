@@ -1031,7 +1031,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01410 "Cannot register %s handler: %s"
 #define HHC01411 "Cannot suppress SIGPIPE signal: %s"
 #define HHC01412 "Hercules terminated"
-#define HHC01413 "%s version %s (%u.%u.%u.%u)"
+#define HHC01413 "%s version %s"
 #define HHC01414 "%s"
 #define HHC01415 "Build date: %s at %s"
 //efine HHC01416 (available)

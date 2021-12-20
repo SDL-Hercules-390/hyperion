@@ -26,8 +26,10 @@ AC_CONFIG_AUX_DIR(autoconf)   # (directory containing auxillary build tools)
 # -----------------------------------------------------------------------------
 
 VERS_MAJ=4                    # first  digit of version
-VERS_INT=4                    # second digit of version
+VERS_INT=5                    # second digit of version
 VERS_MIN=0                    # third  digit of version
+VERS_DEV=1                    # flag: 1 = between releases development version
+                              #       0 = official formal release version
 
 AM_INIT_AUTOMAKE(hercules,${VERS_MAJ}.${VERS_INT}.${VERS_MIN})
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

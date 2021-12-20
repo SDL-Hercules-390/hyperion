@@ -816,7 +816,7 @@ DLL_EXPORT void display_version( FILE* f, int httpfd, const char* prog )
     if (prog)  // called from e.g. "cgibin_debug_version_info()"?
     {
         char buf[256];
-        MSGBUF( buf, MSG( HHC01413, "I", prog, VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+        MSGBUF( buf, MSG( HHC01413, "I", prog, VERSION ));
         display_str( f, httpfd, RTRIM( buf ));
         ++p; // (skip past first str)
     }
@@ -889,7 +889,7 @@ static void init_hercver_strings( const char* prog )
 
     // prog = Utility (HHC02499), NULL = Hercules (HHC01413).
     if (prog) MSGBUF( buf, MSG( HHC02499, "I",   prog,     VERSION ));
-    else      MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION, VERS_MAJ, VERS_INT, VERS_MIN, VERS_BLD ));
+    else      MSGBUF( buf, MSG( HHC01413, "I", "Hercules", VERSION ));
 
     APPEND_STR( strdup( RTRIM( buf )));
 

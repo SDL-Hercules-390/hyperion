@@ -109,12 +109,14 @@ _vercomp()
 VERS_MAJ=$(grep -o -a -m 1  '^VERS_MAJ=[0-9][0-9]*'  $INFILE)
 VERS_INT=$(grep -o -a -m 1  '^VERS_INT=[0-9][0-9]*'  $INFILE)
 VERS_MIN=$(grep -o -a -m 1  '^VERS_MIN=[0-9][0-9]*'  $INFILE)
+VERS_DEV=$(grep -o -a -m 1  '^VERS_DEV=[0-9][0-9]*'  $INFILE)
 
 # Result of above is "VERS_xxx=n". The below does the assignment.
 
 eval $VERS_MAJ
 eval $VERS_INT
 eval $VERS_MIN
+eval $VERS_DEV
 
 # PROGRAMMING NOTE: must check for the existence of both the .git
 # directory as well as the git command itself since either may exist
@@ -206,12 +208,25 @@ fi
 if test "x$VERS_BLD" = "x"; then
            VERS_BLD=0
 fi
+if test "x$VERS_DEV" = "x"; then
+           VERS_DEV=0
+fi
+
+
+# Determine whether this is an official formal release version,
+# or a between formal releases intermediate development version.
+
+if test "$VERS_DEV" == "0"; then
+         dev_string=""          # (official formal release version)
+else
+         dev_string="-DEV"      # (between release development version)
+fi
 
 
 # Construct a quoted VERSION string value
 
 QUOTE='"'
-VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}-SDL${git_hash}${modified_str}${QUOTE}"
+VERSION="${QUOTE}${VERS_MAJ}.${VERS_INT}.${VERS_MIN}.${VERS_BLD}-SDL${dev_string}${git_hash}${modified_str}${QUOTE}"
 
 
 # Finally, return (via echo) the desired version component back to the caller
@@ -227,6 +242,9 @@ elif test "$vers_part" == "VERS_MIN"; then
 
 elif test "$vers_part" == "VERS_BLD"; then
                      echo $VERS_BLD
+
+elif test "$vers_part" == "VERS_DEV"; then
+                     echo $VERS_DEV
 
 elif test "$vers_part" == "VERSION"; then
                      echo $VERSION
