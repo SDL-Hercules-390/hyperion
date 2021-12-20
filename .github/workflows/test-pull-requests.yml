@@ -40,12 +40,19 @@ jobs:
     - name: Build
       if: ${{ runner.os != 'Windows' }}
       run: |
-        export CC="${{ matrix.compiler }}"
-        export CXX="${{ matrix.compiler }}++"
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          export CC="gcc"
+          export CXX=g++
+        else
+          export CC="clang"
+          export CXX="clang++"
+        fi
         if [ "${{ runner.os }}" = "macOS" ]; then
           export CC="$(xcrun --find $CC) -arch x86_64"
           export CXX="$(xcrun --find $CXX) -arch x86_64"
           export SDKROOT="$(xcrun --show-sdk-path)"
+          export CFLAGS="-I/usr/local/include"
+          export CXXFLAGS="-I/usr/local/include"
         fi
         util/bldlvlck
         ./autogen.sh
