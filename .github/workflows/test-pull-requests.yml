@@ -42,13 +42,19 @@ jobs:
       run: |
         export CC="${{ matrix.compiler }}"
         if [ "${{ runner.os }}" = "macOS" ]; then
-          export CC="$CC -arch x86_64"
+          export CC="$(xcrun --find $CC) -arch x86_64"
         fi
         util/bldlvlck
         ./autogen.sh
         ./configure --enable-regina-rexx --enable-setuid-hercifc
         ./config.status --config
-        make -j$(nproc)
+        NUM_JOBS=1
+        if command -v nproc >/dev/null; then
+          NUM_JOBS=$(nproc)
+        elif [ "${{ runner.os }}" = "macOS" ]; then
+          NUM_JOBS=$(sysctl -n hw.physicalcpu)
+        fi
+        make -j$NUM_JOBS
         make check
     - name: Build
       if: ${{ runner.os == 'Windows' }}
