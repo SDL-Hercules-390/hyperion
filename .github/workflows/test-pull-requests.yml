@@ -36,7 +36,7 @@ jobs:
     - name: Install macOS dependencies
       if: ${{ runner.os == 'macOS' }}
       run: |
-        brew install gsed automake regina-rexx
+        brew install gawk gsed automake regina-rexx
     - name: Build
       if: ${{ runner.os != 'Windows' }}
       run: |
