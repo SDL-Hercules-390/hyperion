@@ -26,19 +26,23 @@ jobs:
         - os: windows-latest
       fail-fast: false
     runs-on: ${{matrix.os}}
+
     steps:
     - uses: actions/checkout@v2
+
     - name: Install Ubuntu dependencies
       if: ${{ runner.os == 'Linux' }}
       run: |
         sudo apt-get install -y regina-rexx libregina3-dev
         sudo apt-get install -y binutils binutils-dev
+
     - name: Install macOS dependencies
       if: ${{ runner.os == 'macOS' }}
       run: |
-        brew install gawk gsed automake regina-rexx
-    - name: Build
-      if: ${{ runner.os != 'Windows' }}
+        brew install autoconf automake cmake gsed libtool regina-rexx
+
+    - name: Build Linux
+      if: ${{ runner.os == 'Linux' }}
       run: |
         if [ "${{ matrix.compiler }}" = "gcc" ]; then
           export CC="gcc"
@@ -47,25 +51,43 @@ jobs:
           export CC="clang"
           export CXX="clang++"
         fi
-        if [ "${{ runner.os }}" = "macOS" ]; then
-          export CC="$(xcrun --find $CC) -arch x86_64"
-          export CXX="$(xcrun --find $CXX) -arch x86_64"
-          export SDKROOT="$(xcrun --show-sdk-path)"
-          export CFLAGS="-I/usr/local/include"
-          export CXXFLAGS="-I/usr/local/include"
-        fi
         util/bldlvlck
         ./autogen.sh
         ./configure --enable-regina-rexx --enable-setuid-hercifc
         ./config.status --config
-        NUM_JOBS=1
-        if command -v nproc >/dev/null; then
-          NUM_JOBS=$(nproc)
-        elif [ "${{ runner.os }}" = "macOS" ]; then
-          NUM_JOBS=$(sysctl -n hw.physicalcpu)
-        fi
-        make -j$NUM_JOBS
+        make -j$(nproc)
         make check
-    - name: Build
+
+    - name: Build macOS
+      if: ${{ runner.os == 'macOS' }}
+      run: |
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          export CC="gcc"
+          export CXX=g++
+        else
+          export CC="clang"
+          export CXX="clang++"
+        fi
+        export CFLAGS="-I/usr/local/include -I/usr/local/include/libltdl"
+        export CXXFLAGS="-I/usr/local/include -I/usr/local/include/libltdl"
+        export LDFLAGS="-L/usr/local/lib"
+
+        git clone https://github.com/SDL-Hercules-390/gists.git extpkgs
+        cd ./extpkgs
+        ./extpkgs.sh clone c d s t
+        cd ..
+
+        util/bldlvlck
+        ./autogen.sh
+        ./configure \
+          --enable-optimization="-g -g3 -ggdb3 -O3" \
+          --enable-extpkgs="$PWD/extpkgs" \
+          --enable-regina-rexx \
+          --disable-getoptwrapper
+        ./config.status --config
+        make -j$(sysctl -n hw.physicalcpu)
+        make check
+
+    - name: Build Windows
       if: ${{ runner.os == 'Windows' }}
       run: ./makefile.bat DEBUG-X64 makefile.msvc 8
