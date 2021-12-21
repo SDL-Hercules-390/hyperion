@@ -86,7 +86,8 @@ jobs:
           --disable-getoptwrapper
         ./config.status --config
         make -j$(sysctl -n hw.physicalcpu)
-        make check
+        # run tests and output the log if there is an error in the test runner
+        make check || (cat hyperion/allTests.out; exit 1)
 
     - name: Build Windows
       if: ${{ runner.os == 'Windows' }}
