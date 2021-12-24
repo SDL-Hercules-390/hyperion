@@ -490,6 +490,20 @@ int altcyls;                            /* Number alternate cyls     */
     /*---------------------------------------------------------------*/
     devchar[57] = 0xff;                         // real device type code
 
+    /*---------------------------------------------------------------*/
+    /*  https://www.vm.ibm.com/pubs/cp720/RDCBK.HTML                 */
+    /*                                                               */
+    /*  NAME       : HCPRDCBK                                        */
+    /*  DESCRIPTION: Real Device Characteristics Block               */
+    /*  DSECT      : RDCBK                                           */
+    /*   ...                                                         */
+    /*  003A  58 Bitstring  2 RDC5859    DASD SPECIFIC RESERVED      */
+    /*  003C  60 Signed     4 RDCMCYL32  NUMBER OF PRIMARY CYLINDERS */
+    /*                                                               */
+    /*---------------------------------------------------------------*/
+
+    store_fw( devchar+60, cyls - altcyls );     // Primary cylinders
+
     return 64;
 }
 
