@@ -3137,10 +3137,10 @@ FinishShutdown:
                     PTYPSTR(sysblk.pcpu), sysblk.pcpu ) ;
                 if (IS_CPU_ONLINE(sysblk.pcpu))
                 {
-                    len += snprintf(buf+len, sizeof(buf)-len, "PSW=%8.8X%8.8X ",
+                    len += idx_snprintf( len, buf, sizeof(buf), "PSW=%8.8X%8.8X ",
                                    fetch_fw( curr_psw ), fetch_fw( curr_psw + 4 ));
                     if (regs->arch_mode == ARCH_900_IDX)
-                        len += snprintf (buf+len, sizeof(buf)-len, "%16.16"PRIX64" ",
+                        len += idx_snprintf( len, buf, sizeof(buf), "%16.16"PRIX64" ",
                                         fetch_dw( curr_psw + 8 ));
 #if defined(_FEATURE_SIE)
                     else
@@ -3151,7 +3151,7 @@ FinishShutdown:
                             buf[len++] = ' ';
                         }
 #endif /*defined(_FEATURE_SIE)*/
-                    len += snprintf (buf+len, sizeof(buf)-len, "%2d%c%c%c%c%c%c%c%c",
+                    len += idx_snprintf( len, buf, sizeof(buf), "%2d%c%c%c%c%c%c%c%c",
                            regs->psw.amode64                  ? 64 :
                            regs->psw.amode                    ? 31 : 24,
                            regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
@@ -3164,7 +3164,7 @@ FinishShutdown:
                            regs->arch_mode == ARCH_900_IDX    ? 'Z' : '.');
                 }
                 else
-                    len += snprintf (buf+len, sizeof(buf)-len, "%s", "Offline");
+                    len += idx_snprintf( len, buf, sizeof(buf), "%s", "Offline");
 
                 memset( buf+len, ' ', sizeof( buf ) - len - 1 );
                 buf[ sizeof( buf ) - 1 ] = 0;
@@ -3191,7 +3191,7 @@ FinishShutdown:
                     if ((len + i + 12) < cons_cols)
                     {
                         if (mipsrate > 999)
-                            i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                            i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                           "; mips %1d,%03d",
                                           prev_mipsrate / 1000000000,
                                           ((prev_mipsrate % 1000000000) +
@@ -3201,17 +3201,17 @@ FinishShutdown:
                             U32 mipsfrac = prev_mipsrate % 1000000;
 
                             if (mipsrate > 99)
-                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                               "; mips %3d.%01d",
                                               mipsrate,
                                               (mipsfrac + 50000) / 100000);
                             else if (mipsrate > 9)
-                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                               "; mips %2d.%02d",
                                               mipsrate,
                                               (mipsfrac + 5000) / 10000);
                             else
-                                i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                                i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                               "; mips %1d.%03d",
                                               mipsrate,
                                               (mipsfrac + 500) / 1000);
@@ -3233,7 +3233,7 @@ FinishShutdown:
                     if (numcpu)
                         ibuf[(int)i++] = ';',
                         ibuf[(int)i++] = ' ';
-                    i += snprintf(ibuf + i, sizeof(ibuf) - i,
+                    i += idx_snprintf( i, ibuf, sizeof(ibuf),
                                   "I/O %6.6s",
                                   format_int( prev_siosrate ));
                 }

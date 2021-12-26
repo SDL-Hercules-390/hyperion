@@ -135,7 +135,7 @@ BYTE    c;                              /* Character work area       */
     n = snprintf(buf, bufl, "%s", hdr);
     if (draflag)
     {
-        n += snprintf (buf+n, bufl-n, "R:"F_RADR":", raddr);
+        n += idx_snprintf( n, buf, bufl, "R:"F_RADR":", raddr);
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
@@ -143,26 +143,26 @@ BYTE    c;                              /* Character work area       */
     {
         if (HOSTREGS->mainlim == 0 || aaddr > HOSTREGS->mainlim)
         {
-            n += snprintf (buf+n, bufl-n,
+            n += idx_snprintf( n, buf, bufl,
                 "A:"F_RADR" Guest real address is not valid", aaddr);
             return n;
         }
         else
         {
-            n += snprintf (buf+n, bufl-n, "A:"F_RADR":", aaddr);
+            n += idx_snprintf( n, buf, bufl, "A:"F_RADR":", aaddr);
         }
     }
     else
     if (regs->mainlim == 0 || aaddr > regs->mainlim)
     {
-        n += snprintf (buf+n, bufl-n, "%s", " Real address is not valid");
+        n += idx_snprintf( n, buf, bufl, "%s", " Real address is not valid");
         return n;
     }
 
     /* Note: we use the internal "_get_storage_key" function here
        so that we display the STORKEY_BADFRM bit too, if it's set.
     */
-    n += snprintf( buf+n, bufl-n, "K:%2.2X=", ARCH_DEP( _get_storage_key )( aaddr, SKEY_K ));
+    n += idx_snprintf( n, buf, bufl, "K:%2.2X=", ARCH_DEP( _get_storage_key )( aaddr, SKEY_K ));
 
     memset (hbuf, SPACE, sizeof(hbuf));
     memset (cbuf, SPACE, sizeof(cbuf));
@@ -170,7 +170,7 @@ BYTE    c;                              /* Character work area       */
     for (i = 0, j = 0; i < 16; i++)
     {
         c = regs->mainstor[aaddr++];
-        j += snprintf (hbuf+j, sizeof(hbuf)-j, "%2.2X", c);
+        j += idx_snprintf( j, hbuf, sizeof(hbuf), "%2.2X", c);
         if ((aaddr & 0x3) == 0x0)
         {
             hbuf[j] = SPACE;
@@ -182,7 +182,7 @@ BYTE    c;                              /* Character work area       */
         if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
     } /* end for(i) */
 
-    n += snprintf (buf+n, bufl-n, "%36.36s %16.16s", hbuf, cbuf);
+    n += idx_snprintf( n, buf, bufl, "%36.36s %16.16s", hbuf, cbuf);
     return n;
 
 } /* end function display_real */
@@ -206,7 +206,7 @@ int     stid;                           /* Segment table indication  */
     if (*xcode == 0)
         n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufl-n, 0, "");
     else
-        n += snprintf( buf+n, bufl-n,
+        n += idx_snprintf( n, buf, bufl,
                        " Translation exception %4.4hX (%s)",
                        *xcode, PIC2Name( *xcode ));
     return n;
@@ -435,14 +435,14 @@ char    buf[512];                       /* MSGBUF work buffer        */
 
         if(ilc > 2)
         {
-            len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X", inst[2], inst[3]);
+            len += idx_snprintf( len, buf, sizeof(buf), "%2.2X%2.2X", inst[2], inst[3]);
             if(ilc > 4)
-                len += snprintf(buf + len, sizeof(buf)-len, "%2.2X%2.2X ", inst[4], inst[5]);
+                len += idx_snprintf( len, buf, sizeof(buf), "%2.2X%2.2X ", inst[4], inst[5]);
             else
-                len += snprintf(buf + len, sizeof(buf)-len, "     ");
+                len += idx_snprintf( len, buf, sizeof(buf), "     ");
         }
         else
-            len += snprintf(buf + len, sizeof(buf)-len, "         ");
+            len += idx_snprintf( len, buf, sizeof(buf), "         ");
 
         /* Disassemble the instruction and display the results */
         PRINT_INST(inst, buf + len);
@@ -846,7 +846,7 @@ char    regs_msg_buf[4*512] = {0};
 
 #if defined( _FEATURE_SIE )
     if (SIE_MODE( regs ))
-        n += snprintf( buf + n, sizeof( buf )-n, "SIE: " );
+        n += idx_snprintf( n, buf, sizeof( buf ), "SIE: " );
 #endif
 
     /* Exit if instruction is not valid */
@@ -892,26 +892,26 @@ char    regs_msg_buf[4*512] = {0};
     copy_psw( regs, qword );
 
     if (sysblk.cpus > 1)
-        n += snprintf( buf + n, sizeof( buf )-n, "%s%02X: ", PTYPSTR( regs->cpuad ), regs->cpuad );
+        n += idx_snprintf( n, buf, sizeof( buf ), "%s%02X: ", PTYPSTR( regs->cpuad ), regs->cpuad );
 
-    n += snprintf( buf + n, sizeof( buf )-n,
+    n += idx_snprintf( n, buf, sizeof( buf ),
                 "PSW=%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7] );
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    n += snprintf (buf + n, sizeof(buf)-n,
+    n += idx_snprintf( n, buf, sizeof(buf),
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
 #endif
 
     /* Format instruction line */
-                 n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
-    if (ilc > 2){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );}
-    if (ilc > 4){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );}
-                 n += snprintf( buf + n, sizeof( buf )-n, " %s", (ilc < 4) ? "        " :
-                                                                 (ilc < 6) ? "    " : "" );
+                 n += idx_snprintf( n, buf, sizeof( buf ), "INST=%2.2X%2.2X", inst[0], inst[1] );
+    if (ilc > 2){n += idx_snprintf( n, buf, sizeof( buf ), "%2.2X%2.2X",      inst[2], inst[3] );}
+    if (ilc > 4){n += idx_snprintf( n, buf, sizeof( buf ), "%2.2X%2.2X",      inst[4], inst[5] );}
+                 n += idx_snprintf( n, buf, sizeof( buf ), " %s", (ilc < 4) ? "        " :
+                                                                  (ilc < 6) ? "    " : "" );
     n += PRINT_INST( inst, buf + n );
     MSGBUF( psw_inst_msg, MSG( HHC02324, "I", buf ));
 
@@ -1054,10 +1054,10 @@ char    regs_msg_buf[4*512] = {0};
 
 #if defined( _FEATURE_SIE )
         if (SIE_MODE( regs ))
-            n += snprintf( buf2 + n, sizeof( buf2 )-n, "SIE: " );
+            n += idx_snprintf( n, buf2, sizeof( buf2 ), "SIE: " );
 #endif
         if (sysblk.cpus > 1)
-            n += snprintf( buf2 + n, sizeof( buf2 )-n, "%s%02X: ",
+            n += idx_snprintf( n, buf2, sizeof( buf2 ), "%s%02X: ",
                           PTYPSTR( regs->cpuad ), regs->cpuad );
 
         if (REAL_MODE( &regs->psw ))
@@ -1085,10 +1085,10 @@ char    regs_msg_buf[4*512] = {0};
 
 #if defined(_FEATURE_SIE)
         if (SIE_MODE( regs ))
-            n += snprintf( buf2 + n, sizeof( buf2 )-n, "SIE: " );
+            n += idx_snprintf( n, buf2, sizeof( buf2 ), "SIE: " );
 #endif
         if (sysblk.cpus > 1)
-            n += snprintf( buf2 + n, sizeof( buf2 )-n, "%s%02X: ",
+            n += idx_snprintf( n, buf2, sizeof( buf2 ), "%s%02X: ",
                            PTYPSTR( regs->cpuad ), regs->cpuad );
         if (0
             || REAL_MODE( &regs->psw )
@@ -1445,21 +1445,21 @@ static int display_regs32(char *hdr,U16 cpuad,U32 *r,int numcpus,char *buf,int b
         {
             if(i)
             {
-                len+=snprintf(buf+len, buflen-len, "%s", "\n");
+                len += idx_snprintf( len, buf, buflen, "%s", "\n" );
             }
-            len+=snprintf(buf+len, buflen-len, "%s", msghdr);
+            len += idx_snprintf( len, buf, buflen, "%s", msghdr );
             if(numcpus>1)
             {
-                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+                len += idx_snprintf( len, buf, buflen, "%s%02X: ", PTYPSTR(cpuad), cpuad );
             }
         }
         if(i%4)
         {
-            len+=snprintf(buf+len,buflen-len,"%s", " ");
+            len += idx_snprintf( len, buf, buflen, "%s", " ");
         }
-        len+=snprintf(buf+len,buflen-len,"%s%2.2d=%8.8"PRIX32,hdr,i,r[i]);
+        len += idx_snprintf( len, buf, buflen, "%s%2.2d=%8.8"PRIX32, hdr, i, r[i] );
     }
-    len+=snprintf(buf+len,buflen-len,"%s","\n");
+    len += idx_snprintf( len, buf, buflen, "%s", "\n" );
     return(len);
 }
 
@@ -1484,21 +1484,21 @@ static int display_regs64(char *hdr,U16 cpuad,U64 *r,int numcpus,char *buf,int b
         {
             if(i)
             {
-                len+=snprintf(buf+len,buflen-len,"%s", "\n");
+                len += idx_snprintf( len, buf, buflen, "%s", "\n" );
             }
-            len+=snprintf(buf+len,buflen-len, "%s", msghdr);
+            len += idx_snprintf( len, buf, buflen, "%s", msghdr );
             if(numcpus>1)
             {
-                len+=snprintf(buf+len,buflen-len,"%s%02X: ", PTYPSTR(cpuad), cpuad);
+                len += idx_snprintf( len, buf, buflen, "%s%02X: ", PTYPSTR(cpuad), cpuad );
             }
         }
         if(i%rpl)
         {
-            len+=snprintf(buf+len,buflen-len,"%s"," ");
+            len += idx_snprintf( len, buf, buflen, "%s", " " );
         }
-        len+=snprintf(buf+len,buflen-len,"%s%1.1X=%16.16"PRIX64,hdr,i,r[i]);
+        len += idx_snprintf( len, buf, buflen, "%s%1.1X=%16.16"PRIX64, hdr, i, r[i] );
     }
-    len+=snprintf(buf+len,buflen-len,"%s","\n");
+    len += idx_snprintf( len, buf, buflen, "%s", "\n" );
     return(len);
 }
 
@@ -1555,7 +1555,7 @@ static int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, in
                                 || (opcode == 0xED && (inst[1] >= 0xA8 && inst[1] <= 0xAF)))   /* RXE DFP conversions  */
         )
     {
-        len += snprintf(buf + len, buflen - len, MSG(HHC02276,"I", regs->fpc));
+        len += idx_snprintf( len, buf, buflen, MSG( HHC02276,"I", regs->fpc ));
     }
 
     /* Display floating-point registers if appropriate */
@@ -1576,7 +1576,7 @@ static int display_inst_regs (REGS *regs, BYTE *inst, BYTE opcode, char *buf, in
     }
 
     if (len && sysblk.showregsfirst)
-        len += snprintf( buf + len, buflen - len, "\n" );
+        len += idx_snprintf( len, buf, buflen, "\n" );
 
     return len;
 }
@@ -1724,13 +1724,13 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
     union ByteToBits { struct BITS b; U8 status; } u;
     int len = 0;
 
-    len+=snprintf(buf+len,buflen-len,
+    len += idx_snprintf( len, buf, buflen,
         "%s%1d:%04X D/T%04X\n",
         hdr, LCSS_DEVNUM, dev->devtype);
 
     if (ARCH_370_IDX == sysblk.arch_mode)
     {
-        len+=snprintf(buf+len,buflen-len,
+        len += idx_snprintf( len, buf, buflen,
             "%s  CSW Flags:%2.2X CCW:%2.2X%2.2X%2.2X            Flags\n"
             "%s         US:%2.2X  CS:%2.2X Count:%2.2X%2.2X       (Key) Subchannel key          %1.1X\n"
             "%s                                       (S)   Suspend control         %1.1X\n"
@@ -1746,7 +1746,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
             hdr, (dev->scsw.flag0 & SCSW0_CC));
     }
 
-    len+=snprintf(buf+len,buflen-len,
+    len += idx_snprintf( len, buf, buflen,
         "%s  Subchannel Number[%04X]\n"
         "%s    Path Management Control Word (PMCW)\n"
         "%s  IntParm:%2.2X%2.2X%2.2X%2.2X\n"
@@ -1772,7 +1772,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         hdr,dev->pmcw.zone, dev->pmcw.flag25,
         dev->pmcw.flag26, dev->pmcw.flag27);
 
-    len+=snprintf(buf+len,buflen-len,
+    len += idx_snprintf( len, buf, buflen,
         "%s  Subchannel Status Word (SCSW)\n"
         "%s    Flags: %2.2X%2.2X  Subchan Ctl: %2.2X%2.2X     (FC)  Function Control\n"
         "%s      CCW: %2.2X%2.2X%2.2X%2.2X                          Start                   %1.1X\n"
@@ -1830,7 +1830,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         hdr, (dev->scsw.flag2 & SCSW2_Q)        >> 7);
 
     u.status = (U8)dev->scsw.unitstat;
-    len+=snprintf(buf+len,buflen-len,
+    len += idx_snprintf( len, buf, buflen,
         "%s    %s %s%s%s%s%s%s%s%s%s\n",
         hdr, status_type[(sysblk.arch_mode == ARCH_370_IDX)],
         u.status == 0 ? "is Normal" : "",
@@ -1844,7 +1844,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
         u.b.b7 ? "UE " : "");
 
     u.status = (U8)dev->scsw.chanstat;
-    len+=snprintf(buf+len,buflen-len,
+    len += idx_snprintf( len, buf, buflen,
         "%s    %s %s%s%s%s%s%s%s%s%s\n",
         hdr, status_type[2],
         u.status == 0 ? "is Normal" : "",
@@ -1870,7 +1870,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
   #define BUSYSHAREABLELINE_VALUE       hdr, dev->busy,
 #endif // defined( OPTION_SHARED_DEVICES )
 
-    len+=snprintf(buf+len,buflen-len,
+    len += idx_snprintf( len, buf, buflen,
         "%s  DEVBLK Status\n"
         BUSYSHAREABLELINE_PATTERN
         "%s    suspended        %1.1X    console       %1.1X    rlen3270 %5d\n"

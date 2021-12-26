@@ -981,7 +981,7 @@ DLL_EXPORT void hdl_listmods( int flags )
 
             for (device = mod->devices; device; device = device->next)
             {
-                if ((len += snprintf( buf + len, sizeof( buf ) - len, ", %s", device->name )) >= 50)
+                if ((len += idx_snprintf( len, buf, sizeof( buf ), ", %s", device->name )) >= 50)
                 {
                     // "HDL:  devtypes = %s"
                     WRMSG( HHC01533, "I", trim( buf, ", " ));

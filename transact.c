@@ -2406,13 +2406,13 @@ void dump_tdb( REGS* regs, TDB* tdb )
                         memcpy( inst, ip, sizeof( inst ));
                         ilc = ILC( inst[0] );
 
-                                     n += snprintf( buf + n, sizeof( buf )-n, "%16.16"PRIX64" ", atia );
-                                     n += snprintf( buf + n, sizeof( buf )-n, "INST=%2.2X%2.2X", inst[0], inst[1] );
-                        if (ilc > 2){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[2], inst[3] );}
-                        if (ilc > 4){n += snprintf( buf + n, sizeof( buf )-n, "%2.2X%2.2X",      inst[4], inst[5] );}
-                                     n += snprintf( buf + n, sizeof( buf )-n, " %s", (ilc < 4) ? "        "
-                                                                                   : (ilc < 6) ? "    "
-                                                                                   :             "" );
+                                     n += idx_snprintf( n, buf, sizeof( buf ), "%16.16"PRIX64" ", atia );
+                                     n += idx_snprintf( n, buf, sizeof( buf ), "INST=%2.2X%2.2X", inst[0], inst[1] );
+                        if (ilc > 2){n += idx_snprintf( n, buf, sizeof( buf ), "%2.2X%2.2X",      inst[2], inst[3] );}
+                        if (ilc > 4){n += idx_snprintf( n, buf, sizeof( buf ), "%2.2X%2.2X",      inst[4], inst[5] );}
+                                     n += idx_snprintf( n, buf, sizeof( buf ), " %s", (ilc < 4) ? "        "
+                                                                                    : (ilc < 6) ? "    "
+                                                                                    :             "" );
                         n += PRINT_INST( inst, buf + n );
 
                         // "AAAAAAAAAAAAAAAA INST=112233445566 XXXXX op1,op2                name"

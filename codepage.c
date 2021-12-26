@@ -1456,7 +1456,7 @@ DLL_EXPORT int update_codepage(int argc, char *argv[], char *cmd )
                         hbuf[j++] = SPACE;
                         cbuf[k++] = SPACE;
                     }
-                    j += snprintf( hbuf+j, sizeof(hbuf)-j, "%2.2X", c );
+                    j += idx_snprintf( j, hbuf, sizeof(hbuf), "%2.2X", c );
                     if ( g_to_h) c = guest_to_host(c);
                     cbuf[k++] = ( !isprint(c) ? '.' : c );
                 } /* end for(i) */

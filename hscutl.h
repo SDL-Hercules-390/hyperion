@@ -310,4 +310,53 @@ HUT_DLL_IMPORT void convert_to_ebcdic( BYTE* dest, int len, const char* source )
 /*-------------------------------------------------------------------*/
 HUT_DLL_IMPORT int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 
+/*-------------------------------------------------------------------*/
+/*                        idx_snprintf                               */
+/*      Fix for "Potential snprintf buffer overflow" #457            */
+/*-------------------------------------------------------------------*/
+/* This function is a replacement for code that builds a message     */
+/* piecemeal (a little bit at a time) via a series of snprint calls  */
+/* indexing each time a little bit further into the message buffer   */
+/* until the entire message is built:                                */
+/*                                                                   */
+/*      char buf[64];                                                */
+/*      size_t bufl = sizeof( buf );                                 */
+/*      int n = 0;                                                   */
+/*                                                                   */
+/*      n =  snprintf( buf,   bufl,   "%part1", part1 );             */
+/*      n += snprintf( buf+n, bufl-n, "%part2", part2 );             */
+/*      n += snprintf( buf+n, bufl-n, "%part3", part3 );             */
+/*      ...                                                          */
+/*      n += snprintf( buf+n, bufl-n, "%lastpart", lastpart );       */
+/*                                                                   */
+/*      WRMSG( HHCnnnn, "I", buf );                                  */
+/*                                                                   */
+/* The problem with the above code is there is no check to ensure    */
+/* a buffer overflow does not occur due to trying to format more     */
+/* data than the buffer can hold.                                    */
+/*                                                                   */
+/* The idx_snprintf function accomplishes the same thing but without */
+/* overflowing the buffer. It checks to ensure the idx buffer offset */
+/* value never exceeds the size of the buffer.                       */
+/*                                                                   */
+/* The return value is the same as what snprintf returns, BUT THE    */
+/* BUFFER ADDRESS AND SIZE PASSED TO THE FUNCTION is the *original*  */
+/* address and size of the buffer (i.e. the raw buf and bufl value   */
+/* but NOT offset by the index):                                     */
+/*                                                                   */
+/*      char buf[64];                                                */
+/*      size_t bufl = sizeof( buf );                                 */
+/*      int n = 0;                                                   */
+/*                                                                   */
+/*      n =  idx_snprintf( n, buf, bufl, "%part1", part1 );          */
+/*      n += idx_snprintf( n, buf, bufl, "%part2", part2 );          */
+/*      n += idx_snprintf( n, buf, bufl, "%part3", part3 );          */
+/*      ...                                                          */
+/*      n += idx_snprintf( n, buf, bufl, "%lastpart", lastpart );    */
+/*                                                                   */
+/*      WRMSG( HHCnnnn, "I", buf );                                  */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+HUT_DLL_IMPORT int  idx_snprintf( int idx, char* buffer, size_t bufsiz, const char* fmt, ... ) ATTR_PRINTF(4,5);
+
 #endif /* __HSCUTL_H__ */
