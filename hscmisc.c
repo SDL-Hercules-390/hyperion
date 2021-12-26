@@ -199,16 +199,26 @@ RADR    raddr;                          /* Real address              */
 int     n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 
-    n = snprintf (buf, bufl, "%s%c:"F_VADR":", hdr,
-                 ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
+    /* Convert virtual address to real address */
     *xcode = ARCH_DEP(virt_to_real) (&raddr, &stid,
                                      vaddr, ar, regs, acctype);
+
     if (*xcode == 0)
-        n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufl-n, 0, "");
+    {
+        if (ar == USE_REAL_ADDR)
+            n = snprintf( buf, bufl, "%sR:"F_VADR":", hdr, vaddr );
+        else
+            n = snprintf( buf, bufl, "%sV:"F_VADR":R:"F_RADR":", hdr, vaddr, raddr );
+
+        n += ARCH_DEP( display_real )( regs, raddr, buf+n, bufl-n, 0, "" );
+    }
     else
-        n += idx_snprintf( n, buf, bufl,
-                       " Translation exception %4.4hX (%s)",
-                       *xcode, PIC2Name( *xcode ));
+    {
+        n = snprintf (buf, bufl, "%s%c:"F_VADR":", hdr,
+                     ar == USE_REAL_ADDR ? 'R' : 'V', vaddr);
+        n += idx_snprintf( n, buf, bufl, " Translation exception %4.4hX (%s)",
+            *xcode, PIC2Name( *xcode ));
+    }
     return n;
 
 } /* end function display_virt */
