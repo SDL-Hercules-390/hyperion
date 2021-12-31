@@ -515,7 +515,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00438 "%1d:%04X CKD file %s: writing cyl %d head %d record %d kl %d dl %d"
 #define HHC00439 "%1d:%04X CKD file %s: setting track overflow flag for cyl %d head %d record %d"
 #define HHC00440 "%1d:%04X CKD file %s: updating cyl %d head %d record %d kl %d dl %d"
-#define HHC00441 "%1d:%04X CKD file %s: ipdating cyl %d head %d record %d dl %d"
+#define HHC00441 "%1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
 #define HHC00442 "%1d:%04X CKD file %s: set file mask %02X"
 //efine HHC00443 (available)
 //efine HHC00444 (available)

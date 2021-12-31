@@ -2106,7 +2106,7 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    // "%1d:%04X CKD file %s: ipdating cyl %d head %d record %d dl %d"
+    // "%1d:%04X CKD file %s: updating cyl %d head %d record %d dl %d"
     LOGDEVTR( HHC00441, "I",  dev->filename,
               dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec, dev->ckdcurdl );
 
