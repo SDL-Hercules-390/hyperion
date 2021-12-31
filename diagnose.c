@@ -851,8 +851,6 @@ U32   code;
         break;
 #endif /* defined(_FEATURE_HOST_RESOURCE_ACCESS_FACILITY) */
 
-#endif /*FEATURE_HERCULES_DIAGCALLS*/
-
     case 0xFF8:
     /*---------------------------------------------------------------*/
     /* Diagnose FF8: Simulate Loop                                   */
@@ -866,6 +864,8 @@ U32   code;
     /*---------------------------------------------------------------*/
         SLEEP(300);
         break;
+
+#endif /*FEATURE_HERCULES_DIAGCALLS*/
 
     default:
     /*---------------------------------------------------------------*/
