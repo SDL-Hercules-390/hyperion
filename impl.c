@@ -415,6 +415,7 @@ static void* watchdog_thread( void* arg )
     int   cpu;
     int   sleep_seconds  = WATCHDOG_SECS;
     int   sleep_secs2nd  = 3;
+    int   slept_secs;
 
     bool  deadlock_reported = false;
     bool  hung_cpu_reported = false;
@@ -433,8 +434,13 @@ static void* watchdog_thread( void* arg )
 
     do
     {
-        /* Only check for problems "every once in a while" */
-        SLEEP( sleep_seconds );
+        /* PROGRAMMING NOTE: sleeping in many small increments (rather
+           than one large sleep) prevents problems that can occur when
+           the system resumes (awakens) after having been suspended.
+           (GH Issue #458 "Hercules crash after resume from suspend")
+        */
+        for (slept_secs=0; slept_secs < sleep_seconds; ++slept_secs)
+            SLEEP( 1 );     /* (sleep one second at a time) */
 
 #if defined( _MSVC_ )
         // Disable all watchdog logic while debugger is attached
@@ -543,6 +549,9 @@ static void* watchdog_thread( void* arg )
             // If they do so, then prevent the crash from occurring as
             // long as their debugger is still attached, but once they
             // detach their debugger, then go ahead and allow the crash
+
+            // "You have %d seconds to attach a debugger before crash dump will be taken!"
+            WRMSG( HHC00823, "S", WAIT_FOR_DEBUGGER_SECS );
             {
                 int i;
                 for (i=0; !IsDebuggerPresent() && i < WAIT_FOR_DEBUGGER_SECS; ++i)
@@ -550,9 +559,14 @@ static void* watchdog_thread( void* arg )
 
                 // Don't crash if there is now a debugger attached
                 if (IsDebuggerPresent())
-                    continue; // (don't crash)
+                {
+                    // "Debugger attached! NOT crashing!"
+                    WRMSG( HHC00824, "S" );
+                    continue;
+                }
 
-                // They chose not to attach a debugger. Allow crash.
+                // "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
+                WRMSG( HHC00825, "S" );
             }
 #endif
             /* Display additional debugging information */

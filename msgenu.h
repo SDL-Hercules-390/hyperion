@@ -683,9 +683,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00820 "Processor %s%02X: offline"
 #define HHC00821 "Processor %s%02X: vector facility configured %s"
 #define HHC00822 "PROCESSOR %s%02X APPEARS TO BE HUNG!"
-//efine HHC00823 (available)
-//efine HHC00824 (available)
-//efine HHC00825 (available)
+#define HHC00823 "You have %d seconds to attach a debugger before crash dump will be taken!"
+#define HHC00824 "Debugger attached! NOT crashing!"
+#define HHC00825 "TIME'S UP! (or debugger has been detached!) - Forcing crash dump!"
 //efine HHC00826 (available)
 #define HHC00827 "Processor %s%02X: engine %02X type %1d set: %s"
 #define HHC00828 "Processor %s%02X: ipl failed: %s"
