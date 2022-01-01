@@ -853,17 +853,33 @@ U32   code;
 
     case 0xFF8:
     /*---------------------------------------------------------------*/
-    /* Diagnose FF8: Simulate Loop                                   */
+    /* Diagnose FF8: Hercules Infinite Loop (Malfunctioning CPU)     */
     /*---------------------------------------------------------------*/
-        while(1);
+        while(1);   /* (loop forever)  */
         break;      /* (never reached) */
 
     case 0xFFC:
     /*---------------------------------------------------------------*/
-    /* Diagnose FFC: Simulate Wait                                   */
+    /* Diagnose FFC: Hercules SLOW Instruction (Malfunctioning CPU)  */
     /*---------------------------------------------------------------*/
-        SLEEP(300);
+        SLEEP(300); /* (300 seconds = 5 minutes!) */
         break;
+
+    case 0xFFD:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FFD: Hercules Dummy "Slow(?)" Instruction            */
+    /*---------------------------------------------------------------*/
+    {
+        /* r1 = microseconds */
+        unsigned int secs  = regs->GR_L(r1) / ONE_MILLION;
+        unsigned int usecs = regs->GR_L(r1) % ONE_MILLION;
+        unsigned int i;
+        for (i=0; i < secs; ++i)
+            SLEEP(1);       /* (sleep one second at a time) */
+        if (usecs)
+            usleep(usecs);  /* (remaining microseconds, if any) */
+        break;
+    }
 
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
 
