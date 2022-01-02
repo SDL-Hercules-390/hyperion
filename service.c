@@ -1098,7 +1098,7 @@ int             i;                      /* Array subscripts          */
 U32             realinc;                /* Storage size in increments*/
 U32             incsizemb;              /* Increment size in MB      */
 U32             sccb_absolute_addr;     /* Absolute address of SCCB  */
-U32             sccblen;                /* Length of SCCB            */
+U16             sccblen;                /* Length of SCCB            */
 SCCB_HEADER    *sccb;                   /* -> SCCB header            */
 SCCB_SCP_INFO  *sccbscp;                /* -> SCCB SCP information   */
 SCCB_CPU_INFO  *sccbcpu;                /* -> SCCB CPU information   */
@@ -1162,29 +1162,51 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     /* R2 is real address of service call control block */
     sccb_real_addr = regs->GR_L(r2);
 
-    /* Obtain the absolute address of the SCCB */
-    sccb_absolute_addr = APPLY_PREFIXING(sccb_real_addr, regs->PX);
-
     /* Program check if SCCB is not on a doubleword boundary */
-    if ( sccb_absolute_addr & 0x00000007 )
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    if (sccb_real_addr & 0x00000007)
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
-    /* Program check if SCCB is outside main storage */
-    if ( sccb_absolute_addr > regs->mainlim )
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    /* Program check if SCCB falls outside of main storage */
+    if (sccb_real_addr > (regs->mainlim - sizeof( SCCB_HEADER )))
+        ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
+
+    /* Obtain the absolute address of the SCCB */
+    sccb_absolute_addr = APPLY_PREFIXING( sccb_real_addr, regs->PX );
+
+    /* Specification Exception if SCCB not below 2GB */
+    if (sccb_absolute_addr >= (0x80000000 - sizeof( SCCB_HEADER )))
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* Point to service call control block */
     sccb = (SCCB_HEADER*)(regs->mainstor + sccb_absolute_addr);
 
     /* Load SCCB length from header */
-    FETCH_HW(sccblen, sccb->length);
+    FETCH_HW( sccblen, sccb->length );
 
     /* Set the main storage reference bit */
     ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_REF );
 
-    /* Program check if end of SCCB falls outside main storage */
-    if ( sccb_absolute_addr + sccblen > regs->mainlim + 1)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    /* Specification Exception if SCCB size less than 8 */
+    if (sccblen < sizeof( SCCB_HEADER ))
+        ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+    /* Program check if SCCB falls outside of main storage,
+       isn't below 2GB or overlaps low core or prefix area. */
+    {
+        U64 sccb_first_byte = (U64) sccb_absolute_addr;
+        U64 sccb_last_byte  = (U64) sccb_absolute_addr + sccblen - 1;
+
+        if (0
+            || sccb_first_byte < PSA_SIZE
+            || sccb_last_byte > 0x80000000
+            || (sccb_first_byte >= regs->PX && sccb_first_byte < (regs->PX + PSA_SIZE))
+            || (sccb_last_byte  >= regs->PX && sccb_last_byte  < (regs->PX + PSA_SIZE))
+        )
+            ARCH_DEP( program_interrupt )( regs, PGM_SPECIFICATION_EXCEPTION );
+
+        if (sccb_last_byte > regs->mainlim)
+            ARCH_DEP( program_interrupt )( regs, PGM_ADDRESSING_EXCEPTION );
+    }
 
     /* Obtain lock if immediate response is not requested */
     if (!(sccb->flag & SCCB_FLAG_SYNC)
@@ -1373,7 +1395,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             if(!IS_CPU_ONLINE(i))
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_STANDBY_STATE;
 #endif
-
         }
 
 #if defined(FEATURE_MPF_INFO)
@@ -1387,7 +1408,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
-
         break;
 
 docheckstop:
@@ -1466,7 +1486,6 @@ docheckstop:
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
-
         break;
 
     case SCLP_READ_CSI_INFO:
@@ -1506,7 +1525,6 @@ docheckstop:
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
-
         break;
 
 #ifdef FEATURE_SYSTEM_CONSOLE
@@ -1592,9 +1610,7 @@ docheckstop:
             /* Set response code X'0020' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
             sccb->resp = SCCB_RESP_COMPLETE;
-
             break;
-
 
         case SCCB_EVD_TYPE_CPIDENT:
             sclp_cpident(sccb);
@@ -1622,13 +1638,11 @@ docheckstop:
             break;
 #endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
 
-
 #if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
         case SCCB_EVD_TYPE_VT220:
             sclp_sysa_write(sccb);
             break;
 #endif /*defined(FEATURE_INTEGRATED_ASCII_CONSOLE)*/
-
 
         default:
 
@@ -1640,9 +1654,7 @@ docheckstop:
             /* Set response code X'73F0' in SCCB header */
             sccb->reas = SCCB_REAS_SYNTAX_ERROR;
             sccb->resp = SCCB_RESP_SYNTAX_ERROR;
-
             break;
-
         }
 
         break;
@@ -1676,7 +1688,6 @@ docheckstop:
             break;
         }
 
-
 #if defined(FEATURE_SCEDIO)
         if(SCLP_RECV_ENABLED(SCEDIO) && sclp_attn_pending(SCCB_EVD_TYPE_SCEDIO))
         {
@@ -1706,7 +1717,6 @@ docheckstop:
             break;
         }
 #endif /*defined(FEATURE_INTEGRATED_3270_CONSOLE)*/
-
 
 #if defined(FEATURE_INTEGRATED_ASCII_CONSOLE)
         if(SCLP_RECV_ENABLED(VT220) && sclp_attn_pending(SCCB_EVD_TYPE_VT220))
@@ -1740,9 +1750,7 @@ docheckstop:
             sccb->reas = SCCB_REAS_NO_EVENTS;
             sccb->resp = SCCB_RESP_NO_EVENTS;
         }
-
         break;
-
 
     case SCLP_WRITE_EVENT_MASK:
 
@@ -1978,7 +1986,6 @@ docheckstop:
         /* Set response code X'01F0' for invalid SCLP command */
         sccb->reas = SCCB_REAS_INVALID_CMD;
         sccb->resp = SCCB_RESP_REJECT;
-
         break;
 
     } /* end switch(sclp_command) */
@@ -2007,7 +2014,6 @@ docheckstop:
 
 
 #endif /*defined(FEATURE_SERVICE_PROCESSOR)*/
-
 
 #if !defined(_GEN_ARCH)
 
