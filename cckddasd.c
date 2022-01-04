@@ -861,7 +861,6 @@ int             cache;                  /* New active cache entry    */
 
     /* read the new track */
     dev->bufupd = 0;
-    *unitstat = 0;
     cache = cckd_read_trk (dev, trk, 0, unitstat);
     if (cache < 0)
     {
@@ -1046,7 +1045,6 @@ int             maxlen;                 /* Size for cache entry      */
 
     /* Read the new blkgrp */
     dev->bufupd = 0;
-    *unitstat = 0;
     cache = cckd_read_trk (dev, blkgrp, 0, unitstat);
     if (cache < 0)
     {
