@@ -12,6 +12,69 @@ Hercules: Release Notes
 
 <h1>Hercules Release Notes and Known Issues</h1>
 
+<a name=4.4.1></a>
+<hr noshade>
+
+<h2>Release notes for <a href="https://github.com/SDL-Hercules-390/hyperion/releases/tag/Release_4.4.1">SDL Hyperion 4.4.1</a>
+</h2>
+
+<p>
+<dl>
+
+
+  <dt>CCKD compressed dasd Locate Record bug found and fixed
+  <dd>
+  <p>
+    A potentially serious long standing bug in Hercules's compressed CKD (i.e. CCKD/CFBA/CCKD64/CFBA64)
+    dasd emulation logic was recently discovered and quickly fixed. Due to the natue of the bug,
+    Locate Record channel commands (opcodes X'47' or X'E7') would incorrectly prematurely fail in
+    an unusual way causing unexpected guest behavior <i>(e.g. the guest might end up looping or hanging
+    waiting for the I/O to complete for example. See e.g. GitHub Issue
+    <a href="https://github.com/SDL-Hercules-390/hyperion/issues/464">#464</a>).</i>
+  </p>
+  <p>
+    Please note however that due to the nature of this bug, damage to your emulated dasd images
+    <i><b><u>could never occur</u></b></i>. The bug would only cause the guest's I/O to unexpectedly
+    fail or never finish at all. The integrity of the actual Hercules emulated dasd image file would
+    remain intact. Also note that this bug existed <i>only</i> in the "CCKD" compressed dasd image
+    handling logic, and <i>not</i> in the regular non-compressed "CKD" dasd handling logic. Regular
+    uncompressed CKD dasd images were unaffected by this bug and Locate Record would behave correctly.
+  </p>
+
+
+  <dt>Real address also shown during instruction tracing
+  <dd>
+  <p>
+    During instruction stepping/tracing ('<code>t+</code>' or '<code>s+</code>' Hercules commands),
+    when the address of the instruction's operand is a virtual address the corresponding translated
+    real address is now also shown when possible
+    (e.g: &nbsp;<code>HHC02326I CP00: V:20012CD8:R:7FFF3CD8:K:06=00000000 00000000  ........</code>)
+  </p>
+
+
+  <dt>Change in format of reported version
+  <dd>
+  <p>
+    Hercules now reports its version using the format "V.M.R.nnnnn-SDL-ghhhhhhhh"
+    where V.M.R is the major Version, Modification and Revision level (e.g. 4.4.1),
+    nnnnn is an ever increasing internal build number (to ensure strictly sequentally
+    ascending version strings), and hhhhhhhh is the first eight characters of the hash
+    of the most recent commit made to the git source code repository <i>(which identifies
+    <u>exactly</u> which fixes/changes are present in your build and which are not,
+    which is vitally important for bug reporting and problem analysis purposes).</i>
+  </p>
+  <p>
+    For between release development builds the format is "V.M.R.nnnnn-SDL-DEV-ghhhhhhhh"
+    which is identical to the new format but with the extra "DEV-" string to indicate
+    the build is not an official release build but rather is a privately/manually built
+    intermediate development build.
+  </p>
+
+
+</dl>
+
+<!-- --------------------------------------------------------------------------------- -->
+
 <a name=4.4></a>
 <hr noshade>
 
