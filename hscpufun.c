@@ -679,10 +679,21 @@ int timerint_cmd( int argc, char *argv[], char *cmdline )
     {
         if (CMD( argv[1], DEFAULT, 7 ) || CMD( argv[1], RESET, 5 ))
         {
-            sysblk.timerint     = DEF_TOD_UPDATE_USECS;
 #if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
-            sysblk.txf_timerint = sysblk.timerint;
+            if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, sysblk.arch_mode ))
+            {
+                sysblk.timerint     = DEF_TXF_TIMERINT;
+                sysblk.txf_timerint = DEF_TXF_TIMERINT;
+            }
+            else
 #endif
+            {
+                sysblk.timerint     = DEF_TOD_UPDATE_USECS;
+#if defined( _FEATURE_073_TRANSACT_EXEC_FACILITY )
+                sysblk.txf_timerint = DEF_TOD_UPDATE_USECS;
+#endif
+            }
+
             if (MLVL( VERBOSE ))
             {
                 // "%-14s set to %s"
