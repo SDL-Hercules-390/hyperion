@@ -1,6 +1,6 @@
 /* CTC_LCS.C    (C) Copyright James A. Pierson, 2002-2012            */
 /*              (C) Copyright "Fish" (David B. Trout), 2002-2011     */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2022                             */
 /*              Hercules LAN Channel Station Support                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -4682,29 +4682,10 @@ void Process_0D10 (PLCSDEV pLCSDEV, PLCSHDR pLCSHDR, PLCSBAF1 pLCSBAF1, PLCSBAF2
 //  0100000000 xxxxxxxx...........
 //  0 1 2 3 4  5 6 7 8 9 A B C ...
 
-#define INBOUND_4C0B_SIZE  32
-static const BYTE Inbound_4C0B[INBOUND_4C0B_SIZE] =
-                 {
-                    0x00, 0x20, 0x04, 0x00,                          /* LCSHDR  */
-                    0x00, 0x18, 0x4C, 0x0B, 0x00, 0x03, 0x60, 0x01,  /* LCSBAF1 */
-                    0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x76, 0x57, 0x00, 0x00, 0x00, 0x00,
-                    0x01, 0x40, 0x00,                                /* LCSBAF2 */
-                    0x00                                             /* Filler  */
-                 };
-//  00200400  00184C0B 00036001 00000101 00000000 00007657 00000000  014000  00
-//            0 1 2 3  4 5 6 7  8 9 A B  C D E F  0 1 2 3  4 5 6 7   0  1 2  3
-
     DEVBLK*   pDEVBLK;
     PLCSPORT  pLCSPORT;
     PLCSCONN  pLCSCONN;
     PETHFRM   pEthFrame;
-    PLCSIBH   pLCSIBH;
-    PLCSHDR   pInHDR;
-    PLCSBAF1  pInBAF1;
-//  PLCSBAF2  pInBAF2;
-//  U16       hwLenInBaf1;
-//  U16       hwLenInBaf2;
     int       iEthLen;
     int       iLPDULen;
     LLC       llc;
@@ -4755,7 +4736,9 @@ static const BYTE Inbound_4C0B[INBOUND_4C0B_SIZE] =
     {
         if ( iTHetcLen > 1493 )                                           // 1493 = 0x5D5
         {
-            goto Process_0D10_too_large;
+            snprintf( llcmsg, sizeof(llcmsg), "LCS: Ignoring over long data of %d bytes!!!", iTHetcLen );
+            WRMSG(HHC03984, "W", llcmsg );  /* FixMe! Proper message number! */
+            return;
         }
         STORE_HW( pEthFrame->hwEthernetType, (U16)(iLPDULen + iTHetcLen) );     // Set LLC and TH etc length
         memcpy( &pEthFrame->bData[iLPDULen], &pLCSBAF2->bByte05, iTHetcLen );   // Copy TH etc
@@ -4800,31 +4783,6 @@ static const BYTE Inbound_4C0B[INBOUND_4C0B_SIZE] =
         pLCSDEV->fTuntapError = TRUE;
         PTT_TIMING( "*WRITE ERR", 0, iEthLen, 1 );
     }
-
-    return;
-
-
-Process_0D10_too_large:
-
-    // Obtain a buffer in which to construct the data to be passed to VTAM.
-    pLCSIBH = alloc_lcs_buffer( pLCSDEV, ( INBOUND_4C0B_SIZE * 2 ) );
-
-    memcpy( &pLCSIBH->bData, Inbound_4C0B, INBOUND_4C0B_SIZE );
-    pLCSIBH->iDataLen = INBOUND_4C0B_SIZE;
-
-    pInHDR = (PLCSHDR)&pLCSIBH->bData;
-    pInBAF1 = (PLCSBAF1)( (BYTE*)pInHDR + sizeof(LCSHDR) );
-//  FETCH_HW( hwLenInBaf1, pInBAF1->hwLenBaf1 );
-//  FETCH_HW( hwLenInBaf2, pInBAF1->hwLenBaf2 );
-//  pInBAF2 = (PLCSBAF2)( (BYTE*)pInBAF1 + hwLenInBaf1 );
-
-    //
-    memcpy( pInBAF1->bTokenA, &pLCSCONN->bInToken, sizeof(pLCSCONN->bInToken) );  // Set Inbound token
-
-    // Add the buffer containing the bad news response to the chain.
-    add_lcs_buffer_to_chain( pLCSDEV, pLCSIBH );
-
-    pLCSDEV->fAttnRequired = TRUE;
 
     return;
 }
@@ -5768,7 +5726,7 @@ static const BYTE Inbound_CC98[INBOUND_CC98_SIZE] =
                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x00, 0x00, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00,
                    0x01, 0xff, 0xff,                                 /* LCSBAF2 */
-                   0x04                                              /* Filler  */
+                   0x00                                              /* Filler  */
                  };
 
     PLCSIBH     pLCSIBH;
