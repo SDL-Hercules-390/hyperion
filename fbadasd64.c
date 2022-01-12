@@ -249,8 +249,8 @@ CCKD64_DEVHDR   cdevhdr;                /* Compressed device header  */
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
     if (!dev->quiet)
-        // "%1d:%04X FBA file %s: origin %"PRId64", blks %d"
-        WRMSG( HHC00507, "I", LCSS_DEVNUM,
+        // "%1d:%04X %s file %s: origin %"PRId64", blks %d"
+        WRMSG( HHC00507, "I", LCSS_DEVNUM, cfba ? "CFBA64" : "FBA64",
                dev->filename, dev->fbaorigin, dev->fbanumblk );
 
     /* Set number of sense bytes */

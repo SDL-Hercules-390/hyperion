@@ -600,8 +600,8 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
     /* Log the device geometry */
     if (!dev->quiet)
-        // "%1d:%04X CKD file %s: model %s cyls %d heads %d tracks %d trklen %d"
-        WRMSG( HHC00414, "I", LCSS_DEVNUM, filename, dev->ckdtab->name,
+        // "%1d:%04X %s file %s: model %s cyls %d heads %d tracks %d trklen %d"
+        WRMSG( HHC00414, "I", LCSS_DEVNUM, cckd ? "CCKD" : "CKD", filename, dev->ckdtab->name,
                dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Locate the CKD control unit dasd table entry */
