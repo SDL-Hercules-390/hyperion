@@ -628,3 +628,11 @@ DUT_DLL_IMPORT U32          dh_devid_typ( BYTE* dh_devid );
 DUT_DLL_IMPORT bool      is_dh_devid_typ( BYTE* dh_devid, U32 typmsk );
 
 /*-------------------------------------------------------------------*/
+
+#define CKDTYP( _cmp, _64 )     ((_64) ? ((_cmp) ? "CCKD64" : "CKD64") \
+                                       : ((_cmp) ? "CCKD"   : "CKD"))
+
+#define FBATYP( _cmp, _64 )     ((_64) ? ((_cmp) ? "CFBA64" : "FBA64") \
+                                       : ((_cmp) ? "CFBA"   : "FBA"))
+
+/*-------------------------------------------------------------------*/

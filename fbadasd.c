@@ -193,8 +193,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
                 continue;
             }
 
-            // "%1d:%04X FBA file: parameter %s in argument %d is invalid"
-            WRMSG( HHC00503, "E", LCSS_DEVNUM, argv[i], i + 1 );
+            // "%1d:%04X %s file: parameter %s in argument %d is invalid"
+            WRMSG( HHC00503, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), argv[i], i + 1 );
             return -1;
         }
     }
@@ -259,8 +259,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                // "%1d:%04X FBA file %s: invalid device origin block number %s"
-                WRMSG( HHC00505, "E", LCSS_DEVNUM, dev->filename, argv[1] );
+                // "%1d:%04X %s file %s: invalid device origin block number %s"
+                WRMSG( HHC00505, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, argv[1] );
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -275,8 +275,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                // "%1d:%04X FBA file %s: invalid device block count %s"
-                WRMSG( HHC00506, "E", LCSS_DEVNUM, dev->filename, argv[2] );
+                // "%1d:%04X %s file %s: invalid device block count %s"
+                WRMSG( HHC00506, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, argv[2] );
                 close (dev->fd);
                 dev->fd = -1;
                 return -1;
@@ -289,7 +289,7 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
 
     if (!dev->quiet)
         // "%1d:%04X %s file %s: origin %"PRId64", blks %d"
-        WRMSG( HHC00507, "I", LCSS_DEVNUM, cfba ? "CFBA" : "FBA",
+        WRMSG( HHC00507, "I", LCSS_DEVNUM, FBATYP( cfba, 0 ),
                dev->filename, dev->fbaorigin, dev->fbanumblk );
 
     /* Set number of sense bytes */
@@ -299,8 +299,8 @@ CCKD_DEVHDR     cdevhdr;                /* Compressed device header  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        // "%1d:%04X FBA file %s: device type %4.4X not found in dasd table"
-        WRMSG( HHC00508, "E", LCSS_DEVNUM, dev->filename, dev->devtype );
+        // "%1d:%04X %s file %s: device type %4.4X not found in dasd table"
+        WRMSG( HHC00508, "E", LCSS_DEVNUM, FBATYP( cfba, 0 ), dev->filename, dev->devtype );
         close (dev->fd);
         dev->fd = -1;
         return -1;

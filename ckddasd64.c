@@ -285,16 +285,16 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
 
             if (fileseq != 1)
             {
-                // "%1d:%04X CKD file %s: only 1 CCKD file allowed"
-                WRMSG( HHC00407, "E", LCSS_DEVNUM, filename );
+                // "%1d:%04X %s file %s: only 1 CCKD file allowed"
+                WRMSG( HHC00407, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename );
                 return -1;
             }
         }
 
         if (dev->ckdrdonly)
             if (!dev->quiet)
-                // "%1d:%04X CKD64 file %s: opened r/o%s"
-                WRMSG( HHC00476, "I", LCSS_DEVNUM,
+                // "%1d:%04X %s file %s: opened r/o%s"
+                WRMSG( HHC00476, "I", LCSS_DEVNUM, CKDTYP( cckd, 1 ),
                     filename, dev->ckdfakewr ? " with fake writing" : "" );
 
         /* Read the compressed device header */
@@ -365,16 +365,16 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         if (devhdr.dh_fileseq != fileseq
             && !(devhdr.dh_fileseq == 0 && fileseq == 1))
         {
-            // "%1d:%04X CKD file %s: ckd file out of sequence or bad size"
-            WRMSG( HHC00408, "E", LCSS_DEVNUM, filename );
+            // "%1d:%04X %s file %s: ckd file out of sequence or bad size"
+            WRMSG( HHC00408, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename );
             return -1;
         }
 
         if (devhdr.dh_fileseq > 0)
         {
             if (!dev->quiet)
-                // "%1d:%04X CKD file %s: seq %02d cyls %6d-%-6d"
-                WRMSG( HHC00409, "I", LCSS_DEVNUM,
+                // "%1d:%04X %s file %s: seq %02d cyls %6d-%-6d"
+                WRMSG( HHC00409, "I", LCSS_DEVNUM, CKDTYP( cckd, 1 ),
                        filename, devhdr.dh_fileseq, dev->ckdcyls,
                        (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
@@ -388,8 +388,8 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         }
         else if (heads != dev->ckdheads || trksize != dev->ckdtrksz)
         {
-            // "%1d:%04X CKD file %s: found heads %d trklen %d, expected heads %d trklen %d"
-            WRMSG( HHC00410, "E", LCSS_DEVNUM,
+            // "%1d:%04X %s file %s: found heads %d trklen %d, expected heads %d trklen %d"
+            WRMSG( HHC00410, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ),
                    filename, heads, trksize, dev->ckdheads, dev->ckdtrksz );
             return -1;
         }
@@ -400,16 +400,16 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
-            // "%1d:%04X CKD file %s: ckd header inconsistent with file size"
-            WRMSG( HHC00411, "E", LCSS_DEVNUM, filename );
+            // "%1d:%04X %s file %s: ckd header inconsistent with file size"
+            WRMSG( HHC00411, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename );
             return -1;
         }
 
         /* Check for correct high cylinder number */
         if (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)
         {
-            // "%1d:%04X CKD file %s: ckd header high cylinder incorrect"
-            WRMSG( HHC00412, "E", LCSS_DEVNUM, filename );
+            // "%1d:%04X %s file %s: ckd header high cylinder incorrect"
+            WRMSG( HHC00412, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename );
             return -1;
         }
 
@@ -437,8 +437,8 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
         /* Check that maximum files has not been exceeded */
         if (fileseq > CKD_MAXFILES)
         {
-            // "%1d:%04X CKD file %s: maximum CKD files exceeded: %d"
-            WRMSG( HHC00413, "E", LCSS_DEVNUM, filename, CKD_MAXFILES );
+            // "%1d:%04X %s file %s: maximum CKD files exceeded: %d"
+            WRMSG( HHC00413, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename, CKD_MAXFILES );
             return -1;
         }
 
@@ -460,15 +460,15 @@ BYTE            serial[12+1] = {0};     /* Dasd serial number        */
     /* Log the device geometry */
     if (!dev->quiet)
         // "%1d:%04X %s file %s: model %s cyls %d heads %d tracks %d trklen %d"
-        WRMSG( HHC00470, "I", LCSS_DEVNUM, cckd ? "CCKD64" : "CKD64", filename, dev->ckdtab->name,
+        WRMSG( HHC00470, "I", LCSS_DEVNUM, CKDTYP( cckd, 1 ), filename, dev->ckdtab->name,
                dev->ckdcyls, dev->ckdheads, dev->ckdtrks, dev->ckdtrksz );
 
     /* Locate the CKD control unit dasd table entry */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        // "%1d:%04X CKD file %s: control unit %s not found in dasd table"
-        WRMSG( HHC00416, "E", LCSS_DEVNUM,
+        // "%1d:%04X %s file %s: control unit %s not found in dasd table"
+        WRMSG( HHC00416, "E", LCSS_DEVNUM, CKDTYP( cckd, 1 ),
                filename, cu ? cu : dev->ckdtab->cu );
         return -1;
     }
