@@ -478,7 +478,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00401 "%1d:%04X CKD file %s: open error: not found"
 #define HHC00402 "%1d:%04X CKD file: parameter %s in argument %d is invalid"
 #define HHC00403 "%1d:%04X %s file %s: opened r/o%s"
-#define HHC00404 "%1d:%04X %s file %s: error in function %s: %s"
+#define HHC00404 "%1d:%04X CKD file %s: error in function %s: %s"
 #define HHC00405 "%1d:%04X CKD file %s: only one base file is allowed"
 #define HHC00406 "%1d:%04X CKD file %s: ckd header invalid"
 #define HHC00407 "%1d:%04X %s file %s: only 1 CCKD file allowed"
