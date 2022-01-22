@@ -3518,11 +3518,16 @@ a real System/390.  The configuration file is an ASCII text file.
         first device of the group being an even numbered device:
 
             <blockquote>
-            <code>0600<b>.3</b> &nbsp; QETH &nbsp;<i>[arguments]</i></code>
+            <code>0600<b>.3</b> &nbsp; QETH &nbsp;<i>[arguments...]</i></code>
             </blockquote>
 
-        The device/emulation type may optionally be specified as <code><b>OSA</b></code>
-        or <code><b>OSD</b></code> instead of <code>QETH</code>.
+        You may also optionally use <code>OSA</code> or <code>OSD</code>
+        as the device/emulation type instead of <code>QETH</code> if desired:
+
+            <blockquote>
+            <code>0600.3 &nbsp; OSA &nbsp;&nbsp;<i>[arguments...]</i></code><br>
+            <code>0600.3 &nbsp; OSD &nbsp;&nbsp;<i>[arguments...]</i></code>
+            </blockquote>
 
         </p>
 
@@ -3540,14 +3545,13 @@ a real System/390.  The configuration file is an ASCII text file.
         <br><br>
 
         <i>
-        <b>Please note</b> that this is still considered to be an
-        <u>experimental driver still under development</u>.
-        Not all of the features or functionality that real OSA devices have
-        are currently supported. For example, the current implementation
-        only supports three devices: the read device, the write device and
-        the datapath device. Real OSA devices support multiple datapath
-        devices. Support for this feature is planned, but is not yet
-        implemented.
+        <b>Please note</b> that this is still considered to be an experimental
+        driver still under development. Not all of the features or functionality
+        that real OSA devices have are currently supported. For example, the
+        current implementation only supports three devices: the read device,
+        the write device and the datapath device. Real OSA devices support
+        multiple datapath devices. Support for this feature is planned, but is
+        not yet implemented.
         </i>
 
         </p>
