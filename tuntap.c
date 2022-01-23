@@ -114,12 +114,15 @@ static int TUNTAP_SetMode (int fd, struct hifr *hifr, int iFlags)
         else if (pid == 0)
         {
             /* child */
+            char msglvl[16] = {0};
             dup2 (ifd[0], STDIN_FILENO);
             dup2 (STDOUT_FILENO, STDERR_FILENO);
             dup2 (ifd[0], STDOUT_FILENO);
             close (ifd[1]);
-            rc = execlp (hercifc, hercifc, NULL );
-            return -1;
+            MSGBUF( msglvl, "%d", sysblk.msglvl );
+            execlp( hercifc, hercifc, msglvl, query_codepage(), NULL );
+            WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
+            exit( 127 );
         }
 
         /* parent */
@@ -1082,8 +1085,6 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         if (!(pszCfgCmd = get_symbol( "HERCULES_IFC" )) || !*pszCfgCmd)
             pszCfgCmd = HERCIFC_CMD;
 
-        TRACE(MSG(HHC00147, "I", pszCfgCmd));
-
         // Fork a process to execute the hercifc
         ifc_pid = fork();
 
@@ -1105,6 +1106,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             struct rlimit rlim;
             int i;
             rlim_t file_limit;
+            char msglvl[16] = {0};
             getrlimit(RLIMIT_NOFILE,&rlim);
             /* While Linux and Cygwin have limits of 1024 files by default,
              * Mac OS X does not - its default is -1, or completely unlimited.
@@ -1127,12 +1129,12 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             dup2( STDOUT_FILENO, STDERR_FILENO );
 
             // Execute the interface configuration command
-            (void)execlp( pszCfgCmd, pszCfgCmd, NULL );
+            MSGBUF( msglvl, "%d", sysblk.msglvl );
+            (void)execlp( pszCfgCmd, pszCfgCmd, msglvl, query_codepage(), NULL );
 
             // The exec function returns only if unsuccessful
             // "Error in function %s: %s"
             WRMSG( HHC00136, "E", "execlp()", strerror( errno ) );
-
             exit( 127 );
         }
 

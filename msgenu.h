@@ -314,7 +314,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00144 "Net device %s: Invalid MTU %s"
 #define HHC00145 "Net device %s: Invalid MAC address %s"
 #define HHC00146 "Net device %s: Invalid gateway address %s"
-#define HHC00147 "Executing %s to configure interface"
+//efine HHC00147 (available)
 #define HHC00148 "Closing %"PRId64" files"
 #define HHC00149 "IFC_IOCtl called for %s on FDs %d %d"
 #define HHC00150 "%s module loaded%s"
@@ -329,14 +329,16 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC00159 (available)
 #define HHC00160 "SCP %scommand: %s"
 #define HHC00161 "Function %s failed: [%02d] %s"
-#define HHC00162 "%s: Must be called from within Hercules."
-#define HHC00163 "%s: Cannot obtain %s socket: %s"
-#define HHC00164 "%s: I/O error on read: %s."
-#define HHC00165 "%s: Unknown request: %lX"
-#define HHC00166 "%s: ioctl error doing %s on %s: %d %s"
-#define HHC00167 "%s: Doing %s on %s"
-#define HHC00168 "%s: Hercules disappeared!! .. exiting"
-//efine HHC00169 - HHC00199 (available)
+// hercifc.c: 162-169
+#define HHC00162 "%s: Must be called from within Hercules; ... exiting"
+#define HHC00163 "%s: Cannot obtain %s socket: %s; ... exiting"
+#define HHC00164 "%s: I/O error on read: %s; ... exiting"
+#define HHC00165 "%s: Unknown request: %lX; ... ignoring and continuing"
+#define HHC00166 "%s: ioctl error doing %s on %s: %d %s; ... ignoring and continuing"
+#define HHC00167 "%s: Doing %s on %s ..."
+#define HHC00168 "%s: Hercules disappeared!! ... exiting"
+#define HHC00169 "%s: DONE! ... exiting"
+//efine HHC00170 - HHC00199 (available)
 
 // reserve 002xx for tape device related
 #define HHC00201 "%1d:%04X Tape file %s, type %s: tape closed"
