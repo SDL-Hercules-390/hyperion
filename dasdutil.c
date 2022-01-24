@@ -1187,6 +1187,7 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 /*      start    Starting cylinder number for this file              */
 /*      end      Ending cylinder number for this file                */
 /*      volcyls  Total number of cylinders on volume                 */
+/*      serial   Physical serial number                              */
 /*      volser   Volume serial number                                */
 /*      comp     Compression algorithm for a compressed device.      */
 /*               Will be 0xff if device is not to be compressed.     */
@@ -1203,7 +1204,7 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 static int
 create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *buf, U32 start, U32 end,
-                U32 volcyls, char *volser, BYTE comp, int dasdcopy,
+                U32 volcyls, const char* serial, char *volser, BYTE comp, int dasdcopy,
                 int nullfmt, int rawflag,
                 int flagECmode, int flagMachinecheck)
 {
@@ -1283,7 +1284,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     /* Create the device header */
     memset( &devhdr, 0, CKD_DEVHDR_SIZE );
-    gen_dasd_serial( devhdr.dh_serial );
+    memcpy( devhdr.dh_serial, serial, sizeof( devhdr.dh_serial ));
 
     if (comp == 0xff) memcpy( devhdr.dh_devid, dh_devid_str( CKD_P370_TYP ), 8 );
     else              memcpy( devhdr.dh_devid, dh_devid_str( CKD_C370_TYP ), 8 );
@@ -1786,6 +1787,7 @@ U32             maxcpif;                /* Maximum number of cylinders
                                            in each CKD image file    */
 u_int           rec0len = 8;            /* Length of R0 data         */
 U32             trksize;                /* DASD image track length   */
+char            serial[ sizeof_member( CKD_DEVHDR, dh_serial ) + 1 ] = {0};
 
     /* Compute the DASD image track length */
     trksize = CKD_TRKHDR_SIZE
@@ -1897,6 +1899,9 @@ U32             trksize;                /* DASD image track length   */
         }
     }
 
+    /* Generate a random serial number for this new dasd */
+    gen_dasd_serial( serial );
+
     /* Create the DASD image files */
     for (cyl = 0, fileseq = 1; cyl < volcyls;
             cyl += maxcpif, fileseq++)
@@ -1918,7 +1923,7 @@ U32             trksize;                /* DASD image track length   */
 
         /* Create a CKD DASD image file */
         rc = create_ckd_file (sfname, fileseq, devtype, heads,
-                    trksize, buf, cyl, endcyl, volcyls, volser,
+                    trksize, buf, cyl, endcyl, volcyls, serial, volser,
                     comp, dasdcopy, nullfmt, rawflag,
                     flagECmode, flagMachinecheck);
         if (rc < 0) return -1;
