@@ -77,7 +77,7 @@
   echo.
   echo     VERSION
   echo.
-  echo         3.2     (December 1, 2022)
+  echo         3.3     (January 26, 2022)
 
   endlocal
   exit /b 1
