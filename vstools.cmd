@@ -262,7 +262,7 @@
     %return%
   )
 
-  :: (remove trailing backslash if present)
+  :: Remove trailing backslash if present
 
   set "VSCOMNTOOLS=!VS%vsver%COMNTOOLS!"
 
@@ -270,7 +270,19 @@
     set "VSCOMNTOOLS=%VSCOMNTOOLS:~0,-1%"
   )
 
-  :: (define directory where "vcvarsxx.bat" files live)
+  :: Detect accidental typos in VSCOMNTOOLS path
+
+  if not exist "%VSCOMNTOOLS%" (
+    echo %~nx0: ERROR: Defined VS%vsver%COMNTOOLS directory does not exist!
+    echo %~nx0: INFO: VS%vsver%COMNTOOLS = "%VSCOMNTOOLS%"??
+    set "vsver="
+    set "vsname="
+    set "VCVARSDIR="
+    set "rc=1"
+    %return%
+  )
+
+  :: Define directory where "vcvarsxx.bat" files live
 
   set "VCVARSDIR=%VSCOMNTOOLS%\..\..\VC"
 
