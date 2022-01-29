@@ -3323,7 +3323,8 @@ AC_CACHE_SAVE()
 AC_OUTPUT([  Makefile  util/Makefile  html/Makefile  man/Makefile  m4/Makefile  ])
 
 dnl Kludge to fix Debian/Ubuntu libtool
-perl -pi -e 's/link_all_deplibs=no/link_all_deplibs=yes/' libtool
+sed -e 's/^link_all_deplibs=no$/link_all_deplibs=yes/' <libtool >libtool.tmp
+mv libtool.tmp libtool
 
 ###############################################################################
 #   (end-of-file)
