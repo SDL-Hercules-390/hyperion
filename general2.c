@@ -1,6 +1,6 @@
 /* GENERAL2.C   (C) Copyright Roger Bowler, 1994-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2022                             */
 /*              Hercules CPU Emulator - Instructions N-Z             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -31,6 +31,7 @@
 /*      PLO instruction - Jan Jaeger                                 */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*      Clear TEA on data exception - Peter Kuschnerus           v209*/
+/*      PER 1 GRA - Fish                                     Jan 2022*/
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -54,10 +55,16 @@ DEF_INST(or_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RR(inst, regs, r1, r2);
 
     /* OR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) |= regs->GR_L(r2) ) ? 1 : 0;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -71,6 +78,9 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
@@ -78,6 +88,9 @@ U32     n;                              /* 32-bit operand values     */
 
     /* OR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -716,6 +729,9 @@ U32     n;                              /* 32-bit operand values     */
 U64     dreg;                           /* Double register work area */
 U32     h, i, j, m;                     /* Integer work areas        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
@@ -757,6 +773,8 @@ U32     h, i, j, m;                     /* Integer work areas        */
     /* Set the condition code */
     regs->psw.cc = (S64)dreg > 0 ? 2 : (S64)dreg < 0 ? 1 : 0;
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK2( r1, r1+1 ));
 }
 
 
@@ -771,6 +789,9 @@ VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* 32-bit operand values     */
 U64     dreg;                           /* Double register work area */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
@@ -784,6 +805,8 @@ U64     dreg;                           /* Double register work area */
     regs->GR_L(r1) = dreg >> 32;
     regs->GR_L(r1+1) = dreg & 0xFFFFFFFF;
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK2( r1, r1+1 ));
 }
 
 
@@ -797,6 +820,9 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n, n1, n2;                      /* 32-bit operand values     */
 U32     i, j;                           /* Integer work areas        */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -842,6 +868,8 @@ U32     i, j;                           /* Integer work areas        */
     regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? 2 :
                    (S32)regs->GR_L(r1) < 0 ? 1 : 0;
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -855,6 +883,9 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* Integer work areas        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
@@ -862,6 +893,9 @@ U32     n;                              /* Integer work areas        */
 
     /* Shift the R1 register */
     regs->GR_L(r1) = n > 31 ? 0 : regs->GR_L(r1) << n;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -875,6 +909,9 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* 32-bit operand values     */
 U64     dreg;                           /* Double register work area */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -892,6 +929,8 @@ U64     dreg;                           /* Double register work area */
     /* Set the condition code */
     regs->psw.cc = (S64)dreg > 0 ? 2 : (S64)dreg < 0 ? 1 : 0;
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK2( r1, r1+1 ));
 }
 
 
@@ -906,6 +945,9 @@ VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* 32-bit operand values     */
 U64     dreg;                           /* Double register work area */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
@@ -919,6 +961,8 @@ U64     dreg;                           /* Double register work area */
     regs->GR_L(r1) = dreg >> 32;
     regs->GR_L(r1+1) = dreg & 0xFFFFFFFF;
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK2( r1, r1+1 ));
 }
 
 
@@ -931,6 +975,9 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* Integer work areas        */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -945,6 +992,9 @@ U32     n;                              /* Integer work areas        */
     /* Set the condition code */
     regs->psw.cc = ((S32)regs->GR_L(r1) > 0) ? 2 :
                    (((S32)regs->GR_L(r1) < 0) ? 1 : 0);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -958,6 +1008,9 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* Integer work areas        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
@@ -965,6 +1018,9 @@ U32     n;                              /* Integer work areas        */
 
     /* Shift the R1 register */
     regs->GR_L(r1) = n > 31 ? 0 : regs->GR_L(r1) >> n;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -1288,6 +1344,9 @@ DEF_INST(subtract_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RR(inst, regs, r1, r2);
 
     /* Subtract signed operands and set condition code */
@@ -1299,6 +1358,9 @@ int     r1, r2;                         /* Values of R fields        */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -1311,6 +1373,9 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -1326,6 +1391,9 @@ U32     n;                              /* 32-bit operand values     */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -1338,6 +1406,9 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -1353,52 +1424,77 @@ U32     n;                              /* 32-bit operand values     */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         regs->program_interrupt (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
 #ifdef OPTION_OPTINST
-/* Optimized case (r1 equal r2) is optimized by compiler */
-#define SLRgen(r1, r2) \
-  DEF_INST(1F ## r1 ## r2) \
-  { \
-    UNREFERENCED(inst); \
-    INST_UPDATE_PSW(regs, 2, 2); \
-    regs->psw.cc = sub_logical(&(regs->GR_L(0x ## r1)), regs->GR_L(0x ## r1), regs->GR_L(0x ## r2)); \
-  }
-#define SLRgenr2(r1) \
-  SLRgen(r1, 0) \
-  SLRgen(r1, 1) \
-  SLRgen(r1, 2) \
-  SLRgen(r1, 3) \
-  SLRgen(r1, 4) \
-  SLRgen(r1, 5) \
-  SLRgen(r1, 6) \
-  SLRgen(r1, 7) \
-  SLRgen(r1, 8) \
-  SLRgen(r1, 9) \
-  SLRgen(r1, A) \
-  SLRgen(r1, B) \
-  SLRgen(r1, C) \
-  SLRgen(r1, D) \
-  SLRgen(r1, E) \
-  SLRgen(r1, F)
+/*-------------------------------------------------------------------*/
+/* 1F   SLR   - Subtract Logical Register (optimized)           [RR] */
+/*-------------------------------------------------------------------*/
 
-SLRgenr2(0)
-SLRgenr2(1)
-SLRgenr2(2)
-SLRgenr2(3)
-SLRgenr2(4)
-SLRgenr2(5)
-SLRgenr2(6)
-SLRgenr2(7)
-SLRgenr2(8)
-SLRgenr2(9)
-SLRgenr2(A)
-SLRgenr2(B)
-SLRgenr2(C)
-SLRgenr2(D)
-SLRgenr2(E)
-SLRgenr2(F)
+/* Optimized case (r1 equal r2) is optimized by compiler */
+
+#define SLRgen( r1, r2 )                                              \
+                                                                      \
+  DEF_INST( 1F ## r1 ## r2 )                                          \
+  {                                                                   \
+    UNREFERENCED( inst );                                             \
+                                                                      \
+    /* Save PER 1 GRA address before instruction decode */            \
+    PER_GRA_SAVE( regs );                                             \
+                                                                      \
+    INST_UPDATE_PSW( regs, 2, 2 );                                    \
+                                                                      \
+    regs->psw.cc = sub_logical                                        \
+    (                                                                 \
+        &(regs->GR_L( 0x ## r1 )),                                    \
+          regs->GR_L( 0x ## r1 ),                                     \
+          regs->GR_L( 0x ## r2 )                                      \
+    );                                                                \
+                                                                      \
+    /* Check for PER 1 GRA event */                                   \
+    PER_GRA_CHECK( regs, PER_GRA_MASK( 0x ## r1 ));                   \
+  }
+
+#define SLRgenr2( r1 )                                                \
+                                                                      \
+  SLRgen( r1, 0 )                                                     \
+  SLRgen( r1, 1 )                                                     \
+  SLRgen( r1, 2 )                                                     \
+  SLRgen( r1, 3 )                                                     \
+  SLRgen( r1, 4 )                                                     \
+  SLRgen( r1, 5 )                                                     \
+  SLRgen( r1, 6 )                                                     \
+  SLRgen( r1, 7 )                                                     \
+  SLRgen( r1, 8 )                                                     \
+  SLRgen( r1, 9 )                                                     \
+  SLRgen( r1, A )                                                     \
+  SLRgen( r1, B )                                                     \
+  SLRgen( r1, C )                                                     \
+  SLRgen( r1, D )                                                     \
+  SLRgen( r1, E )                                                     \
+  SLRgen( r1, F )                                                    
+
+SLRgenr2( 0 )
+SLRgenr2( 1 )
+SLRgenr2( 2 )
+SLRgenr2( 3 )
+SLRgenr2( 4 )
+SLRgenr2( 5 )
+SLRgenr2( 6 )
+SLRgenr2( 7 )
+SLRgenr2( 8 )
+SLRgenr2( 9 )
+SLRgenr2( A )
+SLRgenr2( B )
+SLRgenr2( C )
+SLRgenr2( D )
+SLRgenr2( E )
+SLRgenr2( F )
+
 #endif /* #ifdef OPTION_OPTINST */
 
 
@@ -1408,6 +1504,9 @@ SLRgenr2(F)
 DEF_INST(subtract_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -1422,6 +1521,9 @@ int     r1, r2;                         /* Values of R fields        */
             sub_logical (&(regs->GR_L(r1)),
                            regs->GR_L(r1),
                            regs->GR_L(r2));
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -1435,6 +1537,9 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
@@ -1445,6 +1550,9 @@ U32     n;                              /* 32-bit operand values     */
             sub_logical (&(regs->GR_L(r1)),
                     regs->GR_L(r1),
                     n);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -1596,26 +1704,33 @@ BYTE    old;                            /* Old value                 */
 
 
 #ifdef OPTION_OPTINST
-#define TMgen(i2) \
-  DEF_INST(91 ## i2) \
-  { \
-    int b1; \
-    VADR effective_addr1; \
-    SIIX(inst, regs, b1, effective_addr1); \
-    if(ARCH_DEP(vfetchb)(effective_addr1, b1, regs) & 0x ## i2) \
-      regs->psw.cc = 3; \
-    else \
-      regs->psw.cc = 0; \
+/*-------------------------------------------------------------------*/
+/* 91   TM    - Test under Mask (optimized)                     [SI] */
+/*-------------------------------------------------------------------*/
+#define TMgen( i2 )                                                   \
+                                                                      \
+  DEF_INST( 91 ## i2 )                                                \
+  {                                                                   \
+    int b1;                                                           \
+    VADR effective_addr1;                                             \
+                                                                      \
+    SIIX( inst, regs, b1, effective_addr1 );                          \
+                                                                      \
+    if (ARCH_DEP( vfetchb )( effective_addr1, b1, regs ) & 0x ## i2 ) \
+      regs->psw.cc = 3;                                               \
+    else                                                              \
+      regs->psw.cc = 0;                                               \
   }
 
-TMgen(80)
-TMgen(40)
-TMgen(20)
-TMgen(10)
-TMgen(08)
-TMgen(04)
-TMgen(02)
-TMgen(01)
+TMgen( 80 )
+TMgen( 40 )
+TMgen( 20 )
+TMgen( 10 )
+TMgen( 08 )
+TMgen( 04 )
+TMgen( 02 )
+TMgen( 01 )
+
 #endif /* OPTION_OPTINST */
 
 
@@ -1793,6 +1908,9 @@ int     cc = 0;                         /* Condition code            */
 BYTE    dbyte, sbyte = 0;               /* Byte work areas           */
 bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
 
     CONTRAN_INSTR_CHECK( regs );
@@ -1870,6 +1988,12 @@ bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
 
     /* Update the condition code */
     regs->psw.cc = cc;
+
+#if defined( FEATURE_PER1 )
+    /* Check for PER 1 GRA event */
+    if (sbyte != 0) // were GR1 and GR2 modified?
+        PER_GRA_CHECK( regs, PER_GRA_MASK2( 1, 2 ));
+#endif
 }
 
 
@@ -2024,7 +2148,6 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 /*              (C) Copyright Peter Kuschnerus, 1999-2009            */
 /*              (C) Copyright "Fish" (David B. Trout), 2005-2009     */
 /*-------------------------------------------------------------------*/
-
 DEF_INST(update_tree)
 {
 GREG    index;                          /* tree index                */
@@ -2034,6 +2157,12 @@ VADR    nodeaddr;                       /* work addr of current node */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 #endif
+#if defined( FEATURE_PER1 )
+U16     rmask = 0x0000;
+#endif
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     E(inst, regs);
 
@@ -2119,6 +2248,9 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
            the instruction's "current unit of operation")
         */
         SET_GR_A(5,regs,index);     // (do AFTER node data is accessed!)
+#if defined( FEATURE_PER1 )
+        rmask |= PER_GRA_MASK( 5 );
+#endif
 
         /* Exit with cc0 whenever we reach a node whose codeword is equal
            to our current "highest encountered" codeword value (i.e. any
@@ -2130,6 +2262,10 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
             SET_GR_A(2,regs,nodecode);
             SET_GR_A(3,regs,nodedata);
             regs->psw.cc = 0;
+#if defined( FEATURE_PER1 )
+            rmask |= PER_GRA_MASK2( 2, 3 );
+            PER_GRA_CHECK( regs, rmask );
+#endif
             return;
         }
 
@@ -2162,10 +2298,19 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
         /* Update GR0 and GR1 with the new "highest encountered" values */
         SET_GR_A(0,regs,nodecode);
         SET_GR_A(1,regs,nodedata);
+#if defined( FEATURE_PER1 )
+        rmask |= PER_GRA_MASK2( 0, 1 );
+#endif
     }
 
     /* Commit GR5 with the actual index value we stopped on */
     SET_GR_A(5,regs,index);
+
+#if defined( FEATURE_PER1 )
+    /* Check for PER 1 GRA event */
+    rmask |= PER_GRA_MASK( 5 );
+    PER_GRA_CHECK( regs, rmask );
+#endif
 }
 
 #if defined( FEATURE_022_EXT_TRANSL_FACILITY_3 )

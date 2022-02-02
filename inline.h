@@ -1,6 +1,6 @@
 /* INLINE.H     (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              (C) Copyright Roger Bowler, 1999-2012                */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2022                             */
 /*              Inline function definitions                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -14,6 +14,7 @@
 /* ESAME low-address protection          v208d Roger Bowler 20/01/01 */
 /* ESAME subspace replacement            v208e Roger Bowler 27/01/01 */
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
+/* PER 1 GRA - Fish                                    Fish Jan 2022 */
 
 
 #include "skey.h"       // Need storage key inline functions. Note
@@ -538,6 +539,28 @@ inline BYTE* ARCH_DEP( fetch_main_absolute )( RADR addr, REGS* regs )
 
 } /* end function fetch_main_absolute */
 
+/*-------------------------------------------------------------------*/
+/*  Generate a PER 1 General Register Alteration event interrupt     */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( per1_gra )( REGS* regs )
+{
+#if !defined( FEATURE_PER1 )
+    UNREFERENCED( regs );
+#else
+    OBTAIN_INTLOCK( regs );
+    {
+        regs->peradr = regs->pergra_addr;
+        regs->perc   = (CR9_GRA >> 16);
+        regs->peraid = 0;
+
+        ON_IC_PER_GRA( regs );
+    }
+    RELEASE_INTLOCK( regs );
+
+    if (OPEN_IC_PER_GRA( regs ))
+        RETURN_INTCHECK( regs );
+#endif
+}
 
 /*-------------------------------------------------------------------*/
 /* Fetch a doubleword from absolute storage.                         */

@@ -540,16 +540,16 @@
  #define    _FEATURE_PER
 #endif
 
+#if defined( FEATURE_PER1 )
+ #define    _FEATURE_PER1
+#endif
+
 #if defined( FEATURE_PER2 )
  #define    _FEATURE_PER2
 #endif
 
 #if defined( FEATURE_PER3 )
  #define    _FEATURE_PER3
-#endif
-
-#if defined( FEATURE_PER ) && !defined( FEATURE_PER2 ) && !defined( FEATURE_PER3 )
- #define     FEATURE_PER1
 #endif
 
 #if defined( FEATURE_QDIO_TDD )

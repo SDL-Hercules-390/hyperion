@@ -1,6 +1,6 @@
 /* CONTROL.C    (C) Copyright Roger Bowler, 1994-2012                */
 /*              (C) Copyright Jan Jaeger, 1999-2012                  */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2022                             */
 /*              ESA/390 CPU Emulator                                 */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -33,6 +33,7 @@
 /*      ASN-and-LX-reuse facility - Roger Bowler            June 2004*/
 /*      SIGP orders 11,12.2,13,15 - Fish                     Oct 2005*/
 /*      Configuration topology facility fixes by PaoloG      Oct 2013*/
+/*      PER 1 GRA - Fish                                     Jan 2022*/
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -1063,6 +1064,9 @@ DEF_INST( extract_primary_asn )
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1082,6 +1086,9 @@ int     r1, r2;                         /* Values of R fields        */
     /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63
        and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(4);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 
 } /* end DEF_INST(extract_primary_asn) */
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
@@ -1130,6 +1137,9 @@ DEF_INST( extract_secondary_asn )
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1149,6 +1159,9 @@ int     r1, r2;                         /* Values of R fields        */
     /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63
        and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(3);
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 
 } /* end DEF_INST(extract_secondary_asn) */
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
@@ -1199,6 +1212,9 @@ int     r1, r2;                         /* Values of R fields        */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1211,6 +1227,25 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     /* Load registers from the stack entry */
     ARCH_DEP( unstack_registers )( 0, lsea, r1, r2, regs );
+
+#if defined( FEATURE_PER1 )
+    if (EN_IC_PER_GRA( regs ))
+    {
+        /* Check for PER 1 GRA event */
+        int i; U16 rmask = 0x0000;
+        if (r1 > r2)
+        {
+            for (i = r1; i <= 15; ++i)
+                rmask |= PER_GRA_MASK( i );
+            for (i = 0; i <= r2; ++i)
+                rmask |= PER_GRA_MASK( i );
+        }
+        else // (r1 <= r2)
+            for (i = r1; i <= r2; ++i)
+                rmask |= PER_GRA_MASK( i );
+        PER_GRA_CHECK( regs, rmask );
+    }
+#endif
 }
 #endif /* defined( FEATURE_LINKAGE_STACK ) */
 
@@ -1227,6 +1262,8 @@ LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 int     max_esta_code;
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -1263,6 +1300,9 @@ int     max_esta_code;
 
     /* Set condition code depending on entry type */
     regs->psw.cc =  ((lsed.uet & LSED_UET_ET) == LSED_UET_PC) ? 1 : 0;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK2( r1, r1+1 ));
 }
 #endif /* defined( FEATURE_LINKAGE_STACK ) */
 
@@ -1274,6 +1314,9 @@ int     max_esta_code;
 DEF_INST( insert_address_space_control )
 {
 int     r1, r2;                         /* Values of R fields        */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -1305,6 +1348,9 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Insert address-space mode into register bits 22-23 */
     regs->GR_LHLCH(r1) = regs->psw.cc;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
@@ -1316,6 +1362,9 @@ DEF_INST( insert_psw_key )
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -1331,6 +1380,9 @@ VADR    effective_addr2;                /* Effective address         */
     /* Insert PSW key into bits 24-27 of general register 2
        and set bits 28-31 of general register 2 to zero */
     regs->GR_LHLCL(2) = regs->psw.pkey & 0xF0;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( 2 ));
 }
 
 
@@ -1342,6 +1394,9 @@ DEF_INST( insert_storage_key )
 {
 int     r1, r2;                         /* Operand register numbers  */
 RADR    pageaddr;                       /* Working abs page address  */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -1476,6 +1531,9 @@ RADR    pageaddr;                       /* Working abs page address  */
 //  /*debug*/LOGMSG( "ISK storage block %8.8X key %2.2X\n",
 //                   regs->GR_L(r2), regs->GR_L(r1) & 0xFE );
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
+
 } /* end DEF_INST( insert_storage_key ) */
 #endif /* defined( FEATURE_BASIC_STORAGE_KEYS ) */
 
@@ -1488,6 +1546,9 @@ DEF_INST( insert_storage_key_extended )
 {
 int     r1, r2;                         /* Operand register numbers  */
 RADR    pageaddr;                       /* Working abs page address  */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -1599,9 +1660,13 @@ RADR    pageaddr;                       /* Working abs page address  */
     }
     else /* !SIE_MODE */
 #endif /* defined( _FEATURE_SIE ) */
-
+    {
         /* Insert the storage key into r1 register bits 24-31 */
         regs->GR_LHLCL(r1) = ARCH_DEP( get_4K_storage_key )( pageaddr );
+    }
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 
 } /* end DEF_INST( insert_storage_key_extended ) */
 #endif /* defined( FEATURE_EXTENDED_STORAGE_KEYS ) */
@@ -1618,6 +1683,9 @@ VADR    effective_addr;                 /* Operand-2 virtual page    */
 RADR    pageaddr;                       /* Operand-2 page address    */
 BYTE    vsk;                            /* Virtual Storage Key       */
 bool    need_realkey = true;            /* (get from real page)      */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -1719,6 +1787,9 @@ bool    need_realkey = true;            /* (get from real page)      */
        the access key and the fetch protect bit)
     */
     regs->GR_LHLCL(r1) = vsk;
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 
 } /* end DEF_INST(insert_virtual_storage_key) */
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
@@ -2325,6 +2396,9 @@ int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RX( inst, regs, r1, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -2338,6 +2412,9 @@ VADR    effective_addr2;                /* Effective address         */
 #endif
 
     ARCH_DEP( load_real_address_proc )( regs, r1, b2, effective_addr2 );
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 
 } /* end DEF_INST(load_real_address) */
 
@@ -2415,6 +2492,9 @@ DEF_INST( load_using_real_address )
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Unsigned work             */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RRE( inst, regs, r1, r2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -2428,6 +2508,9 @@ RADR    n;                              /* Unsigned work             */
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP( vfetch4 )( n, USE_REAL_ADDR, regs );
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
 }
 
 
@@ -2963,6 +3046,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 CREG    savecr12 = 0;                   /* CR12 save                 */
 #endif
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -3610,6 +3696,9 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     PERFORM_SERIALIZATION( regs );
     PERFORM_CHKPT_SYNC( regs );
 
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, 0x1802 ); // GR 3, 4 and 14
+
 } /* end DEF_INST(program_call) */
 #endif /* defined( FEATURE_DUAL_ADDRESS_SPACE ) */
 
@@ -3636,6 +3725,9 @@ U16     sasn;                           /* New secondary ASN         */
 U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
 int     rc;                             /* return code from load_psw */
+
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
 
     E( inst, regs );
 
@@ -3879,6 +3971,9 @@ int     rc;                             /* return code from load_psw */
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION( regs );
     PERFORM_CHKPT_SYNC( regs );
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, 0x3FFE );  // GR 2-14
 
     RETURN_INTCHECK( regs );
 
@@ -5831,6 +5926,9 @@ static char *ordername[] = {
     /* 0x15 SIGP_SENSE_RUNNING_STATE */  "Sense running state"
 };
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -6517,6 +6615,12 @@ static char *ordername[] = {
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION( regs );
+
+#if defined( FEATURE_PER1 )
+    /* Check for PER 1 GRA event */
+    if (status != 0) // r1 modified?
+        PER_GRA_CHECK( regs, PER_GRA_MASK( r1 ));
+#endif
 
 #if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) || defined( FEATURE_HERCULES_DIAGCALLS )
     if (set_arch)
@@ -7585,6 +7689,9 @@ DEF_INST( test_block )
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Real address              */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     RRE( inst, regs, r1, r2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -7634,6 +7741,9 @@ RADR    n;                              /* Real address              */
 
     /* Clear general register 0 */
     SET_GR_A( 0, regs, 0 );
+
+    /* Check for PER 1 GRA event */
+    PER_GRA_CHECK( regs, PER_GRA_MASK( 0 ));
 }
 #endif /* defined( FEATURE_TEST_BLOCK ) */
 

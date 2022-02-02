@@ -1,4 +1,5 @@
 /* DECIMAL.C    (C) Copyright Roger Bowler, 1991-2012                */
+/*              (C) and others 2013-2022                             */
 /*              ESA/390 Packed Decimal Routines                      */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -23,7 +24,8 @@
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 /* TP instruction - Roger Bowler                            08/02/01 */
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
-/* binary_to_packed subroutine - Roger Bowler              02jul2003 */
+/* binary_to_packed subroutine - Roger Bowler              02Jul2003 */
+/* PER 1 GRA - Fish                                        31Jan2022 */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -916,6 +918,9 @@ BYTE    fbyte;                          /* Fill byte                 */
 BYTE    pbyte;                          /* Pattern byte              */
 BYTE    rbyte;                          /* Result byte               */
 
+    /* Save PER 1 GRA address before instruction decode */
+    PER_GRA_SAVE( regs );
+
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
     CONTRAN_INSTR_CHECK( regs );
@@ -1077,6 +1082,12 @@ BYTE    rbyte;                          /* Result byte               */
 
     /* Set condition code */
     regs->psw.cc = cc;
+
+#if defined( FEATURE_PER1 )
+    /* Check for PER 1 GRA event */
+    if (inst[0] == 0xDF) // EDMK?
+        PER_GRA_CHECK( regs, PER_GRA_MASK( 1 ));
+#endif
 
 } /* end DEF_INST(edit_x_edit_and_mark) */
 

@@ -1,6 +1,6 @@
 /* INLINE.C     (C) Copyright Jan Jaeger, 1999-2012                  */
 /*              (C) Copyright Roger Bowler, 1999-2012                */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2022                             */
 /*              Inline function definitions                          */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -14,6 +14,7 @@
 /* ESAME low-address protection          v208d Roger Bowler 20/01/01 */
 /* ESAME subspace replacement            v208e Roger Bowler 27/01/01 */
 /* Multiply/Divide Logical instructions         Vic Cross 13/02/2001 */
+/* PER 1 GRA                                           Fish Jan 2022 */
 
 #include "hstdinc.h"
 
@@ -62,6 +63,8 @@ extern inline void ARCH_DEP( store_fullword_absolute )  ( U32 value, RADR addr, 
 #else
   extern inline BYTE* ARCH_DEP( fetch_main_absolute )( RADR addr, REGS* regs );
 #endif
+
+extern inline void ARCH_DEP( per1_gra )( REGS* regs );
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */

@@ -1,5 +1,5 @@
 /* OPCODE.H     (C) Copyright Jan Jaeger, 2000-2012                  */
-/*              (C) and others 2013-2021                             */
+/*              (C) and others 2013-2022                             */
 /*              Instruction decoding macros and prototypes           */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1141,6 +1141,43 @@ do {                                                                  \
         (_regs)->program_interrupt( (_regs), PGM_SPECIFICATION_EXCEPTION )
 
 #endif /* !defined( FEATURE_037_FP_EXTENSION_FACILITY ) */
+
+/*-------------------------------------------------------------------*/
+/*        PER 1 GRA (General Register Alteration) support            */
+/*-------------------------------------------------------------------*/
+
+#undef PER_GRA_MASK
+#undef PER_GRA_MASK2
+#undef PER_GRA_MASK4
+#undef PER_GRA_SAVE
+#undef PER_GRA_CHECK
+
+#if defined( FEATURE_PER1 )
+
+  #define PER_GRA_MASK(  _r1 )                  (0x8000 >> (_r1))
+  #define PER_GRA_MASK2( _r1, _r2 )             (PER_GRA_MASK(  _r1 )      | PER_GRA_MASK(  _r2 ))
+  #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )   (PER_GRA_MASK2( _r1, _r2 ) | PER_GRA_MASK2( _r3, _r4 ))
+  #define PER_GRA_SAVE(  _regs )                (_regs)->pergra_addr = PSW_IA_FROM_IP( (_regs), 0 )
+  #define PER_GRA_CHECK( _regs, _mask )                               \
+    do                                                                \
+    {                                                                 \
+      if (1                                                           \
+          && EN_IC_PER_GRA( _regs )                                   \
+          && (_mask) & ((_regs)->CR(9) & CR9_GRMASK)                  \
+      )                                                               \
+        ARCH_DEP( per1_gra )( _regs );                                \
+    }                                                                 \
+    while (0)
+
+#else /* !defined( FEATURE_PER1 ) */
+
+  #define PER_GRA_MASK(  _r1 )                  /* (do nothing) */
+  #define PER_GRA_MASK2( _r1, _r2 )             /* (do nothing) */
+  #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )   /* (do nothing) */
+  #define PER_GRA_SAVE(  _regs )                /* (do nothing) */
+  #define PER_GRA_CHECK( _regs, _mask )         /* (do nothing) */
+
+#endif /* defined( FEATURE_PER1 ) */
 
 /*-------------------------------------------------------------------*/
 /*          PER3 Breaking-Event-Address Register (BEAR)              */
