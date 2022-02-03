@@ -401,7 +401,7 @@ struct SHRD                             /* Device Sharing ctl. blk.  */
         int     release;                /* Client release level      */
         int     comp;                   /* Compression parameter     */
         int     comps;                  /* Compression supported     */
-        int     pending:1,              /* 1=Request pending         */
+        unsigned  pending:1,            /* 1=Request pending         */
                 waiting:1,              /* 1=Waiting for device      */
                 havehdr:1,              /* 1=Header already read     */
                 disconnect:1;           /* 1=Disconnect device       */
