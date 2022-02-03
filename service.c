@@ -969,11 +969,11 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
                         };
 
 BYTE ARCH_DEP(scpinfo_cfg11) =
-    0
+                            0
 #if defined(FEATURE_PER3)
-        | SCCB_CFGB_PER_3
+                            | SCCB_CFGB_PER_3
 #endif
-        | SCCB_CFGB_LIST_DIRECTED_IPL;
+                            | SCCB_CFGB_LIST_DIRECTED_IPL;
 
 BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             0
@@ -1034,7 +1034,7 @@ BYTE ARCH_DEP(scpinfo_cpf)[12] = {
                             ,
                             0
 #if defined(FEATURE_PER2)
-                            | SCCB_CPF4_OMISION_GR_ALTERATION_370
+                            | SCCB_CPF4_OMISSION_GR_ALTERATION_370
 #endif /*defined(FEATURE_PER2)*/
                             ,
                             0

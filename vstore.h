@@ -816,7 +816,8 @@ int     len;                            /* Length for page crossing  */
                    | (AR_BIT   (  &regs->psw ) << 2 );
 #else
         regs->perc = 0;
-#endif
+#endif /* defined( FEATURE_PER2 ) */
+
         if (!exec)
             regs->peradr = addr;
 
@@ -839,7 +840,7 @@ int     len;                            /* Length for page crossing  */
                 regs->psw.zeroilc = 1;
                 regs->program_interrupt( regs, PGM_PER_EVENT );
             }
-#endif
+#endif /* defined( FEATURE_PER3 ) */
         }
 
         /* Quick exit if AIA is still valid */

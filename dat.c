@@ -2288,7 +2288,7 @@ RADR    pfra;                           /* Page Frame Real Address   */
 /*-------------------------------------------------------------------*/
 /* Check for a storage alteration PER2 event. Returns true or false. */
 /*-------------------------------------------------------------------*/
-static inline int ARCH_DEP( check_sa_per2 )( int arn, int acctype, REGS* regs )
+static inline bool ARCH_DEP( check_sa_per2 )( int arn, int acctype, REGS* regs )
 {
     UNREFERENCED( acctype );
 
@@ -2498,19 +2498,21 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.main[ix]    = NEW_MAINADDR (regs, addr, apfra);
 
 #if defined( FEATURE_PER )
-        if (EN_IC_PER_SA(regs))
+        if (EN_IC_PER_SA( regs ))
         {
             regs->tlb.acc[ix] = ACC_READ;
-            if (arn != USE_REAL_ADDR
+            if (1
+                && arn != USE_REAL_ADDR
 #if defined( FEATURE_PER2 )
-            && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (arn, acctype, regs)
-               )
-#endif
+                && (0
+                    || REAL_MODE( &regs->psw )
+                    || ARCH_DEP( check_sa_per2 )( arn, acctype, regs )
+                   )
+#endif /* defined( FEATURE_PER2 ) */
             /* Check the range altered enters the SA PER range */
-            && PER_RANGE_CHECK2(addr,addr+(len-1),regs->CR(10),regs->CR(11))
+                && PER_RANGE_CHECK2( addr, addr+(len-1), regs->CR(10), regs->CR(11))
             )
-                ON_IC_PER_SA(regs);
+                ON_IC_PER_SA( regs );
         }
 #endif /* defined( FEATURE_PER ) */
     } /* acctype & ACC_WRITE|CHECK */

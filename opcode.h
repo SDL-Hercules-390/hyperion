@@ -1171,11 +1171,11 @@ do {                                                                  \
 
 #else /* !defined( FEATURE_PER1 ) */
 
-  #define PER_GRA_MASK(  _r1 )                  /* (do nothing) */
-  #define PER_GRA_MASK2( _r1, _r2 )             /* (do nothing) */
-  #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )   /* (do nothing) */
-  #define PER_GRA_SAVE(  _regs )                /* (do nothing) */
-  #define PER_GRA_CHECK( _regs, _mask )         /* (do nothing) */
+  #define PER_GRA_MASK(  _r1 )
+  #define PER_GRA_MASK2( _r1, _r2 )
+  #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )
+  #define PER_GRA_SAVE(  _regs )
+  #define PER_GRA_CHECK( _regs, _mask )
 
 #endif /* defined( FEATURE_PER1 ) */
 

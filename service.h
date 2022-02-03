@@ -253,7 +253,7 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_CPF3_PRIVATE_SPACE_FEATURE                 0x80
 #define SCCB_CPF3_FETCH_ONLY_BIT                        0x40
 #define SCCB_CPF3_PER2_INSTALLED                        0x01
-#define SCCB_CPF4_OMISION_GR_ALTERATION_370             0x80
+#define SCCB_CPF4_OMISSION_GR_ALTERATION_370            0x80
 #define SCCB_CPF5_GUEST_WAIT_STATE_ASSIST               0x40
 
 /*-------------------------------------------------------------------*/

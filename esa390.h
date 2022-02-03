@@ -403,15 +403,20 @@ typedef struct DAT  DAT;
 /*-------------------------------------------------------------------*/
 /* Bit definitions for PER */
 
-#define CR9_SB          0x80000000      /* Successful Branching      */
-#define CR9_IF          0x40000000      /* Instruction Fetch         */
-#define CR9_SA          0x20000000      /* Storage Alteration        */
-#define CR9_GRA         0x10000000      /* General Register Alt.     */
-#define CR9_STURA       0x08000000      /* Store using real addr     */
-#define CR9_IFNUL       0x01000000      /* IF nullification          */
-#define CR9_GRMASK      0x0000FFFF      /* GR mask bits              */
-#define CR9_BAC         0x00800000      /* Br addr control PER2 only */
-#define CR9_SAC         0x00200000      /* Stor. alter. c. PER2 only */
+#define CR9_SB          0x80000000      /* 32 Successful Branching  1*/
+#define CR9_IF          0x40000000      /* 33 Instruction Fetch     1*/
+#define CR9_SA          0x20000000      /* 34 Storage Alteration    1*/
+#define CR9_GRA         0x10000000      /* 35 General Register      1*/
+#define CR9_STOREKEY    0x10000000      /* 35 Storage-Key           3*/
+#define CR9_STURA       0x08000000      /* 36 Store using real addr 2*/
+#define CR9_ZEROADDR    0x04000000      /* 37 Zero-address-detect.  3*/
+#define CR9_TEND        0x02000000      /* 38 TEND instruction      3*/
+#define CR9_IFNUL       0x01000000      /* 39 I-Fetch nullification 3*/
+#define CR9_BAC         0x00800000      /* 40 Branch address        2*/
+#define CR9_SUPPRESS    0x00400000      /* 41 Event suppression     3*/
+#define CR9_SAC         0x00200000      /* 42 Storage Alteration    2*/
+//efine CR9_xxxxxxxx    0x001F0000      /* 43-47 (unassigned)        */
+#define CR9_GRMASK      0x0000FFFF      /* 48-63 GR mask bits       1*/
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 12 */
