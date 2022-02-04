@@ -1,4 +1,5 @@
 /* HBYTESWP.C   (C) Copyright Roger Bowler, 2012                     */
+/*              (C) and others 2013-2022                             */
 /*              Hercules Little <> Big Endian conversion             */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -7,9 +8,9 @@
 
 /*-------------------------------------------------------------------*/
 /* These definitions are only nessesary when running on older        */
-/* versions of linux that do not have /usr/include/byteswap.h        */
-/* compile option -DNO_ASM_BYTESWAP will expand 'C' code             */
-/* otherwise Intel (486+) assember will be generated  (Jan Jaeger)   */
+/* versions of linux that do not have /usr/include/byteswap.h.       */
+/* Compile option -DNO_ASM_BYTESWAP will expand 'C' code.            */
+/* Otherwise custom assember will be generated.  (Jan Jaeger)        */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
