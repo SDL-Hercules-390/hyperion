@@ -977,7 +977,7 @@ EOF
     crisv32:Linux:*:*)
 	echo "$UNAME_MACHINE"-axis-linux-"$LIBC"
 	exit ;;
-    e2k:Linux:*:*)
+    e2k:Linux:*|elbrus:Linux:*)
 	echo "$UNAME_MACHINE"-unknown-linux-"$LIBC"
 	exit ;;
     frv:Linux:*:*)
