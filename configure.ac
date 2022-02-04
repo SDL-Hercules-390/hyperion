@@ -147,6 +147,11 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir="/arm"
         ;;
 
+    e2k*)
+        hc_cv_cpu_arch=e2k
+        hc_cv_pkg_lib_subdir="/e2k"
+        ;;
+
     mips*)
         hc_cv_cpu_arch=mips
         hc_cv_pkg_lib_subdir="/mips"
@@ -193,6 +198,16 @@ case "$target_cpu" in
         ;;
     *)
         hc_cv_cpu_bits=32
+        ;;
+esac
+
+case "$target_os" in
+
+    *linux*)
+        if test $target_cpu = e2k; then
+            # e2k-mcst-linux-gnu
+            hc_cv_cpu_bits=64
+        fi
         ;;
 esac
 

@@ -800,9 +800,6 @@ AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
 AM_V
-CSCOPE
-ETAGS
-CTAGS
 am__untar
 am__tar
 AMTAR
@@ -2966,7 +2963,12 @@ program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 if test x"${MISSING+set}" != xset; then
-  MISSING="\${SHELL} '$am_aux_dir/missing'"
+  case $am_aux_dir in
+  *\ * | *\	*)
+    MISSING="\${SHELL} \"$am_aux_dir/missing\"" ;;
+  *)
+    MISSING="\${SHELL} $am_aux_dir/missing" ;;
+  esac
 fi
 # Use eval to expand $SHELL
 if eval "$MISSING --is-lightweight"; then
@@ -3320,20 +3322,6 @@ am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
 
 
 
-
-
-# Variables for tags utilities; see am/tags.am
-if test -z "$CTAGS"; then
-  CTAGS=ctags
-fi
-
-if test -z "$ETAGS"; then
-  ETAGS=etags
-fi
-
-if test -z "$CSCOPE"; then
-  CSCOPE=cscope
-fi
 
 
 
@@ -4710,6 +4698,11 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir="/arm"
         ;;
 
+    e2k*)
+        hc_cv_cpu_arch=e2k
+        hc_cv_pkg_lib_subdir="/e2k"
+        ;;
+
     mips*)
         hc_cv_cpu_arch=mips
         hc_cv_pkg_lib_subdir="/mips"
@@ -4758,6 +4751,16 @@ case "$target_cpu" in
         ;;
     *)
         hc_cv_cpu_bits=32
+        ;;
+esac
+
+case "$target_os" in
+
+    *linux*)
+        if test $target_cpu = e2k; then
+            # e2k-mcst-linux-gnu
+            hc_cv_cpu_bits=64
+        fi
         ;;
 esac
 
@@ -24356,9 +24359,7 @@ $as_echo X/"$am_mf" |
     { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "Something went wrong bootstrapping makefile fragments
-    for automatic dependency tracking.  If GNU make was not used, consider
-    re-running the configure script with MAKE=\"gmake\" (or whatever is
-    necessary).  You can also try re-running configure with the
+    for automatic dependency tracking.  Try re-running configure with the
     '--disable-dependency-tracking' option to at least be able to build
     the package (albeit without support for automatic dependency tracking).
 See \`config.log' for more details" "$LINENO" 5; }
