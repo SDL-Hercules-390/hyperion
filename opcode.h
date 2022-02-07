@@ -1149,7 +1149,6 @@ do {                                                                  \
 #undef PER_GRA_MASK
 #undef PER_GRA_MASK2
 #undef PER_GRA_MASK4
-#undef PER_GRA_SAVE
 #undef PER_GRA_CHECK
 
 #if defined( FEATURE_PER1 )
@@ -1157,7 +1156,6 @@ do {                                                                  \
   #define PER_GRA_MASK(  _r1 )                  (0x8000 >> (_r1))
   #define PER_GRA_MASK2( _r1, _r2 )             (PER_GRA_MASK(  _r1 )      | PER_GRA_MASK(  _r2 ))
   #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )   (PER_GRA_MASK2( _r1, _r2 ) | PER_GRA_MASK2( _r3, _r4 ))
-  #define PER_GRA_SAVE(  _regs )                (_regs)->pergra_addr = PSW_IA_FROM_IP( (_regs), 0 )
   #define PER_GRA_CHECK( _regs, _mask )                               \
     do                                                                \
     {                                                                 \
@@ -1174,7 +1172,6 @@ do {                                                                  \
   #define PER_GRA_MASK(  _r1 )
   #define PER_GRA_MASK2( _r1, _r2 )
   #define PER_GRA_MASK4( _r1, _r2, _r3, _r4 )
-  #define PER_GRA_SAVE(  _regs )
   #define PER_GRA_CHECK( _regs, _mask )
 
 #endif /* defined( FEATURE_PER1 ) */

@@ -54,9 +54,6 @@ DEF_INST(add_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     /* Add signed operands and set condition code */
@@ -83,9 +80,6 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -116,9 +110,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 S32     n;                              /* 32-bit operand values     */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -175,9 +166,6 @@ U16     i2;                             /* 16-bit immediate op       */
   DEF_INST( 1E ## r1 ## r2 )                                          \
   {                                                                   \
     UNREFERENCED( inst );                                             \
-                                                                      \
-    /* Save PER 1 GRA address before instruction decode */            \
-    PER_GRA_SAVE( regs );                                             \
                                                                       \
     INST_UPDATE_PSW( regs, 2, 2 );                                    \
                                                                       \
@@ -238,9 +226,6 @@ DEF_INST(add_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     /* Add signed operands and set condition code */
@@ -260,9 +245,6 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(and_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -474,9 +456,6 @@ DEF_INST(branch_and_link_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR_B(inst, regs, r1, r2);
 
     CONTRAN_INSTR_CHECK_IP( regs );
@@ -532,9 +511,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX_B(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK_IP( regs );
@@ -567,9 +543,6 @@ DEF_INST(branch_and_save_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR_B(inst, regs, r1, r2);
 
@@ -624,9 +597,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX_B(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK_IP( regs );
@@ -661,9 +631,6 @@ VADR    newia;                          /* New instruction address   */
 #if !defined( FEATURE_370_EXTENSION )
 int     xmode;                          /* 64 or 31 mode of target   */
 #endif
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR_B( inst, regs, r1, r2 );
 
@@ -750,9 +717,6 @@ DEF_INST( branch_and_set_mode )
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR_B( inst, regs, r1, r2 );
 
@@ -1332,9 +1296,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
@@ -1358,9 +1319,6 @@ U32     n;                              /* 32-bit operand values     */
   {                                                                   \
     int b2;                                                           \
     VADR effective_addr2;                                             \
-                                                                      \
-    /* Save PER 1 GRA address before instruction decode */            \
-    PER_GRA_SAVE( regs );                                             \
                                                                       \
     RXX0RX( inst, regs, b2, effective_addr2 );                        \
                                                                       \
@@ -1399,9 +1357,6 @@ DEF_INST(load)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
 #ifdef OPTION_OPTINST
     RXXx(inst, regs, r1, b2, effective_addr2);
@@ -1487,9 +1442,6 @@ VADR    effective_addr2;                /* Effective address         */
     int b2;                                                           \
     VADR effective_addr2;                                             \
                                                                       \
-    /* Save PER 1 GRA address before instruction decode */            \
-    PER_GRA_SAVE( regs );                                             \
-                                                                      \
     RXX0RX( inst, regs, b2, effective_addr2 );                        \
                                                                       \
     SET_GR_A( 0x ## r1, regs, effective_addr2 );                      \
@@ -1527,9 +1479,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
 #ifdef OPTION_OPTINST
     RXXx(inst, regs, r1, b2, effective_addr2);
 #else
@@ -1553,9 +1502,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Insert character in r1 register */
@@ -1575,9 +1521,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -1669,9 +1612,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of register from operand address */
@@ -1719,9 +1659,6 @@ DEF_INST( branch_on_count_register )
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR_B( inst, regs, r1, r2 );
 
     CONTRAN_INSTR_CHECK_IP( regs );
@@ -1754,9 +1691,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX_B(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK_IP( regs );
@@ -1785,9 +1719,6 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -1826,9 +1757,6 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -2187,9 +2115,6 @@ GREG    gr2_high_bit = CFC_HIGH_BIT;    /* (work constant; uses a64) */
 U16     rmask = 0x0000;                 /* (modified registers mask) */
 #endif
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     S(inst, regs, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
@@ -2354,9 +2279,6 @@ BYTE   *main2;                          /* mainstor address          */
 U32     old;                            /* old value                 */
 U32     new;                            /* new value                 */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
@@ -2421,9 +2343,6 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 BYTE   *main2;                          /* mainstor address          */
 U64     old, new;                       /* old, new values           */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3461,9 +3380,6 @@ DEF_INST(compare_logical_character_long)
     U32   rem;                  // Work (amount remaining)
     U32   total = 0;            // TOTAL amount compared so far
     int   rc = 0;               // memcmp() return code
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR( inst, regs, r1, r2 );
 
@@ -4509,9 +4425,6 @@ int     ovf;                            /* 1=overflow                */
 int     dxf;                            /* 1=data exception          */
 BYTE    dec[8];                         /* Packed decimal operand    */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
@@ -4601,9 +4514,6 @@ int     r1;                             /* Values of R fields        */
 int     r2;                             /* Values of R fields        */
 int     divide_overflow;                /* 1=divide overflow         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     CONTRAN_INSTR_CHECK( regs );
@@ -4636,9 +4546,6 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 int     divide_overflow;                /* 1=divide overflow         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
@@ -4670,9 +4577,6 @@ DEF_INST(exclusive_or_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
@@ -4692,9 +4596,6 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -5089,9 +4990,6 @@ DEF_INST(extract_access_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RRE(inst, regs, r1, r2);
 
     /* Copy R2 access register to R1 general register */
@@ -5115,9 +5013,6 @@ VADR   effective_addr2;                 /* effective address         */
 BYTE   vbyte[4];                        /* Fetched storage bytes     */
 U32    n;                               /* Fetched value             */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RSMX(inst, regs, r1, b2, effective_addr2);
 
     /* Optimized case */
@@ -5139,9 +5034,6 @@ DEF_INST(BF_F)
 int    r1;                              /* Register numbers          */
 int    b2;                              /* effective address base    */
 VADR   effective_addr2;                 /* effective address         */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RSMX(inst, regs, r1, b2, effective_addr2);
 
@@ -5171,9 +5063,6 @@ static const unsigned int               /* Turn reg bytes off by mask*/
                       0xFF00FFFF, 0xFF00FF00, 0xFF0000FF, 0xFF000000,
                       0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
                       0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -5224,9 +5113,6 @@ static const unsigned int               /* Turn reg bytes off by mask*/
                       0xFF00FFFF, 0xFF00FF00, 0xFF0000FF, 0xFF000000,
                       0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
                       0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -5289,9 +5175,6 @@ DEF_INST(insert_program_mask)
 {
 int     r1, r2;                         /* Value of R field          */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RRE(inst, regs, r1, r2);
 
     /* Insert condition code in R1 bits 2-3, program mask
@@ -5312,9 +5195,6 @@ int     r1, r2;                         /* Value of R field          */
   DEF_INST( 18 ## r1 ## r2 )                                          \
   {                                                                   \
     UNREFERENCED( inst );                                             \
-                                                                      \
-    /* Save PER 1 GRA address before instruction decode */            \
-    PER_GRA_SAVE( regs );                                             \
                                                                       \
     INST_UPDATE_PSW( regs, 2, 2 );                                    \
                                                                       \
@@ -5369,9 +5249,6 @@ LRgenr2( F )
 DEF_INST(load_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -5442,9 +5319,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX(inst, regs, r1, b2, effective_addr2);
 
     CONTRAN_INSTR_CHECK( regs );
@@ -5476,9 +5350,6 @@ DEF_INST(load_and_test_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     /* Copy second operand and set condition code */
@@ -5498,9 +5369,6 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_complement_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -5555,9 +5423,6 @@ VADR    effective_addr2;                /* effective address         */
 int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2;                        /* Mainstor pointers         */
 BYTE   *bp1;                            /* Unaligned maintstor ptr   */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
@@ -5656,9 +5521,6 @@ DEF_INST(load_negative_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
@@ -5679,9 +5541,6 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_positive_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -5952,9 +5811,6 @@ BYTE    pad;                            /* Padding byte              */
 #if defined( FEATURE_INTERVAL_TIMER )
 int     orglen1;                        /* Original dest length      */
 #endif
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR( inst, regs, r1, r2 );
 
@@ -6665,9 +6521,6 @@ DEF_INST(multiply_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RR(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
@@ -6691,9 +6544,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 
@@ -6721,9 +6571,6 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 S32     n;                              /* 32-bit operand values     */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RX(inst, regs, r1, b2, effective_addr2);
 

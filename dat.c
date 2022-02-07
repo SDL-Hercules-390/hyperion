@@ -2509,7 +2509,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
                     || ARCH_DEP( check_sa_per2 )( arn, acctype, regs )
                    )
 #endif /* defined( FEATURE_PER2 ) */
-            /* Check the range altered enters the SA PER range */
+                /* Check that the range that was altered is within the PER SA range */
                 && PER_RANGE_CHECK2( addr, addr+(len-1), regs->CR(10), regs->CR(11))
             )
                 ON_IC_PER_SA( regs );

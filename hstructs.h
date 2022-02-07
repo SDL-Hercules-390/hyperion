@@ -364,7 +364,7 @@ struct REGS {                           /* Processor registers       */
         U16     perc;                   /* PER code                  */
         RADR    peradr;                 /* PER address               */
         BYTE    peraid;                 /* PER access id             */
-        RADR    pergra_addr;            /* PER 1 GRA address         */
+        RADR    periaddr;               /* Fetched instruct. address */
 
      /*
       * Making the following flags 'stand-alone' (instead of bit-

@@ -918,9 +918,6 @@ BYTE    fbyte;                          /* Fill byte                 */
 BYTE    pbyte;                          /* Pattern byte              */
 BYTE    rbyte;                          /* Result byte               */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
     CONTRAN_INSTR_CHECK( regs );

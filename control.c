@@ -1064,9 +1064,6 @@ DEF_INST( extract_primary_asn )
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1136,9 +1133,6 @@ int r1, r2;                             /* Values of R fields        */
 DEF_INST( extract_secondary_asn )
 {
 int     r1, r2;                         /* Values of R fields        */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -1212,9 +1206,6 @@ int     r1, r2;                         /* Values of R fields        */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1261,9 +1252,6 @@ BYTE    code;                           /* Extraction code           */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 int     max_esta_code;
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -1315,9 +1303,6 @@ DEF_INST( insert_address_space_control )
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1363,9 +1348,6 @@ DEF_INST( insert_psw_key )
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -1394,9 +1376,6 @@ DEF_INST( insert_storage_key )
 {
 int     r1, r2;                         /* Operand register numbers  */
 RADR    pageaddr;                       /* Working abs page address  */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RR(inst, regs, r1, r2);
 
@@ -1547,9 +1526,6 @@ DEF_INST( insert_storage_key_extended )
 int     r1, r2;                         /* Operand register numbers  */
 RADR    pageaddr;                       /* Working abs page address  */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RRE( inst, regs, r1, r2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -1683,9 +1659,6 @@ VADR    effective_addr;                 /* Operand-2 virtual page    */
 RADR    pageaddr;                       /* Operand-2 page address    */
 BYTE    vsk;                            /* Virtual Storage Key       */
 bool    need_realkey = true;            /* (get from real page)      */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -2396,9 +2369,6 @@ int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RX( inst, regs, r1, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
@@ -2491,9 +2461,6 @@ DEF_INST( load_using_real_address )
 {
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Unsigned work             */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 
@@ -3046,9 +3013,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
 CREG    savecr12 = 0;                   /* CR12 save                 */
 #endif
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -3725,9 +3689,6 @@ U16     sasn;                           /* New secondary ASN         */
 U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
 int     rc;                             /* return code from load_psw */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     E( inst, regs );
 
@@ -5926,9 +5887,6 @@ static char *ordername[] = {
     /* 0x15 SIGP_SENSE_RUNNING_STATE */  "Sense running state"
 };
 
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
-
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
     TRAN_INSTR_CHECK( regs );
@@ -7688,9 +7646,6 @@ DEF_INST( test_block )
 {
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Real address              */
-
-    /* Save PER 1 GRA address before instruction decode */
-    PER_GRA_SAVE( regs );
 
     RRE( inst, regs, r1, r2 );
 

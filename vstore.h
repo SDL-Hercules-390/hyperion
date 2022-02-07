@@ -864,6 +864,10 @@ int     len;                            /* Length for page crossing  */
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
+            /* Save the address of the instruction ABOUT to be executed */
+            regs->periaddr = PSW_IA_FROM_IP( regs, 0 );
+
+            /* Return to caller to execute this instruction */
             return regs->ip;
         }
     }
@@ -936,6 +940,10 @@ int     len;                            /* Length for page crossing  */
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
+    /* Save the address of the instruction ABOUT to be executed */
+    regs->periaddr = PSW_IA_FROM_IP( regs, 0 );
+
+    /* Return to caller to execute this instruction */
     return dest;
 
 } /* end function ARCH_DEP( instfetch ) */

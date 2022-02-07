@@ -549,7 +549,7 @@ inline void ARCH_DEP( per1_gra )( REGS* regs )
 #else
     OBTAIN_INTLOCK( regs );
     {
-        regs->peradr = regs->pergra_addr;
+        regs->peradr = regs->periaddr;
         regs->perc   = (CR9_GRA >> 16);
         regs->peraid = 0;
 
