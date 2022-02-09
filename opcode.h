@@ -1203,7 +1203,6 @@ do {                                                                  \
 /*-------------------------------------------------------------------*/
 
 #undef  IS_PER_SUPRESS
-#undef  IS_PER_IF_SUPRESS
 
 #if defined( FEATURE_PER3 )
 

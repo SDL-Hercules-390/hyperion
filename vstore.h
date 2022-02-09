@@ -818,8 +818,8 @@ int     len;                            /* Length for page crossing  */
         regs->perc = 0;
 #endif /* defined( FEATURE_PER2 ) */
 
-    if (!exec)
-        regs->peradr = addr;
+        if (!exec)
+            regs->peradr = addr;
 
         /* Test for PER instruction-fetching event */
         if (1
