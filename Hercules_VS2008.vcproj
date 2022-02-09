@@ -3502,6 +3502,10 @@
 						RelativePath=".\tests\tape.core"
 						>
 					</File>
+					<File
+						RelativePath=".\tests\TXFPER.core"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="scripts"
@@ -4582,6 +4586,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\TXFPER.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\wild.tst"
 							>
 						</File>
@@ -4845,6 +4853,10 @@
 							RelativePath=".\tests\tape.asm"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\TXFPER.asm"
+							>
+						</File>
 						<Filter
 							Name="list"
 							>
@@ -5094,6 +5106,14 @@
 							</File>
 							<File
 								RelativePath=".\tests\tape.pdf"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TXFPER.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TXFPER.pdf"
 								>
 							</File>
 						</Filter>

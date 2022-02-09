@@ -222,6 +222,7 @@ BYTE       *saveaddr;
 BYTE       *mainaddr;
 TPAGEMAP   *pmap;
 int         txf_tnd, txf_tac, slot;
+bool        per_tend = false;           /* true = check for PER TEND */
 
     S( inst, regs, b2, effective_addr2 );
 
@@ -525,8 +526,25 @@ int         txf_tnd, txf_tac, slot;
         ARCH_DEP( reset_txf_aie )( regs );
 
         PERFORM_SERIALIZATION( regs );
+
+        /* Check if a transaction-end PER event is wanted */
+        if (EN_IC_PER_TEND( regs ))
+        {
+            regs->peradr = regs->periaddr;
+            ON_IC_PER_TEND( regs );
+            per_tend = true;
+        }
     }
     RELEASE_INTLOCK( regs );
+
+    /* If a PER TEND event was generated, check to
+       see if we can take the interrupt right away.
+    */
+    if (per_tend)
+    {
+        if (OPEN_IC_PER_TEND( regs ))
+            RETURN_INTCHECK( regs );
+    }
 
 } /* end DEF_INST( transaction_end ) */
 

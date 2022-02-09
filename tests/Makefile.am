@@ -437,6 +437,11 @@ EXTRA_DIST =                    \
      tape.list                  \
      tape.pdf                   \
      tape.tst                   \
+     TXFPER.asm                 \
+     TXFPER.core                \
+     TXFPER.list                \
+     TXFPER.pdf                 \
+     TXFPER.tst                 \
      tapebsf.subtst             \
      tapepos.txt                \
      tbedr.txt                  \

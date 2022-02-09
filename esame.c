@@ -4899,10 +4899,13 @@ RADR    n;                              /* Unsigned work             */
 
 #if defined(FEATURE_PER2)
     /* Storage alteration must be enabled for STURA to be recognised */
-    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
+    if (1
+        && EN_IC_PER_SA(    regs ) && !IS_PER_SUPRESS( regs, CR9_SA    )
+        && EN_IC_PER_STURA( regs ) && !IS_PER_SUPRESS( regs, CR9_STURA )
+    )
     {
-        ON_IC_PER_SA(regs) ;
-        ON_IC_PER_STURA(regs) ;
+        ON_IC_PER_SA( regs );
+        ON_IC_PER_STURA( regs );
     }
 #endif /*defined(FEATURE_PER2)*/
 

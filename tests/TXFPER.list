@@ -1,0 +1,484 @@
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *                          TXFPER.ASM
+                                                     4 ***********************************************************************
+                                                     5 *
+                                                     6 *  This program performs a PER instruction trace of TXF transactions.
+                                                     7 *  It enables PER instruction fetch events for a range of instructions
+                                                     8 *  that includes two transactions.
+                                                     9 *
+                                                    10 *  The first transaction, a CONSTRAINED transaction, and a separate
+                                                    11 *  second transaction being an unconstrained transaction with another
+                                                    12 *  unconstrained transaction nested within it.
+                                                    13 *
+                                                    14 *  The test is performed with both the Instruction Fetch and Event-
+                                                    15 *  Suppression (ES) PER flags set. It should trace all instructions
+                                                    16 *  EXCEPT FOR the instructions comprising the actual transactions.
+                                                    17 *
+                                                    18 ***********************************************************************
+
+
+                              00000000  00000FFF    20 TXFPER   START 0
+00000000                      00000000              21          USING TXFPER,R0
+
+
+
+
+00000000                      00000000  0000008C    23          ORG   TXFPER+X'8C'         Program interrupt code
+0000008C  00000000                                  24 PGMCODE  DC    F'0'                 Program interrupt code
+                              00000080  00000001    25 PGM_PER_EVENT  EQU  X'80'           PER Event program interrupt code
+                                                    26
+
+
+00000090                      00000090  00000096    28          ORG   TXFPER+X'96'         PER interrupt fields
+00000096  0000                                      29 PERCODE  DC    XL2'00'              PER interrupt code
+                              00000001  00000001    30 PERIFNUL EQU   X'01'                PER IFetch Nullification event
+00000098  00000000 00000000                         31 PERADDR  DC    AD(0)                PER interrupt address
+
+
+
+
+                              00000150  00000000    33 PGMOPSW  EQU   TXFPER+X'150'        z Program Old PSW
+
+000000A0                      000000A0  000001A0    35          ORG   TXFPER+X'1A0'        z Restart New PSW
+000001A0  00000001 80000000                         36          DC    X'0000000180000000'
+000001A8  00000000 00000200                         37          DC    AD(GO)
+
+
+000001B0                      000001B0  000001D0    39          ORG   TXFPER+X'1D0'        z Program New PSW
+000001D0  00000001 80000000                         40          DC    X'0000000180000000'
+000001D8  00000000 00000374                         41          DC    AD(PGMRUPT)
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    43 ***********************************************************************
+                                                    44 *                  Start of actual program...
+                                                    45 ***********************************************************************
+
+000001E0                      000001E0  00000200    47          ORG   TXFPER+X'200'
+
+
+                                                    49 ***********************************************************************
+                                                    50 *              Perform basic TXF sanity checks...
+                                                    51 ***********************************************************************
+
+00000200  4100 001F                     0000001F    53 GO       LA    R0,(L'FACLIST/8)-1           Store Facility List
+00000204  B2B0 0428                     00000428    54          STFLE FACLIST
+
+00000208  9120 0428                     00000428    56          TM    FACLIST+ZAFACBYT,ZAFACBIT    z/Arch mode?
+0000020C  A784 01B1                     0000056E    57          JZ    ZAFAIL
+
+00000210  9140 042E                     0000042E    59          TM    FACLIST+PAFACBYT,PAFACBIT    PPA available?
+00000214  A784 01B1                     00000576    60          JZ    PAFAIL
+
+00000218  9140 0431                     00000431    62          TM    FACLIST+TXFACBYT,TXFACBIT    TXF available?
+0000021C  A784 01B5                     00000586    63          JZ    TXFAIL
+
+00000220  9120 042E                     0000042E    65          TM    FACLIST+CTFACBYT,CTFACBIT    Constrained TXF?
+00000224  A784 01AD                     0000057E    66          JZ    CTFAIL
+
+
+
+                                                    68 ***********************************************************************
+                                                    69 *                       Enable TXF
+                                                    70 ***********************************************************************
+
+00000228  EB00 0528 0025                00000528    72          STCTG R0,R0,CTL0         Save CR0
+0000022E  E300 0528 0004                00000528    73          LG    R0,CTL0            Load into GR0
+00000234  A508 0080                                 74          OIHH  R0,CR0TXF          Enable TXF flag
+00000238  E300 0528 0024                00000528    75          STG   R0,CTL0            Save GR0
+0000023E  EB00 0528 002F                00000528    76          LCTLG R0,R0,CTL0         Load CR0
+
+
+
+
+
+                                                    78 ***********************************************************************
+                                                    79 *                       Begin test...
+                                                    80 ***********************************************************************
+
+00000244  EB9B 0530 002F                00000530    82          LCTLG R9,R11,PERCTL      Load CR9-CR11 PER Control Registers
+0000024A  8000 056D                     0000056D    83          SSM   ENPER              Enable Program Event Recording
+0000024E  45E0 025A                     0000025A    84          BAL   R14,CTRANS         Execute a Constrained Transaction
+00000252  45E0 0272                     00000272    85          BAL   R14,UTRANS         Execute an Unconstrained Transaction
+00000256  A7F4 00E5                     00000420    86          J     SUCCESS            Done!
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    88 ***********************************************************************
+                                                    89 *              Dummy Transactions to be Traced...
+                                                    90 ***********************************************************************
+
+                              0000025A  00000001    92 BEGRANGE EQU   *                  Begin of PER Range
+
+
+
+
+0000025A  4111 1001                     00000001    94 CTRANS   LA    R1,1(R1,R1)
+0000025E  E561 0000 0000                00000000    95          TBEGINC 0,0              Begin Constrained Transaction
+00000264  4122 2002                     00000002    96          LA    R2,2(R2,R2)
+00000268  B2F8 0000                                 97          TEND  ,                  End of Transaction
+0000026C  4133 3003                     00000003    98          LA    R3,3(R3,R3)
+00000270  07FE                                      99          BR    R14                Return to caller
+
+
+
+00000272  A729 2000                                101 UTRANS   LGHI  R2,X'2000'         R2 --> TDB
+00000276  1FFF                                     102          SLR   R15,R15            R15 <== failure count = none yet
+00000278  E560 2000 FE00                00000000   103 URETRY   TBEGIN 0(R2),X'FE00'     unconstrained, WITH TDB, save R0-R13
+0000027E  A774 0012                     000002A2   104          JNZ   UFAILED            CC != 0: aborted or can't be started
+00000282  4144 4004                     00000004   105          LA    R4,4(R4,R4)
+00000286  E560 0000 0000                00000000   106          TBEGIN 0,0               Begin Nested Transaction
+0000028C  4155 5005                     00000005   107          LA    R5,5(R5,R5)
+00000290  B2F8 0000                                108          TEND  ,                  End of Nested Transaction
+00000294  4166 6006                     00000006   109          LA    R6,6(R6,R6)
+00000298  B2F8 0000                                110          TEND  ,                  End of Outermost Transaction
+0000029C  4177 7007                     00000007   111 USKIP    LA    R7,7(R7,R7)
+000002A0  07FE                                     112          BR    R14                Return to caller
+
+
+
+000002A2  A744 000E                     000002BE   114 UFAILED  BRC   CC1,UFAILCC1       Indeterminate condition (unexpected)
+000002A6  A714 0010                     000002C6   115          BRC   CC3,UFAILCC3       Persistent    condition (unexpected)
+
+000002AA  A7FA 0001                                117          AHI   R15,1              Increment temporary failure count
+000002AE  A7FE 0003                                118          CHI   R15,3              Have we reached our maximum retry?
+000002B2  A7B4 FFF5                     0000029C   119          JNL   USKIP              Yes, then do it the hard way
+
+000002B6  B2E8 10F0                                121          PPA   R15,0,1            Otherwise request assistance
+000002BA  A7F4 FFDF                     00000278   122          J     URETRY             And try the transaction again
+
+000002BE  9201 0567                     00000567   124 UFAILCC1 MVI   BADPSW+16-1,1      Unexpected CC1
+000002C2  A7F4 00B1                     00000424   125          J     FAILURE            FAIL test
+000002C6  9203 0567                     00000567   126 UFAILCC3 MVI   BADPSW+16-1,3      Unexpected CC3
+000002CA  A7F4 00AD                     00000424   127          J     FAILURE            FAIL test
+
+
+
+
+                              000002CE  00000001   129 ENDRANGE EQU   *                  End of PER Range
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   131 ***********************************************************************
+                                                   132 *        Issue Hercules MESSAGE pointed to by R1, length in R0
+                                                   133 ***********************************************************************
+
+000002CE  4900 058E                     0000058E   135 MSG      CH    R0,=H'0'             Do we even HAVE a message?
+000002D2  07DF                                     136          BNHR  R15                  No, ignore
+
+000002D4  9002 0304                     00000304   138          STM   R0,R2,MSGSAVE        Save registers
+000002D8  4900 0590                     00000590   139          CH    R0,=AL2(L'MSGMSG)    Message length within limits?
+000002DC  47D0 02E4                     000002E4   140          BNH   MSGOK                Yes, continue
+000002E0  4100 0015                     00000015   141          LA    R0,L'MSGMSG          No, set to maximum
+
+000002E4  1820                                     143 MSGOK    LR    R2,R0                Copy length to work register
+000002E6  0620                                     144          BCTR  R2,0                 Minus-1 for execute
+000002E8  4420 0310                     00000310   145          EX    R2,MSGMVC            Copy message to O/P buffer
+000002EC  4120 200A                     0000000A   146          LA    R2,1+L'MSGCMD(,R2)   Calculate true command length
+000002F0  4110 0316                     00000316   147          LA    R1,MSGCMD            Point to true command
+
+000002F4  83120008                                 149          DC    X'83',X'12',X'0008'  Issue Hercules Diagnose X'008'
+000002F8  4780 02FE                     000002FE   150          BZ    MSGRET               Return if successful
+000002FC  0000                                     151          DC    H'0'                 ** CRASH ** otherwise!
+
+000002FE  9802 0304                     00000304   153 MSGRET   LM    R0,R2,MSGSAVE        Restore registers
+00000302  07FF                                     154          BR    R15                  Return to caller
+
+00000304  00000000 00000000                        156 MSGSAVE  DC    3F'0'                Registers save area
+00000310  D200 031F 1000      0000031F  00000000   157 MSGMVC   MVC   MSGMSG(0),0(R1)      Executed instruction
+
+00000316  D4E2C7D5 D6C8405C                        159 MSGCMD   DC    C'MSGNOH * '
+0000031F  F1F2F3F4 F5F6F7F8                        160 MSGMSG   DC    C'12345678 ==> 12345678',C' ' (extra byte for unpk)
+
+
+
+                                                   162 ***********************************************************************
+                                                   163 *        Trace instructions that was either fetched or executed
+                                                   164 ***********************************************************************
+
+00000336  F384 031F 009C      0000031F  0000009C   166 ITRACE   UNPK  MSGMSG(9),PERADDR+4(5)   Address of instruction
+0000033C  9240 0327                     00000327   167          MVI   MSGMSG+8,C' '
+00000340  DC07 031F 0274      0000031F  00000274   168          TR    MSGMSG(8),HEXCHARS-X'F0'
+
+00000346  5810 009C                     0000009C   170          L     R1,PERADDR+4             The instruction itself
+0000034A  F384 032C 1000      0000032C  00000000   171          UNPK  MSGMSG+13(9),0(5,R1)
+00000350  DC07 032C 0274      0000032C  00000274   172          TR    MSGMSG+13(8),HEXCHARS-X'F0'
+
+00000356  4110 031F                     0000031F   174          LA    R1,MSGMSG
+0000035A  4100 0015                     00000015   175          LA    R0,L'MSGMSG
+0000035E  45F0 02CE                     000002CE   176          BAL   R15,MSG                  "Trace" the instruction
+00000362  07FE                                     177          BR    R14
+
+00000364  F0F1F2F3 F4F5F6F7                        179 HEXCHARS DC    CL16'0123456789ABCDEF'
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   181 ***********************************************************************
+                                                   182 *                Program Interrupt Handler...
+                                                   183 ***********************************************************************
+
+00000374  9180 008F                     0000008F   185 PGMRUPT  TM    PGMCODE+3,PGM_PER_EVENT  Expected interrupt?
+00000378  A784 004C                     00000410   186          JZ    ABORT                    No?! ** ABORT!! **
+0000037C  EB0F 0390 0024                00000390   187          STMG  R0,R15,PGMREGS           Save caller's registers
+00000382  45E0 0336                     00000336   188          BAL   R14,ITRACE               Trace the instruction
+00000386  EB0F 0390 0004                00000390   189          LMG   R0,R15,PGMREGS           Restore caller's registers
+0000038C  B2B2 0150                     00000150   190          LPSWE PGMOPSW                  Return to caller...
+
+00000390  00000000 00000000                        192 PGMREGS  DC    16D'0'                   Saved GR registers 0 - 15
+
+
+
+
+
+                                                   194 ***********************************************************************
+                                                   195 *          ABORT test run due to unexpected program interrupt
+                                                   196 ***********************************************************************
+
+00000410  D201 0562 0592      00000562  00000592   198 ABORT    MVC   BADPSW+8+2(2),=XL2'DEAD'
+00000416  D203 0564 008C      00000564  0000008C   199          MVC   BADPSW+16-L'PGMCODE(L'PGMCODE),PGMCODE
+0000041C  A7F4 0004                     00000424   200          J     FAILURE
+
+
+
+
+
+                                                   202 ***********************************************************************
+                                                   203 *          Successful completion / Abnormal termination
+                                                   204 ***********************************************************************
+
+00000420  B2B2 0548                     00000548   206 SUCCESS  LPSWE    GOODPSW         Load test completed successfully PSW
+00000424  B2B2 0558                     00000558   207 FAILURE  LPSWE    BADPSW          Load the test FAILED somewhere!! PSW
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                   209 ***********************************************************************
+                                                   210 *                      WORKING STORAGE
+                                                   211 ***********************************************************************
+
+00000428                                           213          DC    0D'0'              (doubleword boundary)
+00000428  00000000 00000000                        214 FACLIST  DC    XL256'00'          Facility List
+
+00000528  00000000 00000000                        216 CTL0     DC    D'0'               Control Register 0
+                              00000080  00000001   217 CR0TXF   EQU   X'0080'            CR0 bit 8: TXF Control
+                              00000004  00000001   218 CC1      EQU   B'0100'            Condition Code 1
+                              00000001  00000001   219 CC3      EQU   B'0001'            Condition Code 3
+
+00000530  00000000 40400000                        221 PERCTL   DC    AD(X'40400000')    CR9  = Ifetch + Event Suppress
+00000538  00000000 0000025A                        222          DC    AD(BEGRANGE)       CR10 = Range begining address
+00000540  00000000 000002CE                        223          DC    AD(ENDRANGE)       CR11 = Range ending   address
+
+00000548  00020001 80000000                        225 GOODPSW  DC    XL8'0002000180000000'
+00000550  00000000 00000000                        226          DC    XL4'00000000',A(X'00000000')
+
+00000558  00020001 80000000                        228 BADPSW   DC    XL8'0002000180000000'
+00000560  0000DEAD 000000FF                        229          DC    XL4'0000DEAD',A(X'000000FF')  (FF = Reason for Failure)
+
+00000568  00000000                                 231 SAVEADDR DC    A(0)               Saved PER Address
+0000056C  00                                       232 SAVEPERC DC    X'00'              Saved PER Code
+0000056D  40                                       233 ENPER    DC    B'01000000'        Enable PER bit in PSW
+
+                              00000002  00000001   235 ZAFACNUM EQU   2                  z/Architecture architectural mode is active
+                              00000000  00000001   236 ZAFACBYT EQU   X'00'
+                              00000020  00000001   237 ZAFACBIT EQU   X'20'
+0000056E  9201 0567                     00000567   238 ZAFAIL   MVI   BADPSW+16-1,1
+00000572  A7F4 FF59                     00000424   239          J     FAILURE
+
+                              00000031  00000001   241 PAFACNUM EQU   49                 Processor-Assist Facility
+                              00000006  00000001   242 PAFACBYT EQU   X'06'
+                              00000040  00000001   243 PAFACBIT EQU   X'40'
+00000576  9202 0567                     00000567   244 PAFAIL   MVI   BADPSW+16-1,2
+0000057A  A7F4 FF55                     00000424   245          J     FAILURE
+
+                              00000032  00000001   247 CTFACNUM EQU   50                 Constrained-Transactional-Execution Facility
+                              00000006  00000001   248 CTFACBYT EQU   X'06'
+                              00000020  00000001   249 CTFACBIT EQU   X'20'
+0000057E  9203 0567                     00000567   250 CTFAIL   MVI   BADPSW+16-1,3
+00000582  A7F4 FF51                     00000424   251          J     FAILURE
+
+                              00000049  00000001   253 TXFACNUM EQU   73                 Transactional-Execution Facility
+                              00000009  00000001   254 TXFACBYT EQU   X'09'
+                              00000040  00000001   255 TXFACBIT EQU   X'40'
+00000586  9204 0567                     00000567   256 TXFAIL   MVI   BADPSW+16-1,4
+0000058A  A7F4 FF4D                     00000424   257          J     FAILURE
+
+0000058E                                           259          LTORG ,
+0000058E  0000                                     260                =H'0'
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000590  0015                                     261                =AL2(L'MSGMSG)
+00000592  DEAD                                     262                =XL2'DEAD'
+
+
+
+                                                   264 ***********************************************************************
+                                                   265 *                  Testing option byte
+                                                   266 ***********************************************************************
+
+
+00000594                      00000594  00000FFF   268          ORG   TXFPER+X'FFF'
+
+00000FFF  78                                       270 TESTFLAG DC    AL1(TEST2OPT+TEST3OPT+TEST4OPT+TEST5OPT)
+
+
+
+                              00000080  00000001   272 TEST1OPT EQU   X'80'    Perform Test 1
+                              00000040  00000001   273 TEST2OPT EQU   X'40'    Perform Test 2
+                              00000020  00000001   274 TEST3OPT EQU   X'20'    Perform Test 3
+                              00000010  00000001   275 TEST4OPT EQU   X'10'    Perform Test 4
+                              00000008  00000001   276 TEST5OPT EQU   X'08'    Perform Test 5
+
+
+
+
+
+                                                   278 ***********************************************************************
+                                                   279 *        Register equates
+                                                   280 ***********************************************************************
+
+
+                              00000000  00000001   282 R0       EQU   0
+                              00000001  00000001   283 R1       EQU   1
+                              00000002  00000001   284 R2       EQU   2
+                              00000003  00000001   285 R3       EQU   3
+                              00000004  00000001   286 R4       EQU   4
+                              00000005  00000001   287 R5       EQU   5
+                              00000006  00000001   288 R6       EQU   6
+                              00000007  00000001   289 R7       EQU   7
+                              00000008  00000001   290 R8       EQU   8
+                              00000009  00000001   291 R9       EQU   9
+                              0000000A  00000001   292 R10      EQU   10
+                              0000000B  00000001   293 R11      EQU   11
+                              0000000C  00000001   294 R12      EQU   12
+                              0000000D  00000001   295 R13      EQU   13
+                              0000000E  00000001   296 R14      EQU   14
+                              0000000F  00000001   297 R15      EQU   15
+
+
+                                                   299          END
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     8
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ABORT               I    000410       6   198  186
+BADPSW              X    000558       8   228  124  126  198  199  207  238  244  250  256
+BEGRANGE            U    00025A       1    92  222
+CC1                 U    000004       1   218  114
+CC3                 U    000001       1   219  115
+CR0TXF              U    000080       1   217   74
+CTFACBIT            U    000020       1   249   65
+CTFACBYT            U    000006       1   248   65
+CTFACNUM            U    000032       1   247
+CTFAIL              I    00057E       4   250   66
+CTL0                D    000528       8   216   72   73   75   76
+CTRANS              I    00025A       4    94   84
+ENDRANGE            U    0002CE       1   129  223
+ENPER               B    00056D       1   233   83
+FACLIST             X    000428     256   214   53   54   56   59   62   65
+FAILURE             I    000424       4   207  125  127  200  239  245  251  257
+GO                  I    000200       4    53   37
+GOODPSW             X    000548       8   225  206
+HEXCHARS            C    000364      16   179  168  172
+IMAGE               1    000000    4096     0
+ITRACE              I    000336       6   166  188
+MSG                 I    0002CE       4   135  176
+MSGCMD              C    000316       9   159  146  147
+MSGMSG              C    00031F      21   160  141  157  166  167  168  171  172  174  175  139
+MSGMVC              I    000310       6   157  145
+MSGOK               I    0002E4       2   143  140
+MSGRET              I    0002FE       4   153  150
+MSGSAVE             F    000304       4   156  138  153
+PAFACBIT            U    000040       1   243   59
+PAFACBYT            U    000006       1   242   59
+PAFACNUM            U    000031       1   241
+PAFAIL              I    000576       4   244   60
+PERADDR             A    000098       8    31  166  170
+PERCODE             X    000096       2    29
+PERCTL              A    000530       8   221   82
+PERIFNUL            U    000001       1    30
+PGMCODE             F    00008C       4    24  185  199
+PGMOPSW             U    000150       0    33  190
+PGMREGS             D    000390       8   192  187  189
+PGMRUPT             I    000374       4   185   41
+PGM_PER_EVENT       U    000080       1    25  185
+R0                  U    000000       1   282   21   53   72   73   74   75   76  135  138  139  141  143  153  175  187  189
+R1                  U    000001       1   283   94  147  157  170  171  174
+R10                 U    00000A       1   292
+R11                 U    00000B       1   293   82
+R12                 U    00000C       1   294
+R13                 U    00000D       1   295
+R14                 U    00000E       1   296   84   85   99  112  177  188
+R15                 U    00000F       1   297  102  117  118  121  136  154  176  187  189
+R2                  U    000002       1   284   96  101  103  138  143  144  145  146  153
+R3                  U    000003       1   285   98
+R4                  U    000004       1   286  105
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page     9
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+R5                  U    000005       1   287  107
+R6                  U    000006       1   288  109
+R7                  U    000007       1   289  111
+R8                  U    000008       1   290
+R9                  U    000009       1   291   82
+SAVEADDR            A    000568       4   231
+SAVEPERC            X    00056C       1   232
+SUCCESS             I    000420       4   206   86
+TEST1OPT            U    000080       1   272
+TEST2OPT            U    000040       1   273  270
+TEST3OPT            U    000020       1   274  270
+TEST4OPT            U    000010       1   275  270
+TEST5OPT            U    000008       1   276  270
+TESTFLAG            R    000FFF       1   270
+TXFACBIT            U    000040       1   255   62
+TXFACBYT            U    000009       1   254   62
+TXFACNUM            U    000049       1   253
+TXFAIL              I    000586       4   256   63
+TXFPER              J    000000    4096    20   23   28   33   35   39   47  268   21
+UFAILCC1            I    0002BE       4   124  114
+UFAILCC3            I    0002C6       4   126  115
+UFAILED             I    0002A2       4   114  104
+URETRY              I    000278       6   103  122
+USKIP               I    00029C       4   111  119
+UTRANS              I    000272       4   101   85
+ZAFACBIT            U    000020       1   237   56
+ZAFACBYT            U    000000       1   236   56
+ZAFACNUM            U    000002       1   235
+ZAFAIL              I    00056E       4   238   57
+=AL2(L'MSGMSG)      R    000590       2   261  139
+=H'0'               H    00058E       2   260  135
+=XL2'DEAD'          X    000592       2   262  198
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page    10
+
+MACRO   DEFN  REFERENCES
+
+No defined macros
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page    11
+
+   DESC    SYMBOL  SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE   4096  000-FFF  000-FFF
+  Region           4096  000-FFF  000-FFF
+    CSECT  TXFPER  4096  000-FFF  000-FFF
+ASMA Ver. 0.2.1               TXFPER  --  Test TXF PER Event-Suppression option                     09 Feb 2022 14:07:59  Page    12
+
+   STMT                                         FILE NAME
+
+1     c:\Users\Fish\Documents\Visual Studio 2008\Projects\MyProjects\ASMA-0\TXFPER\TXFPER.asm
+
+
+** NO ERRORS FOUND **
+
+

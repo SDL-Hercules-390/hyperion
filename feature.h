@@ -989,27 +989,41 @@ do { \
 /*
  * PER Successful Branch
  */
-#if defined(FEATURE_PER)
- #if defined(FEATURE_PER2)
-  #define PER_SB(_regs, _addr) \
-   do { \
-    if (unlikely(EN_IC_PER_SB((_regs))) \
-     && (!((_regs)->CR(9) & CR9_BAC) \
-      || PER_RANGE_CHECK((_addr) & ADDRESS_MAXWRAP((_regs)), \
-                          (_regs)->CR(10), (_regs)->CR(11)) \
-        ) \
-       ) \
-     ON_IC_PER_SB((_regs)); \
-   } while (0)
- #else /*!defined(FEATURE_PER2)*/
-  #define PER_SB(_regs, _addr) \
-   do { \
-    if (unlikely(EN_IC_PER_SB((_regs)))) \
-     ON_IC_PER_SB((_regs)); \
-   } while (0)
- #endif /*!defined(FEATURE_PER2)*/
-#else /*!defined(FEATURE_PER)*/
- #define PER_SB(_regs,_addr)
-#endif /*!defined(FEATURE_PER)*/
+#if defined( FEATURE_PER )
+
+  #if defined( FEATURE_PER2 )
+
+    #define PER_SB( _regs, _addr )                                    \
+                                                                      \
+      do                                                              \
+      {                                                               \
+        if (1                                                         \
+            && unlikely( EN_IC_PER_SB( _regs ))                       \
+            && !IS_PER_SUPRESS( (_regs), CR9_SB )                     \
+            && (0                                                     \
+                || !((_regs)->CR(9) & CR9_BAC)                        \
+                || PER_RANGE_CHECK( (_addr) & ADDRESS_MAXWRAP( _regs ), (_regs)->CR(10), (_regs)->CR(11))  \
+               )                                                      \
+        )                                                             \
+          ON_IC_PER_SB( _regs );                                      \
+      }                                                               \
+      while (0)
+
+  #else /* !defined( FEATURE_PER2 ) */
+
+    #define PER_SB( _regs, _addr )                                    \
+                                                                      \
+      do                                                              \
+      {                                                               \
+        if (unlikely( EN_IC_PER_SB( _regs )))                         \
+          ON_IC_PER_SB( _regs );                                      \
+      }                                                               \
+      while (0)
+
+  #endif /* defined( FEATURE_PER2 ) */
+
+#else
+  #define PER_SB( _regs, _addr )
+#endif
 
 /* end of FEATURES.H */

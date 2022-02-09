@@ -2511,6 +2511,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 #endif /* defined( FEATURE_PER2 ) */
                 /* Check that the range that was altered is within the PER SA range */
                 && PER_RANGE_CHECK2( addr, addr+(len-1), regs->CR(10), regs->CR(11))
+                && !IS_PER_SUPRESS( regs, CR9_SA )
             )
                 ON_IC_PER_SA( regs );
         }

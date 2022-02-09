@@ -550,9 +550,6 @@ inline void ARCH_DEP( per1_gra )( REGS* regs )
     OBTAIN_INTLOCK( regs );
     {
         regs->peradr = regs->periaddr;
-        regs->perc   = (CR9_GRA >> 16);
-        regs->peraid = 0;
-
         ON_IC_PER_GRA( regs );
     }
     RELEASE_INTLOCK( regs );
@@ -560,6 +557,42 @@ inline void ARCH_DEP( per1_gra )( REGS* regs )
     if (OPEN_IC_PER_GRA( regs ))
         RETURN_INTCHECK( regs );
 #endif
+}
+
+/*-------------------------------------------------------------------*/
+/* Determine whether specified PER event should be suppressed or not */
+/*-------------------------------------------------------------------*/
+inline bool ARCH_DEP( is_per3_event_suppressed )( REGS* regs, U32 cr9_per_event )
+{
+#if !defined( FEATURE_PER3 )
+    UNREFERENCED( regs );
+    UNREFERENCED( cr9_per_event );
+#else
+    /* DON'T suppress this event if Event Suppression isn't enabled */
+    if (!(regs->CR_L(9) & CR9_SUPPRESS))
+        return false;
+
+    /* Is this PER event one that is ALLOWED to be suppressed? */
+    if (cr9_per_event & CR9_SUPPRESSABLE)
+    {
+        /* Is there an active transaction? */
+        if (regs->txf_tnd)
+            return true;        /* Yes, then suppress it! */
+
+        /* Suppress instruction-fetch events for TBEGIN/TBEGINC */
+        if (1
+            && cr9_per_event & CR9_IF
+            && *(regs->ip+0) == 0xE5
+            && (0
+                || *(regs->ip+1) == 0x60
+                || *(regs->ip+1) == 0x61
+               )
+        )
+            return true;        /* TBEGIN/TBEGINC: suppress it! */
+    }
+#endif
+    /* Otherwise DON'T suppress this PER event */
+    return false;
 }
 
 /*-------------------------------------------------------------------*/

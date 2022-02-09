@@ -1026,6 +1026,11 @@
     <None Include="tests\tape.list" />
     <None Include="tests\tape.pdf" />
     <None Include="tests\tape.tst" />
+    <None Include="tests\TXFPER.asm" />
+    <None Include="tests\TXFPER.core" />
+    <None Include="tests\TXFPER.list" />
+    <None Include="tests\TXFPER.pdf" />
+    <None Include="tests\TXFPER.tst" />
     <None Include="tests\tapebsf.subtst" />
     <None Include="tests\tests.conf" />
     <None Include="tests\text2tst.rexx" />

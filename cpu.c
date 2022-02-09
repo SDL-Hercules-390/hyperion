@@ -1094,8 +1094,6 @@ bool    intercept;                      /* False for virtual pgmint  */
         /* Positions 14 and 15 contain zeros
            if a storage alteration event was not indicated
         */
-
-        // FIXME: is this right??
         if (0
             || !OPEN_IC_PER_SA(    realregs )
             ||  OPEN_IC_PER_STURA( realregs )

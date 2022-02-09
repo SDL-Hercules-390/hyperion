@@ -3897,7 +3897,10 @@ int     rc;                             /* return code from load_psw */
 #if defined( FEATURE_PER )
 
     /* Copy PER info from working copy to real copy of registers */
-    if (IS_IC_PER_SA( &newregs ))
+    if (1
+        && IS_IC_PER_SA( &newregs )
+        && !IS_PER_SUPRESS( &newregs, CR9_SA )
+    )
     {
         ON_IC_PER_SA( regs );
         regs->perc = newregs.perc;
@@ -7574,7 +7577,10 @@ RADR    n;                              /* Unsigned work             */
 
 #if defined( FEATURE_PER2 )
     /* Storage alteration must be enabled for STURA to be recognised */
-    if (EN_IC_PER_SA( regs ) && EN_IC_PER_STURA( regs ))
+    if (1
+        && EN_IC_PER_SA(    regs ) && !IS_PER_SUPRESS( regs, CR9_SA    )
+        && EN_IC_PER_STURA( regs ) && !IS_PER_SUPRESS( regs, CR9_STURA )
+    )
     {
         ON_IC_PER_SA( regs );
         ON_IC_PER_STURA( regs );

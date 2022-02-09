@@ -418,6 +418,16 @@ typedef struct DAT  DAT;
 //efine CR9_xxxxxxxx    0x001F0000      /* 43-47 (unassigned)        */
 #define CR9_GRMASK      0x0000FFFF      /* 48-63 GR mask bits       1*/
 
+#define CR9_SUPPRESSABLE    \
+     (0                     \
+      | CR9_SB              \
+      | CR9_IF              \
+      | CR9_SA              \
+      | CR9_STURA           \
+      | CR9_ZEROADDR        \
+      | CR9_IFNUL           \
+     )
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 12 */
 

@@ -2441,6 +2441,21 @@
     <None Include="tests\tape.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\TXFPER.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TXFPER.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TXFPER.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TXFPER.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TXFPER.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
     <None Include="tests\CBUC.core">
       <Filter>Other Files\tests\core</Filter>
     </None>

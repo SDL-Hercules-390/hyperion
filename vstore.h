@@ -818,8 +818,8 @@ int     len;                            /* Length for page crossing  */
         regs->perc = 0;
 #endif /* defined( FEATURE_PER2 ) */
 
-        if (!exec)
-            regs->peradr = addr;
+    if (!exec)
+        regs->peradr = addr;
 
         /* Test for PER instruction-fetching event */
         if (1
@@ -866,6 +866,10 @@ int     len;                            /* Length for page crossing  */
 
             /* Save the address of the instruction ABOUT to be executed */
             regs->periaddr = PSW_IA_FROM_IP( regs, 0 );
+
+            /* Suppress PER instruction fetch event if appropriate */
+            if (IS_PER_SUPRESS( regs, CR9_IF ))
+                OFF_IC_PER_IF( regs );
 
             /* Return to caller to execute this instruction */
             return regs->ip;
@@ -942,6 +946,10 @@ int     len;                            /* Length for page crossing  */
 
     /* Save the address of the instruction ABOUT to be executed */
     regs->periaddr = PSW_IA_FROM_IP( regs, 0 );
+
+    /* Suppress PER instruction fetch event if appropriate */
+    if (IS_PER_SUPRESS( regs, CR9_IF ))
+        OFF_IC_PER_IF( regs );
 
     /* Return to caller to execute this instruction */
     return dest;

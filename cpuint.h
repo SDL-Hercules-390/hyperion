@@ -12,32 +12,32 @@
  Floating interrupts are made pending to all CPUs, and are
  recorded in the sysblk structure, CPU specific interrupts
  are recorded in the regs structure.
- hi0m mmmm pppp p00p xxxx xxxx xxxx h0hs : type U32
- || | |||| |||| |--| |||| |||| |||| |-||   h:mask  is always '1'
- || | |||| |||| |  | |||| |||| |||| | ||   s:state is always '1'
- || | |||| |||| |  | |||| |||| |||| | |+--> '1' : PSW_WAIT
- || | |||| |||| |  | |||| |||| |||| | +---> '1' : RESTART
- || | |||| |||| |  | |||| |||| |||| |             (available)
- || | |||| |||| |  | |||| |||| |||| +-----> '1' : STORSTAT
- || | |||| |||| |  | |||| |||| ||||
- || | |||| |||| |  | |||| |||| |||+-------> '1' : ETR
- || | |||| |||| |  | |||| |||| ||+--------> '1' : EXTSIG
- || | |||| |||| |  | |||| |||| |+---------> '1' : INTKEY
- || | |||| |||| |  | |||| |||| +----------> '1' : ITIMER
- || | |||| |||| |  | |||| ||||
- || | |||| |||| |  | |||| |||+------------> '1' : ECPS VTIMER
- || | |||| |||| |  | |||| ||+-------------> '1' : SERVSIG
- || | |||| |||| |  | |||| |+--------------> '1' : PTIMER
- || | |||| |||| |  | |||| +---------------> '1' : CLKC
- || | |||| |||| |  | ||||
- || | |||| |||| |  | |||+-----------------> '1' : TODSYNC
- || | |||| |||| |  | ||+------------------> '1' : EXTCALL
- || | |||| |||| |  | |+-------------------> '1' : EMERSIG
- || | |||| |||| |  | +--------------------> '1' : MALFALT
- || | |||| |||| |  |
- || | |||| |||| |  +----------------------> '1' : PER IFNUL
- || | |||| |||| |
- || | |||| |||| |
+ hi0m mmmm pppp pppp xxxx xxxx xxxx h0hs : type U32
+ || | |||| |||| |||| |||| |||| |||| |-||   h:mask  is always '1'
+ || | |||| |||| |||| |||| |||| |||| | ||   s:state is always '1'
+ || | |||| |||| |||| |||| |||| |||| | |+--> '1' : PSW_WAIT
+ || | |||| |||| |||| |||| |||| |||| | +---> '1' : RESTART
+ || | |||| |||| |||| |||| |||| |||| |             (available)
+ || | |||| |||| |||| |||| |||| |||| +-----> '1' : STORSTAT
+ || | |||| |||| |||| |||| |||| ||||
+ || | |||| |||| |||| |||| |||| |||+-------> '1' : ETR
+ || | |||| |||| |||| |||| |||| ||+--------> '1' : EXTSIG
+ || | |||| |||| |||| |||| |||| |+---------> '1' : INTKEY
+ || | |||| |||| |||| |||| |||| +----------> '1' : ITIMER
+ || | |||| |||| |||| |||| ||||
+ || | |||| |||| |||| |||| |||+------------> '1' : ECPS VTIMER
+ || | |||| |||| |||| |||| ||+-------------> '1' : SERVSIG
+ || | |||| |||| |||| |||| |+--------------> '1' : PTIMER
+ || | |||| |||| |||| |||| +---------------> '1' : CLKC
+ || | |||| |||| |||| ||||
+ || | |||| |||| |||| |||+-----------------> '1' : TODSYNC
+ || | |||| |||| |||| ||+------------------> '1' : EXTCALL
+ || | |||| |||| |||| |+-------------------> '1' : EMERSIG
+ || | |||| |||| |||| +--------------------> '1' : MALFALT
+ || | |||| |||| ||||
+ || | |||| |||| |||+----------------------> '1' : PER IFNUL
+ || | |||| |||| ||+-----------------------> '1' : PER TEND
+ || | |||| |||| |+------------------------> '1' : PER ZEROADDR
  || | |||| |||| +-------------------------> '1' : PER STURA
  || | |||| ||||
  || | |||| |||+---------------------------> '1' : PER GRA
@@ -94,8 +94,8 @@
 #define IC_PER_SA          21 /* 0x00200000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_GRA         20 /* 0x00100000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_STURA       19 /* 0x00080000 - Architecture dependent (CR9 >> 8) */
-#define IC_UNUSED_18       18 /* 0x00040000 */
-#define IC_UNUSED_17       17 /* 0x00020000 */
+#define IC_PER_ZEROADDR    18 /* 0x00040000 - Architecture dependent (CR9 >> 8) */
+#define IC_PER_TEND        17 /* 0x00020000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_IFNUL       16 /* 0x00010000 - Architecture dependent (CR9 >> 8) */
 #define IC_MALFALT         15 /* 0x00008000 - Architecture dependent (CR0) */
 #define IC_EMERSIG         14 /* 0x00004000 - Architecture dependent (CR0) */
@@ -180,6 +180,8 @@
                          | BIT(IC_PER_SA) \
                          | BIT(IC_PER_GRA) \
                          | BIT(IC_PER_STURA) \
+                         | BIT(IC_PER_ZEROADDR) \
+                         | BIT(IC_PER_TEND) \
                          | BIT(IC_PER_IFNUL) \
                          )
 
@@ -288,6 +290,11 @@
    } \
  } while (0)
 
+/*  "SET_IC_PER": whenever LCTL/LCTLG instruction is executed that
+    sets a new CR9 (PER control register) value, the following macro
+    is issued which sets the new ints_state value indicating which
+    PER events have been enabled and resets ints_mask appropriately.
+*/
 #define SET_IC_PER(_regs) \
  do { \
   (_regs)->ints_state &= (~IC_PER_MASK); \
@@ -481,6 +488,16 @@
      (_regs)->ints_mask |= BIT(IC_PER_STURA); \
  } while (0)
 
+#define ON_IC_PER_ZEROADDR(_regs) \
+ do { \
+     (_regs)->ints_mask |= BIT(IC_PER_ZEROADDR); \
+ } while (0)
+
+#define ON_IC_PER_TEND(_regs) \
+ do { \
+     (_regs)->ints_mask |= BIT(IC_PER_TEND); \
+ } while (0)
+
 #define ON_IC_PER_IFNUL(_regs) \
  do { \
    (_regs)->ints_mask |= BIT(IC_PER_IFNUL); \
@@ -627,6 +644,16 @@
    (_regs)->ints_mask &= ~BIT(IC_PER_STURA); \
  } while (0)
 
+#define OFF_IC_PER_ZEROADDR(_regs) \
+ do { \
+   (_regs)->ints_mask &= ~BIT(IC_PER_ZEROADDR); \
+ } while (0)
+
+#define OFF_IC_PER_TEND(_regs) \
+ do { \
+   (_regs)->ints_mask &= ~BIT(IC_PER_TEND); \
+ } while (0)
+
 #define OFF_IC_PER_IFNUL(_regs) \
  do { \
    (_regs)->ints_mask &= ~BIT(IC_PER_IFNUL); \
@@ -637,28 +664,30 @@
    * Test interrupt state    *
    * * * * * * * * * * * * * */
 
-#define IS_IC_INTERRUPT(_regs)  ( (_regs)->ints_state & BIT(IC_INTERRUPT) )
-#define IS_IC_RESTART(_regs)    ( (_regs)->ints_state & BIT(IC_RESTART)   )
-#define IS_IC_STORSTAT(_regs)   ( (_regs)->ints_state & BIT(IC_STORSTAT)  )
-#define IS_IC_IOPENDING         ( sysblk.ints_state   & BIT(IC_IO)        )
-#define IS_IC_MCKPENDING(_regs) ( (_regs)->ints_state &     IC_MCKPENDING )
-#define IS_IC_CHANRPT           ( sysblk.ints_state   & BIT(IC_CHANRPT)   )
-#define IS_IC_INTKEY            ( sysblk.ints_state   & BIT(IC_INTKEY)    )
-#define IS_IC_SERVSIG           ( sysblk.ints_state   & BIT(IC_SERVSIG)   )
-#define IS_IC_ITIMER(_regs)     ( (_regs)->ints_state & BIT(IC_ITIMER)    )
-#define IS_IC_PTIMER(_regs)     ( (_regs)->ints_state & BIT(IC_PTIMER)    )
-#define IS_IC_ECPSVTIMER(_regs) ( (_regs)->ints_state & BIT(IC_ECPSVTIMER))
-#define IS_IC_CLKC(_regs)       ( (_regs)->ints_state & BIT(IC_CLKC)      )
-#define IS_IC_EXTCALL(_regs)    ( (_regs)->ints_state & BIT(IC_EXTCALL)   )
-#define IS_IC_MALFALT(_regs)    ( (_regs)->ints_state & BIT(IC_MALFALT)   )
-#define IS_IC_EMERSIG(_regs)    ( (_regs)->ints_state & BIT(IC_EMERSIG)   )
-#define IS_IC_PER(_regs)        ( (_regs)->ints_mask  &     IC_PER_MASK   )
-#define IS_IC_PER_SB(_regs)     ( (_regs)->ints_mask  & BIT(IC_PER_SB)    )
-#define IS_IC_PER_IF(_regs)     ( (_regs)->ints_mask  & BIT(IC_PER_IF)    )
-#define IS_IC_PER_SA(_regs)     ( (_regs)->ints_mask  & BIT(IC_PER_SA)    )
-#define IS_IC_PER_GRA(_regs)    ( (_regs)->ints_mask  & BIT(IC_PER_GRA)   )
-#define IS_IC_PER_STURA(_regs)  ( (_regs)->ints_mask  & BIT(IC_PER_STURA) )
-#define IS_IC_PER_IFNUL(_regs)  ( (_regs)->ints_mask  & BIT(IC_PER_IFNUL) )
+#define IS_IC_INTERRUPT(_regs)     ( (_regs)->ints_state & BIT(IC_INTERRUPT) )
+#define IS_IC_RESTART(_regs)       ( (_regs)->ints_state & BIT(IC_RESTART)   )
+#define IS_IC_STORSTAT(_regs)      ( (_regs)->ints_state & BIT(IC_STORSTAT)  )
+#define IS_IC_IOPENDING            ( sysblk.ints_state   & BIT(IC_IO)        )
+#define IS_IC_MCKPENDING(_regs)    ( (_regs)->ints_state &     IC_MCKPENDING )
+#define IS_IC_CHANRPT              ( sysblk.ints_state   & BIT(IC_CHANRPT)   )
+#define IS_IC_INTKEY               ( sysblk.ints_state   & BIT(IC_INTKEY)    )
+#define IS_IC_SERVSIG              ( sysblk.ints_state   & BIT(IC_SERVSIG)   )
+#define IS_IC_ITIMER(_regs)        ( (_regs)->ints_state & BIT(IC_ITIMER)    )
+#define IS_IC_PTIMER(_regs)        ( (_regs)->ints_state & BIT(IC_PTIMER)    )
+#define IS_IC_ECPSVTIMER(_regs)    ( (_regs)->ints_state & BIT(IC_ECPSVTIMER))
+#define IS_IC_CLKC(_regs)          ( (_regs)->ints_state & BIT(IC_CLKC)      )
+#define IS_IC_EXTCALL(_regs)       ( (_regs)->ints_state & BIT(IC_EXTCALL)   )
+#define IS_IC_MALFALT(_regs)       ( (_regs)->ints_state & BIT(IC_MALFALT)   )
+#define IS_IC_EMERSIG(_regs)       ( (_regs)->ints_state & BIT(IC_EMERSIG)   )
+#define IS_IC_PER(_regs)           ( (_regs)->ints_mask  &     IC_PER_MASK   )
+#define IS_IC_PER_SB(_regs)        ( (_regs)->ints_mask  & BIT(IC_PER_SB)    )
+#define IS_IC_PER_IF(_regs)        ( (_regs)->ints_mask  & BIT(IC_PER_IF)    )
+#define IS_IC_PER_SA(_regs)        ( (_regs)->ints_mask  & BIT(IC_PER_SA)    )
+#define IS_IC_PER_GRA(_regs)       ( (_regs)->ints_mask  & BIT(IC_PER_GRA)   )
+#define IS_IC_PER_STURA(_regs)     ( (_regs)->ints_mask  & BIT(IC_PER_STURA) )
+#define IS_IC_PER_ZEROADDR(_regs)  ( (_regs)->ints_mask  & BIT(IC_PER_ZEROADDR) )
+#define IS_IC_PER_TEND(_regs)      ( (_regs)->ints_mask  & BIT(IC_PER_TEND) )
+#define IS_IC_PER_IFNUL(_regs)     ( (_regs)->ints_mask  & BIT(IC_PER_IFNUL) )
 
 
   /* * * * * * * * * * * * * *
@@ -673,13 +702,15 @@
    * Test PER mask bits      *
    * * * * * * * * * * * * * */
 
-#define EN_IC_PER(_regs)        unlikely( (_regs)->permode )
-#define EN_IC_PER_SB(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_SB))    )
-#define EN_IC_PER_IF(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_IF))    )
-#define EN_IC_PER_SA(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_SA))    )
-#define EN_IC_PER_GRA(_regs)    ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_GRA))   )
-#define EN_IC_PER_STURA(_regs)  ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_STURA)) )
-#define EN_IC_PER_IFNUL(_regs)  ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_IFNUL)) )
+#define EN_IC_PER(_regs)           unlikely( (_regs)->permode )
+#define EN_IC_PER_SB(_regs)        ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_SB))    )
+#define EN_IC_PER_IF(_regs)        ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_IF))    )
+#define EN_IC_PER_SA(_regs)        ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_SA))    )
+#define EN_IC_PER_GRA(_regs)       ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_GRA))   )
+#define EN_IC_PER_STURA(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_STURA)) )
+#define EN_IC_PER_ZEROADDR(_regs)  ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_ZEROADDR)) )
+#define EN_IC_PER_TEND(_regs)      ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_TEND)) )
+#define EN_IC_PER_IFNUL(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_IFNUL)) )
 
 
   /* * * * * * * * * * * * * * * * * * * * * * * * *
@@ -737,6 +768,10 @@
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_GRA) )
 #define OPEN_IC_PER_STURA(_regs) \
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_STURA) )
+#define OPEN_IC_PER_ZEROADDR(_regs) \
+                        ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_ZEROADDR) )
+#define OPEN_IC_PER_TEND(_regs) \
+                        ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_TEND) )
 #define OPEN_IC_PER_IFNUL(_regs) \
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_IFNUL) )
 
@@ -753,3 +788,20 @@
    (((_regs)->ints_state|(HOST(_regs)->ints_state&IC_SIE_INT)) & (_regs)->ints_mask)
 
 #define SIE_INTERRUPT_PENDING(_regs) SIE_IC_INTERRUPT_CPU((_regs))
+
+
+   /* * * * * * * * * * * * * * * * * * * * * * * * *
+    *            PER macros summary                 *
+    * * * * * * * * * * * * * * * * * * * * * * * * *
+
+  SET_IC_PER        indicates which PER events are wanted
+
+  ON_IC_PER_xxx     indicates a PER event has happened
+  OFF_IC_PER_xxx    resets PER event to has NOT happened
+
+  EN_IC_PER_xxx     tests whether PER event is wanted
+  IS_IC_PER_xxx     tests whether PER event has happened
+
+  OPEN_IC_PER_xxx   tests whether PER interrupt is pending
+                    (i.e. whether interrupt SHOULD occur)
+*/

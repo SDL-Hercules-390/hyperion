@@ -65,6 +65,7 @@ extern inline void ARCH_DEP( store_fullword_absolute )  ( U32 value, RADR addr, 
 #endif
 
 extern inline void ARCH_DEP( per1_gra )( REGS* regs );
+extern inline bool ARCH_DEP( is_per3_event_suppressed )( REGS* regs, U32 cr9_per_event );
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */

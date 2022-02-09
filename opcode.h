@@ -1199,6 +1199,25 @@ do {                                                                  \
 #endif
 
 /*-------------------------------------------------------------------*/
+/*                 PER3 Event Suppression                            */
+/*-------------------------------------------------------------------*/
+
+#undef  IS_PER_SUPRESS
+#undef  IS_PER_IF_SUPRESS
+
+#if defined( FEATURE_PER3 )
+
+  #define IS_PER_SUPRESS( _regs, _event )                             \
+    ARCH_DEP( is_per3_event_suppressed )( (_regs), (_event) )
+
+#else
+
+  #define IS_PER_SUPRESS( _regs, _event )                             \
+    false
+
+#endif
+
+/*-------------------------------------------------------------------*/
 /*              Set addressing mode (BASSM, BSM)                     */
 /*-------------------------------------------------------------------*/
 
