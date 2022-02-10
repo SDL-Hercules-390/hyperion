@@ -1997,7 +1997,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
     }
 
     /* Display progress message */
-    // "%1d:%04X CKD file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
+    // "%1d:%04X FBA file %s: creating %4.4X volume %s: %u sectors, %u bytes/sector"
     FWRMSG( stdout, HHC00463, "I", 0, 0, fname,
             devtype, rawflag ? "" : volser, sectors, sectsz );
 
@@ -2162,7 +2162,7 @@ int create_compressed_fba( char* fname, U16 devtype, U32 sectsz,
     }
 
     /* Display progress message */
-    // "%1d:%04X CKD file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
+    // "%1d:%04X FBA file %s: creating %4.4X compressed volume %s: %u sectors, %u bytes/sector"
     FWRMSG( stdout, HHC00465, "I", 0, 0, fname,
         devtype, rawflag ? "" : volser, sectors, sectsz );
 

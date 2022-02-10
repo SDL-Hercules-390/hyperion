@@ -189,13 +189,21 @@ int     rc;                             /* Return code               */
     /* The fourth argument (or third for -r) is the volume size */
     if (argc > volsize_argnum)
     {
+        S32 signed_size;        /* SIGNED Volume size */
+
         if (argc > (volsize_argnum+1))
             argexit( 5, NULL, pgm );
 
-        if (!argv[volsize_argnum] || strlen(argv[volsize_argnum]) == 0
-            || sscanf(argv[volsize_argnum], "%u%c", &size, &c) != 1)
+        if (0
+            || !argv      [volsize_argnum]
+            || strlen(argv[volsize_argnum]) == 0
+            || sscanf(argv[volsize_argnum], "%d%c", &signed_size, &c) != 1
+            || (type == 'C' && (signed_size < 1 || signed_size > 65536))
+            || (type == 'F' && signed_size < 64)
+        )
             argexit( 4, argv[volsize_argnum], pgm );
 
+        size = (U32) signed_size;
         altcylflag = 0;
     }
 
