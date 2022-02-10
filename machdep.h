@@ -551,6 +551,51 @@ inline int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile 
 
 #endif /* define(__aarch64__) */
 
+
+/*-------------------------------------------------------------------
+ * Elbrus e2k
+ *-------------------------------------------------------------------*/
+#if defined(__e2k__) && defined(__LCC__)
+
+#ifndef cmpxchg16
+    #define  cmpxchg16(     x1, x2, y1, y2, z ) \
+             cmpxchg16_e2k( x1, x2, y1, y2, z )
+
+static inline int cmpxchg16_e2k ( U64 *old1, U64 *old2,
+                                  U64 new1, U64 new2,
+                                  volatile void *ptr )
+{
+    // returns 0 == success, 1 otherwise
+
+    static bool lock_flag;
+
+    int result;
+
+    __atomic_thread_fence(__ATOMIC_SEQ_CST);
+    while (__atomic_test_and_set(&lock_flag, __ATOMIC_ACQUIRE) == 1) ;
+
+    __asm volatile("" : : : "memory");
+
+    if (*old1 == *(U64*)ptr && *old2 == *((U64*)ptr + 1))
+    {
+        *(U64*)ptr = new1;
+        *((U64*)ptr + 1) = new2;
+        result = 0;
+    } else {
+        *old1 = *((U64*)ptr);
+        *old2 = *((U64*)ptr + 1);
+        result = 1;
+    }
+
+    __atomic_clear(&lock_flag, __ATOMIC_RELEASE);
+    __atomic_thread_fence(__ATOMIC_SEQ_CST);
+
+    return result;
+}
+#endif /* cmpxchg16 */
+
+#endif /* defined(__e2k__) && defined(__LCC__) */
+
 /*-------------------------------------------------------------------
  * C11_ATOMICS_AVAILABLE
  *-------------------------------------------------------------------*/
@@ -583,11 +628,34 @@ inline BYTE cmpxchg4_C11(U32 *old, U32 new, volatile void *ptr) {
 #endif
 #ifndef cmpxchg8
 #define cmpxchg8(x,y,z) cmpxchg8_C11(x,y,z)
+
 inline BYTE cmpxchg8_C11(U64 *old, U64 new, volatile void *ptr) {
 /* returns 0 on success otherwise returns 1 */
-            return __atomic_compare_exchange_n ((volatile U64 *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
-        }
+    return __atomic_compare_exchange_n ((volatile U64 *)ptr, old, new, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST) ? 0 : 1;
+}
 #endif /* cmpxchg8 */
+
+/*-------------------------------------------------------------------
+ * Elbrus e2k
+ *-------------------------------------------------------------------*/
+#if defined(__e2k__) && defined(__LCC__)
+
+#define fetch_dw_noswap(_p) fetch_dw_e2k_noswap((_p))
+
+inline U64 fetch_dw_e2k_noswap ( volatile const void* ptr )
+{
+    U64 value = __atomic_load_n((U64*)ptr, __ATOMIC_SEQ_CST);
+    return value;
+}
+
+#define store_dw_noswap(_p, _v) store_dw_e2k_noswap( (_p), (_v))
+
+inline void store_dw_e2k_noswap ( volatile void* ptr, U64 value )
+{
+    __atomic_store_n((U64*)ptr, value,__ATOMIC_SEQ_CST);
+}
+
+#endif /* defined(__e2k__) && defined(__LCC__) */
 
 #endif /* defined( C11_ATOMICS_AVAILABLE ) */
 
