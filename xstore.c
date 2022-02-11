@@ -288,7 +288,6 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(_FEATURE_SIE)
         if(SIE_MODE(regs)  && !regs->sie_pref)
         {
-
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
                 (SIE_STATE_BIT_ON(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0)
@@ -345,7 +344,6 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 /*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
                   pte2,xpkey2,xpblk2,akey2);  */
-
             }
             else
             {

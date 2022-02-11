@@ -5449,6 +5449,7 @@ void ARCH_DEP( sske_or_pfmf_procedure )
     bool  set_key;              /* SSKE or PFMF set key option       */
     bool  clear_frame;          /* PFMF clear frame option           */
     bool  replace_key = false;  /* Work flag to make things simpler  */
+    bool  key_updated = false;  /* Work flag to make things simpler  */
 
 #if !defined( FEATURE_010_CONDITIONAL_SSKE_FACILITY )
     UNREFERENCED( m3 );
@@ -5588,6 +5589,7 @@ void ARCH_DEP( sske_or_pfmf_procedure )
                                 rcpte->rcpbyte |= ((oldkey << 4) & RCPHOST);
 
                                 ARCH_DEP( put_4K_storage_key )( abspage, r1key );
+                                key_updated = true;
                                 replace_key = false; // (we just did it!)
                             }
                         }
@@ -5622,6 +5624,7 @@ void ARCH_DEP( sske_or_pfmf_procedure )
 #endif
         {
             ARCH_DEP( put_4K_storage_key )( abspage, r1key );
+            key_updated = true;
         }
     }
 
@@ -5638,6 +5641,16 @@ void ARCH_DEP( sske_or_pfmf_procedure )
         else
             STORKEY_INVALIDATE( regs, abspage );
     }
+
+#if defined( FEATURE_PER3 )
+    /* Indicate PER Storage-key Alteration event if key was updated */
+    if (1
+        && key_updated
+        && EN_IC_PER_SKEY( regs )
+        && PER_RANGE_CHECK( abspage, regs->CR(10), regs->CR(11) )
+    )
+        ON_IC_PER_SKEY( regs );
+#endif
 } /* end ARCH_DEP( sske_or_pfmf_procedure ) */
 
 

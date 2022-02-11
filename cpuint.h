@@ -40,7 +40,7 @@
  || | |||| |||| |+------------------------> '1' : PER ZEROADDR
  || | |||| |||| +-------------------------> '1' : PER STURA
  || | |||| ||||
- || | |||| |||+---------------------------> '1' : PER GRA
+ || | |||| |||+---------------------------> '1' : PER GRA or SKEY
  || | |||| ||+----------------------------> '1' : PER SA
  || | |||| |+-----------------------------> '1' : PER IF
  || | |||| +------------------------------> '1' : PER SB
@@ -93,6 +93,7 @@
 #define IC_PER_IF          22 /* 0x00400000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_SA          21 /* 0x00200000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_GRA         20 /* 0x00100000 - Architecture dependent (CR9 >> 8) */
+#define IC_PER_SKEY        20 /* 0x00100000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_STURA       19 /* 0x00080000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_ZEROADDR    18 /* 0x00040000 - Architecture dependent (CR9 >> 8) */
 #define IC_PER_TEND        17 /* 0x00020000 - Architecture dependent (CR9 >> 8) */
@@ -179,6 +180,7 @@
                          | BIT(IC_PER_IF) \
                          | BIT(IC_PER_SA) \
                          | BIT(IC_PER_GRA) \
+                         | BIT(IC_PER_SKEY) \
                          | BIT(IC_PER_STURA) \
                          | BIT(IC_PER_ZEROADDR) \
                          | BIT(IC_PER_TEND) \
@@ -483,6 +485,11 @@
      (_regs)->ints_mask |= BIT(IC_PER_GRA); \
  } while (0)
 
+#define ON_IC_PER_SKEY(_regs) \
+ do { \
+     (_regs)->ints_mask |= BIT(IC_PER_SKEY); \
+ } while (0)
+
 #define ON_IC_PER_STURA(_regs) \
  do { \
      (_regs)->ints_mask |= BIT(IC_PER_STURA); \
@@ -639,6 +646,11 @@
    (_regs)->ints_mask &= ~BIT(IC_PER_GRA); \
  } while (0)
 
+#define OFF_IC_PER_SKEY(_regs) \
+ do { \
+   (_regs)->ints_mask &= ~BIT(IC_PER_SKEY); \
+ } while (0)
+
 #define OFF_IC_PER_STURA(_regs) \
  do { \
    (_regs)->ints_mask &= ~BIT(IC_PER_STURA); \
@@ -684,6 +696,7 @@
 #define IS_IC_PER_IF(_regs)        ( (_regs)->ints_mask  & BIT(IC_PER_IF)    )
 #define IS_IC_PER_SA(_regs)        ( (_regs)->ints_mask  & BIT(IC_PER_SA)    )
 #define IS_IC_PER_GRA(_regs)       ( (_regs)->ints_mask  & BIT(IC_PER_GRA)   )
+#define IS_IC_PER_SKEY(_regs)      ( (_regs)->ints_mask  & BIT(IC_PER_SKEY)  )
 #define IS_IC_PER_STURA(_regs)     ( (_regs)->ints_mask  & BIT(IC_PER_STURA) )
 #define IS_IC_PER_ZEROADDR(_regs)  ( (_regs)->ints_mask  & BIT(IC_PER_ZEROADDR) )
 #define IS_IC_PER_TEND(_regs)      ( (_regs)->ints_mask  & BIT(IC_PER_TEND) )
@@ -707,6 +720,7 @@
 #define EN_IC_PER_IF(_regs)        ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_IF))    )
 #define EN_IC_PER_SA(_regs)        ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_SA))    )
 #define EN_IC_PER_GRA(_regs)       ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_GRA))   )
+#define EN_IC_PER_SKEY(_regs)      ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_SKEY))  )
 #define EN_IC_PER_STURA(_regs)     ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_STURA)) )
 #define EN_IC_PER_ZEROADDR(_regs)  ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_ZEROADDR)) )
 #define EN_IC_PER_TEND(_regs)      ( EN_IC_PER(_regs) && ((_regs)->ints_state & BIT(IC_PER_TEND)) )
@@ -766,6 +780,8 @@
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_SA) )
 #define OPEN_IC_PER_GRA(_regs) \
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_GRA) )
+#define OPEN_IC_PER_SKEY(_regs) \
+                        ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_SKEY) )
 #define OPEN_IC_PER_STURA(_regs) \
                         ( (_regs)->ints_state & (_regs)->ints_mask & BIT(IC_PER_STURA) )
 #define OPEN_IC_PER_ZEROADDR(_regs) \
