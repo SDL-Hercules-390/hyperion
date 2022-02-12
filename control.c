@@ -5642,7 +5642,7 @@ void ARCH_DEP( sske_or_pfmf_procedure )
             STORKEY_INVALIDATE( regs, abspage );
     }
 
-#if defined( FEATURE_PER3 )
+#if defined( FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY )
     /* Indicate PER Storage-key Alteration event if key was updated */
     if (1
         && key_updated
