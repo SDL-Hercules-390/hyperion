@@ -552,6 +552,14 @@
  #define    _FEATURE_PER3
 #endif
 
+#if defined( FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY )
+ #define    _FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY
+#endif
+
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+ #define    _FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY
+#endif
+
 #if defined( FEATURE_QDIO_TDD )
  #define    _FEATURE_QDIO_TDD
 #endif
@@ -1044,6 +1052,14 @@
 
 #if defined( FEATURE_PER1 ) && (defined( FEATURE_PER2 ) || defined( FEATURE_PER3 ))
  #error FEATURE_PER1 cannot be defined if FEATURE_PER2 or FEATURE_PER3 is defined
+#endif
+
+#if defined( FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY ) && !defined( FEATURE_PER3 )
+ #error FEATURE_PER3 must be defined when using FEATURE_PER_STORAGE_KEY_ALTERATION_FACILITY
+#endif
+
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY ) && !defined( FEATURE_PER3 )
+ #error FEATURE_PER3 must be defined when using FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY
 #endif
 
 #if defined( FEATURE_PROTECTION_INTERCEPTION_CONTROL ) && !defined( FEATURE_SIE )
