@@ -189,7 +189,7 @@ int     rc;                             /* Return code               */
     /* The fourth argument (or third for -r) is the volume size */
     if (argc > volsize_argnum)
     {
-        S32 signed_size;        /* SIGNED Volume size */
+        S32 signed_size = 0;    /* SIGNED Volume size */
 
         if (argc > (volsize_argnum+1))
             argexit( 5, NULL, pgm );
