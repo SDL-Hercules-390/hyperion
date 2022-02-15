@@ -1657,7 +1657,7 @@ DEF_INST( insert_virtual_storage_key )
 int     r1, r2;                         /* Values of R fields        */
 VADR    effective_addr;                 /* Operand-2 virtual page    */
 RADR    pageaddr;                       /* Operand-2 page address    */
-BYTE    vsk;                            /* Virtual Storage Key       */
+BYTE    vsk = 0;                        /* Virtual Storage Key       */
 bool    need_realkey = true;            /* (get from real page)      */
 
     RRE( inst, regs, r1, r2 );
