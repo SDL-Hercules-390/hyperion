@@ -553,50 +553,6 @@ inline int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile 
 
 
 /*-------------------------------------------------------------------
- * Elbrus e2k
- *-------------------------------------------------------------------*/
-#if defined(__e2k__) && defined(__LCC__)
-
-#ifndef cmpxchg16
-    #define  cmpxchg16(     x1, x2, y1, y2, z ) \
-             cmpxchg16_e2k( x1, x2, y1, y2, z )
-
-static inline int cmpxchg16_e2k ( U64 *old1, U64 *old2,
-                                  U64 new1, U64 new2,
-                                  volatile void *ptr )
-{
-    // returns 0 == success, 1 otherwise
-
-    static bool lock_flag;
-
-    int result;
-
-    __atomic_thread_fence(__ATOMIC_SEQ_CST);
-    while (__atomic_test_and_set(&lock_flag, __ATOMIC_ACQUIRE) == 1) ;
-
-    __asm volatile("" : : : "memory");
-
-    if (*old1 == *(U64*)ptr && *old2 == *((U64*)ptr + 1))
-    {
-        *(U64*)ptr = new1;
-        *((U64*)ptr + 1) = new2;
-        result = 0;
-    } else {
-        *old1 = *((U64*)ptr);
-        *old2 = *((U64*)ptr + 1);
-        result = 1;
-    }
-
-    __atomic_clear(&lock_flag, __ATOMIC_RELEASE);
-    __atomic_thread_fence(__ATOMIC_SEQ_CST);
-
-    return result;
-}
-#endif /* cmpxchg16 */
-
-#endif /* defined(__e2k__) && defined(__LCC__) */
-
-/*-------------------------------------------------------------------
  * C11_ATOMICS_AVAILABLE
  *-------------------------------------------------------------------*/
 #if defined( C11_ATOMICS_AVAILABLE )
