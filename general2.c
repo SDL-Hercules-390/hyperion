@@ -2899,64 +2899,63 @@ DEF_INST(convert_utf32_to_utf16)
 /*-------------------------------------------------------------------*/
 /* B9BE SRSTU - Search String Unicode                          [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(search_string_unicode)
+DEF_INST( search_string_unicode )
 {
-  VADR addr1, addr2;                    /* End/start addresses       */
-  int i;                                /* Loop counter              */
-  int r1, r2;                           /* Values of R fields        */
-  U16 sbyte;                            /* String character          */
-  U16 termchar;                         /* Terminating character     */
+    VADR addr1, addr2;                  /* End/start addresses       */
+    int i;                              /* Loop counter              */
+    int r1, r2;                         /* Values of R fields        */
+    U16 sbyte;                          /* String character          */
+    U16 termchar;                       /* Terminating character     */
 
-  RRE(inst, regs, r1, r2);
-  PER_ZEROADDR_CHECK2( regs, r1, r2 );
+    RRE( inst, regs, r1, r2 );
+    PER_ZEROADDR_CHECK2( regs, r1, r2 );
+    CONTRAN_INSTR_CHECK( regs );
 
-  CONTRAN_INSTR_CHECK( regs );
+    /* Program check if bits 0-15 of register 0 not zero */
+    if(regs->GR_L(0) & 0xFFFF0000)
+        regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
-  /* Program check if bits 0-15 of register 0 not zero */
-  if(regs->GR_L(0) & 0xFFFF0000)
-    regs->program_interrupt (regs, PGM_SPECIFICATION_EXCEPTION);
+    /* Load string terminating character from register 0 bits 16-31 */
+    termchar = (U16) regs->GR(0);
 
-  /* Load string terminating character from register 0 bits 16-31 */
-  termchar = (U16) regs->GR(0);
+    /* Determine the operand end and start addresses */
+    addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
+    addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
 
-  /* Determine the operand end and start addresses */
-  addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-  addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-
-  /* Search up to 256 bytes or until end of operand */
-  for(i = 0; i < 0x100; i++)
-  {
-    /* If operand end address has been reached, return condition
-       code 2 and leave the R1 and R2 registers unchanged */
-    if(addr2 == addr1)
+    /* Search up to 256 bytes or until end of operand */
+    for(i = 0; i < 0x100; i++)
     {
-      regs->psw.cc = 2;
-      return;
-    }
+        /* If operand end address has been reached, return condition
+        code 2 and leave the R1 and R2 registers unchanged */
+        if(addr2 == addr1)
+        {
+            regs->psw.cc = 2;
+            return;
+        }
 
-    /* Fetch 2 bytes from the operand */
-    sbyte = ARCH_DEP(vfetch2)(addr2, r2, regs );
+        /* Fetch 2 bytes from the operand */
+        sbyte = ARCH_DEP( vfetch2 )( addr2, r2, regs );
 
-    /* If the terminating character was found, return condition
-       code 1 and load the address of the character into R1 */
-    if(sbyte == termchar)
-    {
-      SET_GR_A(r1, regs, addr2);
-      regs->psw.cc = 1;
-      return;
-    }
+        /* If the terminating character was found, return condition
+        code 1 and load the address of the character into R1 */
+        if(sbyte == termchar)
+        {
+            SET_GR_A( r1, regs, addr2 );
+            regs->psw.cc = 1;
+            return;
+        }
 
-    /* Increment operand address */
-    addr2 += 2;
-    addr2 &= ADDRESS_MAXWRAP(regs);
+        /* Increment operand address */
+        addr2 += 2;
+        addr2 &= ADDRESS_MAXWRAP( regs );
 
-  } /* end for(i) */
+    } /* end for(i) */
 
-  /* Set R2 to point to next character of operand */
-  SET_GR_A(r2, regs, addr2);
+    /* Set R2 to point to next character of operand */
+    SET_GR_A( r2, regs, addr2 );
 
-  /* Return condition code 3 */
-  regs->psw.cc = 3;
+    /* Return condition code 3 */
+    regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
