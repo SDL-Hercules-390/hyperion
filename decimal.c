@@ -708,8 +708,8 @@ BYTE    dec3[MAX_DECIMAL_DIGITS];       /* Work area for result      */
 int     count1, count2, count3;         /* Significant digit counters*/
 int     sign1, sign2, sign3;            /* Sign of operands & result */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
@@ -783,8 +783,8 @@ int     count1, count2;                 /* Significant digit counters*/
 int     sign1, sign2;                   /* Sign of each operand      */
 int     rc;                             /* Return code               */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
@@ -844,8 +844,8 @@ int     count1, count2;                 /* Significant digit counters*/
 int     sign1, sign2;                   /* Sign of operands          */
 int     signq, signr;                   /* Sign of quotient/remainder*/
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Program check if the second operand length exceeds 15 digits
@@ -918,8 +918,8 @@ BYTE    fbyte;                          /* Fill byte                 */
 BYTE    pbyte;                          /* Pattern byte              */
 BYTE    rbyte;                          /* Result byte               */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L(inst, regs, l, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* If addr1 crosses page, make sure both pages are accessible */
@@ -1107,8 +1107,8 @@ int     d;                              /* Decimal digit             */
 int     i1, i2, i3;                     /* Array subscripts          */
 int     carry;                          /* Carry indicator           */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Program check if the second operand length exceeds 15 digits
@@ -1178,8 +1178,8 @@ int     i, j;                           /* Array subscripts          */
 int     d;                              /* Decimal digit             */
 int     carry;                          /* Carry indicator           */
 
-    SS(inst, regs, l1, i3, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, i3, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b1 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load operand into work area */
@@ -1274,8 +1274,8 @@ BYTE    dec3[MAX_DECIMAL_DIGITS];       /* Work area for result      */
 int     count1, count2, count3;         /* Significant digit counters*/
 int     sign1, sign2, sign3;            /* Sign of operands & result */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
@@ -1348,8 +1348,8 @@ BYTE    dec[MAX_DECIMAL_DIGITS];        /* Work area for operand     */
 int     count;                          /* Significant digit counter */
 int     sign;                           /* Sign                      */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* Load second operand into work area */
@@ -1393,6 +1393,7 @@ int     cc = 0;                         /* Condition code            */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
     RSL(inst, regs, l1, b1, effective_addr1);
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
     CONTRAN_INSTR_CHECK( regs );
 

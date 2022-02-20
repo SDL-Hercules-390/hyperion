@@ -885,7 +885,7 @@ U32   code;
 
     default:
     /*---------------------------------------------------------------*/
-    /* Diagnose xxx: Invalid function code                           */
+    /* Diagnose xxx: Invalid function code or Power-Off diagnose     */
     /*---------------------------------------------------------------*/
 
         if( HDC4(debug_diagnose, code, r1, r3, regs) )

@@ -3451,6 +3451,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\PERZAD.core"
+						>
+					</File>
+					<File
 						RelativePath=".\tests\pfpo.core"
 						>
 					</File>
@@ -4494,6 +4498,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\PERZAD.tst"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\pfpo.tst"
 							>
 						</File>
@@ -4806,6 +4814,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\PERZAD.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\pfpo.asm"
 							>
 						</File>
@@ -5045,7 +5057,15 @@
 								>
 							</File>
 							<File
+								RelativePath=".\tests\PERZAD.list"
+								>
+							</File>
+							<File
 								RelativePath=".\tests\pfpo.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\PERZAD.pdf"
 								>
 							</File>
 							<File

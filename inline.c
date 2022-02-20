@@ -66,6 +66,15 @@ extern inline void ARCH_DEP( store_fullword_absolute )  ( U32 value, RADR addr, 
 
 extern inline void ARCH_DEP( per1_gra )( REGS* regs );
 extern inline bool ARCH_DEP( is_per3_event_suppressed )( REGS* regs, U32 cr9_per_event );
+extern inline void ARCH_DEP( per3_zero )( REGS* regs );
+extern inline void ARCH_DEP( per3_zero_check )( REGS* regs, int r1 );
+extern inline void ARCH_DEP( per3_zero_check2 )( REGS* regs, int r1, int r2 );
+extern inline void ARCH_DEP( per3_zero_lcheck )( REGS* regs, int r1, int l1 );
+extern inline void ARCH_DEP( per3_zero_lcheck2 )( REGS* regs, int r1, int l1, int r2, int l2 );
+extern inline void ARCH_DEP( per3_zero_l24check )( REGS* regs, int r1, int l1 );
+extern inline void ARCH_DEP( per3_zero_l24check2 )( REGS* regs, int r1, int l1, int r2, int l2 );
+extern inline void ARCH_DEP( per3_zero_xcheck )( REGS* regs, int b1 );
+extern inline void ARCH_DEP( per3_zero_xcheck2 )( REGS* regs, int x2, int b2 );
 
 /*-------------------------------------------------------------------*/
 /*          (delineates ARCH_DEP from non-arch_dep)                  */

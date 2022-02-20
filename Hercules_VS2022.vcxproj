@@ -949,6 +949,11 @@
     <None Include="tests\mvcos-001.list" />
     <None Include="tests\mvcos-001.pdf" />
     <None Include="tests\mvcos-001.tst" />
+    <None Include="tests\PERZAD.asm" />
+    <None Include="tests\PERZAD.core" />
+    <None Include="tests\PERZAD.list" />
+    <None Include="tests\PERZAD.pdf" />
+    <None Include="tests\PERZAD.tst" />
     <None Include="tests\pfpo.asm" />
     <None Include="tests\pfpo.core" />
     <None Include="tests\pfpo.list" />

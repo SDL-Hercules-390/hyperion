@@ -869,6 +869,7 @@ U64     new64;                          /* New value (CSPG)          */
     TRAN_MISC_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     ODD_CHECK( r1, regs );
+    PER_ZEROADDR_CHECK( regs, r2 );
 
 #if defined( _FEATURE_SIE )
     if (SIE_STATE_BIT_ON( regs, IC0, IPTECSP ))
@@ -1793,6 +1794,11 @@ bool    local = false;                  /* true == m4 bit 3 is on    */
 
     RRF_RM( inst, regs, r1, r2, r3, m4 );
 
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if ((regs->GR_G( r1 ) & 0xfffffffffffff000) == 0) // (bits 0-52)
+        ARCH_DEP( per3_zero )( regs );
+#endif
+
     if (1
         && FACILITY_ENABLED( 051_LOCAL_TLB_CLEARING, regs )
         && m4 & 0x01 /* LC == Local Clearing bit on? */
@@ -1910,6 +1916,7 @@ U16     xcode;                          /* Exception code            */
 CREG    inst_cr;                        /* Instruction CR            */
 
     SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2166,6 +2173,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 U16     updated = 0;                    /* Updated control regs      */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2265,6 +2273,7 @@ int     amode64;
 #endif
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dolpsw( regs, b2, effective_addr2 ) == 0)
@@ -2366,10 +2375,11 @@ int     amode64;
 DEF_INST( load_real_address )
 {
 int     r1;                             /* Register number           */
+int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX( inst, regs, r1, b2, effective_addr2 );
+    RX( inst, regs, r1, x2, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2463,6 +2473,7 @@ int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Unsigned work             */
 
     RRE( inst, regs, r1, r2 );
+    PER_ZEROADDR_CHECK( regs, r2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -2624,8 +2635,8 @@ int     cc;                             /* Condition code            */
 int     k;                              /* Integer workarea          */
 GREG    l;                              /* Unsigned workarea         */
 
-    SS( inst, regs, r1, r3, b1, effective_addr1,
-                            b2, effective_addr2 );
+    SS( inst, regs, r1, r3, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2687,8 +2698,8 @@ int     cc;                             /* Condition code            */
 int     k;                              /* Integer workarea          */
 GREG    l;                              /* Unsigned workarea         */
 
-    SS( inst, regs, r1, r3, b1, effective_addr1,
-                            b2, effective_addr2 );
+    SS( inst, regs, r1, r3, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2746,6 +2757,7 @@ VADR    effective_addr1,
 int     k, l;                           /* Integer workarea          */
 
     SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2783,8 +2795,8 @@ int     cc;                             /* Condition code            */
 int     k;                              /* Integer workarea          */
 GREG    l;                              /* Unsigned workarea         */
 
-    SS( inst, regs, r1, r3, b1, effective_addr1,
-                            b2, effective_addr2 );
+    SS( inst, regs, r1, r3, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2839,6 +2851,7 @@ GREG    len;                            /* Effective length          */
 int     space1, space2;                 /* Address space modifiers   */
 
     SSF( inst, regs, b1, effective_addr1, b2, effective_addr2, r3 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -2942,6 +2955,7 @@ VADR    effective_addr1,
 int     k, l;                           /* Integer workarea          */
 
     SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -4347,6 +4361,7 @@ RADR    pageaddr;                       /* Operand-2 page address    */
 BYTE    oldkey;                         /* Original Storage key      */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -4778,6 +4793,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Clock value               */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
     TRAN_INSTR_CHECK( regs );
@@ -4823,6 +4839,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Clock value               */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -4890,6 +4907,7 @@ VADR    effective_addr2;                /* Effective address         */
 S64     dreg;                           /* Timer value               */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -4931,6 +4949,7 @@ VADR    effective_addr2;                /* Effective address         */
 RADR    n;                              /* Prefix value              */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -5799,6 +5818,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
+
     /*
      * ECPS:VM - Before checking for prob/priv
      * Check CR6 to see if S-ASSIST is requested
@@ -6618,6 +6639,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Clock value               */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -6675,6 +6697,7 @@ int     i, m, n;                        /* Integer work areas        */
 U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dostctl( regs, r1, r3, b2, effective_addr2 ) == 0)
@@ -6727,6 +6750,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -6749,6 +6773,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -6772,6 +6797,7 @@ VADR    effective_addr2;                /* Effective address         */
 S64     dreg;                           /* Double word workarea      */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -6825,6 +6851,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -7013,6 +7040,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
                               0xF8,0xF9,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6 };
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -7475,6 +7503,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SI( inst, regs, i2, b1, effective_addr1 );
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dostnsm( regs, b1, effective_addr1, i2 ) == 0)
@@ -7520,6 +7549,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SI( inst, regs, i2, b1, effective_addr1 );
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dostosm( regs, b1, effective_addr1, i2 ) == 0)
@@ -7575,6 +7605,7 @@ int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Unsigned work             */
 
     RRE( inst, regs, r1, r2 );
+    PER_ZEROADDR_CHECK( regs, r2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -7822,6 +7853,7 @@ U32     op;                             /* Operand                   */
 #endif /* defined( FEATURE_TRACING ) */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );

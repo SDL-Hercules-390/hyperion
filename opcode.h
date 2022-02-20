@@ -1217,6 +1217,92 @@ do {                                                                  \
 #endif
 
 /*-------------------------------------------------------------------*/
+/*            PER3 Zero-Address Detection Facility                   */
+/*-------------------------------------------------------------------*/
+
+#undef  PER_ZEROADDR_CHECK
+#undef  PER_ZEROADDR_CHECK2
+
+#undef  PER_ZEROADDR_LCHECK
+#undef  PER_ZEROADDR_LCHECK2
+
+#undef  PER_ZEROADDR_L24CHECK
+#undef  PER_ZEROADDR_L24CHECK2
+
+#undef  PER_ZEROADDR_XCHECK
+#undef  PER_ZEROADDR_XCHECK2
+
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+
+  // The CHECK macros are designed for instructions where the operand
+  // address is specified in a register but the operand length is not
+  // (or is otherwise implied, perhaps by a function code in another
+  // operand register for example), and/or for instructions where it
+  // is otherwise unpredictable whether operand data will actually be
+  // accessed or not. Thus the only thing we can check is whether the
+  // register holding the address of the operand is zero or not.
+
+  #define PER_ZEROADDR_CHECK(   _regs,  _r1 )                         \
+   ARCH_DEP( per3_zero_check )((_regs),(_r1))
+
+  #define PER_ZEROADDR_CHECK2(   _regs,  _r1,  _r2 )                  \
+   ARCH_DEP( per3_zero_check2 )((_regs),(_r1),(_r2))
+
+  // The LCHECK macros are designed for RR and RRE and similar format
+  // type instructions where a PER Zero-Address event does NOT occur
+  // when the operand length (specified in another register) is zero,
+  // thus causing that operand's storage to never be accessed. Note
+  // that all 32 (or 64) bits of the length register are checked.
+
+  #define PER_ZEROADDR_LCHECK(   _regs,  _r1,  _l1 )                  \
+   ARCH_DEP( per3_zero_lcheck )((_regs),(_r1),(_l1))
+
+  #define PER_ZEROADDR_LCHECK2(   _regs,  _r1,  _l1,  _r2,  _l2 )     \
+   ARCH_DEP( per3_zero_lcheck2 )((_regs),(_r1),(_l1),(_r2),(_l2))
+
+  // The L24CHECK macros are identical to the LCHECK macros except
+  // for the operand length check: instead of checking all 32 or 64
+  // bits of the register containing the operand length, we instead
+  // check only the low-order 24 bits of the length register via the
+  // GR_LA24 macro. They are designed for MVCL and CLCL and other
+  // similar type instructions.
+
+  #define PER_ZEROADDR_L24CHECK(   _regs,  _r1,  _l1 )                \
+   ARCH_DEP( per3_zero_l24check )((_regs),(_r1),(_l1))
+
+  #define PER_ZEROADDR_L24CHECK2(   _regs,  _r1,  _l1,  _r2,  _l2 )   \
+   ARCH_DEP( per3_zero_l24check2 )((_regs),(_r1),(_l1),(_r2),(_l2))
+
+  // The XCHECK macros are designed for RS/RX/S and similar format
+  // type instructions where a PER Zero-Address event does NOT occur
+  // unless the specified base or index register number is non-zero.
+  // When the base or index register number is specified as zero, it
+  // is not used in effective address calculations and thus PER Zero
+  // Address Detection does not apply for that register.
+
+  #define PER_ZEROADDR_XCHECK(   _regs,  _b1 )                        \
+   ARCH_DEP( per3_zero_xcheck )((_regs),(_b1))
+
+  #define PER_ZEROADDR_XCHECK2(   _regs,  _x2,  _b2 )                 \
+   ARCH_DEP( per3_zero_xcheck2 )((_regs),(_x2),(_b2))
+
+#else
+
+  #define PER_ZEROADDR_CHECK(  _regs, _r1 )
+  #define PER_ZEROADDR_CHECK2( _regs, _r1, _r2 )
+
+  #define PER_ZEROADDR_LCHECK(  _regs, _r1, _l1 )
+  #define PER_ZEROADDR_LCHECK2( _regs, _r1, _l1, _r2, _l2 )
+
+  #define PER_ZEROADDR_L24CHECK(  _regs, _r1, _l1 )
+  #define PER_ZEROADDR_L24CHECK2( _regs, _r1, _l1, _r2, _l2 )
+
+  #define PER_ZEROADDR_XCHECK(  _regs, _b1 )
+  #define PER_ZEROADDR_XCHECK2( _regs, _x2, _b2 )
+
+#endif
+
+/*-------------------------------------------------------------------*/
 /*              Set addressing mode (BASSM, BSM)                     */
 /*-------------------------------------------------------------------*/
 

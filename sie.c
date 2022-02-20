@@ -341,6 +341,7 @@ int     i;                              /* (work)                    */
     //-----------------------------------------------------------
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );

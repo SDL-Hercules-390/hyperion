@@ -37,6 +37,7 @@ U32     xaddr;                          /* Expanded storage block#   */
 size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_CHECK( regs, r1 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
@@ -103,6 +104,7 @@ U32     xaddr;                          /* Expanded storage block#   */
 size_t  xoffs;                          /* Byte offset into xpndstor */
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_CHECK( regs, r1 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
@@ -219,6 +221,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_CHECK2( regs, r1, r2 );
     TRAN_INSTR_CHECK( regs );
 
 #if defined(_FEATURE_SIE)

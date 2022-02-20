@@ -290,6 +290,7 @@ U32             src_fpc, new_fpc;       /* New value for FPC         */
 BYTE            dxc;                    /* Data exception code       */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     CONTRAN_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -2610,6 +2611,7 @@ decContext      set;                    /* Working context           */
 char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -2662,6 +2664,7 @@ decContext      set;                    /* Working context           */
 char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -3313,6 +3316,7 @@ int             cc;                     /* Condition code            */
 char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -3366,6 +3370,7 @@ int             cc;                     /* Condition code            */
 char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
 
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -4668,6 +4673,7 @@ BYTE            dxc;                    /* Data exception code       */
 DEF_INST(shift_coefficient_left_dfp_ext)
 {
 int             r1, r3;                 /* Values of R fields        */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal128      x1, x3;                 /* Extended DFP values       */
@@ -4675,7 +4681,7 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -4730,6 +4736,7 @@ int             n;                      /* Number of bits to shift   */
 DEF_INST(shift_coefficient_left_dfp_long)
 {
 int             r1, r3;                 /* Values of R fields        */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal64       x1, x3;                 /* Long DFP values           */
@@ -4737,7 +4744,7 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -4791,6 +4798,7 @@ int             n;                      /* Number of bits to shift   */
 DEF_INST(shift_coefficient_right_dfp_ext)
 {
 int             r1, r3;                 /* Values of R fields        */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal128      x1, x3;                 /* Extended DFP values       */
@@ -4798,7 +4806,7 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -4853,6 +4861,7 @@ int             n;                      /* Number of bits to shift   */
 DEF_INST(shift_coefficient_right_dfp_long)
 {
 int             r1, r3;                 /* Values of R fields        */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal64       x1, x3;                 /* Long DFP values           */
@@ -4860,7 +4869,7 @@ decNumber       d1, d3;                 /* Working decimal numbers   */
 decContext      set;                    /* Working context           */
 int             n;                      /* Number of bits to shift   */
 
-    RXF(inst, regs, r1, r3, b2, effective_addr2);
+    RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -5013,6 +5022,7 @@ BYTE            dxc;                    /* Data exception code       */
 DEF_INST(test_data_class_dfp_ext)
 {
 int             r1;                     /* Value of R field          */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal128      x1;                     /* Extended DFP value        */
@@ -5020,7 +5030,7 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, regs, r1, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -5048,6 +5058,7 @@ U32             bits;                   /* Low 12 bits of address    */
 DEF_INST(test_data_class_dfp_long)
 {
 int             r1;                     /* Value of R field          */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal64       x1;                     /* Long DFP value            */
@@ -5055,7 +5066,7 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, regs, r1, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -5082,6 +5093,7 @@ U32             bits;                   /* Low 12 bits of address    */
 DEF_INST(test_data_class_dfp_short)
 {
 int             r1;                     /* Value of R field          */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal32       x1;                     /* Short DFP value           */
@@ -5089,7 +5101,7 @@ decNumber       d1;                     /* Working decimal number    */
 decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, regs, r1, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -5116,6 +5128,7 @@ U32             bits;                   /* Low 12 bits of address    */
 DEF_INST(test_data_group_dfp_ext)
 {
 int             r1;                     /* Value of R field          */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal128      x1;                     /* Extended DFP value        */
@@ -5124,7 +5137,7 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, regs, r1, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -5157,6 +5170,7 @@ int             lmd;                    /* Leftmost digit            */
 DEF_INST(test_data_group_dfp_long)
 {
 int             r1;                     /* Value of R field          */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal64       x1;                     /* Long DFP value            */
@@ -5165,7 +5179,7 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, regs, r1, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
@@ -5197,6 +5211,7 @@ int             lmd;                    /* Leftmost digit            */
 DEF_INST(test_data_group_dfp_short)
 {
 int             r1;                     /* Value of R field          */
+int             x2;                     /* Index register            */
 int             b2;                     /* Base of effective addr    */
 VADR            effective_addr2;        /* Effective address         */
 decimal32       x1;                     /* Short DFP value           */
@@ -5205,7 +5220,7 @@ decContext      set;                    /* Working context           */
 U32             bits;                   /* Low 12 bits of address    */
 int             lmd;                    /* Leftmost digit            */
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, regs, r1, x2, b2, effective_addr2);
 
     TRAN_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);

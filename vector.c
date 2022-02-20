@@ -614,6 +614,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -631,6 +632,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -649,6 +651,7 @@ U32     n1, n2;
 U64     d;
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -698,6 +701,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -816,6 +820,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -835,6 +840,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 
@@ -859,6 +865,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     VOP_CHECK(regs);
 

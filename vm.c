@@ -1688,13 +1688,14 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
+
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_doiucv(regs,b2,effective_addr2)==0)
     {
         return;
     }
 #endif
-
 
     /* Program check if in problem state,
        the IUCV instruction generates an operation exception
@@ -1709,7 +1710,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Set condition code to indicate IUCV not available */
     regs->psw.cc = 3;
-
 }
 
 #endif /*FEATURE_EMULATE_VM*/

@@ -344,6 +344,11 @@ EXTRA_DIST =                    \
      mvcos-001.tst              \
      mvcos.txt                  \
      mxtr.txt                   \
+     PERZAD.asm                 \
+     PERZAD.core                \
+     PERZAD.list                \
+     PERZAD.pdf                 \
+     PERZAD.tst                 \
      pfpo.asm                   \
      pfpo.core                  \
      pfpo.list                  \

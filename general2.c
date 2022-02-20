@@ -71,11 +71,13 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(or)
 {
 int     r1;                             /* Value of R field          */
+int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, x2, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -99,6 +101,7 @@ VADR    effective_addr1;                /* Effective address         */
 BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
     ITIMER_SYNC(effective_addr1, 0, regs);
     /* Get byte mainstor address */
@@ -132,6 +135,7 @@ int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
 
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -293,8 +297,8 @@ int     i, j;                           /* Loop counters             */
 BYTE    sbyte;                          /* Source operand byte       */
 BYTE    dbyte;                          /* Destination operand byte  */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
@@ -358,8 +362,8 @@ int     b2, b4;                         /* Values of base registers  */
 VADR    effective_addr2,
         effective_addr4;                /* Effective addresses       */
 
-    SS(inst, regs, r1, r3, b2, effective_addr2,
-                                     b4, effective_addr4);
+    SS(inst, regs, r1, r3, b2, effective_addr2, b4, effective_addr4);
+    PER_ZEROADDR_XCHECK2( regs, b2, b4 );
     TRAN_INSTR_CHECK( regs );
 
     if(regs->GR_L(0) & PLO_GPR0_RESV)
@@ -546,6 +550,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
 BYTE    termchar;                       /* Terminating character     */
 
     RRE( inst, regs, r1, r2 );
+    PER_ZEROADDR_CHECK( regs, r2 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -1007,6 +1012,7 @@ int     i, m, n;                        /* Integer work area         */
 U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     FW_CHECK( effective_addr2, regs );
 
@@ -1048,6 +1054,7 @@ int     i;                              /* Integer work area         */
 BYTE    rbyte[4];                       /* Byte work area            */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     switch (r3) {
 
@@ -1098,6 +1105,7 @@ U64     dreg;                           /* Double word work area     */
 ETOD    ETOD;                           /* Extended TOD clock        */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
@@ -1160,6 +1168,7 @@ VADR    effective_addr2;                /* Effective address         */
 ETOD    ETOD;                           /* Extended clock work area  */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
@@ -1212,10 +1221,12 @@ ETOD    ETOD;                           /* Extended clock work area  */
 DEF_INST(store_halfword)
 {
 int     r1;                             /* Value of R field          */
+int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, x2, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
     /* Store rightmost 2 bytes of R1 register at operand address */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
@@ -1235,6 +1246,7 @@ U32    *p1, *p2;                        /* Mainstor pointers         */
 BYTE   *bp1;                            /* Unaligned mainstor ptr    */
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* Calculate number of bytes to store */
     n = (((r3 - r1) & 0xF) + 1) << 2;
@@ -1337,11 +1349,13 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(subtract)
 {
 int     r1;                             /* Value of R field          */
+int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, x2, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1367,11 +1381,13 @@ U32     n;                              /* 32-bit operand values     */
 DEF_INST(subtract_halfword)
 {
 int     r1;                             /* Value of R field          */
+int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, x2, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
     /* Load 2 bytes from operand address */
     n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -1488,11 +1504,13 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(subtract_logical)
 {
 int     r1;                             /* Value of R field          */
+int     x2;                             /* Index register            */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, x2, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1591,6 +1609,7 @@ BYTE   *main2;                          /* Mainstor address          */
 BYTE    old;                            /* Old value                 */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -1667,6 +1686,7 @@ BYTE    old;                            /* Old value                 */
     VADR effective_addr1;                                             \
                                                                       \
     SIIX( inst, regs, b1, effective_addr1 );                          \
+    PER_ZEROADDR_XCHECK( regs, b1 );                                  \
                                                                       \
     if (ARCH_DEP( vfetchb )( effective_addr1, b1, regs ) & 0x ## i2 ) \
       regs->psw.cc = 3;                                               \
@@ -1697,6 +1717,7 @@ VADR    effective_addr1;                /* Effective address         */
 BYTE    tbyte;                          /* Work byte                 */
 
     SI(inst, regs, i2, b1, effective_addr1);
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
     /* Fetch byte from operand address */
     tbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -1786,6 +1807,7 @@ VADR    effective_addr2;                /* Effective address         */
 BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
 
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -1861,6 +1883,7 @@ BYTE    dbyte, sbyte = 0;               /* Byte work areas           */
 bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
 
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -1962,6 +1985,8 @@ BYTE    tbyte;                          /* Test byte                 */
 BYTE    trtab[256];                     /* Translate table           */
 
     RRE(inst, regs, r1, r2);
+    PER_ZEROADDR_LCHECK( regs, r1, r1+1 );
+    PER_ZEROADDR_CHECK( regs, r2 );
 
     CONTRAN_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
@@ -2038,8 +2063,8 @@ BYTE    sbyte;                          /* Source operand byte       */
 BYTE    rbyte;                          /* Right result byte of pair */
 BYTE    lbyte;                          /* Left result byte of pair  */
 
-    SS(inst, regs, l1, l2, b1, effective_addr1,
-                                     b2, effective_addr2);
+    SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
     CONTRAN_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
@@ -2111,6 +2136,7 @@ U16     rmask = 0x0000;
 #endif
 
     E(inst, regs);
+    PER_ZEROADDR_CHECK( regs, 4 );
 
     CONTRAN_INSTR_CHECK( regs );
 
@@ -2281,6 +2307,7 @@ DEF_INST(convert_utf8_to_utf32)
   int xlated;                      /* characters translated          */
 
   RRF_M(inst, regs, r1, r2, m3);
+  PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
@@ -2527,6 +2554,7 @@ DEF_INST(convert_utf16_to_utf32)
   int xlated;                      /* characters translated          */
 
   RRF_M(inst, regs, r1, r2, m3);
+  PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
@@ -2640,6 +2668,7 @@ DEF_INST(convert_utf32_to_utf8)
   int xlated;                      /* characters translated          */
 
   RRE(inst, regs, r1, r2);
+  PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
@@ -2782,6 +2811,7 @@ DEF_INST(convert_utf32_to_utf16)
   BYTE zabcd;                      /* Work value                     */
 
   RRE(inst, regs, r1, r2);
+  PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
@@ -2878,6 +2908,7 @@ DEF_INST(search_string_unicode)
   U16 termchar;                         /* Terminating character     */
 
   RRE(inst, regs, r1, r2);
+  PER_ZEROADDR_CHECK2( regs, r1, r2 );
 
   CONTRAN_INSTR_CHECK( regs );
 
@@ -2943,6 +2974,7 @@ DEF_INST(translate_and_test_reverse)
   BYTE sbyte;                           /* Byte work areas           */
 
   SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
+  PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
   CONTRAN_INSTR_CHECK( regs );
 
@@ -3017,6 +3049,8 @@ DEF_INST(translate_and_test_extended)
   int r2;
 
   RRF_M(inst, regs, r1, r2, m3);
+  PER_ZEROADDR_CHECK( regs, 1 );
+  PER_ZEROADDR_LCHECK( regs, r1, r1+1 );
 
   CONTRAN_INSTR_CHECK( regs );
 

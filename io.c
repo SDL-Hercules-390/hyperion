@@ -186,6 +186,7 @@ DEVBLK* dev;                            /* -> device block           */
 PMCW    pmcw;                           /* Path management ctl word  */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -537,6 +538,7 @@ DEVBLK* dev;                            /* -> device block           */
 ORB     orb;                            /* Operation request block   */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -657,6 +659,7 @@ static const BYTE msbn[256] = {         /* Most signif. bit# (0 - 7) */
 };
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
@@ -710,6 +713,7 @@ VADR    effective_addr2;                /* Effective address         */
 U32     crw;                            /* Channel Report Word       */
 
     S(inst, regs, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PTIO(IO,"STCRW");
@@ -748,6 +752,7 @@ DEVBLK* dev;                            /* -> device block           */
 SCHIB   schib;                          /* Subchannel information blk*/
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
@@ -930,6 +935,7 @@ IRB     irb;                            /* Interruption response blk */
 int     cc;                             /* Condition Code            */
 
     S( inst, regs, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK( regs, b2 );
 
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK( regs );

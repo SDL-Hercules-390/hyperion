@@ -73,16 +73,18 @@
 DEF_INST( tcpip )
 {
     int     r1;              /* Value of R field       */
+    int     x2;              /* Index register         */
     int     b2;              /* Base of effective addr */
     VADR    effective_addr2; /* Effective address      */
     int     i;
     unsigned char * s;
 
     /*  vv---vv---------------- input variables to TCPIP */
-    RX(inst, regs, r1, b2, effective_addr2);
-    /*                     ^^-- becomes yyy+gr[b]+gr[c] */
-    /*                 ^^------ becomes access register c */
-    /*             ^^---------- becomes to-store register a */
+    RX(inst, regs, r1, x2, b2, effective_addr2);
+    /*             ^^-------------- becomes to-store register a */
+    /*                 ^^---------- becomes index register b */
+    /*                     ^^------ becomes access register c */
+    /*                         ^^-- becomes yyy+gr[b]+gr[c] */
     UNREFERENCED(r1);
 
     if (!FACILITY_ENABLED( HERC_TCPIP_PROB_STATE, regs )) PRIV_CHECK(regs);

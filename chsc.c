@@ -581,10 +581,11 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     RRE(inst, regs, r1, r2);
 
     /* Display instruction if debugging */
-    #if defined(CHSC_DEBUG)
+#if defined(CHSC_DEBUG)
     ARCH_DEP(display_inst) (regs, inst);
-    #endif
+#endif
 
+    PER_ZEROADDR_CHECK( regs, r1 );
     TRAN_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 

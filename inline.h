@@ -596,6 +596,192 @@ inline bool ARCH_DEP( is_per3_event_suppressed )( REGS* regs, U32 cr9_per_event 
 }
 
 /*-------------------------------------------------------------------*/
+/*     Generate a PER 3 Zero-Address Detection event interrupt       */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( per3_zero )( REGS* regs )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (1
+        && EN_IC_PER_ZEROADDR( regs )
+        && !IS_PER_SUPRESS( regs, CR9_ZEROADDR )
+    )
+    {
+        regs->peradr = regs->periaddr;
+        ON_IC_PER_ZEROADDR( regs );
+        if (OPEN_IC_PER_ZEROADDR( regs ))
+            RETURN_INTCHECK( regs );
+    }
+#else
+    UNREFERENCED( regs );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/* The CHECK macros are designed for instructions where the operand  */
+/* address is specified in a register but the operand length is not  */
+/* (or is otherwise implied, perhaps by a function code in another   */
+/* operand register for example), and/or for instructions where it   */
+/* is otherwise unpredictable whether operand data will actually be  */
+/* accessed or not. Thus the only thing we can check is whether the  */
+/* register holding the address of the operand is zero or not.       */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( per3_zero_check )( REGS* regs, int r1 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (GR_A( r1, regs ) == 0)
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( r1 );
+#endif
+}
+
+inline void ARCH_DEP( per3_zero_check2 )( REGS* regs, int r1, int r2 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (0
+        || GR_A( r1, regs ) == 0
+        || GR_A( r2, regs ) == 0
+    )
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( r1 );
+    UNREFERENCED( r2 );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*  The LCHECK macros are designed for RR and RRE and similar format */
+/*  type instructions where a PER Zero-Address event does NOT occur  */
+/*  when the operand length (specified in another register) is zero, */
+/*  thus causing that operand's storage to never be accessed. Note   */
+/*  that all 32 (or 64) bits of the length register are checked.     */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( per3_zero_lcheck )( REGS* regs, int r1, int l1 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (1
+        && GR_A( l1, regs ) != 0
+        && GR_A( r1, regs ) == 0
+    )
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( r1 );
+    UNREFERENCED( l1 );
+#endif
+}
+
+inline void ARCH_DEP( per3_zero_lcheck2 )( REGS* regs, int r1, int l1, int r2, int l2 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (0
+        || (1
+            && GR_A( l1, regs ) != 0
+            && GR_A( r1, regs ) == 0
+           )
+        || (1
+            && GR_A( l2, regs ) != 0
+            && GR_A( r2, regs ) == 0
+           )
+    )
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( r1 );
+    UNREFERENCED( l1 );
+    UNREFERENCED( r2 );
+    UNREFERENCED( l2 );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*  The L24CHECK macros are identical to the LCHECK macros except    */
+/*  for the operand length check: instead of checking all 32 or 64   */
+/*  bits of the register containing the operand length, we instead   */
+/*  check only the low-order 24 bits of the length register via the  *
+/*  GR_LA24 macro. They are designed for MVCL and CLCL and other     */
+/*  similar type instructions.                                       */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( per3_zero_l24check )( REGS* regs, int r1, int l1 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (1
+        && regs->GR_LA24( l1 ) != 0
+        && GR_A( r1, regs )    == 0
+    )
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( r1 );
+    UNREFERENCED( l1 );
+#endif
+}
+
+inline void ARCH_DEP( per3_zero_l24check2 )( REGS* regs, int r1, int l1, int r2, int l2 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (0
+        || (1
+            && regs->GR_LA24( l1 ) != 0
+            && GR_A( r1, regs )    == 0
+           )
+        || (1
+            && regs->GR_LA24( l2 ) != 0
+            && GR_A( r2, regs )    == 0
+           )
+    )
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( r1 );
+    UNREFERENCED( l1 );
+    UNREFERENCED( r2 );
+    UNREFERENCED( l2 );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
+/*  The XCHECK macros are designed for RS/RX/S and similar format    */
+/*  type instructions where a PER Zero-Address event does NOT occur  */
+/*  unless the specified base or index register number is non-zero.  */
+/*  When the base or index register number is specified as zero, it  */
+/*  is not used in effective address calculations and thus PER Zero  */
+/*  Address Detection does not apply for that register.              */
+/*-------------------------------------------------------------------*/
+inline void ARCH_DEP( per3_zero_xcheck )( REGS* regs, int b1 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (b1 && GR_A( b1, regs ) == 0)
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( b1 );
+#endif
+}
+
+inline void ARCH_DEP( per3_zero_xcheck2 )( REGS* regs, int x2, int b2 )
+{
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (0
+        || (!b2 && x2 && GR_A( x2, regs ) == 0)
+        || (!x2 && b2 && GR_A( b2, regs ) == 0)
+        || ( b2 && x2 && (0
+                          || GR_A( b2, regs ) == 0
+                          || GR_A( b2, regs ) + GR_A( x2, regs ) == 0
+                         )
+           )
+    )
+        ARCH_DEP( per3_zero )( regs );
+#else
+    UNREFERENCED( regs );
+    UNREFERENCED( x2 );
+    UNREFERENCED( b2 );
+#endif
+}
+
+/*-------------------------------------------------------------------*/
 /* Fetch a doubleword from absolute storage.                         */
 /* The caller is assumed to have already checked that the absolute   */
 /* address is within the limit of main storage.                      */

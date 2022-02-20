@@ -458,8 +458,8 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-a format.
 
-#define RX(   _inst, _regs, _r1, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 4 )
-#define RX_B( _inst, _regs, _r1, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 0, 4 )
+#define RX(   _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 4, 4 )
+#define RX_B( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RX_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 0, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -467,20 +467,20 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
-#define RX_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RX_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r1)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (unlikely( _b2 ))                      /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (unlikely( _x2 ))                                            \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (likely( _b2 ))                        /* (the REAL b2) */   \
+    if (likely( _b2 ))                                              \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (( _len ))                                                   \
@@ -579,7 +579,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RX-a format when x2 known to be NON-ZERO.
 
-#define RXXx(  _inst, _regs, _r1, _b2, _effective_addr2 )  RXXx_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 4, 4 )
+#define RXXx(  _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXXx_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 4, 4 )
 
 //  0           1           2           3           4
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
@@ -587,16 +587,16 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28   31
 
-#define RXXx_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXXx_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2)  = (temp >>  0) & 0xfff;                     \
     (_r1)               = (temp >> 20) & 0xf;                       \
-    (_b2)               = (temp >> 16) & 0xf;  /* (actually x2) */  \
-    (_effective_addr2) += (_regs)->GR(( _b2 ));/* (actually x2) */  \
-    (_b2)               = (temp >> 12) & 0xf;  /* (the REAL b2) */  \
-    if (likely(( _b2 )))                       /* (the REAL b2) */  \
+    (_x2)               = (temp >> 16) & 0xf;                       \
+    (_effective_addr2) += (_regs)->GR(( _x2 ));                     \
+    (_b2)               = (temp >> 12) & 0xf;                       \
+    if (likely(( _b2 )))                                            \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (( _len ))                                                   \
@@ -636,7 +636,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RXE format, but without extracting the m3 field.
 
-#define RXE( _inst, _regs, _r1, _b2, _effective_addr2 )  RXE_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
+#define RXE( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXE_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -644,20 +644,20 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXE_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXE_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r1)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (( _b2 ))                              /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                              /* (the REAL b2) */   \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     (_effective_addr2) &= ADDRESS_MAXWRAP(( _regs ));               \
@@ -670,7 +670,7 @@
 /*-------------------------------------------------------------------*/
 // This is z/Arch RXF format.
 
-#define RXF( _inst, _regs, _r1, _r3, _b2, _effective_addr2 )  RXF_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, 6, 6 )
+#define RXF( _inst, _regs, _r1, _r3, _x2, _b2, _effective_addr2 )  RXF_DECODER( _inst, _regs, _r1, _r3, _x2, _b2, _effective_addr2, 6, 6 )
 
 //  0           1           2           3           4           5           6
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -678,21 +678,21 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXF_DECODER( _inst, _regs, _r1, _r3, _b2, _effective_addr2, _len, _ilc ) \
+#define RXF_DECODER( _inst, _regs, _r1, _r3, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_r1)              = (_inst)[4] >> 4;                           \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r3)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (( _b2 ))                              /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                              /* (the REAL b2) */   \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     (_effective_addr2) &= ADDRESS_MAXWRAP(( _regs ));               \
@@ -707,13 +707,13 @@
 
 #if defined( FEATURE_018_LONG_DISPL_INST_FACILITY )
 
-#define RXY(   _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
-#define RXY_B( _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, 0, 6 )
+#define RXY(   _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 6, 6 )
+#define RXY_B( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER_LD( _inst, _regs, _r1, _x2, _b2, _effective_addr2, 0, 6 )
 
 #else /* !defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
-#define RXY(   _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 6, 6 )
-#define RXY_B( _inst, _regs, _r1, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _b2, _effective_addr2, 0, 6 )
+#define RXY(   _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _x2, _b2, _effective_addr2, 6, 6 )
+#define RXY_B( _inst, _regs, _r1, _x2, _b2, _effective_addr2 )  RXY_DECODER(    _inst, _regs, _r1, _x2, _b2, _effective_addr2, 0, 6 )
 
 #endif /* defined( FEATURE_018_LONG_DISPL_INST_FACILITY ) */
 
@@ -725,22 +725,22 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXY_DECODER_LD( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXY_DECODER_LD( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     S32 disp2; U32 temp = fetch_fw( _inst );                        \
                                                                     \
     (_effective_addr2) = 0;                                         \
                                                                     \
     disp2 = (temp >>  0) & 0xfff;                                   \
-    (_b2) = (temp >> 16) & 0xf;     /* (actually x2) */             \
+    (_x2) = (temp >> 16) & 0xf;                                     \
     (_r1) = (temp >> 20) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                    /* (actually x2) */             \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;     /* (the REAL b2) */             \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                    /* (the REAL b2) */             \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (unlikely((_inst)[4]))       /* long displacement?  */       \
@@ -767,20 +767,20 @@
 //  +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 //  0     4     8     12    16    20    24    28    32    36    40    44   47
 
-#define RXY_DECODER( _inst, _regs, _r1, _b2, _effective_addr2, _len, _ilc ) \
+#define RXY_DECODER( _inst, _regs, _r1, _x2, _b2, _effective_addr2, _len, _ilc ) \
 {                                                                   \
     U32 temp = fetch_fw( _inst );                                   \
                                                                     \
     (_effective_addr2) = (temp >>  0) & 0xfff;                      \
-    (_b2)              = (temp >> 16) & 0xf;  /* (actually x2) */   \
+    (_x2)              = (temp >> 16) & 0xf;                        \
     (_r1)              = (temp >> 20) & 0xf;                        \
                                                                     \
-    if (( _b2 ))                              /* (actually x2) */   \
-        (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
+    if (( _x2 ))                                                    \
+        (_effective_addr2) += (_regs)->GR(( _x2 ));                 \
                                                                     \
-    (_b2) = (temp >> 12) & 0xf;               /* (the REAL b2) */   \
+    (_b2) = (temp >> 12) & 0xf;                                     \
                                                                     \
-    if (( _b2 ))                              /* (the REAL b2) */   \
+    if (( _b2 ))                                                    \
         (_effective_addr2) += (_regs)->GR(( _b2 ));                 \
                                                                     \
     if (( _len ))                                                   \

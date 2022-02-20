@@ -91,6 +91,7 @@ RADR    mplp;
 #define MPLPFAL  0x34
 
     SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK();
 
@@ -123,6 +124,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -152,6 +154,7 @@ DEF_INST(obtain_local_lock)
     int     acc_mode = 0;               /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -245,6 +248,7 @@ VADR    newia;                          /* Unsuccessful branch addr  */
 int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -341,6 +345,7 @@ DEF_INST(obtain_cms_lock)
     int     acc_mode = 0;               /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -447,6 +452,7 @@ VADR    newia;                          /* Unsuccessful branch addr  */
 int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -530,6 +536,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -552,6 +559,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -574,6 +582,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -596,6 +605,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -618,6 +628,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 
@@ -640,6 +651,7 @@ VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     GUEST_CHECK( );
 

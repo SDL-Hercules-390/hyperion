@@ -600,9 +600,11 @@ DEF_INST( nontransactional_store )
 {
 int     r1;                             /* Value of r1 field         */
 int     b2;                             /* Base of effective address */
+int     x2;                             /* Index register            */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY( inst, regs, r1, b2, effective_addr2 );
+    RXY( inst, regs, r1, x2, b2, effective_addr2 );
+    PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
     CONTRAN_INSTR_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
@@ -634,6 +636,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
     SIL( inst, regs, i2, b1, effective_addr1 );
+    PER_ZEROADDR_XCHECK( regs, b1 );
 
     TXF_SIE_INTERCEPT( regs, TBEGIN );
 

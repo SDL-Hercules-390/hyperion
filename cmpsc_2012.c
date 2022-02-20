@@ -1198,6 +1198,15 @@ DEF_INST( cmpsc_2012 )
     int  r1, r2;                        /* Operand register numbers          */
     RRE( inst, regs, r1, r2 );          /* Decode the instruction...         */
 
+#if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
+    if (0
+        || GR_A( 0,  regs ) == 0
+        || GR_A( r1, regs ) == 0
+        || GR_A( r2, regs ) == 0
+    )
+        ARCH_DEP( per3_zero )( regs );
+#endif
+
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
         TRAN_INSTR_CHECK( regs );
