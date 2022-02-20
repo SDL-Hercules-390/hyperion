@@ -2912,7 +2912,7 @@ DEF_INST( search_string_unicode )
     CONTRAN_INSTR_CHECK( regs );
 
     /* Program check if bits 0-15 of register 0 not zero */
-    if(regs->GR_L(0) & 0xFFFF0000)
+    if (regs->GR_L(0) & 0xFFFF0000)
         regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
     /* Load string terminating character from register 0 bits 16-31 */
@@ -2922,12 +2922,27 @@ DEF_INST( search_string_unicode )
     addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
     addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
 
-    /* Search up to 256 bytes or until end of operand */
-    for(i = 0; i < 0x100; i++)
+    /* "When the contents of bit position 63 of general registers R1
+        and R2 differ (that is, when one address is even and the other
+        is odd), the location of the first two-byte character after
+        the second operand is ONE MORE THAN the contents of general
+        register R1." (emphasis added)
+    */
+    if ((addr1 & 1) != (addr2 & 1))
+    {
+        addr1++;
+        addr1 &= ADDRESS_MAXWRAP( regs );
+    }
+
+#undef  SRSTU_MAX
+#define SRSTU_MAX   _4K     /* (Sheesh! 256 bytes is WAY too small!) */
+
+    /* Search up to CPU-determined bytes or until end of operand */
+    for (i=0; i < SRSTU_MAX; i++)
     {
         /* If operand end address has been reached, return condition
-        code 2 and leave the R1 and R2 registers unchanged */
-        if(addr2 == addr1)
+           code 2 and leave the R1 and R2 registers unchanged */
+        if (addr2 >= addr1)
         {
             regs->psw.cc = 2;
             return;
@@ -2937,8 +2952,8 @@ DEF_INST( search_string_unicode )
         sbyte = ARCH_DEP( vfetch2 )( addr2, r2, regs );
 
         /* If the terminating character was found, return condition
-        code 1 and load the address of the character into R1 */
-        if(sbyte == termchar)
+           code 1 and load the address of the character into R1 */
+        if (sbyte == termchar)
         {
             SET_GR_A( r1, regs, addr2 );
             regs->psw.cc = 1;
