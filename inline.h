@@ -700,7 +700,7 @@ inline void ARCH_DEP( per3_zero_lcheck2 )( REGS* regs, int r1, int l1, int r2, i
 /*  The L24CHECK macros are identical to the LCHECK macros except    */
 /*  for the operand length check: instead of checking all 32 or 64   */
 /*  bits of the register containing the operand length, we instead   */
-/*  check only the low-order 24 bits of the length register via the  *
+/*  check only the low-order 24 bits of the length register via the  */
 /*  GR_LA24 macro. They are designed for MVCL and CLCL and other     */
 /*  similar type instructions.                                       */
 /*-------------------------------------------------------------------*/
