@@ -3841,7 +3841,7 @@ BYTE    termchar;                       /* Terminating character     */
 /*-------------------------------------------------------------------*/
 /* B257 CUSE  - Compare Until Substring Equal                  [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_until_substring_equal)
+DEF_INST( compare_until_substring_equal )
 {
 int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
@@ -3860,37 +3860,37 @@ S32     len1, len2;                     /* Operand lengths           */
 S32     remlen1, remlen2;               /* Lengths remaining         */
 #endif
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
 
     CONTRAN_INSTR_CHECK( regs );
-    ODD2_CHECK(r1, r2, regs);
+    ODD2_CHECK( r1, r2, regs );
 
     /* Load substring length from bits 24-31 of register 0 */
-    sublen = regs->GR_LHLCL(0);
+    sublen = regs->GR_LHLCL( 0 );
 
     /* Load padding byte from bits 24-31 of register 1 */
-    pad = regs->GR_LHLCL(1);
+    pad = regs->GR_LHLCL( 1 );
 
     /* Determine the destination and source addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
+    addr2 = regs->GR( r2 ) & ADDRESS_MAXWRAP( regs );
 
     /* update regs so unused bits zeroed */
-    SET_GR_A(r1, regs,addr1);
-    SET_GR_A(r2, regs,addr2);
+    SET_GR_A( r1, regs, addr1 );
+    SET_GR_A( r2, regs, addr2 );
 
     /* Load signed operand lengths from R1+1 and R2+1 */
     len1 =
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-           regs->psw.amode64 ? (S64)(regs->GR_G(r1+1)) :
+           regs->psw.amode64 ? (S64)(regs->GR_G( r1+1 )) :
 #endif
-                               (S32)(regs->GR_L(r1+1));
+                               (S32)(regs->GR_L( r1+1 ));
     len2 =
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-           regs->psw.amode64 ? (S64)(regs->GR_G(r2+1)) :
+           regs->psw.amode64 ? (S64)(regs->GR_G( r2+1 )) :
 #endif
-                               (S32)(regs->GR_L(r2+1));
+                               (S32)(regs->GR_L( r2+1 ));
 
     /* Initialize equal string addresses and lengths */
     eqaddr1 = addr1;
@@ -3920,7 +3920,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     }
 
     /* Process operands from left to right */
-    for (i = 0; len1 > 0 || len2 > 0 ; i++)
+    for (i=0; len1 > 0 || len2 > 0 ; i++)
     {
 
         /* If 4096 bytes have been compared, and the last bytes
@@ -3933,13 +3933,13 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
 
         /* Fetch byte from first operand, or use padding byte */
         if (len1 > 0)
-            byte1 = ARCH_DEP(vfetchb) ( addr1, r1, regs );
+            byte1 = ARCH_DEP( vfetchb )( addr1, r1, regs );
         else
             byte1 = pad;
 
         /* Fetch byte from second operand, or use padding byte */
         if (len2 > 0)
-            byte2 = ARCH_DEP(vfetchb) ( addr2, r2, regs );
+            byte2 = ARCH_DEP( vfetchb )( addr2, r2, regs );
         else
             byte2 = pad;
 
@@ -3973,7 +3973,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
         if (len1 > 0)
         {
             addr1++;
-            addr1 &= ADDRESS_MAXWRAP(regs);
+            addr1 &= ADDRESS_MAXWRAP( regs );
             len1--;
         }
 
@@ -3981,7 +3981,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
         if (len2 > 0)
         {
             addr2++;
-            addr2 &= ADDRESS_MAXWRAP(regs);
+            addr2 &= ADDRESS_MAXWRAP( regs );
             len2--;
         }
 
@@ -3989,12 +3989,12 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
         if ((addr1 & 0x7FF) == 0 || (addr2 & 0x7FF) == 0)
         {
             /* Update R1 and R2 to point to next bytes to compare */
-            SET_GR_A(r1, regs,addr1);
-            SET_GR_A(r2, regs,addr2);
+            SET_GR_A( r1, regs, addr1 );
+            SET_GR_A( r2, regs, addr2 );
 
             /* Set R1+1 and R2+1 to remaining operand lengths */
-            SET_GR_A(r1+1, regs,len1);
-            SET_GR_A(r2+1, regs,len2);
+            SET_GR_A( r1+1, regs, len1 );
+            SET_GR_A( r2+1, regs, len2 );
         }
 
         /* If equal byte count has reached substring length
@@ -4011,23 +4011,23 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     if (cc < 2)
     {
         /* Update R1 and R2 to point to the equal substring */
-        SET_GR_A(r1, regs,eqaddr1);
-        SET_GR_A(r2, regs,eqaddr2);
+        SET_GR_A( r1, regs, eqaddr1 );
+        SET_GR_A( r2, regs, eqaddr2 );
 
         /* Set R1+1 and R2+1 to length remaining in each
            operand after the start of the substring */
-        SET_GR_A(r1+1, regs,remlen1);
-        SET_GR_A(r2+1, regs,remlen2);
+        SET_GR_A( r1+1, regs, remlen1 );
+        SET_GR_A( r2+1, regs, remlen2 );
     }
     else
     {
         /* Update R1 and R2 to point to next bytes to compare */
-        SET_GR_A(r1, regs,addr1);
-        SET_GR_A(r2, regs,addr2);
+        SET_GR_A( r1, regs, addr1 );
+        SET_GR_A( r2, regs, addr2 );
 
         /* Set R1+1 and R2+1 to remaining operand lengths */
-        SET_GR_A(r1+1, regs,len1);
-        SET_GR_A(r2+1, regs,len2);
+        SET_GR_A( r1+1, regs, len1 );
+        SET_GR_A( r2+1, regs, len2 );
     }
 
     /* Set condition code */
