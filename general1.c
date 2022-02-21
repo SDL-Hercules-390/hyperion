@@ -3847,18 +3847,13 @@ int     r1, r2;                         /* Values of R fields        */
 int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
 VADR    addr1, addr2;                   /* Operand addresses         */
+VADR    eqaddr1, eqaddr2;               /* Address of equal substring*/
+S64     len1, len2;                     /* Operand lengths           */
+S64     remlen1, remlen2;               /* Lengths remaining         */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    pad;                            /* Padding byte              */
 BYTE    sublen;                         /* Substring length          */
 BYTE    equlen = 0;                     /* Equal byte counter        */
-VADR    eqaddr1, eqaddr2;               /* Address of equal substring*/
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-S64     len1, len2;                     /* Operand lengths           */
-S64     remlen1, remlen2;               /* Lengths remaining         */
-#else
-S32     len1, len2;                     /* Operand lengths           */
-S32     remlen1, remlen2;               /* Lengths remaining         */
-#endif
 
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
@@ -3881,16 +3876,8 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     SET_GR_A( r2, regs, addr2 );
 
     /* Load signed operand lengths from R1+1 and R2+1 */
-    len1 =
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-           regs->psw.amode64 ? (S64)(regs->GR_G( r1+1 )) :
-#endif
-                               (S32)(regs->GR_L( r1+1 ));
-    len2 =
-#if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-           regs->psw.amode64 ? (S64)(regs->GR_G( r2+1 )) :
-#endif
-                               (S32)(regs->GR_L( r2+1 ));
+    len1 = GR_A( r1+1, regs );
+    len2 = GR_A( r2+1, regs );
 
     /* Initialize equal string addresses and lengths */
     eqaddr1 = addr1;
@@ -3922,10 +3909,12 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     /* Process operands from left to right */
     for (i=0; len1 > 0 || len2 > 0 ; i++)
     {
+#undef  CUSE_MAX
+#define CUSE_MAX    _4K
 
         /* If 4096 bytes have been compared, and the last bytes
            compared were unequal, exit with condition code 3 */
-        if (equlen == 0 && i >= 4096)
+        if (equlen == 0 && i >= CUSE_MAX)
         {
             cc = 3;
             break;
