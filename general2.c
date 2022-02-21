@@ -649,6 +649,12 @@ BYTE    termchar;                       /* Terminating character     */
        because if the boundary condition is met,
        there is no further need to access storage.
     */
+    /* NOTE: "When the address in general register R1 is less
+       than the address in general register R2, condition code
+       2 can be set only if the operand wraps around from the
+       top of storage to location 0."  The below comparison
+       for == is thus correct.
+    */
     if (addr2 == addr1)
     {
         regs->psw.cc = 2;
@@ -659,7 +665,14 @@ BYTE    termchar;                       /* Terminating character     */
     for (i=0; i < cpu_length; i++)
     {
         /* If operand end address has been reached, return
-           CC=2 and leave the R1 and R2 registers unchanged */
+           CC=2 and leave the R1 and R2 registers unchanged
+        */
+        /* NOTE: "When the address in general register R1 is less
+           than the address in general register R2, condition code
+           2 can be set only if the operand wraps around from the
+           top of storage to location 0."  The below comparison
+           for == is thus correct.
+        */
         if (addr2 == addr1)
         {
             regs->psw.cc = 2;
@@ -2954,8 +2967,8 @@ DEF_INST( search_string_unicode )
     for (i=0; i < SRSTU_MAX; i++)
     {
         /* If operand end address has been reached, return condition
-           code 2 and leave the R1 and R2 registers unchanged */
-
+           code 2 and leave the R1 and R2 registers unchanged
+        */
         /* NOTE: "When the address in general register R1 is less than
            the address in general register R2, condition code 2 can be
            set only if the operand wraps around from the top of storage
