@@ -94,8 +94,9 @@
                                 \
   "Format: \"abs addr[.len]\" or \"abs addr[-addr2]\" to display up to 64K\n"   \
   "of absolute storage, or \"abs addr=value\" to alter up to 32 bytes of\n"     \
-  "absolute storage, where 'value' is a string of up to 32 pairs of hex\n"      \
-  "digits.\n"
+  "absolute storage, where 'value' is either a string of up to 32 pairs of\n"   \
+  "hex digits, or a string of up to 32 characters enclosed within single or\n"  \
+  "double quotes.\n"
 
 #define aea_cmd_desc            "Display AEA tables"
 #define aia_cmd_desc            "Display AIA fields"
@@ -1225,7 +1226,8 @@
                                 \
   "Format: \"r addr[.len]\" or \"r addr[-addr2]\" to display up to 64K\n"       \
   "of real storage, or \"r addr=value\" to alter up to 32 bytes of real\n"      \
-  "storage, where 'value' is a string of up to 32 pairs of hex digits.\n"
+  "storage, where 'value' is either a string of up to 32 pairs of hex digits,\n" \
+  "or a string of up to 32 characters enclosed in single or double quotes.\n"
 
 #define restart_cmd_desc        "Generate restart interrupt"
 #define resume_cmd_desc         "Resume hercules"
@@ -1762,10 +1764,11 @@
                                 \
   "Format: \"v [P|S|H]addr[.len]\" or \"v [P|S|H]addr[-addr2]\" to display\n"   \
   "up to 64K of virtual storage, or \"v [P|S|H]addr=value\" to alter up to\n"   \
-  "32 bytes of virtual storage, where 'value' is a string of up to 32\n"        \
-  "pairs of hex digits. The optional P, S or H address prefix character\n"      \
-  "forces Primary, Secondary or Home Space address translation mode\n"          \
-  "instead of using the current PSW mode, which is the default.\n"
+  "32 bytes of virtual storage, where 'value' is either a string of up to 32\n" \
+  "pairs of hex digits, or a string of up to 32 characters enclosed in single\n"  \
+  "or double quotes. The optional P, S or H address prefix character forces\n"  \
+  "Primary, Secondary or Home Space address translation mode instead of using\n"  \
+  "the current PSW mode, which is the default.\n"
 
 #define version_cmd_desc        "Display version information"
 #define xpndsize_cmd_desc       "Define/Display xpndsize parameter"

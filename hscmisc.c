@@ -1917,6 +1917,7 @@ int display_subchannel (DEVBLK *dev, char *buf, int buflen, char *hdr)
 /*                                                                   */
 /* Valid format for a storage alteration operand is:                 */
 /*      startaddr=hexstring (up to 32 pairs of digits)               */
+/*   or startaddr="string"  (up to 32 characters of string data)     */
 /*                                                                   */
 /* Return values:                                                    */
 /*      0  = operand contains valid storage range display syntax;    */
@@ -1947,6 +1948,43 @@ BYTE    c;                              /* Character work area       */
 
     rc = sscanf(operand, "%"SCNx64"%c%"SCNx64"%c",
                 &opnd1, &delim, &opnd2, &c);
+
+    if (rc == 2 && delim == '=' && newval)
+    {
+        /* Parse new startaddr="string" syntax */
+
+        s = strchr( operand, '=' );
+        if (s[1] == '"' || s[1] == '\'')
+        {
+            char* str = s+2;
+
+            for (n=0; str[n]; ++n)
+                if (n < 32)
+                    newval[n] = host_to_guest( str[n] );
+
+            if (!n)
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", "\"", ": string expected");
+                return -1;
+            }
+
+            if (n > 32)
+            {
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", "\"", ": maximum string length is 32 characters");
+                return -1;
+            }
+
+            saddr = opnd1;
+            eaddr = saddr + n - 1;
+
+            *sadrp = saddr;
+            *eadrp = eaddr;
+
+            return n;
+        }
+    }
 
     /* Process storage alteration operand */
     if (rc > 2 && delim == '=' && newval)
