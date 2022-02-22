@@ -552,6 +552,46 @@ inline int cmpxchg16_aarch64(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile 
 #endif /* define(__aarch64__) */
 
 
+
+/*-------------------------------------------------------------------
+ * Elbrus e2k
+ *-------------------------------------------------------------------*/
+#if defined(__e2k__) && defined(__LCC__)
+
+#ifndef cmpxchg16
+  #define  cmpxchg16(     x1, x2, y1, y2, z ) \
+           cmpxchg16_e2k( x1, x2, y1, y2, z )
+
+#define __E2K_LOCKFLAGS_SIZE    (512) /* 8 cache lines */
+extern volatile char __e2k_lockflags[ /*512 bytes, 8 cache lines */ ];
+
+extern int __cmpxchg16_e2k(volatile char *lockflag, U64 *old1, U64 *old2,
+                           U64 new1, U64 new2, volatile void *ptr);
+
+/* Elbrus e2k hash calculation code contributed by Leonid Yuriev */
+
+__attribute__((__const__)) static inline volatile char *
+__cmpxchg16_e2k_lockflag(U64 addr)
+{
+    U64 h;
+    h  = addr * UINT64_C(0x00ADC4E8E91A095F /* 48,911,675,593,197,919 prime */);
+    h += addr ^ UINT64_C(0x0060F9B69F8F4D17 /* 27,296,160,520,555,799 prime */);
+    h ^= h >> 32;
+    h &= __E2K_LOCKFLAGS_SIZE - 1 - 63 /* trim to the array size and align to cache line */;
+    return __e2k_lockflags + h;
+}
+
+static inline int cmpxchg16_e2k(U64 *old1, U64 *old2, U64 new1, U64 new2,
+                                volatile void *ptr)
+{
+    return __cmpxchg16_e2k(__cmpxchg16_e2k_lockflag((uintptr_t)ptr),
+                           old1, old2, new1, new2, ptr);
+}
+
+#endif /* cmpxchg16 */
+
+#endif /* defined(__e2k__) && defined(__LCC__) */
+
 /*-------------------------------------------------------------------
  * C11_ATOMICS_AVAILABLE
  *-------------------------------------------------------------------*/

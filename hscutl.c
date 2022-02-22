@@ -1880,3 +1880,36 @@ DLL_EXPORT int  idx_snprintf( int idx, char* buffer, size_t bufsiz, const char* 
     rc = vsnprintf( buffer+idx, bufsiz-idx, fmt, vargs );
     return rc;
 }
+
+/*-------------------------------------------------------------------
+ * Elbrus e2k
+ *-------------------------------------------------------------------*/
+#if defined(__e2k__) && defined(__LCC__)
+
+volatile char __e2k_lockflags[__E2K_LOCKFLAGS_SIZE];
+
+int __cmpxchg16_e2k(volatile char *lockflag, U64 *old1, U64 *old2, U64 new1,
+                    U64 new2, volatile void *ptr)
+{
+    // returns 0 == success, 1 otherwise
+    int result;
+
+    while (__atomic_test_and_set(lockflag, __ATOMIC_ACQUIRE) == 1)
+        ;
+
+    if (*old1 == *(U64 *)ptr && *old2 == *((U64 *)ptr + 1)) {
+        *(U64 *)ptr = new1;
+        *((U64 *)ptr + 1) = new2;
+        result = 0;
+    } else {
+        *old1 = *((U64 *)ptr);
+        *old2 = *((U64 *)ptr + 1);
+        result = 1;
+    }
+
+    __atomic_clear(lockflag, __ATOMIC_RELEASE);
+
+    return result;
+}
+#endif /* e2k && LCC */
+
