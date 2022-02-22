@@ -850,9 +850,9 @@
 #define message_cmd_help        \
                                 \
   "Format: \"message * text\". The 'text' field is variable in size.\n"         \
-  "A 'VM' formatted similar to \"13:02:41  * MSG FROM HERCULES: hello\" is\n"   \
+  "A 'VM' message similar to: \"13:02:41 * MSG FROM HERCULES: hello\" is\n"     \
   "diplayed on the console panel as a result of the panel command\n"            \
-  "'message * hello'.\n"
+  "'message * hello'.  (See also the \"msgnoh\" command)\n"
 
 #define model_cmd_desc          "Set/Query STSI model code"
 #define model_cmd_help          \

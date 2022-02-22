@@ -623,7 +623,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 /*-------------------------------------------------------------------*/
 /* message command - Display a line of text at the console           */
 /*-------------------------------------------------------------------*/
-int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
+static int message_cmd(int argc,char *argv[], char *cmdline,bool withhdr)
 {
     char    *msgtxt;
     time_t  mytime;
@@ -664,48 +664,55 @@ int message_cmd(int argc,char *argv[], char *cmdline,int withhdr)
             }
         }
     }
-    if (!toskip)
+    if (!toskip || !cmdline[i])
     {
         msgtxt=&cmdline[i];
     }
-    if (msgtxt && strlen(msgtxt)>0)
+    if (msgtxt)
     {
+        char* msg = msgtxt;
+        char msgbuf[256];
+
         if (withhdr)
         {
-            char msgbuf[256];
             char *lparname = str_lparname();
             time(&mytime);
             mytm=localtime(&mytime);
-            MSGBUF(msgbuf, " %2.2d:%2.2d:%2.2d  * MSG FROM %s: %s\n",
+            MSGBUF(msgbuf, " %2.2d:%2.2d:%2.2d  * MSG FROM %s: %s",
                      mytm->tm_hour,
                      mytm->tm_min,
                      mytm->tm_sec,
                      (strlen(lparname)!=0)? lparname: "HERCULES",
                      msgtxt );
-            LOGMSG( "%s", msgbuf );
+            msg = msgbuf;
         }
-        else
-        {
-            LOGMSG( "%s\n", msgtxt );
-        }
+
+        LOGMSG( "%s\n", msg );
+        return 0;
     }
-    return 0;
+    return -1;
 }
 
 /*-------------------------------------------------------------------*/
 /* msg/msgnoh command - Display a line of text at the console        */
 /*-------------------------------------------------------------------*/
-int msg_cmd(int argc,char *argv[], char *cmdline)
+int msg_cmd( int argc, char* argv[], char* cmdline )
 {
     int rc;
 
-    if ( argc < 3 )
+    UPPER_ARGV_0( argv );
+
+    if (argc < 2)
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }
     else
-        rc = message_cmd(argc,argv,cmdline, CMD(argv[0],msgnoh,6)? 0: 1);
+    {
+        bool withhdr = CMD( argv[0], MSGNOH, 6 ) ? false : true;
+        rc = message_cmd( argc, argv, cmdline, withhdr );
+    }
 
     return rc;
 }
