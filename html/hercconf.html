@@ -4590,15 +4590,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
     image.
     <p>
 
-    Refer to "Creating an empty DASD volume" in the "Creating, formatting,
-    and loading DASD volumes" section of the
+    Refer to "<a href="hercload.html#dasdinit">Creating an empty DASD volume</a>"
+    in the "Creating, formatting, and loading DASD volumes" section of the
     <a href="hercload.html">Creating DASD</a>
     web page for information on using the 'dasdinit' command/utility to
     create compressed dasd files. Refer to the
     <a href="cckddasd.html">Compressed Dasd Emulation</a>
     page for details on the actual CCKD emulation itself and additional
-    information on the <a href="cckddasd.html#cckdcommand">CCKD</a>
-    initialization/tuning control file statement.
+    information on the <a href="cckddasd.html#cckdcommand"><code>'CCKD'</code>
+    initialization/tuning control file statement</a>, as well as information
+    regarding the use of <a href="cckddasd.html#shadowfiles">shadow files</a>.
     <p>
 
     If you specify an INET address, the format is:
@@ -4630,8 +4631,11 @@ ROUTE  00  172.21.3.32  255.255.255.224
     <dl> <!-- begin (CKD) additional DASD arguments -->
 
 <a name="shadow"></a>
-    <dt><code>sf=<em>shadow-file-name</em></code>
+    <dt><code>sf=<em>shadow-file-filename-template</em></code>
     <dd><p>
+        Shadow files are only supported for compressed dasd images.
+        <p>
+
         A shadow file contains all the changes made to the emulated dasd since
         it was created, until the next shadow file is created. The moment of the
         shadow file's creation can be thought of as a snapshot of the current

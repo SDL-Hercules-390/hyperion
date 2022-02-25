@@ -36,54 +36,61 @@ volumes for use with Hercules.
 <p>
 IBM distributes pre-built OS/390 and z/OS systems on two
 different CD-ROM packages:
-<dl>
-<dt><b>The OS/390 and z/OS Application Development CD (ADCD)</b>
-<dd>available only to members of IBM PartnerWorld for Developers,
-and
-<p>
-<dt><b>The OS/390 and z/OS DemoPkg</b>
-<dd>available only to IBM employees and qualified IBM Business Partners.
-</dl>
+<blockquote>
+    <dl>
+    <dt><p><b>The OS/390 and z/OS Application Development CD (ADCD)</b>
+    <dd>available only to members of IBM PartnerWorld for Developers,
+    and
+    <p>
+    <dt><b>The OS/390 and z/OS DemoPkg</b>
+    <dd><p>available only to IBM employees and qualified IBM Business Partners.
+    </dl>
+</blockquote>
 <p>Both of these packages contain pre-built DASD image files
 which simply need to be unzipped onto your hard drive.  The
 unzipped images can be directly read by Hercules.
-<p>
 Be aware, however, that you cannot use the ADCD images because
 the PartnerWorld scheme requires you to purchase or lease an IBM
 approved machine in order to obtain the ADCD, and the software on
 the ADCD is licensed for use only on the machine that it was
 shipped with.
-See
-<a href="http://www.ibm.com/servers/enable/site/zinfo/adcd.html">
-http://www.ibm.com/servers/enable/site/zinfo/adcd.html</a>.
+See IBM's
+"<a href="http://www.ibm.com/servers/enable/site/zinfo/adcd.html">Enterprise server solutions</a>"
+web page for more information.
+<p>
 If you want Hercules to be an approved machine so that you can
-use the ADCD, then I suggest you lobby IBM Developer Relations
+use the ADCD, then I suggest you lobby <b>IBM Developer Relations</b>
 <!-- ===(fyolton&nbsp;&#064;&nbsp;us.ibm.com)=== -->
 at the address given on their web page.
-<p>
 Different rules apply to the OS/390 and z/OS
 DemoPkg CD which is available only to IBM employees and business
 partners.  If you fall into this category then you probably know
-what the rules are -- I don't. &nbsp; <tt> :-( </tt>
+what the rules are. I don't. &nbsp;<tt>:-(</tt>
 
 <p><hr><a name="loading"></a>
 <h2>Creating, formatting, and loading DASD volumes</h2>
 
+<p><hr><a name="dasdinit"></a>
 <h4>Creating an empty DASD volume</h4>
 <p>
-The dasdinit / dasdinit64 program must first be run from the Unix shell prompt to
-create a file containing an empty DASD volume.
+The dasdinit or dasdinit64 utility must first be run from the Unix shell
+prompt to create a file containing an empty DASD volume.
+If you are going to be creating <a href="cckddasd.html">compressed dasd images</a>,
+it is recommended that you use the new <u>dasdinit64</u> utility as it is
+able to create <a href="hercrnot.html#CCKD64">CCKD64 format</a> dasd images
+which are highly advantageous over the old 32-bit CCKD images that plain
+dasdinit creates.
 <p>
-The format of the dasdinit / dasdinit64 command is:
+The format of the command is:
 <br><br>
 <pre>
-    Usage: dasdinit [-options] filename devtype[-model] [volser] [size]
+    Usage: dasdinit64 [-options] filename devtype[-model] [volser] [size]
     Builds an empty dasd image file
     options:
-    
-      -z        build compressed dasd image file using zlib
-      -bz2      build compressed dasd image file using bzip2
-      -0        build compressed dasd image file with no compression
+
+      -z        build <a href="cckddasd.html"><b>compressed dasd image</b></a> file using zlib
+      -bz2      build <a href="cckddasd.html"><b>compressed dasd image</b></a> file using bzip2
+      -0        build <a href="cckddasd.html"><b>compressed dasd image</b></a> file with no compression
       -lfs      build a large (uncompressed) dasd file (if supported)
       -a        build dasd image file that includes alternate cylinders
                 (option ignored if size is manually specified)
@@ -93,13 +100,13 @@ The format of the dasdinit / dasdinit64 command is:
                 (default is EC-mode PSW)
       -m        enable wait PSW in IPL1 record for machine checks
                 (default is disabled for machine checks)
-      -linux    null track images will look like linux dasdfmt'ed images
+      -linux    null track images will look like Linux dasdfmt'ed images
                 (3390 device type only)
-    
+
       filename  name of dasd image file to be created
       devtype   CKD: 2305, 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
                 FBA: 0671, 3310, 3370, 9313, 9332, 9335, 9336
-    
+
       model     device model (implies size) (opt)
       volser    volume serial number (1-6 characters)
                 (specified only if '-r' option not used)
@@ -114,7 +121,7 @@ was a BC-mode PSW enabled for machine check interrupts.  The current default for
 the wait PSW is EC-mode, disabled for machine checks.  To obtain the earlier
 behavior, run dasdinit with the "-b" and "-m" flags.
 </p>
-<a NAME="models">
+<a name="models">
 The current list of device types and models supported is:
 </p>
 <pre>
@@ -211,9 +218,10 @@ The current list of device types and models supported is:
 <p>
 <h4>Volumes exceeding 2GB</h4>
 <p>
-For CKD volumes which exceed 2GB, such as the 3390-3, and for
-which the <b>-lfs</b> parameter is not specified, the DASDINIT / DASDINIT64
-program will create multiple files by appending the characters
+For regular (uncompressed) CKD volumes which exceed 2GB in size
+(such as the 3390-3 and larger models) -- <i><u>and for which the
+<b>-lfs</b> parameter was not specified</u></i> -- the DASDINIT /
+DASDINIT64 program creates multiple files by appending the characters
 <b>_1</b>, <b>_2</b>, <b>_3</b> etc.
 to the file name specified on the command line.  These characters
 are inserted before the first dot (<b>.</b>) after the last slash
@@ -223,7 +231,7 @@ to the end of the name. Each file contains a whole number of cylinders.
 logical volume. Specify the full name of just the first file in the
 Hercules configuration file (e.g. "<i>filename</i>_1").
 <p>
-If the <b>-lfs</b> option <i>is</i> specified however, then the output file is
+<u>If the <b>-lfs</b> option <i>is</i> specified however</u>, then the output file is
 a single large file which can be as large as your system supports.
 <p>
 The DASDINIT / DASDINIT64 program cannot create FBA volumes exceeding 2GB
@@ -237,7 +245,7 @@ To create a 3330 model 1 CKD volume consisting of 404 cylinders
 with volume serial number WORK01 in a file called
 <b><i>work01.151</b></i>:
 <pre>
-    dasdinit -a work01.151 3330-1 work01
+    dasdinit64 -a work01.151 3330-1 work01
 </pre>
 <p>
 To create a compressed 3350 CKD volume consisting of 560 cylinders
@@ -245,7 +253,7 @@ To create a compressed 3350 CKD volume consisting of 560 cylinders
 with volume serial number SYSRES in a file called
 <b><i>dosvs34.24f</b></i>:
 <pre>
-    dasdinit -a -bz2 dosvs34.24f 3350-1 sysres
+    dasdinit64 -a -bz2 dosvs34.24f 3350-1 sysres
 </pre>
 <p>
 To create a 3370 FBA volume with only 100000 sectors
@@ -253,13 +261,13 @@ To create a 3370 FBA volume with only 100000 sectors
 with volume serial number WORK02 in a file called
 <b><i>mini.work02.140</b></i>:
 <pre>
-    dasdinit mini.work02.140 3370 work02 100000
+    dasdinit64 mini.work02.140 3370 work02 100000
 </pre>
 <p>
 To create a 3390 model 3 (triple density) CKD volume
 of 3339 cylinders with volume serial number WORK03:
 <pre>
-    dasdinit triple.a88 3390-3 work03
+    dasdinit64 triple.a88 3390-3 work03
 </pre>
 <p>
 Because this volume exceeds 2GB, DASDINIT / DASDINIT64 will create two files
@@ -267,7 +275,7 @@ with <b><i>triple_1.a88</b></i> containing cylinders 0-2518 and
 <b><i>triple_2.a88</b></i> containing cylinders 2519-3339.  However, if you
 instead specify the <tt>-lfs</tt> option:
 <pre>
-    dasdinit -lfs triple.a88 3390-3 work03
+    dasdinit64 -lfs triple.a88 3390-3 work03
 </pre>
 <p>
 then DASDINIT /DASDINIT64 will create a single file <b><i>triple.a88</i></b>
@@ -483,7 +491,7 @@ required to load the dataset, whichever is larger.
 To create a 2314 volume in a file called <b><i>sysres.230</i></b>
 using the control file <b><i>sysres.plf</i></b> with message level 2:
 <pre>
-    dasdload sysres.plf sysres.230 2
+    dasdload64 sysres.plf sysres.230 2
 </pre>
 
 <p>
@@ -510,7 +518,7 @@ To create a compressed 3390-3 volume in a file called
 <b><i>linux.500</i></b> containing a bootable linux system for
 linux/390 installation using the control file <b><i>linux.prm</i></b>:
 <pre>
-    dasdload -z linux.prm linux.500
+    dasdload64 -z linux.prm linux.500
 </pre>
 <p>
 An example control file is shown below:

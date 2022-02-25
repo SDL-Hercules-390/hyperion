@@ -25,10 +25,13 @@ Hercules: Compressed Dasd Emulation
 <hr noshade>
 <h2>Introduction</h2>
 <p>
-Using compressed DASD files you can significantly reduce the file space
-required for emulated DASD files and possibly gain a performance boost
-because less physical I/O occurs.
-
+Using compressed DASD files can significantly reduce the host system
+file space required for emulated DASD files and possibly provide a
+performance gain as well because less physical I/O occurs.
+<p>
+Using compressed DASD files also has other advantages too, such as
+allowing you to use <a href="#shadowfiles">shadow files</a>.
+<p>
 Both <b>CKD</b> (Count-Key-Data) and <b>FBA</b> (Fixed-Block-Architecture)
 emulation files can be compressed.
 <p>
@@ -39,43 +42,53 @@ and the maximum size of the track or block.  In compressed files, each
 track image or group of blocks may be compressed by
 <a href="http://www.zlib.net/"><b>zlib</b></a> or
 <a href="http://www.bzip.org/"><b>bzip2</b></a>, and only
-occupies the space neccessary for the compressed image.  The offset of a compressed
+occupies the space neccessary for the compressed data.  The offset of a compressed
 track or block is obtained by performing a two-table lookup.  The lookup
 tables themselves reside in the emulation file.
 <p>
 Because FBA blocks are 512 bytes in length, and that being a rather small
-number, FBA blocks are grouped into <b>block groups</b>.  Each block group
-contains 120 FBA blocks (60K).
+number, FBA blocks are thus grouped into <b>block groups</b>.  Each block
+group contains 120 FBA blocks (60K).
 <p>
 Whenever a track or block group is written to a compressed file,
-it is written either to an existing free space within the file, or at
-the end of the file, then the lookup tables are updated, and then the space the
-track or block group previously occupied is freed.  The location of a
-track or block group in the file can change many times.
+it is written either to an existing free space within the file or at
+the end of the file, the lookup tables are then updated, and then the
+space the track or block group previously occupied is freed. The location
+of a track or block group in the file can change many times.
 <p>
 In the event of a failure (for example, Hercules crash,
 operating system crash or power failure), the compressed emulation file
 on the host's physical disk may be out of sync if the host operating
 system defers physical writes to the file system containing the emulation
-file.  Several methods have evolved to reduce the amount of data lost in
-these kind of events.
+file.  However, several methods have evolved to greatly reduce the chance
+of this occurring as well as the amount of data lost that can occur after
+these kinds of events, so the chance of actual data loss is small.
 <p>
-A compressed file may occupy only 20% of the disk space required by an
-uncompressed file.  In other words, you may be able to have 5 times more
-emulated volumes using compressed DASD files.  However, compressed files
-are more sensitive to failures and corruption may occur.
+A compressed dasd image file may occupy only 20% of the disk space required
+by an uncompressed file.  In other words, you may be able to have 5 times
+more emulated volumes on your system by using compressed DASD files than by
+using uncompressed dasds.  Compressed files are more slightly more
+sensitive to failures and data corruption however, but due to its design
+and implementation the chance of this occuring is small.
+<p>
+Compressed DASD images are created via the
+<a href="hercload.html#dasdinit">dasdinit64</a> utility.
 
 <p>
 
-<a NAME="shadowfiles"></a>
+<a name="shadowfiles"></a>
 <hr noshade>
 <p><h2>Shadow Files</h2>
 
 <p>
 
+Shadow files are only supported for compressed dasd images.
+
+<p>
+
 A compressed CKD or FBA dasd can have more than one physical file.
-The additional files are called <em>shadow files</em>.
-The function is implemented as a kind of <i>snapshot</i>, where
+These additional files are called <em>shadow files</em>.
+Shadow files are designed to be used as a kind of <i>"snapshot"</i>, where
 a new shadow file can be created on demand.
 An emulated dasd is represented by a <em>base</em> file and 0 or more
 shadow files.  All files are opened <em>read-only</em>
@@ -89,12 +102,14 @@ on the device statement for the compressed DASD device.
 <p class="note">
 
     Please note that the specified shadow filename does <u>not</u> have to
-    actually exist. The <i>shadow-file-name</i> operand of the <i>sf=</i>
-    parameter is simply a filename <i><u>template</u></i> that will be used
-    to name the shadow file whenever a shadow file is to be created, but
-    shadow files do not actually get created until you specifically create
-    them via the <code>sf+xxxx</code> (or <code>sf+*</code>) command. Please
-    refer to the discussion of the <b>sf</b> command several paragraphs
+    actually exist. The <i>shadow-file-name</i> operand of the <b><i>sf=</i></b>
+    parameter is simply a <b>filename <i><u>template</u></i></b> that will
+    be used to name the shadow file whenever a shadow file is to be created.
+    Shadow files do not actually get created until you specifically create
+    them via the <code>sf+xxxx</code> (or <code>sf+*</code>) command, or
+    automatically <b>(<a href="#autoshadow"><code>*</code></a>)</b> by marking
+    either the base dasd image file or an existing shadow file as read-only.
+    Please refer to the discussion of the <b>sf</b> command several paragraphs
     below for more information.
 
 <p>
@@ -105,24 +120,24 @@ or the last character of the file name itself if there is no extension.
 <p>
 For example, the following device statement:<br>
 <pre>
-    0001  2311  VOL111.model-x.ext   sf=VOL111_Shadow_0.model-x.ext
+    0001  2311  AAAAAA.model-x.ext   sf=AAAAAA_Shadow_0.model-x.ext
 </pre>
 will cause a shadow file with the following name to be created:
 <pre>
-                                        VOL111_Shadow_0.model-1.ext
+                                        AAAAAA_Shadow_0.model-<b><i>1</i></b>.ext
 </pre>
-whereas the following slightly different device statement:
+whereas the following <i>slightly different device statement</i>:
 <pre>
-    0002  2311  VOL222.model-x.ext   sf=VOL222.model-x_Shadow_0.ext
+    0002  2311  BBBBBB.model-x.ext   sf=BBBBBB.model-x_Shadow_0.ext
 </pre>
 will cause a shadow file with the following name to be created:
 <pre>
-                                        VOL222.model-x_Shadow_1.ext
+                                        BBBBBB.model-x_Shadow_<b><i>1</i></b>.ext
 </pre>
 
 <p>
 
-Notice the placement of the shadow file number in the above two examples:
+<u>Notice the placement of the shadow file number</u> in the above two examples:
 it is always immediately before the <i>last</i> period of the filename.
 In earlier versions of Hercules the shadow file number was
 erroneously placed immediately before the <i>first</i> period of the
@@ -131,11 +146,12 @@ this has been corrected to place the number immediately before the
 <i>last</i> period, as it was originally intended.
 <p>
 
-<p><h3>The Advantage of Shadow Files</a></h3>
+<p><h3>The Advantage of Shadow Files</h3>
 
+<p>
 A shadow file contains all the changes made to the emulated dasd
 since it was created, until the next shadow file is created.  The moment
-of the shadow file's creation can be thought of as a <em>snapshot</em>
+of the shadow file's creation can be thought of as a <em>"snapshot"</em>
 of the current emulated dasd as it existed at that point in time, because
 if the shadow file is later removed, then the emulated dasd reverts back
 to the state it was in at the moment the snapshot was taken.
@@ -158,7 +174,7 @@ emulated dasd device.  The base file is designated file<b>[0]</b> and
 the shadow files are file<b>[1]</b> to file<b>[8]</b>.
 The <em>highest</em> numbered file in use at a given time is the <em>current</em>
 file, where all writes will occur.  Track reads start with the <em>current</em>
-file and proceed down until a file is found that actually contains the track
+file and proceeds downward until a file is found that actually contains the track
 image.
 <p>
 Hercules console commands are provided to add a new shadow file, remove
@@ -168,21 +184,21 @@ current shadow file, and display the shadow file status and statistics:
 <table width=90%>
 <tr><td colspan="4"> &nbsp; </td></tr>
 <tr><td align="left"><b>sfd</b></td>
-    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left" colspan="2">unit</td>
     <td align="left">Display shadow file status and statistics</td>
 </tr>
 <tr><td align="left"><b>sfc</b></td>
-    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left" colspan="2">unit</td>
     <td align="left">Compress the current file</td>
 </tr>
 <tr><td align="left"><b>sf+</b></td>
-    <td align="left" colspan="2"><font size=-1>unit</font></td>
-    <td align="left">Create a new shadow file</td>
+    <td align="left" colspan="2">unit</td>
+    <td align="left">Create a new shadow file <b>(<a href="#autoshadow"><code>*</code></a>)</b></td>
 </tr>
 <tr><td colspan="4"> &nbsp; </td></tr>
 <tr><td align="left" valign="top"><b>sf-</b></td>
-    <td align="left" valign="top"><font size=-1>unit</font></td>
-    <td align="left" valign="top"<font size=-1><b>merge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b><br><em>nomerge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>force&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em></font></td>
+    <td align="left" valign="top">unit</td>
+    <td align="left" valign="top"<b>merge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b><br><em>nomerge&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>force&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em></td>
     <td align="left" valign="top">Remove a shadow file.<br>If <em>merge</em> is
                      specified or defaulted, then the contents of the current
                      file is merged into the previous file, the current file
@@ -200,8 +216,8 @@ current shadow file, and display the shadow file status and statistics:
 </tr>
 <tr><td colspan="4"> &nbsp; </td></tr>
 <tr><td align="left" valign="top"><b>sfk</b></td>
-    <td align="left" valign="top"><font size=-1>unit</font></td>
-    <td align="left" valign="top"<font size=-1><i>level</i></font></td>
+    <td align="left" valign="top">unit</td>
+    <td align="left" valign="top"<i>level</i></td>
     <td align="left" valign="top">Perform the <b>chkdsk</b> function on the current file.<br>
                      Level is a number from -1 ... 4, with the default level being <b>2</b>:<br>
                      &nbsp; &nbsp;&nbsp; -1 &nbsp; &nbsp; &nbsp; devhdr, cdevhdr, L1 table. <br>
@@ -215,9 +231,19 @@ current shadow file, and display the shadow file status and statistics:
 </table>
 
 <p>
-You can use <b>*</b> in place of 'unit'
+<u>Note</u>: You can use '<b><code>*</code></b>' in place of 'unit'
 in any of the above commands to apply the command to <i>all</i> compressed dasd.
 (<code>sf+*</code>,<code>sf-*</code>,<code>sfc*</code>,<code>sfk*</code>,<code>sfd*</code>)
+
+<p>
+<a name="autoshadow"></a>
+<b>(<code>*</code>)</b> In addition to the <b>sf+</b> command, shadow files can also be created
+<i><u>automatically</u></i> whenever the base dasd image and all of its existing shadow files
+(if any) are marked as read-only. When Hercules opens a compressed dasd image file with a <code>
+sf=</code> option, it automatically looks for and opens whatever existing shadow files
+there may be, with the highest numbered shadow file being the one where all writes
+will occur. If the highest numbered shadow file is also marked as a read-only file too,
+then a new shadow file is automatically created and used instead.
 
 </blockquote>
 
