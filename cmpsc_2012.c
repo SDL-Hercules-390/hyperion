@@ -1200,7 +1200,7 @@ DEF_INST( cmpsc_2012 )
 
 #if defined( FEATURE_PER_ZERO_ADDRESS_DETECTION_FACILITY )
     if (0
-        || GR_A( 0,  regs ) == 0
+        || GR_A( 1,  regs ) == 0
         || GR_A( r1, regs ) == 0
         || GR_A( r2, regs ) == 0
     )
