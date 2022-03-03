@@ -2118,6 +2118,10 @@ U32     n;                              /* 32-bit operand values     */
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
 }
 
+#if defined(_MSVC_) && (_MSC_VER >= VS2019) && (_MSC_VER < VS2022)
+PUSH_MSVC_WARNINGS()
+DISABLE_MSVC_WARNING( 4789 )
+#endif
 
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */
@@ -2299,6 +2303,10 @@ U16     rmask = 0x0000;                 /* (modified registers mask) */
     PER_GRA_CHECK( regs, rmask );
 #endif
 }
+
+#if defined(_MSVC_) && (_MSC_VER >= VS2019) && (_MSC_VER < VS2022)
+POP_MSVC_WARNINGS()
+#endif
 
 /*-------------------------------------------------------------------*/
 /* BA   CS    - Compare and Swap                              [RS-a] */
