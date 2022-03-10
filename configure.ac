@@ -145,6 +145,13 @@ case "$target_cpu" in
     arm*)
         hc_cv_cpu_arch=arm
         hc_cv_pkg_lib_subdir="/arm"
+
+        case "$target_os" in
+          *darwin*)
+            hc_cv_cpu_arch=aarch64
+            hc_cv_pkg_lib_subdir="/aarch64"
+            ;;
+        esac
         ;;
 
     e2k*)
@@ -206,6 +213,13 @@ case "$target_os" in
     *linux*)
         if test $target_cpu = e2k; then
             # e2k-mcst-linux-gnu
+            hc_cv_cpu_bits=64
+        fi
+        ;;
+    *darwin*)
+        if test $target_cpu = arm; then
+            # arm-apple-darwin20.6.0
+            target_cpu=aarch64
             hc_cv_cpu_bits=64
         fi
         ;;
