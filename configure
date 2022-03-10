@@ -4756,6 +4756,9 @@ case "$target_cpu" in
     *64|*64le)
         hc_cv_cpu_bits=64
         ;;
+    s390x)
+        hc_cv_cpu_bits=64
+        ;;
     *)
         hc_cv_cpu_bits=32
         ;;
