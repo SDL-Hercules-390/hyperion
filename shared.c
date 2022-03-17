@@ -731,13 +731,11 @@ int      cache;                         /* Lookup index              */
 int      lru;                           /* Available index           */
 int      len;                           /* Response length           */
 int      id;                            /* Response id               */
+int      status;                        /* Response status           */
 BYTE    *buf;                           /* Cache buffer              */
 BYTE     code;                          /* Response code             */
 U16      devnum;                        /* Response device number    */
 BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
-
-    /* Initialize the unit status */
-    *unitstat = 0;
 
     /* Return if reading the same track image */
     if (trk == dev->bufcur && dev->cache >= 0)
@@ -823,7 +821,7 @@ read_retry:
 
     /* Read the track from the remote host */
     rc = clientRecv (dev, hdr, buf, dev->ckdtrksz);
-    SHRD_GET_HDR (hdr, code, *unitstat, devnum, id, len);
+    SHRD_GET_HDR( hdr, code, status, devnum, id, len );
     if (rc < 0 || code & SHRD_ERROR)
     {
         if (rc < 0 && retries--) goto read_retry;
