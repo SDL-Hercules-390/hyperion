@@ -665,6 +665,9 @@ DLL_EXPORT void hdl_atexit( void )
 {
     HDLSHUT*  shut;
 
+    if (hdl_shutting)
+        return;
+
     if (MLVL( DEBUG ))
         // "HDL: begin shutdown sequence"
         WRMSG( HHC01500, "I" );
