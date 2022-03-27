@@ -1033,6 +1033,7 @@ static void hthread_has_exited( TID tid, const char* exit_loc )
             RemoveListEntry( &ht->ht_link );
             threadcount--;
             free( ht->ht_name );
+            free( ht->ht_ob_where );
             free_aligned( ht );
         }
     }
