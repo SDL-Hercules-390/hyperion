@@ -3303,6 +3303,8 @@ FinishShutdown:
 
     } /* end while */
 
+    free( kbbuf );
+
     sysblk.panel_init = 0;
 
     LOG_THREAD_END( PANEL_THREAD_NAME  );
