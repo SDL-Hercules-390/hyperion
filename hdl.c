@@ -235,6 +235,7 @@ static void* hdl_dlopen( const char* filename, int flag )
     }
 #endif
 
+    free( fullname );
     return NULL;
 }
 
@@ -273,6 +274,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
 
     /* Ask the host operating system to load the module */
     mod->name = strdup( modname );
+    // FIXME what if this malloc() fails?
 
     if (!(mod->handle = hdl_dlopen( name, RTLD_NOW )))
     {
@@ -280,6 +282,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
             // "HDL: unable to open module %s: %s"
             WRMSG( HHC01516, "E", name, dlerror());
 
+        free( mod->name );
         free( mod );
         return -1;
     }
@@ -292,6 +295,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
         // "HDL: no HDL_DEPENDENCY_SECTION in %s: %s"
         WRMSG( HHC01517, "E", mod->name, dlerror());
         dlclose( mod->handle );
+        free( mod->name );
         free( mod );
         return -1;
     }
@@ -304,6 +308,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
             // "HDL: module %s is duplicate of %s"
             WRMSG( HHC01520, "E", mod->name, wrkmod->name );
             dlclose( mod->handle );
+            free( mod->name );
             free( mod );
             return -1;
         }
@@ -337,6 +342,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
                 // "All CPU's must be stopped %s"
                 WRMSG( HHC02253, "E", "to load an instruction module" );
                 dlclose( mod->handle );
+                free( mod->name );
                 free( mod );
                 return -1;
             }
@@ -362,6 +368,7 @@ DLL_EXPORT int hdl_loadmod( const char* name, int flags )
                     RELEASE_INTLOCK( NULL );
                 release_lock( &hdl_lock );
                 dlclose( mod->handle );
+                free( mod->name );
                 free( mod );
                 return -1;
             }
