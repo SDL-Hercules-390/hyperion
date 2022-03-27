@@ -1855,6 +1855,7 @@ static int parse_single_devnum__INTERNAL
     *p_devnum = rc;
     *p_lcss   = lcss;
 
+    free( r );
     return 0;
 }
 
