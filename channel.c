@@ -5393,7 +5393,7 @@ breakchain:
                 {
                     if (prevccwaddr != prefetch.ccwaddr[ts])
                     {
-                        prevccwaddr = ccwaddr = prefetch.ccwaddr[ts];
+                        prevccwaddr = prefetch.ccwaddr[ts];
                         if (ts)
                         {
                             /* Display CCW */
