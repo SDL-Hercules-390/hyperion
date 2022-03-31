@@ -1120,9 +1120,12 @@ int deconfigure_cpu( int target_cpu )
         int   ourcpu;
         bool  arecpu  = are_cpu_thread( &ourcpu );
 
-        /* If we're NOT trying to deconfigure ourselves */
-        if (target_cpu != ourcpu)
+        if (!arecpu || target_cpu != ourcpu)  // NORMAL CASE
         {
+            /* We're either not a CPU thread, or if we are,
+               we're not attempting to deconfigure ourself.
+            */
+
             /* Deconfigure CPU */
             sysblk.regs[ target_cpu ]->configured = 0;
             sysblk.regs[ target_cpu ]->cpustate = CPUSTATE_STOPPING;
@@ -1143,6 +1146,7 @@ int deconfigure_cpu( int target_cpu )
             if (arecpu)
                 sysblk.regs[ ourcpu ]->intwait = false;
 
+            /* Wait for cpu_thread to completely exit */
             join_thread( sysblk.cputid[ target_cpu ], NULL );
             detach_thread( sysblk.cputid[ target_cpu ]);
 
@@ -1152,9 +1156,14 @@ int deconfigure_cpu( int target_cpu )
             /*       post-processing that is done by various callers.    */
             /*-----------------------------------------------------------*/
         }
-        else
+        else // (arecpu && target_cpu == ourcpu)    HIGHLY UNUSUAL!
         {
-            /* Else we ARE trying to deconfigure ourselves */
+            /* We ARE a cpu thread *AND* we're trying to deconfigure
+               ourself! This can only happen if B220 SERVC instruction
+               is executed to deconfigure its own CPU, or else the CPU
+               issues a Hercules command via the diagnose-8 interface
+               to deconfigure its own CPU (i.e. itself).
+            */
             sysblk.regs[ target_cpu ]->configured = 0;
             sysblk.regs[ target_cpu ]->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT( sysblk.regs[ target_cpu ]);
@@ -1202,9 +1211,6 @@ static int configure_numcpu_intlock_held( int numcpu )
         if (!IS_CPU_ONLINE( cpu ))
             configure_cpu( cpu );
     }
-
-    /* Make sure we did that right */
-    ASSERT( sysblk.cpus == numcpu && numcpu <= sysblk.maxcpu );
 
     return 0;
 }
