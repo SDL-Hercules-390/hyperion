@@ -210,8 +210,6 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
         return 0;
     }
 
-#if 0 // Enable the below on/after 2019-12-31
-
     /* Too many arguments? */
 
     if (argc > 2)
@@ -226,72 +224,6 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     /*-----------------------------------------------------*/
 
     any_started = are_any_cpus_started();
-
-#else // Below is DEPRECATED; replace with above on/after 2019-12-31
-
-    /* Too many arguments? */
-
-    if (argc > 4)
-    {
-        // "Invalid command usage. Type 'help %s' for assistance."
-        WRMSG( HHC02299, "E", argv[0] );
-        return -1;
-    }
-
-    /*-----------------------------------------------------*/
-    /*                Query Facility?                      */
-    /*-----------------------------------------------------*/
-
-    if (CMD( argv[1], QUERY, 1 ))
-    {
-        int rc = facility_query( argc, argv ) ? 0 : -1;
-        // "Note: Enabling/Disabling/Querying facilities via 'ARCHLVL' is deprecated."
-        // "      Please use the new FACILITY command instead."
-        WRMSG( HHC00887, "W" );
-        WRMSG( HHC00888, "W" );
-        return rc;
-    }
-
-    /*-----------------------------------------------------*/
-    /*    Make sure all CPUs are deconfigured or stopped   */
-    /*-----------------------------------------------------*/
-
-    any_started = are_any_cpus_started();
-
-    /*-----------------------------------------------------*/
-    /*             Enable/Disable Facility?                */
-    /*-----------------------------------------------------*/
-
-    if (0
-        || CMD( argv[1], ENABLE,  3 )
-        || CMD( argv[1], DISABLE, 3 )
-    )
-    {
-        int rc;
-
-        if (sysblk.ipled)
-        {
-            // "Available facilities cannot be changed once system is IPLed"
-            WRMSG( HHC00889, "E" );
-            return -1;
-        }
-
-        if (any_started)
-        {
-            // "All CPU's must be stopped %s"
-            WRMSG( HHC02253, "E", "to modify a facility" );
-            return HERRCPUONL;
-        }
-
-        rc = facility_enable_disable( argc, argv );
-        // "Note: Enabling/Disabling/Querying facilities via 'ARCHLVL' is deprecated."
-        // "      Please use the new FACILITY command instead."
-        WRMSG( HHC00887, "W" );
-        WRMSG( HHC00888, "W" );
-        return rc;
-    }
-
-#endif // Delete the above on/after 2019-12-31
 
     /*-----------------------------------------------------*/
     /*                Set Architecture                     */
