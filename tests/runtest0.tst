@@ -1,6 +1,5 @@
 
 msglvl +verbose +emsgloc
-msglvl +time +usecs
 
 * ----------------------------------------------------------------------------
 *Testcase runtest0: all cpus 0 seconds
