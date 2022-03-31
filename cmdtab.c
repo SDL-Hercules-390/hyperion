@@ -233,7 +233,7 @@ DLL_EXPORT int CallHercCmd ( CMDFUNC_ARGS_PROTO )
 CMDTAB* pCmdTab;
 size_t  cmdlen, matchlen;
 int     rc = HERRINVCMD;             /* Default to invalid command   */
-BYTE    isdiag;
+bool    isdiag;
 
     /* Let 'cscript' command run immediately in any context */
     if (argc >= 1 && strcasecmp( argv[0], "cscript" ) == 0)

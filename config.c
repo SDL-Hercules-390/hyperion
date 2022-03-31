@@ -1000,7 +1000,7 @@ int configure_shrdport( U16 shrdport )
 /*-------------------------------------------------------------------*/
 /* Check if we're a CPU thread or not.       (boolean function)      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT BYTE are_cpu_thread( int* cpunum )
+DLL_EXPORT bool are_cpu_thread( int* cpunum )
 {
     TID  tid  = thread_id();
     int  i;
@@ -1011,19 +1011,23 @@ DLL_EXPORT BYTE are_cpu_thread( int* cpunum )
         {
             if (cpunum)
                 *cpunum = i;
-            return TRUE;
+            return true;        // (we ARE a CPU thread)
         }
     }
-    return FALSE;
+
+    if (cpunum)
+        *cpunum = -1;
+
+    return false;               // (we are NOT a CPU thead)
 }
 
 /*-------------------------------------------------------------------*/
 /* Check if we're a CPU executing diagnose   (boolean function)      */
 /*-------------------------------------------------------------------*/
-DLL_EXPORT BYTE is_diag_instr()
+DLL_EXPORT bool is_diag_instr()
 {
     REGS* regs;
-    BYTE  arecpu;
+    bool  arecpu;
     int   ourcpu;
 
     /* Find out if we are a cpu thread */
@@ -1034,7 +1038,7 @@ DLL_EXPORT BYTE is_diag_instr()
     regs = sysblk.regs[ ourcpu ];
 
     /* Return TRUE/FALSE boolean as appropriate */
-    return regs->diagnose ? TRUE : FALSE;
+    return regs->diagnose ? true : false;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1048,7 +1052,7 @@ int configure_cpu( int target_cpu )
     {
         int   rc;
         char  thread_name[32];
-        BYTE  arecpu;
+        bool  arecpu;
         int   ourcpu;
 
         /* If no more CPUs are permitted, exit */
@@ -1090,7 +1094,7 @@ int configure_cpu( int target_cpu )
 
         /* Wait for CPU thread to initialize */
         while (!IS_CPU_ONLINE( target_cpu ))
-           wait_condition( &sysblk.cpucond, &sysblk.intlock );
+            wait_condition( &sysblk.cpucond, &sysblk.intlock );
 
         if (arecpu)
             sysblk.regs[ ourcpu ]->intwait = false;
@@ -1114,7 +1118,7 @@ int deconfigure_cpu( int target_cpu )
     if (IS_CPU_ONLINE( target_cpu ))
     {
         int   ourcpu;
-        BYTE  arecpu  = are_cpu_thread( &ourcpu );
+        bool  arecpu  = are_cpu_thread( &ourcpu );
 
         /* If we're NOT trying to deconfigure ourselves */
         if (target_cpu != ourcpu)

@@ -92,8 +92,8 @@ CONF_DLL_IMPORT size_t parse_devnums(const char *spec,DEVNUMSDESC *dd);
 CONF_DLL_IMPORT int readlogo(char *fn);
 CONF_DLL_IMPORT void clearlogo(void);
 CONF_DLL_IMPORT int parse_conkpalv(char* s, int* idle, int* intv, int* cnt );
-CONF_DLL_IMPORT BYTE is_diag_instr();
-CONF_DLL_IMPORT BYTE are_cpu_thread( int* cpunum );
+CONF_DLL_IMPORT bool is_diag_instr();
+CONF_DLL_IMPORT bool are_cpu_thread( int* cpunum );
 
 /* Functions in module panel.c */
 void expire_kept_msgs(int unconditional);
