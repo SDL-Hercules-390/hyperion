@@ -1017,7 +1017,12 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01351 "%1d:%04X CHAN: incorrect generic channel method %s"
 #define HHC01352 "%1d:%04X CHAN: generic channel initialisation failed"
 #define HHC01353 "%1d:%04X CHAN: generic channel is currently in development"
-//efine HHC01354 - HHC01399 (available)
+//efine HHC01354 - HHC01389 (available)
+#define HHC01390 "%s" // DUMP (debugging)
+#define HHC01391 "%s" // DUMP_STORAGE (debugging)
+#define HHC01392 "%s" // DISPLAY_PREFETCH (debugging)
+#define HHC01393 "%s" // DEBUG_SCSW (debugging)
+//efine HHC01394 - HHC01399 (available)
 
 // reserve 014xx for initialization and shutdown
 #define HHC01400 "CTRL_BREAK_EVENT received: %s"
