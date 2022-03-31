@@ -2226,7 +2226,7 @@ DEF_INST(perform_floating_point_operation)
   i6 = FPR2I(6);
 
     E(inst, regs);
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
    gr0 = (S64)regs->GR_G(0);
    FPC = regs->fpc;

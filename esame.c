@@ -50,7 +50,7 @@ VADR    effective_addr2;                /* Effective address         */
     S(inst, regs, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Store register contents at operand address */
@@ -73,7 +73,7 @@ U32     tmp_fpc;
     S(inst, regs, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Load FPC register from operand address */
@@ -99,7 +99,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Program check if reserved bits are non-zero */
@@ -122,7 +122,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Load R1 register bits 32-63 from FPC register */
@@ -143,7 +143,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Set FPC register BFP rounding mode bits from operand address */
@@ -170,7 +170,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     /* Program check if operand address bits 56-60 are non-zero */
@@ -200,7 +200,7 @@ DEF_INST(trap2)
     E(inst, regs);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     UNREFERENCED(inst);
 
     ARCH_DEP(trap_x) (0, regs, 0);
@@ -221,7 +221,7 @@ VADR    effective_addr2;                /* Effective address         */
     S(inst, regs, b2, effective_addr2);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     ARCH_DEP(trap_x) (1, regs, effective_addr2);
 
@@ -266,7 +266,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Determine the address of the parameter list */
     pl_addr = likely(!regs->execflag) ? PSW_IA_FROM_IP(regs, 0) :
@@ -546,7 +546,7 @@ U32     op;                             /* Operand                   */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
     FW_CHECK(effective_addr2, regs);
 
@@ -593,7 +593,7 @@ BYTE    dec[16];                        /* Packed decimal operand    */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Fetch 16-byte packed decimal operand */
     ARCH_DEP(vfetchc) ( dec, 16-1, effective_addr2, b2, regs );
@@ -635,7 +635,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load signed value of register */
     bin = (S64)(regs->GR_G(r1));
@@ -777,7 +777,7 @@ U64     n;
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     n = ((U64)regs->GR_L(r1) << 32) | (U32)regs->GR_L(r1 + 1);
@@ -812,7 +812,7 @@ U64     d, r, q;
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Load second operand from operand address */
@@ -854,7 +854,7 @@ U32     d;
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     n = ((U64)regs->GR_L(r1) << 32) | regs->GR_L(r1 + 1);
@@ -884,7 +884,7 @@ U64     r, q, d;
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     d = regs->GR_G(r2);
@@ -1010,7 +1010,7 @@ bool    local = false;                  /* true == m4 bit 3 is on    */
     )
         local = true;
 
-    TRAN_MISC_INSTR_CHECK( regs );
+    TXF_MISC_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
     PRIV_CHECK( regs );
 
@@ -1144,7 +1144,7 @@ int     acctype = ACCTYPE_LPTEA;        /* Storage access type       */
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT(regs);
     PRIV_CHECK(regs);
 
@@ -1392,7 +1392,7 @@ U64     n;                              /* 64-bit operand values     */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Load second operand from operand address */
@@ -1425,7 +1425,7 @@ U32     n;                              /* 64-bit operand values     */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Load second operand from operand address */
@@ -1454,7 +1454,7 @@ U64     n;
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     if(regs->GR_G(r2) == 0
@@ -1483,7 +1483,7 @@ U32     n;
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     if(regs->GR_L(r2) == 0
@@ -1557,7 +1557,7 @@ ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
     RXY( inst, regs, r1, x2, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK( r1, regs );
 
     QW_CHECK( effective_addr2, regs );
@@ -1597,7 +1597,7 @@ ALIGN_16 U64 old[2] = { 0, 0 } ;        /* ALIGNED Quadword workarea */
     RXY( inst, regs, r1, x2, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK( r1, regs );
 
     QW_CHECK( effective_addr2, regs );
@@ -1638,7 +1638,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     RRE(inst, regs, r1, r2);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT(regs);
 
     /* Find the virtual address of the entry descriptor
@@ -1665,7 +1665,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
 
 #if defined( _FEATURE_ZSIE )
@@ -1707,7 +1707,7 @@ int     r1, r2;                         /* Value of R field          */
     RRE(inst, regs, r1, r2);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     regs->GR_LHH(r1) = regs->CR_LHH(8);
@@ -2061,7 +2061,7 @@ S32     ri2;                            /* 32-bit relative operand   */
 
     RIL_B( inst, regs, m1, xop, ri2 );
 
-    CONTRAN_RELATIVE_BRANCH_CHECK_IP( regs );
+    TXFC_RELATIVE_BRANCH_CHECK_IP( regs );
 
     /* Branch if R1 mask bit is set */
     if (m1 & (0x08 >> regs->psw.cc))
@@ -2088,7 +2088,7 @@ S32     ri2;                            /* 32-bit relative operand   */
 
     RIL_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
     if (regs->psw.amode64)
@@ -2168,7 +2168,7 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_2, regs ))
     {
         if (m3 == 0 && (r1 == 6 || r1 == 7))
-            TRAN_INSTR_CHECK( regs );
+            TXF_INSTR_CHECK( regs );
     }
 #endif
 
@@ -2224,7 +2224,7 @@ U64     gr0, gr1;                       /* Result register workareas */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
 
 #if defined(_FEATURE_SIE)
@@ -2352,7 +2352,7 @@ S64     i,j;                            /* Integer workareas         */
 
     RIE_B(inst, regs, r1, r3, i2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2388,7 +2388,7 @@ S64     i,j;                            /* Integer workareas         */
 
     RIE_B(inst, regs, r1, r3, i2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2425,7 +2425,7 @@ S64     i, j;                           /* Integer work areas        */
 
     RSY_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2462,7 +2462,7 @@ S64     i, j;                           /* Integer work areas        */
 
     RSY_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = regs->GR_G(r3);
@@ -2502,7 +2502,7 @@ U64     new;                            /* new value                 */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     DW_CHECK(effective_addr2, regs);
 
     /* Perform serialization before and after operation */
@@ -2562,7 +2562,7 @@ U64     newhi, newlo;                   /* new value                 */
     RSY( inst, regs, r1, r3, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK( r1, r3, regs );
     QW_CHECK( effective_addr2, regs );
 
@@ -2624,7 +2624,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RXY_B(inst, regs, r1, x2, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
@@ -2650,7 +2650,7 @@ VADR    newia;                          /* New instruction address   */
 
     RRE_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR_G(r2);
@@ -3348,7 +3348,7 @@ S16     ri2;                            /* 16-bit relative operand   */
 
     RI_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if (--(regs->GR_G( r1 )) )
@@ -3377,7 +3377,7 @@ VADR    branch_address;                 /* Branch address            */
     RXY_B( inst, regs, m1, x2, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch if m1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
@@ -4428,7 +4428,7 @@ U32     rwork1[16], rwork2[16];         /* Intermediate work areas   */
     SS(inst, regs, r1, r3, b2, effective_addr2, b4, effective_addr4);
     PER_ZEROADDR_XCHECK2( regs, b2, b4 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     n = ((r3 - r1) & 0xF) + 1;
 
@@ -4644,7 +4644,7 @@ U64    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -4697,7 +4697,7 @@ U16     updated = 0;                    /* Updated control regs      */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -4955,7 +4955,7 @@ RADR    n;                              /* Unsigned work             */
     PER_ZEROADDR_CHECK( regs, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     /* R2 register contains operand real storage address */
@@ -4984,7 +4984,7 @@ RADR    n;                              /* Unsigned work             */
     PER_ZEROADDR_CHECK( regs, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     /* R2 register contains operand real storage address */
@@ -5020,7 +5020,7 @@ DEF_INST(test_addressing_mode)
 {
     E(inst, regs);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     UNREFERENCED(inst);
 
     regs->psw.cc =
@@ -5045,8 +5045,8 @@ VADR    ia = PSW_IA_FROM_IP( regs, 0 ); /* Unupdated instruction addr*/
 
     E( inst, regs );
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_SET_ADDRESSING_MODE_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
+    TXF_SET_ADDRESSING_MODE_CHECK( regs );
     UNREFERENCED( inst );
 
 #if !defined( FEATURE_370_EXTENSION )
@@ -5082,8 +5082,8 @@ VADR    ia = PSW_IA_FROM_IP( regs, 0 ); /* Unupdated instruction addr*/
 
     E( inst, regs );
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_SET_ADDRESSING_MODE_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
+    TXF_SET_ADDRESSING_MODE_CHECK( regs );
     UNREFERENCED( inst );
 
 #if !defined( FEATURE_370_EXTENSION )
@@ -5114,8 +5114,8 @@ DEF_INST(set_addressing_mode_64)
 {
     E(inst, regs);
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_SET_ADDRESSING_MODE_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
+    TXF_SET_ADDRESSING_MODE_CHECK( regs );
     UNREFERENCED(inst);
 
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -5191,7 +5191,7 @@ VADR    effective_addr1,
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
     DW_CHECK(effective_addr1, regs);
 
@@ -5348,7 +5348,7 @@ int     rc;
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
     DW_CHECK(effective_addr2, regs);
 
@@ -5396,7 +5396,7 @@ int     cc;                             /* Condition code            */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT(regs);
     PRIV_CHECK(regs);
 
@@ -5445,7 +5445,7 @@ DEF_INST( perform_timing_facility_function )
     PER_ZEROADDR_CHECK( regs, 1 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* z/VM should always simulate this instruction when in SIE mode */
     SIE_INTERCEPT( regs );
@@ -5571,7 +5571,7 @@ int     fc, rc = 0;                     /* Function / Reason Code    */
     RRE(inst, regs, r1, r2);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PTT_INF("PTF",regs->GR_G(r1),0,regs->psw.IA_L);
     PRIV_CHECK(regs);
 
@@ -5684,7 +5684,7 @@ BYTE    oldkey;                         /* Original Storage key      */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Load 4K block address from r2 register */
@@ -5902,7 +5902,7 @@ bool    multi_block = false;            /* Work (simplifies things)  */
     PER_ZEROADDR_CHECK( regs, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Check for specification exception */
@@ -6041,7 +6041,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     // This instruction should *ALWAYS* be simulated under SIE
@@ -6076,7 +6076,7 @@ int     cc;                             /* Condition code            */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     // Let VM simulate this instruction if SIE interception is either
     // explicitly requested -OR- implicitly required to do so (which
@@ -6333,7 +6333,7 @@ int     i, j;                           /* Array subscripts          */
     SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if operand length (len+1) exceeds 32 bytes */
     if (len > 31)
@@ -6376,7 +6376,7 @@ int     i, j;                           /* Array subscripts          */
     SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if byte count (len+1) exceeds 64 or is odd */
     if (len > 63 || (len & 1) == 0)
@@ -6421,7 +6421,7 @@ int     cc;                             /* Condition code            */
     SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if operand length (len+1) exceeds 32 bytes */
     if (len > 31)
@@ -6477,7 +6477,7 @@ int     cc;                             /* Condition code            */
     SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if byte count (len+1) exceeds 64 or is odd */
     if (len > 63 || (len & 1) == 0)
@@ -6537,7 +6537,7 @@ bool    tccc;                   /* Test-Character-Comparison Control */
     PER_ZEROADDR_CHECK( regs, r1 );
     PER_ZEROADDR_LCHECK( regs, r2, r1+1 );  // (yes r1+1 is correct!)
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
@@ -6632,7 +6632,7 @@ bool    tccc;                   /* Test-Character-Comparison Control */
     PER_ZEROADDR_CHECK( regs, r1 );
     PER_ZEROADDR_LCHECK( regs, r2, r1+1 );  // (yes r1+1 is correct!)
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
@@ -6727,7 +6727,7 @@ bool    tccc;                   /* Test-Character-Comparison Control */
     PER_ZEROADDR_CHECK( regs, r1 );
     PER_ZEROADDR_LCHECK( regs, r2, r1+1 );  // (yes r1+1 is correct!)
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
@@ -6827,7 +6827,7 @@ bool    tccc;                   /* Test-Character-Comparison Control */
     PER_ZEROADDR_CHECK( regs, r1 );
     PER_ZEROADDR_LCHECK( regs, r2, r1+1 );  // (yes r1+1 is correct!)
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
 #ifdef FEATURE_024_ETF2_ENHANCEMENT_FACILITY
@@ -6929,7 +6929,7 @@ int     cpu_length;                     /* cpu determined length     */
     PER_ZEROADDR_XCHECK( regs, b2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r3, r3+1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r3, regs);
 
     /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
@@ -7016,7 +7016,7 @@ int     cpu_length;                     /* cpu determined length     */
     PER_ZEROADDR_XCHECK( regs, b2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r3, r3+1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r3, regs);
 
     /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
@@ -7443,7 +7443,7 @@ U32     old;                            /* old value                 */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     FW_CHECK(effective_addr2, regs);
 
     /* Perform serialization before and after operation */
@@ -7501,7 +7501,7 @@ U64     old, new;                       /* old, new values           */
     RSY(inst, regs, r1, r3, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r3, regs);
     DW_CHECK(effective_addr2, regs);
 
@@ -7565,7 +7565,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
@@ -7611,7 +7611,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
@@ -7803,7 +7803,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     RSY( inst, regs, r1, r3, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_ACCESS_INSTR_CHECK( regs );
+    TXF_ACCESS_INSTR_CHECK( regs );
     FW_CHECK( effective_addr2, regs );
 
     /* Calculate number of regs to load */
@@ -7974,7 +7974,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, x2, b2, effective_addr2);
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
 
@@ -9140,7 +9140,7 @@ U64     effective_addr2;                /* Effective address         */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     /* At least one of these is installed */

@@ -987,20 +987,20 @@ do { \
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
-  #undef  ABORT_TRANS                               /* (nothing) */
-  #define ABORT_TRANS( _regs, _retry, _tac )        /* (nothing) */
+  #undef  ABORT_TRANS                                   /* (nothing) */
+  #define ABORT_TRANS( _regs, _retry, _tac )            /* (nothing) */
 
-  #undef  TXF_INSTRADDR_CONSTRAINT                  /* (nothing) */
-  #define TXF_INSTRADDR_CONSTRAINT( _regs )         /* (nothing) */
+  #undef  TXF_INSTRADDR_CONSTRAINT                      /* (nothing) */
+  #define TXF_INSTRADDR_CONSTRAINT( _regs )             /* (nothing) */
 
-  #undef  TXF_INSTRCOUNT_CONSTRAINT                 /* (nothing) */
-  #define TXF_INSTRCOUNT_CONSTRAINT( _ip, _regs )   /* (nothing) */
+  #undef  TXF_INSTRCOUNT_CONSTRAINT                     /* (nothing) */
+  #define TXF_INSTRCOUNT_CONSTRAINT( _ip, _regs )       /* (nothing) */
 
-  #undef  TXF_RAND_ABORT_CONSTRAINT                 /* (nothing) */
-  #define TXF_RAND_ABORT_CONSTRAINT( _regs )        /* (nothing) */
+  #undef  TXF_RAND_ABORT_CONSTRAINT                     /* (nothing) */
+  #define TXF_RAND_ABORT_CONSTRAINT( _regs )            /* (nothing) */
 
-  #undef  CHECK_TXF_CONSTRAINTS                     /* (nothing) */
-  #define CHECK_TXF_CONSTRAINTS( _ip, _regs )       /* (nothing) */
+  #undef  CHECK_TXF_CONSTRAINTS                         /* (nothing) */
+  #define CHECK_TXF_CONSTRAINTS( _ip, _regs )           /* (nothing) */
 
 #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
@@ -1620,48 +1620,50 @@ do {                                                                  \
 #endif
 
 /*-------------------------------------------------------------------*/
-/*        Transactional-Execution Facility support macros            */
+/*      Transactional-Execution Facility (TXF) support macros        */
 /*-------------------------------------------------------------------*/
 
-#undef CONTRAN_INSTR_CHECK
-#undef CONTRAN_INSTR_CHECK_IP
-#undef CONTRAN_BRANCH_CHECK_IP
-#undef CONTRAN_RELATIVE_BRANCH_CHECK_IP
-#undef TRAN_INSTR_CHECK
-#undef TRAN_FLOAT_INSTR_CHECK
-#undef TRAN_ACCESS_INSTR_CHECK
-#undef TRAN_NONRELATIVE_BRANCH_CHECK_IP
-#undef TRAN_BRANCH_SET_MODE_CHECK_IP
-#undef TRAN_SET_ADDRESSING_MODE_CHECK
-#undef TRAN_MISC_INSTR_CHECK
-#undef TRAN_EXECUTE_INSTR_CHECK
-#undef ALLOC_TXFMAP
-#undef FREE_TXFMAP
+#undef TXFC_INSTR_CHECK                     /* 'TXFC' == Constrained */
+#undef TXFC_INSTR_CHECK_IP                  /* 'TXFC' == Constrained */
+#undef TXFC_BRANCH_CHECK_IP                 /* 'TXFC' == Constrained */
+#undef TXFC_RELATIVE_BRANCH_CHECK_IP        /* 'TXFC' == Constrained */
+
+#undef TXF_INSTR_CHECK
+#undef TXF_FLOAT_INSTR_CHECK
+#undef TXF_ACCESS_INSTR_CHECK
+#undef TXF_NONRELATIVE_BRANCH_CHECK_IP
+#undef TXF_BRANCH_SET_MODE_CHECK_IP
+#undef TXF_SET_ADDRESSING_MODE_CHECK
+#undef TXF_MISC_INSTR_CHECK
+#undef TXF_EXECUTE_INSTR_CHECK
+#undef TXF_ALLOCMAP
+#undef TXF_FREEMAP
 #undef TXF_MADDRL
 
 #if !defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
 
-  #define CONTRAN_INSTR_CHECK( _regs )
-  #define CONTRAN_INSTR_CHECK_IP( _regs )
-  #define CONTRAN_BRANCH_CHECK_IP( _regs, _m3, _i4 )
-  #define CONTRAN_RELATIVE_BRANCH_CHECK_IP( _regs )
-  #define TRAN_INSTR_CHECK( _regs )
-  #define TRAN_FLOAT_INSTR_CHECK( _regs )
-  #define TRAN_ACCESS_INSTR_CHECK( _regs )
-  #define TRAN_MISC_INSTR_CHECK( _regs )
-  #define TRAN_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )
-  #define TRAN_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )
-  #define TRAN_SET_ADDRESSING_MODE_CHECK( _regs )
-  #define TRAN_EXECUTE_INSTR_CHECK( _regs )
-  #define ALLOC_TXFMAP( _regs )
-  #define FREE_TXFMAP( _regs )
+  #define TXFC_INSTR_CHECK( _regs )
+  #define TXFC_INSTR_CHECK_IP( _regs )
+  #define TXFC_BRANCH_CHECK_IP( _regs, _m3, _i4 )
+  #define TXFC_RELATIVE_BRANCH_CHECK_IP( _regs )
+
+  #define TXF_INSTR_CHECK( _regs )
+  #define TXF_FLOAT_INSTR_CHECK( _regs )
+  #define TXF_ACCESS_INSTR_CHECK( _regs )
+  #define TXF_MISC_INSTR_CHECK( _regs )
+  #define TXF_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )
+  #define TXF_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )
+  #define TXF_SET_ADDRESSING_MODE_CHECK( _regs )
+  #define TXF_EXECUTE_INSTR_CHECK( _regs )
+  #define TXF_ALLOCMAP( _regs )
+  #define TXF_FREEMAP( _regs )
 
   #define TXF_MADDRL( _vaddr, _len, _arn, _regs, _acctype, _maddr ) \
     /* Return the very same address as what was passed */ (_maddr)
 
 #else /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 
-  #define CONTRAN_INSTR_CHECK( _regs )                                                  \
+  #define TXFC_INSTR_CHECK( _regs )                                                     \
     /* Restricted instruction in CONSTRAINED transaction mode */                        \
     do {                                                                                \
       if ((_regs)->txf_contran)                                                         \
@@ -1671,7 +1673,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define CONTRAN_INSTR_CHECK_IP( _regs )                                               \
+  #define TXFC_INSTR_CHECK_IP( _regs )                                                  \
     /* Restricted instruction in CONSTRAINED transaction mode */                        \
     do {                                                                                \
       if ((_regs)->txf_contran)                                                         \
@@ -1685,7 +1687,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define CONTRAN_BRANCH_CHECK_IP( _regs, _m3, _i4 )                                    \
+  #define TXFC_BRANCH_CHECK_IP( _regs, _m3, _i4 )                                       \
     /* Branches restricted in CONSTRAINED mode if mask zero or offset negative */       \
     do {                                                                                \
       if ((_regs)->txf_contran &&                                                       \
@@ -1703,7 +1705,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define CONTRAN_RELATIVE_BRANCH_CHECK_IP( _regs )                                     \
+  #define TXFC_RELATIVE_BRANCH_CHECK_IP( _regs )                                        \
     /* Relative branches restricted in CONSTRAINED mode */                              \
     /* if the mask is zero or the offset is negative    */                              \
     do {                                                                                \
@@ -1722,7 +1724,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_INSTR_CHECK( _regs )                                                     \
+  #define TXF_INSTR_CHECK( _regs )                                                      \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
       if ((_regs)->txf_tnd)                                                             \
@@ -1732,7 +1734,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_FLOAT_INSTR_CHECK( _regs )                                               \
+  #define TXF_FLOAT_INSTR_CHECK( _regs )                                                \
     /* Restricted instruction if CONSTRAINED mode or float bit zero */                  \
     do {                                                                                \
       if (1                                                                             \
@@ -1748,7 +1750,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_ACCESS_INSTR_CHECK( _regs )                                              \
+  #define TXF_ACCESS_INSTR_CHECK( _regs )                                               \
     /* Restricted instruction if access control bit zero */                             \
     do {                                                                                \
       if (1                                                                             \
@@ -1761,7 +1763,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )                                 \
+  #define TXF_NONRELATIVE_BRANCH_CHECK_IP( _regs, _r )                                  \
     /* BALR/BASR/BASSM are restricted when the branch     */                            \
     /* register is non-zero and BRANCH tracing is enabled */                            \
     do {                                                                                \
@@ -1779,7 +1781,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )                                   \
+  #define TXF_BRANCH_SET_MODE_CHECK_IP( _regs, _r2 )                                    \
     /* BASSM/BSM are restricted if the r2 field */                                      \
     /* is non-zero and MODE tracing is enabled. */                                      \
     do {                                                                                \
@@ -1797,7 +1799,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_SET_ADDRESSING_MODE_CHECK( _regs )                                       \
+  #define TXF_SET_ADDRESSING_MODE_CHECK( _regs )                                        \
     /* SAM24/31/64 is restricted if mode tracing is enabled. */                         \
     do {                                                                                \
       if (1                                                                             \
@@ -1810,7 +1812,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_MISC_INSTR_CHECK( _regs )                                                \
+  #define TXF_MISC_INSTR_CHECK( _regs )                                                 \
     /* Restricted instruction in any transaction mode */                                \
     do {                                                                                \
       if ((_regs)->txf_tnd)                                                             \
@@ -1820,7 +1822,7 @@ do {                                                                  \
       }                                                                                 \
     } while (0)
 
-  #define TRAN_EXECUTE_INSTR_CHECK( _regs )                                             \
+  #define TXF_EXECUTE_INSTR_CHECK( _regs )                                              \
     /* Most all TXF instructions cannot be executed */                                  \
     do {                                                                                \
       if ((_regs)->execflag)                                                            \
@@ -1832,8 +1834,8 @@ do {                                                                  \
   #define TXF_MADDRL(   _vaddr,   _len,   _arn,   _regs,   _acctype,   _maddr  )        \
           txf_maddr_l( (_vaddr), (_len), (_arn), (_regs), (_acctype), (_maddr) )
 
-  #define ALLOC_TXFMAP( _regs )     alloc_txfmap( _regs )
-  #define FREE_TXFMAP( _regs )      free_txfmap( _regs )
+  #define TXF_ALLOCMAP( _regs )     alloc_txfmap( _regs )
+  #define TXF_FREEMAP( _regs )      free_txfmap( _regs )
 
 #endif /* defined( FEATURE_073_TRANSACT_EXEC_FACILITY ) */
 

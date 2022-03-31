@@ -1863,7 +1863,7 @@ int     aswitch;
     {
         if (oldregs != regs)
         {
-            FREE_TXFMAP( oldregs );
+            TXF_FREEMAP( oldregs );
             memcpy (regs, oldregs, sizeof(REGS));
             free_aligned(oldregs);
             regs->blkloc = CSWAP64((U64)((uintptr_t)regs));
@@ -1934,7 +1934,7 @@ int     aswitch;
     init_cpu_facilities( regs );
 
     /* Initialize Transactional-Execution Facility */
-    ALLOC_TXFMAP( regs );
+    TXF_ALLOCMAP( regs );
 
     /* Get pointer to primary opcode table */
     current_opcode_table = regs->ARCH_DEP( runtime_opcode_xxxx );
@@ -1993,7 +1993,8 @@ int     aswitch;
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( 073_TRANSACT_EXEC, regs ))
-        goto txf_facility_loop;
+        if (regs->CR(0) & CR0_TXC)
+            goto txf_facility_loop;
 #endif
 
 fastest_no_txf_loop:
@@ -2493,7 +2494,7 @@ static void *cpu_uninit (int cpu, REGS *regs)
     }
 
     /* Free the REGS structure */
-    FREE_TXFMAP( regs );
+    TXF_FREEMAP( regs );
     free_aligned( regs );
 
     return NULL;

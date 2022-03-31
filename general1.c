@@ -308,7 +308,7 @@ int     cc = 0;                         /* Condition code            */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ITIMER_SYNC( effective_addr2, len, regs );
     ITIMER_SYNC( effective_addr1, len, regs );
@@ -464,8 +464,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
-    TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
+    TXFC_INSTR_CHECK_IP( regs );
+    TXF_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
 
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
@@ -520,7 +520,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, x2, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -553,8 +553,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
-    TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
+    TXFC_INSTR_CHECK_IP( regs );
+    TXF_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
 
 #if defined( FEATURE_TRACING )
     /* Add a branch trace entry to the trace table */
@@ -607,7 +607,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, x2, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Save the link information in the R1 register */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -642,9 +642,9 @@ int     xmode;                          /* 64 or 31 mode of target   */
 
     RR_B( inst, regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
-    TRAN_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
-    TRAN_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
+    TXFC_INSTR_CHECK_IP( regs );
+    TXF_NONRELATIVE_BRANCH_CHECK_IP( regs, r2 );
+    TXF_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR( r2 );
@@ -728,8 +728,8 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B( inst, regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
-    TRAN_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
+    TXFC_INSTR_CHECK_IP( regs );
+    TXF_BRANCH_SET_MODE_CHECK_IP( regs, r2 );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR( r2 );
@@ -819,7 +819,7 @@ DEF_INST( branch_on_condition_register )
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 2;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if ((inst[1] & 0x0F) != 0 && (inst[1] & (0x80 >> regs->psw.cc)))
@@ -887,7 +887,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
@@ -913,7 +913,7 @@ DEF_INST( nop4 )
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Bump ip to next sequential instruction */
     regs->ip += 4;
@@ -931,7 +931,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 3)
@@ -958,7 +958,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 2)
@@ -985,7 +985,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc > 1)
@@ -1012,7 +1012,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc == 1)
@@ -1039,7 +1039,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc & 0x01)
@@ -1066,7 +1066,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc)
@@ -1093,7 +1093,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (!regs->psw.cc)
@@ -1120,7 +1120,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (!(regs->psw.cc & 0x01))
@@ -1147,7 +1147,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 1)
@@ -1174,7 +1174,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc < 2)
@@ -1201,7 +1201,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 2)
@@ -1228,7 +1228,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if (regs->psw.cc != 3)
@@ -1255,7 +1255,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     RXX_BC( inst, regs, b2, effective_addr2 );
     SUCCESSFUL_BRANCH( regs, effective_addr2 );
@@ -1275,7 +1275,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
@@ -1661,7 +1661,7 @@ S16  ri2;                               /* 16-bit relative operand   */
     /* Ensure ilc is always accurate */
     regs->psw.ilc = 4;
 
-    CONTRAN_RELATIVE_BRANCH_CHECK_IP( regs );
+    TXFC_RELATIVE_BRANCH_CHECK_IP( regs );
 
     /* Branch if R1 mask bit is set */
     if (inst[1] & (0x80 >> regs->psw.cc))
@@ -1689,7 +1689,7 @@ VADR    newia;                          /* New instruction address   */
 
     RR_B( inst, regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -1722,7 +1722,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX_B(inst, regs, r1, x2, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
@@ -1751,7 +1751,7 @@ S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1789,7 +1789,7 @@ S32     i, j;                           /* Integer work areas        */
 
     RS_B(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = regs->GR_L(r3);
@@ -1827,7 +1827,7 @@ S16     ri2;                            /* 16-bit relative operand   */
 
     RI_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Save the link information in the R1 operand */
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
@@ -1858,7 +1858,7 @@ S16     ri2;                            /* 16-bit relative operand   */
 
     RI_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if (--(regs->GR_L( r1 )))
@@ -1885,7 +1885,7 @@ S32     i,j;                            /* Integer workareas         */
 
     RI_B( inst, regs, r1, r3, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L( r3 );
@@ -1921,7 +1921,7 @@ S32     i,j;                            /* Integer workareas         */
 
     RI_B( inst, regs, r1, r3, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L( r3 );
@@ -1964,7 +1964,7 @@ BYTE    *main2;                         /* Operand-2 mainstor addr   */
     RRE(inst, regs, r1, r2);
     PER_ZEROADDR_LCHECK( regs, r2, r2+1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r2, regs);
 
     /* Obtain the second operand address and length from R2, R2+1 */
@@ -2154,7 +2154,7 @@ U16     rmask = 0x0000;                 /* (modified registers mask) */
     S(inst, regs, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* All operands must be halfword aligned */
     if (0
@@ -2323,7 +2323,7 @@ U32     new;                            /* new value                 */
     RS(inst, regs, r1, r3, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     FW_CHECK(effective_addr2, regs);
 
     ITIMER_SYNC(effective_addr2,4-1,regs);
@@ -2389,7 +2389,7 @@ U64     old, new;                       /* old, new values           */
     RS(inst, regs, r1, r3, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r3, regs);
     DW_CHECK(effective_addr2, regs);
 
@@ -2476,7 +2476,7 @@ BYTE    sc;                             /* Store characteristic      */
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Extract function code from register 0 bits 56-63 */
     fc = regs->GR_LHLCL(0);
@@ -3217,7 +3217,7 @@ int      rc;                            /* mem_cmp() return code     */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     rc = ARCH_DEP( mem_cmp )( regs, effective_addr1, b1, effective_addr2, b2, len+1, NULL );
     regs->psw.cc = (rc == 0 ? 0 : (rc < 0 ? 1 : 2));
@@ -3238,7 +3238,7 @@ BYTE    *m1, *m2;                       /* Mainstor addresses        */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ITIMER_SYNC( effective_addr1, len, regs );
     ITIMER_SYNC( effective_addr2, len, regs );
@@ -3435,7 +3435,7 @@ DEF_INST(compare_logical_character_long)
 
     ODD2_CHECK( r1, r2, regs );
     PER_ZEROADDR_L24CHECK2( regs, r1, r1+1, r2, r2+1 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     // Determine the destination and source addresses
     addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
@@ -3570,7 +3570,7 @@ BYTE    pad;                            /* Padding byte              */
     RS( inst, regs, r1, r3, b2, effective_addr2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r3, r3+1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK( r1, r3, regs );
 
     /* Load padding byte from bits 24-31 of effective address */
@@ -3654,7 +3654,7 @@ BYTE    termchar;                       /* Terminating character     */
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_CHECK2( regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -3866,7 +3866,7 @@ BYTE    equlen = 0;                     /* Equal byte counter        */
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK( r1, r2, regs );
 
     /* Load substring length from bits 24-31 of register 0 */
@@ -4062,7 +4062,7 @@ bool    wfc;                            /* Well-Formedness-Checking  */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
     ODD2_CHECK(r1, r2, regs);
 
@@ -4220,7 +4220,7 @@ bool    wfc;                            /* WellFormednessChecking    */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
     ODD2_CHECK(r1, r2, regs);
 
@@ -4474,7 +4474,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
     RX(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
@@ -4521,7 +4521,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
     RX(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
@@ -4545,7 +4545,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_ACCESS_INSTR_CHECK( regs );
+    TXF_ACCESS_INSTR_CHECK( regs );
 
     /* Copy R2 access register to R1 access register */
     regs->AR(r1) = regs->AR(r2);
@@ -4565,7 +4565,7 @@ int     divide_overflow;                /* 1=divide overflow         */
 
     RR(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Divide r1::r1+1 by r2, remainder in r1, quotient in r1+1 */
@@ -4599,7 +4599,7 @@ int     divide_overflow;                /* 1=divide overflow         */
     RX(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Load second operand from operand address */
@@ -4711,7 +4711,7 @@ int     cc = 0;                         /* Condition code            */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ITIMER_SYNC( effective_addr1, len, regs );
     ITIMER_SYNC( effective_addr2, len, regs );
@@ -4882,7 +4882,7 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     RX(inst, regs, r1, x2, b2, regs->ET);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(regs->ET, regs);
 
 #if defined( _FEATURE_SIE )
@@ -4944,7 +4944,7 @@ DEF_INST(execute_relative_long)
 
     RIL_A( inst, regs, r1, regs->ET );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
     /* Ensure that the instruction field is zero, such that
@@ -5335,7 +5335,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
     RS( inst, regs, r1, r3, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_ACCESS_INSTR_CHECK( regs );
+    TXF_ACCESS_INSTR_CHECK( regs );
     FW_CHECK(effective_addr2, regs);
 
     /* Calculate number of regs to fetch */
@@ -5383,7 +5383,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     RX(inst, regs, r1, x2, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operand address into register */
     SET_GR_A(r1, regs,effective_addr2);
@@ -5652,7 +5652,7 @@ CREG    n;                              /* Work                      */
 
     /* The Monitor Call instruction is restricted in transaction
        execution mode when a monitor-event conditon recognized */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_036_ENH_MONITOR_FACILITY )
     /* Perform Monitor Event Counting Operation if enabled */
@@ -5788,7 +5788,7 @@ VADR    effective_addr1,
 
     SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Move characters using current addressing mode and key */
     ARCH_DEP(move_chars) (effective_addr1, b1, regs->psw.pkey,
@@ -5810,7 +5810,7 @@ VADR    effective_addr1,
     SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operand length-1 from general register 0 bits 56-63 */
     len = regs->GR_LHLCL(0);
@@ -5839,7 +5839,7 @@ BYTE    len;                            /* Amount to move minus 1    */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Copy operand-2 source string to work area */
     op2end = (effective_addr2 - len) & ADDRESS_MAXWRAP( regs );
@@ -5882,7 +5882,7 @@ int     orglen1;                        /* Original dest length      */
 
     ODD2_CHECK( r1, r2, regs );
     PER_ZEROADDR_L24CHECK2( regs, r1, r1+1, r2, r2+1 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR( r1 ) & ADDRESS_MAXWRAP( regs );
@@ -6068,7 +6068,7 @@ size_t  dstlen,srclen;                  /* Page wide src/dst lengths */
     RS(inst, regs, r1, r3, b2, effective_addr2);
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r3, r3+1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD2_CHECK(r1, r3, regs);
 
     /* Load padding byte from bits 24-31 of effective address */
@@ -6173,7 +6173,7 @@ int     i;                              /* Loop counter              */
     SS_L( inst, regs, len, r1, effective_addr1, r2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ITIMER_SYNC( effective_addr2, len, regs );
 
     /* Translate addresses of leftmost operand bytes */
@@ -6309,7 +6309,7 @@ BYTE    termchar;                       /* Terminating character     */
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_CHECK2( regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -6390,7 +6390,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -6466,7 +6466,7 @@ int     i;                              /* Loop counter              */
     SS_L( inst, regs, len, r1, effective_addr1, r2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, r1, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ITIMER_SYNC( effective_addr2, len, regs );
 
     /* Translate addresses of leftmost operand bytes */

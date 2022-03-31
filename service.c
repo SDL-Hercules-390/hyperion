@@ -1150,7 +1150,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     RRE(inst, regs, r1, r2);
 
     PER_ZEROADDR_CHECK( regs, r2 );
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);

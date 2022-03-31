@@ -209,7 +209,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Special operation exception if ASF is not enabled */
     if (!ASF_ENABLED( regs ))
@@ -494,7 +494,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off or ASF not enabled */
@@ -766,7 +766,7 @@ VADR    n = 0;                          /* Work area                 */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
 #if defined( _FEATURE_SIE )
@@ -866,7 +866,7 @@ U64     new64;                          /* New value (CSPG)          */
 
     RRE( inst, regs, r1, r2 );
 
-    TRAN_MISC_INSTR_CHECK( regs );
+    TXF_MISC_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     ODD_CHECK( r1, regs );
     PER_ZEROADDR_CHECK( regs, r2 );
@@ -1003,7 +1003,7 @@ VADR    effective_addr2;                /* Effective address         */
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     PTT_INF( "DIAG", regs->GR_G( r1 ), regs->GR_G( r3 ),
         (U32)(effective_addr2 & 0xffffff) );
@@ -1068,7 +1068,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1103,7 +1103,7 @@ int r1, r2;                             /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1138,7 +1138,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1173,7 +1173,7 @@ int r1, r2;                             /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Special operation exception if DAT is off */
@@ -1210,7 +1210,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Find the virtual address of the entry descriptor
@@ -1257,7 +1257,7 @@ int     max_esta_code;
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     if (REAL_MODE( &regs->psw )
@@ -1307,7 +1307,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Special operation exception if DAT is off */
     if (REAL_MODE( &regs->psw )
@@ -1352,7 +1352,7 @@ VADR    effective_addr2;                /* Effective address         */
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Privileged operation exception if in problem state
        and the extraction-authority control bit is zero */
@@ -1380,7 +1380,7 @@ RADR    pageaddr;                       /* Working abs page address  */
 
     RR(inst, regs, r1, r2);
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Special Operation Exception if Storkey exception control zero */
@@ -1529,7 +1529,7 @@ RADR    pageaddr;                       /* Working abs page address  */
 
     RRE( inst, regs, r1, r2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Load 4K block address from r2 register */
@@ -1664,7 +1664,7 @@ bool    need_realkey = true;            /* (get from real page)      */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Special operation exception if DAT is off */
     if ((regs->psw.sysmask & PSW_DATMODE) == 0)
@@ -1808,7 +1808,7 @@ bool    local = false;                  /* true == m4 bit 3 is on    */
     RRE( inst, regs, r1, r2 );
 #endif
 
-    TRAN_MISC_INSTR_CHECK( regs );
+    TXF_MISC_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     pto = regs->GR(r1);
@@ -1919,7 +1919,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     PER_ZEROADDR_XCHECK( regs, b1 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
     PRIV_CHECK( regs );
 
@@ -2176,7 +2176,7 @@ U16     updated = 0;                    /* Updated control regs      */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dolctl( regs, r1, r3, b2, effective_addr2 ) == 0)
@@ -2282,7 +2282,7 @@ int     amode64;
     }
 #endif
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -2382,7 +2382,7 @@ VADR    effective_addr2;                /* Effective address         */
     RX( inst, regs, r1, x2, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dolra( regs, r1, b2, effective_addr2 ) == 0)
@@ -2475,7 +2475,7 @@ RADR    n;                              /* Unsigned work             */
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_CHECK( regs, r2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* R2 register contains operand real storage address */
@@ -2505,7 +2505,7 @@ CREG    pte;                            /* Page Table Entry          */
 
     RRE( inst, regs, r1, r2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     if (REAL_MODE( &regs->psw ))
@@ -2597,7 +2597,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     if (REAL_MODE( &regs->psw )
@@ -2639,7 +2639,7 @@ GREG    l;                              /* Unsigned workarea         */
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Program check if secondary space control (CR0 bit 5) is 0,
@@ -2702,7 +2702,7 @@ GREG    l;                              /* Unsigned workarea         */
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Program check if secondary space control (CR0 bit 5) is 0,
@@ -2760,7 +2760,7 @@ int     k, l;                           /* Integer workarea          */
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Load operand length-1 from register 0 bits 24-31 */
     l = regs->GR_L(0) & 0xFF;
@@ -2799,7 +2799,7 @@ GREG    l;                              /* Unsigned workarea         */
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Load true length from R1 register */
     l = GR_A( r1,regs );
@@ -2854,7 +2854,7 @@ int     space1, space2;                 /* Address space modifiers   */
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
     /* Program check if DAT is off */
@@ -2958,7 +2958,7 @@ int     k, l;                           /* Integer workarea          */
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Load operand length-1 from register 0 bits 24-31 */
     l = regs->GR_L(0) & 0xFF;
@@ -3031,7 +3031,7 @@ CREG    savecr12 = 0;                   /* CR12 save                 */
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     SIE_XC_INTERCEPT( regs );
 
 #if defined( _FEATURE_SIE )
@@ -3707,7 +3707,7 @@ int     rc;                             /* return code from load_psw */
     E( inst, regs );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     UNREFERENCED( inst );
     SIE_XC_INTERCEPT( regs );
@@ -4261,7 +4261,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     ARCH_DEP( program_transfer_proc )( regs, r1, r2, 0 );
 }
@@ -4279,7 +4279,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     ARCH_DEP( program_transfer_proc )( regs, r1, r2, 1 );
 }
@@ -4297,7 +4297,7 @@ int     r1, r2;                         /* Register values (unused)  */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* This instruction is executed as a no-operation in XC mode */
@@ -4329,7 +4329,7 @@ VADR    effective_addr2;                /* Effective address         */
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE )
     /* This instruction is executed as a no-operation in XC mode */
@@ -4364,7 +4364,7 @@ BYTE    oldkey;                         /* Original Storage key      */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_4K_STORAGE_KEYS ) || defined( _FEATURE_SIE )
     if (
@@ -4518,7 +4518,7 @@ BYTE    oldkey;                         /* Original Storage key      */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Load 4K block real address from r2 register */
@@ -4672,7 +4672,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_SET_ADDRESS_SPACE_CONTROL_FAST )
     if (inst[1] == 0x19) // SAC only
@@ -4796,7 +4796,7 @@ U64     dreg;                           /* Clock value               */
     PER_ZEROADDR_XCHECK( regs, b2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     SIE_INTERCEPT( regs );
 
@@ -4841,7 +4841,7 @@ U64     dreg;                           /* Clock value               */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -4884,7 +4884,7 @@ DEF_INST( set_clock_programmable_field )
 
     UNREFERENCED( inst );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Program check if register 0 bits 0-15 are not zeroes */
@@ -4909,7 +4909,7 @@ S64     dreg;                           /* Timer value               */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -4951,7 +4951,7 @@ RADR    n;                              /* Prefix value              */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     SIE_INTERCEPT( regs );
     FW_CHECK( effective_addr2, regs );
@@ -4997,7 +4997,7 @@ BYTE    pkey;                           /* Original key              */
     S( inst, regs, b2, effective_addr2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     pkey = regs->psw.pkey;
 
@@ -5163,7 +5163,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     ARCH_DEP( set_secondary_asn_proc )( regs, r1, r2, 0 );
 }
@@ -5181,7 +5181,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     ARCH_DEP( set_secondary_asn_proc )( regs, r1, r2, 1 );
 }
@@ -5201,7 +5201,7 @@ BYTE    r1key;                          /* Key value to set from r1  */
     RR( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Special Operation Exception if Storkey exception control zero */
@@ -5694,7 +5694,7 @@ bool    quiesce = false;                /* Set Key should quiesce    */
     RRF_M( inst, regs, r1, r2, m3 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* Save key to MAYBE be set */
@@ -5828,7 +5828,7 @@ VADR    effective_addr2;                /* Effective address         */
     */
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_ECPSVM )
     if (ecpsvm_dossm( regs, b2, effective_addr2 ) == 0)
@@ -5926,7 +5926,7 @@ static char *ordername[] = {
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     SIE_INTERCEPT( regs );
@@ -6641,7 +6641,7 @@ U64     dreg;                           /* Clock value               */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -6704,7 +6704,7 @@ U32    *p1, *p2 = NULL;                 /* Mainstor pointers         */
         return;
 #endif
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     FW_CHECK( effective_addr2, regs );
 
@@ -6752,7 +6752,7 @@ VADR    effective_addr2;                /* Effective address         */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     SIE_INTERCEPT( regs );
@@ -6775,7 +6775,7 @@ VADR    effective_addr2;                /* Effective address         */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     SIE_INTERCEPT( regs );
@@ -6799,7 +6799,7 @@ S64     dreg;                           /* Double word workarea      */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
@@ -6853,7 +6853,7 @@ VADR    effective_addr2;                /* Effective address         */
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     SIE_INTERCEPT( regs );
@@ -7042,7 +7042,7 @@ static BYTE hexebcdic[16] = { 0xF0,0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,
     S( inst, regs, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     SIE_INTERCEPT( regs );
@@ -7512,7 +7512,7 @@ VADR    effective_addr1;                /* Effective address         */
     }
 #endif
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
@@ -7531,8 +7531,21 @@ VADR    effective_addr1;                /* Effective address         */
 
 #if defined( FEATURE_002_ZARCH_ACTIVE_FACILITY )
     if ((effective_addr1 == 0x00000950) && (i2 == 0xff))
-        if (!(ARCH_DEP( vfetchb )( 1376 + ARCH_DEP( vfetch4 )( 2892, 0, regs ), 0, regs ) & 0x80))
-            ARCH_DEP( vstoreb )( 0x00, 1376 + ARCH_DEP( vfetch4 )( 2892, 0, regs ), 0, regs );
+    {
+        if (!ARCH_DEP( translate_addr )(           16, 0, regs, ACCTYPE_READ ))
+        {
+            VADR  va_1 = ARCH_DEP( vfetch4 )(      16, 0, regs ) + 140;
+            if (!ARCH_DEP( translate_addr )(     va_1, 0, regs, ACCTYPE_READ ))
+            {
+                VADR va_2 = ARCH_DEP( vfetch4 )( va_1, 0, regs ) + 476;
+                if (!ARCH_DEP( translate_addr )( va_2, 0, regs, ACCTYPE_READ ))
+                {
+                    if (ARCH_DEP( vfetch2 )(     va_2, 0, regs ) == 258)
+                        ARCH_DEP( vstoreb )( 0x00, 1376 + ARCH_DEP( vfetch4 )( 2892, 0, regs ), 0, regs );
+                }
+            }
+        }
+    }
 #endif
 
     RETURN_INTCHECK( regs );
@@ -7558,7 +7571,7 @@ VADR    effective_addr1;                /* Effective address         */
     }
 #endif
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
@@ -7607,7 +7620,7 @@ RADR    n;                              /* Unsigned work             */
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_CHECK( regs, r2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
     /* R2 register contains operand real storage address */
@@ -7647,7 +7660,7 @@ U32     aste[16];                       /* ASN second table entry    */
     RRE( inst, regs, r1, r2 );
 
     /* All control instructions are restricted in transaction mode */
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Program check if ASF control bit is zero */
     if (!ASF_ENABLED( regs ))
@@ -7699,7 +7712,7 @@ RADR    n;                              /* Real address              */
 
     RRE( inst, regs, r1, r2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
 #if defined( FEATURE_REGION_RELOCATE )
@@ -7767,7 +7780,7 @@ BYTE    akey;                           /* Access key                */
 
     SSE( inst, regs, b1, effective_addr1, b2, effective_addr2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
 
 #if defined( _FEATURE_SIE )
@@ -7855,7 +7868,7 @@ U32     op;                             /* Operand                   */
     RS( inst, regs, r1, r3, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK( regs );
     FW_CHECK( effective_addr2, regs );
 

@@ -337,7 +337,7 @@ int     cc;                             /* Comparison result         */
 
     RRS_B( inst, regs, r1, r2, m3, b4, effective_addr4 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
@@ -369,7 +369,7 @@ int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
@@ -400,7 +400,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B(inst, regs, r1, r2, i4, m3);
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, i4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, i4 );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)regs->GR_L(r2) ? 1 :
@@ -431,7 +431,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B( inst, regs, r1, r2, ri4, m3 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)regs->GR_G(r2) ? 1 :
@@ -655,7 +655,7 @@ BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)(S8)i2 ? 1 :
@@ -688,7 +688,7 @@ BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
@@ -720,7 +720,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B( inst, regs, r1, i2, m3, ri4 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare signed operands and set comparison result */
     cc = (S32)regs->GR_L(r1) < (S32)(S8)i2 ? 1 :
@@ -752,7 +752,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B( inst, regs, r1, i2, m3, ri4 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare signed operands and set comparison result */
     cc = (S64)regs->GR_G(r1) < (S64)(S8)i2 ? 1 :
@@ -838,7 +838,7 @@ int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
@@ -870,7 +870,7 @@ int     cc;                             /* Comparison result         */
 
     RRS_B(inst, regs, r1, r2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
@@ -901,7 +901,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B( inst, regs, r1, r2, ri4, m3 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
@@ -932,7 +932,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RRIM_B( inst, regs, r1, r2, ri4, m3 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
@@ -1017,7 +1017,7 @@ BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < i2 ? 1 :
@@ -1050,7 +1050,7 @@ BYTE    i2;                             /* Immediate value           */
 
     RIS_B(inst, regs, r1, i2, m3, b4, effective_addr4);
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < i2 ? 1 :
@@ -1082,7 +1082,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B( inst, regs, r1, i2, m3, ri4 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_L(r1) < i2 ? 1 :
@@ -1114,7 +1114,7 @@ int     cc;                             /* Comparison result         */
 
     RIE_RMII_B( inst, regs, r1, i2, m3, ri4 );
 
-    CONTRAN_BRANCH_CHECK_IP( regs, m3, ri4 );
+    TXFC_BRANCH_CHECK_IP( regs, m3, ri4 );
 
     /* Compare unsigned operands and set comparison result */
     cc = regs->GR_G(r1) < i2 ? 1 :
@@ -1470,7 +1470,7 @@ int     ai, li, ti;                     /* Operand address subfields */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Address bit 63 contains the Type Indication (TI) */
     ti = effective_addr2 & 0x1;
@@ -2039,7 +2039,7 @@ VADR    effective_addr2;                /* Effective address         */
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_2, regs ))
     {
         if (m1 == 6 || m1 == 7)
-            TRAN_INSTR_CHECK( regs );
+            TXF_INSTR_CHECK( regs );
     }
 #endif
 
@@ -2461,7 +2461,7 @@ S32     ri2;                            /* 32-bit relative operand   */
 
     RIL_B( inst, regs, r1, xop, ri2 );
 
-    CONTRAN_INSTR_CHECK_IP( regs );
+    TXFC_INSTR_CHECK_IP( regs );
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if (--(regs->GR_H( r1 )))
@@ -3066,7 +3066,7 @@ BYTE    opcode;                         /* 2nd byte of opcode        */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 
@@ -3082,7 +3082,7 @@ DEF_INST(load_and_add)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_long)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 
@@ -3098,7 +3098,7 @@ DEF_INST(load_and_add_long)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_logical)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_add_logical) */
@@ -3109,7 +3109,7 @@ DEF_INST(load_and_add_logical)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_add_logical_long)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_add_logical_long) */
@@ -3120,7 +3120,7 @@ DEF_INST(load_and_add_logical_long)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_and)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_and) */
@@ -3131,7 +3131,7 @@ DEF_INST(load_and_and)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_and_long)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_and_long) */
@@ -3142,7 +3142,7 @@ DEF_INST(load_and_and_long)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_exclusive_or)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or) */
@@ -3153,7 +3153,7 @@ DEF_INST(load_and_exclusive_or)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_exclusive_or_long)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_exclusive_or_long) */
@@ -3164,7 +3164,7 @@ DEF_INST(load_and_exclusive_or_long)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_or)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access) (inst, regs);
 } /* end DEF_INST(load_and_or) */
@@ -3175,7 +3175,7 @@ DEF_INST(load_and_or)
 /*-------------------------------------------------------------------*/
 DEF_INST(load_and_or_long)
 {
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ARCH_DEP(load_and_perform_interlocked_access_long) (inst, regs);
 } /* end DEF_INST(load_and_or_long) */
@@ -3196,7 +3196,7 @@ U32     w1, w2;                         /* Refetched values          */
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r3, regs);
 
     /* Fetch the values of the storage operands */
@@ -3234,7 +3234,7 @@ U64     w1, w2;                         /* Refetched values          */
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r3, regs);
 
     /* Fetch the values of the storage operands */
@@ -4270,7 +4270,7 @@ int     m1;                             /* Mask value                */
 
     SMI_A(inst, regs, m1, effective_addr2, b3, effective_addr3);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that
@@ -4291,7 +4291,7 @@ int     m1;                             /* Mask value                */
 
     MII_A(inst, regs, m1, effective_addr2, effective_addr3);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Depending on the model, the CPU may not implement
        all of the branch-attribute codes. For codes that

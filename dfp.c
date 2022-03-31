@@ -49,7 +49,7 @@ int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
     i1 = FPR2I(r1);
@@ -72,7 +72,7 @@ int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
     i1 = FPR2I(r1);
@@ -96,7 +96,7 @@ U32     sign;                           /* Work area for sign bit    */
 
     RRF_M(inst, regs, r1, r2, r3);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
     HFPREG_CHECK(r3, regs);
 
@@ -128,7 +128,7 @@ int     i1, i2;                         /* FP register subscripts    */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     HFPREG2_CHECK(r1, r2, regs);
 
     i1 = FPR2I(r1);
@@ -153,7 +153,7 @@ int     i1;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     HFPREG_CHECK(r1, regs);
 
     i1 = FPR2I(r1);
@@ -175,7 +175,7 @@ int     i2;                             /* FP register subscript     */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     HFPREG_CHECK(r2, regs);
 
     i2 = FPR2I(r2);
@@ -199,7 +199,7 @@ VADR            effective_addr2;        /* Effective address         */
 
     S(inst, regs, b2, effective_addr2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Set DFP rounding mode in FPC register from address bits 61-63 */
@@ -292,7 +292,7 @@ BYTE            dxc;                    /* Data exception code       */
     S(inst, regs, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Load new FPC register contents from operand location */
@@ -331,7 +331,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Load new FPC register contents from R1 register bits 32-63 */
@@ -1772,7 +1772,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -1822,7 +1822,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -1871,7 +1871,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -1916,7 +1916,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -1960,7 +1960,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -2009,7 +2009,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2056,7 +2056,7 @@ decContext      set;                    /* Working context           */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -2087,7 +2087,7 @@ decContext      set;                    /* Working context           */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2120,7 +2120,7 @@ decContext      set;                    /* Working context           */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2156,7 +2156,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2193,7 +2193,7 @@ decContext      set;                    /* Working context           */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2229,7 +2229,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2266,7 +2266,7 @@ decContext      set;                    /* Working context           */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2301,7 +2301,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2346,7 +2346,7 @@ decContext      set;                    /* Working context           */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2382,7 +2382,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2420,7 +2420,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
     ODD_CHECK(r2, regs);
@@ -2465,7 +2465,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2508,7 +2508,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
     ODD_CHECK(r2, regs);
@@ -2560,7 +2560,7 @@ int32_t         scale = 0;              /* Scaling factor            */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2613,7 +2613,7 @@ char            zoned[CXZT_MAXLEN];     /* Zoned decimal operand     */
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -2666,7 +2666,7 @@ char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Program check if operand length exceeds maximum */
@@ -2717,7 +2717,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2768,7 +2768,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2818,7 +2818,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2869,7 +2869,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -2920,7 +2920,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -2971,7 +2971,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3022,7 +3022,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -3073,7 +3073,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3124,7 +3124,7 @@ BYTE            pwork[18];              /* 33-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
     ODD_CHECK(r1, regs);
@@ -3173,7 +3173,7 @@ BYTE            pwork[9];               /* 17-digit packed work area */
 
     RRF_M4(inst, regs, r1, r2, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3219,7 +3219,7 @@ BYTE            pwork[17];              /* 33-digit packed work area */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
     ODD_CHECK(r1, regs);
@@ -3268,7 +3268,7 @@ BYTE            pwork[9];               /* 17-digit packed work area */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3318,7 +3318,7 @@ char            zoned[CZXT_MAXLEN];     /* Zoned decimal result      */
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -3372,7 +3372,7 @@ char            zoned[CZDT_MAXLEN];     /* Zoned decimal result      */
     RSL_RM(inst, regs, r1, l2, b2, effective_addr2, m3);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Program check if operand length exceeds 16 */
@@ -3421,7 +3421,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -3466,7 +3466,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3510,7 +3510,7 @@ S64             exponent;               /* Biased exponent           */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -3552,7 +3552,7 @@ S64             exponent;               /* Biased exponent           */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3593,7 +3593,7 @@ S64             digits;                 /* Number of decimal digits  */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -3637,7 +3637,7 @@ S64             digits;                 /* Number of decimal digits  */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3680,7 +3680,7 @@ S64             bexp;                   /* Biased exponent           */
 
     RRF_M(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -3751,7 +3751,7 @@ S64             bexp;                   /* Biased exponent           */
 
     RRF_M(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3821,7 +3821,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3875,7 +3875,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -3928,7 +3928,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -4004,7 +4004,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4080,7 +4080,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_M4(inst, regs, r1, r2, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -4149,7 +4149,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_M4(inst, regs, r1, r2, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4219,7 +4219,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r2, regs);
 
@@ -4306,7 +4306,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4389,7 +4389,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -4434,7 +4434,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4478,7 +4478,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -4523,7 +4523,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4568,7 +4568,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -4625,7 +4625,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRF_RM(inst, regs, r1, r2, r3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -4683,7 +4683,7 @@ int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -4746,7 +4746,7 @@ int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Isolate rightmost 6 bits of second operand address */
@@ -4808,7 +4808,7 @@ int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR2_CHECK(r1, r3, regs);
 
@@ -4871,7 +4871,7 @@ int             n;                      /* Number of bits to shift   */
 
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Isolate rightmost 6 bits of second operand address */
@@ -4930,7 +4930,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR3_CHECK(r1, r2, r3, regs);
 
@@ -4980,7 +4980,7 @@ BYTE            dxc;                    /* Data exception code       */
 
     RRR(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -5032,7 +5032,7 @@ U32             bits;                   /* Low 12 bits of address    */
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -5068,7 +5068,7 @@ U32             bits;                   /* Low 12 bits of address    */
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -5103,7 +5103,7 @@ U32             bits;                   /* Low 12 bits of address    */
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for short DFP */
@@ -5139,7 +5139,7 @@ int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
     DFPREGPAIR_CHECK(r1, regs);
 
@@ -5181,7 +5181,7 @@ int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for long DFP */
@@ -5222,7 +5222,7 @@ int             lmd;                    /* Leftmost digit            */
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     DFPINST_CHECK(regs);
 
     /* Initialise the context for short DFP */

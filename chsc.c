@@ -586,7 +586,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 #endif
 
     PER_ZEROADDR_CHECK( regs, r1 );
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);

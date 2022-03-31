@@ -137,7 +137,7 @@ int     cc = 0;                         /* Condition code            */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ITIMER_SYNC( effective_addr1, len, regs );
     ITIMER_SYNC( effective_addr2, len, regs );
@@ -299,7 +299,7 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -364,7 +364,7 @@ VADR    effective_addr2,
 
     SS(inst, regs, r1, r3, b2, effective_addr2, b4, effective_addr4);
     PER_ZEROADDR_XCHECK2( regs, b2, b4 );
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     if(regs->GR_L(0) & PLO_GPR0_RESV)
         regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
@@ -552,7 +552,7 @@ BYTE    termchar;                       /* Terminating character     */
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_CHECK( regs, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -716,7 +716,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_ACCESS_INSTR_CHECK( regs );
+    TXF_ACCESS_INSTR_CHECK( regs );
 
     /* Copy R2 general register to R1 access register */
     regs->AR(r1) = regs->GR_L(r2);
@@ -1135,7 +1135,7 @@ ETOD    ETOD;                           /* Extended TOD clock        */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
 
 #if defined( _FEATURE_SIE )
@@ -1198,7 +1198,7 @@ ETOD    ETOD;                           /* Extended clock work area  */
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
 
 #if defined( _FEATURE_SIE )
@@ -1564,7 +1564,7 @@ int     rc;                             /* Return code               */
 
     RR_SVC(inst, regs, i);
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
 #if defined( FEATURE_ECPSVM )
     if(ecpsvm_dosvc(regs,i)==0)
@@ -1637,7 +1637,7 @@ BYTE    old;                            /* Old value                 */
     S(inst, regs, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     ITIMER_SYNC(effective_addr2,0,regs);
 
@@ -1835,7 +1835,7 @@ BYTE   *dest, *dest2 = NULL, *tab, *tab2; /* Mainstor pointers       */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Get destination pointer */
     dest = MADDRL( effective_addr1, len+1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
@@ -1911,7 +1911,7 @@ bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
     SS_L( inst, regs, len, b1, effective_addr1, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Copy operand-1 data to work area if within same page */
     if (!(op1crosses = CROSSPAGE( effective_addr1, len )))
@@ -2014,7 +2014,7 @@ BYTE    trtab[256];                     /* Translate table           */
     PER_ZEROADDR_LCHECK( regs, r1, r1+1 );
     PER_ZEROADDR_CHECK( regs, r2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
 
     /* Load the test byte from bits 24-31 of register 0 */
@@ -2091,7 +2091,7 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* If operand 1 crosses a page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -2164,7 +2164,7 @@ U16     rmask = 0x0000;
     E(inst, regs);
     PER_ZEROADDR_CHECK( regs, 4 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /*
     **  GR0, GR1    node values (codeword and other data) of node
@@ -2337,7 +2337,7 @@ DEF_INST(convert_utf8_to_utf32)
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2584,7 +2584,7 @@ DEF_INST(convert_utf16_to_utf32)
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2698,7 +2698,7 @@ DEF_INST(convert_utf32_to_utf8)
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2841,7 +2841,7 @@ DEF_INST(convert_utf32_to_utf16)
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
   ODD2_CHECK(r1, r2, regs);
 
@@ -2935,7 +2935,7 @@ DEF_INST( search_string_unicode )
 
     RRE( inst, regs, r1, r2 );
     PER_ZEROADDR_CHECK2( regs, r1, r2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if bits 0-15 of register 0 not zero */
     if (regs->GR_L(0) & 0xFFFF0000)
@@ -3022,7 +3022,7 @@ DEF_INST(translate_and_test_reverse)
   SS_L(inst, regs, len, b1, effective_addr1, b2, effective_addr2);
   PER_ZEROADDR_XCHECK2( regs, b1, b2 );
 
-  CONTRAN_INSTR_CHECK( regs );
+  TXFC_INSTR_CHECK( regs );
 
   /* Process first operand from right to left*/
   for(i = 0; i <= len; i++)
@@ -3098,7 +3098,7 @@ DEF_INST(translate_and_test_extended)
   PER_ZEROADDR_CHECK( regs, 1 );
   PER_ZEROADDR_LCHECK( regs, r1, r1+1 );
 
-  CONTRAN_INSTR_CHECK( regs );
+  TXFC_INSTR_CHECK( regs );
 
   a_bit = ((m3 & 0x08) ? 1 : 0);
   f_bit = ((m3 & 0x04) ? 1 : 0);
@@ -3194,7 +3194,7 @@ DEF_INST(translate_and_test_reverse_extended)
 
   RRF_M(inst, regs, r1, r2, m3);
 
-  CONTRAN_INSTR_CHECK( regs );
+  TXFC_INSTR_CHECK( regs );
 
   a_bit = ((m3 & 0x08) ? 1 : 0);
   f_bit = ((m3 & 0x04) ? 1 : 0);

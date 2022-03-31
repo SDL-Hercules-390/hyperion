@@ -1209,7 +1209,7 @@ DEF_INST( cmpsc_2012 )
 
 #if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
     if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TRAN_INSTR_CHECK( regs );
+        TXF_INSTR_CHECK( regs );
 #endif
 
     /* Build our internal Compression Call parameters block */

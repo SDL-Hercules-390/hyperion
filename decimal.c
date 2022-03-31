@@ -710,7 +710,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -785,7 +785,7 @@ int     rc;                             /* Return code               */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -846,7 +846,7 @@ int     signq, signr;                   /* Sign of quotient/remainder*/
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
@@ -920,7 +920,7 @@ BYTE    rbyte;                          /* Result byte               */
 
     SS_L(inst, regs, l, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* If addr1 crosses page, make sure both pages are accessible */
     if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
@@ -1109,7 +1109,7 @@ int     carry;                          /* Carry indicator           */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Program check if the second operand length exceeds 15 digits
        or is equal to or greater than the first operand length */
@@ -1180,7 +1180,7 @@ int     carry;                          /* Carry indicator           */
 
     SS(inst, regs, l1, i3, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b1 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operand into work area */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec, &count, &sign);
@@ -1276,7 +1276,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load operands into work areas */
     ARCH_DEP(load_decimal) (effective_addr1, l1, b1, regs, dec1, &count1, &sign1);
@@ -1350,7 +1350,7 @@ int     sign;                           /* Sign                      */
 
     SS(inst, regs, l1, l2, b1, effective_addr1, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Load second operand into work area */
     ARCH_DEP(load_decimal) (effective_addr2, l2, b2, regs, dec, &count, &sign);
@@ -1395,7 +1395,7 @@ BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
     RSL(inst, regs, l1, b1, effective_addr1);
     PER_ZEROADDR_XCHECK( regs, b1 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* Fetch the packed decimal operand into the work area */
     ARCH_DEP(vfetchc) (pack, l1, effective_addr1, b1, regs);

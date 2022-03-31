@@ -95,7 +95,7 @@ U32     abort_count;                    /* Transaction Abort count   */
 
     UNREFERENCED( r2 );
 
-    TRAN_INSTR_CHECK( regs );
+    TXF_INSTR_CHECK( regs );
 
     /* Retrieve abort count */
     abort_count = regs->GR_L( r1 );
@@ -166,7 +166,7 @@ int     r1, r2;                         /* Operand register numbers  */
         UNREACHABLE_CODE( return );
     }
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     regs->GR_L(r1) = (U32) regs->txf_tnd;
 
@@ -228,7 +228,7 @@ bool        per_tend = false;           /* true = check for PER TEND */
 
     TXF_SIE_INTERCEPT( regs, TEND );
 
-    TRAN_EXECUTE_INSTR_CHECK( regs );
+    TXF_EXECUTE_INSTR_CHECK( regs );
 
     if (!(regs->CR(0) & CR0_TXC))
     {
@@ -561,8 +561,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     TXF_SIE_INTERCEPT( regs, TABORT );
 
-    CONTRAN_INSTR_CHECK( regs );
-    TRAN_EXECUTE_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
+    TXF_EXECUTE_INSTR_CHECK( regs );
 
     if (effective_addr2 <= 255)
     {
@@ -578,7 +578,7 @@ VADR    effective_addr2;                /* Effective address         */
         UNREACHABLE_CODE( return );
     }
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
 
     /* CC in transaction abort PSW = 2 or 3 based on operand2 bit 63 */
     regs->txf_tapsw.cc = (effective_addr2 & 0x1) == 0 ? 2 : 3;
@@ -606,7 +606,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY( inst, regs, r1, x2, b2, effective_addr2 );
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     DW_CHECK( effective_addr2, regs );
 
     PTT_TXF( "TXF NTSTG", regs->GR_G( r1 ), effective_addr2, 0 );
@@ -647,7 +647,7 @@ VADR    effective_addr1;                /* Effective address         */
         UNREACHABLE_CODE( return );
     }
 
-    TRAN_EXECUTE_INSTR_CHECK( regs );
+    TXF_EXECUTE_INSTR_CHECK( regs );
 
     /* Unconstrained: PIFC of 3 is invalid */
     if ((i2 & TXF_CTL_PIFC) == 3)
@@ -707,7 +707,7 @@ VADR    effective_addr1;                /* Effective address         */
         UNREACHABLE_CODE( return );
     }
 
-    TRAN_EXECUTE_INSTR_CHECK( regs );
+    TXF_EXECUTE_INSTR_CHECK( regs );
 
     /* CONSTRAINED: Specification Exception if b1 is non-zero */
     if (b1)
@@ -762,7 +762,7 @@ TPAGEMAP   *pmap;
     /* Count transaction */
     atomic_update32( &sysblk.txf_counter, +1 );
 
-    CONTRAN_INSTR_CHECK( regs );    /* Unallowed in CONSTRAINED mode */
+    TXFC_INSTR_CHECK( regs );    /* Unallowed in CONSTRAINED mode */
 
     /*---------------------------------------------*/
     /*  Increase nesting depth                     */

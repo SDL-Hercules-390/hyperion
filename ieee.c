@@ -994,7 +994,7 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     //logmsg("THDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -1021,7 +1021,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -1051,7 +1051,7 @@ DEF_INST(convert_float_long_to_bfp_long_reg)
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -1076,7 +1076,7 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
 
     RRF_M(inst, regs, r1, r2, m3);
 
-    CONTRAN_INSTR_CHECK( regs );
+    TXFC_INSTR_CHECK( regs );
     //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -1104,7 +1104,7 @@ DEF_INST(add_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair                       */
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );             /* Get operand values                                   */
@@ -1139,7 +1139,7 @@ DEF_INST(add_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -1174,7 +1174,7 @@ DEF_INST(add_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -1209,7 +1209,7 @@ DEF_INST(add_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -1246,7 +1246,7 @@ DEF_INST(add_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -1280,7 +1280,7 @@ DEF_INST(compare_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
@@ -1306,7 +1306,7 @@ DEF_INST(compare_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -1332,7 +1332,7 @@ DEF_INST(compare_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -1356,7 +1356,7 @@ DEF_INST(compare_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -1381,7 +1381,7 @@ DEF_INST(compare_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -1405,7 +1405,7 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     GET_FLOAT128_OPS( op1, r1, op2, r2, regs );
@@ -1429,7 +1429,7 @@ DEF_INST(compare_and_signal_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
 
@@ -1454,7 +1454,7 @@ DEF_INST(compare_and_signal_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT64_OP( op1, r1, regs );
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -1478,7 +1478,7 @@ DEF_INST(compare_and_signal_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
 
@@ -1503,7 +1503,7 @@ DEF_INST(compare_and_signal_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     GET_FLOAT32_OP( op1, r1, regs );
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -1549,7 +1549,7 @@ DEF_INST(convert_fix32_to_bfp_ext_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -1586,7 +1586,7 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1625,7 +1625,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1666,7 +1666,7 @@ DEF_INST(convert_fix64_to_bfp_ext_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -1708,7 +1708,7 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1753,7 +1753,7 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
 #if defined( FEATURE_037_FP_EXTENSION_FACILITY )
@@ -1827,7 +1827,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -1896,7 +1896,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
 
@@ -1964,7 +1964,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2033,7 +2033,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -2104,7 +2104,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2174,7 +2174,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -2254,7 +2254,7 @@ DEF_INST(convert_u32_to_bfp_ext_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
@@ -2285,7 +2285,7 @@ DEF_INST(convert_u32_to_bfp_long_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
     UNREFERENCED(m4);                 /* M4 field supported but does nothing; no inexact            */
@@ -2318,7 +2318,7 @@ DEF_INST(convert_u32_to_bfp_short_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 
@@ -2350,7 +2350,7 @@ DEF_INST(convert_u64_to_bfp_ext_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction                  */
@@ -2384,7 +2384,7 @@ DEF_INST(convert_u64_to_bfp_long_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 
@@ -2421,7 +2421,7 @@ DEF_INST(convert_u64_to_bfp_short_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);            /* validate BFP Rounding mode in instruction         */
 
@@ -2478,7 +2478,7 @@ DEF_INST(convert_bfp_ext_to_u32_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
@@ -2532,7 +2532,7 @@ DEF_INST(convert_bfp_long_to_u32_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
 
@@ -2585,7 +2585,7 @@ DEF_INST(convert_bfp_short_to_u32_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
 
@@ -2638,7 +2638,7 @@ DEF_INST(convert_bfp_ext_to_u64_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r2, regs);
     BFPRM_CHECK(m3, regs);
@@ -2692,7 +2692,7 @@ DEF_INST(convert_bfp_long_to_u64_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
 
@@ -2744,7 +2744,7 @@ DEF_INST(convert_bfp_short_to_u64_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3, regs);
 
@@ -2794,7 +2794,7 @@ DEF_INST(divide_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -2831,7 +2831,7 @@ DEF_INST(divide_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -2869,7 +2869,7 @@ DEF_INST(divide_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op1, r1, regs );
@@ -2906,7 +2906,7 @@ DEF_INST(divide_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -2943,7 +2943,7 @@ DEF_INST(divide_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op1, r1, regs );
@@ -2979,7 +2979,7 @@ DEF_INST(load_and_test_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3012,7 +3012,7 @@ DEF_INST(load_and_test_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3044,7 +3044,7 @@ DEF_INST(load_and_test_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3083,7 +3083,7 @@ DEF_INST(load_fp_int_bfp_short_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -3120,7 +3120,7 @@ DEF_INST(load_fp_int_bfp_long_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPRM_CHECK(m3,regs);
 
@@ -3158,7 +3158,7 @@ DEF_INST(load_fp_int_bfp_ext_reg)
     m4 = 0;
 #endif
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
     BFPRM_CHECK(m3,regs);
@@ -3204,7 +3204,7 @@ DEF_INST(load_lengthened_bfp_short_to_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op2, r2, regs );
@@ -3235,7 +3235,7 @@ DEF_INST(load_lengthened_bfp_short_to_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -3263,7 +3263,7 @@ DEF_INST(load_lengthened_bfp_long_to_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3294,7 +3294,7 @@ DEF_INST(load_lengthened_bfp_long_to_ext)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3323,7 +3323,7 @@ DEF_INST(load_lengthened_bfp_short_to_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3354,7 +3354,7 @@ DEF_INST(load_lengthened_bfp_short_to_ext)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3382,7 +3382,7 @@ DEF_INST(load_negative_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3401,7 +3401,7 @@ DEF_INST(load_negative_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3419,7 +3419,7 @@ DEF_INST(load_negative_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3437,7 +3437,7 @@ DEF_INST(load_complement_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3456,7 +3456,7 @@ DEF_INST(load_complement_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3474,7 +3474,7 @@ DEF_INST(load_complement_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3492,7 +3492,7 @@ DEF_INST(load_positive_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3511,7 +3511,7 @@ DEF_INST(load_positive_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op, r2, regs );
@@ -3529,7 +3529,7 @@ DEF_INST(load_positive_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op, r2, regs );
@@ -3572,7 +3572,7 @@ DEF_INST(load_rounded_bfp_long_to_short_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op2, r2, regs );
@@ -3625,7 +3625,7 @@ DEF_INST(load_rounded_bfp_ext_to_long_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3679,7 +3679,7 @@ DEF_INST(load_rounded_bfp_ext_to_short_reg)
 
     RRF_MM(inst, regs, r1, r2, m3, m4);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3730,7 +3730,7 @@ DEF_INST(multiply_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -3769,7 +3769,7 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3823,7 +3823,7 @@ DEF_INST(multiply_bfp_long_to_ext)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -3870,7 +3870,7 @@ DEF_INST(multiply_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op2, r2, regs );
@@ -3906,7 +3906,7 @@ DEF_INST(multiply_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op1, r1, regs );
@@ -3945,7 +3945,7 @@ DEF_INST(multiply_bfp_short_to_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -3998,7 +3998,7 @@ DEF_INST(multiply_bfp_short_to_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op1, r1, regs );
@@ -4046,7 +4046,7 @@ DEF_INST(multiply_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op2, r2, regs );
@@ -4081,7 +4081,7 @@ DEF_INST(multiply_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op1, r1, regs );
@@ -4116,7 +4116,7 @@ DEF_INST(multiply_add_bfp_long_reg)
 
     RRD(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4153,7 +4153,7 @@ DEF_INST(multiply_add_bfp_long)
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4187,7 +4187,7 @@ DEF_INST(multiply_add_bfp_short_reg)
 
     RRD(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4224,7 +4224,7 @@ DEF_INST(multiply_add_bfp_short)
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4259,7 +4259,7 @@ DEF_INST(multiply_subtract_bfp_long_reg)
 
     RRD(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4300,7 +4300,7 @@ DEF_INST(multiply_subtract_bfp_long)
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OPS( op1, r1, op3, r3, regs );
@@ -4339,7 +4339,7 @@ DEF_INST(multiply_subtract_bfp_short_reg)
 
     RRD(inst, regs, r1, r2, r3);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4381,7 +4381,7 @@ DEF_INST(multiply_subtract_bfp_short)
     RXF(inst, regs, r1, r3, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OPS( op1, r1, op3, r3, regs );
@@ -4419,7 +4419,7 @@ DEF_INST(squareroot_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
 
@@ -4451,7 +4451,7 @@ DEF_INST(squareroot_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op2, r2, regs );
@@ -4484,7 +4484,7 @@ DEF_INST(squareroot_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     VFETCH_FLOAT64_OP( op2, effective_addr2, b2, regs );
@@ -4515,7 +4515,7 @@ DEF_INST(squareroot_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op2, r2, regs );
@@ -4548,7 +4548,7 @@ DEF_INST(squareroot_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     VFETCH_FLOAT32_OP( op2, effective_addr2, b2, regs );
@@ -4581,7 +4581,7 @@ DEF_INST(subtract_bfp_ext_reg)
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
     BFPREGPAIR2_CHECK(r1, r2, regs);                        /* Ensure valide FP register pair for extended format   */
 
@@ -4620,7 +4620,7 @@ DEF_INST(subtract_bfp_long_reg)
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
 
     GET_FLOAT64_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
@@ -4657,7 +4657,7 @@ DEF_INST(subtract_bfp_long)
     RXE(inst, regs, r1, x2, b2, effective_addr2);               /* decode operand register and address                  */
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
 
     GET_FLOAT64_OP(op1, r1, regs);                          /* Get register operand value                           */
@@ -4694,7 +4694,7 @@ DEF_INST(subtract_bfp_short_reg)
 
     RRE(inst, regs, r1, r2);                                /* decode operand registers from instruction            */
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
 
     GET_FLOAT32_OPS(op1, r1, op2, r2, regs);                /* Get operand values                                   */
@@ -4732,7 +4732,7 @@ DEF_INST(subtract_bfp_short)
     RXE(inst, regs, r1, x2, b2, effective_addr2);               /* decode operand register and address                  */
     PER_ZEROADDR_XCHECK2( regs, x2, b2 );
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
 
     GET_FLOAT32_OP(op1, r1, regs);                          /* Get register operand value                           */
@@ -4771,7 +4771,7 @@ DEF_INST(test_data_class_bfp_short)
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT32_OP( op1, r1, regs );
@@ -4790,7 +4790,7 @@ DEF_INST(test_data_class_bfp_long)
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
 
     GET_FLOAT64_OP( op1, r1, regs );
@@ -4809,7 +4809,7 @@ DEF_INST(test_data_class_bfp_ext)
 
     RXE(inst, regs, r1, x2, b2, effective_addr2);
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);
     BFPREGPAIR_CHECK(r1, regs);
 
@@ -4848,7 +4848,7 @@ DEF_INST(divide_integer_bfp_long_reg)
 
     RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
 
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
@@ -5049,7 +5049,7 @@ DEF_INST(divide_integer_bfp_short_reg)
                                                             /* Test Data Class instruction                          */
     RRF_RM(inst, regs, r1, r2, r3, m4);                     /* decode operand registers and rounding mask           */
 
-    TRAN_FLOAT_INSTR_CHECK( regs );
+    TXF_FLOAT_INSTR_CHECK( regs );
     BFPINST_CHECK(regs);                                    /* Ensure BPF instructions allowed by CPU State         */
 
     if (r1 == r2 || r2 == r3 || r1 == r3)                   /* Ensure all three operands in different registers     */
