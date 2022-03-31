@@ -1487,7 +1487,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
     }
 
     /* Trace the I/O interrupt */
-    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace || dev->ccwstep)
+    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace)
     {
         BYTE*   csw = psa->csw;
 
@@ -1512,7 +1512,7 @@ DEVBLK *dev;                            /* dev presenting interrupt  */
 #endif
 
     /* Trace the I/O interrupt */
-    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace || dev->ccwstep)
+    if (CPU_STEPPING_OR_TRACING( regs, 0 ) || dev->ccwtrace)
 #if !defined( FEATURE_001_ZARCH_INSTALLED_FACILITY ) && !defined( _FEATURE_IO_ASSIST )
         // "Processor %s%02X: I/O interrupt code %8.8X parm %8.8X"
         WRMSG (HHC00805, "I", PTYPSTR(regs->cpuad), regs->cpuad, ioid, ioparm);

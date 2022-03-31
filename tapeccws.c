@@ -1892,7 +1892,7 @@ BYTE    rustat;                         /* Addl CSW stat on RewUnld  */
         RESIDUAL_CALC( sizeof(locblock) );
 
         /* Informative message if tracing */
-        if ( dev->ccwtrace || dev->ccwstep )
+        if (dev->ccwtrace)
             WRMSG(HHC00217, "I", LCSS_DEVNUM
                 ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
                 ,TTYPSTR(dev->tapedevt)
@@ -3447,7 +3447,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
             STRLCPY( dev->tapemsg1, msg1 );
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
@@ -3472,7 +3472,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
 
             STRLCPY( dev->tapemsg1, msg1 );
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1 );
         }
 
@@ -3524,7 +3524,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedisptype  = TAPEDISPTYP_UMOUNTMOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00219, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg1, dev->tapemsg2 );
         }
         else
@@ -3532,7 +3532,7 @@ BYTE*           msg;                    /* (work buf ptr)            */
             dev->tapedisptype  = TAPEDISPTYP_MOUNT;
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00218, "I", LCSS_DEVNUM, dev->filename, TTYPSTR(dev->tapedevt), dev->tapemsg2 );
         }
 

@@ -134,7 +134,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define LOGDEVTR( id, sev, ... )                                \
     do                                                          \
     {                                                           \
-        if (dev->ccwtrace || dev->ccwstep)                      \
+        if (dev->ccwtrace)                                      \
         {                                                       \
             /* PROGRAMMING NOTE: we must call 'fwritemsg'       \
                directly since attempting to use the 'WRMSG'     \

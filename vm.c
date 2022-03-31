@@ -643,7 +643,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         blknum = ARCH_DEP(fetch_fullword_absolute)(sbiaddr, regs);
         absadr = ARCH_DEP(fetch_fullword_absolute)(sbiaddr+4, regs);
 
-        if (dev->ccwtrace || dev->ccwstep)
+        if (dev->ccwtrace)
         {
             WRMSG(HHC01952, "I",
                     LCSS_DEVNUM,

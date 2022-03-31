@@ -1611,7 +1611,7 @@ void  ptp_read( DEVBLK* pDEVBLK, U32  uCount,
             // check for halt condition
             if (haltorclear)
             {
-                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep)
+                if (pDEVBLK->ccwtrace)
                 {
                     // HHC00904 "%1d:%04X %s: halt or clear recognized"
                     WRMSG(HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );

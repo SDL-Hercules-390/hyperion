@@ -1080,7 +1080,7 @@ int  LCS_Close( DEVBLK* pDEVBLK )
             obtain_lock( &pLCSPORT->PortEventLock );
             PTT_DEBUG(        "GOT  PortEventLock", 000, pDEVBLK->devnum, pLCSPORT->bPort );
             {
-                if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSBLK->fDebug)
+                if (pDEVBLK->ccwtrace || pLCSBLK->fDebug)
                     // "%1d:%04X CTC: lcs triggering port %2.2X event"
                     WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
 
@@ -1669,7 +1669,7 @@ static void  UpdatePortStarted( int bStarted, DEVBLK* pDEVBLK, PLCSPORT pLCSPORT
     PTT_DEBUG(         "REL  PortDataLock ", 000, pDEVBLK->devnum, pLCSPORT->bPort );
     release_lock( &pLCSPORT->PortDataLock );
 
-    if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSPORT->pLCSBLK->fDebug)
+    if (pDEVBLK->ccwtrace || pLCSPORT->pLCSBLK->fDebug)
         // "%1d:%04X CTC: lcs triggering port %2.2X event"
         WRMSG( HHC00966, "I", SSID_TO_LCSS( pDEVBLK->ssid ), pDEVBLK->devnum, pLCSPORT->bPort );
 
@@ -2985,7 +2985,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U32   sCount,
 
             PTT_DEBUG(    "*HALT or CLEAR*   ", *pUnitStat, pDEVBLK->devnum, sCount );
 
-            if (pDEVBLK->ccwtrace || pDEVBLK->ccwstep || pLCSDEV->pLCSBLK->fDebug)
+            if (pDEVBLK->ccwtrace || pLCSDEV->pLCSBLK->fDebug)
                 // "%1d:%04X %s: halt or clear recognized"
                 WRMSG( HHC00904, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->typname );
             release_lock( &pLCSDEV->DevEventLock );

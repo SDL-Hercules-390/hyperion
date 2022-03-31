@@ -7826,10 +7826,9 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
 
     // o+devn and o-devn commands - turn ORB tracing on/off
     // t+devn and t-devn commands - turn CCW tracing on/off
-    // s+devn and s-devn commands - turn CCW stepping on/off
 
     if (1
-        && (cmd[0] == 'o' || cmd[0] == 't' || cmd[0] == 's')
+        && (cmd[0] == 'o' || cmd[0] == 't')
         && parse_single_devnum_silent( &cmd[2], &lcss, &devnum ) == 0
     )
     {
@@ -7849,18 +7848,11 @@ int OnOffCommand( int argc, char* argv[], char* cmdline )
             typ = "ORB trace";
             dev->orbtrace = plus_enable_on;
         }
-        else if (cmd[0] == 't')
+        else // (cmd[0] == 't')
         {
             typ = "CCW trace";
             dev->orbtrace = plus_enable_on;
             dev->ccwtrace = plus_enable_on;
-        }
-        else // (cmd[0] == 's')
-        {
-            typ = "CCW step";
-            dev->orbtrace = plus_enable_on;
-            dev->ccwtrace = plus_enable_on;
-            dev->ccwstep  = plus_enable_on;
         }
         MSGBUF( buf, "%s for %1d:%04X", typ, lcss, devnum );
         // "%-14s set to %s"

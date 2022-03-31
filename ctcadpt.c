@@ -593,7 +593,7 @@ static const CTCE_FSM_CELL CTCE_Fsm[16][8] = {
 /* dev->ctce_trace_cntr > 0 causes temporary tracing until the counter   */
 /* is decremented reaching zero.                                         */
 #define CTCE_CCWTRACE( dev )                                                \
-        ( dev->ccwtrace || dev->ccwstep ||                                  \
+        ( dev->ccwtrace ||                                                  \
         ( dev->ctce_trace_cntr == CTCE_TRACE_ON  ) ||                       \
         ( ( dev->ctce_trace_cntr >  0 ) && ( dev->ctce_trace_cntr-- ) ) )
 #define CTCE_RESTART_CCWTRACE( dev )     ( ( dev->ctce_trace_cntr >= 0 ) && \
@@ -1302,7 +1302,7 @@ static void  CTCT_Write( DEVBLK* pDEVBLK,   CCWC  sCount,
         sDataLen = sSegLen - sizeof( CTCISEG );
 
         // Trace the IP packet before sending
-        if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+        if (pDEVBLK->ccwtrace)
         {
             WRMSG(HHC00934, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, pDEVBLK->filename );
             if( pDEVBLK->ccwtrace )
@@ -1401,7 +1401,7 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   CCWC  sCount,
     }
 
     // Trace the packet received from the TUN device
-    if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
+    if (pDEVBLK->ccwtrace)
     {
         // "%1d:%04X %s: receive%s packet of size %d bytes from device %s"
         WRMSG(HHC00913, "I", SSID_TO_LCSS(pDEVBLK->ssid), pDEVBLK->devnum, "CTC",
@@ -3190,7 +3190,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     char           ctce_trace_stat[24];        // to contain " Stat=.. CC=. w=.,r=."
     char           ctce_trace_xtra[256];       // to contain extra info when tracing
     char           ctce_trace_xtra_temp[256];  // temporary work area for the above
-    char           ctce_devnum[8];             // for ccwstep packet trace information
+    char           ctce_devnum[8];             // for ccwtrace packet trace information
 
     // The source for reporting dependings on the Command X-fer
     // direction.  The CTCE states are reported in lower case,
@@ -3437,7 +3437,7 @@ void            CTCE_Trace(       DEVBLK*             pDEVBLK,
     }
 
     // Add an ending dot if this ends a temporarily triggered trace.
-    if( !pDEVBLK->ccwtrace && !pDEVBLK->ccwstep && ( pDEVBLK->ctce_trace_cntr == 0 ) )
+    if( !pDEVBLK->ccwtrace && ( pDEVBLK->ctce_trace_cntr == 0 ) )
     {
         STRLCAT( ctce_trace_xtra, "." );
     }
@@ -3451,7 +3451,7 @@ HHC05079I <src_dev> CTCE: <direction> <dst_dev> <seq#> cmd=<cmd>=<cmd_hex>
 Explanation
         The CTCE device <local_dev> processes a <cmd> (hex value <cmd_hex>).
         The <direction> shows whether it originates locally (the x-side),
-        and if it needs to be send (->) to the remote <remote_dev> device
+        and if it needs to be sent (->) to the remote <remote_dev> device
         (the y-side), or if the command was received (<-) from the y-side.
         The command causes a state transition shown in <x_local><y_local>
         <direction> <x_remote><y_remote>, using single-letter presentations
@@ -3481,7 +3481,7 @@ Action
         ctce_trace_stat,
         CTCE_ACTIONS_PRT( pCTCE_Info->actions ),
         ctce_trace_xtra );
-    if( pDEVBLK->ccwstep )
+    if( pDEVBLK->ccwtrace )
     {
         MSGBUF( ctce_devnum, "%1d:%04X", CTCE_DEVNUM( pDEVBLK ) );
         net_data_trace( pDEVBLK, ( BYTE * ) pSokBuf, pSokBuf->SndLen ,

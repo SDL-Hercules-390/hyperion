@@ -1311,7 +1311,6 @@
   "Format: \"s?\" displays whether instruction stepping is on or off\n"         \
   "and the range if any.\n"
 
-#define sdev_cmd_desc           "Turn CCW stepping on/off"
 #define splus_cmd_desc          "Activate instruction stepping"
 #define splus_cmd_help          \
                                 \
@@ -2025,7 +2024,6 @@ COMMAND( "dumpdev",                 lddev_cmd,              SYSCMD,             
         // directly to the "OnOffCommand" command function in hsccmd.c.
 
 COMMAND( "f{+/-}adr",               NULL,                   SYSCMDNOPER,        f_cmd_desc,             f_cmd_help          )
-COMMAND( "s{+/-}dev",               NULL,                   SYSCMDNOPER,        sdev_cmd_desc,          NULL                )
 COMMAND( "o{+/-}dev",               NULL,                   SYSCMDNOPER,        odev_cmd_desc,          NULL                )
 COMMAND( "t{+/-}dev",               NULL,                   SYSCMDNOPER,        tdev_cmd_desc,          NULL                )
 #if defined( OPTION_CKD_KEY_TRACING )

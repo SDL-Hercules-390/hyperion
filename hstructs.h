@@ -1410,7 +1410,6 @@ struct DEVBLK {                         /* Device configuration block*/
                 oslinux:1,              /* 1=Linux                   */
                 orbtrace:1,             /* 1=ORB trace               */
                 ccwtrace:1,             /* 1=CCW trace               */
-                ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1,             /* 1=Channel will merge data
                                              chained write CCWs      */
                 debug:1,                /* 1=generic debug flag      */

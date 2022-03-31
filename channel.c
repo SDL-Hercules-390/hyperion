@@ -63,20 +63,16 @@ DISABLE_GCC_UNUSED_SET_WARNING;
 /* CCW Tracing helper macros                                         */
 /*-------------------------------------------------------------------*/
 
-#ifndef CCW_TRACE_OR_STEP
-#define CCW_TRACE_OR_STEP( dev )    ((dev)->ccwtrace || (dev)->ccwstep)
-#endif
-
 #ifndef CCW_TRACING_ACTIVE
-#define CCW_TRACING_ACTIVE( dev, tracethis )    (CCW_TRACE_OR_STEP( dev ) \
-                                                    || ( tracethis ))
+#define CCW_TRACING_ACTIVE( dev, tracethis )    ((dev)->ccwtrace \
+                                                 || ( tracethis ))
 #endif
 
 #ifndef SKIP_CH9UC
 #define SKIP_CH9UC( dev, chanstat, unitstat )                       \
                                                                     \
     (1                                                              \
-     && !CCW_TRACE_OR_STEP( dev )                                   \
+     && !(dev)->ccwtrace                                            \
      && !CPU_STEPPING_OR_TRACING_ALL                                \
      && sysblk.noch9oflow                                           \
      && is_ch9oflow( dev, chanstat, unitstat )                      \
@@ -1156,7 +1152,7 @@ testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
     else
         cc = 0;         /* Available */
 
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         WRMSG (HHC01318, "I", LCSS_DEVNUM, cc);
 
     /* Complete unlock sequence */
@@ -1179,7 +1175,7 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
 
     UNREFERENCED( ibyte );
 
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: halt I/O"
         WRMSG( HHC01329, "I", LCSS_DEVNUM );
 
@@ -1244,7 +1240,7 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
         /* Store the channel status word at PSA+X'40' */
         store_scsw_as_csw( regs, &dev->scsw );
 
-        if (CCW_TRACE_OR_STEP( dev ))
+        if (dev->ccwtrace)
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
             display_csw( dev, psa->csw );
@@ -1258,7 +1254,7 @@ int haltio( REGS *regs, DEVBLK *dev, BYTE ibyte )
         /* Store the channel status word at PSA+X'40' */
         store_scsw_as_csw( regs, &dev->scsw );
 
-        if (CCW_TRACE_OR_STEP( dev ))
+        if (dev->ccwtrace)
         {
             psa = (PSA_3XX*)(regs->mainstor + regs->PX);
             // "%1d:%04X CHAN: HIO modification executed: cc=1"
@@ -1540,7 +1536,7 @@ test_subchan_locked (REGS* regs, DEVBLK* dev,
     DEQUEUE_IO_INTERRUPT_QLOCKED(*ioint);
 
     /* Display the subchannel status word */
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         display_scsw( dev, **scsw );
 
     /* Copy the SCSW to the IRB */
@@ -1635,7 +1631,7 @@ test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
     release_lock(&sysblk.iointqlk);
 
     /* Display the condition code */
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: test I/O: cc=%d"
         WRMSG( HHC01318, "I", LCSS_DEVNUM, cc );
 
@@ -1709,7 +1705,7 @@ perform_clear_subchan (DEVBLK *dev)
     UPDATE_IC_IOPENDING_QLOCKED();
     release_lock(&sysblk.iointqlk);
 
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: clear completed"
         WRMSG( HHC01308, "I", LCSS_DEVNUM );
 
@@ -1736,7 +1732,7 @@ void clear_subchan( REGS* regs, DEVBLK* dev )
 {
     UNREFERENCED( regs );
 
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: clear subchannel"
         WRMSG( HHC01331, "I", LCSS_DEVNUM );
 
@@ -1883,7 +1879,7 @@ perform_halt_and_release_lock (DEVBLK *dev)
     }
 
     /* Trace HALT */
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: halt subchannel: cc=%d"
         WRMSG( HHC01300, "I", LCSS_DEVNUM, 0 );
 
@@ -1933,7 +1929,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
 {
     UNREFERENCED( regs );
 
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: halt subchannel"
         WRMSG( HHC01332, "I", LCSS_DEVNUM );
 
@@ -1966,7 +1962,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
            )
     )
     {
-        if (CCW_TRACE_OR_STEP( dev ))
+        if (dev->ccwtrace)
             // "%1d:%04X CHAN: halt subchannel: cc=%d"
             WRMSG( HHC01300, "I", LCSS_DEVNUM, 1 );
         release_lock( &dev->lock );
@@ -1979,7 +1975,7 @@ int halt_subchan( REGS* regs, DEVBLK* dev)
     */
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
-        if (CCW_TRACE_OR_STEP( dev ))
+        if (dev->ccwtrace)
             // "%1d:%04X CHAN: halt subchannel: cc=%d"
             WRMSG( HHC01300, "I", LCSS_DEVNUM, 2 );
         release_lock( &dev->lock );
@@ -2756,7 +2752,7 @@ int cc;                                 /* Return code               */
     }
 
     /* If tracing, write trace message */
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         WRMSG (HHC01333, "I", LCSS_DEVNUM, cc);
 
     release_lock (&dev->lock);
@@ -3411,10 +3407,10 @@ do {                                                                   \
                 } /* end if(!MIDAW_FLAG_SKIP) */
 
                 /* Display the MIDAW if CCW tracing is on */
-                if (!prefetch->seq && CCW_TRACE_OR_STEP( dev ))
+                if (!prefetch->seq && dev->ccwtrace)
                     display_idaw( dev, PF_MIDAW, midawflg, midawdat, midawlen );
 #if DEBUG_DUMP
-                if (CCW_TRACE_OR_STEP( dev ))
+                if (dev->ccwtrace)
                 {
                     if (to_memory)
                         dump("iobuf:", iobuf, midawlen);
@@ -3612,10 +3608,10 @@ do {                                                                   \
             }
 
             /* If not prefetch, display the IDAW if CCW tracing */
-            else if (CCW_TRACE_OR_STEP( dev ))
+            else if (dev->ccwtrace)
                 display_idaw( dev, idawfmt, 0, idadata, idalen );
 #if DEBUG_DUMP
-            if (CCW_TRACE_OR_STEP( dev ))
+            if (dev->ccwtrace)
             {
                 if (to_memory)
                     dump( "iobuf:", iobuf-idalen, idalen );
@@ -3729,7 +3725,7 @@ do {                                                                   \
             } /* end for(page) */
 
 #if DEBUG_PREFETCH
-            if (CCW_TRACE_OR_STEP( dev ))
+            if (dev->ccwtrace)
             {
                 char msgbuf[133];
 
@@ -3792,7 +3788,7 @@ do {                                                                   \
 #endif
 
 #if DEBUG_DUMP
-            if (CCW_TRACE_OR_STEP( dev ))
+            if (dev->ccwtrace)
             {
                 char msgbuf[133];
 
@@ -3890,7 +3886,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
 
             schedule_ioq( NULL, dev );
 
-            if (CCW_TRACE_OR_STEP( dev ))
+            if (dev->ccwtrace)
                 // "%1d:%04X CHAN: attention signaled"
                 WRMSG( HHC01304, "I", SSID_TO_LCSS( dev->ssid ), dev->devnum);
             rc = 0;
@@ -3903,7 +3899,7 @@ ARCH_DEP( device_attention )( DEVBLK* dev, BYTE unitstat )
         return rc;
     }
 
-    if (CCW_TRACE_OR_STEP( dev ))
+    if (dev->ccwtrace)
         // "%1d:%04X CHAN: attention"
         WRMSG( HHC01305, "I", LCSS_DEVNUM );
 
@@ -4011,7 +4007,7 @@ int     rc;                             /* Return code               */
         /* SSCH resulting in cc=2 thanks to this additional log msg. */
         /*                        Peter J. Jansen, 21-Jun-2016       */
         /*************************************************************/
-        if (CCW_TRACE_OR_STEP( dev ))
+        if (dev->ccwtrace)
         {
             // "%1d:%04X CHAN: startio cc=2 (busy=%d startpending=%d)"
             WRMSG( HHC01336, "I", SSID_TO_LCSS(dev->ssid),
@@ -4411,7 +4407,7 @@ execute_clear:
 execute_halt:
             perform_halt(dev);
 
-            if (tracethis && !dev->ccwstep)
+            if (tracethis)
                 // "%1d:%04X CHAN: halt completed"
                 WRMSG( HHC01309, "I", LCSS_DEVNUM );
 
@@ -4493,7 +4489,7 @@ execute_halt:
                 goto breakchain;
 
             /* Display the CCW */
-            if (dev->ccwtrace || dev->ccwstep)
+            if (dev->ccwtrace)
                 display_ccw (dev, ccw, addr, count, flags);
         }
 
@@ -5328,7 +5324,7 @@ breakchain:
             BYTE  tracing_active  = CCW_TRACING_ACTIVE( dev, tracethis );
             BYTE  cpu_tracing     = CPU_STEPPING_OR_TRACING_ALL;
             BYTE  ostailor_quiet  = (sysblk.pgminttr == 0);
-            BYTE  ccw_tracing     = CCW_TRACE_OR_STEP( dev );
+            BYTE  ccw_tracing     = dev->ccwtrace;
             BYTE  skip_ch9uc      = SKIP_CH9UC( dev, chanstat, unitstat );
 
             /* Trace the CCW if not already done */

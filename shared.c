@@ -2661,7 +2661,7 @@ static void shrdhdrtrc( DEVBLK* dev, const char* msg, const BYTE* hdr,
  *-------------------------------------------------------------------*/
 static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
 {
-    bool            tracing_or_stepping;
+    bool            tracing;
     struct timeval  tv;
     SHRD_TRACE      tracemsg;
     va_list         vl;
@@ -2674,17 +2674,17 @@ static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
        is true (not tracing or stepping AND no trace table) then
        there's nothing for us to do so we return immediately.
     */
-    tracing_or_stepping = (dev && (dev->ccwtrace || dev->ccwstep));
+    tracing = (dev && dev->ccwtrace);
 
     OBTAIN_SHRDTRACE_LOCK();
 
-    if (!tracing_or_stepping && !sysblk.shrdtrace)
+    if (!tracing && !sysblk.shrdtrace)
     {
         RELEASE_SHRDTRACE_LOCK();
         return;  // (nothing for us to do!)
     }
 
-    ASSERT( tracing_or_stepping || sysblk.shrdtrace );
+    ASSERT( tracing || sysblk.shrdtrace );
 
     /* Build the timestamp portion of the trace message */
     gettimeofday( &tv, NULL );
@@ -2702,7 +2702,7 @@ static void shrdtrc( DEVBLK* dev, const char* fmt, ... )
 
     /* Log the trace message directly to the panel (WITHOUT the
        timestamp prefix) if the device is being traced/stepped. */
-    if (tracing_or_stepping)
+    if (tracing)
         // "Shared:  %s"
         WRMSG( HHC00743, "I", tracemsg + 16 ); // (skip "HH:MM:SS.uuuuuu ")
 

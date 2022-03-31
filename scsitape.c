@@ -1208,7 +1208,7 @@ struct mtop opblk;
     {
         dev->fenced = 0;
 
-        if ( dev->ccwtrace || dev->ccwstep )
+        if (dev->ccwtrace)
             // "%1d:%04X Tape file %s, type %s: tape unloaded"
             WRMSG (HHC00210, "I", LCSS_DEVNUM, dev->filename, "scsi");
 
@@ -1379,7 +1379,7 @@ int readblkid_scsitape ( DEVBLK* dev, BYTE* logical, BYTE* physical )
         int save_errno = errno;
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC90205, "D"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
@@ -1444,7 +1444,7 @@ int locateblk_scsitape ( DEVBLK* dev, U32 blockid, BYTE *unitstat, BYTE code )
         int save_errno = errno;
         {
             // "%1d:%04X Tape file %s, type %s: error in function %s: %s"
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
                 WRMSG(HHC00205, "W"
                     ,SSID_TO_LCSS(dev->ssid)
                     ,dev->devnum
@@ -1993,7 +1993,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
         while (ETIMEDOUT == (rc = int_scsi_status_wait( dev,
             MAX_GSTAT_FREQ_USECS + (2 * SLOW_UPDATE_STATUS_TIMEOUT) )))
         {
-            if ( dev->ccwtrace || dev->ccwstep )
+            if (dev->ccwtrace)
             {
                 // "%1d:%04X Tape status retrieval timeout"
                 WRMSG( HHC00243, "W", LCSS_DEVNUM );
@@ -2013,7 +2013,7 @@ void int_scsi_status_update( DEVBLK* dev, int mountstat_only )
     create_automount_thread( dev );     // (in case status changed)
 
     /* Display tape status if tracing is active */
-    if (unlikely( dev->ccwtrace || dev->ccwstep ))
+    if (unlikely( dev->ccwtrace ))
     {
         char sstat_str[ 384 ] = {0};
         gstat2str( (U32) dev->sstat, sstat_str, sizeof( sstat_str ));

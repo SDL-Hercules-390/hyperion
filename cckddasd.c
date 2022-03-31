@@ -6561,7 +6561,7 @@ void cckd_trace( const char* func, int line, DEVBLK* dev, char* fmt, ... )
     /* Log the trace entry if requested */
     if (cckdblk.debug)
     {
-        if (dev && (dev->ccwtrace || dev->ccwstep))
+        if (dev && dev->ccwtrace)
             // "%1d:%04X %s"
             WRMSG( HHC00396, "I", LCSS_DEVNUM, trcmsg );
     }
