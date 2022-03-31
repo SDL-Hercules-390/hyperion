@@ -5919,6 +5919,7 @@ void cckd_command_help()
         , "  comp=<n>      Override compression                 (-1,0,1,2)"
         , "  compparm=<n>  Override compression parm            (-1 ... 9)"
         , "  debug=<n>     Enable CCW tracing debug messages      (0 or 1)"
+        , "  dtax=<n>      Dump cckd trace table at exit          (0 or 1)"
         , "  freepend=<n>  Set free pending cycles              (-1 ... 4)"
         , "  fsync=<n>     Enable fsync                           (0 or 1)"
         , "  gcint=<n>     Set garbage collector interval (sec) ( 0 .. 60)"
@@ -5955,6 +5956,7 @@ void cckd_command_opts()
         " "   "comp=%d"
         ","   "compparm=%d"
         ","   "debug=%d"
+        ","   "dtax=%d"
         ","   "freepend=%d"
         ","   "fsync=%d"
         ","   "gcint=%d"
@@ -5963,6 +5965,7 @@ void cckd_command_opts()
         , cckdblk.comp == 0xff ? -1 : cckdblk.comp
         , cckdblk.compparm
         , cckdblk.debug
+        , cckdblk.dtax
         , cckdblk.freepend
         , cckdblk.fsync
         , cckdblk.gcint

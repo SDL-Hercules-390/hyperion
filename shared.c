@@ -3032,7 +3032,7 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
     {
         OBTAIN_SHRDTRACE_LOCK();
         {
-            MSGBUF( buf, "TRACE=%d", sysblk.shrdtracen );
+            MSGBUF( buf, "TRACE=%d DTAX=%d", sysblk.shrdtracen, sysblk.shrddtax );
         }
         RELEASE_SHRDTRACE_LOCK();
         // "%-14s: %s"
@@ -3133,7 +3133,10 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
             WRMSG( HHC00740, "E", kw );
             return -1;
         }
-        if (sscanf( op, "%d%c", &dtax, &c ) != 1)
+        if (0
+            || sscanf( op, "%d%c", &dtax, &c ) != 1
+            || (dtax != 0 && dtax != 1)
+        )
         {
             // "Shared: invalid or missing value %s"
             WRMSG( HHC00740, "E", op );
@@ -3145,6 +3148,10 @@ DLL_EXPORT int shrd_cmd( int argc, char* argv[], char* cmdline )
             sysblk.shrddtax = dtax ? true : false;
         }
         RELEASE_SHRDTRACE_LOCK();
+
+        // "%-14s set to %s"
+        MSGBUF( buf, "DTAX=%d", sysblk.shrddtax );
+        WRMSG( HHC02204, "I", argv[0], buf );
 
         return 0;
     }

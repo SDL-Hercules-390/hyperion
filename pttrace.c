@@ -186,14 +186,15 @@ static void ptt_showparms()
 
     if (str)
     {
-        // "Pttrace: %s %s %s %s to=%d %d"
+        // "Pttrace: %s %s %s %s %s to=%d %d"
         WRMSG
         (
-            HHC90012, "I",
+            HHC90012, "D",
             str,
             pttnolock ? "nolock" : "lock",
             pttnotod  ? "notod"  : "tod",
             pttnowrap ? "nowrap" : "wrap",
+            !pttdtax  ? "nodtax" : "dtax",
             pttto,
             pttracen
         );
@@ -295,7 +296,12 @@ DLL_EXPORT int ptt_cmd( int argc, char* argv[], char* cmdline )
             }
             else if (strcasecmp("dtax", argv[0]) == 0)
             {
-                pttdtax = true; // Dump Table At Exit
+                pttdtax = true;
+                continue;
+            }
+            else if (strcasecmp("nodtax", argv[0]) == 0)
+            {
+                pttdtax = false;
                 continue;
             }
             else if (strcasecmp("lock", argv[0]) == 0)
@@ -564,7 +570,7 @@ char  tod[27];     // "YYYY-MM-DD HH:MM:SS.uuuuuu"
                     retcode[0] = ' ', retcode[1] = 0;
 
                 // "%s "TIDPAT" %-15.15s %-18.18s %-18.18s"PTR_FMTx" "PTR_FMTx" %s%s"
-                WRMSG( HHC90021, "I"
+                WRMSG( HHC90021, "D"
                     , &tod[11]                          // Time of day (HH:MM:SS.usecs)
                     , TID_CAST( pttrace[i].tid )        // Thread id
                     , threadname                        // Thread name

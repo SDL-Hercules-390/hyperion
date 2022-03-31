@@ -194,6 +194,7 @@
   "  comp=n        Override compression                  (-1,0,1,2)\n"          \
   "  compparm=n    Override compression parm             (-1 ... 9)\n"          \
   "  debug=n       Enable CCW tracing debug messages       (0 or 1)\n"          \
+  "  dtax=n        Dump trace table at exit                (0 or 1)\n"          \
   "  freepend=n    Set free pending cycles               (-1 ... 4)\n"          \
   "  fsync=n       Enable fsync                            (0 or 1)\n"          \
   "  gcint=n       Set garbage collector interval (sec)  ( 0 .. 60)\n"          \
@@ -1129,6 +1130,7 @@
   "     (no)lock         lock table before updating\n"                              \
   "     (no)tod          timestamp table entries\n"                                 \
   "     (no)wrap         wraparound trace table\n"                                  \
+  "     (no)dtax         dump table at exit\n"                                      \
   "     to=nnn           automatic display timeout  (number of seconds)\n"          \
   "     nnnnnn           table size                 (number of entries)\n"
 
@@ -1513,12 +1515,16 @@
 #define shrd_cmd_desc           "shrd command"
 #define shrd_cmd_help           \
                                 \
-  "Format: \"SHRD [TRACE[=nnnn]]\" where 'nnnn' is the desired number of\n"     \
-  "trace table entries. Specifying a non-zero value enables debug tracing\n"    \
-  "of the Shared Device Server.  Specifying a value of 0 disables tracing.\n"   \
-  "Entering the command with no arguments displays the current setting.\n"      \
-  "Use 'SHRD TRACE' by itself to print the current table.\n"                    \
-  "SEE ALSO: 'shrdport' command.\n"
+  "Format: \"SHRD [TRACE[=nnnn]|[DTAX=0|1]]\" where 'nnnn' is the desired\n"    \
+  "number of trace table entries, and DTAX is either 0 or 1. Specifying a\n"    \
+  "non-zero TRACE= value enables debug tracing of the Shared Device Server.\n"  \
+  "Specifying a value of 0 disables tracing. DTAX is a boolean true/false\n"    \
+  "value indicating whether or not to automatically dump the trace table\n"     \
+  "when Hercules exits. Both TRACE= and DTAX= must each be set individually\n"  \
+  "via separate commands. They cannot both be specified on the same command.\n" \
+  "Entering the SHRD command by itself with no arguments displays current\n"    \
+  "values. Entering \"SHRD TRACE\" by itself (without defining any value)\n"    \
+  "prints the current trace table. SEE ALSO: the 'shrdport' command.\n"
 
 #define shrdport_cmd_desc       "Set shrdport value"
 #define shrdport_cmd_help       \

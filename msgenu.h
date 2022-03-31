@@ -2596,7 +2596,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 /* hthreads.c, pttrace.c */
 #define HHC90010 "Pttrace: trace is busy"
 #define HHC90011 "Pttrace: invalid argument %s"
-#define HHC90012 "Pttrace: %s %s %s %s to=%d %d"
+#define HHC90012 "Pttrace: %s %s %s %s %s to=%d %d"
 #define HHC90013 "'%s(%s)' failed: rc=%d: %s; tid="TIDPAT", loc=%s"
 #define HHC90014 "lock %s was %s by thread "TIDPAT" at %s"
 #define HHC90015 "Thread "TIDPAT" (%s) abandoned lock %s obtained on %s at %s"
