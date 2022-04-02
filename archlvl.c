@@ -193,7 +193,6 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     U64   new_mainsize  = sysblk.mainsize;
     int   old_arch_mode = sysblk.arch_mode;
     int   new_arch_mode = sysblk.arch_mode;
-    bool  any_started;  // (true if any cpus are still started)
 
     UNREFERENCED( cmdline );
 
@@ -211,7 +210,6 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     }
 
     /* Too many arguments? */
-
     if (argc > 2)
     {
         // "Invalid command usage. Type 'help %s' for assistance."
@@ -220,16 +218,11 @@ int archlvl_cmd( int argc, char* argv[], char* cmdline )
     }
 
     /*-----------------------------------------------------*/
-    /*    Make sure all CPUs are deconfigured or stopped   */
-    /*-----------------------------------------------------*/
-
-    any_started = are_any_cpus_started();
-
-    /*-----------------------------------------------------*/
     /*                Set Architecture                     */
     /*-----------------------------------------------------*/
 
-    if (any_started)
+    /* Make sure all CPUs are deconfigured or stopped */
+    if (!are_all_cpus_stopped())
     {
         // "All CPU's must be stopped %s"
         WRMSG( HHC02253, "E", "to switch architectures" );
