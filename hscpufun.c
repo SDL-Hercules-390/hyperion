@@ -153,49 +153,52 @@ DLL_EXPORT int stopall_cmd( int argc, char* argv[], char* cmdline )
     return 0;
 }
 
-#ifdef _FEATURE_CPU_RECONFIG
-
+#if defined( _FEATURE_CPU_RECONFIG )
 /*-------------------------------------------------------------------*/
 /* cf command - configure/deconfigure a CPU                          */
 /*-------------------------------------------------------------------*/
-int cf_cmd(int argc, char *argv[], char *cmdline)
+int cf_cmd( int argc, char* argv[], char* cmdline )
 {
-    int on = -1;
+    int on = -1;  // (-1 indicates no change wanted)
 
     UPPER_ARGV_0( argv );
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
+    /* Change settings? */
     if (argc == 2)
     {
-        if ( CMD(argv[1],on,2) )
-            on = 1;
-        else if ( CMD(argv[1],off,3) )
-            on = 0;
+             if (CMD( argv[1], ON,  2 )) on = 1; // (change to online)
+        else if (CMD( argv[1], OFF, 3 )) on = 0; // (change to offline)
     }
 
-    OBTAIN_INTLOCK(NULL);
-
-    if (IS_CPU_ONLINE(sysblk.pcpu))
+    /* Display current settings or change to new settings */
+    OBTAIN_INTLOCK( NULL );
     {
-        if (on < 0)
-            WRMSG(HHC00819, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu );
-        else if (on == 0)
-            deconfigure_cpu(sysblk.pcpu);
+        if (IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            if (on < 0) // (no change; just show current setting)
+                // "Processor %s%02X: online"
+                WRMSG( HHC00819, "I", PTYPSTR( sysblk.pcpu ), sysblk.pcpu );
+            else if (on == 0) // (change to offline)
+                deconfigure_cpu( sysblk.pcpu );
+        }
+        else // (cpu is currently offline)
+        {
+            if (on < 0) // (no change; show current setting)
+                // "Processor %s%02X: offline"
+                WRMSG( HHC00820, "I", PTYPSTR( sysblk.pcpu ), sysblk.pcpu );
+            else if (on > 0) // (change to online)
+                configure_cpu( sysblk.pcpu );
+        }
     }
-    else
-    {
-        if (on < 0)
-            WRMSG(HHC00820, "I", PTYPSTR(sysblk.pcpu), sysblk.pcpu );
-        else if (on > 0)
-            configure_cpu(sysblk.pcpu);
-    }
+    RELEASE_INTLOCK( NULL );
 
-    RELEASE_INTLOCK(NULL);
-
+    /* If settings changed, show results */
     if (on >= 0)
     {
-        cf_cmd (1, argv, argv[0]);
+        // (call ourselves again to display current settings)
+        cf_cmd( 1, argv, argv[0] );
     }
 
     return 0;
@@ -205,64 +208,68 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
 /*-------------------------------------------------------------------*/
 /* cfall command - configure/deconfigure all CPU's                   */
 /*-------------------------------------------------------------------*/
-int cfall_cmd(int argc, char *argv[], char *cmdline)
+int cfall_cmd( int argc, char *argv[], char *cmdline )
 {
-static char *qproc[] = { "qproc", NULL };
+static char* qproc[] = { "qproc", NULL };   // "qproc" command
 int rc = 0;
 int on = -1;
 
     UPPER_ARGV_0( argv );
 
-    UNREFERENCED(cmdline);
+    UNREFERENCED( cmdline );
 
     if (argc == 2)
     {
-        if ( CMD(argv[1],on,2) )
-            on = 1;
-        else if ( CMD(argv[1],off,3) )
-            on = 0;
+             if (CMD( argv[1], ON,  2 )) on = 1; // (change to online)
+        else if (CMD( argv[1], OFF, 3 )) on = 0; // (change to offline)
         else
         {
+            // "Missing or invalid argument(s)"
             WRMSG( HHC17000, "E" );
             rc = -1;
         }
-        if ( rc == 0 )
+        if (rc == 0)
         {
-            rc = configure_numcpu(on ? sysblk.maxcpu : 0);
+            // configure number of online CPUs (i.e. NUMCPU)
+            rc = configure_numcpu( on ? sysblk.maxcpu : 0 );
         }
     }
-    else if ( argc == 1 )
+    else if (argc == 1)
     {
-        rc = qproc_cmd(1, qproc, *qproc);
+        // Show current CPU settings
+        rc = qproc_cmd( 1, qproc, *qproc );
     }
     else
     {
+        // "Invalid command usage. Type 'help %s' for assistance."
         WRMSG( HHC02299, "E", argv[0] );
         rc = -1;
     }
     return rc;
 }
 
-#else
-int cf_cmd(int argc, char *argv[], char *cmdline)
+#else // !defined( _FEATURE_CPU_RECONFIG )
+int cf_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
+    // "Panel command %s is not supported in this build; see option %s"
     WRMSG( HHC02310, "S", "cf", "FEATURE_CPU_RECONFIG" );
     return -1;
 }
-int cfall_cmd(int argc, char *argv[], char *cmdline)
+int cfall_cmd( int argc, char* argv[], char* cmdline )
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
-    UNREFERENCED(cmdline);
+    UNREFERENCED( argc );
+    UNREFERENCED( argv );
+    UNREFERENCED( cmdline );
 
+    // "Panel command %s is not supported in this build; see option %s"
     WRMSG( HHC02310, "S", "cfall", "FEATURE_CPU_RECONFIG" );
     return -1;
 }
-#endif /*_FEATURE_CPU_RECONFIG*/
+#endif /* defined( _FEATURE_CPU_RECONFIG ) */
 
 
 /*-------------------------------------------------------------------*/
