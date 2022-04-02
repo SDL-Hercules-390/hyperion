@@ -2161,15 +2161,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     }
 
     /* Command reject if data chaining and command is not READ */
-    if ((flags & CCW_FLAGS_CD) && code != 0x02 && code != 0x5E
-        && (code & 0x7F) != 0x1E && (code & 0x7F) != 0x1A
-        && (code & 0x7F) != 0x16 && (code & 0x7F) != 0x12
-        && (code & 0x7F) != 0x0E && (code & 0x7F) != 0x06)
+    if ((flags & CCW_FLAGS_CD) && !IS_CCW_READ( code ))
     {
-        // "%1d:%04X CKD file %s: data chaining not supported for CCW %02X"
+        // "%1d:%04X CKD file %s: data chaining not supported for non-read CCW %02X"
         WRMSG( HHC00422, "E", LCSS_DEVNUM, dev->filename, code );
-        ckd_build_sense (dev, SENSE_CR, 0, 0,
-                        FORMAT_0, MESSAGE_1);
+        ckd_build_sense( dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_1 );
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return;
     }

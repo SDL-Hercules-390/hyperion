@@ -498,7 +498,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00419 "%1d:%04X CKD file %s: error attempting to read past end of track %d %d"
 #define HHC00420 "%1d:%04X CKD file %s: error write kd orientation"
 #define HHC00421 "%1d:%04X CKD file %s: error write data orientation"
-#define HHC00422 "%1d:%04X CKD file %s: data chaining not supported for CCW %02X"
+#define HHC00422 "%1d:%04X CKD file %s: data chaining not supported for non-read CCW %02X"
 #define HHC00423 "%1d:%04X CKD file %s: search key %s"
 #define HHC00424 "%1d:%04X CKD file %s: read trk %d cur trk %d"
 #define HHC00425 "%1d:%04X CKD file %s: read track updating track %d"
