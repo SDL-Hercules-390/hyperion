@@ -131,6 +131,9 @@
   DISABLE_GCC_WARNING( "-Wstringop-truncation" )
   #endif
 
+  /* Mostly anoying bullshit */
+  DISABLE_GCC_WARNING( "-Wmisleading-indentation" )
+
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */
   /*-----------------------------------------------------------------*/
