@@ -670,6 +670,7 @@ sl_fmtdate( char *dest, char *src, int fromto )
         */
         if( src == NULL )
         {
+            time( &curtime );
             strftime( sbuf, sizeof( sbuf ), "%Y%j", localtime( &curtime ) );
             src = sbuf;
         }
