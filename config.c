@@ -1032,7 +1032,7 @@ DLL_EXPORT bool is_diag_instr()
 
     /* Find out if we are a cpu thread */
     if (!(arecpu = are_cpu_thread( &ourcpu )))
-        return FALSE;
+        return false;
 
     /* Point to our REGS structure */
     regs = sysblk.regs[ ourcpu ];
