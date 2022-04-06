@@ -1032,7 +1032,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01404 "Could not create the Automatic Operator thread"
 #define HHC01405 "Script file %s not found"
 #define HHC01406 "Startup parm -l: maximum loadable modules %d exceeded; remainder not loaded"
-#define HHC01407 "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
+#define HHC01407 "Usage: %s [--help[=SHORT|LONG]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
 #define HHC01408 "Hercules terminating, see previous messages for reason"
 #define HHC01409 "Load of dyngui.dll failed, Hercules terminated"
 #define HHC01410 "Cannot register %s handler: %s"
@@ -1041,7 +1041,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01413 "%s version %s"
 #define HHC01414 "%s"
 #define HHC01415 "Build date: %s at %s"
-//efine HHC01416 (available)
+#define HHC01416 "Required configuration file not found"
 #define HHC01417 "%s"
 #define HHC01418 "Symbol expansion will result in buffer overflow; ignored"
 #define HHC01419 "Symbol and/or Value is invalid; ignored"

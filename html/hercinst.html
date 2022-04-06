@@ -440,8 +440,13 @@ where:
 
             is the name of the configuration file.
             The default, if none is specified, is <b><em>hercules.cnf</em></b>.
-            The default may be overridden via the <code>HERCULES_CNF</code>
-            environment variable.
+            The default may be overridden via the "<code>HERCULES_CNF</code>"
+            environment variable. If the value "<b>none</b>" is specified as the
+            name of the configuration file, then Hercules is started without a
+            configuration file using internal default values and no devices.
+            Alternatively, specifying the filename as "<code>NUL</code>" on
+            Windows or "<code>/dev/null</code>" on Linux means the same thing
+            as specifying "<b>none</b>".
         <p>
         <dt><code><em>logfile</em></code><p><dd>
 

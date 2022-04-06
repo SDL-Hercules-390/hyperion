@@ -697,6 +697,24 @@ static void* process_rc_file( void* dummy )
 }
 
 /*-------------------------------------------------------------------*/
+/* Display cmdline arguments help                                    */
+/*-------------------------------------------------------------------*/
+static void arghelp()
+{
+    char   pgm[ MAX_PATH ];
+    char*  strtok_str = NULL;
+
+    STRLCPY( pgm, sysblk.hercules_pgmname );
+
+    // "Usage: %s [--help[=SHORT|LONG]] -f config-filename|\"none\" [-o logfile-name] [-r rcfile-name] [-d] [-b logo-filename] [-s sym=val] [-t [factor]] [-p dyn-load-dir] [[-l dynmod-to-load]...] [> logfile]"
+    WRMSG( HHC01407, "S", strtok_r( pgm, ".", &strtok_str ) );
+
+    fflush( stderr );
+    fflush( stdout );
+    usleep( 100000 );
+}
+
+/*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int impl( int argc, char* argv[] )
@@ -1366,6 +1384,43 @@ int     rc;
     }
 #endif /* defined( OPTION_WATCHDOG ) */
 
+    /* Make sure the name of the configuration file is either NULL
+       or a non-empty string. Note: when cfgorrc[want_cfg].filename
+       is NULL (which can be forced using "-f none" syntax), then
+       Hercules is started *without* any configuration file, using
+       default values and no devices. A configuration filename of
+       just an empty string however, is ALWAYS invalid.
+    */
+    if (1
+        &&  cfgorrc[want_cfg].filename      // filename specified,
+        && !cfgorrc[want_cfg].filename[0]   // but is empty string!
+    )
+    {
+        LOGMSG("\n");
+
+        // "Required configuration file not found"
+        WRMSG( HHC01416, "S");
+
+        LOGMSG("\n");
+
+        /* Show them all of our command-line arguments... */
+        arghelp();
+
+        LOGMSG("\n");
+
+        // "Hercules terminating, see previous messages for reason"
+        WRMSG( HHC01408, "S");
+
+        LOGMSG("\n");
+
+        fflush( stderr );
+        fflush( stdout );
+        usleep( 100000 );
+
+        delayed_exit(-1);
+        return 1;
+    }
+
     /* Build system configuration */
     if ( build_config (cfgorrc[want_cfg].filename) )
     {
@@ -1728,17 +1783,8 @@ error:
     /* Terminate if invalid arguments were detected */
     if (arg_error)
     {
-        char   pgm[ MAX_PATH ];
-        char*  strtok_str = NULL;
-
-        const char symsub[] = " [-s sym=val]";
-        const char dlsub [] = " [-p dyn-load-dir] [[-l dynmod-to-load]...]";
-
         /* Show them all of our command-line arguments... */
-        STRLCPY( pgm, sysblk.hercules_pgmname );
-
-        // "Usage: %s [--help[=SHORT|LONG]] [-f config-filename] [-r rcfile-name] [-d] [-b logo-filename]%s [-t [factor]]%s [> logfile]"
-        WRMSG( HHC01407, "S", strtok_r( pgm, ".", &strtok_str ), symsub, dlsub );
+        arghelp();
     }
     else /* Check for config and rc file, but don't open */
     {
