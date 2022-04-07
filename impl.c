@@ -1384,43 +1384,6 @@ int     rc;
     }
 #endif /* defined( OPTION_WATCHDOG ) */
 
-    /* Make sure the name of the configuration file is either NULL
-       or a non-empty string. Note: when cfgorrc[want_cfg].filename
-       is NULL (which can be forced using "-f none" syntax), then
-       Hercules is started *without* any configuration file, using
-       default values and no devices. A configuration filename of
-       just an empty string however, is ALWAYS invalid.
-    */
-    if (1
-        &&  cfgorrc[want_cfg].filename      // filename specified,
-        && !cfgorrc[want_cfg].filename[0]   // but is empty string!
-    )
-    {
-        LOGMSG("\n");
-
-        // "Required configuration file not found"
-        WRMSG( HHC01416, "S");
-
-        LOGMSG("\n");
-
-        /* Show them all of our command-line arguments... */
-        arghelp();
-
-        LOGMSG("\n");
-
-        // "Hercules terminating, see previous messages for reason"
-        WRMSG( HHC01408, "S");
-
-        LOGMSG("\n");
-
-        fflush( stderr );
-        fflush( stdout );
-        usleep( 100000 );
-
-        delayed_exit(-1);
-        return 1;
-    }
-
     /* Build system configuration */
     if ( build_config (cfgorrc[want_cfg].filename) )
     {
@@ -1790,36 +1753,50 @@ error:
     {
         struct stat st;
         int i, rv;
+        bool using_default;
 
         for (i=0; cfgorrccount > i; i++)
         {
-            /* If no value explicitly specified, try env. default */
-            if (!cfgorrc[i].filename)
-                cfgorrc[i].filename = get_symbol( cfgorrc[i].envname );
+            using_default = false;
 
-            /* If no env. default, try hard coded default */
+            /* If no value explicitly specified, try environment */
             if (0
                 || !cfgorrc[i].filename
                 || !cfgorrc[i].filename[0]
             )
             {
-                /* Use default from current directory if it exists */
-                if ((rv = stat( cfgorrc[i].defaultfile, &st )) == 0)
+                const char* envname = get_symbol( cfgorrc[i].envname );
+
+                if (envname && envname[0])
+                    cfgorrc[i].filename = envname;
+                else
+                {
+                    /* If no environment, use our hard coded default */
+                    using_default = true;
                     cfgorrc[i].filename = cfgorrc[i].defaultfile;
-                continue;
+                }
             }
 
             /* Explicit request for no file use at all? */
-            if (strcasecmp( cfgorrc[i].filename, "None" ) == 0)
+            if (strcasecmp( cfgorrc[i].filename, "none" ) == 0)
             {
                cfgorrc[i].filename = NULL;  /* Suppress file */
                continue;
             }
 
-            /* File specified explicitly or by env; check existence */
+            /* File specified either explicitly, by environment,
+               or by hard coded default: verify its existence.
+            */
             if ((rv = stat( cfgorrc[i].filename, &st )) != 0)
             {
-                // "%s file %s not found: %s"
+                /* If this is the .rc file, default to none */
+                if (want_rc == i && using_default)
+                {
+                   cfgorrc[i].filename = NULL;  /* Suppress file */
+                   continue;
+                }
+
+                // "%s file '%s' not found: %s"
                 WRMSG( HHC02342, "S", cfgorrc[i].whatfile,
                     cfgorrc[i].filename, strerror( errno ));
                 arg_error++;

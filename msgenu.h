@@ -746,8 +746,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00884 "Channel Report queue: (empty)"
 #define HHC00885 "Channel Report queue:"
 #define HHC00886 "CRW 0x%8.8X: %s"
-#define HHC00887 "Note: Enabling/Disabling/Querying facilities via 'ARCHLVL' is deprecated."
-#define HHC00888 "      Please use the new FACILITY command instead."
+//efine HHC00887 (available)
+//efine HHC00888 (available)
 #define HHC00889 "Available facilities cannot be changed once system is IPLed"
 #define HHC00890 "Cannot %s facility %s without first %s facility %s"
 #define HHC00891 "%3d %02X %02X %c%c%c%c%c %-27s%c%s"
@@ -1041,7 +1041,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC01413 "%s version %s"
 #define HHC01414 "%s"
 #define HHC01415 "Build date: %s at %s"
-#define HHC01416 "Required configuration file not found"
+//efine HHC01416 (available)
 #define HHC01417 "%s"
 #define HHC01418 "Symbol expansion will result in buffer overflow; ignored"
 #define HHC01419 "Symbol and/or Value is invalid; ignored"

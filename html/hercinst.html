@@ -458,8 +458,11 @@ where:
         <p>
         <dt><code><em>rcfile</em></code><p><dd>
 
-            is the name of the Hercules <a href="#RCFILE">.RC run commands file</a>.
-            The run commands file automatically executes panel commands upon startup.
+            is the name of the Hercules <a href="#RCFILE">.rc run commands file</a>.
+            The run commands file automatically executes panel commands upon
+            startup. If not specified, the value of the "<code>HERCULES_RC</code>"
+            environment variable is used. If no environment variable is defined,
+            the value "<b>none</b>" is used, indicating an .rc will not be used.
         <p>
         <dt><code><em>logofile</em></code><p><dd>
 
