@@ -701,13 +701,13 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 //efine HHC00837 (available)
 //efine HHC00838 (available)
 #define HHC00839 "Processor %s%02X: ipl failed: %s"
-#define HHC00840 "External interrupt: interrupt key"
-#define HHC00841 "External interrupt: clock comparator"
-#define HHC00842 "External interrupt: CPU timer=%16.16"PRIX64
-#define HHC00843 "External interrupt: interval timer"
-#define HHC00844 "%1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
-#define HHC00845 "External interrupt: block I/O %s"
-#define HHC00846 "External interrupt: service signal %8.8X"
+#define HHC00840 "Processor %s%02X: External interrupt: interrupt key"
+#define HHC00841 "Processor %s%02X: External interrupt: clock comparator"
+#define HHC00842 "Processor %s%02X: External interrupt: CPU timer=%16.16"PRIX64
+#define HHC00843 "Processor %s%02X: External interrupt: interval timer"
+#define HHC00844 "Processor %s%02X: %1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
+#define HHC00845 "Processor %s%02X: External interrupt: block I/O %s"
+#define HHC00846 "Processor %s%02X: External interrupt: service signal %8.8X"
 //efine HHC00847 - HHC00849 (available)
 #define HHC00850 "Processor %s%02X: CPUint=%8.8X (State:%8.8X)&(Mask:%8.8X)"
 #define HHC00851 "Processor %s%02X: interrupt %spending"

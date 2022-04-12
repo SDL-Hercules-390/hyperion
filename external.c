@@ -175,7 +175,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
     /* External interrupt if console interrupt key was depressed */
     if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
     {
-        WRMSG (HHC00840, "I");
+        // "Processor %s%02X: External interrupt: interrupt key"
+        WRMSG (HHC00840, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -291,8 +292,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            // "External interrupt: clock comparator"
-            WRMSG( HHC00841, "I" );
+            // "Processor %s%02X: External interrupt: clock comparator"
+            WRMSG( HHC00841, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
         }
         ARCH_DEP( external_interrupt )( EXT_CLOCK_COMPARATOR_INTERRUPT, regs );
     }
@@ -308,8 +309,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            // "External interrupt: CPU timer=%16.16"PRIX64
-            WRMSG( HHC00842, "I", CPU_TIMER( regs ));
+            // "Processor %s%02X: External interrupt: CPU timer=%16.16"PRIX64
+            WRMSG( HHC00842, "I", PTYPSTR( regs->cpuad ), regs->cpuad, CPU_TIMER( regs ));
         }
         ARCH_DEP( external_interrupt )( EXT_CPU_TIMER_INTERRUPT, regs );
     }
@@ -327,8 +328,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            // "External interrupt: interval timer"
-            WRMSG( HHC00843, "I" );
+            // "Processor %s%02X: External interrupt: interval timer"
+            WRMSG( HHC00843, "I", PTYPSTR( regs->cpuad ), regs->cpuad );
         }
         OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
@@ -357,8 +358,9 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
 
             if (sysblk.biodev->ccwtrace)
             {
-                // "%1d:%04X: processing block I/O interrupt: code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
-                WRMSG (HHC00844, "I",
+                // "Processor %s%02X: %1d:%04X: processing block I/O interrupt:
+                //     code %4.4X parm %16.16"PRIX64" status %2.2X subcode %2.2X"
+                WRMSG( HHC00844, "I", PTYPSTR( regs->cpuad ), regs->cpuad,
                     SSID_TO_LCSS(sysblk.biodev->ssid),
                     sysblk.biodev->devnum,
                     sysblk.servcode,
@@ -383,8 +385,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 {
                     char buf[40];
                     MSGBUF( buf, "%16.16X", (unsigned) sysblk.bioparm );
-                    // "External interrupt: block I/O %s"
-                    WRMSG( HHC00845,"I", buf );
+                    // "Processor %s%02X: External interrupt: block I/O %s"
+                    WRMSG( HHC00845,"I", PTYPSTR( regs->cpuad ), regs->cpuad, buf );
                 }
 
                 /* Set the main storage reference and change bits   */
@@ -420,8 +422,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 {
                     char buf[40];
                     MSGBUF( buf, "%8.8X", (U32) sysblk.bioparm );
-                    // "External interrupt: block I/O %s"
-                    WRMSG( HHC00845,"I", buf );
+                    // "Processor %s%02X: External interrupt: block I/O %s"
+                    WRMSG( HHC00845,"I", PTYPSTR( regs->cpuad ), regs->cpuad, buf );
                 }
 
                 /* Store Block I/O parameter at PSA+X'80' */
@@ -453,8 +455,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
                 && !TXF_INSTR_TRACING()
             )
             {
-                // "External interrupt: service signal %8.8X"
-                WRMSG( HHC00846,"I", sysblk.servparm );
+                // "Processor %s%02X: External interrupt: service signal %8.8X"
+                WRMSG( HHC00846,"I", PTYPSTR( regs->cpuad ), regs->cpuad, sysblk.servparm );
             }
 
             /* Store service signal parameter at PSA+X'80' */
@@ -485,8 +487,8 @@ U16     servcode;      /* Service Signal or Block I/O Interrupt code */
             && !TXF_INSTR_TRACING()
         )
         {
-            // "External interrupt: service signal %8.8X"
-            WRMSG( HHC00846,"I", sysblk.servparm );
+            // "Processor %s%02X: External interrupt: service signal %8.8X"
+            WRMSG( HHC00846,"I", PTYPSTR( regs->cpuad ), regs->cpuad, sysblk.servparm );
         }
 
         /* Store service signal parameter at PSA+X'80' */
