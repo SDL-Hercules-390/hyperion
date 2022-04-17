@@ -1851,7 +1851,7 @@ REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 const INSTR_FUNC   *current_opcode_table;
 register REGS   *regs;
 BYTE   *ip;
-int     i;
+int     i = 0;
 int     aswitch;
 
     /* Assign new regs if not already assigned */
@@ -1955,8 +1955,8 @@ int     aswitch;
            to here, thereby causing the instruction counter to not be
            properly updated. Thus, we need to update it here instead.
        */
-        regs->instcount   +=     MAX_CPU_LOOPS/2;   /* approximate */
-        UPDATE_SYSBLK_INSTCOUNT( MAX_CPU_LOOPS/2 ); /* approximate */
+        regs->instcount   +=     (i * 2);
+        UPDATE_SYSBLK_INSTCOUNT( (i * 2) );
 
         /* Perform automatic instruction tracing if it's enabled */
         do_automatic_tracing();
