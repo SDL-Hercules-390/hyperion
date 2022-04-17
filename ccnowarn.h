@@ -121,6 +121,10 @@
   // "converts between pointers to integer types with different sign"
   DISABLE_GCC_WARNING( "-Wpointer-sign" )
 
+  #if defined( GCC_VERSION ) && GCC_VERSION >= 60000 /* gcc >= 6.0.0 */
+  /* Mostly anoying bullshit */
+  DISABLE_GCC_WARNING( "-Wmisleading-indentation" )
+  #endif
   #if defined( GCC_VERSION ) && GCC_VERSION >= 70100 /* gcc >= 7.1.0 */
   // "output may be truncated writing up to x bytes into a region of size y"
   // (this warning is usually issued for most all uses of our MSGBUF macro)
@@ -130,9 +134,6 @@
   /* Too many false positives on this one */
   DISABLE_GCC_WARNING( "-Wstringop-truncation" )
   #endif
-
-  /* Mostly anoying bullshit */
-  DISABLE_GCC_WARNING( "-Wmisleading-indentation" )
 
   /*-----------------------------------------------------------------*/
   /*            define support for other compilers here              */
