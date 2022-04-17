@@ -122,7 +122,7 @@
   DISABLE_GCC_WARNING( "-Wpointer-sign" )
 
   #if defined( GCC_VERSION ) && GCC_VERSION >= 60000 /* gcc >= 6.0.0 */
-  /* Mostly anoying bullshit */
+  /* Mostly annoying bullshit */
   DISABLE_GCC_WARNING( "-Wmisleading-indentation" )
   #endif
   #if defined( GCC_VERSION ) && GCC_VERSION >= 70100 /* gcc >= 7.1.0 */
