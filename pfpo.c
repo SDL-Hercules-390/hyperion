@@ -1050,6 +1050,7 @@ int dfl2hflbfl(unsigned int * dfltab,unsigned int * hfltab,int dflwords,int hflw
     {
       arraydiv(dec,1024,ARRAYMAX,&rem);
       decnum = DPD2BIN[rem];
+      if (i == ndpd - 1) decnum += lmd;
       memset(wrk, 0x00, ARRAYMAX * 4);
       wrk[ARRAYMAX - 1] = decnum;
       k = fac10;
