@@ -3828,7 +3828,7 @@ static void qeth_halt_data_device( DEVBLK* dev, OSA_GRP* grp )
 /*-------------------------------------------------------------------*/
 /*                  QETH Halt or Clear Subchannel                    */
 /*-------------------------------------------------------------------*/
-/* This function is called by channelc. in response to a HSCH (Halt  */
+/* This function is called by channel.c in response to a HSCH (Halt  */
 /* Subchannel) or CSCH (Clear Subchannel) instruction.  Upon entry,  */
 /* both INTLOCK (sysblk.intlock) and dev->lock are held.             */
 /*-------------------------------------------------------------------*/
