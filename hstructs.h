@@ -668,6 +668,16 @@ struct SYSBLK {
         TID     loggertid;              /* logger_thread Thread-id   */
 #if defined( OPTION_WATCHDOG )
         TID     wdtid;                  /* Thread-id for watchdog    */
+#if defined( _MSVC_ )
+        /* Normal operation: both false. During suspend but before
+           resume, suspended = true, resumed = false. After waking
+           up from being suspended, suspended = false, resumed = true.
+           Watchdog thread will reset resumed to false again once it
+           notices resumed = true.
+        */
+        bool    sys_suspended;          /* System has been suspended */
+        bool    sys_resumed;            /* System has been resumed   */
+#endif
 #endif
         enum OPERATION_MODE operation_mode; /* CPU operation mode    */
         u_int   lparmode:1;             /* LPAR mode active          */
