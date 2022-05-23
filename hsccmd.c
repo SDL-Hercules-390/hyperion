@@ -511,7 +511,7 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
         {
             curr_high_mips_rate = 0;
             curr_high_sios_rate = 0;
-            WRMSG( HHC02272, "I", "Done!" );
+            WRMSG( HHC02268, "I", "Done!" );
             return 0;
         }
         else
@@ -584,28 +584,28 @@ int maxrates_cmd(int argc, char *argv[],char *cmdline)
 
         if ( rc )
         {
-            WRMSG(HHC02272, "I", "Highest observed MIPS and IO/s rates:");
+            WRMSG(HHC02268, "I", "Highest observed MIPS and IO/s rates:");
             if ( prev_int_start_time != curr_int_start_time )
             {
                 MSGBUF( buf, "From %s to %s", pszPrevIntervalStartDateTime,
                          pszCurrIntervalStartDateTime);
-                WRMSG(HHC02272, "I", buf);
+                WRMSG(HHC02268, "I", buf);
                 MSGBUF( buf, "MIPS: %d.%02d", prev_high_mips_rate / 1000000,
                          prev_high_mips_rate % 1000000);
-                WRMSG(HHC02272, "I", buf);
+                WRMSG(HHC02268, "I", buf);
                 MSGBUF( buf, "IO/s: %d", prev_high_sios_rate);
-                WRMSG(HHC02272, "I", buf);
+                WRMSG(HHC02268, "I", buf);
             }
             MSGBUF( buf, "From %s to %s", pszCurrIntervalStartDateTime,
                      pszCurrentDateTime);
-            WRMSG(HHC02272, "I", buf);
+            WRMSG(HHC02268, "I", buf);
             MSGBUF( buf, "MIPS: %d.%02d", curr_high_mips_rate / 1000000,
                      curr_high_mips_rate % 1000000);
-            WRMSG(HHC02272, "I", buf);
+            WRMSG(HHC02268, "I", buf);
             MSGBUF( buf, "IO/s: %d", curr_high_sios_rate);
-            WRMSG(HHC02272, "I", buf);
+            WRMSG(HHC02268, "I", buf);
             MSGBUF( buf, "Current interval is %d minutes", maxrates_rpt_intvl);
-            WRMSG(HHC02272, "I", buf);
+            WRMSG(HHC02268, "I", buf);
         }
         else
         {

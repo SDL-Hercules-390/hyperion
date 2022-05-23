@@ -1388,7 +1388,7 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC02265 "Script %d: file %s aborted due to previous conditions"
 //efine HHC02266 (available)
 #define HHC02267 "%s" // (trace instr: Real address is not valid)
-//efine HHC02268 (available)
+#define HHC02268 "%s" // maxrates command
 #define HHC02269 "%s" // General purpose registers
 #define HHC02270 "%s" // Floating point registers
 #define HHC02271 "%s" // Control registers
