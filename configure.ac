@@ -169,6 +169,11 @@ case "$target_cpu" in
         hc_cv_pkg_lib_subdir="/ppc"
         ;;
 
+    riscv64*)
+        hc_cv_cpu_arch=riscv64
+        hc_cv_pkg_lib_subdir="/riscv64"
+        ;;
+
     sparc*)
         hc_cv_cpu_arch=sparc
         hc_cv_pkg_lib_subdir="/sparc"
