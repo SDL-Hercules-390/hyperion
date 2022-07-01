@@ -2273,6 +2273,9 @@ static int  CTCE_Start_Listen_Connect_Threads( DEVBLK* dev )
 // CTCE_ListenThread
 // ---------------------------------------------------------------------
 
+PUSH_GCC_WARNINGS()
+DISABLE_GCC_UNUSED_SET_WARNING; // (because rc only referenced if full keepalive)
+
 static void*  CTCE_ListenThread( void* argp )
 {
     DEVBLK        *pDEVBLK;                      // device block pointer
@@ -2465,6 +2468,8 @@ static void*  CTCE_ListenThread( void* argp )
     UNREACHABLE_CODE( return NULL );
 
 } // CTCE_ListenThread
+
+POP_GCC_WARNINGS()
 
 // ---------------------------------------------------------------------
 // CTCE_Send
