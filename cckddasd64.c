@@ -411,7 +411,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     return cckd->fd[sfx];
 
-} /* end function cckd_open */
+} /* end function cckd64_open */
 
 /*-------------------------------------------------------------------*/
 /* Close a cckd file                                                 */
@@ -441,7 +441,7 @@ int             rc = 0;                 /* Return code               */
 
     return rc;
 
-} /* end function cckd_close */
+} /* end function cckd64_close */
 
 /*-------------------------------------------------------------------*/
 /* Read from a cckd file                                             */
@@ -488,7 +488,7 @@ int             rc;                     /* Return code               */
 
     return rc;
 
-} /* end function cckd_read */
+} /* end function cckd64_read */
 
 /*-------------------------------------------------------------------*/
 /* Write to a cckd file                                              */
@@ -560,7 +560,7 @@ CCKD64_EXT     *cckd;                   /* -> cckd extension         */
 
     return 0;
 
-} /* end function cckd_ftruncate */
+} /* end function cckd64_ftruncate */
 
 /*-------------------------------------------------------------------*/
 /* Compressed ckd read track image                                   */
@@ -1121,7 +1121,7 @@ cckd_read_trk_retry:
 
     return lru;
 
-} /* end function cckd_read_trk */
+} /* end function cckd64_read_trk */
 
 /*-------------------------------------------------------------------*/
 /* Flush updated cache entries for a device                          */
@@ -1492,7 +1492,7 @@ U64             fpos;
         }
         cckd_print_itrace();
     }
-} /* end function cckd_chk_space */
+} /* end function cckd64_chk_space */
 #endif // defined( DEBUG_FREESPACE )
 
 /*-------------------------------------------------------------------*/
@@ -1638,7 +1638,7 @@ cckd_get_space_atend:
 
     return fpos;
 
-} /* end function cckd_get_space */
+} /* end function cckd64_get_space */
 
 /*-------------------------------------------------------------------*/
 /* Release file space                                                */
@@ -1748,7 +1748,7 @@ U64             fsize = size;           /* Free space size           */
 
     CCKD_CHK_SPACE(dev);
 
-} /* end function cckd_rel_space */
+} /* end function cckd64_rel_space */
 
 /*-------------------------------------------------------------------*/
 /* Flush pending free space                                          */
@@ -1870,7 +1870,7 @@ U64             ppos, pos;              /* Free space offsets        */
 
     CCKD_CHK_SPACE(dev);
 
-} /* end function cckd_flush_space */
+} /* end function cckd64_flush_space */
 
 /*-------------------------------------------------------------------*/
 /* Read compressed dasd header                                       */
@@ -1923,7 +1923,7 @@ int             sfx;                    /* File index                */
 
     return 0;
 
-} /* end function cckd_read_chdr */
+} /* end function cckd64_read_chdr */
 
 /*-------------------------------------------------------------------*/
 /* Write compressed dasd header                                      */
@@ -1951,7 +1951,7 @@ int             sfx;                    /* File index                */
 
     return 0;
 
-} /* end function cckd_write_chdr */
+} /* end function cckd64_write_chdr */
 
 /*-------------------------------------------------------------------*/
 /* Read the level 1 table                                            */
@@ -2007,7 +2007,7 @@ int             i;                      /* Work integer              */
 
     return 0;
 
-} /* end function cckd_read_l1 */
+} /* end function cckd64_read_l1 */
 
 /*-------------------------------------------------------------------*/
 /* Write the level 1 table                                           */
@@ -2033,7 +2033,7 @@ int             len;                    /* Length of level 1 table   */
 
     return 0;
 
-} /* end function cckd_write_l1 */
+} /* end function cckd64_write_l1 */
 
 /*-------------------------------------------------------------------*/
 /* Update a level 1 table entry                                      */
@@ -2059,7 +2059,7 @@ U64             off;                    /* Offset to l1 entry        */
 
     return 0;
 
-} /* end function cckd_write_l1ent */
+} /* end function cckd64_write_l1ent */
 
 /*-------------------------------------------------------------------*/
 /* Initial read                                                      */
@@ -2108,7 +2108,7 @@ int cckd64_read_init (DEVBLK *dev)
         return -1;
 
     return 0;
-} /* end function cckd_read_init */
+} /* end function cckd64_read_init */
 
 /*-------------------------------------------------------------------*/
 /* Read free space                                                   */
@@ -2219,7 +2219,7 @@ CCKD64_FREEBLK  freeblk;                /* First freeblk read        */
     cckd->free_minsize = CCKD_MIN_FREESIZE( cckd->free_count );
     return 0;
 
-} /* end function cckd_read_fsp */
+} /* end function cckd64_read_fsp */
 
 /*-------------------------------------------------------------------*/
 /* Write the free space                                              */
@@ -2316,7 +2316,7 @@ CCKD64_FREEBLK *fsp = NULL;             /* -> new format free space  */
 
     return 0;
 
-} /* end function cckd_write_fsp */
+} /* end function cckd64_write_fsp */
 
 /*-------------------------------------------------------------------*/
 /* Read a new level 2 table                                          */
@@ -2427,7 +2427,7 @@ BYTE            nullfmt;                /* Null track format         */
 
     return 0;
 
-} /* end function cckd_read_l2 */
+} /* end function cckd64_read_l2 */
 
 /*-------------------------------------------------------------------*/
 /* Purge all l2tab cache entries for a given device                  */
@@ -2548,7 +2548,7 @@ int             fix;                    /* Null format type          */
 
     return 0;
 
-} /* end function cckd_write_l2 */
+} /* end function cckd64_write_l2 */
 
 /*-------------------------------------------------------------------*/
 /* Return a level 2 entry                                            */
@@ -2600,7 +2600,7 @@ int             sfx,L1idx,l2x;          /* Lookup table indices      */
 
     return sfx;
 
-} /* end function cckd_read_l2ent */
+} /* end function cckd64_read_l2ent */
 
 /*-------------------------------------------------------------------*/
 /* Update a level 2 entry                                            */
@@ -2640,7 +2640,7 @@ U64             off;                    /* L2 entry offset           */
         return -1;
 
     return 0;
-} /* end function cckd_write_l2ent */
+} /* end function cckd64_write_l2ent */
 
 /*-------------------------------------------------------------------*/
 /* Read a track image                                                */
@@ -2692,7 +2692,7 @@ cckd_read_trkimg_error:
 
     return cckd64_null_trk (dev, buf, trk, 0);
 
-} /* end function cckd_read_trkimg */
+} /* end function cckd64_read_trkimg */
 
 /*-------------------------------------------------------------------*/
 /* Write a track image                                               */
@@ -2780,7 +2780,7 @@ int             size;                   /* Size of new track         */
     /* `after' is 1 if the new offset is after the old offset */
     return after;
 
-} /* end function cckd_write_trkimg */
+} /* end function cckd64_write_trkimg */
 
 /*-------------------------------------------------------------------*/
 /* Harden the file                                                   */
@@ -2822,7 +2822,7 @@ int             rc=0;                   /* Return code               */
         fdatasync (cckd->fd[cckd->sfn]);
 
     return rc;
-} /* cckd_harden */
+} /* cckd64_harden */
 
 /*-------------------------------------------------------------------*/
 /* Build a null track                                                */
@@ -2931,7 +2931,7 @@ int             len;                    /* Length of null track      */
 
     return len;
 
-} /* end function cckd_null_trk */
+} /* end function cckd64_null_trk */
 
 /*-------------------------------------------------------------------*/
 /* Return a number 0 .. CKD_NULLTRK_FMTMAX if track is null          */
@@ -3041,7 +3041,7 @@ BYTE            badcomp=0;              /* 1=Unsupported compression */
     }
 
     return -1;
-} /* end function cckd_cchh */
+} /* end function cckd64_cchh */
 
 /*-------------------------------------------------------------------*/
 /* Validate a track image                                            */
@@ -3127,7 +3127,7 @@ CKD_RECHDR      rn;                     /* Record-n (r0, r1 ... rn)  */
 
     return sz;
 
-} /* end function cckd_validate */
+} /* end function cckd64_validate */
 
 /*-------------------------------------------------------------------*/
 /* Initialize shadow files                                           */
@@ -3236,7 +3236,7 @@ char            pathname[MAX_PATH];     /* file path in host format  */
 
     return 0;
 
-} /* end function cckd_sf_init */
+} /* end function cckd64_sf_init */
 
 /*-------------------------------------------------------------------*/
 /* Create a new shadow file                                          */
@@ -3331,7 +3331,7 @@ sf_new_error:
 
     return -1;
 
-} /* end function cckd_sf_new */
+} /* end function cckd64_sf_new */
 
 /*-------------------------------------------------------------------*/
 /* Add a shadow file  (sf+)                                          */
@@ -4518,7 +4518,7 @@ cckd_gc_perc_error:
     release_lock (&cckd->filelock);
     return (int) moved;
 
-} /* end function cckd_gc_percolate */
+} /* end function cckd64_gc_percolate */
 
 /*-------------------------------------------------------------------*/
 /* Garbage Collection -- Reposition level 2 tables                   */

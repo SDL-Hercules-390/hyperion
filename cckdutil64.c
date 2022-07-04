@@ -2802,7 +2802,7 @@ cdsk_error:
     rc = -1;
     goto cdsk_return;
 
-} /* end function cckd_chkdsk */
+} /* end function cckd64_chkdsk */
 
 /*-------------------------------------------------------------------
  * cckd64_chkdsk() space table sort
