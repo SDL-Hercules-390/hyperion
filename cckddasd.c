@@ -5254,6 +5254,13 @@ BYTE            buf[256*1024];          /* Buffer                    */
     cckd = dev->cckd_ext;
     size = size << SHIFT_1K;
 
+    if (cckd->cdevhdr[ cckd->sfn ].cdh_opts & CCKD_OPT_SPERRS)
+    {
+        // "Skipping garbage collection for CCKD%s file[%d] %1d:%04X %s due to space errors"
+        WRMSG( HHC00385, "I", "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+        return moved;
+    }
+
     /* Debug */
     OBTAIN_TRACE_LOCK();
     if (cckdblk.itracen)
