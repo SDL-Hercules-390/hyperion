@@ -5196,6 +5196,33 @@ int             gctab[5]= {             /* default gcol parameters   */
 }
 
 /*-------------------------------------------------------------------*/
+/* Garbage Collection error handler helper functions/macros          */
+/*-------------------------------------------------------------------*/
+static int cckd_gc_perc_error( DEVBLK* dev, CCKD_EXT* cckd, unsigned int moved,
+                               const char* file, int line )
+{
+    cckd_trace( file, line, dev, "gcperc exiting due to error, moved %u", moved );
+    release_lock( &cckd->filelock );
+    return moved;
+}
+#define GC_PERC_ERROR()     cckd_gc_perc_error( dev, cckd, moved, __FILE__, __LINE__ )
+
+static int cckd_gc_perc_space_error( DEVBLK* dev, CCKD_EXT* cckd, off_t upos, int i, BYTE* buf, int moved,
+                                     const char* file, int line )
+{
+    // "%1d:%04X CCKD file[%d] %s: %s(%d): offset 0x%16.16"PRIx64" unknown space %2.2x%2.2x%2.2x%2.2x%2.2x"
+
+    WRMSG( HHC00342, "E", LCSS_DEVNUM,
+            cckd->sfn, cckd_sf_name( dev, cckd->sfn ), TRIMLOC( file ), line,
+            upos + i, buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
+
+    cckd->cdevhdr[ cckd->sfn ].cdh_opts |= CCKD_OPT_SPERRS;
+    cckd_print_itrace();
+    return cckd_gc_perc_error( dev, cckd, moved, file, line );
+}
+#define GC_PERC_SPACE_ERROR()   cckd_gc_perc_space_error( dev, cckd, upos, i, buf, moved, __FILE__, __LINE__)
+
+/*-------------------------------------------------------------------*/
 /* Garbage Collection -- Percolate algorithm                         */
 /*-------------------------------------------------------------------*/
 int cckd_gc_percolate(DEVBLK *dev, unsigned int size)
@@ -5352,7 +5379,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         CCKD_TRACE( "gcperc selected space 0x%16.16"PRIx64" len %d", upos, ulen);
 
         if (cckd_read (dev, sfx, upos, buf, ulen) < 0)
-            goto cckd_gc_perc_error;
+            return GC_PERC_ERROR();
 
         /* Process each space in the buffer */
         flags = cckd->cdevhdr[sfx].free_num < 100 ? CCKD_SIZE_EXACT : CCKD_SIZE_ANY;
@@ -5372,26 +5399,26 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
                 /* Make the level 2 table active */
                 if (cckd_read_l2 (dev, sfx, j) < 0)
-                    goto cckd_gc_perc_error;
+                    return GC_PERC_ERROR();
 
                 /* Write the level 2 table */
                 if (cckd_write_l2 (dev) < 0)
-                    goto cckd_gc_perc_error;
+                    return GC_PERC_ERROR();
             }
             else
             {
                 /* Moving a track image */
                 if ((trk = cckd_cchh (dev, buf + i, -1)) < 0)
-                    goto cckd_gc_perc_space_error;
+                    return GC_PERC_SPACE_ERROR();
 
                 L1idx = trk >> 8;
                 l2x = trk & 0xff;
 
                 /* Read the lookup entry for the track */
                 if (cckd_read_l2ent (dev, &l2, trk) < 0)
-                    goto cckd_gc_perc_error;
+                    return GC_PERC_ERROR();
                 if (l2.L2_trkoff != (U32)(upos + i))
-                    goto cckd_gc_perc_space_error;
+                    return GC_PERC_SPACE_ERROR();
                 len = (int)l2.L2_size;
                 if (i + l2.L2_len > (int)ulen) break;
 
@@ -5400,7 +5427,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
                 /* Relocate the track image somewhere else */
                 if ((rc = cckd_write_trkimg (dev, buf + i, (int)l2.L2_len, trk, flags)) < 0)
-                    goto cckd_gc_perc_error;
+                    return GC_PERC_ERROR();
                 a += rc;
             }
         } /* for each space in the used space */
@@ -5419,21 +5446,6 @@ BYTE            buf[256*1024];          /* Buffer                    */
     CCKD_TRACE( "gcperc moved %d 1st 0x%x nbr %u", moved,
                 cckd->cdevhdr[cckd->sfn].free_off,cckd->cdevhdr[cckd->sfn].free_num);
     return moved;
-
-cckd_gc_perc_space_error:
-
-    WRMSG (HHC00342, "E", LCSS_DEVNUM,
-            cckd->sfn,cckd_sf_name(dev, cckd->sfn), upos + i,
-            buf[i], buf[i+1],buf[i+2], buf[i+3], buf[i+4]);
-    cckd->cdevhdr[cckd->sfn].cdh_opts |= CCKD_OPT_SPERRS;
-    cckd_print_itrace();
-
-cckd_gc_perc_error:
-
-    CCKD_TRACE( "gcperc exiting due to error, moved %u", moved);
-    release_lock (&cckd->filelock);
-    return moved;
-
 } /* end function cckd_gc_percolate */
 
 /*-------------------------------------------------------------------*/
