@@ -4335,7 +4335,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
     if (cckd->cdevhdr[ cckd->sfn ].cdh_opts & CCKD_OPT_SPERRS)
     {
         // "Skipping garbage collection for CCKD%s file[%d] %1d:%04X %s due to space errors"
-        WRMSG( HHC00385, "I", "64", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+        if (cckdblk.gcmsgs)
+            WRMSG( HHC00385, "I", "64", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
         return (int) moved;
     }
 
@@ -4379,13 +4380,6 @@ BYTE            buf[256*1024];          /* Buffer                    */
         {
             release_lock (&cckd->filelock);
             return (int) moved;
-        }
-
-        if (!didmsg)
-        {
-            // "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
-            WRMSG( HHC00384, "I", "64", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
-            didmsg = true;
         }
 
         /* Make sure the free space chain is built */
@@ -4488,6 +4482,14 @@ BYTE            buf[256*1024];          /* Buffer                    */
             for (j = 0; j < cckd->cdevhdr[sfx].num_L1tab; j++)
                 if (cckd->L1tab[sfx][j] == (upos + i)) break;
 
+            if (!didmsg)
+            {
+                // "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
+                if (cckdblk.gcmsgs)
+                    WRMSG( HHC00384, "I", "64", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+                didmsg = true;
+            }
+
             if (j < cckd->cdevhdr[sfx].num_L1tab)
             {
                 /* Moving a level 2 table */
@@ -4544,6 +4546,9 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
     CCKD_TRACE( "gcperc moved %d 1st 0x%"PRIx64" nbr %"PRIu64, moved,
                 cckd->cdevhdr[cckd->sfn].free_off, cckd->cdevhdr[cckd->sfn].free_num);
+    // "Collected %u bytes of garbage for CCKD%s file[%d] %1d:%04X %s..."
+    if (cckdblk.gcmsgs)
+        WRMSG( HHC00386, "I", (unsigned int) moved, "64", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
     return (int) moved;
 } /* end function cckd64_gc_percolate */
 

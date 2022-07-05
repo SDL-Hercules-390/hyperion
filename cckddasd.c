@@ -5029,7 +5029,8 @@ int             gcs;
     while (gcol <= cckdblk.gcmax)
     {
         // "Begin CCKD garbage collection"
-        WRMSG( HHC00382, "I" );
+        if (cckdblk.gcmsgs)
+            WRMSG( HHC00382, "I" );
 
         /* Perform collection on each device */
         cckd_lock_devchain(0);
@@ -5043,7 +5044,8 @@ int             gcs;
         cckd_unlock_devchain();
 
         // "End CCKD garbage collection"
-        WRMSG( HHC00383, "I" );
+        if (cckdblk.gcmsgs)
+            WRMSG( HHC00383, "I" );
 
         /* If we're in manual on-demand mode, then we're done. */
         if (cckdblk.gcint <= 0)
@@ -5257,7 +5259,8 @@ BYTE            buf[256*1024];          /* Buffer                    */
     if (cckd->cdevhdr[ cckd->sfn ].cdh_opts & CCKD_OPT_SPERRS)
     {
         // "Skipping garbage collection for CCKD%s file[%d] %1d:%04X %s due to space errors"
-        WRMSG( HHC00385, "I", "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+        if (cckdblk.gcmsgs)
+            WRMSG( HHC00385, "I", "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
         return moved;
     }
 
@@ -5301,13 +5304,6 @@ BYTE            buf[256*1024];          /* Buffer                    */
         {
             release_lock (&cckd->filelock);
             return moved;
-        }
-
-        if (!didmsg)
-        {
-            // "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
-            WRMSG( HHC00384, "I", "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
-            didmsg = true;
         }
 
         /* Make sure the free space chain is built */
@@ -5410,6 +5406,14 @@ BYTE            buf[256*1024];          /* Buffer                    */
             for (j = 0; j < cckd->cdevhdr[sfx].num_L1tab; j++)
                 if (cckd->L1tab[sfx][j] == (U32)(upos + i)) break;
 
+            if (!didmsg)
+            {
+                // "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
+                if (cckdblk.gcmsgs)
+                    WRMSG( HHC00384, "I", "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+                didmsg = true;
+            }
+
             if (j < cckd->cdevhdr[sfx].num_L1tab)
             {
                 /* Moving a level 2 table */
@@ -5466,6 +5470,9 @@ BYTE            buf[256*1024];          /* Buffer                    */
 
     CCKD_TRACE( "gcperc moved %d 1st 0x%x nbr %u", moved,
                 cckd->cdevhdr[cckd->sfn].free_off,cckd->cdevhdr[cckd->sfn].free_num);
+    // "Collected %u bytes of garbage for CCKD%s file[%d] %1d:%04X %s..."
+    if (cckdblk.gcmsgs)
+        WRMSG( HHC00386, "I", moved, "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
     return moved;
 } /* end function cckd_gc_percolate */
 
@@ -5956,6 +5963,7 @@ void cckd_command_help()
         , "  freepend=<n>  Set free pending cycles              (-1 ... 4)"
         , "  fsync=<n>     Enable fsync                           (0 or 1)"
         , "  gcint=<n>     Set garbage collector interval (sec) ( 0 .. 60)"
+        , "  gcmsgs=<n>    Display garbage collector messages     (0 or 1)"
         , "  gcparm=<n>    Set garbage collector parameter      (-8 ... 8)"
         , "  gcstart=<n>   Start garbage collector                (0 or 1)"
         , "  linuxnull=<n> Check for null linux tracks            (0 or 1)"
@@ -5980,7 +5988,7 @@ void cckd_command_help()
 /*-------------------------------------------------------------------*/
 void cckd_command_opts()
 {
-    char msgbuf[128];
+    char msgbuf[256];
 
     MSGBUF( msgbuf, "cckd opts:"
 
@@ -5993,7 +6001,7 @@ void cckd_command_opts()
         ","   "freepend=%d"
         ","   "fsync=%d"
         ","   "gcint=%d"
-        ","   "gcparm=%d"
+        ","   "gcmsgs=%d"
 
         , cckdblk.comp == 0xff ? -1 : cckdblk.comp
         , cckdblk.compparm
@@ -6002,7 +6010,7 @@ void cckd_command_opts()
         , cckdblk.freepend
         , cckdblk.fsync
         , cckdblk.gcint
-        , cckdblk.gcparm
+        , cckdblk.gcmsgs
     );
     WRMSG( HHC00346, "I", msgbuf );
 
@@ -6010,7 +6018,8 @@ void cckd_command_opts()
 
         // ***  Please keep these in alphabetical order!  ***
 
-        " "   "linuxnull=%d"
+        " "   "gcparm=%d"
+        ","   "linuxnull=%d"
         ","   "nosfd=%d"
         ","   "nostress=%d"
         ","   "ra=%d"
@@ -6019,6 +6028,7 @@ void cckd_command_opts()
         ","   "trace=%d"
         ","   "wr=%d"
 
+        , cckdblk.gcparm
         , cckdblk.linuxnull
         , cckdblk.nosfd
         , cckdblk.nostress
@@ -6279,6 +6289,21 @@ int   rc;
             else
             {
                 cckdblk.gcint = val;
+                opts = 1;
+            }
+        }
+        // Garbage collector messages
+        else if (CMD( kw, GCMSGS, 6 ))
+        {
+            if (val < 0 || val > 1)
+            {
+                // "CCKD file: value %d invalid for %s"
+                WRMSG( HHC00348, "E", val, kw );
+                return -1;
+            }
+            else
+            {
+                cckdblk.gcmsgs = val;
                 opts = 1;
             }
         }

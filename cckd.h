@@ -310,6 +310,7 @@ struct CCKDBLK {                        /* Global cckd dasd block    */
         int              devwaiters;    /* Number of waiters         */
 
         int              freepend;      /* Number freepend cycles    */
+        int              gcmsgs;        /* Garbage collector msgs    */
         int              nosfd;         /* 1=No stats rpt at close   */
         int              nostress;      /* 1=No stress writes        */
         int              linuxnull;     /* 1=Always check nulltrk    */

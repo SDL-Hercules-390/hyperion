@@ -473,7 +473,8 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00383 "End CCKD garbage collection"
 #define HHC00384 "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
 #define HHC00385 "Skipping garbage collection for CCKD%s file[%d] %1d:%04X %s due to space errors"
-//efine HHC00386 - HHC00395 (available)
+#define HHC00386 "Collected %u bytes of garbage for CCKD%s file[%d] %1d:%04X %s..."
+//efine HHC00387 - HHC00395 (available)
 #define HHC00396 "%1d:%04X %s" // (cckd_trace)
 //efine HHC00397 (available)
 #define HHC00398 "%s" // (trace table)

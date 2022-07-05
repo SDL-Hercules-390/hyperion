@@ -198,6 +198,7 @@
   "  freepend=n    Set free pending cycles               (-1 ... 4)\n"          \
   "  fsync=n       Enable fsync                            (0 or 1)\n"          \
   "  gcint=n       Set garbage collector interval (sec)  ( 0 .. 60)\n"          \
+  "  gcmsgs=n      Display garbage collector messages      (0 or 1)\n"          \
   "  gcparm=n      Set garbage collector parameter       (-8 ... 8)\n"          \
   "  gcstart=n     Start garbage collector                 (0 or 1)\n"          \
   "  linuxnull=n   Check for null linux tracks             (0 or 1)\n"          \

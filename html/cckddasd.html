@@ -1034,6 +1034,7 @@ the <b>cckd</b> command explained below.
 <tr><td>&nbsp;</td><td><b>freepend=</b>n</td>  <td> &nbsp; Set the free pending value</td>
 <tr><td>&nbsp;</td><td><b>fsync=</b>n</td>     <td> &nbsp; Turn fsync on or off</td>
 <tr><td>&nbsp;</td><td><b>gcint=</b>n</td>     <td> &nbsp; Garbage collection interval</td>
+<tr><td>&nbsp;</td><td><b>gcmsgs=</b>n</td>    <td> &nbsp; Garbage collection messages</td>
 <tr><td>&nbsp;</td><td><b>gcparm=</b>n</td>    <td> &nbsp; Garbage collection parameter</td>
 <tr><td>&nbsp;</td><td><b>gcstart=</b>n</td>   <td> &nbsp; Start garbage collector</td>
 <tr><td>&nbsp;</td><td><b>linuxnull=</b>n</td> <td> &nbsp; Check for null linux tracks</td>
@@ -1138,6 +1139,12 @@ the <b>cckd</b> command explained below.
         automatically and remain idle (but still running) between each garbage
         collection cycle, automatically starting the next cycle every 'gcint'
         seconds.
+        <br /><br />
+    </td>
+
+<tr><td valign="top"><b>gcmsgs=</b>n</td><td> &nbsp; </td>
+    <td>Set to 1 to display garbage collector progress messages.
+        Set to <b>0</b> (the default) to suppress garbage collector progress messages.
         <br /><br />
     </td>
 
