@@ -4312,6 +4312,7 @@ static int cckd64_gc_perc_space_error( DEVBLK* dev, CCKD64_EXT* cckd, U64 upos, 
 int cckd64_gc_percolate(DEVBLK *dev, unsigned int size)
 {
 CCKD64_EXT     *cckd;                   /* -> cckd extension         */
+bool            didmsg = false;         /* HHC00384 issued           */
 int             rc;                     /* Return code               */
 U64             moved = 0;              /* Space moved               */
 S64             after = 0, a;           /* New space after old       */
@@ -4360,7 +4361,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
     if (!cckd->L2ok)
         cckd64_gc_l2(dev, buf);
 
-    /* garbage collection cycle */
+    /* garbage collection cycle... */
     while (moved < size && after < 4)
     {
         obtain_lock (&cckd->filelock);
@@ -4371,6 +4372,13 @@ BYTE            buf[256*1024];          /* Buffer                    */
         {
             release_lock (&cckd->filelock);
             return (int) moved;
+        }
+
+        if (!didmsg)
+        {
+            // "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
+            WRMSG( HHC00384, "I", "64", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+            didmsg = true;
         }
 
         /* Make sure the free space chain is built */

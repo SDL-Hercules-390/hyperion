@@ -469,7 +469,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC00379 "%1d:%04X CCKD file %s: starting %s level %d%s..."
 #define HHC00380 "%1d:%04X CCKD file %s: %s level %d complete; rc=%d"
 #define HHC00381 "%1d:%04X CCKD file %s: closing device while wrpending=%d cckdioact=%d"
-//efine HHC00382 - HHC00395 (available)
+#define HHC00382 "Begin CCKD garbage collection"
+#define HHC00383 "End CCKD garbage collection"
+#define HHC00384 "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
+//efine HHC00385 - HHC00395 (available)
 #define HHC00396 "%1d:%04X %s" // (cckd_trace)
 //efine HHC00397 (available)
 #define HHC00398 "%s" // (trace table)

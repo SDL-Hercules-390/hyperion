@@ -5028,6 +5028,9 @@ int             gcs;
 
     while (gcol <= cckdblk.gcmax)
     {
+        // "Begin CCKD garbage collection"
+        WRMSG( HHC00382, "I" );
+
         /* Perform collection on each device */
         cckd_lock_devchain(0);
         {
@@ -5038,6 +5041,9 @@ int             gcs;
             }
         }
         cckd_unlock_devchain();
+
+        // "End CCKD garbage collection"
+        WRMSG( HHC00383, "I" );
 
         /* If we're in manual on-demand mode, then we're done. */
         if (cckdblk.gcint <= 0)
@@ -5053,7 +5059,7 @@ int             gcs;
 
         tm.tv_sec = tv_now.tv_sec + cckdblk.gcint;
         tm.tv_nsec = tv_now.tv_usec * 1000;
-        timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, &tm);
+        timed_wait_condition( &cckdblk.gccond, &cckdblk.gclock, &tm );
     }
 
     if (!cckdblk.batch || cckdblk.batchml > 1)
@@ -5228,6 +5234,7 @@ static int cckd_gc_perc_space_error( DEVBLK* dev, CCKD_EXT* cckd, off_t upos, in
 int cckd_gc_percolate(DEVBLK *dev, unsigned int size)
 {
 CCKD_EXT       *cckd;                   /* -> cckd extension         */
+bool            didmsg = false;         /* HHC00384 issued           */
 int             rc;                     /* Return code               */
 unsigned int    moved = 0;              /* Space moved               */
 int             after = 0, a;           /* New space after old       */
@@ -5276,7 +5283,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
     if (!cckd->L2ok)
         cckd_gc_l2(dev, buf);
 
-    /* garbage collection cycle */
+    /* garbage collection cycle... */
     while (moved < size && after < 4)
     {
         obtain_lock (&cckd->filelock);
@@ -5287,6 +5294,13 @@ BYTE            buf[256*1024];          /* Buffer                    */
         {
             release_lock (&cckd->filelock);
             return moved;
+        }
+
+        if (!didmsg)
+        {
+            // "Collecting garbage for CCKD%s file[%d] %1d:%04X %s..."
+            WRMSG( HHC00384, "I", "", cckd->sfn, LCSS_DEVNUM, cckd_sf_name( dev, cckd->sfn ));
+            didmsg = true;
         }
 
         /* Make sure the free space chain is built */
