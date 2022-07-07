@@ -4285,11 +4285,11 @@ ROUTE  00  172.21.3.32  255.255.255.224
             <p>
             First Hercules PC Host with IP address 192.168.1.100:
             <pre>
-    0E40.2 CTCE        =192.168.1.200  30882 </pre>
+    0E40.2 CTCE        =192.168.1.200        </pre>
             <p>
             Second Hercules PC Host with IP address 192.168.1.200:
             <pre>
-    0E40.2 CTCE        =192.168.1.100  30882 </pre>
+    0E40.2 CTCE        =192.168.1.100        </pre>
         </blockquote>
         <p>        
 
@@ -4298,14 +4298,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
         <blockquote>
             <p>
             <pre>
-    0E40.4 CTCE       1=192.168.1.200  30882 </pre>
+    0E40.4 CTCE       1=192.168.1.200        </pre>
             <p>
             The above is axactly the same as this specification:
             <pre>
-    0E40   CTCE    0E41=192.168.1.200  30882
-    0E41   CTCE    0E40=192.168.1.200  30882
-    0E42   CTCE    0E43=192.168.1.200  30882        
-    0E43   CTCE    0E42=192.168.1.200  30882 </pre>
+    0E40   CTCE    0E41=192.168.1.200       
+    0E41   CTCE    0E40=192.168.1.200       
+    0E42   CTCE    0E43=192.168.1.200               
+    0E43   CTCE    0E42=192.168.1.200        </pre>
                 <p>
             The above example could be used to establish a redundant pair
             of read/write CTC links, where each Hercules side uses the even
