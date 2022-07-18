@@ -509,12 +509,12 @@ architecture:
 
 
 **Please note** that under normal circumstances there is no need to code any
-`if (FACILITY_ENABLED( ... ))` statement anywhere in your instruction if
-your instruction is only defined when the given facility is enabled, as
-this is handled automatically by the associated `facility.c`
-[`BEG_DIS_FAC_INS_FUNC` function](#5d-instrxxx-Update-Opcode-Table-functions)
-(controlled by the [`instrxxx`](#5d-instrxxx-Update-Opcode-Table-functions)
-second parameter of the [`FT2`](#5b-The-FT2-table) table.)
+`if (FACILITY_ENABLED( ... ))` test anywhere in your instruction if your
+instruction is only defined when the given facility is enabled, as this is
+handled automatically by the associated `facility.c` [`BEG_DIS_FAC_INS_FUNC`
+function](#5d-instrxxx-Update-Opcode-Table-functions) (controlled by the
+[`instrxxx`](#5d-instrxxx-Update-Opcode-Table-functions) second parameter of
+the [`FT2`](#5b-The-FT2-table) table.)
 
 When the facility is enabled, the instruction is defined and will be called.
 When the facility is _not_ enabled, the instruction is _not_ defined and will
@@ -523,6 +523,30 @@ of the primary purposes of the code in [`facility.c`](../facility.c).
 
 Thus you can be assured that if your instruction is called, the corresponding
 facility is indeed enabled. Otherwise your instruction function would never
-have been called! Thus any use of the `FACILITY_ENABLED( ... )` macro is
+have been called! Thus any use of `if (FACILITY_ENABLED( ... ))` statement is
 completely unnecessary.
+
+_The only time you **might** need to_ code a `if (FACILITY_ENABLED( ... ))`
+statement is if the instruction in question is defined to behave _differently_
+depending on whether a given facility is enabled (installed) or not. For example,
+take a look at the `IPTE` (Invalidate Page Table Entry) and `SSKE` (Set Storage
+Key extended) instructions in `control.c`:
+
+The `IPTE` instruction contains a `if (FACILITY_ENABLED( ... ))` check for
+each of the `051_LOCAL_TLB_CLEARING` and `013_IPTE_RANGE` facilities because
+it behaves differently depending on whether either of those given facilities
+are enabled or not.
+
+Similarly, the `SSKE` instruction contains a `if (FACILITY_ENABLED( ... ))`
+check for the `008_EDAT_1` facility because it too behaves differently depending
+on whether that particular facility is enabled or not.
+
+These are likely the _only_ times an instruction function might actually need
+to use an `if (FACILITY_ENABLED( ... ))` statement.
+
+_**But the key point is,**_ you _don't_ need to do any `if (FACILITY_ENABLED( ... ))`
+test simply to check whether or not your instruction _EXISTS_ due to whether
+or not your facility is enabled or not. _That_ type of check (test) is handled
+automatically by the `FT2` table's second parameter and corresponding "instrxxx"
+function.
 &nbsp;
