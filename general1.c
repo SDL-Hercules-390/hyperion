@@ -4059,11 +4059,6 @@ bool    wfc;                            /* Well-Formedness-Checking  */
 
     RRF_M(inst, regs, r1, r2, m3);
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TXF_INSTR_CHECK( regs );
-#endif
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )
@@ -4217,11 +4212,6 @@ bool    wfc;                            /* WellFormednessChecking    */
 
     RRF_M(inst, regs, r1, r2, m3);
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r2, r2+1 );
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TXF_INSTR_CHECK( regs );
-#endif
     ODD2_CHECK(r1, r2, regs);
 
 #if defined( FEATURE_030_ETF3_ENHANCEMENT_FACILITY )

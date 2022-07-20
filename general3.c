@@ -2035,14 +2035,6 @@ VADR    effective_addr2;                /* Effective address         */
 
     RIL_A(inst, regs, m1, effective_addr2);
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_2, regs ))
-    {
-        if (m1 == 6 || m1 == 7)
-            TXF_INSTR_CHECK( regs );
-    }
-#endif
-
     /* On Hercules the Prefetch Data instruction acts as a no-op */
 
 } /* end DEF_INST(prefetch_data_relative_long) */

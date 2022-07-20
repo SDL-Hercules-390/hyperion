@@ -1207,11 +1207,6 @@ DEF_INST( cmpsc_2012 )
         ARCH_DEP( per3_zero )( regs );
 #endif
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_1, regs ))
-        TXF_INSTR_CHECK( regs );
-#endif
-
     /* Build our internal Compression Call parameters block */
 
     ARCH_DEP( cmpsc_SetCMPSC )( &cmpsc, regs, r1, r2 );

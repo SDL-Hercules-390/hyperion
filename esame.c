@@ -1663,11 +1663,6 @@ QWORD   currpsw;                        /* Work area for PSW         */
 
     RRE(inst, regs, r1, r2);
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
-        TXF_INSTR_CHECK( regs );
-#endif
-
 #if defined( _FEATURE_ZSIE )
     if (SIE_STATE_BIT_ON( regs, IC1, LPSW ))
         longjmp( regs->progjmp, SIE_INTERCEPT_INST );
@@ -2164,14 +2159,6 @@ BYTE    rbyte[4];                       /* Register bytes from mask  */
     RSY(inst, regs, r1, m3, b2, effective_addr2);
     PER_ZEROADDR_XCHECK( regs, b2 );
 
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_2, regs ))
-    {
-        if (m3 == 0 && (r1 == 6 || r1 == 7))
-            TXF_INSTR_CHECK( regs );
-    }
-#endif
-
     switch (m3)
     {
     case 15:
@@ -2221,11 +2208,6 @@ U64     gr0, gr1;                       /* Result register workareas */
 
     SSF(inst, regs, b1, effective_addr1, b2, effective_addr2, r3);
     PER_ZEROADDR_XCHECK2( regs, b1, b2 );
-
-#if defined( FEATURE_073_TRANSACT_EXEC_FACILITY )
-    if (FACILITY_ENABLED( HERC_TXF_RESTRICT_3, regs ))
-        TXF_INSTR_CHECK( regs );
-#endif
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATE_BIT_ON(regs, IC3, SPT))
