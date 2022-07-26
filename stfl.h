@@ -301,7 +301,10 @@
 
 #define STFL_130_INSTR_EXEC_PROT     130    /* Instruction-execution-
                                                protection facility       */
-#define STFL_131_SIDE_EFFECT_ACCESS  131    /* Side-effect-access        */
+
+#define STFL_131_SIDE_EFFECT_ACCESS  131    /* Side-Effect-Access Facil. */
+#define STFL_131_ENH_SUPP_ON_PROT_2  131    /* Enhanced-Suppression-
+                                               on-Protection Facility 2  */
 
 #define STFL_132_UNDEFINED           132    /* Undefined                 */
 
@@ -349,7 +352,7 @@
                                                ility installed. Bit 14 is
                                                also on if bit 149 is on. */
 
-#define STFL_150_UNDEFINED           150    /* Undefined                 */
+#define STFL_150_ENH_SORT            150    /* Enhanced-Sort Facility    */
 
 #define STFL_151_DEFLATE_CONV        151    /* DEFLATE-conversion facil-
                                                ity is installed.         */
@@ -359,7 +362,7 @@
                                                129 and 134 are also one
                                                when bit 152 is one.      */
 
-#define STFL_153_UNDEFINED           153    /* Undefined                 */
+#define STFL_153_IBM_INTERNAL        153    /* IBM internal use          */
 
 #define STFL_154_UNDEFINED           154    /* Undefined                 */
 
@@ -371,14 +374,23 @@
 #define STFL_156_IBM_INTERNAL        156    /* IBM internal use          */
 
 #define STFL_157_UNDEFINED           157    /* Undefined                 */
-#define STFL_158_UNDEFINED           158    /* Undefined                 */
+
+#define STFL_158_ULTRAV_CALL         158    /* Ultravisor-Call Facility  */
+
 #define STFL_159_UNDEFINED           159    /* Undefined                 */
 #define STFL_160_UNDEFINED           160    /* Undefined                 */
-#define STFL_161_UNDEFINED           161    /* Undefined                 */
+
+#define STFL_161_SEC_EXE_UNPK        161    /* Secure-Execution-Unpack   */
+
 #define STFL_162_UNDEFINED           162    /* Undefined                 */
 #define STFL_163_UNDEFINED           163    /* Undefined                 */
 #define STFL_164_UNDEFINED           164    /* Undefined                 */
-#define STFL_165_UNDEFINED           165    /* Undefined                 */
+
+#define STFL_165_NNET_ASSIST         165    /* Neural-Network-Processing-
+                                               Assist Facility. When bit
+                                               165 is one, bit 129 is also
+                                               one.                      */
+
 #define STFL_166_UNDEFINED           166    /* Undefined                 */
 #define STFL_167_UNDEFINED           167    /* Undefined                 */
 
@@ -386,7 +398,10 @@
                                                Bit 168 can only be 1 when
                                                bit 2 is zero.            */
 
-#define STFL_169_UNDEFINED           169    /* Undefined                 */
+#define STFL_169_SKEY_REMOVAL        169    /* Storage-key-Removal Facility.
+                                               When bit 169 is one, bits 10,
+                                               14, 66, 145, 149 are ZERO!*/
+
 #define STFL_170_UNDEFINED           170    /* Undefined                 */
 #define STFL_171_UNDEFINED           171    /* Undefined                 */
 #define STFL_172_UNDEFINED           172    /* Undefined                 */
@@ -409,12 +424,32 @@
 #define STFL_189_UNDEFINED           189    /* Undefined                 */
 #define STFL_190_UNDEFINED           190    /* Undefined                 */
 #define STFL_191_UNDEFINED           191    /* Undefined                 */
-#define STFL_192_UNDEFINED           192    /* Undefined                 */
-#define STFL_193_UNDEFINED           193    /* Undefined                 */
-#define STFL_194_UNDEFINED           194    /* Undefined                 */
+
+#define STFL_192_VECT_PACKDEC_ENH_2  192    /* Vector-Packed-Decimal En-
+                                               hancement Facility 2. When
+                                               bit 192 is one, bits 129,
+                                               134, and 152 are also one */
+
+
+#define STFL_193_BEAR_ENH            193    /* BEAR-Enhancement Facility.
+                                               When bit 193 is one, the
+                                               PER-3 facility is also
+                                               installed.                */
+
+#define STFL_194_RESET_DAT_PROT      194    /* Reset-DAT-Protection Facil-
+                                               ity. When bit 194 is one,
+                                               bit 51 is also one.       */
+
 #define STFL_195_UNDEFINED           195    /* Undefined                 */
-#define STFL_196_UNDEFINED           196    /* Undefined                 */
-#define STFL_197_UNDEFINED           197    /* Undefined                 */
+
+#define STFL_196_PROC_ACT            196    /* Processor-Activity-
+                                               Instrumentation Facility. */
+
+#define STFL_197_PROC_ACT_EXT_1      197    /* Processor-Activity-Instru-
+                                               mentation Extension 1. When
+                                               bit 197 is one, bit 196 is
+                                               also one.                 */
+
 #define STFL_198_UNDEFINED           198    /* Undefined                 */
 #define STFL_199_UNDEFINED           199    /* Undefined                 */
 #define STFL_200_UNDEFINED           200    /* Undefined                 */
