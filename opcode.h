@@ -13,10 +13,15 @@
 #define _OPCODE_H
 
 /*-------------------------------------------------------------------*/
-/*               Architecture INDEPENDENT macros                     */
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
-/*  The following macros are defined ONE TIME                        */
-/*  and thus are the same for all build architectures.               */
+
+/*-------------------------------------------------------------------*/
+/*               Architecture *INDEPENDENT* macros                   */
+/*-------------------------------------------------------------------*/
+/*  The following macros are defined ONE TIME (due to the above      */
+/*  "#ifndef _OPCODE_H" guard) and thus are the same for ALL         */
+/*   build architectures.                                            */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -157,12 +162,12 @@
 /* When the facility is disabled (default), all such instructions    */
 /* will properly Program Check (Operation Exception) when attempted  */
 /* to be executed in S/370 mode.  When the facility enabled however, */
-/* then all such 37X instructions are instead allowed to execute.    */
+/* then all such "37X" instructions are instead allowed to execute.  */
 /*-------------------------------------------------------------------*/
 
-#define GENx37Xx390x___     GENx370x390x___
-#define GENx37Xx___x900     GENx370x___x900
-#define GENx37Xx390x900     GENx370x390x900
+#define    GENx37Xx390x___     GENx370x390x___
+#define    GENx37Xx___x900     GENx370x___x900
+#define    GENx37Xx390x900     GENx370x390x900
 
 /*-------------------------------------------------------------------*/
 
@@ -691,13 +696,18 @@ do { \
 
 #include "machdep.h"
 
-#endif /*!defined( _OPCODE_H )*/
+#endif /* !defined( _OPCODE_H ) */
 
 /*-------------------------------------------------------------------*/
-/*               Architecture DEPENDENT macros                       */
+/*          (delineates ARCH_DEP from non-arch_dep)                  */
 /*-------------------------------------------------------------------*/
-/* The following macros are undef'ed and then re-defined differently */
-/* for each subsequent new build architecture.                       */
+
+/*-------------------------------------------------------------------*/
+/*               Architecture *DEPENDENT* macros                     */
+/*-------------------------------------------------------------------*/
+/*  The below macros (due to being outside of the above "#endif"     */
+/*  for "_OPCODE_H") are undef'ed and then re-defined differently    */
+/*  for each subsequent new build architecture.                      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/

@@ -1219,11 +1219,11 @@ FT2( NULL,      NULL,      188_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      189_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      190_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      191_UNDEFINED,              "Undefined" )
-FT2( mod192,    NULL,      192_VECT_PACKDEC_ENH_2,     "Vector-Packed-Decimal-Enhancement Facility 2" )
-FT2( NULL,      NULL,      193_BEAR_ENH,               "BEAR-Enhancement Facility" )
-FT2( mod194,    NULL,      194_RESET_DAT_PROT,         "Reset-DAT-Protection Facility" )
+FT2( mod192,    instr192,  192_VECT_PACKDEC_ENH_2,     "Vector-Packed-Decimal-Enhancement Facility 2" )
+FT2( NULL,      instr193,  193_BEAR_ENH,               "BEAR-Enhancement Facility" )
+FT2( mod194,    instr194,  194_RESET_DAT_PROT,         "Reset-DAT-Protection Facility" )
 FT2( NULL,      NULL,      195_UNDEFINED,              "Undefined" )
-FT2( mod196,    NULL,      196_PROC_ACT,               "Processor-Activity-Instrumentation Facility" )
+FT2( mod196,    instr196,  196_PROC_ACT,               "Processor-Activity-Instrumentation Facility" )
 FT2( mod197,    NULL,      197_PROC_ACT_EXT_1,         "Processor-Activity-Instrumentation Extension 1 Facility" )
 FT2( NULL,      NULL,      198_UNDEFINED,              "Undefined" )
 FT2( NULL,      NULL,      199_UNDEFINED,              "Undefined" )
@@ -1891,6 +1891,8 @@ static bool name( bool         enable,                              \
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod000 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 007_STFL_EXTENDED, archnum ))
@@ -1909,6 +1911,8 @@ FAC_MOD_OK_FUNC           ( mod000 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod002 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     168_ESA390_COMPAT_MODE, archnum ))
@@ -1924,6 +1928,8 @@ FAC_MOD_OK_FUNC           ( mod002 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod003 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 004_IDTE_SC_SEGTAB, archnum ))
@@ -1942,6 +1948,8 @@ FAC_MOD_OK_FUNC           ( mod003 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod004 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 003_DAT_ENHANCE_1, archnum ))
@@ -1962,6 +1970,8 @@ FAC_MOD_OK_FUNC           ( mod004 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod005 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 003_DAT_ENHANCE_1, archnum ))
@@ -1981,6 +1991,8 @@ FAC_MOD_OK_FUNC           ( mod005 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod007 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 000_N3_INSTR, archnum ))
@@ -1996,6 +2008,8 @@ FAC_MOD_OK_FUNC           ( mod007 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod008 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 078_EDAT_2, archnum ))
@@ -2011,6 +2025,8 @@ FAC_MOD_OK_FUNC             ( mod008 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod010 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     169_SKEY_REMOVAL, archnum ))
@@ -2026,6 +2042,8 @@ FAC_MOD_OK_FUNC             ( mod010 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod014 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     169_SKEY_REMOVAL, archnum ))
@@ -2046,6 +2064,8 @@ FAC_MOD_OK_FUNC             ( mod014 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod018 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 019_LONG_DISPL_HPERF, archnum ))
@@ -2061,6 +2081,8 @@ FAC_MOD_OK_FUNC           ( mod018 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod019 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 018_LONG_DISPL_INST, archnum ))
@@ -2076,6 +2098,8 @@ FAC_MOD_OK_FUNC           ( mod019 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod025 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 139_MULTIPLE_EPOCH, archnum ))
@@ -2092,6 +2116,8 @@ FAC_MOD_OK_FUNC            ( mod025 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod028 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 139_MULTIPLE_EPOCH, archnum ))
@@ -2108,6 +2134,8 @@ FAC_MOD_OK_FUNC            ( mod028 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod037 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
@@ -2123,6 +2151,8 @@ FAC_MOD_OK_FUNC             ( mod037 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod040 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 068_CPU_MEAS_SAMPLNG, archnum ))
@@ -2138,6 +2168,8 @@ FAC_MOD_OK_FUNC            ( mod040 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod042 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 037_FP_EXTENSION, archnum ))
@@ -2156,6 +2188,8 @@ FAC_MOD_OK_FUNC            ( mod042 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod043 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
@@ -2171,6 +2205,8 @@ FAC_MOD_OK_FUNC            ( mod043 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod045 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 061_MISC_INSTR_EXT_3, archnum ))
@@ -2186,6 +2222,8 @@ FAC_MOD_OK_FUNC             ( mod045 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod048 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
@@ -2201,6 +2239,8 @@ FAC_MOD_OK_FUNC             ( mod048 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod049 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
@@ -2219,6 +2259,8 @@ FAC_MOD_OK_FUNC           ( mod049 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod050 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 073_TRANSACT_EXEC, archnum ))
@@ -2234,6 +2276,8 @@ FAC_MOD_OK_FUNC           ( mod050 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod051 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 194_RESET_DAT_PROT, archnum ))
@@ -2249,6 +2293,8 @@ FAC_MOD_OK_FUNC           ( mod051 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod061 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 045_POPULATION_COUNT, archnum ))
@@ -2264,6 +2310,8 @@ FAC_MOD_OK_FUNC             ( mod061 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod066 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     169_SKEY_REMOVAL, archnum ))
@@ -2279,6 +2327,8 @@ FAC_MOD_OK_FUNC             ( mod066 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod067 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 068_CPU_MEAS_SAMPLNG, archnum ))
@@ -2298,6 +2348,8 @@ FAC_MOD_OK_FUNC            ( mod067 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod068 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 040_LOAD_PROG_PARAM, archnum ))
@@ -2316,6 +2368,8 @@ FAC_MOD_OK_FUNC            ( mod068 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod073 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 049_PROCESSOR_ASSIST, archnum ))
@@ -2341,6 +2395,8 @@ FAC_MOD_OK_FUNC           ( mod073 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod076 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 146_MSA_EXTENSION_8, archnum ))
@@ -2359,6 +2415,8 @@ FAC_MOD_OK_FUNC            ( mod076 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod077 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 155_MSA_EXTENSION_9, archnum ))
@@ -2374,6 +2432,8 @@ FAC_MOD_OK_FUNC            ( mod077 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod078 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 008_EDAT_1, archnum ))
@@ -2389,6 +2449,8 @@ FAC_MOD_OK_FUNC             ( mod078 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( mod080 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 042_DFP, archnum ))
@@ -2404,6 +2466,8 @@ FAC_MOD_OK_FUNC             ( mod080 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod081 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 049_PROCESSOR_ASSIST, archnum ))
@@ -2419,6 +2483,8 @@ FAC_MOD_OK_FUNC           ( mod081 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod129 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 134_ZVECTOR_PACK_DEC, archnum ))
@@ -2449,6 +2515,8 @@ FAC_MOD_OK_FUNC            ( mod129 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod134 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR, archnum ))
@@ -2472,6 +2540,8 @@ FAC_MOD_OK_FUNC            ( mod134 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod135 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR, archnum ))
@@ -2492,6 +2562,8 @@ FAC_MOD_OK_FUNC            ( mod135 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod139 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 025_STORE_CLOCK_FAST, archnum ))
@@ -2510,6 +2582,8 @@ FAC_MOD_OK_FUNC            ( mod139 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod142 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 067_CPU_MEAS_COUNTER, archnum ))
@@ -2525,6 +2599,8 @@ FAC_MOD_OK_FUNC            ( mod142 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod145 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     169_SKEY_REMOVAL, archnum ))
@@ -2540,6 +2616,8 @@ FAC_MOD_OK_FUNC            ( mod145 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod146 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 076_MSA_EXTENSION_3, archnum ))
@@ -2555,6 +2633,8 @@ FAC_MOD_OK_FUNC            ( mod146 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod148 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR, archnum ))
@@ -2573,6 +2653,8 @@ FAC_MOD_OK_FUNC            ( mod148 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod149 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 014_NONQ_KEY_SET, archnum ))
@@ -2588,6 +2670,8 @@ FAC_MOD_OK_FUNC            ( mod149 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod152 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR, archnum ))
@@ -2611,6 +2695,8 @@ FAC_MOD_OK_FUNC            ( mod152 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod155 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 076_MSA_EXTENSION_3, archnum ))
@@ -2629,6 +2715,8 @@ FAC_MOD_OK_FUNC            ( mod155 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod165 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH(    129_ZVECTOR, archnum ))
@@ -2647,6 +2735,8 @@ FAC_MOD_OK_FUNC            ( mod165 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod168 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     002_ZARCH_ACTIVE, archnum ))
@@ -2662,6 +2752,8 @@ FAC_MOD_OK_FUNC           ( mod168 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod169 )
 {
+    UNREFERENCED( actioning );
+
     if (enable)
     {
         if (FACILITY_ENABLED_ARCH(     010_CONDITIONAL_SSKE, archnum ))
@@ -2689,6 +2781,8 @@ FAC_MOD_OK_FUNC            ( mod169 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod192 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 129_ZVECTOR , archnum ))
@@ -2710,6 +2804,8 @@ FAC_MOD_OK_FUNC            ( mod192 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC            ( mod194 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 051_LOCAL_TLB_CLEARING, archnum ))
@@ -2725,6 +2821,8 @@ FAC_MOD_OK_FUNC            ( mod194 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod196 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (!enable) // disabling
     {
         if (FACILITY_ENABLED_ARCH( 197_PROC_ACT_EXT_1, archnum ))
@@ -2740,6 +2838,8 @@ FAC_MOD_OK_FUNC           ( mod196 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC           ( mod197 )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (!FACILITY_ENABLED_ARCH( 196_PROC_ACT, archnum ))
@@ -2755,6 +2855,8 @@ FAC_MOD_OK_FUNC           ( mod197 )
 /*-------------------------------------------------------------------*/
 FAC_MOD_OK_FUNC             ( modtcp )
 {
+    UNREFERENCED( opp_actioning );
+
     if (enable)
     {
         if (bitno == STFL_HERC_TCPIP_PROB_STATE)
