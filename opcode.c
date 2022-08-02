@@ -2254,10 +2254,10 @@ static INSTR_FUNC gen_opcode_table[256][NUM_INSTR_TAB_PTRS] =
  /*99*/   GENx___x390x900 ( "TRACE"     , RS_a , ASMFMT_RS       , trace                                               ),
  /*9A*/   GENx___x390x900 ( "LAM"       , RS_a , ASMFMT_RS       , load_access_multiple                                ),
  /*9B*/   GENx___x390x900 ( "STAM"      , RS_a , ASMFMT_RS       , store_access_multiple                               ),
- /*9C*/   GENx370x390x900 ( "SIO"       , S    , ASMFMT_S        , start_io                                            ),
- /*9D*/   GENx370x390x900 ( "TIO"       , S    , ASMFMT_S        , test_io                                             ),
- /*9E*/   GENx370x390x900 ( "HIO"       , S    , ASMFMT_S        , halt_io                                             ),
- /*9F*/   GENx370x390x900 ( "TCH"       , S    , ASMFMT_S        , test_channel                                        ),
+ /*9C*/   GENx370x___x___ ( "SIO"       , S    , ASMFMT_S        , start_io                                            ),
+ /*9D*/   GENx370x___x___ ( "TIO"       , S    , ASMFMT_S        , test_io                                             ),
+ /*9E*/   GENx370x___x___ ( "HIO"       , S    , ASMFMT_S        , halt_io                                             ),
+ /*9F*/   GENx370x___x___ ( "TCH"       , S    , ASMFMT_S        , test_channel                                        ),
  /*A0*/   GENx___x___x___ ,
  /*A1*/   GENx___x___x___ ,
  /*A2*/   GENx___x___x___ ,
@@ -2658,10 +2658,10 @@ static INSTR_FUNC gen_opcode_a7_x[16][NUM_INSTR_TAB_PTRS] =
 
 static INSTR_FUNC gen_opcode_b2xx[256][NUM_INSTR_TAB_PTRS] =
 {
- /*B200*/ GENx370x390x900 ( "CONCS"     , S    , ASMFMT_S        , connect_channel_set                                 ),
- /*B201*/ GENx370x390x900 ( "DISCS"     , S    , ASMFMT_S        , disconnect_channel_set                              ),
+ /*B200*/ GENx370x___x___ ( "CONCS"     , S    , ASMFMT_S        , connect_channel_set                                 ),
+ /*B201*/ GENx370x___x___ ( "DISCS"     , S    , ASMFMT_S        , disconnect_channel_set                              ),
  /*B202*/ GENx370x390x900 ( "STIDP"     , S    , ASMFMT_S        , store_cpu_id                                        ),
- /*B203*/ GENx370x390x900 ( "STIDC"     , S    , ASMFMT_S        , store_channel_id                                    ),
+ /*B203*/ GENx370x___x___ ( "STIDC"     , S    , ASMFMT_S        , store_channel_id                                    ),
  /*B204*/ GENx370x390x900 ( "SCK"       , S    , ASMFMT_S        , set_clock                                           ),
  /*B205*/ GENx370x390x900 ( "STCK"      , S    , ASMFMT_S        , store_clock                                         ),
  /*B206*/ GENx370x390x900 ( "SCKC"      , S    , ASMFMT_S        , set_clock_comparator                                ),

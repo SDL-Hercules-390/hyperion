@@ -83,6 +83,5 @@ to our **bug report tracking system** by adding/creating a new
 [Hercules Dynamic Loader](readme/README.HDL.md)  
 [Hercules Dynamic Modules (on Windows)](readme/README.DYNMOD.md)  
 [HQA Build Scenarios](readme/README.HQA.md)  
-[Input/Output Architecture](readme/README.IOARCH.md)  
 [Low-level Test Cases](tests/README.md)  
 [PTT Tracing](readme/README.PTT.md)  

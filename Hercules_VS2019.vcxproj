@@ -697,7 +697,6 @@
     <None Include="readme\README.HERCLOGO.md" />
     <None Include="readme\README.HQA.md" />
     <None Include="readme\README.HRAF.md" />
-    <None Include="readme\README.IOARCH.md" />
     <None Include="readme\README.ISSUES.md" />
     <None Include="readme\README.MINGW.md" />
     <None Include="readme\README.MSVC.md" />

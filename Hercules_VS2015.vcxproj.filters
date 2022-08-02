@@ -1004,9 +1004,6 @@
     <None Include="readme\README.HRAF.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>
-    <None Include="readme\README.IOARCH.md">
-      <Filter>Other Files\DOC\README</Filter>
-    </None>
     <None Include="readme\README.MINGW.md">
       <Filter>Other Files\DOC\README</Filter>
     </None>

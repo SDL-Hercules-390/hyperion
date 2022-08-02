@@ -839,7 +839,6 @@ EXTRA_DIST =                  \
   readme/README.HERCLOGO.md       \
   readme/README.HQA.md            \
   readme/README.HRAF.md           \
-  readme/README.IOARCH.md         \
   readme/README.ISSUES.md         \
   readme/README.MINGW.md          \
   readme/README.MSVC.md           \

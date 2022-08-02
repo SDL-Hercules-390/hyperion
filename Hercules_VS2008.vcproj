@@ -2131,10 +2131,6 @@
 						>
 					</File>
 					<File
-						RelativePath=".\readme\README.IOARCH.md"
-						>
-					</File>
-					<File
 						RelativePath=".\readme\README.ISSUES.md"
 						>
 					</File>
@@ -5061,11 +5057,11 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\pfpo.list"
+								RelativePath=".\tests\PERZAD.pdf"
 								>
 							</File>
 							<File
-								RelativePath=".\tests\PERZAD.pdf"
+								RelativePath=".\tests\pfpo.list"
 								>
 							</File>
 							<File
