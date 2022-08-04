@@ -3,14 +3,15 @@ bin_SCRIPTS =       \
     dasdlist
 
 
-dist_pkgdata_DATA =                     \
-    awssl-v19g                          \
-    awswrite.jcl                        \
-    rawstape.jcl                        \
-    scsiboot                            \
-    tapeconv.jcl                        \
-    TMOUNT.txt                          \
-    zzsacard.bin                        \
+dist_pkgdata_DATA =         \
+    awssl-v19g              \
+    awswrite.jcl            \
+    rawstape.jcl            \
+    scsiboot                \
+    tapeconv.jcl            \
+    TMOUNT.txt              \
+    CMPSC.txt               \
+    zzsacard.bin            \
     cckddump-cckdload.zip
 
 
@@ -20,4 +21,3 @@ EXTRA_DIST =        \
     dasdlist.bat    \
     voldsext.cmd    \
     Makefile.am
-

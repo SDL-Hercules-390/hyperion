@@ -731,10 +731,18 @@ vmfplc2_LDFLAGS    = $(tools_LD_FLAGS)
 #------------------------------------------------------------------------------
 
 EXTRA_DIST =                  \
+  .gitattributes              \
+  .gitignore                  \
+  .travis.yml                 \
   _dynamic_version            \
   _dynamic_version.cmd        \
   _TODO.txt                   \
   all-all.jobs                \
+  all-all.msbuild.jobs        \
+  CODEOWNERS                  \
+  debug-all.msbuild.jobs      \
+  retail-all.msbuild.jobs     \
+  vstools.cmd                 \
   autoconf/config.guess       \
   autoconf/config.rpath       \
   autoconf/config.sub         \
@@ -742,8 +750,13 @@ EXTRA_DIST =                  \
   autoconf/hercules.m4        \
   autoconf/install-sh         \
   autoconf/libtool.m4         \
+  autoconf/ltargz.m4          \
   autoconf/ltdl.m4            \
   autoconf/ltmain.sh          \
+  autoconf/ltoptions.m4       \
+  autoconf/ltsugar.m4         \
+  autoconf/ltversion.m4       \
+  autoconf/lt~obsolete.m4     \
   autoconf/missing            \
   autoconf/mkinstalldirs      \
   autoconf/README             \
@@ -861,6 +874,7 @@ EXTRA_DIST =                  \
   retail-all.jobs             \
   scripts/cmpsc.cnf           \
   scripts/cmpsc.rexx          \
+  scripts/hbasics             \
   scripts/hbasic1.rexx        \
   scripts/hbasic2.rex         \
   scripts/hbasic3.cmd         \
@@ -870,7 +884,87 @@ EXTRA_DIST =                  \
   scripts/hexecio.rexx        \
   scripts/hlinein.rexx        \
   scripts/hrecurs.rexx        \
-  util/CMPSC.txt              \
+  crypto/crypto.LICENSE.txt               \
+  crypto/crypto.README.txt                \
+  crypto/include/crypto.h                 \
+  crypto/include/crypto_version.h         \
+  crypto/include/rijndael.h               \
+  crypto/include/sha1.h                   \
+  crypto/include/sha2.h                   \
+  crypto/include/sshdes.h                 \
+  crypto/lib/crypto32.lib                 \
+  crypto/lib/crypto32.pdb                 \
+  crypto/lib/crypto32d.lib                \
+  crypto/lib/crypto32d.pdb                \
+  crypto/lib/crypto64.lib                 \
+  crypto/lib/crypto64.pdb                 \
+  crypto/lib/crypto64d.lib                \
+  crypto/lib/crypto64d.pdb                \
+  crypto/lib/libcrypto32.a                \
+  crypto/lib/libcrypto32d.a               \
+  crypto/lib/libcrypto64.a                \
+  crypto/lib/libcrypto64d.a               \
+  decNumber/decnumber.ERRATA              \
+  decNumber/decnumber.ICU-license.html    \
+  decNumber/decnumber.pdf                 \
+  decNumber/decnumber.readme.txt          \
+  decNumber/include/decContext.h          \
+  decNumber/include/decNumber.h           \
+  decNumber/include/decPacked.h           \
+  decNumber/include/decQuad.h             \
+  decNumber/include/decimal128.h          \
+  decNumber/include/decimal32.h           \
+  decNumber/include/decimal64.h           \
+  decNumber/include/decnumber_version.h   \
+  decNumber/lib/decNumber32.lib           \
+  decNumber/lib/decNumber32.pdb           \
+  decNumber/lib/decNumber32d.lib          \
+  decNumber/lib/decNumber32d.pdb          \
+  decNumber/lib/decNumber64.lib           \
+  decNumber/lib/decNumber64.pdb           \
+  decNumber/lib/decNumber64d.lib          \
+  decNumber/lib/decNumber64d.pdb          \
+  decNumber/lib/libdecNumber32.a          \
+  decNumber/lib/libdecNumber32d.a         \
+  decNumber/lib/libdecNumber64.a          \
+  decNumber/lib/libdecNumber64d.a         \
+  SoftFloat/doc/SoftFloat-history.html    \
+  SoftFloat/doc/SoftFloat-source.html     \
+  SoftFloat/doc/SoftFloat.html            \
+  SoftFloat/include/softfloat.h           \
+  SoftFloat/include/softfloat_types.h     \
+  SoftFloat/include/softfloat_version.h   \
+  SoftFloat/lib/SoftFloat32.lib           \
+  SoftFloat/lib/SoftFloat32.pdb           \
+  SoftFloat/lib/SoftFloat32d.lib          \
+  SoftFloat/lib/SoftFloat32d.pdb          \
+  SoftFloat/lib/SoftFloat64.lib           \
+  SoftFloat/lib/SoftFloat64.pdb           \
+  SoftFloat/lib/SoftFloat64d.lib          \
+  SoftFloat/lib/SoftFloat64d.pdb          \
+  SoftFloat/lib/libSoftFloat32.a          \
+  SoftFloat/lib/libSoftFloat32d.a         \
+  SoftFloat/lib/libSoftFloat64.a          \
+  SoftFloat/lib/libSoftFloat64d.a         \
+  SoftFloat/softfloat.LICENSE.txt         \
+  SoftFloat/softfloat.README.html         \
+  SoftFloat/softfloat.README.txt          \
+  telnet/include/telnet.h                 \
+  telnet/include/telnet_version.h         \
+  telnet/lib/libtelnet32.a                \
+  telnet/lib/libtelnet32d.a               \
+  telnet/lib/libtelnet64.a                \
+  telnet/lib/libtelnet64d.a               \
+  telnet/lib/telnet32.lib                 \
+  telnet/lib/telnet32.pdb                 \
+  telnet/lib/telnet32d.lib                \
+  telnet/lib/telnet32d.pdb                \
+  telnet/lib/telnet64.lib                 \
+  telnet/lib/telnet64.pdb                 \
+  telnet/lib/telnet64d.lib                \
+  telnet/lib/telnet64d.pdb                \
+  telnet/telnet.LICENSE.txt               \
+  telnet/telnet.README.txt                \
   $(extpkg_headers)
 
 #------------------------------------------------------------------------------
@@ -996,10 +1090,14 @@ noinst_HEADERS =          \
   version.h               \
   vmd250.h                \
   vstore.h                \
+  vsvers.h                \
+  w32ctca.c               \
   w32ctca.h               \
   w32dl.h                 \
   w32mtio.h               \
+  w32stape.c              \
   w32stape.h              \
+  w32util.c               \
   w32util.h               \
   x75.h                   \
   zfcp.h

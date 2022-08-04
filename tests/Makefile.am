@@ -397,6 +397,7 @@ EXTRA_DIST =                    \
      skey390z.pdf               \
      skey390z.tst               \
      srdt.txt                   \
+     SRSTU.tst                  \
      ssk370.xxx                 \
      sske.assemble              \
      sske.listing               \
@@ -406,6 +407,7 @@ EXTRA_DIST =                    \
      stfl.asm                   \
      stfl.core                  \
      stfl.list                  \
+     stfl.pdf                   \
      stfl.tst                   \
      stfle.txt                  \
      stidp-esa390.subtst        \
