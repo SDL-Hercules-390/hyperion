@@ -601,6 +601,12 @@ PSA     *sspsa;                         /* -> Store status area      */
     for (i = 0; i < 16; i++)
         STORE_W(sspsa->storecr[i],ssreg->CR(i));
 
+    /* Store Breaking-Event Address Register if BEAR-Enhancement */
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+    if (FACILITY_ENABLED( 193_BEAR_ENH, ssreg ))
+        STORE_DW( sspsa->bear, ssreg->bear );
+#endif
+
 } /* end function store_status */
 
 

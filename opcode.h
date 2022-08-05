@@ -47,8 +47,36 @@
 #endif
 
 /*-------------------------------------------------------------------*/
-/*              Macros for defining opcode table entries             */
+/*            Macros for defining opcode table entries               */
 /*-------------------------------------------------------------------*/
+/*                                                                   */
+/* The below GENx...macros are used to define the NON-archdep master */
+/* opcode table entries in opcode.c. Each entry defines a separate   */
+/* pointer to an architecture DEPENDENT instruction function for all */
+/* three of our supported build architectures, as well as a common   */
+/* instruction tracing function (based on the instruction's format)  */
+/* and a string used during tracing containing the instruction's     */
+/* mnemonic and instruction function's name, because each opcode is  */
+/* expected to define the same instruction for each architecture if  */
+/* that opcode is defined in the given architecture.                 */
+/*                                                                   */
+/* That is to say, using the below macros, it is NOT possible to de- */
+/* fine a table entry for a given opcode for an instruction that is  */
+/* completely different in one architecture than it is in the other  */
+/* architectures. Opcode 'D2' for example, is expected to be the op- */
+/* code for the "MVC" instruction in all three architectures.        */
+/*                                                                   */
+/* With later versions of z/Architecture however, this is not neces- */
+/* sarily always true. In later versions of z/Architecture, IBM has  */
+/* begun re-using opcodes for older S/370-only instructions. In such */
+/* type of situations you need to define an architecture DEPENDENT   */
+/* opcode table instead, using the new 'AD_GENx...' macros defined   */
+/* further below in the architecture-DEPENDENT section of opcode.h   */
+/* (which immediately follows the "#endif" for _OPCODE_H).           */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*                      PROGRAMMING NOTE                             */
 /*                                                                   */
 /* PROGRAMMING NOTE: the '_ifmt' argument in the below "GENx" macros */
 /* is currently ignored since it is not being used for anything at   */
@@ -74,9 +102,9 @@
 
 #define GENx___x___x___                                     \
     {                                                       \
-        _GEN370( operation_exception )                      \
-        _GEN390( operation_exception )                      \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
         (void*) &iprint_ASMFMT_none,                        \
         (void*) &"?????" "\0" "?"                           \
     }
@@ -84,17 +112,17 @@
 #define GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
         _GEN370( _ifunc_name )                              \
-        _GEN390( operation_exception )                      \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
+                &operation_exception,                       \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
 #define GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
-        _GEN370( operation_exception )                      \
+                &operation_exception,                       \
         _GEN390( _ifunc_name )                              \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
     }
@@ -103,15 +131,15 @@
     {                                                       \
         _GEN370( _ifunc_name )                              \
         _GEN390( _ifunc_name )                              \
-        _GEN900( operation_exception )                      \
+                &operation_exception,                       \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
     }
 
 #define GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
-        _GEN370( operation_exception )                      \
-        _GEN390( operation_exception )                      \
+                &operation_exception,                       \
+                &operation_exception,                       \
         _GEN900( _ifunc_name )                              \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
@@ -120,7 +148,7 @@
 #define GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
         _GEN370( _ifunc_name )                              \
-        _GEN390( operation_exception )                      \
+                &operation_exception,                       \
         _GEN900( _ifunc_name )                              \
         (void*) &iprint_ ## _asmfmt,                        \
         (void*) & _mnemonic "\0" #_ifunc_name               \
@@ -128,7 +156,7 @@
 
 #define GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
     {                                                       \
-        _GEN370( operation_exception )                      \
+                &operation_exception,                       \
         _GEN390( _ifunc_name )                              \
         _GEN900( _ifunc_name )                              \
         (void*) &iprint_ ## _asmfmt,                        \
@@ -169,6 +197,10 @@
 #define    GENx37Xx___x900     GENx370x___x900
 #define    GENx37Xx390x900     GENx370x390x900
 
+#define AD_GENx37Xx390x___  AD_GENx370x390x___
+#define AD_GENx37Xx___x900  AD_GENx370x___x900
+#define AD_GENx37Xx390x900  AD_GENx370x390x900
+
 /*-------------------------------------------------------------------*/
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
@@ -183,11 +215,11 @@
 /*  Instruction tracing helper function to print the instruction     */
 /*-------------------------------------------------------------------*/
 
-#define PRINT_INST( _inst, _prtbuf )            \
+#define PRINT_INST( _regs, _inst, _prtbuf )     \
                                                 \
-           iprint_router_func( (_inst), 0, (_prtbuf) )
+           iprint_router_func( (_regs), (_inst), 0, (_prtbuf) )
 
-extern int iprint_router_func( BYTE inst[], char mnemonic[], char* prtbuf );
+extern int iprint_router_func( REGS* regs, BYTE inst[], char mnemonic[], char* prtbuf );
 
 /*-------------------------------------------------------------------*/
 /*               Individual instruction counting                     */
@@ -709,6 +741,245 @@ do { \
 /*  for "_OPCODE_H") are undef'ed and then re-defined differently    */
 /*  for each subsequent new build architecture.                      */
 /*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/*    Macros for defining ARCH_DEP master opcode table entries       */
+/*-------------------------------------------------------------------*/
+
+#undef AD_GENx___x___x___
+#undef AD_GENx370x___x___
+#undef AD_GENx___x390x___
+#undef AD_GENx370x390x___
+#undef AD_GENx___x___x900
+#undef AD_GENx370x___x900
+#undef AD_GENx___x390x900
+#undef AD_GENx370x390x900
+
+#if   __GEN_ARCH == 370
+
+#define AD_GENx___x___x___                                  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
+    }
+
+#define AD_GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+        _GEN370( _ifunc_name )                              \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#elif __GEN_ARCH == 390
+
+#define AD_GENx___x___x___                                  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
+    }
+
+#define AD_GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+        _GEN390( _ifunc_name )                              \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#elif __GEN_ARCH == 900
+
+#define AD_GENx___x___x___                                  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ASMFMT_none,                        \
+        (void*) &"?????" "\0" "?"                           \
+    }
+
+#define AD_GENx370x___x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x___( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x___x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx___x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#define AD_GENx370x390x900( _mnemonic, _ifmt, _asmfmt, _ifunc_name )  \
+    {                                                       \
+                &operation_exception,                       \
+                &operation_exception,                       \
+        _GEN900( _ifunc_name )                              \
+        (void*) &iprint_ ## _asmfmt,                        \
+        (void*) & _mnemonic "\0" #_ifunc_name               \
+    }
+
+#else
+#error HUH?!
+#endif
 
 /*-------------------------------------------------------------------*/
 /*               PSW Instruction Address macros                      */
@@ -2940,6 +3211,12 @@ DEF_INST( cipher_message_with_counter );
 
 #if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
 DEF_INST( insert_reference_bits_multiple );
+#endif
+
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+DEF_INST( load_bear );
+DEF_INST( store_bear );
+DEF_INST( load_program_status_word_extended_y );
 #endif
 
 /*-------------------------------------------------------------------*/

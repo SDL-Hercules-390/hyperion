@@ -5159,6 +5159,28 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
 
 
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+/*-------------------------------------------------------------------*/
+/* B201 STBEAR - Store BEAR                                      [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST( store_bear )
+{
+VADR    effective_addr2;                /* Effective address         */
+int     b2;                             /* Base of effective address */
+
+    S( inst, regs, b2, effective_addr2 );
+
+    PER_ZEROADDR_XCHECK( regs, b2 );
+    TXF_INSTR_CHECK( regs );
+    PRIV_CHECK( regs );
+    DW_CHECK( effective_addr2, regs );
+
+    /* Store BEAR register at second operand address */
+    ARCH_DEP( vstore8 )( regs->bear, effective_addr2, b2, regs );
+}
+#endif
+
+
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
 /*-------------------------------------------------------------------*/
 /* E502 STRAG - Store Real Address                             [SSE] */
@@ -5228,6 +5250,28 @@ VADR    effective_addr2;                /* Effective address         */
 
 } /* end DEF_INST(load_long) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+
+
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+/*-------------------------------------------------------------------*/
+/* B200 LBEAR  - Load BEAR                                       [S] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_bear )
+{
+VADR    effective_addr2;                /* Effective address         */
+int     b2;                             /* Base of effective address */
+
+    S( inst, regs, b2, effective_addr2 );
+
+    PER_ZEROADDR_XCHECK( regs, b2 );
+    TXF_INSTR_CHECK( regs );
+    PRIV_CHECK( regs );
+    DW_CHECK( effective_addr2, regs );
+
+    /* Load BEAR register from second operand address */
+    regs->bear = ARCH_DEP( vfetch8 )( effective_addr2, b2, regs );
+}
+#endif
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )
@@ -5361,6 +5405,59 @@ int     rc;
 
 } /* end DEF_INST(load_program_status_word_extended) */
 #endif /* defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS ) */
+
+
+#if defined( FEATURE_193_BEAR_ENH_FACILITY )
+/*-------------------------------------------------------------------*/
+/* EB71 LPSWEY - Load PSW Extended Y                           [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST( load_program_status_word_extended_y )
+{
+QWORD   qword;                          /* PSW fetched from storage  */
+U64     effective_addr1;                /* Effective address         */
+int     b1;                             /* Base of effective addr    */
+int     rc;                             /* Return code from load_psw */
+BYTE    i1;                             /* Immediate byte from instr */
+
+    SIY( inst, regs, i1, b1, effective_addr1 );
+    PER_ZEROADDR_XCHECK( regs, b1 );
+
+    /* All control instructions are restricted in transaction mode */
+    TXF_INSTR_CHECK( regs );
+    PRIV_CHECK( regs );
+    DW_CHECK( effective_addr1, regs );
+
+#if defined( _FEATURE_ZSIE )
+    if (SIE_STATE_BIT_ON( regs, IC1, LPSW ))
+        longjmp( regs->progjmp, SIE_INTERCEPT_INST );
+#endif
+
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
+    {
+        /* Fetch new PSW from operand address */
+        ARCH_DEP( vfetchc )( qword, 16-1, effective_addr1, b1, regs );
+
+        /* If the storage-key-removal facility is installed, a special-
+           operation exception is recognized if the key value in bits
+           8-11 of the storage operand is nonzero.
+        */
+        if (1
+            && FACILITY_ENABLED( 169_SKEY_REMOVAL, regs )
+            && (qword[1] & 0xF0)
+        )
+            regs->program_interrupt( regs, PGM_SPECIAL_OPERATION_EXCEPTION );
+
+        /* Load updated PSW */
+        if ((rc = ARCH_DEP( load_psw )( regs, qword )))
+            regs->program_interrupt( regs, rc );
+    }
+    PERFORM_SERIALIZATION( regs );
+    PERFORM_CHKPT_SYNC( regs );
+
+    RETURN_INTCHECK( regs );
+}
+#endif /* defined( FEATURE_193_BEAR_ENH_FACILITY ) */
 
 
 #if defined( FEATURE_NEW_ZARCH_ONLY_INSTRUCTIONS )

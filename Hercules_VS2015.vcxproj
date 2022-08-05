@@ -1005,6 +1005,7 @@
     <None Include="tests\stfl.asm" />
     <None Include="tests\stfl.core" />
     <None Include="tests\stfl.list" />
+    <None Include="tests\stfl.pdf" />
     <None Include="tests\stfl.tst" />
     <None Include="tests\str-001-cksm.asm" />
     <None Include="tests\str-001-cksm.core" />
@@ -1216,6 +1217,7 @@
     <Text Include="SoftFloat\softfloat.README.txt" />
     <Text Include="tests\alsi.txt" />
     <Text Include="tests\axtr.txt" />
+    <Text Include="tests\BEAR.txt" />
     <Text Include="tests\brc.txt" />
     <Text Include="tests\cdfr.txt" />
     <Text Include="tests\cdgr.txt" />

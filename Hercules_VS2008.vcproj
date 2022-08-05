@@ -3522,6 +3522,10 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\BEAR.txt"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\brc.txt"
 							>
 						</File>
@@ -5098,6 +5102,10 @@
 							</File>
 							<File
 								RelativePath=".\tests\stfl.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\stfl.pdf"
 								>
 							</File>
 							<File

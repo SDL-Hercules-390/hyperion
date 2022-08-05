@@ -987,7 +987,7 @@ struct PSA_900
 /*0100*/ DBLWRD cao;                    /* Enh Mon Counter Array Orig*/
 /*0108*/ FWORD  cal;                    /* Enh Mon Counter Array Len */
 /*010C*/ FWORD  ec;                     /* Enh Mon Exception Count   */
-/*0110*/ DBLWRD bea;                    /* Breaking event address    */
+/*0110*/ DBLWRD bea;                    /* Breaking-Event Address    */
 /*0118*/ DBLWRD resv0118;               /* Reserved                  */
 /*0120*/ QWORD  rstold;                 /* Restart old PSW           */
 /*0130*/ QWORD  extold;                 /* External old PSW          */
@@ -1003,6 +1003,7 @@ struct PSA_900
 /*01E0*/ QWORD  mcknew;                 /* Machine check new PSW     */
 /*01F0*/ QWORD  iopnew;                 /* I/O new PSW               */
 /*0200*/ BYTE   resv0200[4096];         /* Reserved                  */
+/*-------------------------------------------------------------------*/
 /*1200*/ FWORD  storefpr[32];           /* FP register save area     */
 /*1280*/ DBLWRD storegpr[16];           /* General register save area*/
 /*1300*/ QWORD  storepsw;               /* Store status PSW save area*/
@@ -1013,7 +1014,7 @@ struct PSA_900
 /*1324*/ FWORD  storetpr;               /* TOD prog reg save area    */
 /*1328*/ DBLWRD storeptmr;              /* CPU timer save area       */
 /*1330*/ DBLWRD storeclkc;              /* Clock comparator save area*/
-/*1338*/ DBLWRD resv1338;               /* Reserved                  */
+/*1338*/ DBLWRD bear;                   /* Breaking-Event Address    */
 /*1340*/ FWORD  storear[16];            /* Access register save area */
 /*1380*/ DBLWRD storecr[16];            /* Control register save area*/
 };

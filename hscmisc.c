@@ -455,8 +455,8 @@ char    buf[512];                       /* MSGBUF work buffer        */
             len += idx_snprintf( len, buf, sizeof(buf), "         ");
 
         /* Disassemble the instruction and display the results */
-        PRINT_INST(inst, buf + len);
-        WRMSG(HHC02289, "I", buf);
+        PRINT_INST( regs, inst, buf + len );
+        WRMSG( HHC02289, "I", buf );
 
         /* Go on to the next instruction */
         saddr += ilc;
@@ -922,7 +922,7 @@ char    regs_msg_buf[4*512] = {0};
     if (ilc > 4){n += idx_snprintf( n, buf, sizeof( buf ), "%2.2X%2.2X",      inst[4], inst[5] );}
                  n += idx_snprintf( n, buf, sizeof( buf ), " %s", (ilc < 4) ? "        " :
                                                                   (ilc < 6) ? "    " : "" );
-    n += PRINT_INST( inst, buf + n );
+    n += PRINT_INST( regs, inst, buf + n );
     MSGBUF( psw_inst_msg, MSG( HHC02324, "I", buf ));
 
     n = 0;

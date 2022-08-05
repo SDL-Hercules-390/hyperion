@@ -2423,6 +2423,9 @@
     <None Include="tests\stfl.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\stfl.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\str-001-cksm.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -3043,6 +3046,9 @@
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
     <Text Include="tests\axtr.txt">
+      <Filter>Other Files\tests\scripts\txt</Filter>
+    </Text>
+    <Text Include="tests\BEAR.txt">
       <Filter>Other Files\tests\scripts\txt</Filter>
     </Text>
     <Text Include="tests\brc.txt">
