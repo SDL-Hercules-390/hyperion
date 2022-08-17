@@ -27,9 +27,6 @@
 *   archlvl   z/Arch
 *   loadcore  "$(testpath)/CMPSC.core"
 *   runtest   1
-*   *Compare
-*   r 500.1
-*   *Want "Result Flag"  FF
 *   *Done
 *
 *

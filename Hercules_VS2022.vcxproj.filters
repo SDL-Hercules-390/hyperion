@@ -1742,6 +1742,9 @@
     <None Include="tests\fix-page.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\fix-page.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\fix-page.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2195,73 +2198,142 @@
     <None Include="tests\bfp-001-divtoint.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-001-divtoint.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-002-loadr.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-002-loadr.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-003-loadfpi.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-003-loadfpi.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-004-cvttolog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-004-cvttolog.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-005-cvttolog64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-005-cvttolog64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-006-cvttofix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-006-cvttofix.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-007-cvttofix64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-007-cvttofix64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-008-cvtfrlog.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-008-cvtfrlog.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-009-cvtfrlog64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-009-cvtfrlog64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-010-cvtfrfix.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-010-cvtfrfix.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-011-cvtfrfix64.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-011-cvtfrfix64.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-012-loadtest.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-012-loadtest.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-013-comps.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-013-comps.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-014-divide.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-014-divide.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-015-sqrt.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-015-sqrt.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-016-add.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-016-add.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-017-loadl.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-017-loadl.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-018-subtract.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-018-subtract.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-019-multiply.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-019-multiply.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-020-multlonger.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-020-multlonger.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-021-multadd.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\bfp-021-multadd.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\bfp-022-multsub.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bfp-022-multsub.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bfp-023-threads.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\bim-001-add-sub.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\bim-001-add-sub.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\PERZAD.list">
@@ -2429,13 +2501,25 @@
     <None Include="tests\str-001-cksm.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\str-001-cksm.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\str-001-clst.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-clst.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\str-001-mvst.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\str-001-mvst.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\str-001-srst.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\str-001-srst.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\tape.core">
