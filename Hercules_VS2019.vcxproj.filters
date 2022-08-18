@@ -1703,6 +1703,12 @@
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\dfp-080-from-packed.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>    
     <None Include="tests\FAC53.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1970,6 +1976,12 @@
     <None Include="tests\csxtr.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\dfp-080-from-packed.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>    
     <None Include="tests\digest.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2180,9 +2192,15 @@
     <None Include="tests\bim-001-add-sub.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
-    <None Include="tests\dc-float.asm">
+    <None Include="tests\dfp-080-from-packed.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\dfp-080-to-packed.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>    
+    <None Include="tests\dc-float.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>    
     <None Include="tests\PERZAD.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2336,6 +2354,12 @@
     <None Include="tests\bim-001-add-sub.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\dfp-080-from-packed.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\dfp-080-to-packed.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>       
     <None Include="tests\PERZAD.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
