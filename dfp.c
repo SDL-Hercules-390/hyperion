@@ -1542,12 +1542,9 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
     int             i;                      /* Array subscript           */
     int             pad;                    /* Number of padding bytes   */
     int             cc;                     /* Condition code            */
-    int             sign;                   /* 1=negative number         */
     char            pwork[MAXDECSTRLEN + 64]; /* Decimal string work area  */
     int             pwlen;                  /* Length of pwork string    */
     int             pwind;                  /* Index into pwork string   */
-    char            buf[128];               /* Message buffer            */
-    char            dnbuf[128];             /* DecNumber buffer          */     
     int             pSigned;                /* packed field is signed    */
     unsigned char   pSign;                  /* packed sign               */
     int             pDigits;                /* number of packed digits   */
