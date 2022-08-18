@@ -3427,6 +3427,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\dfp-080-from-packed.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\dfp-080-to-packed.core"
+						>
+					</File>										
+					<File
 						RelativePath=".\tests\FAC53.core"
 						>
 					</File>
@@ -4410,6 +4418,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\cdfp-080-from-packed.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\cdfp-080-to-packed.tst"
+							>
+						</File>													
+						<File
 							RelativePath=".\tests\digest.tst"
 							>
 						</File>
@@ -4794,6 +4810,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\dfp-080-from-packed.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\dfp-080-to-packed.asm"
+							>
+						</File>
+						<File
 							RelativePath=".\tests\FAC53.asm"
 							>
 						</File>
@@ -5116,6 +5140,14 @@
 								RelativePath=".\tests\CMPSC.pdf"
 								>
 							</File>
+							<File
+								RelativePath=".\tests\dfp-080-from-packed.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\dfp-080-to-packed.list"
+								>
+							</File>															
 							<File
 								RelativePath=".\tests\FAC53.list"
 								>

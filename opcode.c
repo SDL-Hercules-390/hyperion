@@ -667,6 +667,13 @@ DISABLE_GCC_UNUSED_FUNCTION_WARNING;
  UNDEF_INST( perform_cryptographic_computation )
 #endif
 
+#if !defined( FEATURE_080_DFP_PACK_CONV_FACILITY )
+ UNDEF_INST(convert_packed_to_dfp_long)
+ UNDEF_INST(convert_packed_to_dfp_ext)
+ UNDEF_INST(convert_dfp_long_to_packed)
+ UNDEF_INST(convert_dfp_ext_to_packed)
+#endif
+
 #if !defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
  UNDEF_INST( insert_reference_bits_multiple )
 #endif
@@ -5258,10 +5265,10 @@ static INSTR_FUNC gen_opcode_edxx[256][NUM_INSTR_TAB_PTRS] =
  /*EDA9*/ GENx___x___x900 ( "CZXT"      , RSL_b, ASMFMT_RSL_RM   , convert_dfp_ext_to_zoned                            ),
  /*EDAA*/ GENx___x___x900 ( "CDZT"      , RSL_b, ASMFMT_RSL_RM   , convert_zoned_to_dfp_long                           ),
  /*EDAB*/ GENx___x___x900 ( "CXZT"      , RSL_b, ASMFMT_RSL_RM   , convert_zoned_to_dfp_ext                            ),
- /*EDAC*/ GENx___x___x___ ,
- /*EDAD*/ GENx___x___x___ ,
- /*EDAE*/ GENx___x___x___ ,
- /*EDAF*/ GENx___x___x___ ,
+ /*EDAC*/ GENx___x___x900 ( "CPDT"      , RSL_b, ASMFMT_RSL_RM   , convert_dfp_long_to_packed                          ),
+ /*EDAD*/ GENx___x___x900 ( "CPXT"      , RSL_b, ASMFMT_RSL_RM   , convert_dfp_ext_to_packed                           ),
+ /*EDAE*/ GENx___x___x900 ( "CDPT"      , RSL_b, ASMFMT_RSL_RM   , convert_packed_to_dfp_long                          ),
+ /*EDAF*/ GENx___x___x900 ( "CXPT"      , RSL_b, ASMFMT_RSL_RM   , convert_packed_to_dfp_ext                           ),
  /*EDB0*/ GENx___x___x___ ,
  /*EDB1*/ GENx___x___x___ ,
  /*EDB2*/ GENx___x___x___ ,

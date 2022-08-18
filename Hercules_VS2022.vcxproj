@@ -910,6 +910,14 @@
     <None Include="tests\cr.tst" />
     <None Include="tests\cpu0off.core" />
     <None Include="tests\dotest" />
+    <None Include="tests\dfp-080-from-packed.asm" />
+    <None Include="tests\dfp-080-from-packed.core" />
+    <None Include="tests\dfp-080-from-packed.list" />
+    <None Include="tests\dfp-080-from-packed.tst" />
+    <None Include="tests\dfp-080-to-packed.asm" />
+    <None Include="tests\dfp-080-to-packed.core" />
+    <None Include="tests\dfp-080-to-packed.list" />
+    <None Include="tests\dfp-080-to-packed.tst" />     
     <None Include="tests\FAC53.asm" />
     <None Include="tests\FAC53.core" />
     <None Include="tests\FAC53.list" />
