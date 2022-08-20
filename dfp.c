@@ -1558,11 +1558,11 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
             pSign = 0x0D;
             /* -0 : force positive sign based on plus-sign-control */ 
             if ( m_F && decNumberIsZero(dn))
-                pSign =  (m_P) ? 0b1111 : 0b1100 ;      /* 0xF : 0xC */       
+                pSign =  (m_P) ? 0x0F : 0x0C;      /* 0b1111 : 0b1100 */       
         }
         else {
             /* select plus sign */
-            pSign = (m_P) ? 0b1111 : 0b1100 ;   /* 0xF : 0xC */   
+            pSign = (m_P) ? 0x0F : 0x0C;            /* 0b1111 : 0b1100 */   
         }
     }
 
