@@ -1,0 +1,1339 @@
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     1
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                             2 ***********************************************************************
+                                                                             3 *
+                                                                             4 *Testcase: Convert From Packed (Long and Extended)
+                                                                             5 *  Test results, Program interrupt code, and
+                                                                             6 *  DXC saved for all tests.
+                                                                             7 *
+                                                                             8 ***********************************************************************
+
+
+                                                                            10 ***********************************************************************
+                                                                            11 *
+                                                                            12 *                    dfp-080-from-packed.asm
+                                                                            13 *
+                                                                            14 *        This assembly-language source file is modelled on
+                                                                            15 *        Hercules Decimal Floating Point Validation Package
+                                                                            16 *        by Stephen R. Orso, specifically dfp-012-loadtest.asm.
+                                                                            17 *
+                                                                            18 *        Note: this has been tested ONLY on Hercules and not z/CMS.
+                                                                            19 *
+                                                                            20 *        James Wekel - August 2022
+                                                                            21 *
+                                                                            22 *
+                                                                            23 * Copyright 2017 by Stephen R Orso.
+                                                                            24 *
+                                                                            25 * Redistribution and use in source and binary forms, with or without
+                                                                            26 * modification, are permitted provided that the following conditions
+                                                                            27 * are met:
+                                                                            28 *
+                                                                            29 * 1. Redistributions of source code must retain the above copyright
+                                                                            30 *    notice, this list of conditions and the following disclaimer.
+                                                                            31 *
+                                                                            32 * 2. Redistributions in binary form must reproduce the above copyright
+                                                                            33 *    notice, this list of conditions and the following disclaimer in
+                                                                            34 *    the documentation and/or other materials provided  with the
+                                                                            35 *    distribution.
+                                                                            36 *
+                                                                            37 * 3. The name of the author may not be used to endorse or promote
+                                                                            38 *    products derived from this software without specific prior written
+                                                                            39 *    permission.
+                                                                            40 *
+                                                                            41 * DISCLAMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS"
+                                                                            42 * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+                                                                            43 * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+                                                                            44 * PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+                                                                            45 * HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+                                                                            46 * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+                                                                            47 * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+                                                                            48 * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+                                                                            49 * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+                                                                            50 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+                                                                            51 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+                                                                            52 *
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     2
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                            53 ***********************************************************************
+
+
+                                                                            55 ***********************************************************************
+                                                                            56 *
+                                                                            57 *
+                                                                            58 *Testcase Convert From Packed (Long and Extended)
+                                                                            59 *  Test results, Program interrupt code, DXC saved for all tests.
+                                                                            60 *
+                                                                            61 * Tests the following two DFP packed conversion instructions
+                                                                            62 *   CONVERT FROM PACKED
+                                                                            63 *        CDPT (packed to long DFP)
+                                                                            64 *        CXPT (packed to extended DFP)
+                                                                            65 *
+                                                                            66 * This routine tests both signed and unsigned packed decimal fields
+                                                                            67 * and ignore sign flag.
+                                                                            68 *
+                                                                            69 * Test data is compiled into this program.  The test script that runs
+                                                                            70 * this program can provide alternative test data through Hercules R
+                                                                            71 * commands.
+                                                                            72 *
+                                                                            73 * Test Case Order
+                                                                            74 * 1) Long signed packed to long DFP tests
+                                                                            75 * 2) Long unsigned packed to long DFP tests
+                                                                            76 * 3) Extended signed packed to extended DFP tests
+                                                                            77 * 4) Extended unsigned packed to extended DFP tests
+                                                                            78 *
+                                                                            79 *
+                                                                            80 * Also tests the following floating point support instructions
+                                                                            81 *   LOAD  (Long)
+                                                                            82 *   STORE (Long)
+                                                                            83 *
+                                                                            84 *
+                                                                            85 ***********************************************************************
+
+
+                                                                            87          MACRO
+                                                                            88          PADCSECT &ENDLABL
+                                                                            89 .*
+                                                                            90 .*  Macro to pad the CSECT to include result data areas if this test
+                                                                            91 .*  program is not being assembled using asma.  asma generates a core
+                                                                            92 .*  image that is loaded by the loadcore command, and because the
+                                                                            93 .*  core image is a binary stored in Github, it makes sense to make
+                                                                            94 .*  this small effort to keep the core image small.
+                                                                            95 .*
+                                                                            96          AIF   (D'&ENDLABL).GOODPAD
+                                                                            97          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
+                                                                            98          MNOTE *,'No CSECT padding performed'
+                                                                            99          MEXIT
+                                                                           100 .*
+                                                                           101 .GOODPAD ANOP            Label valid.  See if we're on asma
+                                                                           102          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').NOPAD
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     3
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           103          ORG   &ENDLABL-1   Not ASMA.  Pad CSECT
+                                                                           104          MEXIT
+                                                                           105 .*
+                                                                           106 .NOPAD   ANOP
+                                                                           107          MNOTE *,'asma detected; no CSECT padding performed'
+                                                                           108          MEND
+                                                                           109 *
+                                                                           110          MACRO
+                                                                           111          SVCALL &CODE
+                                                                           112 * SVCALL macro - perform supervisory functions
+                                                                           113 .* Perform various functions as SVCs on Hercules (asma), and by
+                                                                           114 .* z/CMS friendly equivalents otherwise.
+                                                                           115          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').DOSVC
+                                                                           116          AIF   ('&CODE' EQ 'EOJ').ZEOJ
+                                                                           117          AIF   ('&CODE' EQ 'AEOJ').ZAEOJ
+                                                                           118          AIF   ('&CODE' EQ 'PROBST').ZPROBST
+                                                                           119          AIF   ('&CODE' EQ 'SUPVST').ZSUPVST
+                                                                           120          MNOTE 4,'Missing or invalid SVCALL code ''&CODE'''
+                                                                           121          MNOTE *,'No supervisory funcion performed'
+                                                                           122          MEXIT
+                                                                           123 .ZAEOJ   ANOP
+                                                                           124          MNOTE *,'No Abend capability in z/CMS.  Normal EOJ performed.'
+                                                                           125          BR    R14           Return to z/CMS test rig.
+                                                                           126 .ZEOJ    ANOP
+                                                                           127          MEXIT
+                                                                           128 .* Switch between problem and supervisor states
+                                                                           129 .ZPROBST ANOP
+                                                                           130          LA    R0,2          Request problem state
+                                                                           131          AGO   .ZSVC
+                                                                           132 .ZSUPVST ANOP
+                                                                           133          LA    R0,3          Request supervisor state
+                                                                           134 .ZSVC    ANOP
+                                                                           135          SVC   255           Invoke z/CMS SVC Handler
+                                                                           136          MEXIT
+                                                                           137 .DOSVC   ANOP
+                                                                           138          AIF   ('&CODE' EQ 'EOJ').HEOJ
+                                                                           139          AIF   ('&CODE' EQ 'AEOJ').HAEOJ
+                                                                           140          AIF   ('&CODE' EQ 'PROBST').HPROBST
+                                                                           141          AIF   ('&CODE' EQ 'SUPVST').HSUPVST
+                                                                           142          MNOTE 4,'Missing or invalid SVCALL code ''&CODE'''
+                                                                           143          MNOTE *,'No supervisory funcion performed'
+                                                                           144          MEXIT
+                                                                           145 .HAEOJ   ANOP
+                                                                           146          SVC   1             Abnormal end of job
+                                                                           147          MEXIT
+                                                                           148 .HEOJ    ANOP
+                                                                           149          SVC   0             Normal end of job
+                                                                           150          MEXIT
+                                                                           151 .* Switch between problem and supervisor states
+                                                                           152 .HPROBST ANOP
+                                                                           153          LA    R0,2          Request problem state
+                                                                           154          AGO   .HSVC
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     4
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           155 .HSUPVST ANOP
+                                                                           156          LA    R0,3          Request supervisor state
+                                                                           157 .HSVC    ANOP
+                                                                           158          SVC   255           Invoke z/CMS SVC Handler
+                                                                           159          MEXIT
+                                                                           160          MEND
+                                                                           161 *
+                                                                           162 *  Note: for compatibility with the z/CMS test rig, do not change
+                                                                           163 *  or use R11, R14, or R15.  Everything else is fair game.
+                                                                           164 *
+                                      0000000000000000  0000000000000878   165 DFPLTTDC START 0
+                                      0000000000000000  0000000000000001   166 STRTLABL EQU   *
+                                      0000000000000000  0000000000000001   167 R0       EQU   0
+                                      0000000000000001  0000000000000001   168 R1       EQU   1
+                                      0000000000000002  0000000000000001   169 R2       EQU   2
+                                      0000000000000003  0000000000000001   170 R3       EQU   3
+                                      0000000000000004  0000000000000001   171 R4       EQU   4
+                                      0000000000000005  0000000000000001   172 R5       EQU   5
+                                      0000000000000006  0000000000000001   173 R6       EQU   6
+                                      0000000000000007  0000000000000001   174 R7       EQU   7
+                                      0000000000000008  0000000000000001   175 R8       EQU   8
+                                      0000000000000009  0000000000000001   176 R9       EQU   9
+                                      000000000000000A  0000000000000001   177 R10      EQU   10
+                                      000000000000000B  0000000000000001   178 R11      EQU   11                  **Reserved for z/CMS test rig
+                                      000000000000000C  0000000000000001   179 R12      EQU   12
+                                      000000000000000D  0000000000000001   180 R13      EQU   13                  Mainline return address
+                                      000000000000000E  0000000000000001   181 R14      EQU   14                  **Return address for z/CMS test rig
+                                      000000000000000F  0000000000000001   182 R15      EQU   15                  **Base register on z/CMS or Hyperion
+                                                                           183 *
+                                                                           184 * Floating Point Register equates to keep the cross reference clean
+                                                                           185 *
+                                      0000000000000000  0000000000000001   186 FPR0     EQU   0
+                                      0000000000000001  0000000000000001   187 FPR1     EQU   1
+                                      0000000000000002  0000000000000001   188 FPR2     EQU   2
+                                      0000000000000003  0000000000000001   189 FPR3     EQU   3
+                                      0000000000000004  0000000000000001   190 FPR4     EQU   4
+                                      0000000000000005  0000000000000001   191 FPR5     EQU   5
+                                      0000000000000006  0000000000000001   192 FPR6     EQU   6
+                                      0000000000000007  0000000000000001   193 FPR7     EQU   7
+                                      0000000000000008  0000000000000001   194 FPR8     EQU   8
+                                      0000000000000009  0000000000000001   195 FPR9     EQU   9
+                                      000000000000000A  0000000000000001   196 FPR10    EQU   10
+                                      000000000000000B  0000000000000001   197 FPR11    EQU   11
+                                      000000000000000C  0000000000000001   198 FPR12    EQU   12
+                                      000000000000000D  0000000000000001   199 FPR13    EQU   13
+                                      000000000000000E  0000000000000001   200 FPR14    EQU   14
+                                      000000000000000F  0000000000000001   201 FPR15    EQU   15
+                                                                           202 *
+0000000000000000                      0000000000000000                     203          USING *,R15
+                                                                           204 *
+                                                                           205 * Above works on real iron (R15=0 after sysclear)
+                                                                           206 * and in z/CMS (R15 points to start of load module)
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     5
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           207 *
+
+
+                                                                           209 ***********************************************************************
+                                                                           210 *
+                                                                           211 * Low core definitions, Restart PSW, Program Check routine, and
+                                                                           212 * Supervisor Call routine..
+                                                                           213 *
+                                                                           214 ***********************************************************************
+0000000000000000                      0000000000000000  0000000000000000   215          ORG   STRTLABL+X'00'     z/Arch IPL PSW
+0000000000000000  00000000 00000000                                        216          DC    X'0000000000000000',AD(START)
+                                                                           217
+
+
+0000000000000010                      0000000000000010  0000000000000088   219          ORG   STRTLABL+X'88'      Supervisor call interruption area
+0000000000000088  0000                                                     220 SVILC    DS    H                   ..Instruction length in bytes
+000000000000008A  0000                                                     221 SVINTCD  DS    H                   ..SVC number
+                                                                           222 *
+000000000000008C                      000000000000008C  000000000000008C   223          ORG   STRTLABL+X'8C'      Program check interruption area
+000000000000008C  0000                                                     224 PCILC    DS    H                   ..Instruction length in bytes
+000000000000008E  0000                                                     225 PCINTCD  DS    H                   ..PC interruption code
+                                                                           226 *
+                                      0000000000000140  0000000000000001   227 SVOLDPSW EQU   STRTLABL+X'140'     z/Arch Supervisor call old PSW
+                                      0000000000000150  0000000000000001   228 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
+                                                                           229 *
+0000000000000090                      0000000000000090  00000000000001A0   230          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
+00000000000001A0  00000001 80000000                                        231          DC    X'0000000180000000',AD(START)
+                                                                           232 *
+00000000000001B0                      00000000000001B0  00000000000001C0   233          ORG   STRTLABL+X'1C0'     z/Arch Supervisor call new PSW
+00000000000001C0  00000000 00000000                                        234          DC    X'0000000000000000',AD(SVCALL)
+                                                                           235 *
+00000000000001D0                      00000000000001D0  00000000000001D0   236          ORG   STRTLABL+X'1D0'     z/Arch Program check new PSW
+00000000000001D0  00000000 00000000                                        237          DC    X'0000000000000000',AD(PROGCHK)
+                                                                           238 *
+                                                                           239 * Program check routine.  If Program Specification or Data Exception,
+                                                                           240 * continue execution at the instruction following the program check.
+                                                                           241 * Otherwise, hard wait.
+                                                                           242 * Save Program interrup code to confirm Program Exceptions:
+                                                                           243 * Data with DXC 0, general operand for 'Unused digits must be zero.'
+                                                                           244 * checks.
+                                                                           245 *
+00000000000001E0                      00000000000001E0  0000000000000200   246          ORG   STRTLABL+X'200'
+0000000000000200                                                           247 PROGCHK  DS    0H            Program check occured...
+0000000000000200  D201 F290 F08E      0000000000000290  000000000000008E   248          MVC   LASTPCIND,PCINTCD
+0000000000000206  9506 F08F                             000000000000008F   249          CLI   PCINTCD+1,X'06'  Program Specification Exception?
+000000000000020A  A784 0007                             0000000000000218   250          JE    PCCONT            ..yes, continue test
+000000000000020E  9507 F08F                             000000000000008F   251          CLI   PCINTCD+1,X'07'  Data Exception?
+0000000000000212  A784 0003                             0000000000000218   252          JE    PCCONT            ..yes, continue test
+                                                                           253 *                            ..no, hardwait (not sure if R15 is ok)
+0000000000000216                                                           254 PCNOTDTA DS    0H
+                                                                           255          SVCALL AEOJ         Signal abend
+                                                                           256+* SVCALL macro - perform supervisory functions
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     6
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000216  0A01                                                     257+         SVC   1             Abnormal end of job
+                                                                           258 *
+0000000000000218                                                           259 PCCONT   DS    0H
+0000000000000218  B2B2 F150                             0000000000000150   260          LPSWE PCOLDPSW      ..yes, resume program execution
+                                                                           261
+                                                                           262 * Supervisor call routine.  Four SVCs are defined:
+                                                                           263 * - SVC 0 - Normal end of job
+                                                                           264 * - SVC 1 - Abnormal end of job
+                                                                           265 * - SVC 255 - Return control in problem or supervisor state
+                                                                           266 *
+000000000000021C                                                           267 SVCALL   DS    0H            Supervisor call occurred...
+000000000000021C  9500 F08B                             000000000000008B   268          CLI   SVINTCD+1,X'00'  SVC 0?
+0000000000000220  4780 F25C                             000000000000025C   269          BE    EOJ           ..Yes, terminate
+0000000000000224  9501 F08B                             000000000000008B   270          CLI   SVINTCD+1,X'01'  SVC 1?
+0000000000000228  4780 F25C                             000000000000025C   271          BE    EOJ           ..Yes, terminate
+000000000000022C  95FF F08B                             000000000000008B   272          CLI   SVINTCD+1,X'FF'  SVC 255, change privilege?
+0000000000000230  4780 F238                             0000000000000238   273          BE    SETPRIVS       ..Yes, set requested privilege
+0000000000000234  47F0 F25C                             000000000000025C   274          B     EOJ           ..invalid SVC, abend.
+                                                                           275 *
+                                                                           276 * Privilege change.  Determine if to problem or to supervisor state
+                                                                           277 *
+0000000000000238                                                           278 SETPRIVS DS    0H            Determine privilege state requested
+0000000000000238  4900 F292                             0000000000000292   279          CH    R0,=H'2'      Problem state requested?
+000000000000023C  4780 F24C                             000000000000024C   280          BE    SETPROBS      ..Yes, do it
+0000000000000240  4900 F294                             0000000000000294   281          CH    R0,=H'3'      Supervisor state requested?
+0000000000000244  4780 F254                             0000000000000254   282          BE    SETSUPVS      ..Yes, do it
+0000000000000248  47F0 F25C                             000000000000025C   283          B     EOJ           ..out of choices, time to hard wait.
+                                                                           284 *
+                                                                           285 * SVC 255 R0=2: Return to caller in problem state
+                                                                           286 *
+000000000000024C                                                           287 SETPROBS DS    0H            Set problem sat for caller
+000000000000024C  9601 F141                             0000000000000141   288          OI    SVOLDPSW+1,X'01'  Turn on problem state bit
+0000000000000250  B2B2 F140                             0000000000000140   289          LPSWE SVOLDPSW      Resume execution
+                                                                           290 *
+                                                                           291 * SVC 255 R0=3: Return to caller in supervisor state
+                                                                           292 *
+0000000000000254                                                           293 SETSUPVS DS    0H            Set problem sat for caller
+0000000000000254  94FE F141                             0000000000000141   294          NI    SVOLDPSW+1,X'FF'-X'01' Turn off problem state bit
+0000000000000258  B2B2 F140                             0000000000000140   295          LPSWE SVOLDPSW      Resume execution
+                                                                           296 *
+                                                                           297 * No opportunity to provide a return code to z/CMS, so if on z/CMS,
+                                                                           298 * just exit.
+                                                                           299 *
+000000000000025C  12EE                                                     300 EOJ      LTR   R14,R14        Return address provided?
+000000000000025E  077E                                                     301          BNZR  R14            ..Yes, return to z/CMS test rig.
+0000000000000260  9500 F08B                             000000000000008B   302          CLI   SVINTCD+1,X'00'  Normal End of Job?
+0000000000000264  4780 F26C                             000000000000026C   303          BE    NORMEOJ       ..yes, normal EOJ
+0000000000000268  B2B2 F280                             0000000000000280   304          LPSWE HARDWAIT      ..Yes, load Abend hard wait PSW
+                                                                           305 *
+000000000000026C  B2B2 F270                             0000000000000270   306 NORMEOJ  LPSWE NORMWAIT      Load abend hard wait PSW
+                                                                           307 *
+0000000000000270                                                           308          DS    0D             Ensure correct alignment for psw
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     7
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000270  00020000 00000000                                        309 NORMWAIT DC    X'0002000000000000',AD(0)  Normal end - disabled wait
+0000000000000280  00020000 00000000                                        310 HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
+                                                                           311 *
+                                                                           312 **************************************************************
+                                                                           313 * saved program interupt code
+                                                                           314 **************************************************************
+0000000000000290                                                           315          DS    0D
+0000000000000290  0000                                                     316 LASTPCIND DS   H              last Interupt code
+                                                                           317 *
+0000000000000292                                                           318          LTORG ,             Interrupt handler literal pool
+0000000000000292  0002                                                     319                =H'2'
+0000000000000294  0003                                                     320                =H'3'
+                                                                           321 *
+                                                                           322 ***********************************************************************
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     8
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           324 ***********************************************************************
+                                                                           325 *
+                                                                           326 *  Main program.  Enable Advanced Floating Point, process test cases.
+                                                                           327 *
+                                                                           328 ***********************************************************************
+
+
+0000000000000296                                                           330 START    DS    0H
+0000000000000296  B600 F2CC                             00000000000002CC   331          STCTL R0,R0,CTLR0   Store CR0 to enable AFP
+000000000000029A  9604 F2CD                             00000000000002CD   332          OI    CTLR0+1,X'04' Turn on AFP bit
+000000000000029E  B700 F2CC                             00000000000002CC   333          LCTL  R0,R0,CTLR0   Reload updated CR0
+                                                                           334          SVCALL PROBST       Switch to problem state for tests
+                                                                           335+* SVCALL macro - perform supervisory functions
+00000000000002A2  4100 0002                             0000000000000002   336+         LA    R0,2          Request problem state
+00000000000002A6  0AFF                                                     337+         SVC   255           Invoke z/CMS SVC Handler
+                                                                           338 *===
+00000000000002A8  41A0 F300                             0000000000000300   339          LA    R10,ARGLSP     Test CDPT for signed packed fields
+00000000000002AC  4DD0 F330                             0000000000000330   340          BAS   R13,TESTLSP
+                                                                           341 *
+00000000000002B0  41A0 F30C                             000000000000030C   342          LA    R10,ARGLUP     Test CDPT for unsigned packed fields
+00000000000002B4  4DD0 F3B4                             00000000000003B4   343          BAS   R13,TESTLUP
+                                                                           344 *
+00000000000002B8  41A0 F318                             0000000000000318   345          LA    R10,ARGXSP     Test CXPT for signed packed fields
+00000000000002BC  4DD0 F438                             0000000000000438   346          BAS   R13,TESTXSP
+                                                                           347 *
+00000000000002C0  41A0 F324                             0000000000000324   348          LA    R10,ARGXUP     Test CXPT for unsigned packed fields
+00000000000002C4  4DD0 F4CC                             00000000000004CC   349          BAS   R13,TESTXUP
+                                                                           350
+                                                                           351          SVCALL EOJ          Normal end of job
+                                                                           352+* SVCALL macro - perform supervisory functions
+00000000000002C8  0A00                                                     353+         SVC   0             Normal end of job
+                                                                           354 *
+00000000000002CA                                                           355          LTORG ,             Literal pool for supervisor routines
+                                                                           356 *
+00000000000002CC  00000000                                                 357 CTLR0    DS    F
+                                                                           358 *
+                                                                           359 * Input values parameter list, three fullwords for each test data set
+                                                                           360 *      1) Address of inputs,
+                                                                           361 *      2) Address to place results, and
+                                                                           362 *      3) Address to place DXC/Flags/cc values.
+                                                                           363 *
+00000000000002D0                      00000000000002D0  0000000000000300   364          ORG   STRTLABL+X'300'  Enable run-time replacement
+                                                                           365 *
+                                                                           366 * Test sets for Convert From Packed : CDPT and CXDT
+                                                                           367 *
+0000000000000300                                                           368 ARGLSP   DS    0F             Input for long signed packed
+0000000000000300  00000580                                                 369          DC    A(LSPADRS)
+0000000000000304  00001000                                                 370          DC    A(LSPOUT)
+0000000000000308  00001200                                                 371          DC    A(LSPOUTCC)
+                                                                           372
+000000000000030C                                                           373 ARGLUP   DS    0F             Input for long unsigned packed
+000000000000030C  0000063C                                                 374          DC    A(LUPADRS)
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page     9
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000310  00001300                                                 375          DC    A(LUPOUT)
+0000000000000314  00001400                                                 376          DC    A(LUPOUTCC)
+                                                                           377
+                                                                           378
+0000000000000318                                                           379 ARGXSP   DS    0F             Input for extended signed packed
+0000000000000318  000006BC                                                 380          DC    A(XSPADRS)
+000000000000031C  00001600                                                 381          DC    A(XSPOUT)
+0000000000000320  00002000                                                 382          DC    A(XSPOUTCC)
+                                                                           383
+0000000000000324                                                           384 ARGXUP   DS    0F             Input for extended unsigned packed
+0000000000000324  000007B4                                                 385          DC    A(XUPADRS)
+0000000000000328  00002100                                                 386          DC    A(XUPOUT)
+000000000000032C  00002500                                                 387          DC    A(XUPOUTCC)
+                                                                           388 *
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    10
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           390 ***********************************************************************
+                                                                           391 *
+                                                                           392 * Perform CONVERT FROM PACKED for signed packed tests.
+                                                                           393 * This includes 14 packed fields with two CDPT executions
+                                                                           394 * per field. CDPT The condition code remained unchanged.
+                                                                           395 *
+                                                                           396 *        R0    work register
+                                                                           397 *        R1    length of packed field (R5 ->)
+                                                                           398 *        R2    pointer to input address list
+                                                                           399 *
+                                                                           400 *        R5    pointer to packed signed field
+                                                                           401 *        R7    pointer to results area
+                                                                           402 *        R8    pointer to prog Check, DXC, CC area
+                                                                           403 *
+                                                                           404 *        R12   Arg processing loop return
+                                                                           405 *        R13   RETURN ADDRESS
+                                                                           406 *        R15   Base register
+                                                                           407 *
+                                                                           408 *        FPR0  work register - result of CDPT and CXDT instructions
+                                                                           409 ***********************************************************************
+
+
+0000000000000330                                                           411 TESTLSP  DS    0H             Test long signed packed input
+0000000000000330  582A 0000                             0000000000000000   412          L     R2,0(R10)      Get pointer to address of test inputs
+0000000000000334  9878 A004                             0000000000000004   413          LM    R7,R8,4(R10)   Get address of result and CC areas.
+0000000000000338  1222                                                     414          LTR   R2,R2          Any test cases?
+000000000000033A  078D                                                     415          BZR   R13            ..No, return to caller
+                                                                           416
+000000000000033C  0DC0                                                     417          BASR  R12,0          Set TOP of LOOP
+                                                                           418 *
+000000000000033E  5852 0000                             0000000000000000   419          L     R5,0(R2)       Get address of packed field
+0000000000000342  1255                                                     420          LTR   R5,R5          End of arg list?
+0000000000000344  078D                                                     421          BZR   R13              yes, return
+                                                                           422
+0000000000000346  1815                                                     423          LR    R1,R5          packed field address
+0000000000000348  5B10 F560                             0000000000000560   424          S     R1,=F'2'       packed field length address
+000000000000034C  4811 0000                             0000000000000000   425          LH    R1,0(R1)       get packed field length
+0000000000000350  0610                                                     426          BCTR  R1,0              less one (for Execute)
+                                                                           427
+0000000000000352  6800 F566                             0000000000000566   428          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
+0000000000000356  D201 F290 F564      0000000000000290  0000000000000564   429          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           430
+000000000000035C  4410 F3A8                             00000000000003A8   431          EX    R1,LSPEX       do CDPT into FPR0
+                                                                           432
+0000000000000360  D201 8000 F290      0000000000000000  0000000000000290   433          MVC   0(L'LASTPCIND,R8),LASTPCIND
+0000000000000366  B38C 0000                                                434          EFPC  R0             Extract FPC contents to R0
+000000000000036A  BE02 8002                             0000000000000002   435          STCM  R0,B'0010',2(R8)  Store any DXC code
+000000000000036E  6007 0000                             0000000000000000   436          STD   FPR0,0(R7)     save conversion
+0000000000000372  4177 0008                             0000000000000008   437          LA    R7,8(R7)       move to next result
+0000000000000376  4188 0004                             0000000000000004   438          LA    R8,4(R8)       move to next result exception
+                                                                           439
+000000000000037A  6800 F566                             0000000000000566   440          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    11
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000037E  D201 F290 F564      0000000000000290  0000000000000564   441          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           442
+0000000000000384  4410 F3AE                             00000000000003AE   443          EX    R1,LSPEX+6     do 2nd CDPT into FPR0
+                                                                           444
+0000000000000388  D201 8000 F290      0000000000000000  0000000000000290   445          MVC   0(L'LASTPCIND,R8),LASTPCIND
+000000000000038E  B38C 0000                                                446          EFPC  R0             Extract FPC contents to R0
+0000000000000392  BE02 8002                             0000000000000002   447          STCM  R0,B'0010',2(R8)  Store any DXC code
+0000000000000396  6007 0000                             0000000000000000   448          STD   FPR0,0(R7)     save conversion
+000000000000039A  4177 0008                             0000000000000008   449          LA    R7,8(R7)       move to next result
+000000000000039E  4188 0004                             0000000000000004   450          LA    R8,4(R8)       move to next result exception
+                                                                           451
+00000000000003A2  4122 0004                             0000000000000004   452          LA    R2,4(R2)       Point to next arg list pointer
+00000000000003A6  07FC                                                     453          BR    R12            next test
+                                                                           454 *
+                                                                           455 *        CDPT EXECUTE instructions
+                                                                           456 *
+00000000000003A8  ED00 5000 08AE                        0000000000000000   457 LSPEX    CDPT  FPR0,0(,R5),8      SIGNED PACKED
+00000000000003AE  ED00 5000 09AE                        0000000000000000   458          CDPT  FPR0,0(,R5),9      SIGNED PACKED - ignore sign
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    12
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           460 ***********************************************************************
+                                                                           461 *
+                                                                           462 * Perform CONVERT FROM PACKED for unsigned packed tests.
+                                                                           463 * This includes 10 packed fields with two CDPT executions
+                                                                           464 * per field. CDPT The condition code remained unchanged.
+                                                                           465 *
+                                                                           466 *        R0    work register
+                                                                           467 *        R1    length of packed field (R5 ->)
+                                                                           468 *        R2    pointer to input address list
+                                                                           469 *
+                                                                           470 *        R5    pointer to packed unsigned field
+                                                                           471 *        R7    pointer to results area
+                                                                           472 *        R8    pointer to prog Check, DXC, CC area
+                                                                           473 *
+                                                                           474 *        R12   Arg processing loop return
+                                                                           475 *        R13   RETURN ADDRESS
+                                                                           476 *        R15   Base register
+                                                                           477 *
+                                                                           478 *        FPR0  work register - result of CDPT and CXDT instructions
+                                                                           479 ***********************************************************************
+
+
+00000000000003B4                                                           481 TESTLUP  DS    0H             Test long unsigned packed input
+00000000000003B4  582A 0000                             0000000000000000   482          L     R2,0(R10)      Get pointer to address of test inputs
+00000000000003B8  9878 A004                             0000000000000004   483          LM    R7,R8,4(R10)   Get address of result and CC areas.
+00000000000003BC  1222                                                     484          LTR   R2,R2          Any test cases?
+00000000000003BE  078D                                                     485          BZR   R13            ..No, return to caller
+                                                                           486
+00000000000003C0  0DC0                                                     487          BASR  R12,0          Set TOP of LOOP
+                                                                           488 *
+00000000000003C2  5852 0000                             0000000000000000   489          L     R5,0(R2)       Get address of packed field
+00000000000003C6  1255                                                     490          LTR   R5,R5          End of arg list?
+00000000000003C8  078D                                                     491          BZR   R13              yes, return
+                                                                           492
+00000000000003CA  1815                                                     493          LR    R1,R5          packed field address
+00000000000003CC  5B10 F560                             0000000000000560   494          S     R1,=F'2'       packed field length address
+00000000000003D0  4811 0000                             0000000000000000   495          LH    R1,0(R1)       get packed field length
+00000000000003D4  0610                                                     496          BCTR  R1,0              less one (for Execute)
+                                                                           497
+00000000000003D6  6800 F566                             0000000000000566   498          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
+00000000000003DA  D201 F290 F564      0000000000000290  0000000000000564   499          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           500
+00000000000003E0  4410 F42C                             000000000000042C   501          EX    R1,LUPEX       do CDPT into FPR0
+                                                                           502
+00000000000003E4  D201 8000 F290      0000000000000000  0000000000000290   503          MVC   0(L'LASTPCIND,R8),LASTPCIND
+00000000000003EA  B38C 0000                                                504          EFPC  R0             Extract FPC contents to R0
+00000000000003EE  BE02 8002                             0000000000000002   505          STCM  R0,B'0010',2(R8)  Store any DXC code
+00000000000003F2  6007 0000                             0000000000000000   506          STD   FPR0,0(R7)     save conversion
+00000000000003F6  4177 0008                             0000000000000008   507          LA    R7,8(R7)       move to next result
+00000000000003FA  4188 0004                             0000000000000004   508          LA    R8,4(R8)       move to next result exception
+                                                                           509
+00000000000003FE  6800 F566                             0000000000000566   510          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    13
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000402  D201 F290 F564      0000000000000290  0000000000000564   511          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           512
+0000000000000408  4410 F432                             0000000000000432   513          EX    R1,LUPEX+6     do 2nd CDPT into FPR0
+                                                                           514
+000000000000040C  D201 8000 F290      0000000000000000  0000000000000290   515          MVC   0(L'LASTPCIND,R8),LASTPCIND
+0000000000000412  B38C 0000                                                516          EFPC  R0             Extract FPC contents to R0
+0000000000000416  BE02 8002                             0000000000000002   517          STCM  R0,B'0010',2(R8)  Store any DXC code
+000000000000041A  6007 0000                             0000000000000000   518          STD   FPR0,0(R7)     save conversion
+000000000000041E  4177 0008                             0000000000000008   519          LA    R7,8(R7)       move to next result
+0000000000000422  4188 0004                             0000000000000004   520          LA    R8,4(R8)       move to next result exception
+                                                                           521
+0000000000000426  4122 0004                             0000000000000004   522          LA    R2,4(R2)       Point to next arg list pointer
+000000000000042A  07FC                                                     523          BR    R12            next test
+                                                                           524 *
+                                                                           525 *        CDPT EXECUTE instructions
+                                                                           526 *
+000000000000042C  ED00 5000 00AE                        0000000000000000   527 LUPEX    CDPT  FPR0,0(,R5),0        UNSIGNED PACKED
+0000000000000432  ED00 5000 01AE                        0000000000000000   528          CDPT  FPR0,0(,R5),1      UNSIGNED PACKED - ignore sign
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    14
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           530 ***********************************************************************
+                                                                           531 *
+                                                                           532 * Perform CONVERT FROM PACKED for signed packed tests.
+                                                                           533 * This includes 22 packed fields with two CXPT executions
+                                                                           534 * per field. For CXPT, the condition code remained unchanged.
+                                                                           535 *
+                                                                           536 *        R0    work register
+                                                                           537 *        R1    length of packed field (R5 ->)
+                                                                           538 *        R2    pointer to input address list
+                                                                           539 *
+                                                                           540 *        R5    pointer to packed signed field
+                                                                           541 *        R7    pointer to results area
+                                                                           542 *        R8    pointer to prog Check, DXC, CC area
+                                                                           543 *
+                                                                           544 *        R12   Arg processing loop return
+                                                                           545 *        R13   RETURN ADDRESS
+                                                                           546 *        R15   Base register
+                                                                           547 *
+                                                                           548 *        FPR0  work register - result of CDPT and CXDT instructions
+                                                                           549 ***********************************************************************
+
+
+0000000000000438                                                           551 TESTXSP  DS    0H              Test extended unsigned packed input
+0000000000000438  582A 0000                             0000000000000000   552          L     R2,0(R10)       Get pointer to address of test inputs
+000000000000043C  9878 A004                             0000000000000004   553          LM    R7,R8,4(R10)    Get address of result and CC areas.
+0000000000000440  1222                                                     554          LTR   R2,R2           Any test cases?
+0000000000000442  078D                                                     555          BZR   R13              ..No, return to caller
+                                                                           556
+0000000000000444  0DC0                                                     557          BASR  R12,0           Set TOP of LOOP
+                                                                           558 *
+0000000000000446  5852 0000                             0000000000000000   559          L     R5,0(R2)        Get address of packed field
+000000000000044A  1255                                                     560          LTR   R5,R5           End of arg list?
+000000000000044C  078D                                                     561          BZR   R13              yes, return
+                                                                           562
+000000000000044E  1815                                                     563          LR    R1,R5           packed field address
+0000000000000450  5B10 F560                             0000000000000560   564          S     R1,=F'2'        packed field length address
+0000000000000454  4811 0000                             0000000000000000   565          LH    R1,0(R1)        get packed field length
+0000000000000458  0610                                                     566          BCTR  R1,0              less one (for Execute)
+                                                                           567
+000000000000045A  6800 F566                             0000000000000566   568          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
+000000000000045E  6820 F566                             0000000000000566   569          LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
+0000000000000462  D201 F290 F564      0000000000000290  0000000000000564   570          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           571
+0000000000000468  4410 F4C0                             00000000000004C0   572          EX    R1,XSPEX        do CDPT into FPR0
+                                                                           573
+000000000000046C  D201 8000 F290      0000000000000000  0000000000000290   574          MVC   0(L'LASTPCIND,R8),LASTPCIND
+0000000000000472  B38C 0000                                                575          EFPC  R0              Extract FPC contents to R0
+0000000000000476  BE02 8002                             0000000000000002   576          STCM  R0,B'0010',2(R8)  Store any DXC code
+000000000000047A  6007 0000                             0000000000000000   577          STD   FPR0,0(R7)      save conversion - first half
+000000000000047E  6027 0008                             0000000000000008   578          STD   FPR2,8(R7)      save conversion - second half
+0000000000000482  4177 0010                             0000000000000010   579          LA    R7,16(R7)       move to next result
+0000000000000486  4188 0004                             0000000000000004   580          LA    R8,4(R8)        move to next result exception
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    15
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           581
+000000000000048A  6800 F566                             0000000000000566   582          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
+000000000000048E  6820 F566                             0000000000000566   583          LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
+0000000000000492  D201 F290 F564      0000000000000290  0000000000000564   584          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           585
+0000000000000498  4410 F4C6                             00000000000004C6   586          EX    R1,XSPEX+6      do 2nd CDPT into FPR0
+                                                                           587
+000000000000049C  D201 8000 F290      0000000000000000  0000000000000290   588          MVC   0(L'LASTPCIND,R8),LASTPCIND
+00000000000004A2  B38C 0000                                                589          EFPC  R0              Extract FPC contents to R0
+00000000000004A6  BE02 8002                             0000000000000002   590          STCM  R0,B'0010',2(R8)  Store any DXC code
+00000000000004AA  6007 0000                             0000000000000000   591          STD   FPR0,0(R7)      save conversion - first half
+00000000000004AE  6027 0008                             0000000000000008   592          STD   FPR2,8(R7)      save conversion - second half
+00000000000004B2  4177 0010                             0000000000000010   593          LA    R7,16(R7)       move to next result
+00000000000004B6  4188 0004                             0000000000000004   594          LA    R8,4(R8)        move to next result exception
+                                                                           595
+00000000000004BA  4122 0004                             0000000000000004   596          LA    R2,4(R2)       Point to next arg list pointer
+00000000000004BE  07FC                                                     597          BR    R12            next test
+                                                                           598 *
+                                                                           599 *        CDPT EXECUTE instructions
+                                                                           600 *
+00000000000004C0  ED00 5000 08AF                        0000000000000000   601 XSPEX    CXPT  FPR0,0(,R5),8       SIGNED PACKED
+00000000000004C6  ED00 5000 09AF                        0000000000000000   602          CXPT  FPR0,0(,R5),9       SIGNED PACKED - ignore sign
+                                                                           603
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    16
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           605 ***********************************************************************
+                                                                           606 *
+                                                                           607 * Perform CONVERT FROM PACKED for unsigned packed tests.
+                                                                           608 * This includes 17 packed fields with two CXPT executions
+                                                                           609 * per field. For CXPT, the condition code remained unchanged.
+                                                                           610 *
+                                                                           611 *        R0    work register
+                                                                           612 *        R1    length of packed field (R5 ->)
+                                                                           613 *        R2    pointer to input address list
+                                                                           614 *
+                                                                           615 *        R5    pointer to packed unsigned field
+                                                                           616 *        R7    pointer to results area
+                                                                           617 *        R8    pointer to prog Check, DXC, CC area
+                                                                           618 *
+                                                                           619 *        R12   Arg processing loop return
+                                                                           620 *        R13   RETURN ADDRESS
+                                                                           621 *        R15   Base register
+                                                                           622 *
+                                                                           623 *        FPR0  work register - result of CDPT and CXDT instructions
+                                                                           624 ***********************************************************************
+
+
+00000000000004CC                                                           626 TESTXUP  DS    0H              Test extended unsigned packed input
+00000000000004CC  582A 0000                             0000000000000000   627          L     R2,0(R10)       Get pointer to address of test inputs
+00000000000004D0  9878 A004                             0000000000000004   628          LM    R7,R8,4(R10)    Get address of result and CC areas.
+00000000000004D4  1222                                                     629          LTR   R2,R2           Any test cases?
+00000000000004D6  078D                                                     630          BZR   R13              ..No, return to caller
+                                                                           631
+00000000000004D8  0DC0                                                     632          BASR  R12,0           Set TOP of LOOP
+                                                                           633 *
+00000000000004DA  5852 0000                             0000000000000000   634          L     R5,0(R2)        Get address of packed field
+00000000000004DE  1255                                                     635          LTR   R5,R5           End of arg list?
+00000000000004E0  078D                                                     636          BZR   R13              yes, return
+                                                                           637
+00000000000004E2  1815                                                     638          LR    R1,R5           packed field address
+00000000000004E4  5B10 F560                             0000000000000560   639          S     R1,=F'2'        packed field length address
+00000000000004E8  4811 0000                             0000000000000000   640          LH    R1,0(R1)        get packed field length
+00000000000004EC  0610                                                     641          BCTR  R1,0              less one (for Execute)
+                                                                           642
+00000000000004EE  6800 F566                             0000000000000566   643          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
+00000000000004F2  6820 F566                             0000000000000566   644          LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
+00000000000004F6  D201 F290 F564      0000000000000290  0000000000000564   645          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           646
+00000000000004FC  4410 F554                             0000000000000554   647          EX    R1,XUPEX        do CDPT into FPR0
+                                                                           648
+0000000000000500  D201 8000 F290      0000000000000000  0000000000000290   649          MVC   0(L'LASTPCIND,R8),LASTPCIND
+0000000000000506  B38C 0000                                                650          EFPC  R0              Extract FPC contents to R0
+000000000000050A  BE02 8002                             0000000000000002   651          STCM  R0,B'0010',2(R8)  Store any DXC code
+000000000000050E  6007 0000                             0000000000000000   652          STD   FPR0,0(R7)      save conversion - first half
+0000000000000512  6027 0008                             0000000000000008   653          STD   FPR2,8(R7)      save conversion - second half
+0000000000000516  4177 0010                             0000000000000010   654          LA    R7,16(R7)       move to next result
+000000000000051A  4188 0004                             0000000000000004   655          LA    R8,4(R8)        move to next result exception
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    17
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           656
+000000000000051E  6800 F566                             0000000000000566   657          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
+0000000000000522  6820 F566                             0000000000000566   658          LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
+0000000000000526  D201 F290 F564      0000000000000290  0000000000000564   659          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+                                                                           660
+000000000000052C  4410 F55A                             000000000000055A   661          EX    R1,XUPEX+6      do 2nd CDPT into FPR0
+                                                                           662
+0000000000000530  D201 8000 F290      0000000000000000  0000000000000290   663          MVC   0(L'LASTPCIND,R8),LASTPCIND
+0000000000000536  B38C 0000                                                664          EFPC  R0              Extract FPC contents to R0
+000000000000053A  BE02 8002                             0000000000000002   665          STCM  R0,B'0010',2(R8)  Store any DXC code
+000000000000053E  6007 0000                             0000000000000000   666          STD   FPR0,0(R7)      save conversion - first half
+0000000000000542  6027 0008                             0000000000000008   667          STD   FPR2,8(R7)      save conversion - second half
+0000000000000546  4177 0010                             0000000000000010   668          LA    R7,16(R7)       move to next result
+000000000000054A  4188 0004                             0000000000000004   669          LA    R8,4(R8)        move to next result exception
+                                                                           670
+000000000000054E  4122 0004                             0000000000000004   671          LA    R2,4(R2)       Point to next arg list pointer
+0000000000000552  07FC                                                     672          BR    R12            next test
+                                                                           673 *
+                                                                           674 *        CXPT EXECUTE instructions
+                                                                           675 *
+0000000000000554  ED00 5000 00AF                        0000000000000000   676 XUPEX    CXPT  FPR0,0(,R5),0       UNSIGNED PACKED
+000000000000055A  ED00 5000 01AF                        0000000000000000   677          CXPT  FPR0,0(,R5),1       UNSIGNED PACKED - ignore sign
+0000000000000560                                                           678          LTORG
+0000000000000560  00000002                                                 679                =F'2'
+0000000000000564  FFFF                                                     680                =x'FFFF'
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    18
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           682 ***********************************************************************
+
+
+
+                                                                           684 ***********************************************************************
+                                                                           685 *
+0000000000000566                                                           686          LTORG
+                                                                           687 *
+                                                                           688 *  END OF TEST CASE BASE REGISTER ADDRESSABLE STORAGE.
+                                                                           689 *
+                                                                           690 *  Everything after this point is addressed by address constants.
+                                                                           691 *
+                                                                           692 ***********************************************************************
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    19
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           694 ***********************************************************************
+                                                                           695 *
+                                                                           696 *  Invalid FPR results ...
+                                                                           697 *
+                                                                           698 ***********************************************************************
+0000000000000566  FFFFFFFF FFFFFFFF                                        699 LFPINVL  DC    X'FFFFFFFFFFFFFFFF'  Invalid result, used to
+                                                                           700 *                                ..polute result FPR
+000000000000056E  FFFFFFFF FFFFFFFF                                        701 XFPINVL  DC    X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  Invalid result,
+                                                                           702 *                                ..used to polute result EXTENDED FPR
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    20
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           704 ***********************************************************************
+                                                                           705 *
+                                                                           706 *  Input: Address list of Signed Long Pack fields
+                                                                           707 *
+                                                                           708 ***********************************************************************
+0000000000000580                                                           709 LSPADRS  DS    0F
+0000000000000580  000005BE                                                 710          DC    A(LSP01)
+0000000000000584  000005C2                                                 711          DC    A(LSP02)
+0000000000000588  000005C6                                                 712          DC    A(LSP03)
+000000000000058C  000005CC                                                 713          DC    A(LSP04)
+0000000000000590  000005D2                                                 714          DC    A(LSP05)
+0000000000000594  000005DA                                                 715          DC    A(LSP06)
+0000000000000598  000005E2                                                 716          DC    A(LSP07)
+000000000000059C  000005EC                                                 717          DC    A(LSP08)
+00000000000005A0  000005F6                                                 718          DC    A(LSP09)
+00000000000005A4  00000602                                                 719          DC    A(LSP10)
+00000000000005A8  0000060E                                                 720          DC    A(LSP11)
+00000000000005AC  0000061A                                                 721          DC    A(LSP12)
+00000000000005B0  00000626                                                 722          DC    A(LSP13)
+00000000000005B4  00000632                                                 723          DC    A(LSP14)
+                                                                           724 *
+00000000000005B8  00000000                                                 725          DC    F'0'                 end of address list
+
+                                                                           727 ***********************************************************************
+                                                                           728 *
+                                                                           729 *  Input: Signed Long Pack test fields.
+                                                                           730 *              Length (2 bytes) of packed field preceeds packed test
+                                                                           731 *
+                                                                           732 ***********************************************************************
+00000000000005BC                                                           733          DS    0H
+00000000000005BC  0001                                                     734          DC    AL2(L'LSP01)
+00000000000005BE  0C                                                       735 LSP01    DC    P'+0'
+00000000000005C0                                                           736          DS    0H
+00000000000005C0  0001                                                     737          DC    AL2(L'LSP02)
+00000000000005C2  0D                                                       738 LSP02    DC    P'-0'
+00000000000005C4                                                           739          DS    0H
+00000000000005C4  0003                                                     740          DC    AL2(L'LSP03)
+00000000000005C6  12345C                                                   741 LSP03    DC    P'+12345'
+00000000000005CA                                                           742          DS    0H
+00000000000005CA  0003                                                     743          DC    AL2(L'LSP04)
+00000000000005CC  12345D                                                   744 LSP04    DC    P'-12345'
+00000000000005D0                                                           745          DS    0H
+00000000000005D0  0005                                                     746          DC    AL2(L'LSP05)
+00000000000005D2  27182818 2C                                              747 LSP05    DC    P'+271828182'
+00000000000005D8                                                           748          DS    0H
+00000000000005D8  0005                                                     749          DC    AL2(L'LSP06)
+00000000000005DA  27182818 2D                                              750 LSP06    DC    P'-271828182'
+00000000000005E0                                                           751          DS    0H
+00000000000005E0  0008                                                     752          DC    AL2(L'LSP07)
+00000000000005E2  31415926 5358979C                                        753 LSP07    DC    P'+314159265358979'
+00000000000005EA                                                           754          DS    0H
+00000000000005EA  0008                                                     755          DC    AL2(L'LSP08)
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    21
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000005EC  31415926 5358979D                                        756 LSP08    DC    P'-314159265358979'
+00000000000005F4                                                           757          DS    0H
+00000000000005F4  0009                                                     758          DC    AL2(L'LSP09)
+00000000000005F6  03141592 65358979                                        759 LSP09    DC    P'+3141592653589793'
+0000000000000600                                                           760          DS    0H
+0000000000000600  0009                                                     761          DC    AL2(L'LSP10)
+0000000000000602  03141592 65358979                                        762 LSP10    DC    P'-3141592653589793'
+000000000000060C                                                           763          DS    0H
+000000000000060C  0009                                                     764          DC    AL2(L'LSP11)
+000000000000060E  93141592 65358979                                        765 LSP11    DC    P'+93141592653589793'   error - too long - 17 digits
+0000000000000618                                                           766          DS    0H
+0000000000000618  0009                                                     767          DC    AL2(L'LSP12)
+000000000000061A  93141592 65358979                                        768 LSP12    DC    P'-93141592653589793'   error - too long - 17 digits
+0000000000000624                                                           769          DS    0H
+0000000000000624  000A                                                     770          DC    AL2(L'LSP13)
+0000000000000626  09931415 92653589                                        771 LSP13    DC    P'+993141592653589793'  Program Specification Exception
+0000000000000630                                                           772          DS    0H
+0000000000000630  000A                                                     773          DC    AL2(L'LSP14)
+0000000000000632  09931415 92653589                                        774 LSP14    DC    P'-993141592653589793'  Program Specification Exception
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    22
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           776 ***********************************************************************
+                                                                           777 *
+                                                                           778 *  Input: Address list of Unsigned Long Pack fields
+                                                                           779 *
+                                                                           780 ***********************************************************************
+000000000000063C                                                           781 LUPADRS  DS    0F
+000000000000063C  0000066A                                                 782          DC    A(LUP01)
+0000000000000640  0000066E                                                 783          DC    A(LUP02)
+0000000000000644  00000672                                                 784          DC    A(LUP03)
+0000000000000648  00000678                                                 785          DC    A(LUP04)
+000000000000064C  0000067E                                                 786          DC    A(LUP05)
+0000000000000650  00000686                                                 787          DC    A(LUP06)
+0000000000000654  0000068E                                                 788          DC    A(LUP07)
+0000000000000658  00000698                                                 789          DC    A(LUP08)
+000000000000065C  000006A4                                                 790          DC    A(LUP09)
+0000000000000660  000006B0                                                 791          DC    A(LUP10)
+                                                                           792 *
+0000000000000664  00000000                                                 793          DC    F'0'                 end of address list
+
+                                                                           795 ***********************************************************************
+                                                                           796 *
+                                                                           797 *  Input: Unsigned Long Pack test fields.
+                                                                           798 *              Length (2 bytes) of packed field preceeds packed test
+                                                                           799 *
+                                                                           800 ***********************************************************************
+0000000000000668                                                           801          DS    0H
+0000000000000668  0001                                                     802          DC    AL2(L'LUP01)
+000000000000066A  00                                                       803 LUP01    DC    X'0'
+000000000000066C                                                           804          DS    0H
+000000000000066C  0001                                                     805          DC    AL2(L'LUP02)
+000000000000066E  01                                                       806 LUP02    DC    X'1'
+0000000000000670                                                           807          DS    0H
+0000000000000670  0003                                                     808          DC    AL2(L'LUP03)
+0000000000000672  012345                                                   809 LUP03    DC    X'12345'
+0000000000000676                                                           810          DS    0H
+0000000000000676  0003                                                     811          DC    AL2(L'LUP04)
+0000000000000678  123456                                                   812 LUP04    DC    X'123456'
+000000000000067C                                                           813          DS    0H
+000000000000067C  0005                                                     814          DC    AL2(L'LUP05)
+000000000000067E  02718281 82                                              815 LUP05    DC    X'271828182'
+0000000000000684                                                           816          DS    0H
+0000000000000684  0005                                                     817          DC    AL2(L'LUP06)
+0000000000000686  27182818 28                                              818 LUP06    DC    X'2718281828'
+000000000000068C                                                           819          DS    0H
+000000000000068C  0008                                                     820          DC    AL2(L'LUP07)
+000000000000068E  31415926 53589793                                        821 LUP07    DC    X'3141592653589793'
+0000000000000696                                                           822          DS    0H
+0000000000000696  0009                                                     823          DC    AL2(L'LUP08)
+0000000000000698  09314159 26535897                                        824 LUP08    DC    X'93141592653589793'     error - too long - 17 digits
+00000000000006A2                                                           825          DS    0H
+00000000000006A2  0009                                                     826          DC    AL2(L'LUP09)
+00000000000006A4  99314159 26535897                                        827 LUP09    DC    X'993141592653589793'    error - too long - 18 digits
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    23
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+00000000000006AE                                                           828          DS    0H
+00000000000006AE  000A                                                     829          DC    AL2(L'LUP10)
+00000000000006B0  09993141 59265358                                        830 LUP10    DC    X'9993141592653589793'  Program Specification Exception
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    24
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           832 ***********************************************************************
+                                                                           833 *
+                                                                           834 *  Input: Address list of Signed Extended Pack fields
+                                                                           835 *              - use long packed test fields
+                                                                           836 *              - add extended fields with 17-34 digits
+                                                                           837 *
+                                                                           838 ***********************************************************************
+00000000000006BC                                                           839 XSPADRS  DS    0F
+                                                                           840 *                             reuse long pack signed fields
+                                                                           841 *                             .. no exceptions
+00000000000006BC  000005BE                                                 842          DC    A(LSP01)
+00000000000006C0  000005C2                                                 843          DC    A(LSP02)
+00000000000006C4  000005C6                                                 844          DC    A(LSP03)
+00000000000006C8  000005CC                                                 845          DC    A(LSP04)
+00000000000006CC  000005D2                                                 846          DC    A(LSP05)
+00000000000006D0  000005DA                                                 847          DC    A(LSP06)
+00000000000006D4  000005E2                                                 848          DC    A(LSP07)
+00000000000006D8  000005EC                                                 849          DC    A(LSP08)
+00000000000006DC  000005F6                                                 850          DC    A(LSP09)
+00000000000006E0  00000602                                                 851          DC    A(LSP10)
+00000000000006E4  0000060E                                                 852          DC    A(LSP11)
+00000000000006E8  0000061A                                                 853          DC    A(LSP12)
+00000000000006EC  00000626                                                 854          DC    A(LSP13)
+00000000000006F0  00000632                                                 855          DC    A(LSP14)
+                                                                           856 *                             additional extended signed packed fields
+00000000000006F4  0000071A                                                 857          DC    A(XSP01)
+00000000000006F8  0000072A                                                 858          DC    A(XSP02)
+00000000000006FC  0000073A                                                 859          DC    A(XSP03)
+0000000000000700  0000074E                                                 860          DC    A(XSP04)
+0000000000000704  00000762                                                 861          DC    A(XSP05)
+0000000000000708  00000776                                                 862          DC    A(XSP06)
+000000000000070C  0000078A                                                 863          DC    A(XSP07)
+0000000000000710  000007A0                                                 864          DC    A(XSP08)
+                                                                           865 *
+0000000000000714  00000000                                                 866          DC    F'0'                 end of address list
+                                                                           867 ***********************************************************************
+                                                                           868 *
+                                                                           869 *  Input: Signed Extended Pack test fields: 17-34 digits.
+                                                                           870 *              Length (2 bytes) of packed field preceeds packed test
+                                                                           871 *
+                                                                           872 ***********************************************************************
+0000000000000718                                                           873          DS    0H
+0000000000000718  000D                                                     874          DC    AL2(L'XSP01)
+000000000000071A  12345678 90123456                                        875 XSP01    DC    P'+1234567890123456789012345'
+0000000000000728                                                           876          DS    0H
+0000000000000728  000D                                                     877          DC    AL2(L'XSP02)
+000000000000072A  12345678 90123456                                        878 XSP02    DC    P'-1234567890123456789012345'
+0000000000000738                                                           879          DS    0H
+0000000000000738  0012                                                     880          DC    AL2(L'XSP03)
+000000000000073A  03141592 65358979                                        881 XSP03    DC    P'+3141592653589793238462643383279502'
+000000000000074C                                                           882          DS    0H
+000000000000074C  0012                                                     883          DC    AL2(L'XSP04)
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    25
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+000000000000074E  03141592 65358979                                        884 XSP04    DC    P'-3141592653589793238462643383279502'
+0000000000000760                                                           885          DS    0H
+0000000000000760  0012                                                     886          DC    AL2(L'XSP05)            error - too long - 35 digits
+0000000000000762  93141592 65358979                                        887 XSP05    DC    P'+93141592653589793238462643383279502'
+0000000000000774                                                           888          DS    0H
+0000000000000774  0012                                                     889          DC    AL2(L'XSP06)            error - too long - 35 digits
+0000000000000776  93141592 65358979                                        890 XSP06    DC    P'-93141592653589793238462643383279502'
+0000000000000788                                                           891          DS    0H
+0000000000000788  0013                                                     892          DC    AL2(L'XSP07)            Program Specification Exception
+000000000000078A  09931415 92653589                                        893 XSP07    DC    P'+993141592653589793238462643383279502'
+000000000000079E                                                           894          DS    0H
+000000000000079E  0013                                                     895          DC    AL2(L'XSP08)            Program Specification Exception
+00000000000007A0  09931415 92653589                                        896 XSP08    DC    P'-993141592653589793238462643383279502'
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    26
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+                                                                           898 ***********************************************************************
+                                                                           899 *
+                                                                           900 *  Input: Address list of Signed Extended Pack fields
+                                                                           901 *              - use long packed test fields
+                                                                           902 *              - add extended fields with 17-34 digits
+                                                                           903 *
+                                                                           904 ***********************************************************************
+00000000000007B4                                                           905 XUPADRS  DS    0F
+                                                                           906 *                             reuse long pack signed fields
+                                                                           907 *                             .. no exceptions
+00000000000007B4  0000066A                                                 908          DC    A(LUP01)
+00000000000007B8  0000066E                                                 909          DC    A(LUP02)
+00000000000007BC  00000672                                                 910          DC    A(LUP03)
+00000000000007C0  00000678                                                 911          DC    A(LUP04)
+00000000000007C4  0000067E                                                 912          DC    A(LUP05)
+00000000000007C8  00000686                                                 913          DC    A(LUP06)
+00000000000007CC  0000068E                                                 914          DC    A(LUP07)
+00000000000007D0  00000698                                                 915          DC    A(LUP08)
+00000000000007D4  000006A4                                                 916          DC    A(LUP09)
+00000000000007D8  000006B0                                                 917          DC    A(LUP10)
+                                                                           918 *                             additional extended signed packed fields
+00000000000007DC  000007FE                                                 919          DC    A(XUP01)
+00000000000007E0  0000080A                                                 920          DC    A(XUP02)
+00000000000007E4  0000081A                                                 921          DC    A(XUP03)
+00000000000007E8  0000082A                                                 922          DC    A(XUP04)
+00000000000007EC  0000083E                                                 923          DC    A(XUP05)
+00000000000007F0  00000852                                                 924          DC    A(XUP06)
+00000000000007F4  00000866                                                 925          DC    A(XUP07)
+                                                                           926 *
+00000000000007F8  00000000                                                 927          DC    F'0'                 end of address list
+                                                                           928 ***********************************************************************
+                                                                           929 *
+                                                                           930 *  Input: Signed Extended Pack test fields: 17-34 digits.
+                                                                           931 *              Length (2 bytes) of packed field preceeds packed test
+                                                                           932 *
+                                                                           933 ***********************************************************************
+00000000000007FC                                                           934          DS    0H
+00000000000007FC  000A                                                     935          DC    AL2(L'XUP01)
+00000000000007FE  12345678 90123456                                        936 XUP01    DC    X'12345678901234567890'
+0000000000000808                                                           937          DS    0H
+0000000000000808  000D                                                     938          DC    AL2(L'XUP02)
+000000000000080A  01234567 89012345                                        939 XUP02    DC    X'1234567890123456789012345'
+0000000000000818                                                           940          DS    0H
+0000000000000818  000D                                                     941          DC    AL2(L'XUP03)
+000000000000081A  03141592 65358979                                        942 XUP03    DC    X'3141592653589793238462643'
+0000000000000828                                                           943          DS    0H
+0000000000000828  0011                                                     944          DC    AL2(L'XUP04)
+000000000000082A  31415926 53589793                                        945 XUP04    DC    X'3141592653589793238462643383279502'
+000000000000083C                                                           946          DS    0H
+000000000000083C  0012                                                     947          DC    AL2(L'XUP05)            error - too long - 35 digits
+000000000000083E  09314159 26535897                                        948 XUP05    DC    X'93141592653589793238462643383279502'
+0000000000000850                                                           949          DS    0H
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    27
+
+      LOC            OBJECT CODE           ADDR1             ADDR2        STMT
+
+0000000000000850  0012                                                     950          DC    AL2(L'XUP06)            error - too long - 36 digits
+0000000000000852  99314159 26535897                                        951 XUP06    DC    X'993141592653589793238462643383279502'
+0000000000000864                                                           952          DS    0H
+0000000000000864  0013                                                     953          DC    AL2(L'XUP07)            Program Specification Exception
+0000000000000866  09993141 59265358                                        954 XUP07    DC    X'9993141592653589793238462643383279502'
+                                                                           955 *
+
+
+                                                                           957 ***********************************************************************
+                                                                           958 *
+                                                                           959 *  Locations for from-packed results
+                                                                           960 *
+                                                                           961 ***********************************************************************
+
+
+                                      0000000000001000  0000000000000001   963 LSPOUT   EQU   STRTLABL+X'1000'  Long DFP results: CDPT signed
+                                      0000000000001200  0000000000000001   964 LSPOUTCC EQU   STRTLABL+X'1200'  ... Pgm Check Ind + DXC
+                                                                           965 *
+                                      0000000000001300  0000000000000001   966 LUPOUT   EQU   STRTLABL+X'1300'  Long DFP results: CDPT unsigned
+                                      0000000000001400  0000000000000001   967 LUPOUTCC EQU   STRTLABL+X'1400'   ... Pgm Check Ind + DXC
+                                                                           968 *
+                                      0000000000001600  0000000000000001   969 XSPOUT   EQU   STRTLABL+X'1600'  Extended DFP results: CXPT signed
+                                      0000000000002000  0000000000000001   970 XSPOUTCC EQU   STRTLABL+X'2000'   ... Pgm Check Ind + DXC
+                                                                           971 *
+                                      0000000000002100  0000000000000001   972 XUPOUT   EQU   STRTLABL+X'2100'  Extended DFP results: CXPT unsigned
+                                      0000000000002500  0000000000000001   973 XUPOUTCC EQU   STRTLABL+X'2500'   ... Pgm Check Ind + DXC
+                                                                           974 *
+                                      0000000000002600  0000000000000001   975 ENDLABL  EQU   STRTLABL+X'2600'
+                                                                           976          PADCSECT ENDLABL
+                                                                           977+         MNOTE *,'asma detected; no CSECT padding performed'
+                  ** [977] MNOTE *,asma detected; no CSECT padding performed
+                                                                           978 *
+                                                                           979          END
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    28
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+ARGLSP              F    000300       4   368  339
+ARGLUP              F    00030C       4   373  342
+ARGXSP              F    000318       4   379  345
+ARGXUP              F    000324       4   384  348
+CTLR0               F    0002CC       4   357  331  332  333
+DFPLTTDC            J    000000    2169   165
+ENDLABL             U    002600       1   975
+EOJ                 I    00025C       2   300  269  271  274  283
+FPR0                U    000000       1   186  428  436  440  448  457  458  498  506  510  518  527  528  568  577  582  591  601
+                                               602  643  652  657  666  676  677
+FPR1                U    000001       1   187
+FPR10               U    00000A       1   196
+FPR11               U    00000B       1   197
+FPR12               U    00000C       1   198
+FPR13               U    00000D       1   199
+FPR14               U    00000E       1   200
+FPR15               U    00000F       1   201
+FPR2                U    000002       1   188  569  578  583  592  644  653  658  667
+FPR3                U    000003       1   189
+FPR4                U    000004       1   190
+FPR5                U    000005       1   191
+FPR6                U    000006       1   192
+FPR7                U    000007       1   193
+FPR8                U    000008       1   194
+FPR9                U    000009       1   195
+HARDWAIT            X    000280       8   310  304
+IMAGE               1    000000    2169     0
+LASTPCIND           H    000290       2   316  248  429  433  441  445  499  503  511  515  570  574  584  588  645  649  659  663
+LFPINVL             X    000566       8   699  428  440  498  510  568  569  582  583  643  644  657  658
+LSP01               P    0005BE       1   735  710  734  842
+LSP02               P    0005C2       1   738  711  737  843
+LSP03               P    0005C6       3   741  712  740  844
+LSP04               P    0005CC       3   744  713  743  845
+LSP05               P    0005D2       5   747  714  746  846
+LSP06               P    0005DA       5   750  715  749  847
+LSP07               P    0005E2       8   753  716  752  848
+LSP08               P    0005EC       8   756  717  755  849
+LSP09               P    0005F6       9   759  718  758  850
+LSP10               P    000602       9   762  719  761  851
+LSP11               P    00060E       9   765  720  764  852
+LSP12               P    00061A       9   768  721  767  853
+LSP13               P    000626      10   771  722  770  854
+LSP14               P    000632      10   774  723  773  855
+LSPADRS             F    000580       4   709  369
+LSPEX               I    0003A8       6   457  431  443
+LSPOUT              U    001000       1   963  370
+LSPOUTCC            U    001200       1   964  371
+LUP01               X    00066A       1   803  782  802  908
+LUP02               X    00066E       1   806  783  805  909
+LUP03               X    000672       3   809  784  808  910
+LUP04               X    000678       3   812  785  811  911
+LUP05               X    00067E       5   815  786  814  912
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    29
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+LUP06               X    000686       5   818  787  817  913
+LUP07               X    00068E       8   821  788  820  914
+LUP08               X    000698       9   824  789  823  915
+LUP09               X    0006A4       9   827  790  826  916
+LUP10               X    0006B0      10   830  791  829  917
+LUPADRS             F    00063C       4   781  374
+LUPEX               I    00042C       6   527  501  513
+LUPOUT              U    001300       1   966  375
+LUPOUTCC            U    001400       1   967  376
+NORMEOJ             I    00026C       4   306  303
+NORMWAIT            X    000270       8   309  306
+PCCONT              H    000218       2   259  250  252
+PCILC               H    00008C       2   224
+PCINTCD             H    00008E       2   225  248  249  251
+PCNOTDTA            H    000216       2   254
+PCOLDPSW            U    000150       1   228  260
+PROGCHK             H    000200       2   247  237
+R0                  U    000000       1   167  279  281  331  333  336  434  435  446  447  504  505  516  517  575  576  589  590
+                                               650  651  664  665
+R1                  U    000001       1   168  423  424  425  426  431  443  493  494  495  496  501  513  563  564  565  566  572
+                                               586  638  639  640  641  647  661
+R10                 U    00000A       1   177  339  342  345  348  412  413  482  483  552  553  627  628
+R11                 U    00000B       1   178
+R12                 U    00000C       1   179  417  453  487  523  557  597  632  672
+R13                 U    00000D       1   180  340  343  346  349  415  421  485  491  555  561  630  636
+R14                 U    00000E       1   181  300  301
+R15                 U    00000F       1   182  203
+R2                  U    000002       1   169  412  414  419  452  482  484  489  522  552  554  559  596  627  629  634  671
+R3                  U    000003       1   170
+R4                  U    000004       1   171
+R5                  U    000005       1   172  419  420  423  457  458  489  490  493  527  528  559  560  563  601  602  634  635
+                                               638  676  677
+R6                  U    000006       1   173
+R7                  U    000007       1   174  413  436  437  448  449  483  506  507  518  519  553  577  578  579  591  592  593
+                                               628  652  653  654  666  667  668
+R8                  U    000008       1   175  413  433  435  438  445  447  450  483  503  505  508  515  517  520  553  574  576
+                                               580  588  590  594  628  649  651  655  663  665  669
+R9                  U    000009       1   176
+SETPRIVS            H    000238       2   278  273
+SETPROBS            H    00024C       2   287  280
+SETSUPVS            H    000254       2   293  282
+START               H    000296       2   330  216  231
+STRTLABL            U    000000       1   166  215  219  223  227  228  230  233  236  246  364  963  964  966  967  969  970  972
+                                               973  975
+SVCALL              H    00021C       2   267  234
+SVILC               H    000088       2   220
+SVINTCD             H    00008A       2   221  268  270  272  302
+SVOLDPSW            U    000140       1   227  288  289  294  295
+TESTLSP             H    000330       2   411  340
+TESTLUP             H    0003B4       2   481  343
+TESTXSP             H    000438       2   551  346
+TESTXUP             H    0004CC       2   626  349
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    30
+
+     SYMBOL        TYPE  VALUE   LENGTH  DEFN  REFERENCES
+
+XFPINVL             X    00056E      16   701
+XSP01               P    00071A      13   875  857  874
+XSP02               P    00072A      13   878  858  877
+XSP03               P    00073A      18   881  859  880
+XSP04               P    00074E      18   884  860  883
+XSP05               P    000762      18   887  861  886
+XSP06               P    000776      18   890  862  889
+XSP07               P    00078A      19   893  863  892
+XSP08               P    0007A0      19   896  864  895
+XSPADRS             F    0006BC       4   839  380
+XSPEX               I    0004C0       6   601  572  586
+XSPOUT              U    001600       1   969  381
+XSPOUTCC            U    002000       1   970  382
+XUP01               X    0007FE      10   936  919  935
+XUP02               X    00080A      13   939  920  938
+XUP03               X    00081A      13   942  921  941
+XUP04               X    00082A      17   945  922  944
+XUP05               X    00083E      18   948  923  947
+XUP06               X    000852      18   951  924  950
+XUP07               X    000866      19   954  925  953
+XUPADRS             F    0007B4       4   905  385
+XUPEX               I    000554       6   676  647  661
+XUPOUT              U    002100       1   972  386
+XUPOUTCC            U    002500       1   973  387
+=F'2'               F    000560       4   679  424  494  564  639
+=H'2'               H    000292       2   319  279
+=H'3'               H    000294       2   320  281
+=x'FFFF'            X    000564       2   680  429  441  499  511  570  584  645  659
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    31
+
+ MACRO     DEFN  REFERENCES
+
+PADCSECT     88   976
+SVCALL      111   255   334   351
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    32
+
+   DESC     SYMBOL   SIZE    POS      ADDR
+
+Entry: 0
+
+Image      IMAGE     2169  000-878  000-878
+  Region             2169  000-878  000-878
+    CSECT  DFPLTTDC  2169  000-878  000-878
+
+
+      ADDR         POS                                OBJECT CONTENT                                         CHARACTER CONTENT
+
+
+Region:
+
+0000000000000000   000   00000000 00000000 00000000 00000296  00000000 00000000 00000000 00000000   |...............o ................|
+0000000000000020   020   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000040   040   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000060   060   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000080   080   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000000000000A0   0A0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000000000000C0   0C0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000000000000E0   0E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000100   100   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000120   120   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000140   140   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000160   160   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000180   180   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000000000001A0   1A0   00000001 80000000 00000000 00000296  00000000 00000000 00000000 00000000   |...............o ................|
+00000000000001C0   1C0   00000000 00000000 00000000 0000021C  00000000 00000000 00000000 00000200   |................ ................|
+00000000000001E0   1E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000200   200   D201F290 F08E9506 F08FA784 00079507  F08FA784 00030A01 B2B2F150 9500F08B   |K.2.0.n.0.xd..n. 0.xd......1&n.0.|
+0000000000000220   220   4780F25C 9501F08B 4780F25C 95FFF08B  4780F238 47F0F25C 4900F292 4780F24C   |..2*n.0...2*n.0. ..2..02*..2k..2<|
+0000000000000240   240   4900F294 4780F254 47F0F25C 9601F141  B2B2F140 94FEF141 B2B2F140 12EE077E   |..2m..2..02*o.1. ..1 m.1...1 ...=|
+0000000000000260   260   9500F08B 4780F26C B2B2F280 B2B2F270  00020000 00000000 00000000 00000000   |n.0...2%..2...2. ................|
+0000000000000280   280   00020000 00000000 00000000 0000DEAD  00000002 0003B600 F2CC9604 F2CDB700   |................ ........2.o.2...|
+00000000000002A0   2A0   F2CC4100 00020AFF 41A0F300 4DD0F330  41A0F30C 4DD0F3B4 41A0F318 4DD0F438   |2.........3.(.3. ..3.(.3...3.(.4.|
+00000000000002C0   2C0   41A0F324 4DD0F4CC 0A000000 00000000  00000000 00000000 00000000 00000000   |..3.(.4......... ................|
+00000000000002E0   2E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+0000000000000300   300   00000580 00001000 00001200 0000063C  00001300 00001400 000006BC 00001600   |................ ................|
+0000000000000320   320   00002000 000007B4 00002100 00002500  582A0000 9878A004 1222078D 0DC05852   |................ ....q...........|
+0000000000000340   340   00001255 078D1815 5B10F560 48110000  06106800 F566D201 F290F564 4410F3A8   |........$.5-.... ....5.K.2.5...3y|
+0000000000000360   360   D2018000 F290B38C 0000BE02 80026007  00004177 00084188 00046800 F566D201   |K...2.........-. .......h....5.K.|
+0000000000000380   380   F290F564 4410F3AE D2018000 F290B38C  0000BE02 80026007 00004177 00084188   |2.5...3.K...2... ......-........h|
+00000000000003A0   3A0   00044122 000407FC ED005000 08AEED00  500009AE 582A0000 9878A004 1222078D   |..........&..... &.......q.......|
+00000000000003C0   3C0   0DC05852 00001255 078D1815 5B10F560  48110000 06106800 F566D201 F290F564   |............$.5- ........5.K.2.5.|
+00000000000003E0   3E0   4410F42C D2018000 F290B38C 0000BE02  80026007 00004177 00084188 00046800   |..4.K...2....... ..-........h....|
+0000000000000400   400   F566D201 F290F564 4410F432 D2018000  F290B38C 0000BE02 80026007 00004177   |5.K.2.5...4.K... 2.........-.....|
+0000000000000420   420   00084188 00044122 000407FC ED005000  00AEED00 500001AE 582A0000 9878A004   |...h..........&. ....&.......q...|
+0000000000000440   440   1222078D 0DC05852 00001255 078D1815  5B10F560 48110000 06106800 F5666820   |................ $.5-........5...|
+0000000000000460   460   F566D201 F290F564 4410F4C0 D2018000  F290B38C 0000BE02 80026007 00006027   |5.K.2.5...4.K... 2.........-...-.|
+0000000000000480   480   00084177 00104188 00046800 F5666820  F566D201 F290F564 4410F4C6 D2018000   |.......h....5... 5.K.2.5...4FK...|
+00000000000004A0   4A0   F290B38C 0000BE02 80026007 00006027  00084177 00104188 00044122 000407FC   |2.........-...-. .......h........|
+00000000000004C0   4C0   ED005000 08AFED00 500009AF 582A0000  9878A004 1222078D 0DC05852 00001255   |..&.....&....... q...............|
+00000000000004E0   4E0   078D1815 5B10F560 48110000 06106800  F5666820 F566D201 F290F564 4410F554   |....$.5-........ 5...5.K.2.5...5.|
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    33
+
+      ADDR         POS                                OBJECT CONTENT                                         CHARACTER CONTENT
+
+0000000000000500   500   D2018000 F290B38C 0000BE02 80026007  00006027 00084177 00104188 00046800   |K...2.........-. ..-........h....|
+0000000000000520   520   F5666820 F566D201 F290F564 4410F55A  D2018000 F290B38C 0000BE02 80026007   |5...5.K.2.5...5! K...2.........-.|
+0000000000000540   540   00006027 00084177 00104188 00044122  000407FC ED005000 00AFED00 500001AF   |..-........h.... ......&.....&...|
+0000000000000560   560   00000002 FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFF0000   |................ ................|
+0000000000000580   580   000005BE 000005C2 000005C6 000005CC  000005D2 000005DA 000005E2 000005EC   |.......B...F.... ...K.......S....|
+00000000000005A0   5A0   000005F6 00000602 0000060E 0000061A  00000626 00000632 00000000 00010C00   |...6............ ................|
+00000000000005C0   5C0   00010D00 00031234 5C000003 12345D00  00052718 28182C00 00052718 28182D00   |........*.....). ................|
+00000000000005E0   5E0   00083141 59265358 979C0008 31415926  5358979D 00090314 15926535 89793C00   |........p....... ..p......k..i...|
+0000000000000600   600   00090314 15926535 89793D00 00099314  15926535 89793C00 00099314 15926535   |.....k..i.....l. .k..i.....l..k..|
+0000000000000620   620   89793D00 000A0993 14159265 3589793C  000A0993 14159265 3589793D 0000066A   |i......l..k..i.. ...l..k..i.....¦|
+0000000000000640   640   0000066E 00000672 00000678 0000067E  00000686 0000068E 00000698 000006A4   |...>...........= ...f.......q...u|
+0000000000000660   660   000006B0 00000000 00010000 00010100  00030123 45000003 12345600 00050271   |................ ................|
+0000000000000680   680   82818200 00052718 28182800 00083141  59265358 97930009 09314159 26535897   |bab............. ....pl.........p|
+00000000000006A0   6A0   93000009 99314159 26535897 9300000A  09993141 59265358 97930000 000005BE   |l...r......pl... .r......pl......|
+00000000000006C0   6C0   000005C2 000005C6 000005CC 000005D2  000005DA 000005E2 000005EC 000005F6   |...B...F.......K .......S.......6|
+00000000000006E0   6E0   00000602 0000060E 0000061A 00000626  00000632 0000071A 0000072A 0000073A   |................ ................|
+0000000000000700   700   0000074E 00000762 00000776 0000078A  000007A0 00000000 000D1234 56789012   |...+............ ................|
+0000000000000720   720   34567890 12345C00 000D1234 56789012  34567890 12345D00 00120314 15926535   |......*......... ......)......k..|
+0000000000000740   740   89793238 46264338 3279502C 00120314  15926535 89793238 46264338 3279502D   |i.........&..... .k..i.........&.|
+0000000000000760   760   00129314 15926535 89793238 46264338  3279502C 00129314 15926535 89793238   |..l..k..i....... ..&...l..k..i...|
+0000000000000780   780   46264338 3279502D 00130993 14159265  35897932 38462643 38327950 2C000013   |......&....l..k. .i.........&....|
+00000000000007A0   7A0   09931415 92653589 79323846 26433832  79502D00 0000066A 0000066E 00000672   |.l..k..i........ .&.....¦...>....|
+00000000000007C0   7C0   00000678 0000067E 00000686 0000068E  00000698 000006A4 000006B0 000007FE   |.......=...f.... ...q...u........|
+00000000000007E0   7E0   0000080A 0000081A 0000082A 0000083E  00000852 00000866 00000000 000A1234   |................ ................|
+0000000000000800   800   56789012 34567890 000D0123 45678901  23456789 01234500 000D0314 15926535   |..............i. ...i.........k..|
+0000000000000820   820   89793238 46264300 00113141 59265358  97932384 62643383 27950200 00120931   |i............... pl.d...c.n......|
+0000000000000840   840   41592653 58979323 84626433 83279502  00129931 41592653 58979323 84626433   |.....pl.d...c.n. ..r......pl.d...|
+0000000000000860   860   83279502 00130999 31415926 53589793  23846264 33832795 02                  |c.n....r......pl .d...c.n.       |
+ASMA Ver. 0.2.1  dfp-080-from-packed.asm: Test Convert From Packed                                  17 Aug 2022 11:33:47  Page    34
+
+   STMT                         FILE NAME
+
+1     /devstor/dev/satk/samples/tests/dfp-080-from-packed.asm
+
+
+** NO ERRORS FOUND **
+
+[977] MNOTE *,asma detected; no CSECT padding performed
+

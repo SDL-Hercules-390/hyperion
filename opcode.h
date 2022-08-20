@@ -3209,6 +3209,13 @@ DEF_INST( cipher_message_with_output_feedback );
 DEF_INST( cipher_message_with_counter );
 #endif
 
+#if defined( FEATURE_080_DFP_PACK_CONV_FACILITY )
+DEF_INST(convert_packed_to_dfp_ext);
+DEF_INST(convert_packed_to_dfp_long);
+DEF_INST(convert_dfp_ext_to_packed);
+DEF_INST(convert_dfp_long_to_packed);
+#endif
+
 #if defined( FEATURE_145_INS_REF_BITS_MULT_FACILITY )
 DEF_INST( insert_reference_bits_multiple );
 #endif
