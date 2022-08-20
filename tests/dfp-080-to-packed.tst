@@ -12,7 +12,7 @@ archmode esame
 
 ostailor quiet
 
-loadcore "dfp-080-to-packed.core" 0x0
+loadcore "$(testpath)/dfp-080-to-packed.core" 0x0
 runtest 1.0
 
 ostailor default   # restore messages for subsequent tests
