@@ -735,13 +735,15 @@ comp_restart:
     /*---------------------------------------------------------------
      * Update the device header
      *---------------------------------------------------------------*/
-    cdevhdr.cdh_size =
-    cdevhdr.cdh_used = spctab[s-1].spc_off;
-    cdevhdr.free_off =
-    cdevhdr.free_total =
+    cdevhdr.cdh_size     =
+    cdevhdr.cdh_used     = spctab[s-1].spc_off;
+
+    cdevhdr.free_off     =
+    cdevhdr.free_total   =
     cdevhdr.free_largest =
-    cdevhdr.free_num =
-    cdevhdr.free_imbed = 0;
+    cdevhdr.free_num     =
+    cdevhdr.free_imbed   = 0;
+
     cdevhdr.cdh_vrm[0] = CCKD_VERSION;
     cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
     cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
@@ -2566,22 +2568,29 @@ cdsk_fsperr_retry:
         cdevhdr.cdh_vrm[1] = CCKD_RELEASE;
         cdevhdr.cdh_vrm[2] = CCKD_MODLVL;
 
-        cdevhdr.cdh_size        = cdevhdr.cdh_used         = cdevhdr.free_off =
-        cdevhdr.free_total  = cdevhdr.free_largest =
-        cdevhdr.free_num = cdevhdr.free_imbed   = 0;
+        cdevhdr.cdh_size     =
+        cdevhdr.cdh_used     =
+        cdevhdr.free_off     =
+        cdevhdr.free_total   =
+        cdevhdr.free_largest =
+        cdevhdr.free_num     =
+        cdevhdr.free_imbed   = 0;
+
         for (i = 0; spctab[i].spc_typ != SPCTAB_EOF; i++)
             if (spctab[i].spc_typ == SPCTAB_FREE)
             {
                 cdevhdr.cdh_size += spctab[i].spc_siz;
+
                 if (spctab[i].spc_siz > cdevhdr.free_largest)
                     cdevhdr.free_largest = spctab[i].spc_siz;
+
                 cdevhdr.free_total += spctab[i].spc_siz;
                 cdevhdr.free_num++;
             }
             else
             {
-                cdevhdr.cdh_size += spctab[i].spc_siz;
-                cdevhdr.cdh_used += spctab[i].spc_len;
+                cdevhdr.cdh_size   += spctab[i].spc_siz;
+                cdevhdr.cdh_used   += spctab[i].spc_len;
                 cdevhdr.free_total += spctab[i].spc_siz - spctab[i].spc_len;
                 cdevhdr.free_imbed += spctab[i].spc_siz - spctab[i].spc_len;
              }
