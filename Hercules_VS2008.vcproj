@@ -3433,7 +3433,7 @@
 					<File
 						RelativePath=".\tests\dfp-080-to-packed.core"
 						>
-					</File>										
+					</File>
 					<File
 						RelativePath=".\tests\FAC53.core"
 						>
@@ -5147,7 +5147,7 @@
 							<File
 								RelativePath=".\tests\dfp-080-to-packed.list"
 								>
-							</File>															
+							</File>
 							<File
 								RelativePath=".\tests\FAC53.list"
 								>

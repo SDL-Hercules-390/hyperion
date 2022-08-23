@@ -5241,7 +5241,7 @@ int             rc;                     /* Return code               */
 unsigned int    moved = 0;              /* Space moved               */
 int             after = 0, a;           /* New space after old       */
 int             sfx;                    /* File index                */
-int             i, j, l;                /* Indexes                   */
+int             i, j, k;                /* Indexes                   */
 int             flags;                  /* Write trkimg flags        */
 off_t           fpos, upos;             /* File offsets              */
 unsigned int    flen, ulen, len;        /* Lengths                   */
@@ -5310,7 +5310,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         if (!cckd->ifb) cckd_read_fsp (dev);
 
         /* Find a space to start with */
-        l = -1;
+        k = -1;
         upos = ulen = flen = 0;
         fpos = cckd->cdevhdr[sfx].free_off;
 
@@ -5328,7 +5328,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
         /* Continue to largest if non-zero `after' */
         for ( ; i >= 0 && after; i = cckd->ifb[i].ifb_idxnxt)
         {
-            l = i;
+            k = i;
             if (!cckd->ifb[i].ifb_pending) flen += cckd->ifb[i].ifb_len;
             if (cckd->ifb[i].ifb_len == cckd->cdevhdr[sfx].free_largest)
                 break;
@@ -5344,10 +5344,10 @@ BYTE            buf[256*1024];          /* Buffer                    */
         }
 
         /* Space preceding largest if largest is at the end */
-        if (i < 0 && l >= 0)
+        if (i < 0 && k >= 0)
         {
-            if (!cckd->ifb[l].ifb_pending) flen -= cckd->ifb[i].ifb_len;
-            for (i = cckd->ifb[l].ifb_idxprv; i >= 0; i = cckd->ifb[i].ifb_idxprv)
+            if (!cckd->ifb[k].ifb_pending) flen -= cckd->ifb[i].ifb_len;
+            for (i = cckd->ifb[k].ifb_idxprv; i >= 0; i = cckd->ifb[i].ifb_idxprv)
             {
                 fpos = cckd->ifb[i].ifb_idxprv >= 0
                      ? cckd->ifb[cckd->ifb[i].ifb_idxprv].ifb_offnxt
