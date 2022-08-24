@@ -3417,7 +3417,19 @@
 					<File
 						RelativePath=".\tests\CLCL.core"
 						>
+					</File>		
+					<File
+						RelativePath=".\tests\CLCLE-01-unaligned-buffers.core"
+						>
 					</File>
+					<File
+						RelativePath=".\tests\CLCLE-02-unaligned-buffers.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\CLCLE-03-performance.core"
+						>
+					</File>										
 					<File
 						RelativePath=".\tests\CMPSC.core"
 						>
@@ -4398,6 +4410,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CLCLE-01-unaligned-buffers.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CLCLE-02-unaligned-buffers.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CLCLE-03-performance.tst"
+							>
+						</File>						
+						<File
 							RelativePath=".\tests\cmd-abs.xxx"
 							>
 						</File>
@@ -4802,6 +4826,18 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\CLCLE-01-unaligned-buffers.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CLCLE-02-unaligned-buffers.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\CLCLE-03-performance.asm"
+							>
+						</File>						
+						<File
 							RelativePath=".\tests\CMPSC.asm"
 							>
 						</File>
@@ -5140,6 +5176,18 @@
 								RelativePath=".\tests\CMPSC.pdf"
 								>
 							</File>
+							<File
+								RelativePath=".\tests\CLCLE-01-unaligned-buffers.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CLCLE-02-unaligned-buffers.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\CLCLE-03-performance.list"
+								>
+							</File>							
 							<File
 								RelativePath=".\tests\dfp-080-from-packed.list"
 								>

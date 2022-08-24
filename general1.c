@@ -3552,20 +3552,34 @@ DEF_INST(compare_logical_character_long)
 
 
 #if defined( FEATURE_COMPARE_AND_MOVE_EXTENDED )
+
 /*-------------------------------------------------------------------*/
 /* A9   CLCLE - Compare Logical Long Extended                 [RS-a] */
 /*-------------------------------------------------------------------*/
+
+#undef   MAX_CPU_AMT
+#define  MAX_CPU_AMT    (PAGEFRAME_PAGESIZE - 256)  // for (CC=3) and 0 <  MAX_CPU_AMT < pagesize) 
+
+#ifndef CLCLE_ONETIME
+ #define CLCLE_ONETIME
+#endif
+
 DEF_INST(compare_logical_long_extended)
 {
-int     r1, r3;                         /* Register numbers          */
-int     b2;                             /* effective address base    */
-VADR    effective_addr2;                /* effective address         */
-int     i;                              /* Loop counter              */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-GREG    len1, len2;                     /* Operand lengths           */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    pad;                            /* Padding byte              */
+    int     r1, r3;                         /* Register numbers          */
+    int     b2;                             /* effective address base    */
+    VADR    effective_addr2;                /* effective address         */
+    VADR    addr1, addr2;                   /* Operand addresses         */
+    GREG    len1, len2;                     /* Operand lengths           */
+    BYTE    pad;                            /* Padding byte              */ 
+
+    U64   unpadded_len;         // work (lesser of the two lengths)
+    U64   padded_len;           // work (greater length minus lesser)
+    U32   in_amt;               // Work (amount to be compared)
+    U32   out_amt;              // Work (amount that was found equal)
+    U64   total = 0;            // TOTAL amount compared so far
+    GREG  wlen1, wlen3;         // Work length (current reg length) 
+    int   rc = 0;               // memcmp() return code
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
     PER_ZEROADDR_LCHECK2( regs, r1, r1+1, r3, r3+1 );
@@ -3584,55 +3598,97 @@ BYTE    pad;                            /* Padding byte              */
     len1 = GR_A( r1+1, regs );
     len2 = GR_A( r3+1, regs );
 
-    /* Process operands from left to right */
-    for (i = 0; len1 > 0 || len2 > 0 ; i++)
+    // Nothing to compare, so equal 
+    if (len1 == 0 && len2 == 0)  {  
+        regs->psw.cc = 0;
+        return;
+    }
+
+    // Save lengths of padded/unpadded parts
+    if (len1 == len2)
     {
-        /* If 4096 bytes have been compared, exit with cc=3 */
-        if (i >= 4096)
-        {
-            cc = 3;
-            break;
-        }
+        unpadded_len = len1;
+        padded_len   = 0;
+    }
+    else if (len1 < len2)
+    {
+        unpadded_len = len1;
+        padded_len   = len2 - len1;
+    }
+    else // (len1 > len2)
+    {
+        unpadded_len = len2;
+        padded_len   = len1 - len2;
+    }
 
-        /* Fetch a byte from each operand, or use padding byte */
-        byte1 = (len1 > 0) ? ARCH_DEP( vfetchb )( addr1, r1, regs ) : pad;
-        byte2 = (len2 > 0) ? ARCH_DEP( vfetchb )( addr2, r3, regs ) : pad;
+    // Compare the unpadded part first (up to Max_CPU_AMT)
+    in_amt = unpadded_len <  MAX_CPU_AMT
+            ? unpadded_len :  MAX_CPU_AMT;
 
-        /* Compare operand bytes, set condition code if unequal */
-        if (byte1 != byte2)
-        {
-            cc = (byte1 < byte2) ? 1 : 2;
-            break;
-        }
+    rc = ARCH_DEP( mem_cmp )( regs, addr1, r1, addr2, r3, in_amt,
+                                                        &out_amt );
+    addr1 += out_amt;
+    addr1 &= ADDRESS_MAXWRAP( regs );        
+    addr2 += out_amt;
+    addr2 &= ADDRESS_MAXWRAP( regs );        
+    total += out_amt;
 
-        /* Update the first operand address and length */
-        if (len1 > 0)
-        {
-            addr1++;
-            addr1 &= ADDRESS_MAXWRAP( regs );
-            len1--;
-        }
+    // Update register values 
 
-        /* Update the second operand address and length */
-        if (len2 > 0)
-        {
-            addr2++;
-            addr2 &= ADDRESS_MAXWRAP( regs );
-            len2--;
-        }
-
-    } /* end for(i) */
-
-    /* Update the registers */
     SET_GR_A( r1, regs, addr1 );
+    wlen1 = GR_A( r1+1, regs );
+    if ( wlen1 >= out_amt)
+            SET_GR_A( r1+1, regs, wlen1 - out_amt);
+    else SET_GR_A( r1+1, regs, 0);
+
     SET_GR_A( r3, regs, addr2 );
+    wlen3 = GR_A( r3+1, regs );
+    if ( wlen3 >= out_amt)
+            SET_GR_A( r3+1, regs, wlen3 - out_amt);
+    else SET_GR_A( r3+1, regs, 0);
 
-    SET_GR_A( r1+1, regs, len1 );
-    SET_GR_A( r3+1, regs, len2 );
+    // Now compare the padded part, if needed
 
-    regs->psw.cc = cc;
+    if (rc == 0 && padded_len && total < MAX_CPU_AMT)
+    {
+        BYTE  padding[ MAX_CPU_AMT ];
+        VADR  addr     =  (len1 > len2) ? addr1 : addr2;
+        int   r        =  (len1 > len2) ? r1    : r3;
+        bool  swap_rc  =  (len1 > len2) ? false : true;
+        GREG  wlen; 
+
+        memset( padding, pad, MIN( padded_len, sizeof( padding )));
+
+        // Compare the padded part (up to Max_CPU_AMT - total (padded part))
+        in_amt = padded_len < MAX_CPU_AMT - total
+                ? padded_len : MAX_CPU_AMT - total;
+
+        rc = ARCH_DEP( mem_pad_cmp )( regs, addr, r, padding, in_amt,
+                                                            &out_amt );
+        addr  += out_amt;
+        addr  &= ADDRESS_MAXWRAP( regs );            
+        total += out_amt;
+
+        // Update register values 
+
+        SET_GR_A( r, regs, addr );
+        wlen = GR_A( r+1, regs );
+        if ( wlen >= out_amt)
+            SET_GR_A( r+1, regs, wlen - out_amt);
+        else SET_GR_A( r+1, regs, 0);
+        
+        if (swap_rc)
+            rc = -rc;
+    }
+
+    // Set the condition code and return
+    if (rc == 0 && total >= MAX_CPU_AMT )  
+        regs->psw.cc = 3;
+    else
+        regs->psw.cc = (!rc ? 0 : (rc < 0 ? 1 : 2));
 
 } /* end DEF_INST( compare_logical_long_extended ) */
+
 #endif /* defined( FEATURE_COMPARE_AND_MOVE_EXTENDED ) */
 
 
