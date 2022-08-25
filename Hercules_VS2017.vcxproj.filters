@@ -1976,7 +1976,7 @@
     <None Include="tests\CLCLE-02-unaligned-buffers.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None> 
-    <None Include="tests\CCLCLE-03-performance.tst">
+    <None Include="tests\CLCLE-03-performance.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>             
     <None Include="tests\cipher.tst">
