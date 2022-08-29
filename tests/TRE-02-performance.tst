@@ -3,7 +3,7 @@
 #  ----------------------------------------------------------------------------------
 #  This ONLY tests the performance of the TRE instruction.
 #
-#  The defulat is to NOT run performance tests. To enable
+#  The default is to NOT run performance tests. To enable
 #  performance test, uncomment the "#r           21fd=ff "
 #  line below.
 #
