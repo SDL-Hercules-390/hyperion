@@ -43,7 +43,7 @@
 *
 *     r           21fd=ff   # (enable timing tests)
 *     runtest     20        # (depends on the host)
-*qui
+*
 *     *Done
 *
 *

@@ -214,7 +214,7 @@ FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
                                                                 SPACE 5
 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
-                                                                EJECT
+                                                                SPACE 5
 ***********************************************************************
 *        Working Storage
 ***********************************************************************
@@ -227,31 +227,6 @@ K64      EQU   (64*K)           64 KB
 MB       EQU   (K*K)             1 MB
                                                                 SPACE
 TESTADDR EQU   (2*PAGE+X'200'-2)  Where test/subtest numbers will go
-                                                                SPACE
-MAINSIZE EQU   (2*MB)                   Minimum required storage size
-NUMPGTBS EQU   ((MAINSIZE+K64-1)/K64)   Number of Page Tables needed
-NUMSEGTB EQU   ((NUMPGTBS*4)/(16*4))    Number of Segment Tables
-SEGTABLS EQU   (3*PAGE)                 Segment Tables Origin
-PAGETABS EQU   (SEGTABLS+(NUMPGTBS*4))  Page Tables Origin
-CRLREG0  DC    0A(0),XL4'00B00060'      Control Register 0
-CTLREG1  DC    A(SEGTABLS+NUMSEGTB)     Control Register 1
-                                                                SPACE
-NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
-                                                                SPACE
-BEGCLOCK DC    0D'0',8X'BB'     Begin
-ENDCLOCK DC    0D'0',8X'EE'     End
-DURATION DC    0D'0',8X'DD'     Diff
-OVERHEAD DC    0D'0',8X'FF'     Overhead
-                                                                SPACE
-TICKSAAA DC    PL8'0'           Clock ticks high part
-TICKSBBB DC    PL8'0'           Clock ticks low part
-TICKSTOT DC    PL8'0'           Total clock ticks
-                                                                SPACE
-CONPGM   CCW1  X'09',PRTLINE,0,PRTLNG
-PRTLINE  DC    C'         1,000,000 iterations of XXXXX'
-         DC    C' took 999,999,999 microseconds'
-PRTLNG   EQU   *-PRTLINE
-EDIT     DC    X'402020206B2020206B202120'
                                                                 EJECT
 ***********************************************************************
 *        TRETEST DSECT
