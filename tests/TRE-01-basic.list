@@ -1,0 +1,2224 @@
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *            TRE instruction tests
+                                                     5 *
+                                                     6 *        NOTE: This test is based the CLCL-et-al Test
+                                                     7 *              modified to only test the TRE instruction.
+                                                     8 *
+                                                     9 *        James Wekel August 2022
+                                                    10 ***********************************************************************
+                                                    11 ***********************************************************************
+                                                    12 *
+                                                    13 *            TRE basic instruction tests
+                                                    14 *
+                                                    15 ***********************************************************************
+                                                    16 *
+                                                    17 *  This program tests proper functioning of the TRE
+                                                    18 *  instructions.
+                                                    19 *
+                                                    20 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
+                                                    21 *  obvious coding errors.  None of the tests are thorough.  They are
+                                                    22 *  NOT designed to test all aspects of any of the instructions.
+                                                    23 *
+                                                    24 ***********************************************************************
+                                                    25 *
+                                                    26 *  Example Hercules Testcase:
+                                                    27 *
+                                                    28 *
+                                                    29 *     *Testcase TRE-01-basic (Test TRE instructions)
+                                                    30 *
+                                                    31 *     archlvl     390
+                                                    32 *     mainsize    3
+                                                    33 *     numcpu      1
+                                                    34 *     sysclear
+                                                    35 *
+                                                    36 *     loadcore    "$(testpath)/TRE-01-basic" 0x0
+                                                    37 *
+                                                    38 *     runtest     1         # (NON-timing test duration)
+                                                    39 *
+                                                    40 *     *Done
+                                                    41 *
+                                                    42 *
+                                                    43 ***********************************************************************
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    45          PRINT OFF
+                                                  3426          PRINT ON
+
+                                                  3428 ***********************************************************************
+                                                  3429 *        SATK prolog stuff...
+                                                  3430 ***********************************************************************
+
+                                                  3432          ARCHLVL  ZARCH=NO,MNOTE=NO
+                                                  3434+$AL      OPSYN AL
+                                                  3435+$ALR     OPSYN ALR
+                                                  3436+$B       OPSYN B
+                                                  3437+$BAS     OPSYN BAS
+                                                  3438+$BASR    OPSYN BASR
+                                                  3439+$BC      OPSYN BC
+                                                  3440+$BCTR    OPSYN BCTR
+                                                  3441+$BE      OPSYN BE
+                                                  3442+$BH      OPSYN BH
+                                                  3443+$BL      OPSYN BL
+                                                  3444+$BM      OPSYN BM
+                                                  3445+$BNE     OPSYN BNE
+                                                  3446+$BNH     OPSYN BNH
+                                                  3447+$BNL     OPSYN BNL
+                                                  3448+$BNM     OPSYN BNM
+                                                  3449+$BNO     OPSYN BNO
+                                                  3450+$BNP     OPSYN BNP
+                                                  3451+$BNZ     OPSYN BNZ
+                                                  3452+$BO      OPSYN BO
+                                                  3453+$BP      OPSYN BP
+                                                  3454+$BXLE    OPSYN BXLE
+                                                  3455+$BZ      OPSYN BZ
+                                                  3456+$CH      OPSYN CH
+                                                  3457+$L       OPSYN L
+                                                  3458+$LH      OPSYN LH
+                                                  3459+$LM      OPSYN LM
+                                                  3460+$LPSW    OPSYN LPSW
+                                                  3461+$LR      OPSYN LR
+                                                  3462+$LTR     OPSYN LTR
+                                                  3463+$NR      OPSYN NR
+                                                  3464+$SL      OPSYN SL
+                                                  3465+$SLR     OPSYN SLR
+                                                  3466+$SR      OPSYN SR
+                                                  3467+$ST      OPSYN ST
+                                                  3468+$STM     OPSYN STM
+                                                  3469+$X       OPSYN X
+                                                  3470+$AHI     OPSYN AHI
+                                                  3471+$B       OPSYN J
+                                                  3472+$BC      OPSYN BRC
+                                                  3473+$BE      OPSYN JE
+                                                  3474+$BH      OPSYN JH
+                                                  3475+$BL      OPSYN JL
+                                                  3476+$BM      OPSYN JM
+                                                  3477+$BNE     OPSYN JNE
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3478+$BNH     OPSYN JNH
+                                                  3479+$BNL     OPSYN JNL
+                                                  3480+$BNM     OPSYN JNM
+                                                  3481+$BNO     OPSYN JNO
+                                                  3482+$BNP     OPSYN JNP
+                                                  3483+$BNZ     OPSYN JNZ
+                                                  3484+$BO      OPSYN JO
+                                                  3485+$BP      OPSYN JP
+                                                  3486+$BXLE    OPSYN JXLE
+                                                  3487+$BZ      OPSYN JZ
+                                                  3488+$CHI     OPSYN CHI
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3490 ***********************************************************************
+                                                  3491 *        Initiate the TRE01TST CSECT in the CODE region
+                                                  3492 *        with the location counter at 0
+                                                  3493 ***********************************************************************
+
+                                                  3495 TRE01TST ASALOAD  REGION=CODE
+                              00000000  000021FF  3496+TRE01TST START 0,CODE
+00000000  000A0000 00000008                       3498+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000008                      00000008  00000058  3499+         ORG   TRE01TST+X'058'
+00000058  000A0000 00000018                       3501+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000060  000A0000 00000020                       3502+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000068  000A0000 00000028                       3503+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000070  000A0000 00000030                       3504+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000078  000A0000 00000038                       3505+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+00000080                      00000080  00000200  3506+         ORG   TRE01TST+512
+
+
+
+                                                  3508 ***********************************************************************
+                                                  3509 *        Create IPL (restart) PSW
+                                                  3510 ***********************************************************************
+
+                                                  3512          ASAIPL   IA=BEGIN
+                              00000000  000021FF  3513+TRE01TST CSECT
+00000200                      00000200  00000000  3514+         ORG   TRE01TST
+00000000  00080000 00000200                       3515+         PSW   0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3516+         ORG   TRE01TST+512     Reset CSECT to end of assigned storage area
+                              00000000  000021FF  3517+TRE01TST CSECT
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3519 ***********************************************************************
+                                                  3520 *               The actual "TRE01TST" program itself...
+                                                  3521 ***********************************************************************
+                                                  3522 *
+                                                  3523 *  Architecture Mode: 390
+                                                  3524 *  Addressing Mode:   31-bit
+                                                  3525 *  Register Usage:
+                                                  3526 *
+                                                  3527 *   R0       (work)
+                                                  3528 *   R1       I/O device used by ENADEV and RAWIO macros
+                                                  3529 *   R2       First base register
+                                                  3530 *   R3       IOCB pointer for ENADEV and RAWIO macros
+                                                  3531 *   R4       IO work register used by ENADEV and RAWIO
+                                                  3532 *   R5-R7    (work)
+                                                  3533 *   R8       ORB pointer
+                                                  3534 *   R9       Second base register
+                                                  3535 *   R10-R13  (work)
+                                                  3536 *   R14      Subroutine call
+                                                  3537 *   R15      Secondary Subroutine call or work
+                                                  3538 *
+                                                  3539 ***********************************************************************
+
+00000200                      00000000            3541          USING  ASA,R0          Low core addressability
+00000200                      00000200            3542          USING  BEGIN,R2        FIRST Base Register
+00000200                      00001200            3543          USING  BEGIN+4096,R9   SECOND Base Register
+
+00000200  0520                                    3545 BEGIN    BALR  R2,0             Initalize FIRST base register
+00000202  0620                                    3546          BCTR  R2,0             Initalize FIRST base register
+00000204  0620                                    3547          BCTR  R2,0             Initalize FIRST base register
+00000206  5020 20CC                     000002CC  3548          ST    R2,SAVER2
+
+0000020A  4190 2800                     00000800  3550          LA    R9,2048(,R2)     Initalize SECOND base register
+0000020E  4190 9800                     00000800  3551          LA    R9,2048(,R9)     Initalize SECOND base register
+                                                  3552 *
+                                                  3553 **       Run the tests...
+                                                  3554 *
+00000212  45E0 202C                     0000022C  3555          BAL   R14,TEST01       Test TRE   instruction
+                                                  3556 *
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3558 ***********************************************************************
+                                                  3559 *         Test for normal or unexpected test completion...
+                                                  3560 ***********************************************************************
+
+00000216  950A 9FFE                     000021FE  3562          CLI   TESTNUM,X'0A'    Did we end on expected test?
+0000021A  4770 2110                     00000310  3563          BNE   FAILTEST         No?! Then FAIL the test!
+
+0000021E  9502 9FFF                     000021FF  3565          CLI   SUBTEST,X'02'    Did we end on expected SUB-test?
+00000222  4770 2110                     00000310  3566          BNE   FAILTEST         No?! Then FAIL the test!
+
+00000226  47F0 20E0                     000002E0  3568          B     EOJ              Yes, then normal completion!
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3570 ***********************************************************************
+                                                  3571 *        TEST01                   Test TRE instruction
+                                                  3572 ***********************************************************************
+
+0000022C                                          3574 TEST01   DS    0F
+                                                  3575
+0000022C  5010 20C8                     000002C8  3576          ST    R1,SAVER1          Save register 1
+00000230  18F2                                    3577          LR    R15,R2             Save first base register
+                                                  3578
+00000232                                          3579          DROP  R2                 Temporarily drop addressability
+00000232                      00000200            3580          USING BEGIN,R15          Establish temporary addressability
+                                                  3581 *
+00000232  4150 F1C8                     000003C8  3582          LA    R5,TRECTL          Point R5 --> testing control table
+00000236                      00000000            3583          USING TRETEST,R5         What each table entry looks like
+                                                  3584 *
+                              00000236  00000001  3585 TST1LOOP EQU   *
+                                                  3586 *
+00000236  4360 5000                     00000000  3587          IC    R6,TNUM            Set test number
+0000023A  4260 9FFE                     000021FE  3588          STC   r6,TESTNUM
+                                                  3589 *
+                                                  3590 **       Initialize operand data  (move data to testing address)
+                                                  3591 *
+0000023E  58A0 500C                     0000000C  3592          L     R10,OP1WHERE       Where to move operand-1 data to
+00000242  58B0 5010                     00000010  3593          L     R11,OP1LEN           operand-1 length
+00000246  5860 5004                     00000004  3594          L     R6,OP1DATA         Where op1 data is right now
+0000024A  5870 5010                     00000010  3595          L     R7,OP1LEN          How much of it there is
+0000024E  0EA6                                    3596          MVCL  R10,R6
+                                                  3597 *
+00000250  58C0 5014                     00000014  3598          L     R12,OP2WHERE       Where to move operand-2 data to
+00000254  58D0 F120                     00000320  3599          L     R13,=A(OP2LEN)     How much of it there is
+00000258  5860 5008                     00000008  3600          L     R6,OP2DATA         Where op2 data is right now
+0000025C  5870 F120                     00000320  3601          L     R7,=A(OP2LEN)          How much of it there is
+00000260  0EC6                                    3602          MVCL  R12,R6
+                                                  3603 *
+00000262  4300 5001                     00000001  3604          IC    R0,TBYTE           Set test byte
+
+
+                                                  3606 *
+                                                  3607 **       Execute TRE instruction and check for expected condition code
+                                                  3608 *
+00000266  9200 9FFF                     000021FF  3609          MVI   SUBTEST,X'00'      (primary TRE)
+                                                  3610
+0000026A  5870 5018                     00000018  3611          L     R7,FAILMASK       (failure CC)
+0000026E  8970 0004                     00000004  3612          SLL   R7,4              (shift to BC instr CC position)
+                                                  3613
+00000272  98AC 500C                     0000000C  3614          LM    R10,R12,OPSWHERE     get TRE operands
+00000276  B2A5 00AC                               3615 TREMORE  TRE   R10,R12              TRE...
+0000027A  4470 F0C2                     000002C2  3616          EX    R7,TREBC                fail if..not an expected cc?
+0000027E  4710 F076                     00000276  3617          BC    B'0001',TREMORE             not finished
+                                                  3618
+                                                  3619 *
+                                                  3620 **       Verify end conditions R10 and expected main store
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3621 *        (last 4 bytes)
+                                                  3622 *
+00000282  5860 501C                     0000001C  3623          L     R6,ENDREG
+                                                  3624
+00000286  9201 9FFF                     000021FF  3625          MVI   SUBTEST,X'01'      (R10 result)
+0000028A  15A6                                    3626          CLR   R10,R6             R10 correct?
+0000028C  4770 F0B6                     000002B6  3627          BNE   TREFAIL            No, FAILTEST!
+                                                  3628
+00000290  9202 9FFF                     000021FF  3629          MVI   SUBTEST,X'02'      (end store)
+00000294  186A                                    3630          LR    R6,R10
+00000296  5B60 F124                     00000324  3631          S     R6,=F'4'
+0000029A  D503 5020 6000      00000020  00000000  3632          CLC   ENDSTOR,0(R6)      end storage correct?
+000002A0  4770 F0B6                     000002B6  3633          BNE   TREFAIL            No, FAILTEST!
+                                                  3634
+                                                  3635 *
+000002A4  4150 5024                     00000024  3636          LA    R5,TRENEXT         Go on to next table entry
+000002A8  D503 F128 5000      00000328  00000000  3637          CLC   =F'0',0(R5)        End of table?
+000002AE  4770 F036                     00000236  3638          BNE   TST1LOOP           No, loop...
+000002B2  47F0 F0BA                     000002BA  3639          B     TREDONE            Done! (success!)
+                                                  3640
+000002B6  41E0 F110                     00000310  3641 TREFAIL  LA    R14,FAILTEST       Unexpected results!
+000002BA  5810 F0C8                     000002C8  3642 TREDONE  L     R1,SAVER1          Restore register 1
+000002BE  182F                                    3643          LR    R2,R15             Restore first base register
+000002C0  07FE                                    3644          BR    R14                Return to caller or FAILTEST
+                                                  3645
+000002C2  4700 F0B6                     000002B6  3646 TREBC    BC    0,TREFAIL          (fail if unexpected condition code)
+                                                  3647
+000002C8  00000000                                3648 SAVER1   DC    F'0'
+000002CC  00000000                                3649 SAVER2   DC    F'0'
+000002D0  00000000                                3650 SAVER5   DC    F'0'
+000002D8  00000000 00000000                       3651 SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
+                                                  3652
+000002E0                                          3653          DROP  R5
+000002E0                                          3654          DROP  R15
+000002E0                      00000200            3655          USING BEGIN,R2
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3657 ***********************************************************************
+                                                  3658 *        Normal completion or Abnormal termination PSWs
+                                                  3659 ***********************************************************************
+
+
+
+
+
+                                                  3661 EOJ      DWAITEND LOAD=YES          Normal completion
+000002E0                                          3663+EOJ      DS    0H
+000002E0  8200 20E8                     000002E8  3664+         LPSW  DWAT0008
+000002E8  000A0000 00000000                       3665+DWAT0008 PSW   0,0,2,0,X'000000'
+
+
+
+
+
+                                                  3667 FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
+000002F0                                          3668+FAILDEV  DS    0H
+000002F0  8200 20F8                     000002F8  3669+         LPSW  DWAT0009
+000002F8  000A0000 00010001                       3670+DWAT0009 PSW   0,0,2,0,X'010001'
+
+
+
+
+
+                                                  3672 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
+00000300                                          3673+FAILIO   DS    0H
+00000300  8200 2108                     00000308  3674+         LPSW  DWAT0010
+00000308  000A0000 00010002                       3675+DWAT0010 PSW   0,0,2,0,X'010002'
+
+
+
+
+
+                                                  3677 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
+00000310                                          3678+FAILTEST DS    0H
+00000310  8200 2118                     00000318  3679+         LPSW  DWAT0011
+00000318  000A0000 00010BAD                       3680+DWAT0011 PSW   0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3682 ***********************************************************************
+                                                  3683 *        Working Storage
+                                                  3684 ***********************************************************************
+
+
+00000320                                          3686          LTORG ,                Literals pool
+00000320  00000100                                3687                =A(OP2LEN)
+00000324  00000004                                3688                =F'4'
+00000328  00000000                                3689                =F'0'
+
+                              00000400  00000001  3691 K        EQU   1024             One KB
+                              00001000  00000001  3692 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001  3693 K64      EQU   (64*K)           64 KB
+                              00100000  00000001  3694 MB       EQU   (K*K)             1 MB
+
+                              000021FE  00000001  3696 TESTADDR EQU   (2*PAGE+X'200'-2)  Where test/subtest numbers will go
+
+                              00200000  00000001  3698 MAINSIZE EQU   (2*MB)                   Minimum required storage size
+                              00000020  00000001  3699 NUMPGTBS EQU   ((MAINSIZE+K64-1)/K64)   Number of Page Tables needed
+                              00000002  00000001  3700 NUMSEGTB EQU   ((NUMPGTBS*4)/(16*4))    Number of Segment Tables
+                              00003000  00000001  3701 SEGTABLS EQU   (3*PAGE)                 Segment Tables Origin
+                              00003080  00000001  3702 PAGETABS EQU   (SEGTABLS+(NUMPGTBS*4))  Page Tables Origin
+0000032C  00B00060                                3703 CRLREG0  DC    0A(0),XL4'00B00060'      Control Register 0
+00000330  00003002                                3704 CTLREG1  DC    A(SEGTABLS+NUMSEGTB)     Control Register 1
+
+00000334  00002710                                3706 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
+
+00000338  BBBBBBBB BBBBBBBB                       3708 BEGCLOCK DC    0D'0',8X'BB'     Begin
+00000340  EEEEEEEE EEEEEEEE                       3709 ENDCLOCK DC    0D'0',8X'EE'     End
+00000348  DDDDDDDD DDDDDDDD                       3710 DURATION DC    0D'0',8X'DD'     Diff
+00000350  FFFFFFFF FFFFFFFF                       3711 OVERHEAD DC    0D'0',8X'FF'     Overhead
+
+00000358  00000000 0000000C                       3713 TICKSAAA DC    PL8'0'           Clock ticks high part
+00000360  00000000 0000000C                       3714 TICKSBBB DC    PL8'0'           Clock ticks low part
+00000368  00000000 0000000C                       3715 TICKSTOT DC    PL8'0'           Total clock ticks
+
+00000370  09000044 00000378                       3717 CONPGM   CCW1  X'09',PRTLINE,0,PRTLNG
+00000378  40404040 40404040                       3718 PRTLINE  DC    C'         1,000,000 iterations of XXXXX'
+0000039E  40A39696 9240F9F9                       3719          DC    C' took 999,999,999 microseconds'
+                              00000044  00000001  3720 PRTLNG   EQU   *-PRTLINE
+000003BC  40202020 6B202020                       3721 EDIT     DC    X'402020206B2020206B202120'
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3723 ***********************************************************************
+                                                  3724 *        TRETEST DSECT
+                                                  3725 ***********************************************************************
+
+
+                                                  3727 TRETEST  DSECT ,
+
+
+00000000  00                                      3729 TNUM     DC    X'00'          TRE table Number
+00000001  00                                      3730 TBYTE    DC    X'00'          TRE Testbyte
+00000002  00                                      3731          DC    X'00'
+00000003  00                                      3732          DC    X'00'
+
+
+00000004  00000000                                3734 OP1DATA  DC    A(0)           Pointer to Operand-1 data
+00000008  00000000                                3735 OP2DATA  DC    A(0)           Pointer to Operand-2 data
+                                                  3736
+                              0000000C  00000001  3737 OPSWHERE EQU   *              Where TRE Operands are located
+0000000C  00000000                                3738 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
+00000010  00000000                                3739 OP1LEN   DC    F'0'           How much data is there - 1
+00000014  00000000                                3740 OP2WHERE DC    A(0)           Where Operand-2 data should be placed
+                              00000100  00000001  3741 OP2LEN   EQU   256            Operand-2 is always 256
+
+
+00000018  00000000                                3743 FAILMASK DC    A(0)           Failure Branch on Condition mask
+
+
+0000001C  00000000                                3745 ENDREG   DC    A(0)           Ending R10 register value
+00000020  00000000                                3746 ENDSTOR  DC    XL4'00'        Ending TRE main store value
+
+
+                              00000024  00000001  3748 TRENEXT  EQU   *              Start of next table entry...
+
+
+
+
+
+
+
+
+                              00000000  000021FF  3750 TRE01TST CSECT ,
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3752 ***********************************************************************
+                                                  3753 *        TRE Testing Control tables   (ref: TRETEST DSECT)
+                                                  3754 ***********************************************************************
+                                                  3755          PRINT DATA
+000003C8                                          3756 TRECTL   DC    0A(0)    start of table
+                                                  3757
+
+
+
+
+000003C8                                          3759 TRE1     DS    0F
+000003C8  01000000                                3760          DC    X'01',X'00',X'00',X'00'
+000003CC  00000538 00001930                       3761          DC    A(TRTOP10),A(TRTOP20)
+000003D4  00010000 00000001                       3762          DC    A(00+(1*K64)),A(001),A(MB+(1*K64))
+000003DC  00110000
+000003E0  00000007                                3763          DC    A(7) CC0
+000003E4  00010001 00000000                       3764          DC    A(00+(1*K64)+01),X'00000000'
+
+
+
+
+000003EC                                          3766 TRE2     DS    0F
+000003EC  02000000                                3767          DC    X'02',X'00',X'00',X'00'
+000003F0  00000538 00001930                       3768          DC    A(TRTOP10),A(TRTOP20)
+000003F8  00020000 00000002                       3769          DC    A(00+(2*K64)),A(002),A(MB+(2*K64))
+00000400  00120000
+00000404  00000007                                3770          DC    A(7) CC0
+00000408  00020002 00000000                       3771          DC    A(00+(2*K64)+02),X'00000000'
+
+
+
+
+00000410                                          3773 TRE4     DS    0F
+00000410  03000000                                3774          DC    X'03',X'00',X'00',X'00'
+00000414  00000538 00001930                       3775          DC    A(TRTOP10),A(TRTOP20)
+0000041C  00030000 00000004                       3776          DC    A(00+(3*K64)),A(004),A(MB+(3*K64))
+00000424  00130000
+00000428  00000007                                3777          DC    A(7) CC0
+0000042C  00030004 00000000                       3778          DC    A(00+(3*K64)+04),X'00000000'
+
+
+
+
+00000434                                          3780 TRE8     DS    0F
+00000434  04000000                                3781          DC    X'04',X'00',X'00',X'00'
+00000438  00000538 00001930                       3782          DC    A(TRTOP10),A(TRTOP20)
+00000440  00040000 00000008                       3783          DC    A(00+(4*K64)),A(008),A(MB+(4*K64))
+00000448  00140000
+0000044C  00000007                                3784          DC    A(7) CC0
+00000450  00040008 00000000                       3785          DC    A(00+(4*K64)+08),X'00000000'
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000458                                          3787 TRE256   DS    0F
+00000458  05000000                                3788          DC    X'05',X'00',X'00',X'00'
+0000045C  00000538 00001930                       3789          DC    A(TRTOP10),A(TRTOP20)
+00000464  00050000 00000100                       3790          DC    A(00+(5*K64)),A(256),A(MB+(5*K64))
+0000046C  00150000
+00000470  00000007                                3791          DC    A(7) CC0
+00000474  00050100 00000000                       3792          DC    A(00+(5*K64)+256),X'00000000'
+
+
+
+
+0000047C                                          3794 TREBTH   DS    0F
+0000047C  06110000                                3795          DC    X'06',X'11',X'00',X'00'
+00000480  00001730 00001A30                       3796          DC    A(TRTOP111),A(TRTOP211)
+00000488  0005FFF4 00000100                       3797          DC    A(00+(6*K64)-12),A(256),A(MB+(6*K64)-34) both cross page
+00000490  0015FFDE
+00000494  0000000A                                3798          DC    A(10)   CC1 = stop, scan incomplete or CC=3
+00000498  00060005 00000000                       3799          DC    A(00+(6*K64)-12+X'11'),X'00000000'
+
+
+
+
+000004A0                                          3801 TREOP1   DS    0F
+000004A0  07F00000                                3802          DC    X'07',X'F0',X'00',X'00'
+000004A4  00001830 00001B30                       3803          DC    A(TRTOP1F0),A(TRTOP2F0)
+000004AC  0006FFF4 00000100                       3804          DC    A(00+(7*K64)-12),A(256),A(MB+(7*K64)) only op1 crosses
+000004B4  00170000
+000004B8  0000000A                                3805          DC    A(10) CC1 = stopped on last byte  or CC=3
+000004BC  000700F3 00000000                       3806          DC    A(00+(7*K64)-12+255),X'00000000'
+
+
+
+
+000004C4                                          3808 TREOP2   DS    0F
+000004C4  08110000                                3809          DC    X'08',X'11',X'00',X'00'
+000004C8  00001730 00001A30                       3810          DC    A(TRTOP111),A(TRTOP211)
+000004D0  00080000 00000100                       3811          DC    A(00+(8*K64)),A(256),A(MB+(8*K64)-34)   only op2 crosses
+000004D8  0017FFDE
+000004DC  0000000A                                3812          DC    A(10) CC1 = stop, scan incomplete or CC=3
+000004E0  00080011 00000000                       3813          DC    A(00+(8*K64)+X'11'),X'00000000'
+
+
+
+
+000004E8                                          3815 TRELOP1  DS    0F
+000004E8  09000000                                3816          DC    X'09',X'00',X'00',X'00'
+000004EC  00000538 00001C30                       3817          DC    A(TRTOP10),A(TRELOP20)
+000004F4  0008FFF4 00000200                       3818          DC    A(00+(9*K64)-12),A(512),A(MB+(9*K64)) only op1 crosses
+000004FC  00190000
+00000500  00000006                                3819          DC    A(6)  CC0 or CC=3
+00000504  000901F4 00000000                       3820          DC    A(00+(9*K64)-12+512),X'00000000'
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000050C                                          3822 TRELOP2  DS    0F
+0000050C  0A000000                                3823          DC    X'0A',X'00',X'00',X'00'
+00000510  00000538 00001D30                       3824          DC    A(TRTOP10),A(TRELOP21)
+00000518  0009FFF4 000011F8                       3825          DC    A(00+(10*K64)-12),A(4600),A(MB+(10*K64)) op1 crosses 2X
+00000520  001A0000
+00000524  00000006                                3826          DC    A(6)  CC0 or CC=3
+00000528  000A11EC FFFFFFFF                       3827          DC    A(00+(10*K64)-12+4600),X'FFFFFFFF'
+
+
+
+
+
+
+
+00000530  00000000                                3829          DC    A(0)     end of table
+00000534  00000000                                3830          DC    A(0)     end of table
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3832 ***********************************************************************
+                                                  3833 *        TRE op1 scan data...
+                                                  3834 ***********************************************************************
+
+00000538  78125634 78125634                       3836 TRTOP10  DC    1150XL4'78125634'
+00000540  78125634 78125634
+00000548  78125634 78125634
+00000550  78125634 78125634
+00000558  78125634 78125634
+00000560  78125634 78125634
+00000568  78125634 78125634
+00000570  78125634 78125634
+00000578  78125634 78125634
+00000580  78125634 78125634
+00000588  78125634 78125634
+00000590  78125634 78125634
+00000598  78125634 78125634
+000005A0  78125634 78125634
+000005A8  78125634 78125634
+000005B0  78125634 78125634
+000005B8  78125634 78125634
+000005C0  78125634 78125634
+000005C8  78125634 78125634
+000005D0  78125634 78125634
+000005D8  78125634 78125634
+000005E0  78125634 78125634
+000005E8  78125634 78125634
+000005F0  78125634 78125634
+000005F8  78125634 78125634
+00000600  78125634 78125634
+00000608  78125634 78125634
+00000610  78125634 78125634
+00000618  78125634 78125634
+00000620  78125634 78125634
+00000628  78125634 78125634
+00000630  78125634 78125634
+00000638  78125634 78125634
+00000640  78125634 78125634
+00000648  78125634 78125634
+00000650  78125634 78125634
+00000658  78125634 78125634
+00000660  78125634 78125634
+00000668  78125634 78125634
+00000670  78125634 78125634
+00000678  78125634 78125634
+00000680  78125634 78125634
+00000688  78125634 78125634
+00000690  78125634 78125634
+00000698  78125634 78125634
+000006A0  78125634 78125634
+000006A8  78125634 78125634
+000006B0  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000006B8  78125634 78125634
+000006C0  78125634 78125634
+000006C8  78125634 78125634
+000006D0  78125634 78125634
+000006D8  78125634 78125634
+000006E0  78125634 78125634
+000006E8  78125634 78125634
+000006F0  78125634 78125634
+000006F8  78125634 78125634
+00000700  78125634 78125634
+00000708  78125634 78125634
+00000710  78125634 78125634
+00000718  78125634 78125634
+00000720  78125634 78125634
+00000728  78125634 78125634
+00000730  78125634 78125634
+00000738  78125634 78125634
+00000740  78125634 78125634
+00000748  78125634 78125634
+00000750  78125634 78125634
+00000758  78125634 78125634
+00000760  78125634 78125634
+00000768  78125634 78125634
+00000770  78125634 78125634
+00000778  78125634 78125634
+00000780  78125634 78125634
+00000788  78125634 78125634
+00000790  78125634 78125634
+00000798  78125634 78125634
+000007A0  78125634 78125634
+000007A8  78125634 78125634
+000007B0  78125634 78125634
+000007B8  78125634 78125634
+000007C0  78125634 78125634
+000007C8  78125634 78125634
+000007D0  78125634 78125634
+000007D8  78125634 78125634
+000007E0  78125634 78125634
+000007E8  78125634 78125634
+000007F0  78125634 78125634
+000007F8  78125634 78125634
+00000800  78125634 78125634
+00000808  78125634 78125634
+00000810  78125634 78125634
+00000818  78125634 78125634
+00000820  78125634 78125634
+00000828  78125634 78125634
+00000830  78125634 78125634
+00000838  78125634 78125634
+00000840  78125634 78125634
+00000848  78125634 78125634
+00000850  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000858  78125634 78125634
+00000860  78125634 78125634
+00000868  78125634 78125634
+00000870  78125634 78125634
+00000878  78125634 78125634
+00000880  78125634 78125634
+00000888  78125634 78125634
+00000890  78125634 78125634
+00000898  78125634 78125634
+000008A0  78125634 78125634
+000008A8  78125634 78125634
+000008B0  78125634 78125634
+000008B8  78125634 78125634
+000008C0  78125634 78125634
+000008C8  78125634 78125634
+000008D0  78125634 78125634
+000008D8  78125634 78125634
+000008E0  78125634 78125634
+000008E8  78125634 78125634
+000008F0  78125634 78125634
+000008F8  78125634 78125634
+00000900  78125634 78125634
+00000908  78125634 78125634
+00000910  78125634 78125634
+00000918  78125634 78125634
+00000920  78125634 78125634
+00000928  78125634 78125634
+00000930  78125634 78125634
+00000938  78125634 78125634
+00000940  78125634 78125634
+00000948  78125634 78125634
+00000950  78125634 78125634
+00000958  78125634 78125634
+00000960  78125634 78125634
+00000968  78125634 78125634
+00000970  78125634 78125634
+00000978  78125634 78125634
+00000980  78125634 78125634
+00000988  78125634 78125634
+00000990  78125634 78125634
+00000998  78125634 78125634
+000009A0  78125634 78125634
+000009A8  78125634 78125634
+000009B0  78125634 78125634
+000009B8  78125634 78125634
+000009C0  78125634 78125634
+000009C8  78125634 78125634
+000009D0  78125634 78125634
+000009D8  78125634 78125634
+000009E0  78125634 78125634
+000009E8  78125634 78125634
+000009F0  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000009F8  78125634 78125634
+00000A00  78125634 78125634
+00000A08  78125634 78125634
+00000A10  78125634 78125634
+00000A18  78125634 78125634
+00000A20  78125634 78125634
+00000A28  78125634 78125634
+00000A30  78125634 78125634
+00000A38  78125634 78125634
+00000A40  78125634 78125634
+00000A48  78125634 78125634
+00000A50  78125634 78125634
+00000A58  78125634 78125634
+00000A60  78125634 78125634
+00000A68  78125634 78125634
+00000A70  78125634 78125634
+00000A78  78125634 78125634
+00000A80  78125634 78125634
+00000A88  78125634 78125634
+00000A90  78125634 78125634
+00000A98  78125634 78125634
+00000AA0  78125634 78125634
+00000AA8  78125634 78125634
+00000AB0  78125634 78125634
+00000AB8  78125634 78125634
+00000AC0  78125634 78125634
+00000AC8  78125634 78125634
+00000AD0  78125634 78125634
+00000AD8  78125634 78125634
+00000AE0  78125634 78125634
+00000AE8  78125634 78125634
+00000AF0  78125634 78125634
+00000AF8  78125634 78125634
+00000B00  78125634 78125634
+00000B08  78125634 78125634
+00000B10  78125634 78125634
+00000B18  78125634 78125634
+00000B20  78125634 78125634
+00000B28  78125634 78125634
+00000B30  78125634 78125634
+00000B38  78125634 78125634
+00000B40  78125634 78125634
+00000B48  78125634 78125634
+00000B50  78125634 78125634
+00000B58  78125634 78125634
+00000B60  78125634 78125634
+00000B68  78125634 78125634
+00000B70  78125634 78125634
+00000B78  78125634 78125634
+00000B80  78125634 78125634
+00000B88  78125634 78125634
+00000B90  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000B98  78125634 78125634
+00000BA0  78125634 78125634
+00000BA8  78125634 78125634
+00000BB0  78125634 78125634
+00000BB8  78125634 78125634
+00000BC0  78125634 78125634
+00000BC8  78125634 78125634
+00000BD0  78125634 78125634
+00000BD8  78125634 78125634
+00000BE0  78125634 78125634
+00000BE8  78125634 78125634
+00000BF0  78125634 78125634
+00000BF8  78125634 78125634
+00000C00  78125634 78125634
+00000C08  78125634 78125634
+00000C10  78125634 78125634
+00000C18  78125634 78125634
+00000C20  78125634 78125634
+00000C28  78125634 78125634
+00000C30  78125634 78125634
+00000C38  78125634 78125634
+00000C40  78125634 78125634
+00000C48  78125634 78125634
+00000C50  78125634 78125634
+00000C58  78125634 78125634
+00000C60  78125634 78125634
+00000C68  78125634 78125634
+00000C70  78125634 78125634
+00000C78  78125634 78125634
+00000C80  78125634 78125634
+00000C88  78125634 78125634
+00000C90  78125634 78125634
+00000C98  78125634 78125634
+00000CA0  78125634 78125634
+00000CA8  78125634 78125634
+00000CB0  78125634 78125634
+00000CB8  78125634 78125634
+00000CC0  78125634 78125634
+00000CC8  78125634 78125634
+00000CD0  78125634 78125634
+00000CD8  78125634 78125634
+00000CE0  78125634 78125634
+00000CE8  78125634 78125634
+00000CF0  78125634 78125634
+00000CF8  78125634 78125634
+00000D00  78125634 78125634
+00000D08  78125634 78125634
+00000D10  78125634 78125634
+00000D18  78125634 78125634
+00000D20  78125634 78125634
+00000D28  78125634 78125634
+00000D30  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000D38  78125634 78125634
+00000D40  78125634 78125634
+00000D48  78125634 78125634
+00000D50  78125634 78125634
+00000D58  78125634 78125634
+00000D60  78125634 78125634
+00000D68  78125634 78125634
+00000D70  78125634 78125634
+00000D78  78125634 78125634
+00000D80  78125634 78125634
+00000D88  78125634 78125634
+00000D90  78125634 78125634
+00000D98  78125634 78125634
+00000DA0  78125634 78125634
+00000DA8  78125634 78125634
+00000DB0  78125634 78125634
+00000DB8  78125634 78125634
+00000DC0  78125634 78125634
+00000DC8  78125634 78125634
+00000DD0  78125634 78125634
+00000DD8  78125634 78125634
+00000DE0  78125634 78125634
+00000DE8  78125634 78125634
+00000DF0  78125634 78125634
+00000DF8  78125634 78125634
+00000E00  78125634 78125634
+00000E08  78125634 78125634
+00000E10  78125634 78125634
+00000E18  78125634 78125634
+00000E20  78125634 78125634
+00000E28  78125634 78125634
+00000E30  78125634 78125634
+00000E38  78125634 78125634
+00000E40  78125634 78125634
+00000E48  78125634 78125634
+00000E50  78125634 78125634
+00000E58  78125634 78125634
+00000E60  78125634 78125634
+00000E68  78125634 78125634
+00000E70  78125634 78125634
+00000E78  78125634 78125634
+00000E80  78125634 78125634
+00000E88  78125634 78125634
+00000E90  78125634 78125634
+00000E98  78125634 78125634
+00000EA0  78125634 78125634
+00000EA8  78125634 78125634
+00000EB0  78125634 78125634
+00000EB8  78125634 78125634
+00000EC0  78125634 78125634
+00000EC8  78125634 78125634
+00000ED0  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00000ED8  78125634 78125634
+00000EE0  78125634 78125634
+00000EE8  78125634 78125634
+00000EF0  78125634 78125634
+00000EF8  78125634 78125634
+00000F00  78125634 78125634
+00000F08  78125634 78125634
+00000F10  78125634 78125634
+00000F18  78125634 78125634
+00000F20  78125634 78125634
+00000F28  78125634 78125634
+00000F30  78125634 78125634
+00000F38  78125634 78125634
+00000F40  78125634 78125634
+00000F48  78125634 78125634
+00000F50  78125634 78125634
+00000F58  78125634 78125634
+00000F60  78125634 78125634
+00000F68  78125634 78125634
+00000F70  78125634 78125634
+00000F78  78125634 78125634
+00000F80  78125634 78125634
+00000F88  78125634 78125634
+00000F90  78125634 78125634
+00000F98  78125634 78125634
+00000FA0  78125634 78125634
+00000FA8  78125634 78125634
+00000FB0  78125634 78125634
+00000FB8  78125634 78125634
+00000FC0  78125634 78125634
+00000FC8  78125634 78125634
+00000FD0  78125634 78125634
+00000FD8  78125634 78125634
+00000FE0  78125634 78125634
+00000FE8  78125634 78125634
+00000FF0  78125634 78125634
+00000FF8  78125634 78125634
+00001000  78125634 78125634
+00001008  78125634 78125634
+00001010  78125634 78125634
+00001018  78125634 78125634
+00001020  78125634 78125634
+00001028  78125634 78125634
+00001030  78125634 78125634
+00001038  78125634 78125634
+00001040  78125634 78125634
+00001048  78125634 78125634
+00001050  78125634 78125634
+00001058  78125634 78125634
+00001060  78125634 78125634
+00001068  78125634 78125634
+00001070  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001078  78125634 78125634
+00001080  78125634 78125634
+00001088  78125634 78125634
+00001090  78125634 78125634
+00001098  78125634 78125634
+000010A0  78125634 78125634
+000010A8  78125634 78125634
+000010B0  78125634 78125634
+000010B8  78125634 78125634
+000010C0  78125634 78125634
+000010C8  78125634 78125634
+000010D0  78125634 78125634
+000010D8  78125634 78125634
+000010E0  78125634 78125634
+000010E8  78125634 78125634
+000010F0  78125634 78125634
+000010F8  78125634 78125634
+00001100  78125634 78125634
+00001108  78125634 78125634
+00001110  78125634 78125634
+00001118  78125634 78125634
+00001120  78125634 78125634
+00001128  78125634 78125634
+00001130  78125634 78125634
+00001138  78125634 78125634
+00001140  78125634 78125634
+00001148  78125634 78125634
+00001150  78125634 78125634
+00001158  78125634 78125634
+00001160  78125634 78125634
+00001168  78125634 78125634
+00001170  78125634 78125634
+00001178  78125634 78125634
+00001180  78125634 78125634
+00001188  78125634 78125634
+00001190  78125634 78125634
+00001198  78125634 78125634
+000011A0  78125634 78125634
+000011A8  78125634 78125634
+000011B0  78125634 78125634
+000011B8  78125634 78125634
+000011C0  78125634 78125634
+000011C8  78125634 78125634
+000011D0  78125634 78125634
+000011D8  78125634 78125634
+000011E0  78125634 78125634
+000011E8  78125634 78125634
+000011F0  78125634 78125634
+000011F8  78125634 78125634
+00001200  78125634 78125634
+00001208  78125634 78125634
+00001210  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001218  78125634 78125634
+00001220  78125634 78125634
+00001228  78125634 78125634
+00001230  78125634 78125634
+00001238  78125634 78125634
+00001240  78125634 78125634
+00001248  78125634 78125634
+00001250  78125634 78125634
+00001258  78125634 78125634
+00001260  78125634 78125634
+00001268  78125634 78125634
+00001270  78125634 78125634
+00001278  78125634 78125634
+00001280  78125634 78125634
+00001288  78125634 78125634
+00001290  78125634 78125634
+00001298  78125634 78125634
+000012A0  78125634 78125634
+000012A8  78125634 78125634
+000012B0  78125634 78125634
+000012B8  78125634 78125634
+000012C0  78125634 78125634
+000012C8  78125634 78125634
+000012D0  78125634 78125634
+000012D8  78125634 78125634
+000012E0  78125634 78125634
+000012E8  78125634 78125634
+000012F0  78125634 78125634
+000012F8  78125634 78125634
+00001300  78125634 78125634
+00001308  78125634 78125634
+00001310  78125634 78125634
+00001318  78125634 78125634
+00001320  78125634 78125634
+00001328  78125634 78125634
+00001330  78125634 78125634
+00001338  78125634 78125634
+00001340  78125634 78125634
+00001348  78125634 78125634
+00001350  78125634 78125634
+00001358  78125634 78125634
+00001360  78125634 78125634
+00001368  78125634 78125634
+00001370  78125634 78125634
+00001378  78125634 78125634
+00001380  78125634 78125634
+00001388  78125634 78125634
+00001390  78125634 78125634
+00001398  78125634 78125634
+000013A0  78125634 78125634
+000013A8  78125634 78125634
+000013B0  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000013B8  78125634 78125634
+000013C0  78125634 78125634
+000013C8  78125634 78125634
+000013D0  78125634 78125634
+000013D8  78125634 78125634
+000013E0  78125634 78125634
+000013E8  78125634 78125634
+000013F0  78125634 78125634
+000013F8  78125634 78125634
+00001400  78125634 78125634
+00001408  78125634 78125634
+00001410  78125634 78125634
+00001418  78125634 78125634
+00001420  78125634 78125634
+00001428  78125634 78125634
+00001430  78125634 78125634
+00001438  78125634 78125634
+00001440  78125634 78125634
+00001448  78125634 78125634
+00001450  78125634 78125634
+00001458  78125634 78125634
+00001460  78125634 78125634
+00001468  78125634 78125634
+00001470  78125634 78125634
+00001478  78125634 78125634
+00001480  78125634 78125634
+00001488  78125634 78125634
+00001490  78125634 78125634
+00001498  78125634 78125634
+000014A0  78125634 78125634
+000014A8  78125634 78125634
+000014B0  78125634 78125634
+000014B8  78125634 78125634
+000014C0  78125634 78125634
+000014C8  78125634 78125634
+000014D0  78125634 78125634
+000014D8  78125634 78125634
+000014E0  78125634 78125634
+000014E8  78125634 78125634
+000014F0  78125634 78125634
+000014F8  78125634 78125634
+00001500  78125634 78125634
+00001508  78125634 78125634
+00001510  78125634 78125634
+00001518  78125634 78125634
+00001520  78125634 78125634
+00001528  78125634 78125634
+00001530  78125634 78125634
+00001538  78125634 78125634
+00001540  78125634 78125634
+00001548  78125634 78125634
+00001550  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001558  78125634 78125634
+00001560  78125634 78125634
+00001568  78125634 78125634
+00001570  78125634 78125634
+00001578  78125634 78125634
+00001580  78125634 78125634
+00001588  78125634 78125634
+00001590  78125634 78125634
+00001598  78125634 78125634
+000015A0  78125634 78125634
+000015A8  78125634 78125634
+000015B0  78125634 78125634
+000015B8  78125634 78125634
+000015C0  78125634 78125634
+000015C8  78125634 78125634
+000015D0  78125634 78125634
+000015D8  78125634 78125634
+000015E0  78125634 78125634
+000015E8  78125634 78125634
+000015F0  78125634 78125634
+000015F8  78125634 78125634
+00001600  78125634 78125634
+00001608  78125634 78125634
+00001610  78125634 78125634
+00001618  78125634 78125634
+00001620  78125634 78125634
+00001628  78125634 78125634
+00001630  78125634 78125634
+00001638  78125634 78125634
+00001640  78125634 78125634
+00001648  78125634 78125634
+00001650  78125634 78125634
+00001658  78125634 78125634
+00001660  78125634 78125634
+00001668  78125634 78125634
+00001670  78125634 78125634
+00001678  78125634 78125634
+00001680  78125634 78125634
+00001688  78125634 78125634
+00001690  78125634 78125634
+00001698  78125634 78125634
+000016A0  78125634 78125634
+000016A8  78125634 78125634
+000016B0  78125634 78125634
+000016B8  78125634 78125634
+000016C0  78125634 78125634
+000016C8  78125634 78125634
+000016D0  78125634 78125634
+000016D8  78125634 78125634
+000016E0  78125634 78125634
+000016E8  78125634 78125634
+000016F0  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000016F8  78125634 78125634
+00001700  78125634 78125634
+00001708  78125634 78125634
+00001710  78125634 78125634
+00001718  78125634 78125634
+00001720  78125634 78125634
+00001728  78125634 78125634
+
+00001730  78125634 78125634                       3838 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
+00001738  78125634 78125634
+00001740  00110000 78125634
+00001748  78125634 78125634
+00001750  78125634 78125634
+00001758  78125634 78125634
+00001760  78125634 78125634
+00001768  78125634 78125634
+00001770  78125634 78125634
+00001778  78125634 78125634
+00001780  78125634 78125634
+00001788  78125634 78125634
+00001790  78125634 78125634
+00001798  78125634 78125634
+000017A0  78125634 78125634
+000017A8  78125634 78125634
+000017B0  78125634 78125634
+000017B8  78125634 78125634
+000017C0  78125634 78125634
+000017C8  78125634 78125634
+000017D0  78125634 78125634
+000017D8  78125634 78125634
+000017E0  78125634 78125634
+000017E8  78125634 78125634
+000017F0  78125634 78125634
+000017F8  78125634 78125634
+00001800  78125634 78125634
+00001808  78125634 78125634
+00001810  78125634 78125634
+00001818  78125634 78125634
+00001820  78125634 78125634
+00001828  78125634 78125634
+
+00001830  78125634 78125634                       3840 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
+00001838  78125634 78125634
+00001840  78125634 78125634
+00001848  78125634 78125634
+00001850  78125634 78125634
+00001858  78125634 78125634
+00001860  78125634 78125634
+00001868  78125634 78125634
+00001870  78125634 78125634
+00001878  78125634 78125634
+00001880  78125634 78125634
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001888  78125634 78125634
+00001890  78125634 78125634
+00001898  78125634 78125634
+000018A0  78125634 78125634
+000018A8  78125634 78125634
+000018B0  78125634 78125634
+000018B8  78125634 78125634
+000018C0  78125634 78125634
+000018C8  78125634 78125634
+000018D0  78125634 78125634
+000018D8  78125634 78125634
+000018E0  78125634 78125634
+000018E8  78125634 78125634
+000018F0  78125634 78125634
+000018F8  78125634 78125634
+00001900  78125634 78125634
+00001908  78125634 78125634
+00001910  78125634 78125634
+00001918  78125634 78125634
+00001920  78125634 78125634
+00001928  78125634 000000F0
+                                                  3841
+                                                  3842
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3844 ***********************************************************************
+                                                  3845 *        TRE op2 stop tables...
+                                                  3846 ***********************************************************************
+
+00001930  00000000 00000000                       3848 TRTOP20  DC    256X'00'                   no stop
+00001938  00000000 00000000
+00001940  00000000 00000000
+00001948  00000000 00000000
+00001950  00000000 00000000
+00001958  00000000 00000000
+00001960  00000000 00000000
+00001968  00000000 00000000
+00001970  00000000 00000000
+00001978  00000000 00000000
+00001980  00000000 00000000
+00001988  00000000 00000000
+00001990  00000000 00000000
+00001998  00000000 00000000
+000019A0  00000000 00000000
+000019A8  00000000 00000000
+000019B0  00000000 00000000
+000019B8  00000000 00000000
+000019C0  00000000 00000000
+000019C8  00000000 00000000
+000019D0  00000000 00000000
+000019D8  00000000 00000000
+000019E0  00000000 00000000
+000019E8  00000000 00000000
+000019F0  00000000 00000000
+000019F8  00000000 00000000
+00001A00  00000000 00000000
+00001A08  00000000 00000000
+00001A10  00000000 00000000
+00001A18  00000000 00000000
+00001A20  00000000 00000000
+00001A28  00000000 00000000
+
+00001A30  00000000 00000000                       3850 TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+00001A38  00000000 00000000
+00001A40  00110000 00000000
+00001A48  00000000 00000000
+00001A50  00000000 00000000
+00001A58  00000000 00000000
+00001A60  00000000 00000000
+00001A68  00000000 00000000
+00001A70  00000000 00000000
+00001A78  00000000 00000000
+00001A80  00000000 00000000
+00001A88  00000000 00000000
+00001A90  00000000 00000000
+00001A98  00000000 00000000
+00001AA0  00000000 00000000
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    29
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001AA8  00000000 00000000
+00001AB0  00000000 00000000
+00001AB8  00000000 00000000
+00001AC0  00000000 00000000
+00001AC8  00000000 00000000
+00001AD0  00000000 00000000
+00001AD8  00000000 00000000
+00001AE0  00000000 00000000
+00001AE8  00000000 00000000
+00001AF0  00000000 00000000
+00001AF8  00000000 00000000
+00001B00  00000000 00000000
+00001B08  00000000 00000000
+00001B10  00000000 00000000
+00001B18  00000000 00000000
+00001B20  00000000 00000000
+00001B28  00000000 00000000
+
+00001B30  00000000 00000000                       3852 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+00001B38  00000000 00000000
+00001B40  00000000 00000000
+00001B48  00000000 00000000
+00001B50  00000000 00000000
+00001B58  00000000 00000000
+00001B60  00000000 00000000
+00001B68  00000000 00000000
+00001B70  00000000 00000000
+00001B78  00000000 00000000
+00001B80  00000000 00000000
+00001B88  00000000 00000000
+00001B90  00000000 00000000
+00001B98  00000000 00000000
+00001BA0  00000000 00000000
+00001BA8  00000000 00000000
+00001BB0  00000000 00000000
+00001BB8  00000000 00000000
+00001BC0  00000000 00000000
+00001BC8  00000000 00000000
+00001BD0  00000000 00000000
+00001BD8  00000000 00000000
+00001BE0  00000000 00000000
+00001BE8  00000000 00000000
+00001BF0  00000000 00000000
+00001BF8  00000000 00000000
+00001C00  00000000 00000000
+00001C08  00000000 00000000
+00001C10  00000000 00000000
+00001C18  00000000 00000000
+00001C20  F0000000 00000000
+00001C28  00000000 00000000
+
+00001C30  FF000000 00000000                       3854 TRELOP20 DC    X'FF',255X'00'
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    30
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001C38  00000000 00000000
+00001C40  00000000 00000000
+00001C48  00000000 00000000
+00001C50  00000000 00000000
+00001C58  00000000 00000000
+00001C60  00000000 00000000
+00001C68  00000000 00000000
+00001C70  00000000 00000000
+00001C78  00000000 00000000
+00001C80  00000000 00000000
+00001C88  00000000 00000000
+00001C90  00000000 00000000
+00001C98  00000000 00000000
+00001CA0  00000000 00000000
+00001CA8  00000000 00000000
+00001CB0  00000000 00000000
+00001CB8  00000000 00000000
+00001CC0  00000000 00000000
+00001CC8  00000000 00000000
+00001CD0  00000000 00000000
+00001CD8  00000000 00000000
+00001CE0  00000000 00000000
+00001CE8  00000000 00000000
+00001CF0  00000000 00000000
+00001CF8  00000000 00000000
+00001D00  00000000 00000000
+00001D08  00000000 00000000
+00001D10  00000000 00000000
+00001D18  00000000 00000000
+00001D20  00000000 00000000
+00001D28  00000000 00000000
+                                                  3855
+00001D30  FFFFFFFF FFFFFFFF                       3856 TRELOP21 DC    256X'FF'
+00001D38  FFFFFFFF FFFFFFFF
+00001D40  FFFFFFFF FFFFFFFF
+00001D48  FFFFFFFF FFFFFFFF
+00001D50  FFFFFFFF FFFFFFFF
+00001D58  FFFFFFFF FFFFFFFF
+00001D60  FFFFFFFF FFFFFFFF
+00001D68  FFFFFFFF FFFFFFFF
+00001D70  FFFFFFFF FFFFFFFF
+00001D78  FFFFFFFF FFFFFFFF
+00001D80  FFFFFFFF FFFFFFFF
+00001D88  FFFFFFFF FFFFFFFF
+00001D90  FFFFFFFF FFFFFFFF
+00001D98  FFFFFFFF FFFFFFFF
+00001DA0  FFFFFFFF FFFFFFFF
+00001DA8  FFFFFFFF FFFFFFFF
+00001DB0  FFFFFFFF FFFFFFFF
+00001DB8  FFFFFFFF FFFFFFFF
+00001DC0  FFFFFFFF FFFFFFFF
+00001DC8  FFFFFFFF FFFFFFFF
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    31
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+00001DD0  FFFFFFFF FFFFFFFF
+00001DD8  FFFFFFFF FFFFFFFF
+00001DE0  FFFFFFFF FFFFFFFF
+00001DE8  FFFFFFFF FFFFFFFF
+00001DF0  FFFFFFFF FFFFFFFF
+00001DF8  FFFFFFFF FFFFFFFF
+00001E00  FFFFFFFF FFFFFFFF
+00001E08  FFFFFFFF FFFFFFFF
+00001E10  FFFFFFFF FFFFFFFF
+00001E18  FFFFFFFF FFFFFFFF
+00001E20  FFFFFFFF FFFFFFFF
+00001E28  FFFFFFFF FFFFFFFF
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    32
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3858 ***********************************************************************
+                                                  3859 *        Fixed storage locations
+                                                  3860 ***********************************************************************
+
+
+
+
+
+00001E30                      00001E30  000021FE  3862          ORG   TRE01TST+TESTADDR      (s/b @ X'21FE', X'21FF')
+
+000021FE  00                                      3864 TESTNUM  DC    X'00'      Test number of active test
+000021FF  00                                      3865 SUBTEST  DC    X'00'      Active test sub-test number
+
+
+
+
+
+
+
+
+
+                                                  3867 ***********************************************************************
+                                                  3868 *        (other DSECTS needed by SATK)
+                                                  3869 ***********************************************************************
+
+                                                  3871          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                  4147          PRINT ON
+
+                                                  4149 ***********************************************************************
+                                                  4150 *        Register equates
+                                                  4151 ***********************************************************************
+
+
+                              00000000  00000001  4153 R0       EQU   0
+                              00000001  00000001  4154 R1       EQU   1
+                              00000002  00000001  4155 R2       EQU   2
+                              00000003  00000001  4156 R3       EQU   3
+                              00000004  00000001  4157 R4       EQU   4
+                              00000005  00000001  4158 R5       EQU   5
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    33
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000006  00000001  4159 R6       EQU   6
+                              00000007  00000001  4160 R7       EQU   7
+                              00000008  00000001  4161 R8       EQU   8
+                              00000009  00000001  4162 R9       EQU   9
+                              0000000A  00000001  4163 R10      EQU   10
+                              0000000B  00000001  4164 R11      EQU   11
+                              0000000C  00000001  4165 R12      EQU   12
+                              0000000D  00000001  4166 R13      EQU   13
+                              0000000E  00000001  4167 R14      EQU   14
+                              0000000F  00000001  4168 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  4170          END
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    34
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+ASA                 4    000000      512  3875  3541
+ASBEGIN             U    000000        1  3876  3881  3923  3959  3968  3986  3993  3999  4003  4007  4013  4030
+ASEND               U    000200        1  4029  4030
+ASLENGTH            U    000200        1  4030
+BCEXTCOD            H    00001A        2  3893
+BCIOCOD             H    00003A        2  3901
+BCMCKCOD            H    000032        2  3899
+BCPGMCOD            H    00002A        2  3897
+BCSVCCOD            H    000022        2  3895
+BEGCLOCK            D    000338        8  3708
+BEGIN               I    000200        2  3545  3515  3542  3543  3580  3655
+CAW                 F    000048        4  3905
+CAWADDR             R    000049        3  3908
+CAWKEY              X    000048        1  3906
+CAWSUSP             U    000008        1  3907
+CCW0                4    000000        8  4034  4040
+CCW0ADDR            R    000001        3  4036
+CCW0CNT             H    000006        2  4039
+CCW0CODE            X    000000        1  4035
+CCW0FLGS            X    000004        1  4037
+CCW0L               U    000008        1  4040
+CCW1                4    000000        8  4052  4057
+CCW1ADDR            A    000004        4  4056
+CCW1CNT             H    000002        2  4055
+CCW1CODE            X    000000        1  4053
+CCW1FLGS            X    000001        1  4054
+CCW1L               U    000008        1  4057
+CCWCC               U    000040        1  4044
+CCWCD               U    000080        1  4043
+CCWIDA              U    000004        1  4048
+CCWPCI              U    000008        1  4047
+CCWSKIP             U    000010        1  4046
+CCWSLI              U    000020        1  4045
+CCWSUSP             U    000002        1  4049
+CHANID              F    0000A8        4  3960
+CODE                2    000000     8704  3496
+CONPGM              W    000370        8  3717
+CPUID               U    00031B        1  4032
+CRLREG0             A    00032C        4  3703
+CSW                 F    000040        8  3904
+CSWATTN             U    000080        1  4074
+CSWBUSY             U    000010        1  4077
+CSWCCTL             U    000004        1  4089
+CSWCCW              R    000001        3  4071
+CSWCDAT             U    000008        1  4088
+CSWCE               U    000008        1  4078
+CSWCHNG             U    000001        1  4091
+CSWCNT              H    000006        2  4093
+CSWCS               X    000005        1  4083
+CSWCUE              U    000020        1  4076
+CSWDCC0             U    000000        1  4067
+CSWDCC1             U    000001        1  4068
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    35
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+CSWDCC3             U    000003        1  4069
+CSWDCCM             U    000003        1  4066
+CSWDE               U    000004        1  4079
+CSWFLAG             X    000000        1  4061
+CSWFMT              4    000000        8  4060  4094
+CSWFMTL             U    000008        1  4094
+CSWICTL             U    000002        1  4090
+CSWIL               U    000040        1  4085
+CSWKEYM             U    0000F0        1  4062
+CSWLOG              U    000004        1  4065
+CSWPCI              U    000080        1  4084
+CSWPRGM             U    000020        1  4086
+CSWPROT             U    000010        1  4087
+CSWSM               U    000040        1  4075
+CSWSUSP             U    000008        1  4064
+CSWUC               U    000002        1  4080
+CSWUS               X    000004        1  4073
+CSWUX               U    000001        1  4081
+CTLREG1             A    000330        4  3704
+DURATION            D    000348        8  3710
+DWAT0008            3    0002E8        8  3665  3664
+DWAT0009            3    0002F8        8  3670  3669
+DWAT0010            3    000308        8  3675  3674
+DWAT0011            3    000318        8  3680  3679
+EDIT                X    0003BC       12  3721
+ENDCLOCK            D    000340        8  3709
+ENDREG              A    00001C        4  3745  3623
+ENDSTOR             X    000020        4  3746  3632
+EOJ                 H    0002E0        2  3663  3568
+EXTCPUAD            H    000084        2  3925
+EXTICODE            H    000086        2  3926
+EXTIPARM            F    000080        4  3924
+EXTNPSW             F    000058        8  3914
+EXTOPSW             F    000018        8  3886  3892
+FAILDEV             H    0002F0        2  3668
+FAILIO              H    000300        2  3673
+FAILMASK            A    000018        4  3743  3611
+FAILTEST            H    000310        2  3678  3563  3566  3641
+IMAGE               1    000000     8704     0
+IOELADDR            F    0000AC        4  3961
+IOICODE             H    0000BA        2  3966
+IOIID               F    0000C0        4  3971
+IOIPARM             F    0000BC        4  3970
+IONPSW              F    000078        8  3918
+IOOPSW              F    000038        8  3890  3900
+IOSSID              F    0000B8        4  3969
+IPLCCW1             F    000008        8  3878
+IPLCCW2             F    000010        8  3879
+IPLPSW              F    000000        8  3877
+K                   U    000400        1  3691  3692  3693  3694
+K64                 U    010000        1  3693  3699  3762  3764  3769  3771  3776  3778  3783  3785  3790  3792  3797  3799  3804
+                                                3806  3811  3813  3818  3820  3825  3827
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    36
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+LCHANLOG            F    0000B0        4  3962
+MAINSIZE            U    200000        1  3698  3699
+MB                  U    100000        1  3694  3698  3762  3769  3776  3783  3790  3797  3804  3811  3818  3825
+MCKLOG              F    000100        4  3994
+MCKNPSW             F    000070        8  3917
+MCKOPSW             F    000030        8  3889  3898
+MEASUREB            X    0000B9        1  3965
+MKARCHMD            X    0000A3        1  3953
+MKARS               F    000120        4  3992
+MKCLKCMP            F    0000E0        8  3978
+MKCPUTIM            F    0000D8        8  3977
+MKCRS               F    0001C0        4  3997
+MKDMGCOD            F    0000F4        4  3981
+MKFAILA             F    0000F8        4  3983
+MKFPRS              D    000160        8  3995
+MKICODE             F    0000E8        4  3979
+MKLOGOUT            F    000100        4  3985
+MKMODEL             F    0000FC        4  3984
+MKXSAA              F    0000D4        4  3976
+MONCLS              H    000094        2  3941
+MONCODE             F    00009C        4  3948
+MONNUMBR            X    000095        1  3943
+MPGACCID            X    0000A2        1  3951
+NKGRS               F    000180        4  3996
+NUMLOOPS            F    000334        4  3706
+NUMPGTBS            U    000020        1  3699  3700  3702
+NUMSEGTB            U    000002        1  3700  3704
+OP1DATA             A    000004        4  3734  3594
+OP1LEN              F    000010        4  3739  3593  3595
+OP1WHERE            A    00000C        4  3738  3592
+OP2DATA             A    000008        4  3735  3600
+OP2LEN              U    000100        1  3741  3599
+OP2WHERE            A    000014        4  3740  3598
+OPSWHERE            U    00000C        1  3737  3614
+OVERHEAD            D    000350        8  3711
+PAGE                U    001000        1  3692  3696  3701
+PAGETABS            U    003080        1  3702
+PCFETO              A    0000C4        4  3972
+PERACCID            X    0000A1        1  3950
+PERADDR             F    000098        4  3947
+PERCODE             X    000096        1  3944
+PERCODMK            U    0000F0        1  3945
+PGMACCID            X    0000A0        1  3949
+PGMDXC              F    000090        4  3939
+PGMICODE            H    00008E        2  3938
+PGMIID              F    00008C        4  3934
+PGMIILC             X    00008D        1  3936
+PGMIILCM            U    00000C        1  3937
+PGMNPSW             F    000068        8  3916
+PGMOPSW             F    000028        8  3888  3896
+PGMTRX              F    000090        4  3940
+PMCW1_0             X    000004        1  4101
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    37
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+PMCW1_8             X    000005        1  4104
+PMCWB               U    000004        1  4136
+PMCWCHP0            X    000010        1  4125
+PMCWCHP1            X    000011        1  4126
+PMCWCHP2            X    000012        1  4127
+PMCWCHP3            X    000013        1  4128
+PMCWCHP4            X    000014        1  4129
+PMCWCHP5            X    000015        1  4130
+PMCWCHP6            X    000016        1  4131
+PMCWCHP7            X    000017        1  4132
+PMCWDNUM            H    000006        2  4116
+PMCWE               U    000080        1  4105
+PMCWEXC             X    00001B        1  4135
+PMCWIP              F    000000        4  4100
+PMCWISCM            U    000038        1  4102
+PMCWLM              U    000060        1  4106
+PMCWLMG             U    000020        1  4107
+PMCWLML             U    000040        1  4108
+PMCWLPM             X    000008        1  4118
+PMCWLPUM            X    00000A        1  4120
+PMCWM               U    000004        1  4112
+PMCWMBI             H    00000C        2  4122
+PMCWMM              U    000018        1  4109
+PMCWMMC             U    000008        1  4111
+PMCWMME             U    000010        1  4110
+PMCWPAM             X    00000F        1  4124
+PMCWPIM             X    00000B        1  4121
+PMCWPNOM            X    000009        1  4119
+PMCWPOM             X    00000E        1  4123
+PMCWRES1            X    000018        4  4133
+PMCWRES2            X    000018        3  4134
+PMCWS               U    000001        1  4138
+PMCWT               U    000002        1  4113
+PMCWV               U    000001        1  4114
+PMCWX               U    000002        1  4137
+PRTLINE             C    000378       38  3718  3720  3717
+PRTLNG              U    000044        1  3720  3717
+R0                  U    000000        1  4153  3541  3604
+R1                  U    000001        1  4154  3576  3642
+R10                 U    00000A        1  4163  3592  3596  3614  3615  3626  3630
+R11                 U    00000B        1  4164  3593
+R12                 U    00000C        1  4165  3598  3602  3614  3615
+R13                 U    00000D        1  4166  3599
+R14                 U    00000E        1  4167  3555  3641  3644
+R15                 U    00000F        1  4168  3577  3580  3643  3654
+R2                  U    000002        1  4155  3542  3545  3546  3547  3548  3550  3577  3579  3643  3655
+R3                  U    000003        1  4156
+R4                  U    000004        1  4157
+R5                  U    000005        1  4158  3582  3583  3636  3637  3653
+R6                  U    000006        1  4159  3587  3588  3594  3596  3600  3602  3623  3626  3630  3631  3632
+R7                  U    000007        1  4160  3595  3601  3611  3612  3616
+R8                  U    000008        1  4161
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    38
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+R9                  U    000009        1  4162  3543  3550  3551
+RSTNPSW             F    000000        8  3882
+RSTOPSW             F    000008        8  3883
+SAVER1              F    0002C8        4  3648  3576  3642
+SAVER2              F    0002CC        4  3649  3548
+SAVER5              F    0002D0        4  3650
+SAVETRT             D    0002D8        8  3651
+SCANOUT             X    000080        1  3920  3921
+SCANOUTL            U    000000        1  3921
+SCHIB               4    000000       52  4097  4144
+SCHIBL              U    000034        1  4144
+SCHMBA              A    000028        8  4142
+SCHMDA1             X    000030        4  4143
+SCHMDA3             X    000028       12  4141
+SCHPMCW             X    000000       28  4099
+SCHSCSW             X    00001C       12  4140
+SEGTABLS            U    003000        1  3701  3702  3704
+SSARCHMD            X    0000A3        1  3952
+SSARS               F    000120        4  4008
+SSCLKCMP            F    0000E0        8  4002
+SSCPUTIM            F    0000D8        8  4001
+SSCRS               F    0001C0        4  4011
+SSFPRS              D    000160        8  4009
+SSGRS               F    000180        4  4010
+SSMODEL             F    00010C        4  4006
+SSPREFIX            F    000108        4  4005
+SSPSW               F    000100        8  4004
+SSXSAA              A    0000D4        4  4000
+STFLDATA            F    0000C8        4  3973
+SUBTEST             X    0021FF        1  3865  3565  3609  3625  3629
+SVCICODE            H    00008A        2  3932
+SVCIID              F    000088        4  3928
+SVCIILC             X    000089        1  3930
+SVCIILCM            U    00000C        1  3931
+SVCNPSW             F    000060        8  3915
+SVCOPSW             F    000020        8  3887  3894
+TBYTE               X    000001        1  3730  3604
+TEST01              F    00022C        4  3574  3555
+TESTADDR            U    0021FE        1  3696  3862
+TESTNUM             X    0021FE        1  3864  3562  3588
+TICKSAAA            P    000358        8  3713
+TICKSBBB            P    000360        8  3714
+TICKSTOT            P    000368        8  3715
+TIMER               F    000050        4  3911
+TNUM                X    000000        1  3729  3587
+TRE01TST            J    000000     8704  3496  3499  3506  3514  3516  3862
+TRE1                F    0003C8        4  3759
+TRE2                F    0003EC        4  3766
+TRE256              F    000458        4  3787
+TRE4                F    000410        4  3773
+TRE8                F    000434        4  3780
+TREBC               I    0002C2        4  3646  3616
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    39
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+TREBTH              F    00047C        4  3794
+TRECTL              A    0003C8        4  3756  3582
+TREDONE             I    0002BA        4  3642  3639
+TREFAIL             I    0002B6        4  3641  3627  3633  3646
+TRELOP1             F    0004E8        4  3815
+TRELOP2             F    00050C        4  3822
+TRELOP20            X    001C30        1  3854  3817
+TRELOP21            X    001D30        1  3856  3824
+TREMORE             I    000276        4  3615  3617
+TRENEXT             U    000024        1  3748  3636
+TREOP1              F    0004A0        4  3801
+TREOP2              F    0004C4        4  3808
+TRETEST             4    000000       36  3727  3583
+TRTOP10             X    000538        4  3836  3761  3768  3775  3782  3789  3817  3824
+TRTOP111            X    001730        4  3838  3796  3810
+TRTOP1F0            X    001830        4  3840  3803
+TRTOP20             X    001930        1  3848  3761  3768  3775  3782  3789
+TRTOP211            X    001A30        1  3850  3796  3810
+TRTOP2F0            X    001B30        1  3852  3803
+TST1LOOP            U    000236        1  3585  3638
+TTDES               F    000054        4  3912
+UA0                 F    000010        8  3884
+UA1                 F    00004C        4  3909
+UA2                 F    0000A4        4  3954
+UA3                 F    0000B4        4  3963
+UA4                 X    0000B8        1  3964
+UA5                 X    0000CC        8  3974
+UA6                 X    0000EC        8  3980
+UA7                 F    000118        8  3991
+UA8                 X    000180       32  4020
+ZBRKADDR            A    000110        8  3990
+ZEMONCNT            F    00010C        4  3989
+ZEMONCTR            A    000100        8  3987
+ZEMONSIZ            F    000108        4  3988
+ZEXTNPSW            X    0001B0       16  4023
+ZEXTOPSW            X    000130       16  4015
+ZIONPSW             X    0001F0       16  4027
+ZIOOPSW             X    000170       16  4019
+ZMCKNPSW            X    0001E0       16  4026
+ZMCKOPSW            X    000160       16  4018
+ZMKFAILA            F    0000F8        8  3982
+ZMONCODE            F    0000B0        8  3957
+ZPGMNPSW            X    0001D0       16  4025
+ZPGMOPSW            X    000150       16  4017
+ZPGMTRX             F    0000A8        8  3956
+ZRSTNPSW            X    0001A0       16  4022
+ZRSTOPSW            X    000120       16  4014
+ZSASDISP            U    0011C0        1  4028
+ZSVCNPSW            X    0001C0       16  4024
+ZSVCOPSW            X    000140       16  4016
+=A(OP2LEN)          A    000320        4  3687  3599  3601
+=F'0'               F    000328        4  3689  3637
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    40
+
+     SYMBOL        TYPE  VALUE    LENGTH  DEFN  REFERENCES
+
+=F'4'               F    000324        4  3688  3631
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    41
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        111
+APROB       243
+ARCHIND     403   3433
+ARCHLVL     544   3432
+ASAIPL      670   3512
+ASALOAD     750   3495
+ASAREA      805   3874
+ASAZAREA    990
+CPUWAIT    1073
+DSECTS     1399   3871
+DWAIT      1602   3662   3667   3672   3677
+DWAITEND   1659   3661
+ENADEV     1667
+ESA390     1767
+IOCB       1778
+IOCBDS     1954
+IOFMT      1988   4033   4051   4059   4096
+IOINIT     2326
+IOTRFR     2367
+ORB        2415
+POINTER    2604
+PSWFMT     2632
+RAWAIT     2766
+RAWIO      2862
+SIGCPU     3020
+SMMGR      3078
+SMMGRB     3178
+TRAP128    3227
+TRAP64     3204   3497   3500
+TRAPS      3240
+ZARCH      3314
+ZEROH      3326
+ZEROL      3354
+ZEROLH     3382
+ZEROLL     3405
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    42
+
+   DESC     SYMBOL   SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE     8704  0000-21FF  0000-21FF
+  Region   CODE      8704  0000-21FF  0000-21FF
+    CSECT  TRE01TST  8704  0000-21FF  0000-21FF
+
+
+  ADDR     POS                                 OBJECT CONTENT                                         CHARACTER CONTENT
+
+
+Region: CODE
+
+00000000   0000   00080000 00000200 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000020   0020   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000040   0040   00000000 00000000 00000000 00000000  00000000 00000000 000A0000 00000018   |................ ................|
+00000060   0060   000A0000 00000020 000A0000 00000028  000A0000 00000030 000A0000 00000038   |................ ................|
+00000080   0080   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000000A0   00A0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000000C0   00C0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000000E0   00E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000100   0100   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000120   0120   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000140   0140   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000160   0160   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000180   0180   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000001A0   01A0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000001C0   01C0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000001E0   01E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00000200   0200   05200620 06205020 20CC4190 28004190  980045E0 202C950A 9FFE4770 21109502   |......&......... q.....n.......n.|
+00000220   0220   9FFF4770 211047F0 20E00000 501020C8  18F24150 F1C84360 50004260 9FFE58A0   |.......0....&..H .2.&1H.-&..-....|
+00000240   0240   500C58B0 50105860 50045870 50100EA6  58C05014 58D0F120 58605008 5870F120   |&...&..-&...&..w ..&...1..-&...1.|
+00000260   0260   0EC64300 50019200 9FFF5870 50188970  000498AC 500CB2A5 00AC4470 F0C24710   |.F..&.k.....&.i. ..q.&..v....0B..|
+00000280   0280   F0765860 501C9201 9FFF15A6 4770F0B6  92029FFF 186A5B60 F124D503 50206000   |0..-&.k....w..0. k....¦$-1.N.&.-.|
+000002A0   02A0   4770F0B6 41505024 D503F128 50004770  F03647F0 F0BA41E0 F1105810 F0C8182F   |..0..&&.N.1.&... 0..00...1...0H..|
+000002C0   02C0   07FE4700 F0B60000 00000000 00000000  00000000 00000000 00000000 00000000   |....0........... ................|
+000002E0   02E0   820020E8 00000000 000A0000 00000000  820020F8 00000000 000A0000 00010001   |b..Y............ b..8............|
+00000300   0300   82002108 00000000 000A0000 00010002  82002118 00000000 000A0000 00010BAD   |b............... b...............|
+00000320   0320   00000100 00000004 00000000 00B00060  00003002 00002710 BBBBBBBB BBBBBBBB   |...............- ................|
+00000340   0340   EEEEEEEE EEEEEEEE DDDDDDDD DDDDDDDD  FFFFFFFF FFFFFFFF 00000000 0000000C   |................ ................|
+00000360   0360   00000000 0000000C 00000000 0000000C  09000044 00000378 40404040 40404040   |................ ........        |
+00000380   0380   40F16BF0 F0F06BF0 F0F04089 A3859981  A3899695 A2409686 40E7E7E7 E7E740A3   | 1,000,000 itera tions of XXXXX t|
+000003A0   03A0   96969240 F9F9F96B F9F9F96B F9F9F940  94898399 96A28583 969584A2 40202020   |ook 999,999,999  microseconds ...|
+000003C0   03C0   6B202020 6B202120 01000000 00000538  00001930 00010000 00000001 00110000   |,...,........... ................|
+000003E0   03E0   00000007 00010001 00000000 02000000  00000538 00001930 00020000 00000002   |................ ................|
+00000400   0400   00120000 00000007 00020002 00000000  03000000 00000538 00001930 00030000   |................ ................|
+00000420   0420   00000004 00130000 00000007 00030004  00000000 04000000 00000538 00001930   |................ ................|
+00000440   0440   00040000 00000008 00140000 00000007  00040008 00000000 05000000 00000538   |................ ................|
+00000460   0460   00001930 00050000 00000100 00150000  00000007 00050100 00000000 06110000   |................ ................|
+00000480   0480   00001730 00001A30 0005FFF4 00000100  0015FFDE 0000000A 00060005 00000000   |...........4.... ................|
+000004A0   04A0   07F00000 00001830 00001B30 0006FFF4  00000100 00170000 0000000A 000700F3   |.0.............4 ...............3|
+000004C0   04C0   00000000 08110000 00001730 00001A30  00080000 00000100 0017FFDE 0000000A   |................ ................|
+000004E0   04E0   00080011 00000000 09000000 00000538  00001C30 0008FFF4 00000200 00190000   |................ .......4........|
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    43
+
+  ADDR     POS                                 OBJECT CONTENT                                         CHARACTER CONTENT
+
+00000500   0500   00000006 000901F4 00000000 0A000000  00000538 00001D30 0009FFF4 000011F8   |.......4........ ...........4...8|
+00000520   0520   001A0000 00000006 000A11EC FFFFFFFF  00000000 00000000 78125634 78125634   |................ ................|
+00000540   0540   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000560   0560   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000580   0580   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000005A0   05A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000005C0   05C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000005E0   05E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000600   0600   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000620   0620   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000640   0640   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000660   0660   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000680   0680   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000006A0   06A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000006C0   06C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000006E0   06E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000700   0700   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000720   0720   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000740   0740   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000760   0760   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000780   0780   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000007A0   07A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000007C0   07C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000007E0   07E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000800   0800   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000820   0820   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000840   0840   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000860   0860   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000880   0880   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000008A0   08A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000008C0   08C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000008E0   08E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000900   0900   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000920   0920   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000940   0940   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000960   0960   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000980   0980   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000009A0   09A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000009C0   09C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000009E0   09E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000A00   0A00   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000A20   0A20   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000A40   0A40   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000A60   0A60   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000A80   0A80   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000AA0   0AA0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000AC0   0AC0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000AE0   0AE0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000B00   0B00   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000B20   0B20   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000B40   0B40   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000B60   0B60   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    44
+
+  ADDR     POS                                 OBJECT CONTENT                                         CHARACTER CONTENT
+
+00000B80   0B80   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000BA0   0BA0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000BC0   0BC0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000BE0   0BE0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000C00   0C00   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000C20   0C20   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000C40   0C40   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000C60   0C60   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000C80   0C80   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000CA0   0CA0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000CC0   0CC0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000CE0   0CE0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000D00   0D00   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000D20   0D20   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000D40   0D40   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000D60   0D60   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000D80   0D80   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000DA0   0DA0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000DC0   0DC0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000DE0   0DE0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000E00   0E00   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000E20   0E20   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000E40   0E40   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000E60   0E60   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000E80   0E80   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000EA0   0EA0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000EC0   0EC0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000EE0   0EE0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000F00   0F00   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000F20   0F20   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000F40   0F40   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000F60   0F60   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000F80   0F80   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000FA0   0FA0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000FC0   0FC0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00000FE0   0FE0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001000   1000   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001020   1020   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001040   1040   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001060   1060   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001080   1080   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000010A0   10A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000010C0   10C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000010E0   10E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001100   1100   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001120   1120   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001140   1140   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001160   1160   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001180   1180   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000011A0   11A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000011C0   11C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000011E0   11E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    45
+
+  ADDR     POS                                 OBJECT CONTENT                                         CHARACTER CONTENT
+
+00001200   1200   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001220   1220   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001240   1240   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001260   1260   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001280   1280   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000012A0   12A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000012C0   12C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000012E0   12E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001300   1300   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001320   1320   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001340   1340   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001360   1360   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001380   1380   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000013A0   13A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000013C0   13C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000013E0   13E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001400   1400   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001420   1420   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001440   1440   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001460   1460   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001480   1480   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000014A0   14A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000014C0   14C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000014E0   14E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001500   1500   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001520   1520   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001540   1540   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001560   1560   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001580   1580   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000015A0   15A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000015C0   15C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000015E0   15E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001600   1600   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001620   1620   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001640   1640   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001660   1660   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001680   1680   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000016A0   16A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000016C0   16C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000016E0   16E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001700   1700   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001720   1720   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001740   1740   00110000 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001760   1760   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001780   1780   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000017A0   17A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000017C0   17C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000017E0   17E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001800   1800   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001820   1820   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001840   1840   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001860   1860   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    46
+
+  ADDR     POS                                 OBJECT CONTENT                                         CHARACTER CONTENT
+
+00001880   1880   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000018A0   18A0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000018C0   18C0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+000018E0   18E0   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001900   1900   78125634 78125634 78125634 78125634  78125634 78125634 78125634 78125634   |................ ................|
+00001920   1920   78125634 78125634 78125634 000000F0  00000000 00000000 00000000 00000000   |...............0 ................|
+00001940   1940   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001960   1960   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001980   1980   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000019A0   19A0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000019C0   19C0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000019E0   19E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001A00   1A00   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001A20   1A20   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001A40   1A40   00110000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001A60   1A60   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001A80   1A80   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001AA0   1AA0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001AC0   1AC0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001AE0   1AE0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001B00   1B00   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001B20   1B20   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001B40   1B40   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001B60   1B60   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001B80   1B80   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001BA0   1BA0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001BC0   1BC0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001BE0   1BE0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001C00   1C00   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001C20   1C20   F0000000 00000000 00000000 00000000  FF000000 00000000 00000000 00000000   |0............... ................|
+00001C40   1C40   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001C60   1C60   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001C80   1C80   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001CA0   1CA0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001CC0   1CC0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001CE0   1CE0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001D00   1D00   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001D20   1D20   00000000 00000000 00000000 00000000  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001D40   1D40   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001D60   1D60   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001D80   1D80   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001DA0   1DA0   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001DC0   1DC0   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001DE0   1DE0   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001E00   1E00   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF   |................ ................|
+00001E20   1E20   FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF  00000000 00000000 00000000 00000000   |................ ................|
+00001E40   1E40   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001E60   1E60   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001E80   1E80   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001EA0   1EA0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001EC0   1EC0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001EE0   1EE0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    47
+
+  ADDR     POS                                 OBJECT CONTENT                                         CHARACTER CONTENT
+
+00001F00   1F00   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001F20   1F20   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001F40   1F40   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001F60   1F60   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001F80   1F80   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001FA0   1FA0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001FC0   1FC0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00001FE0   1FE0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002000   2000   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002020   2020   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002040   2040   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002060   2060   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002080   2080   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000020A0   20A0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000020C0   20C0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000020E0   20E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002100   2100   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002120   2120   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002140   2140   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002160   2160   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+00002180   2180   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000021A0   21A0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000021C0   21C0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+000021E0   21E0   00000000 00000000 00000000 00000000  00000000 00000000 00000000 00000000   |................ ................|
+ASMA Ver. 0.2.1              TRE-01-basic (Test TRE instructions)                                   29 Aug 2022 12:10:40  Page    48
+
+   STMT                     FILE NAME
+
+1     /devstor/dev/satk/samples/tests/TRE-01-basic.asm
+2     /home/tn529/dev/satk/srcasm/satk.mac
+
+
+** NO ERRORS FOUND **
+
+

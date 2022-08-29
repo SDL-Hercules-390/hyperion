@@ -3511,6 +3511,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\tests\TRE-01-basic.core"
+						>
+					</File>
+					<File
+						RelativePath=".\tests\TRE-02-performance.core"
+						>
+					</File>					
+					<File
 						RelativePath=".\tests\TXFPER.core"
 						>
 					</File>
@@ -4610,6 +4618,14 @@
 							>
 						</File>
 						<File
+							RelativePath=".\tests\TRE-01-basic.tst"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\TRE-02-performance.tst"
+							>
+						</File>							
+						<File
 							RelativePath=".\tests\TXFPER.tst"
 							>
 						</File>
@@ -4889,6 +4905,14 @@
 							RelativePath=".\tests\tape.asm"
 							>
 						</File>
+						<File
+							RelativePath=".\tests\TRE-01-basic.asm"
+							>
+						</File>
+						<File
+							RelativePath=".\tests\TRE-02-performance.asm"
+							>
+						</File>							
 						<File
 							RelativePath=".\tests\TXFPER.asm"
 							>
@@ -5276,6 +5300,14 @@
 								RelativePath=".\tests\tape.pdf"
 								>
 							</File>
+							<File
+								RelativePath=".\tests\TRE-01-basic.list"
+								>
+							</File>
+							<File
+								RelativePath=".\tests\TRE-02-performance.list"
+								>
+							</File>								
 							<File
 								RelativePath=".\tests\TXFPER.list"
 								>

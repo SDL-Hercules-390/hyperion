@@ -1986,19 +1986,22 @@ bool    op1crosses, op2crosses;         /* Operand crosses Page Bdy  */
 
 
 #ifdef FEATURE_EXTENDED_TRANSLATION_FACILITY_1
+
 /*-------------------------------------------------------------------*/
 /* B2A5 TRE   - Translate Extended                             [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_extended)
 {
-int     r1, r2;                         /* Values of R fields        */
-int     i;                              /* Loop counter              */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-GREG    len1;                           /* Operand length            */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    tbyte;                          /* Test byte                 */
-BYTE    trtab[256];                     /* Translate table           */
+int     r1, r2;                     /* Values of R fields            */
+U64     i;                          /* Loop counter                  */
+int     cc = 0;                     /* Condition code                */
+VADR    addr1, addr2;               /* Operand addresses             */
+GREG    len1;                       /* Operand length                */
+BYTE    tbyte;                      /* Test byte                     */
+CACHE_ALIGN BYTE  trtab[256];       /* Translate table               */
+GREG    len;                        /* on page translate length      */
+int     translen = 0;               /* translated length             */
+BYTE   *main1;                      /* Mainstor addresses            */
 
     RRE(inst, regs, r1, r2);
     PER_ZEROADDR_LCHECK( regs, r1, r1+1 );
@@ -2006,17 +2009,22 @@ BYTE    trtab[256];                     /* Translate table           */
 
     TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
+    
+    /* Load first operand length from R1+1 */
+    len1 = GR_A(r1+1, regs);
 
-    /* Load the test byte from bits 24-31 of register 0 */
-
-    tbyte = regs->GR_LHLCL(0);
+    /* fast exit path */
+    if (len1 == 0) {
+        regs->psw.cc =  0;
+        return;      
+    }
 
     /* Load the operand addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
-    /* Load first operand length from R1+1 */
-    len1 = GR_A(r1+1, regs);
+    /* Load the test byte from bits 24-31 of register 0 */
+    tbyte = regs->GR_LHLCL(0);
 
     /* Fetch second operand into work area.
        [7.5.101] Access exceptions for all 256 bytes of the second
@@ -2024,44 +2032,62 @@ BYTE    trtab[256];                     /* Translate table           */
     ARCH_DEP(vfetchc) ( trtab, 255, addr2, r2, regs );
 
     /* Process first operand from left to right */
-    for (i = 0; len1 > 0; i++)
+    /*  POP : SA22-7832-13 Page 7-422   
+        The amount of processing that results in the setting
+        of condition code 3 is determined by the CPU on the
+        basis of improving system performance, and it may
+        be a different amount each time the instruction is
+        executed.
+
+        CC=3 :  Processed first operand to end of page and
+                indicate more data remaining.
+    */
+    
+    /* get on page translate length */ 
+    len = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
+    if (len1 > len)
     {
-        /* If 4096 bytes have been compared, exit with CC 3 */
-        if (i >= 4096)
-        {
-            cc = 3;
-            break;
-        }
+       cc = 3;        /* maybe partial data */
+    }
+    else
+    {
+      len = len1;     /* all of operand 1 is on page */
+      cc = 0;         /* can't be a cc=3, assume 0 */ 
+    } 
+    
+    /* Get operand 1 on page address */
+    main1 = MADDRL( addr1, len, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-        /* Fetch byte from first operand */
-        byte1 = ARCH_DEP(vfetchb) ( addr1, r1, regs );
-
+    /* translate on page data */
+    for (i = 0; i < len; i++)
+    {
         /* If equal to test byte, exit with condition code 1 */
-        if (byte1 == tbyte)
+        if (*main1 == tbyte)
         {
             cc = 1;
             break;
         }
 
         /* Load indicated byte from translate table */
-        byte2 = trtab[byte1];
-
-        /* Store result at first operand address */
-        ARCH_DEP(vstoreb) ( byte2, addr1, r1, regs );
-        addr1++;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1--;
-
-        /* Update the registers */
-        SET_GR_A(r1, regs, addr1);
-        SET_GR_A(r1+1, regs, len1);
-
+        *main1 = trtab[ *main1 ];
+        
+        main1++;
+        translen++;
     } /* end for(i) */
+   
+    /* Update the registers */
+    addr1 += translen;
+    addr1 &= ADDRESS_MAXWRAP(regs);
+    SET_GR_A(r1, regs, addr1);
+
+    len1  -= translen;
+    SET_GR_A(r1+1, regs, len1);
 
     /* Set condition code */
     regs->psw.cc =  cc;
 
 } /* end translate_extended */
+
 #endif /*FEATURE_EXTENDED_TRANSLATION_FACILITY_1*/
 
 
