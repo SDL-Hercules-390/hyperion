@@ -3427,7 +3427,11 @@
 						>
 					</File>
 					<File
-						RelativePath=".\tests\CLCLE-03-performance.core"
+						RelativePath=".\tests\CLCLE-03-basic.core"
+						>
+					</File>						
+					<File
+						RelativePath=".\tests\CLCLE-04-performance.core"
 						>
 					</File>										
 					<File
@@ -4418,7 +4422,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\CLCLE-03-performance.tst"
+							RelativePath=".\tests\CLCLE-03-basic.tst"
+							>
+						</File>						
+						<File
+							RelativePath=".\tests\CLCLE-04-performance.tst"
 							>
 						</File>						
 						<File
@@ -4834,7 +4842,11 @@
 							>
 						</File>
 						<File
-							RelativePath=".\tests\CLCLE-03-performance.asm"
+							RelativePath=".\tests\CLCLE-03-basic.asm"
+							>
+						</File>						
+						<File
+							RelativePath=".\tests\CLCLE-04-performance.asm"
 							>
 						</File>						
 						<File
@@ -5185,7 +5197,11 @@
 								>
 							</File>
 							<File
-								RelativePath=".\tests\CLCLE-03-performance.list"
+								RelativePath=".\tests\CLCLE-03-basic.list"
+								>
+							</File>								
+							<File
+								RelativePath=".\tests\CLCLE-04-performance.list"
 								>
 							</File>							
 							<File
