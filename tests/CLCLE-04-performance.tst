@@ -30,7 +30,7 @@ mainsize    3
 numcpu      1
 sysclear
 
-loadcore    "CLCLE-04-performance.core" 0x0
+loadcore    "$(testpath)/CLCLE-04-performance.core" 0x0
 
 #r           21fd=ff   # (enable timing tests)
 #runtest     300       # (TIMING test duration)

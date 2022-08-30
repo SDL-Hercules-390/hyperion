@@ -5,7 +5,7 @@ mainsize    3
 numcpu      1
 sysclear
 
-loadcore    "CLCLE-03-basic.core" 0x0
+loadcore    "$(testpath)/CLCLE-03-basic.core" 0x0
 
 runtest     1        
 
