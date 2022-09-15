@@ -68,6 +68,7 @@ DLL_EXPORT const char* spc_typ_to_str( BYTE spc_typ )
         "L2LOWER",          //  SPCTAB_L2LOWER    9
         "L2UPPER",          //  SPCTAB_L2UPPER   10
         "data",             //  SPCTAB_DATA      11
+        "unknown",          //  SPCTAB_DATA      12
     };
 
     return (spc_typ < _countof( spc_types )) ?

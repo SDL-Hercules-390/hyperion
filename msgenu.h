@@ -1,8 +1,7 @@
-/* MSGENU.H     (C) Copyright Bernard van der Helm, 2010-2012        */
+/* MSGENU.H     (C) Copyright Roger Bowler and others, 1999-2022     */
+/*              (C) Copyright Bernard van der Helm, 2010-2012        */
 /*              (C) Copyright TurboHercules, SAS 2010-2011           */
-/*              (C) and others 2013-2021                             */
 /*              Header file for Hercules messages (US English)       */
-/* Message text (C) Copyright Roger Bowler and others, 1999-2011     */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
@@ -2244,7 +2243,9 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
 #define HHC03004 "Unsupported dasd image file format"
 #define HHC03005 "Device type %4.4X not found in dasd table"
 #define HHC03006 "%s error: %s"
-//efine HHC03007 - HHC03019 (available)
+#define HHC03007 "File size:      (%s bytes)"
+#define HHC03008 "Compressed device header inconsistency(s) found! code: %4.4X"
+//efine HHC03009 - HHC03019 (available)
 #define HHC03020 "" // (blank line)
 #define HHC03021 "%s of:     \"%s\""
 #define HHC03022                                                            "\n" \
@@ -2260,10 +2261,10 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC03023I   cdh_opts:      0x%2.2X"                                 "\n" \
        "HHC03023I   num_L1tab:     %"PRId32                                 "\n" \
        "HHC03023I   num_L2tab:     %"PRId32                                 "\n" \
-       "HHC03023I   cdh_cyls:      %"PRIu32"            (%"PRIu32" tracks)" "\n" \
+       "HHC03023I   cdh_cyls:      %"PRIu32"           (%s tracks)"         "\n" \
        "HHC03023I   cdh_size:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
        "HHC03023I   cdh_used:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
-       "HHC03023I   free_off:      0x%10.10"PRIX64                          "\n" \
+       "HHC03023I   free_off:      0x%10.10"PRIX64"    (%s format)"         "\n" \
        "HHC03023I   free_total:    0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
        "HHC03023I   free_largest:  0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
        "HHC03023I   free_num:      %"PRId64                                 "\n" \
@@ -2272,38 +2273,39 @@ LOGM_DLL_IMPORT int  panel_command_capture( char* cmd, char** resp, bool quiet )
        "HHC03023I   cmp_algo:      %u               (%s)"                   "\n" \
        "HHC03023I   cmp_parm:      %"PRId16"              %s(%s)"
 #define HHC03024                                                            "\n" \
-       "HHC03023I   cdh_vrm:       %u.%u.%u"                                "\n" \
-       "HHC03023I   cdh_opts:      0x%2.2X"                                 "\n" \
-       "HHC03023I   num_L1tab:     %"PRId32                                 "\n" \
-       "HHC03023I   num_L2tab:     %"PRId32                                 "\n" \
-       "HHC03023I   cdh_cyls:      %"PRIu32"            (%"PRIu32" groups)" "\n" \
-       "HHC03023I   cdh_size:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
-       "HHC03023I   cdh_used:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
-       "HHC03023I   free_off:      0x%10.10"PRIX64                          "\n" \
-       "HHC03023I   free_total:    0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
-       "HHC03023I   free_largest:  0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
-       "HHC03023I   free_num:      %"PRId64                                 "\n" \
-       "HHC03023I   free_imbed:    %"PRIu64                                 "\n" \
-       "HHC03023I   cdh_nullfmt:   %u               (%s)"                   "\n" \
-       "HHC03023I   cmp_algo:      %u               (%s)"                   "\n" \
-       "HHC03023I   cmp_parm:      %"PRId16"              %s(%s)"
+       "HHC03024I   cdh_vrm:       %u.%u.%u"                                "\n" \
+       "HHC03024I   cdh_opts:      0x%2.2X"                                 "\n" \
+       "HHC03024I   num_L1tab:     %"PRId32                                 "\n" \
+       "HHC03024I   num_L2tab:     %"PRId32                                 "\n" \
+       "HHC03024I   cdh_cyls:      %"PRIu32"           (%s blkgrps)"        "\n" \
+       "HHC03024I   cdh_size:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03024I   cdh_used:      0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03024I   free_off:      0x%10.10"PRIX64"    (%s format)"         "\n" \
+       "HHC03024I   free_total:    0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03024I   free_largest:  0x%10.10"PRIX64"    (%*s bytes)"         "\n" \
+       "HHC03024I   free_num:      %"PRId64                                 "\n" \
+       "HHC03024I   free_imbed:    %"PRIu64                                 "\n" \
+       "HHC03024I   cdh_nullfmt:   %u               (%s)"                   "\n" \
+       "HHC03024I   cmp_algo:      %u               (%s)"                   "\n" \
+       "HHC03024I   cmp_parm:      %"PRId16"              %s(%s)"
 #define HHC03040 "         File offset    Size (hex)         Size  track(s)"
 #define HHC03041 "***********************************************************"
 #define HHC03042 "%-8s 0x%10.10"PRIX64"  0x%10.10"PRIX64" %11"PRIu64"%s"
-#define HHC03043 "Total active tracks      = %"PRIu32" tracks"
-#define HHC03044 "Average L2-to-track seek = %.3f MB"
-#define HHC03045 "Total active blkgrps     = %"PRIu32" groups"
-#define HHC03046 "Average L2-to-group seek = %.3f MB"
+#define HHC03043 "Total active tracks    = %"PRIu32" tracks"
+#define HHC03044 "Avg. L2-to-track seek  = %.3f MB"
+#define HHC03045 "Total active blkgrps   = %"PRIu32" groups"
+#define HHC03046 "Avg. L2-to-block seek  = %.3f MB"
 #define HHC03047 "         File offset    Size (hex)         Size  group(s)"
 #define HHC03048                                                            "\n" \
-       "HHC03022I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \
-       "HHC03022I   dh_heads:      %u         (total sectors)"              "\n" \
-       "HHC03022I   dh_trksize:    %u             (sector size)"            "\n" \
-       "HHC03022I   dh_devtyp:     0x%2.2X            (%s)"                 "\n" \
-       "HHC03022I   dh_fileseq:    0x%2.2X"                                 "\n" \
-       "HHC03022I   dh_highcyl:    %u"                                      "\n" \
-       "HHC03022I   dh_serial:     %s"
-//efine HHC03049 - HHC03099 (available)
+       "HHC03048I   dh_devid:      %s        (%s-bit C%s%s %s)"             "\n" \
+       "HHC03048I   dh_heads:      %u         (total sectors)"              "\n" \
+       "HHC03048I   dh_trksize:    %u             (sector size)"            "\n" \
+       "HHC03048I   dh_devtyp:     0x%2.2X            (%s)"                 "\n" \
+       "HHC03048I   dh_fileseq:    0x%2.2X"                                 "\n" \
+       "HHC03048I   dh_highcyl:    %u"                                      "\n" \
+       "HHC03048I   dh_serial:     %s"
+#define HHC03049 "Total unknown space    = %s bytes"
+//efine HHC03050 - HHC03099 (available)
 
 // dasdser
 #define HHC03100 "Usage: %s  image  [serial]"                               "\n" \

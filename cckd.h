@@ -459,6 +459,7 @@ struct SPCTAB
 #define SPCTAB_L2LOWER         9        /* Space is L2 lower bound   */
 #define SPCTAB_L2UPPER        10        /* Space is L2 upper bound   */
 #define SPCTAB_DATA           11        /* Space is track/block data */
+#define SPCTAB_UNKNOWN        12        /* Unknown space             */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for sense data format codes and message codes         */
