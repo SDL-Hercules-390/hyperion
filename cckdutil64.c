@@ -1,4 +1,5 @@
 /* CCKDUTIL64.C (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2022                             */
 /*              CCKD64 (Compressed CKD64) Common routines            */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1230,7 +1231,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     /* cdevhdr inconsistencies check */
     hdrerr  = 0;
-    hdrerr |= (U64)fst.st_size != cdevhdr.cdh_size && cdevhdr.cdh_size != cdevhdr.free_off ? 0x0001 : 0;
+    hdrerr |= (U64)fst.st_size != cdevhdr.cdh_size && cdevhdr.cdh_size != cdevhdr.free_off   ? 0x0001 : 0;
     hdrerr |= cdevhdr.cdh_size !=      cdevhdr.free_total  +  cdevhdr.cdh_used               ? 0x0002 : 0;
     hdrerr |= cdevhdr.free_largest  >  cdevhdr.free_total  -  cdevhdr.free_imbed             ? 0x0004 : 0;
     hdrerr |= cdevhdr.free_off == 0 && cdevhdr.free_num    != 0                              ? 0x0008 : 0;
@@ -1244,6 +1245,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Additional checking if header errors */
     if (hdrerr != 0)
     {
+        // "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"
         if(dev->batch)
             FWRMSG( stdout, HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr );
         else
@@ -1586,6 +1588,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* overlaps are serious */
     if (recovery && level < 3)
     {
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         level = 3;
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level );
@@ -1695,6 +1698,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     if (fsperr)
     {
+        // "%1d:%04X CCKD file %s: free space errors detected"
         if(dev->batch)
             FWRMSG( stdout, HHC00368, "W", LCSS_DEVNUM, dev->filename );
         else

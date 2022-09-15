@@ -1,4 +1,4 @@
-/* CCKD64.H    (C) Copyright "Fish" (David B. Trout), 2018-2019      */
+/* CCKD64.H    (C) Copyright "Fish" (David B. Trout), 2018-2022      */
 /*              CCKD64 dasd struct and type definitions              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -97,8 +97,8 @@ struct CCKD64_FREEBLK {                 /* Free block (file)         */
 
 /* NOTE: all fields are numeric and always in LITTLE endian format.  */
 
-        U64              fb_offnxt;     /* Offset to next free blk   */
-        U64              fb_len;        /* Length this free blk      */
+        U64              fb_offnxt;     /* Offset to NEXT free blk   */
+        U64              fb_len;        /* Length of THIS free blk    */
 };
 
 struct CCKD64_IFREEBLK {                /* Free block (internal)     */
@@ -109,8 +109,9 @@ struct CCKD64_IFREEBLK {                /* Free block (internal)     */
 /* in *HOST* endian format (little endian on little endian hosts     */
 /* and big endian on big endian hosts).                              */
 
-        U64              ifb_offnxt;    /* Offset to next free blk   */
-        U64              ifb_len;       /* Length this free blk      */
+        U64              ifb_offnxt;    /* Offset to NEXT free blk   */
+        U64              ifb_len;       /* Length of THIS free blk   */
+
         int              ifb_idxprv;    /* Index to prev free blk    */
         int              ifb_idxnxt;    /* Index to next free blk    */
         int              ifb_pending;   /* 1=Free pending (don't use)*/

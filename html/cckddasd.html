@@ -372,6 +372,8 @@ The <i>dh_heads</i>, <i>dh_trksize</i> and <i>dh_highcyl</i> values, being numer
 
 <!-- ---------------------------------------------------------------------------------- -->
 
+<a name="cdevhdr">
+
 <br><br>
 
 The next 512 bytes contains the <b>compressed device header</b>.
@@ -848,12 +850,26 @@ Any other value is invalid:
 
 <br><br>
 
-<b>Free space</b> contains a
-4 byte <i>offset</i> to the next free space
-(8 byte <i>offset</i> for CCKD64),
-a 4 byte <i>length</i> of the free space
-(8 byte <i>length</i> for CCKD64),
-and zero or more bytes of residual data.
+<b>free space blocks</b> which are <i>not</i> part of the <u>initial free space
+chain table</u>, contain a 4 byte <i>offset</i> (8 bytes for CCKD64) to the
+<i>next</i> free space, a 4 byte (or 8 byte) <i>length</i> of the free space
+(which includes both the offset and length fields) and zero or more bytes
+of undefined data.
+
+<p>
+
+The format of free space blocks which <i>are</i> part of the <u>initial free space
+chain table</u> (used only during initialization of the internally maintained free
+space chain) are formatted <i>slightly differently</i>. (see further below)
+
+<p>
+
+The  contents of the actual free space <u>data</u> is entirely unpredictable,
+and can be anything from previous track data to previously used secondary
+lookup tables, etc. From the programmer's point of view it is meaningless.
+It is just unpredictable/undefined file space.
+
+<p>
 
 The <i>fb_offnxt</i> and <i>fb_len</i> values, being numeric, are always kept in little endian format:
 
@@ -870,11 +886,11 @@ The <i>fb_offnxt</i> and <i>fb_len</i> values, being numeric, are always kept in
     <td align="center" colspan="4"><font size=-1>fb_offnxt</font></td>
     <td align="center" colspan="4"><font size=-1>fb_len</font></td>
 
-    <td align="center" colspan="8"><font size=-1>residual&nbsp;.&nbsp;.&nbsp;.</font></td>
+    <td align="center" colspan="8"><font size=-1>data&nbsp;.&nbsp;.&nbsp;.</font></td>
 </tr>
 <tr>
     <td align="center" colspan="16"><font size=-1>
-        <br><center>residual&nbsp;.&nbsp;.&nbsp;.</center><br></td>
+        <br><center>data&nbsp;.&nbsp;.&nbsp;.</center><br></td>
 </tr>
 </table>
 
@@ -894,25 +910,88 @@ The <i>fb_offnxt</i> and <i>fb_len</i> values, being numeric, are always kept in
 </tr>
 <tr>
     <td align="center" colspan="16"><font size=-1>
-        <br><center>residual&nbsp;.&nbsp;.&nbsp;.</center><br></td>
+        <br><center>data&nbsp;.&nbsp;.&nbsp;.</center><br></td>
 </tr>
 </table>
-<p>
-
-The minimum length of a free space is 8 bytes.
-
-The free space chain is ordered by file offset and no two free spaces are adjacent.
-
-The chain is terminated when a free space has zero offset to the next free space.
-
-The <b>compressed device header</b> <i>free_off</i> field contains the offset to
-the first free space block.
 
 <p>
 
-The free space chain is read when the file is opened
-for read-write and written when the file is closed.
-The free space chain is maintained in storage while the file is opened.
+The compressed device header's <a href=#cdevhdr><i>free_off</i></a> field
+contains the file offset to either the first actual free space block (which then
+contains the offset to the next free space block, etc), or else the file offset
+to a "new" format <u>initial free space chain table</u>, explained further
+below.
+
+<p>
+
+The minimum length of a free space is 8 bytes (16 bytes for CCKD64). The free
+space chain is ordered by file offset and no two free spaces are adjacent. The
+chain is terminated when a free space block has zero offset to the next free space.
+
+<p>
+
+Each free space block in the chain (or the entire "new" format <u>initial free
+space chain table</u>) is read when the file is first opened for read-write,
+and are written only when the file is closed. The free space chain itself however,
+is maintained internally in storage while the file is opened and the system is
+running.
+
+<p>
+
+The compressed device header <a href=#cdevhdr><i>free_off</i></a> field
+contains either the offset to the first free space block in the chain, or else
+to a "new" format <u>initial free space chain table</u>. The compressed device
+header <a href=#cdevhdr><i>free_num</i></a> field contains the count of
+the total number of free spaces there are in the chain.
+
+<p>
+
+Whenever a dasd image file is closed, a "new" format <u>initial free space chain
+table</u> is written out to the first available free space block that is large
+enough to hold the entire table (or to the end of the file if a large enough
+free space block was not found).
+
+<p>
+
+The "new" format <u>initial free space chain
+table</u> allows quick initialization of the internal in-storage free space
+chain since each individual free space block does not need to read from disk.
+Instead, the location and size of <i><u>all</u></i> available free spaces
+are read in <i><u>all at once</u></i> from the initial free space chain table
+that was written out when the file was closed.
+
+<p>
+
+The "new" format <b><u>initial free space chain table</u></b> is a table
+of (contiguous series of) <b>slightly modified free space blocks</b>,
+wherein the first block in the chain is a dummy block containing the
+8-byte literal "<b>FREE_BLK</b>" in ASCII, and where the remaining blocks
+in the table are identical in format to the above documented <b>free space
+block</b> layout, <i><u>with the following important exceptions</u>:</i>
+
+<p>
+
+<ol>
+
+<li>The <i><u>fb_offnxt</u></i> field does <i>not</i> contain the file offset
+to the <i>next</i> free space, but rather instead contains the file offset of
+the <i>current</i> free space.
+
+<p>
+
+<li>The <i><u>fb_len</u></i> field is itself accurate regarding the size
+(length) of the free space at that offset, but the free space blocks in the
+table themselves do not contain any actual free space <i>data</i>. That is
+to say, each free space block in the table is exactly 8 bytes in size
+(or 16 bytes for CCKD64).
+
+</ol>
+
+<p>
+
+The number of free space blocks in the table is <u>one more</u> than the
+compressed device header <a href=#cdevhdr><i>free_num</i></a> field to
+account for the first dummy block containing the "FREE_BLK" literal.
 
 <p>
 
@@ -988,7 +1067,7 @@ images towards the beginning of the file, causing free space to move
 towards the end of the file.  When a free space reaches the end of the
 file, it 'falls off', that is, the file size is reduced.
 <p>
-Simply, the space recovery routine selects a space after a sufficiently
+Simply put, the space recovery routine first selects a space after a sufficiently
 large <i>non-pending</i> free space.  It then reads and writes consecutive
 spaces using the normal cckd read and write routines.  The space read will
 become <i>pending</i> free space and will hopefully be written to a
@@ -996,8 +1075,9 @@ become <i>pending</i> free space and will hopefully be written to a
 is necessary to write the space later in the file to increase free space
 size earlier in the file.  Left to itself, the space recovery routine will
 eventually remove all free space from the file.  However, it is not
-intended to be a replacement for the cckdcomp utility; rather, the intent
-is to provide sufficient free space to prevent excessive file growth.
+intended to be a replacement for the <code>cckdcomp</code> utility; rather,
+the intent is to provide sufficient free space to prevent excessive file growth.
+
 <p>
 <strike>
 Another function performed by space recovery is to relocate <em>L2</em> (secondary

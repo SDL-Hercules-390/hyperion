@@ -1,4 +1,5 @@
 /* CCKDUTIL.C   (C) Copyright Roger Bowler, 1999-2012                */
+/*              (C) and others 2013-2022                             */
 /*              CCKD (Compressed CKD) Common routines                */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
@@ -1314,6 +1315,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* Additional checking if header errors */
     if (hdrerr != 0)
     {
+        // "%1d:%04X CCKD file %s: cdevhdr inconsistencies found, code %4.4X"
         if(dev->batch)
             FWRMSG( stdout, HHC00363, "W", LCSS_DEVNUM, dev->filename, hdrerr);
         else
@@ -1656,6 +1658,7 @@ BYTE            buf[4*65536];           /* buffer                    */
     /* overlaps are serious */
     if (recovery && level < 3)
     {
+        // "%1d:%04X CCKD file %s: forcing check level %d"
         level = 3;
         if(dev->batch)
             FWRMSG( stdout, HHC00364, "W", LCSS_DEVNUM, dev->filename, level);
@@ -1765,6 +1768,7 @@ BYTE            buf[4*65536];           /* buffer                    */
 
     if (fsperr)
     {
+        // "%1d:%04X CCKD file %s: free space errors detected"
         if(dev->batch)
             FWRMSG( stdout, HHC00368, "W", LCSS_DEVNUM, dev->filename);
         else
