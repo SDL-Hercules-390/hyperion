@@ -1105,7 +1105,7 @@
 28 Aug 2005 Tell where crash dump is going - Fish
 18 Aug 2005 ostailor panel command; add display to pgmtrace command - Fish
 17 Aug 2005 eliminate dupe "high water mark" code in panel/dyngui - Fish
-17 Aug 2005 tapedev.c: fix locblock endianess issue in LOCATE BLOCK logic,
+17 Aug 2005 tapedev.c: fix locblock endianness issue in LOCATE BLOCK logic,
             add missing blockid increment in write_hetmark - Andy Styles
             [andy@styles.homeip.net] and John Decker [jdecker@oaksg.com]
             by Fish

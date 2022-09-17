@@ -644,8 +644,8 @@ do { \
 /*-------------------------------------------------------------------*/
 /*                   Byte swapping macros                            */
 /*-------------------------------------------------------------------*/
-/* The "CSWAPxx()" macros CONDITIONALLY swap the endianess of the    */
-/* given argument depending on the endianess of the current host,    */
+/* The "CSWAPxx()" macros CONDITIONALLY swap the endianness of the   */
+/* given argument depending on the endianness of the current host,   */
 /* much like the "htonl()" networking API functions. If this build   */
 /* of Hercules is for running on a big endian host, then CSWAPxx()   */
 /* will do absolutely nothing since the argument should already be   */
@@ -654,17 +654,17 @@ do { \
 /* so that the result is a big endian value (since z/Architecture    */
 /* is big endian).                                                   */
 /*                                                                   */
-/* The "SWAPxx()" macros however, UNCONDITIONALLY swap the endianess */
-/* of the specified value *regardless* of the endianess Hercules was */
-/* built for or the endianess of the host it is running on. It is    */
+/* The SWAPxx() macros however, UNCONDITIONALLY swap the endianness  */
+/* of the specified value REGARDLESS of the endianness Hercules was  */
+/* built for or the endianness of the host it is running on. It is   */
 /* designed for situations such as what might exist when a number    */
 /* is read or written to/from disk in a format different from the    */
 /* format of the Hercules build or the host it is running on (such   */
 /* as what occurs with Hercules's emulated dasd files). In such a    */
-/* situation the device driver detects the endianess of the system   */
-/* it is running on differs from the endianess that the DASD file    */
+/* situation the device driver detects the endianness of the system  */
+/* it is running on differs from the endianness that the DASD file   */
 /* was written in, thereby requiring it to *UNCONDITIONALLY* swap    */
-/* the value that was read from disk, REGARDLESS of the endianess    */
+/* the value that was read from disk, REGARDLESS of the endianness   */
 /* of the Hercules build or the host it is currently running on.     */
 /*-------------------------------------------------------------------*/
 
@@ -693,7 +693,7 @@ do { \
 /* (via the "CSWAPxx()" macro) to ensure the value placed into guest */
 /* storage is always big endian or that the local work variable is   */
 /* always in the expected big or little endian format (depending on  */
-/* which endianess Hercules was built for).                          */
+/* which endianness Hercules was built for).                         */
 /*-------------------------------------------------------------------*/
 
 #define FETCH_HW( _val, _stor )     (_val) = fetch_hw( _stor )

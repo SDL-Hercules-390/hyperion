@@ -34,7 +34,7 @@ static int  cdsk_build_free_space64(SPCTAB64 *spctab, int s);
 #define  gui_fprintf        if (extgui) fprintf
 
 /*-------------------------------------------------------------------*/
-/* Toggle the endianess of a compressed file                         */
+/* Toggle the endianness of a compressed file                        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd64_swapend (DEVBLK *dev)
 {
@@ -408,7 +408,7 @@ comp_restart:
         goto comp_read_error;
 
     /*---------------------------------------------------------------
-     * Check the endianess of the file
+     * Check the endianness of the file
      *---------------------------------------------------------------*/
     if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {

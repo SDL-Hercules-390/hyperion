@@ -1999,7 +1999,7 @@ int             i;                      /* Work integer              */
     if (cckd64_read (dev, sfx, CCKD64_L1TAB_POS, cckd->L1tab[sfx], len) < 0)
         return -1;
 
-    /* Fix endianess */
+    /* Fix endianness */
     if (cckd->swapend[sfx])
         cckd64_swapend_l1 (cckd->L1tab[sfx], cckd->cdevhdr[sfx].num_L1tab);
 

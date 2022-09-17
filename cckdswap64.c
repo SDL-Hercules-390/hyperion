@@ -1,12 +1,12 @@
 /* CCKDSWAP64.C (C) Copyright Roger Bowler, 1999-2012                */
-/*              Swap the 'endianess' of a CCKD64 file.               */
+/*              Swap the 'endianness' of a CCKD64 file.              */
 /*                                                                   */
 /*   Released under "The Q Public License Version 1"                 */
 /*   (http://www.hercules-390.org/herclic.html) as modifications to  */
 /*   Hercules.                                                       */
 
 /*-------------------------------------------------------------------*/
-/* This module changes the `endianess' of a compressed CKD file.     */
+/* This module changes the `endianness' of a compressed CKD file.    */
 /*-------------------------------------------------------------------*/
 
 #include "hstdinc.h"
@@ -15,10 +15,10 @@
 #include "ccwarn.h"
 
 #define UTILITY_NAME    "cckdswap64"
-#define UTILITY_DESC    "Swap 'endianess' of a CCKD64 file"
+#define UTILITY_DESC    "Swap 'endianness' of a CCKD64 file"
 
 /*-------------------------------------------------------------------*/
-/* Swap the `endianess' of  cckd file                                */
+/* Swap the `endianness' of  cckd file                               */
 /*-------------------------------------------------------------------*/
 
 int syntax( const char* pgm );

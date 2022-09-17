@@ -76,7 +76,7 @@ DLL_EXPORT const char* spc_typ_to_str( BYTE spc_typ )
 }
 
 /*-------------------------------------------------------------------*/
-/* Toggle the endianess of a compressed file                         */
+/* Toggle the endianness of a compressed file                        */
 /*-------------------------------------------------------------------*/
 DLL_EXPORT int cckd_swapend (DEVBLK *dev)
 {
@@ -315,7 +315,7 @@ cswp_error:
 /* a little-endian system.                                           */
 /*                                                                   */
 /* The idea here is, the default format for our CCKD dasd images     */
-/* should match the endianess of the system we're running on (i.e.   */
+/* should match the endianness of the system we're running on (i.e.  */
 /* that we were built for), so that we don't need to swap of any     */
 /* of the fields in any of our dasd control blocks (e.g. compressed  */
 /* CCKD device header, L1/L2 tables, etc).  Instead, we can simply   */
@@ -479,7 +479,7 @@ comp_restart:
         goto comp_read_error;
 
     /*---------------------------------------------------------------
-     * Check the endianess of the file
+     * Check the endianness of the file
      *---------------------------------------------------------------*/
     if ((cdevhdr.cdh_opts & CCKD_OPT_BIGEND) != cckd_def_opt_bigend())
     {
