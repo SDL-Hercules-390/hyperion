@@ -131,5 +131,5 @@ extern inline BYTE ARCH_DEP(  _get_dev_storage_key  )( DEVBLK* dev, U64 abs,    
   extern inline BYTE* _get_storekey2_ptr( U64 abs );
   extern inline BYTE* _get_dev_storekey1_ptr( DEVBLK* dev, U64 abs );
   extern inline BYTE* _get_dev_storekey2_ptr( DEVBLK* dev, U64 abs );
-  
+
 #endif /*!defined( _GEN_ARCH )*/

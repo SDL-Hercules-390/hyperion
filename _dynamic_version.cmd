@@ -599,7 +599,7 @@
 :set_VERSION_do_set
 
   if not defined VERS_BLD set "VERS_BLD=0"
-  
+
   %TRACE%.
   %TRACE%     set_VERSION_do_set
   %TRACE%.

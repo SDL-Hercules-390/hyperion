@@ -503,7 +503,7 @@ U16             devtype;                /* Device type (e.g. 0x3390) */
 
         /* Save the number of free spaces */
         free_num = (int) cdevhdr.free_num;
-    
+
         /* Init the size of a free space block */
         size     = (U32) CCKD64_FREEBLK_SIZE;
         size32   = (U32) CCKD_FREEBLK_SIZE;

@@ -1,5 +1,5 @@
 * EPSW test
-sysclear           
+sysclear
 archmode esa/390
 r 000=0008000080000200                 # ESA/390 restart PSW
 r 068=000A00008000DEAD                 # ESA/390 pgm new PSW

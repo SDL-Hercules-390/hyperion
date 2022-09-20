@@ -102,7 +102,7 @@
   set "vs2022=170"
 
   set "VSNAMES=vs2022 vs2019 vs2017 vs2015 vs2013 vs2012 vs2010 vs2008 vs2005"
-  
+
   set "vsname="
   set "vsver="
   set "vshost="

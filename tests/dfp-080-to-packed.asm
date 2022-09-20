@@ -2,7 +2,7 @@
 ***********************************************************************
 *
 *Testcase: Convert To Packed (Long and Extended)
-*  Test results, Program interrupt code, CC, and 
+*  Test results, Program interrupt code, CC, and
 *  DXC saved for all tests.
 *
 ***********************************************************************
@@ -64,8 +64,8 @@
 *   CONVERT TO PACKED
 *        CPDT (long DFP to packed)
 *        CPXT (extended DFP to packed)
-*  
-* This routine tests both signed and unsigned packed decimal fields 
+*
+* This routine tests both signed and unsigned packed decimal fields
 * and Sign Control (S), Plus-Sign-Code Control (P),
 * Force-Plus-Zero Control (F) flags.
 *
@@ -75,9 +75,9 @@
 *
 * Test Case Order
 * 1) Long DFP to signed packed tests
-* 2) Long DFP to unsigned packed tests 
+* 2) Long DFP to unsigned packed tests
 * 3) Extended DFP to signed packed tests
-* 4) Extended DFP to unsigned packed 
+* 4) Extended DFP to unsigned packed
 *
 *
 * Also tests the following floating point support instructions
@@ -91,13 +91,13 @@
 .*
 .*  Macro to pad the CSECT to include result data areas if this test
 .*  program is not being assembled using asma.  asma generates a core
-.*  image that is loaded by the loadcore command, and because the 
+.*  image that is loaded by the loadcore command, and because the
 .*  core image is a binary stored in Github, it makes sense to make
-.*  this small effort to keep the core image small.  
+.*  this small effort to keep the core image small.
 .*
          AIF   (D'&ENDLABL).GOODPAD
          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
-         MNOTE *,'No CSECT padding performed'  
+         MNOTE *,'No CSECT padding performed'
          MEXIT
 .*
 .GOODPAD ANOP            Label valid.  See if we're on asma
@@ -106,14 +106,14 @@
          MEXIT
 .*
 .NOPAD   ANOP
-         MNOTE *,'asma detected; no CSECT padding performed'  
+         MNOTE *,'asma detected; no CSECT padding performed'
          MEND
 *
          MACRO
          SVCALL &CODE
 * SVCALL macro - perform supervisory functions
 .* Perform various functions as SVCs on Hercules (asma), and by
-.* z/CMS friendly equivalents otherwise.  
+.* z/CMS friendly equivalents otherwise.
          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').DOSVC
          AIF   ('&CODE' EQ 'EOJ').ZEOJ
          AIF   ('&CODE' EQ 'AEOJ').ZAEOJ
@@ -162,23 +162,23 @@
          MEND
 *
 *  Note: for compatibility with the z/CMS test rig, do not change
-*  or use R11, R14, or R15.  Everything else is fair game.  
+*  or use R11, R14, or R15.  Everything else is fair game.
 *
 DFPLTTDC START 0
 STRTLABL EQU   *
-R0       EQU   0                   
-R1       EQU   1                   
-R2       EQU   2                   
-R3       EQU   3                   
-R4       EQU   4                   
-R5       EQU   5                   
-R6       EQU   6                   
-R7       EQU   7                   
-R8       EQU   8                   
-R9       EQU   9                   
-R10      EQU   10                  
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
 R11      EQU   11                  **Reserved for z/CMS test rig
-R12      EQU   12                 
+R12      EQU   12
 R13      EQU   13                  Mainline return address
 R14      EQU   14                  **Return address for z/CMS test rig
 R15      EQU   15                  **Base register on z/CMS or Hyperion
@@ -204,13 +204,13 @@ FPR15    EQU   15
 *
          USING *,R15
 *
-* Above works on real iron (R15=0 after sysclear) 
+* Above works on real iron (R15=0 after sysclear)
 * and in z/CMS (R15 points to start of load module)
 *
-         SPACE 2 
+         SPACE 2
 ***********************************************************************
 *
-* Low core definitions, Restart PSW, Program Check routine, and 
+* Low core definitions, Restart PSW, Program Check routine, and
 * Supervisor Call routine..
 *
 ***********************************************************************
@@ -230,30 +230,30 @@ SVOLDPSW EQU   STRTLABL+X'140'     z/Arch Supervisor call old PSW
 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
 *
          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
-         DC    X'0000000180000000',AD(START)   
+         DC    X'0000000180000000',AD(START)
 *
          ORG   STRTLABL+X'1C0'     z/Arch Supervisor call new PSW
          DC    X'0000000000000000',AD(SVCALL)
 *
          ORG   STRTLABL+X'1D0'     z/Arch Program check new PSW
          DC    X'0000000000000000',AD(PROGCHK)
-* 
+*
 * Program check routine.  If Program Specification or Data Exception,
 * continue execution at the instruction following the program check.
 * Otherwise, hard wait.
 * Save Program interrup code to confirm Program Exceptions:
-* Data with DXC 0, general operand for 'Unused digits must be zero.' 
+* Data with DXC 0, general operand for 'Unused digits must be zero.'
 * checks.
 *
          ORG   STRTLABL+X'200'
 PROGCHK  DS    0H            Program check occured...
          MVC   LASTPCIND,PCINTCD
          CLI   PCINTCD+1,X'06'  Program Specification Exception?
-         JE    PCCONT            ..yes, continue test         
+         JE    PCCONT            ..yes, continue test
          CLI   PCINTCD+1,X'07'  Data Exception?
          JE    PCCONT            ..yes, continue test
 *                            ..no, hardwait (not sure if R15 is ok)
-PCNOTDTA DS    0H             
+PCNOTDTA DS    0H
          SVCALL AEOJ         Signal abend
 *
 PCCONT   DS    0H
@@ -317,7 +317,7 @@ HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
 LASTPCIND DS   H              last Interupt code
 *
          LTORG ,             Interrupt handler literal pool
-*         
+*
 ***********************************************************************
          EJECT
 ***********************************************************************
@@ -345,46 +345,46 @@ START    DS    0H
 *
 CTLR0    DS    F
 *
-* Input values parameter list, three fullwords for each test data set 
-*      1) Address of inputs, 
+* Input values parameter list, three fullwords for each test data set
+*      1) Address of inputs,
 *      2) Address to place results, and
-*      3) Address to place DXC/Flags/cc values.  
+*      3) Address to place DXC/Flags/cc values.
 *
          ORG   STRTLABL+X'300'  Enable run-time replacement
 *
 * Test sets for Convert To Packed : CDPT and CPXT
 *
 ARGLP    DS    0F             Input for long DFP fields
-         DC    A(LPADRS)     
+         DC    A(LPADRS)
          DC    A(LPOUT)
-         DC    A(LPOUTCC)       
+         DC    A(LPOUTCC)
 
 ARGXP    DS    0F             Input for extended DFP fields
-         DC    A(XPADRS)     
+         DC    A(XPADRS)
          DC    A(XPOUT)
-         DC    A(XPOUTCC)          
-              
+         DC    A(XPOUTCC)
+
          EJECT
 ***********************************************************************
 *
 * Perform CONVERT TO PACKED for long DFP field tests.
-* This includes 33 long DFP fields with eight (8) CPDT executions  
+* This includes 33 long DFP fields with eight (8) CPDT executions
 * per field. The condition code is set:
 *              0 Source is zero
 *              1 Source is not special and is less than zero
 *              2 Source is not special and is greater than zero
 *              3 Source is special which is infinity, QNaN, SNaN,
-*                or a partial result 
+*                or a partial result
 **
 * Tests include Program Specification Execption when the size
 * of the packed field is too long (greater than 9).
 *
-*        R0    work register      
+*        R0    work register
 *        R1    length of packed field (R5 ->)
 *        R2    pointer to input address list
 *        R3    Count of 'execute' remaining
 *        R4    address of next execute
-*              
+*
 *        R5    pointer to packed signed field
 *        R7    pointer to results area
 *        R8    pointer to prog Check, DXC, CC area
@@ -393,7 +393,7 @@ ARGXP    DS    0F             Input for extended DFP fields
 *        R13   RETURN ADDRESS
 *        R15   Base register
 *
-*        FPR0  work register - result of CPDT and CPXT instructions      
+*        FPR0  work register - result of CPDT and CPXT instructions
 ***********************************************************************
          SPACE 2
 TESTLP   DS    0H             Test long DFP to packed
@@ -408,32 +408,32 @@ TESTLP   DS    0H             Test long DFP to packed
          LTR   R5,R5          End of arg list?
          BZR   R13                  yes, return
 *
-         LH    R1,0(R5)       packed field length     
+         LH    R1,0(R5)       packed field length
          BCTR  R1,0              less one (for Execute)
          LD    FPR0,8(R5)     load long DFP test value
 
          L     R3,=A(LPEXCNT) set up execute loop
-         LA    R4,LPEX         
+         LA    R4,LPEX
          BASR  R9,0           Set TOP of Execute LOOP
-*         
+*
          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
-* 
+*
          EX    R1,0(,R4)      do CPDT
-         
+
          IPM   R0            Get condition code and program mask
          SRL   R0,28         Isolate CC in low order byte
-         N     R0,=XL4'00000003'    just the CC 
-         STC   R0,3(R8)      save CC 
-         MVC   0(L'LASTPCIND,R8),LASTPCIND    
+         N     R0,=XL4'00000003'    just the CC
+         STC   R0,3(R8)      save CC
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0             Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
-*           
-*                             setup for next execute   
+*
+*                             setup for next execute
          LA    R4,6(,R4)      move to next CPDT execute
-         LA    R7,1(R7,R1)    move to next result (packed length) 
+         LA    R7,1(R7,R1)    move to next result (packed length)
          LA    R8,4(,R8)      move to next result exception
 *
-         BCTR  R3,R9          next execute       
+         BCTR  R3,R9          next execute
 *
          LA    R2,4(,R2)      Point to next arg list pointer
          BR    R12            next test
@@ -445,35 +445,35 @@ LPEX     DS    0H
          CPDT  FPR0,0(,R7),1      UNSIGNED PACKED - Force Plus zero
          CPDT  FPR0,0(,R7),2      UNSIGNED PACKED - Plus-Sign-Code
          CPDT  FPR0,0(,R7),3      UNSIGNED PACKED - Force Plus zero +
-*                                                 .. Plus-Sign-Code     
+*                                                 .. Plus-Sign-Code
          CPDT  FPR0,0(,R7),8      SIGNED PACKED
          CPDT  FPR0,0(,R7),9      SIGNED PACKED - Force Plus zero
          CPDT  FPR0,0(,R7),10     SIGNED PACKED - Plus-Sign-Code
          CPDT  FPR0,0(,R7),11     SIGNED PACKED - Force Plus zero +
 *                                                 .. Plus-Sign-Code
-LPEXCNT  EQU   (*-LPEX)/6         # of CPDT executes            
+LPEXCNT  EQU   (*-LPEX)/6         # of CPDT executes
          LTORG
          EJECT
 ***********************************************************************
 *
 * Perform CONVERT TO PACKED for extended DFP fields.
-* This includes 33 extended DFP fields with eight (8) CPDT executions  
+* This includes 33 extended DFP fields with eight (8) CPDT executions
 * per field. The condition code is set:
 *              0 Source is zero
 *              1 Source is not special and is less than zero
 *              2 Source is not special and is greater than zero
 *              3 Source is special which is infinity, QNaN, SNaN,
-*                or a partial result 
+*                or a partial result
 *
 * Tests include Program Specification Execption when the size
 * of the packed field is too long (greater than 18).
 
-*        R0    work register      
+*        R0    work register
 *        R1    length of packed field (R5 ->)
 *        R2    pointer to input address list
 *        R3    Count of 'execute' remaining
 *        R4    address of next execute
-*              
+*
 *        R5    pointer to packed signed field
 *        R7    pointer to results area
 *        R8    pointer to prog Check, DXC, CC area
@@ -482,7 +482,7 @@ LPEXCNT  EQU   (*-LPEX)/6         # of CPDT executes
 *        R13   RETURN ADDRESS
 *        R15   Base register
 *
-*        FPR0  work register - result of CPDT and CPXT instructions      
+*        FPR0  work register - result of CPDT and CPXT instructions
 ***********************************************************************
          SPACE 2
 TESTXP   DS    0H             Test Extended DFP to packed
@@ -497,33 +497,33 @@ TESTXP   DS    0H             Test Extended DFP to packed
          LTR   R5,R5          End of arg list?
          BZR   R13                  yes, return
 *
-         LH    R1,0(R5)       packed field length     
+         LH    R1,0(R5)       packed field length
          BCTR  R1,0              less one (for Execute)
          LD    FPR0,8(R5)     extended DFP test value - first 1/2
          LD    FPR2,16(R5)       ... second 1/2
 
          L     R3,=A(XPEXCNT) set up execute loop
-         LA    R4,XPEX         
+         LA    R4,XPEX
          BASR  R9,0           Set TOP of Execute LOOP
-*         
+*
          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
 
          EX    R1,0(,R4)      do CPXT
-         
+
          IPM   R0            Get condition code and program mask
          SRL   R0,28         Isolate CC in low order byte
-         N     R0,=XL4'00000003'    just the CC 
-         STC   R0,3(R8)      save CC 
-         MVC   0(L'LASTPCIND,R8),LASTPCIND    
+         N     R0,=XL4'00000003'    just the CC
+         STC   R0,3(R8)      save CC
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0             Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
-   
-*                             setup for next execute   
+
+*                             setup for next execute
          LA    R4,6(,R4)      move to next CPDT execute
-         LA    R7,1(R7,R1)    move to next result (packed length) 
+         LA    R7,1(R7,R1)    move to next result (packed length)
          LA    R8,4(,R8)      move to next result exception
 
-         BCTR  R3,R9          next execute       
+         BCTR  R3,R9          next execute
 
          LA    R2,4(,R2)      Point to next arg list pointer
          BR    R12            next test
@@ -535,16 +535,16 @@ XPEX     DS    0H
          CPXT  FPR0,0(,R7),1      UNSIGNED PACKED - Force Plus zero
          CPXT  FPR0,0(,R7),2      UNSIGNED PACKED - Plus-Sign-Code
          CPXT  FPR0,0(,R7),3      UNSIGNED PACKED - Force Plus zero +
-*                                                 .. Plus-Sign-Code     
+*                                                 .. Plus-Sign-Code
          CPXT  FPR0,0(,R7),8      SIGNED PACKED
          CPXT  FPR0,0(,R7),9      SIGNED PACKED - Force Plus zero
          CPXT  FPR0,0(,R7),10     SIGNED PACKED - Plus-Sign-Code
          CPXT  FPR0,0(,R7),11     SIGNED PACKED - Force Plus zero +
 *                                                 .. Plus-Sign-Code
-XPEXCNT  EQU   (*-XPEX)/6         # of CPDT executes            
+XPEXCNT  EQU   (*-XPEX)/6         # of CPDT executes
          LTORG
-         EJECT                   
-***********************************************************************         
+         EJECT
+***********************************************************************
 *
 *  END OF TEST CASE BASE REGISTER ADDRESSABLE STORAGE.
 *
@@ -554,17 +554,17 @@ XPEXCNT  EQU   (*-XPEX)/6         # of CPDT executes
          EJECT
 ***********************************************************************
 *
-*  Invalid FPR results ...  
+*  Invalid FPR results ...
 *
-***********************************************************************         
-LFPINVL  DC    X'FFFFFFFFFFFFFFFF'  Invalid result, used to 
+***********************************************************************
+LFPINVL  DC    X'FFFFFFFFFFFFFFFF'  Invalid result, used to
 *                                ..polute result FPR
 XFPINVL  DC    X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  Invalid result,
 *                                ..used to polute result EXTENDED FPR
          EJECT
 ***********************************************************************
 *
-*  Input: Address list of packed result length and long DFP fields 
+*  Input: Address list of packed result length and long DFP fields
 *
 ***********************************************************************
 LPADRS   DS    0F
@@ -598,22 +598,22 @@ LPADRS   DS    0F
          DC    A(LDFP28)
          DC    A(LDFP29)
          DC    A(LDFP30)
-         DC    A(LDFP31)                                        
+         DC    A(LDFP31)
          DC    A(LDFP32)
-         DC    A(LDFP33)             
-*                                    
+         DC    A(LDFP33)
+*
          DC    F'0'                 end of address list
-         SPACE 1           
+         SPACE 1
 ***********************************************************************
 *
 *  Input: Long DFP to Signed Pack fields.
 *              - Length (2 bytes) of packed field
-*              - Long DFP field                
+*              - Long DFP field
 *
 *NOTE: DO NOT add any prefix '0' within DD'999.99' definitions as
-*        this may cause normalization and rounding  
+*        this may cause normalization and rounding
 ***********************************************************************
-         DS    0DD         force DD alignment    
+         DS    0DD         force DD alignment
 LDFP01   DC    H'1'
          DC    DD'+0'
 LDFP02   DC    H'1'
@@ -629,7 +629,7 @@ LDFP06   DC    H'3'
 LDFP07   DC    H'6'
          DC    DD'+271828182'
 LDFP08   DC    H'6'
-         DC    DD'-271828182'                             
+         DC    DD'-271828182'
 LDFP09   DC    H'8'
          DC    DD'+3.14159265358979'
 LDFP10   DC    H'8'
@@ -638,9 +638,9 @@ LDFP11   DC    H'2'
          DC    DD'+0E368'     +Zero, non-extreme exponent
 LDFP12   DC    H'4'
          DC    DD'+0E-397'   ..
-LDFP13   DC    H'5'         
+LDFP13   DC    H'5'
          DC    DD'-0E368'     -Zero, non-extreme exponent
-LDFP14   DC    H'7'         
+LDFP14   DC    H'7'
          DC    DD'-0E-397'   ..
 LDFP15   DC    H'8'
          DC    DD'+123456789012345E369'  +non-zero, extreme exponent
@@ -657,10 +657,10 @@ LDFP20   DC    H'8'
 LDFP21   DC    H'8'
          DC    DD'-1234567890123456E368'  -non-zero, non-extr., lmd > 0
 LDFP22   DC    H'8'
-         DC    DD'-1234567890123456E-397' ..          
+         DC    DD'-1234567890123456E-397' ..
 LDFP23   DC    H'8'
          DC    DD'+(INF)'
-LDFP24    DC    H'8'         
+LDFP24    DC    H'8'
          DC    DD'-(INF)'
 LDFP25    DC    H'8'
          DC    DD'+(QNAN)'
@@ -670,20 +670,20 @@ LDFP27    DC    H'8'
          DC    DD'+(SNAN)'
 LDFP28    DC    H'8'
          DC    DD'-(SNAN)'
-LDFP29   DC    H'6'         
+LDFP29   DC    H'6'
          DC    DD'+(DMIN)'
 LDFP30   DC    H'6'
-         DC    DD'-(DMIN)'         
+         DC    DD'-(DMIN)'
 LDFP31   DC    H'10'                 Program Specification Exception
          DC    DD'+3.14159265358979'
 LDFP32   DC    H'10'                 Program Specification Exception
          DC    DD'-3.14159265358979'
 LDFP33   DC    H'8'                  end of data
-         DC    DD'1111111111111111'                    
+         DC    DD'1111111111111111'
          EJECT
 ***********************************************************************
 *
-*  Input: Address list of packed result length and long DFP fields 
+*  Input: Address list of packed result length and long DFP fields
 *
 ***********************************************************************
 XPADRS   DS    0F
@@ -715,24 +715,24 @@ XPADRS   DS    0F
          DC    A(XDFP26)
          DC    A(XDFP27)
          DC    A(XDFP28)
-         DC    A(XDFP29)     
-         DC    A(XDFP30)                                
-         DC    A(XDFP31) 
+         DC    A(XDFP29)
+         DC    A(XDFP30)
+         DC    A(XDFP31)
          DC    A(XDFP32)
-         DC    A(XDFP33)                            
-*                                    
+         DC    A(XDFP33)
+*
          DC    F'0'                 end of address list
-         SPACE 1           
+         SPACE 1
 ***********************************************************************
 *
 *  Input: Long DFP to Signed Pack fields.
 *              - Length (2 bytes) of packed field
-*              - Long DFP field                
+*              - Long DFP field
 *
 *NOTE: DO NOT add any prefix '0' within LD'999.99' definitions as
-*        this may cause normalization and rounding  
+*        this may cause normalization and rounding
 ***********************************************************************
-         DS    0LD         force LD alignment 
+         DS    0LD         force LD alignment
 XDFP01   DC    H'1'
          DC    LD'+0'
 XDFP02   DC    H'1'
@@ -748,7 +748,7 @@ XDFP06   DC    H'3'
 XDFP07   DC    H'6'
          DC    LD'+271828182'
 XDFP08   DC    H'6'
-         DC    LD'-271828182'                             
+         DC    LD'-271828182'
 XDFP09   DC    H'8'
          DC    LD'+3.14159265358979'
 XDFP10   DC    H'8'
@@ -757,9 +757,9 @@ XDFP11   DC    H'2'
          DC    LD'+0E368'     +Zero, non-extreme exponent
 XDFP12   DC    H'4'
          DC    LD'+0E-397'   ..
-XDFP13   DC    H'5'         
+XDFP13   DC    H'5'
          DC    LD'-0E368'     -Zero, non-extreme exponent
-XDFP14   DC    H'7'         
+XDFP14   DC    H'7'
          DC    LD'-0E-397'   ..
 XDFP15   DC    H'8'
          DC    LD'+123456789012345E369'  +non-zero, extreme exponent
@@ -773,14 +773,14 @@ XDFP19   DC    H'8'
          DC    LD'+1234567890123456E368'  +non-zero, non-extr., lmd > 0
 XDFP20   DC    H'8'
          DC    LD'+1234567890123456E-397' ..
-*                             -non-zero, non-extreme, lmd > 0         
+*                             -non-zero, non-extreme, lmd > 0
 XDFP21   DC    H'8'
          DC    LD'-1234567890123456789012345678901234E6110'
 XDFP22   DC    H'8'
-         DC    LD'-1234567890123456789012345678901234E-6175'     
+         DC    LD'-1234567890123456789012345678901234E-6175'
 XDFP23   DC    H'8'
          DC    LD'+(INF)'
-XDFP24   DC    H'8'         
+XDFP24   DC    H'8'
          DC    LD'-(INF)'
 XDFP25   DC    H'8'
          DC    LD'+(QNAN)'
@@ -793,11 +793,11 @@ XDFP28   DC    H'8'
 XDFP29   DC    H'6'
          DC    LD'+(DMIN)'
 XDFP30   DC    H'6'
-         DC    LD'-(DMIN)'         
+         DC    LD'-(DMIN)'
 XDFP31   DC    H'19'                Program Specification Exception
          DC    LD'+3.14159265358979'
 XDFP32   DC    H'19'                Program Specification Exception
-         DC    LD'-3.14159265358979'        
+         DC    LD'-3.14159265358979'
 XDFP33   DC    H'16'                end of data
          DC    LD'11111111111111111111111111111111'
          EJECT

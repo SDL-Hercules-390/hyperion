@@ -32,7 +32,7 @@ crypto_pkgdir      =            $(crypto_pkgname)
 crypto_libname     =            $(crypto_pkgname)$(arch_suffix).lib
 crypto_libdir      =            $(crypto_pkgdir)\lib
 crypto_incdir      =            $(crypto_pkgdir)\include
-               
+
 LIBS               =    $(LIBS) $(crypto_libname)
 LIB                =     $(LIB);$(crypto_libdir)
 INCLUDE            = $(INCLUDE);$(crypto_incdir)
@@ -65,7 +65,7 @@ telnet_pkgdir      =            $(telnet_pkgname)
 telnet_libname     =            $(telnet_pkgname)$(arch_suffix).lib
 telnet_libdir      =            $(telnet_pkgdir)\lib
 telnet_incdir      =            $(telnet_pkgdir)\include
-               
+
 LIBS               =    $(LIBS) $(telnet_libname)
 LIB                =     $(LIB);$(telnet_libdir)
 INCLUDE            = $(INCLUDE);$(telnet_incdir)

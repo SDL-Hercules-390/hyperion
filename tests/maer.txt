@@ -21,7 +21,7 @@ r 22C=60F00380     # STD F15,RES1      Store actual result
 r 230=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 * Test data
 r 320=BF00BD608217487D                 # TEST1
 r 328=C12022F43FBA7F77                 # TEST2

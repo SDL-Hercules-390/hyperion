@@ -5,7 +5,7 @@
 # See accompanying file BOOST_LICENSE_1_0.txt or a copy at:
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# Expanded by Peter J. Jansen, 2019 
+# Expanded by Peter J. Jansen, 2019
 # Runtest *Compare dependency removed on 2022-08-16 by Fish.
 
 # Suppress logging of program checks. Processing of this test

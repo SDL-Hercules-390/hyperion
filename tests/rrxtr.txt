@@ -9,7 +9,7 @@ r 208=41100320     # LA R1,TEST1       R1=>Test data table
 r 20C=41F00400     # LA R15,RES1       R15=>Result table
 r 210=E3401000008F #A LPQ R4,0(,R1)    Load R4,R5=TESTn
 r 216=B3C10044     # LDGR F4,R4        Load FPR4 from R4
-r 21A=B3C10065     # LDGR F6,R5        Load FPR6 from R5          
+r 21A=B3C10065     # LDGR F6,R5        Load FPR6 from R5
 r 21E=41200002     # LA R2,2           R2=Number of DRM tests
 r 222=A7390003     # LGHI R3,3         R3=DRM 3 (round down)
 r 226=B29D0314     #B LFPC FPCREG      Load value into FPC register
@@ -17,7 +17,7 @@ r 22A=B2B93000     # SRNMT 0(R3)       Set DFP rounding mode from R3
 r 22E=41A00003     # LA R10,3          R10=Requested significance
 r 232=B3FF405A     # RRXTR F5,F4,R10,0 Reround FPR5,7 from FPR4,6
 r 236=B2220080     # IPM R8            R8=Cond code and pgm mask
-r 23A=B38C0090     # EFPC R9           R9=Copy of FPC register  
+r 23A=B38C0090     # EFPC R9           R9=Copy of FPC register
 r 23E=6050F000     # STD R5,0(,R15)    Store FPR5 in result table
 r 242=6070F008     # STD R7,8(,R15)    Store FPR7 in result table
 r 246=9089F010     # STM R8,R9,16(R15) Store CC and FPC in table
@@ -29,19 +29,19 @@ r 25A=46000210     # BCT R0,A          Loop to end of TEST table
 r 25E=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 320=A20800000000000000000000000049C5 # TEST1 DC LD'-12345'
 r 330=A207C000000000000000000000000005 # TEST2 DC LD'-0.5'
 r 340=A2080000000000000000000000000000 # TEST3 DC LD'-0'
-r 350=2207C000000000000000000000000035 # TEST4 DC LD'3.5' 
+r 350=2207C000000000000000000000000035 # TEST4 DC LD'3.5'
 r 360=220800000000000000000000000049C5 # TEST5 DC LD'12345'
 r 370=78123456789ABCDE0123456789ABCDEF # TEST6 DC LD'INF'
-r 380=7EABCDEF01234567890123456789ABCD # TEST7 DC LD'SNAN' 
+r 380=7EABCDEF01234567890123456789ABCD # TEST7 DC LD'SNAN'
 ostailor null
 pgmtrace +7
 restart
 pause 1
 * Display test data
-r 320.70 
+r 320.70
 * Display results
 r 400.1C0

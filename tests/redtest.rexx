@@ -908,7 +908,7 @@ HHC022nnI:
 /* Example call:   Call HHC022nnI  'General',  'GR',  'R' ;   */
 /* Example call:   Call HHC022nnI  'Control',  'CR',  'C' ;   */
 
-If verb = ARG(1) Then Return  -- (ignore header line)  
+If verb = ARG(1) Then Return  -- (ignore header line)
 regsline = verb rest          -- ("x0=... x1..." as one long string)
 
 /* If NUMCPU > 1 strip the engine name/number prefix from each line */

@@ -2,20 +2,20 @@
 ***********************************************************************
 *
 *Testcase IEEE MULTIPLY (to longer precision)
-*  Test case capability includes IEEE exceptions trappable and 
+*  Test case capability includes IEEE exceptions trappable and
 *  otherwise. Test results, FPCR flags, the Condition code, and any
 *  DXC are saved for all tests.
 *
 *  The result precision for each instruction is longer than the input
 *  operands.  As a result, the underflow and overflow exceptions will
 *  never occur.  Further, the results are always exact.  There is
-*  no rounding of the result.  
+*  no rounding of the result.
 *
 *  The fused multiply operations are not included in this test program,
-*  nor are the standard multiply instructions.  The former are 
-*  are excluded to keep test case complexity manageable, and latter 
+*  nor are the standard multiply instructions.  The former are
+*  are excluded to keep test case complexity manageable, and latter
 *  because they require a more extensive testing profile (overflow,
-*  underflow, rounding). 
+*  underflow, rounding).
 *
 *
 *                      ********************
@@ -31,10 +31,10 @@
          SPACE 2
 ***********************************************************************
 *
-*                      bfp-020-multlonger.asm 
+*                      bfp-020-multlonger.asm
 *
 *        This assembly-language source file is part of the
-*        Hercules Binary Floating Point Validation Package 
+*        Hercules Binary Floating Point Validation Package
 *                        by Stephen R. Orso
 *
 * Copyright 2016 by Stephen R Orso.
@@ -78,11 +78,11 @@
 *   MULTIPLY (long BFP, RRE) (long to extended)
 *   MULTIPLY (short BFP, RXE) (short to long)
 *   MULTIPLY (long BFP, RXE) (long to extended)
-* 
+*
 * Test data is compiled into this program.  The test script that runs
-* this program can provide alternative test data through Hercules R 
+* this program can provide alternative test data through Hercules R
 * commands.
-* 
+*
 * Test Case Order
 * 1) Short BFP basic tests, including traps and NaN propagation
 * 2) Long BFP basic tests, including traps and NaN propagation
@@ -102,7 +102,7 @@
          EJECT
 *
 *  Note: for compatibility with the z/CMS test rig, do not change
-*  or use R11, R14, or R15.  Everything else is fair game.  
+*  or use R11, R14, or R15.  Everything else is fair game.
 *
 BFPMUL2L START 0
 STRTLABL EQU   *
@@ -145,10 +145,10 @@ FPR15    EQU   15
          USING *,R15
          USING HELPERS,R12
 *
-* Above works on real iron (R15=0 after sysclear) 
+* Above works on real iron (R15=0 after sysclear)
 * and in z/CMS (R15 points to start of load module)
 *
-         SPACE 2 
+         SPACE 2
 ***********************************************************************
 *
 * Low core definitions, Restart PSW, and Program Check Routine.
@@ -161,11 +161,11 @@ PCINTCD  DS    H
 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
 *
          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
-         DC    X'0000000180000000',AD(START)   
+         DC    X'0000000180000000',AD(START)
 *
          ORG   STRTLABL+X'1D0'     z/Arch Program check NEW PSW
          DC    X'0000000000000000',AD(PROGCHK)
-* 
+*
 * Program check routine.  If Data Exception, continue execution at
 * the instruction following the program check.  Otherwise, hard wait.
 * No need to collect data.  All interesting DXC stuff is captured
@@ -225,11 +225,11 @@ CTLR0    DS    F
 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
 *
-* Input values parameter list, four fullwords for each test data set 
-*      1) Count, 
-*      2) Address of inputs, 
+* Input values parameter list, four fullwords for each test data set
+*      1) Count,
+*      2) Address of inputs,
 *      3) Address to place results, and
-*      4) Address to place DXC/Flags/cc values.  
+*      4) Address to place DXC/Flags/cc values.
 *
 SHORTNF  DS    0F           Input pairs for short BFP non-finite tests
          DC    A(SBFPNFCT)
@@ -253,12 +253,12 @@ LONGNF   DS    0F           Input pairs for long BFP non-finite testing
 * Each value in this table is tested against every other value in the
 * table.  Eight entries means 64 result sets.
 *
-* Four results are generated for each input: one RRE with all 
+* Four results are generated for each input: one RRE with all
 * exceptions non-trappable, a second RRE with all exceptions trappable,
-* a third RXE with all exceptions non-trappable, a fourth RXE with all 
+* a third RXE with all exceptions non-trappable, a fourth RXE with all
 * exceptions trappable,
 *
-* The difference, FPCR, and condition code are stored for each result.  
+* The difference, FPCR, and condition code are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -317,12 +317,12 @@ SBFPNF   DS    0H            BFP Short non-finite values tests
 * value in this table is tested against every other value in the table.
 * Eight entries means 64 result sets.
 *
-* Four results are generated for each input: one RRE with all 
+* Four results are generated for each input: one RRE with all
 * exceptions non-trappable, a second RRE with all exceptions trappable,
-* a third RXE with all exceptions non-trappable, a fourth RXE with all 
+* a third RXE with all exceptions non-trappable, a fourth RXE with all
 * exceptions trappable,
 *
-* The difference, FPCR, and condition code are stored for each result.  
+* The difference, FPCR, and condition code are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -378,11 +378,11 @@ LBFPNF   DS    0H            BFP long non-finite values tests
          EJECT
 ***********************************************************************
 *
-* Short BFP test data for Multiply to longer precision testing.  
+* Short BFP test data for Multiply to longer precision testing.
 *
 * The test data set is used for tests of basic functionality, NaN
 * propagation, and results from operations involving other than finite
-* numbers.  
+* numbers.
 *
 * Member values chosen to validate against Figure 19-23 on page 19-28
 * of SA22-7832-10.  Each value in this table is tested against every
@@ -390,7 +390,7 @@ LBFPNF   DS    0H            BFP long non-finite values tests
 *
 * Because Multiply to longer precision cannot generate overflow nor
 * underflow exceptions and the result is always exact, there are no
-* further tests required.  Any more extensive testing would be in 
+* further tests required.  Any more extensive testing would be in
 * effect a test of Softfloat, not of the the integration of Softfloat
 * to Hercules.
 *
@@ -409,11 +409,11 @@ SBFPNFCT EQU   (*-SBFPNFIN)/4    Count of short BFP in list
         EJECT
 ***********************************************************************
 *
-* Long BFP test data for Multiply to longer precision testing.  
+* Long BFP test data for Multiply to longer precision testing.
 *
 * The test data set is used for tests of basic functionality, NaN
 * propagation, and results from operations involving other than finite
-* numbers.  
+* numbers.
 *
 * Member values chosen to validate against Figure 19-23 on page 19-28
 * of SA22-7832-10.  Each value in this table is tested against every
@@ -421,7 +421,7 @@ SBFPNFCT EQU   (*-SBFPNFIN)/4    Count of short BFP in list
 *
 * Because Multiply to longer precision cannot generate overflow nor
 * underflow exceptions and the result is always exact, there are no
-* further tests required.  Any more extensive testing would be in 
+* further tests required.  Any more extensive testing would be in
 * effect a test of Softfloat, not of the the integration of Softfloat
 * to Hercules.
 *

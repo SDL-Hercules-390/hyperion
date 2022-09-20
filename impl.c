@@ -387,7 +387,7 @@ static LRESULT CALLBACK MainWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
                 case PBT_APMRESUMEAUTOMATIC:
 
                     // Notifies applications that the computer has woken up
-                    // automatically to handle an event. 
+                    // automatically to handle an event.
 
                     sysblk.sys_suspended = false;
                     sysblk.sys_resumed   = true;

@@ -1,5 +1,5 @@
 * KLMD fc1
-stopall 
+stopall
 pause 1
 sysclear
 archmode esame
@@ -18,7 +18,7 @@ r 510=C3D2E1F00000000000000040         # Parameter block
 *
 r 580=C5592921382388B41AE53FA27A726F8B # Expected result
 r 590=64D9FFA2000000000000004000000000 # Expected result
-* 
+*
 r 600=000102030405060708090A0B0C0D0E0F # Second operand
 r 610=101112131415161718191A1B1C1D1E1F # Second operand
 r 620=202122232425262728292A2B2C2D2E2F # Second operand

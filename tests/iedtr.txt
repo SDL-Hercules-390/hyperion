@@ -12,7 +12,7 @@ r 214=B3E500E6     # EEDTR R14,F6      Extract exponent from FPR6
 r 218=E3E0F0000024 # STG R14,0(,R15)   Store exponent in result table
 r 21E=41F0F008     # LA R15,8(,R15)    R15=>next result table
 r 222=41200007     # LA R2,7           R2=Number of BEXP tests
-r 226=41300318     # LA R3,BEXP1       R3=>BEXP test table           
+r 226=41300318     # LA R3,BEXP1       R3=>BEXP test table
 r 22A=E34030000004 #B LG R4,0(,R3)     Load R4=BEXPn
 r 230=B3F66084     # IEDTR F8,F6,R4    Insert BEXPn in F6, result in F8
 r 234=6080F000     # STD F8,0(,R15)    Store F8 in result table
@@ -24,7 +24,7 @@ r 248=46000210     # BCT R0,A          Loop to end of TEST table
 r 24C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 318=0000000000000300 # BEXP1 DC G'768'
 r 320=00000000000002FF # BEXP2 DC G'767'
 r 328=0000000000000000 # BEXP3 DC G'0'
@@ -35,12 +35,12 @@ r 348=FFFFFFFFFFFFFFFC # BEXP7 DC G'-4'
 r 380=2238000000000000 # TEST1 DC DD'0' Zero positive
 r 388=2238123456789ABC # TEST2 DC DD'1' Normal positive
 r 390=78123456789ABCDE # TEST3 DC DD'INF' Infinity positive
-r 398=7CABCDEF01234567 # TEST4 DC DD'QNAN' QNaN positive 
+r 398=7CABCDEF01234567 # TEST4 DC DD'QNAN' QNaN positive
 r 3A0=FE0000000000ABCD # TEST5 DC DD'-SNAN' SNaN negative
 restart
 pause 1
 * Display test data
-r 310.40 
-r 380.28 
+r 310.40
+r 380.28
 * Display results
 r 400.140

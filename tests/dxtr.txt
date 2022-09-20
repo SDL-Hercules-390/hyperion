@@ -8,14 +8,14 @@ r 204=B2BD0234     # LFAS FPCREG       Load value into FPC register
 r 208=EB2502400004 # LMG R2,R5,PACKED  Load R2,R3=PACKED1 R4,R5=PACKED2
 r 20E=B3FB0042     # CXSTR R4,R2       Load FPR R4,R6 from PACKED1 R2,R3
 r 212=B3FB0014     # CXSTR R1,R4       Load FPR R1,R3 from PACKED2 R4,R5
-r 216=B2B90003     # SRNMT 3           Set decimal rounding mode              
+r 216=B2B90003     # SRNMT 3           Set decimal rounding mode
 r 21A=B3D91094     # DXTR R9,R4,R1     Divide FPR R4,R6 by R1,R3 giving R9,R11
 r 21E=B3EB00A9     # CSXTR R10,R9,0    Convert FPR R9,R11 to PACKED R10,R11
-r 222=B3EB01C9     # CSXTR R12,R9,1    Convert FPR R9,R11 to PACKED R12,R13 
+r 222=B3EB01C9     # CSXTR R12,R9,1    Convert FPR R9,R11 to PACKED R12,R13
 r 226=EBAD02600024 # STMG R10,R13,RESULTC  R10,R11=>RESULTC R12,R13=>RESULTF
 r 22C=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 230=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 234=40000000     # FPCREG            Floating point control register        
+r 234=40000000     # FPCREG            Floating point control register
 r 240=0000000000000000000000000000500C # PACKED1  DC PL16'500'
 r 250=0000000000000000000000000000000C # PACKED2  DC PL16'0'
 r 260=FEEDFEEDFEEDFEEDFEEDFEEDFEEDFEED # RESULTC (with sign C)

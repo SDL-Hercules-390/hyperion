@@ -1301,7 +1301,7 @@ MYPGMNEW MVC   PGMNPSW,SVPGMNEW   Restore original Program New PSW
          SRL   R0,12
          SLL   R0,12
                                                                 SPACE
-         SRL   R6,12              Where Page Fault is expected 
+         SRL   R6,12              Where Page Fault is expected
          SLL   R6,12
                                                                 SPACE
          CLR   R0,R6              Page Fault occur on expected Page?

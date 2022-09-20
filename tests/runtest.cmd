@@ -858,7 +858,7 @@
   if not defined ttof %skip%
 
   :: Use Rexx to prevent antivirus issues with .vbs files
-  
+
   call :tempfn                                 check_mttof_rexx    .rexx
   echo Parse Arg ttof mttof               >   %check_mttof_rexx%
   echo say ttof ^>= 1 ^& ttof ^<= mttof   >>  %check_mttof_rexx%

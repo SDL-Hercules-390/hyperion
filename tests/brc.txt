@@ -1,5 +1,5 @@
 * BRC test
-sysclear           
+sysclear
 archmode s/370
 r 000=0008000000000200                 # EC mode restart PSW
 r 068=000A00000000DEAD                 # EC mode pgm new PSW

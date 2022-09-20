@@ -36,15 +36,15 @@ r 31C=FFFFFFC1     # N2 DC F'1'    Shift count 1
 r 320=000002C4     # N3 DC F'708'  Shift count 4
 r 324=0000003F     # N4 DC F'63'   Shift count 63
 r 380=2238000000000000 # TEST1 DC DD'0' Zero positive
-r 388=2238000012045078 # TEST2 DC DD'12045078' Normal positive 
+r 388=2238000012045078 # TEST2 DC DD'12045078' Normal positive
 r 390=ABCDEF0123456789 # TEST3 DC DD'2.989004434259709E116' Large positive
-r 398=7CABCDEF01234567 # TEST4 DC DD'QNAN' QNaN positive 
+r 398=7CABCDEF01234567 # TEST4 DC DD'QNAN' QNaN positive
 r 3A0=FE0000000000ABCD # TEST5 DC DD'-SNAN' SNaN negative
 r 3A8=78123456789ABCDE # TEST6 DC DD'INF' Infinity positive
 restart
 pause 1
 * Display test data
-r 318.10 
-r 380.30 
+r 318.10
+r 380.30
 * Display results
 r 400.300

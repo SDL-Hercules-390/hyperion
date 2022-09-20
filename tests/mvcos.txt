@@ -11,23 +11,23 @@ r 200E=EB7796A0002F # LCTLG C7,C7,CTLR7 Load SASCE control reg 7
 r 2014=EBDD96A8002F # LCTLG C13,C13,CTLR13 Load HASCE control reg 13
 r 201A=80009606     # SSM DAT_ON        Turn on addr translation
 r 201E=B2190100     # SAC X'100'        Set secondary addr space
-r 2022=E320A0000003 # LRAG R2,SSOURCE   R2=Real addr of secondary  
+r 2022=E320A0000003 # LRAG R2,SSOURCE   R2=Real addr of secondary
 r 2028=41100040     # LA R1,X'48'       R1=Storage key + fetch prot
 r 202C=B22B0012     # SSKE R1,R2        Set secondary storage key
-r 2030=B2190000     # SAC X'000'        Set primary addr space   
+r 2030=B2190000     # SAC X'000'        Set primary addr space
 r 2034=41500008     # LA  R5,8          R5=MVCOS length
-r 2038=A7080000     # LHI R0,0          R0=Default key and AS   
+r 2038=A7080000     # LHI R0,0          R0=Default key and AS
 r 203C=C8509800A000 # MVCOS DEST1,PSOURCE,R5 Move from primary
 r 2042=47709600     # BNZ DIE           Branch if cc not zero
 r 2046=D50798009700 # CLC DEST1(8),EXP1 Compare with expected result
-r 204C=47709600     # BNE DIE           Branch if not equal  
+r 204C=47709600     # BNE DIE           Branch if not equal
 r 2050=0A01         # SVC X'01'         Set PSW key=0, prob state
 r 2052=41500008     # LA  R5,8          R5=MVCOS length
-r 2056=A7084083     # LHI R0,X'4083'    R0=Key4, secondary AS   
+r 2056=A7084083     # LHI R0,X'4083'    R0=Key4, secondary AS
 r 205A=C8509808A000 # MVCOS DEST2,SSOURCE,R5 Move from secondary
 r 2060=47709600     # BNZ DIE           Branch if cc not zero
 r 2064=D50798089708 # CLC DEST2(8),EXP2 Compare with expected result
-r 206A=47709600     # BNE DIE           Branch if not equal  
+r 206A=47709600     # BNE DIE           Branch if not equal
 r 206E=0A00         # SVC X'00'         Set PSW key=0, supv state
 r 2070=B2B29610     # LPSWE WAITPSW     Load enabled wait PSW
 r 2600=0A00         #DIE SVC X'00'      Set PSW key=0, supv state

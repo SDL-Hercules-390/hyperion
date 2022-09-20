@@ -1985,7 +1985,7 @@ void ARCH_DEP( invalidate_tlb )( REGS* regs, BYTE mask )
 {
     /* Do it for the current architecture first */
     ARCH_DEP( do_invalidate_tlb )( regs, mask );
-    
+
 #if defined( _FEATURE_SIE )
     /* Also invalidate the GUEST registers in the SIE copy */
     if (regs->host && GUESTREGS)

@@ -2,14 +2,14 @@
 ***********************************************************************
 *
 *Testcase IEEE MULTIPLY
-*  Test case capability includes IEEE exceptions trappable and 
+*  Test case capability includes IEEE exceptions trappable and
 *  otherwise. Test results, FPCR flags, the Condition code, and any
 *  DXC are saved for all tests.
 *
 *  The fused multiply operations are not included in this test program,
 *  nor are the multiply to longer precision instructions.  The former
-*  are excluded to keep test case complexity manageable, and latter 
-*  because they require a slightly different testing profile.  
+*  are excluded to keep test case complexity manageable, and latter
+*  because they require a slightly different testing profile.
 *
 *
 *                      ********************
@@ -25,10 +25,10 @@
           SPACE 2
 ***********************************************************************
 *
-*                      bfp-019-multiply.asm 
+*                      bfp-019-multiply.asm
 *
 *        This assembly-language source file is part of the
-*        Hercules Binary Floating Point Validation Package 
+*        Hercules Binary Floating Point Validation Package
 *                        by Stephen R. Orso
 *
 * Copyright 2016 by Stephen R Orso.
@@ -69,15 +69,15 @@
 *
 * Tests the following three conversion instructions
 *   MULTIPLY (short BFP, RRE)
-*   MULTIPLY (long BFP, RRE) 
-*   MULTIPLY (extended BFP, RRE) 
+*   MULTIPLY (long BFP, RRE)
+*   MULTIPLY (extended BFP, RRE)
 *   MULTIPLY (short BFP, RXE)
-*   MULTIPLY (long BFP, RXE) 
-* 
+*   MULTIPLY (long BFP, RXE)
+*
 * Test data is compiled into this program.  The test script that runs
-* this program can provide alternative test data through Hercules R 
+* this program can provide alternative test data through Hercules R
 * commands.
-* 
+*
 * Test Case Order
 * 1) Short BFP basic tests, including traps and NaN propagation
 * 2) Short BFP finite number tests, incl. traps and scaling
@@ -89,10 +89,10 @@
 * 8) Extended BFP finite number tests, incl. traps and scaling
 * 9) Extended BFP FPC-controlled rounding mode exhaustive tests
 *
-* Three input test sets are provided each for short, long, and 
+* Three input test sets are provided each for short, long, and
 *   extended BFP inputs.  Test values are the same for each precision
 *   for most tests.  Overflow and underflow each require precision-
-*   dependent test values.  
+*   dependent test values.
 *
 * Also tests the following floating point support instructions
 *   LOAD  (Short)
@@ -107,7 +107,7 @@
          EJECT
 *
 *  Note: for compatibility with the z/CMS test rig, do not change
-*  or use R11, R14, or R15.  Everything else is fair game.  
+*  or use R11, R14, or R15.  Everything else is fair game.
 *
 BFPMUL   START 0
 STRTLABL EQU   *
@@ -150,10 +150,10 @@ FPR15    EQU   15
          USING *,R15
          USING HELPERS,R12
 *
-* Above works on real iron (R15=0 after sysclear) 
+* Above works on real iron (R15=0 after sysclear)
 * and in z/CMS (R15 points to start of load module)
 *
-         SPACE 2 
+         SPACE 2
 ***********************************************************************
 *
 * Low core definitions, Restart PSW, and Program Check Routine.
@@ -166,11 +166,11 @@ PCINTCD  DS    H
 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
 *
          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
-         DC    X'0000000180000000',AD(START)   
+         DC    X'0000000180000000',AD(START)
 *
          ORG   STRTLABL+X'1D0'     z/Arch Program check NEW PSW
          DC    X'0000000000000000',AD(PROGCHK)
-* 
+*
 * Program check routine.  If Data Exception, continue execution at
 * the instruction following the program check.  Otherwise, hard wait.
 * No need to collect data.  All interesting DXC stuff is captured
@@ -245,11 +245,11 @@ CTLR0    DS    F
 FPCREGNT DC    X'00000000'  FPCR, trap all IEEE exceptions, zero flags
 FPCREGTR DC    X'F8000000'  FPCR, trap no IEEE exceptions, zero flags
 *
-* Input values parameter list, four fullwords for each test data set 
-*      1) Count, 
-*      2) Address of inputs, 
+* Input values parameter list, four fullwords for each test data set
+*      1) Count,
+*      2) Address of inputs,
 *      3) Address to place results, and
-*      4) Address to place DXC/Flags/cc values.  
+*      4) Address to place DXC/Flags/cc values.
 *
 SHORTNF  DS    0F           Input pairs for short BFP non-finite tests
          DC    A(SBFPNFCT)
@@ -313,12 +313,12 @@ RMXTNDS  DS    0F           Inputs for ext'd BFP non-finite testing
 * numbers, and other basic tests.  This set generates results that can
 * be validated against Figure 19-23 on page 19-28 of SA22-7832-10.
 *
-* Four results are generated for each input: one RRE with all 
+* Four results are generated for each input: one RRE with all
 * exceptions non-trappable, a second RRE with all exceptions trappable,
-* a third RXE with all exceptions non-trappable, a fourth RXE with all 
+* a third RXE with all exceptions non-trappable, a fourth RXE with all
 * exceptions trappable,
 *
-* The product and FPC contents are stored for each result.  
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -371,16 +371,16 @@ SBFPNF   DS    0H            BFP Short non-finite values tests
          EJECT
 ***********************************************************************
 *
-* Perform Multiply using provided short BFP input pairs.  This set of 
-* tests triggers IEEE exceptions Overflow, Underflow, and Inexact and 
+* Perform Multiply using provided short BFP input pairs.  This set of
+* tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
 * collects both trap and non-trap results.
 *
-* Four results are generated for each input: one RRE with all 
+* Four results are generated for each input: one RRE with all
 * exceptions non-trappable, a second RRE with all exceptions trappable,
-* a third RXE with all exceptions non-trappable, a fourth RXE with all 
+* a third RXE with all exceptions non-trappable, a fourth RXE with all
 * exceptions trappable,
-* 
-* The product and FPC contents are stored for each result.  
+*
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -419,23 +419,23 @@ SBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,2*4(,R3)   Point to next input value pair
          LA    R7,4*4(,R7)   Point to next product result set
          LA    R8,4*4(,R8)   Point to next FPCR result set
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
 *
-* Perform Multiply using provided short BFP input pairs.  This set of 
+* Perform Multiply using provided short BFP input pairs.  This set of
 * tests exhaustively tests all rounding modes available for Multiply.
-* The rounding mode can only be specified in the FPC.  
+* The rounding mode can only be specified in the FPC.
 *
 * All five FPC rounding modes are tested because the preceeding tests,
 * using rounding mode RNTE, do not often create results that require
-* rounding.  
+* rounding.
 *
-* Two results are generated for each input and rounding mode: one RRE 
-* and one RXE.  Traps are disabled for all rounding mode tests.  
+* Two results are generated for each input and rounding mode: one RRE
+* and one RXE.  Traps are disabled for all rounding mode tests.
 *
-* The product and FPC contents are stored for each test.  
+* The product and FPC contents are stored for each test.
 *
 ***********************************************************************
          SPACE 2
@@ -445,7 +445,7 @@ SBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          BZR   R13           ..No, return to caller
          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
          BASR  R12,0         Set top of test case loop
-         
+
          LA    R5,FPCMCT     Get count of FPC modes to be tested
          BASR  R9,0          Set top of rounding mode outer loop
 *
@@ -472,10 +472,10 @@ SBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          BCTR  R5,R9         Iterate to next FPC mode for this input
 *
 * End of FPC modes to be tested.  Advance to next test case.  We will
-* skip eight bytes of result area so that each set of five result 
-* value pairs starts at a memory address ending in zero for the 
-* convenience of memory dump review.  
-*         
+* skip eight bytes of result area so that each set of five result
+* value pairs starts at a memory address ending in zero for the
+* convenience of memory dump review.
+*
          LA    R3,2*4(,R3)   Point to next input value pair
          LA    R7,8(,R7)     Skip to start of next result set
          LA    R8,8(,R8)     Skip to start of next FPCR result set
@@ -490,12 +490,12 @@ SBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
 * numbers, and other basic tests.  This set generates results that can
 * be validated against Figure 19-23 on page 19-28 of SA22-7832-10.
 *
-* Four results are generated for each input: one RRE with all 
+* Four results are generated for each input: one RRE with all
 * exceptions non-trappable, a second RRE with all exceptions trappable,
-* a third RXE with all exceptions non-trappable, a fourth RXE with all 
+* a third RXE with all exceptions non-trappable, a fourth RXE with all
 * exceptions trappable,
 *
-* The product and FPC contents are stored for each result.  
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -551,12 +551,12 @@ LBFPNF   DS    0H            BFP long non-finite values tests
 * tests triggers IEEE exceptions Overflow, Underflow, and Inexact and
 * collects non-trap and trap results.
 *
-* Four results are generated for each input: one RRE with all 
+* Four results are generated for each input: one RRE with all
 * exceptions non-trappable, a second RRE with all exceptions trappable,
-* a third RXE with all exceptions non-trappable, a fourth RXE with all 
+* a third RXE with all exceptions non-trappable, a fourth RXE with all
 * exceptions trappable,
-* 
-* The product and FPC contents are stored for each result.  
+*
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -595,23 +595,23 @@ LBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,2*8(,R3)   Point to next input value pair
          LA    R7,4*8(,R7)   Point to next quotent result pair
          LA    R8,4*4(,R8)   Point to next FPCR result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
          BR    R13           All converted; return.
          EJECT
 ***********************************************************************
 *
-* Perform Multiply using provided long BFP input pairs.  This set of 
+* Perform Multiply using provided long BFP input pairs.  This set of
 * tests exhaustively tests all rounding modes available for Multiply.
-* The rounding mode can only be specified in the FPC.  
+* The rounding mode can only be specified in the FPC.
 *
 * All five FPC rounding modes are tested because the preceeding tests,
 * using rounding mode RNTE, do not often create results that require
-* rounding.  
+* rounding.
 *
-* Two results are generated for each input and rounding mode: one RRE 
-* and one RXE.  Traps are disabled for all rounding mode tests.  
+* Two results are generated for each input and rounding mode: one RRE
+* and one RXE.  Traps are disabled for all rounding mode tests.
 *
-* The product and FPC contents are stored for each result.  
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -621,7 +621,7 @@ LBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          BZR   R13           ..No, return to caller
          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
          BASR  R12,0         Set top of test case loop
-         
+
          LA    R5,FPCMCT     Get count of FPC modes to be tested
          BASR  R9,0          Set top of rounding mode loop
 *
@@ -648,10 +648,10 @@ LBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          BCTR  R5,R9         Iterate to next FPC mode
 *
 * End of FPC modes to be tested.  Advance to next test case.  We will
-* skip eight bytes of FPCR result area so that each set of five result 
-* FPCR contents pairs starts at a memory address ending in zero for the 
-* convenience of memory dump review.  
-*         
+* skip eight bytes of FPCR result area so that each set of five result
+* FPCR contents pairs starts at a memory address ending in zero for the
+* convenience of memory dump review.
+*
          LA    R3,2*8(,R3)   Point to next input value pair
          LA    R8,8(,R8)     Skip to start of next FPCR result area
          BCTR  R2,R12        Multiply next input value lots of times
@@ -663,14 +663,14 @@ LBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
 * Perform Multiply using provided extended BFP inputs.  This set of
 * tests checks NaN propagation, operations on values that are not
 * finite numbers, and other basic tests.  This set generates results
-* that can be validated against Figure 19-23 on page 19-28 of 
+* that can be validated against Figure 19-23 on page 19-28 of
 * SA22-7832-10.
 *
-* Two results are generated for each input: one RRE with all 
-* exceptions non-trappable, and a second RRE with all exceptions 
+* Two results are generated for each input: one RRE with all
+* exceptions non-trappable, and a second RRE with all exceptions
 * trappable.  Extended BFP Multiply does not have an RXE format.
 *
-* The product and FPC contents are stored for each result.  
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -719,14 +719,14 @@ XBFPNF   DS    0H            BFP extended non-finite values tests
 * Perform Multiply using provided extended BFP input pairs.  This set
 * of tests triggers IEEE exceptions Overflow, Underflow, and Inexact
 * and collects results when the exceptions do not result in a trap and
-* when they do. 
+* when they do.
 *
-* Two results are generated for each input: one RRE with all 
+* Two results are generated for each input: one RRE with all
 * exceptions non-trappable and a second RRE with all exceptions
-* trappable.  There is no RXE format for Multiply in extended 
+* trappable.  There is no RXE format for Multiply in extended
 * precision.
-* 
-* The product and FPC contents are stored for each result.  
+*
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -758,7 +758,7 @@ XBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
          LA    R3,32(,R3)    Point to next input value pair
          LA    R7,32(,R7)    Point to next quotent result pair
          LA    R8,16(,R8)    Point to next FPCR result area
-         BCTR  R2,R12        Convert next input value.  
+         BCTR  R2,R12        Convert next input value.
 *
          BR    R13           All converted; return.
          EJECT
@@ -766,16 +766,16 @@ XBFPF    LM    R2,R3,0(R10)  Get count and address of test input values
 *
 * Perform Multiply using provided extended BFP input pairs.  This set
 * of tests exhaustively tests all rounding modes available for
-* Multiply.  The rounding mode can only be specified in the FPC.  
+* Multiply.  The rounding mode can only be specified in the FPC.
 *
 * All five FPC rounding modes are tested because the preceeding tests,
 * using rounding mode RNTE, do not often create results that require
-* rounding.  
+* rounding.
 *
-* Two results are generated for each input and rounding mode: one RRE 
-* and one RXE.  Traps are disabled for all rounding mode tests.  
+* Two results are generated for each input and rounding mode: one RRE
+* and one RXE.  Traps are disabled for all rounding mode tests.
 *
-* The product and FPC contents are stored for each result.  
+* The product and FPC contents are stored for each result.
 *
 ***********************************************************************
          SPACE 2
@@ -785,7 +785,7 @@ XBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          BZR   R13           ..No, return to caller
          XR    R1,R1         Zero register 1 for use in IC/STC/indexing
          BASR  R12,0         Set top of test case loop
-         
+
          LA    R5,FPCMCT     Get count of FPC modes to be tested
          BASR  R9,0          Set top of rounding mode loop
 *
@@ -808,10 +808,10 @@ XBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          BCTR  R5,R9         Iterate to next FPC mode
 *
 * End of FPC modes to be tested.  Advance to next test case.  We will
-* skip eight bytes of FPCR result area so that each set of five result 
-* FPCR contents pairs starts at a memory address ending in zero for the 
-* convenience of memory dump review.  
-*         
+* skip eight bytes of FPCR result area so that each set of five result
+* FPCR contents pairs starts at a memory address ending in zero for the
+* convenience of memory dump review.
+*
          LA    R3,2*16(,R3)  Point to next input value pair
          LA    R8,12(,R8)    Skip to start of next FPCR result area
          BCTR  R2,R12        Multiply next input value lots of times
@@ -820,20 +820,20 @@ XBFPRM   LM    R2,R3,0(R10)  Get count and address of test input values
          EJECT
 ***********************************************************************
 *
-* Table of FPC rounding modes to test product rounding modes.  
+* Table of FPC rounding modes to test product rounding modes.
 *
 * The Set BFP Rounding Mode does allow specification of the FPC
-* rounding mode as an address, so we shall index into a table of 
-* BFP rounding modes without bothering with Execute. 
+* rounding mode as an address, so we shall index into a table of
+* BFP rounding modes without bothering with Execute.
 *
 ***********************************************************************
          SPACE 2
 *
 * Rounding modes that may be set in the FPCR.  The FPCR controls
-* rounding of the product.  
+* rounding of the product.
 *
 * These are indexed directly by the loop counter, which counts down.
-* So the modes are listed in reverse order here.  
+* So the modes are listed in reverse order here.
 *
 FPCMODES DS    0C
          DC    AL1(7)              RFS, Round for shorter precision
@@ -846,24 +846,24 @@ FPCMCT   EQU   *-FPCMODES          Count of FPC Modes to be tested
          EJECT
 ***********************************************************************
 *
-* Short BFP test data sets for Multiply testing.  
+* Short BFP test data sets for Multiply testing.
 *
 * The first test data set is used for tests of basic functionality,
 * NaN propagation, and results from operations involving other than
-* finite numbers.  
+* finite numbers.
 *
 * The second test data set is used for testing boundary conditions
 * using two finite non-zero values.  Each possible type of result
-* (normal, scaled, etc) is created by members of this test data set.  
+* (normal, scaled, etc) is created by members of this test data set.
 *
-* The third test data set is used for exhaustive testing of final 
+* The third test data set is used for exhaustive testing of final
 * results across the five rounding modes available for the Multiply
 * instruction.
 *
-* The strategy for predictable rounding mode testing is to use a 
+* The strategy for predictable rounding mode testing is to use a
 * multiplicand with some one-bits in the low-order byte and multiply
 * that by 1/16 (0.0625).  In BFP, this will have the effect of shifting
-* the low-order byte out of the target precision representation and 
+* the low-order byte out of the target precision representation and
 * into the high-order portion of the bits that control rounding.  The
 * input low-order byte will be determined by the rounding desired.
 *
@@ -871,7 +871,7 @@ FPCMCT   EQU   *-FPCMODES          Count of FPC Modes to be tested
          SPACE 2
 ***********************************************************************
 *
-* First input test data set, to test operations using non-finite or 
+* First input test data set, to test operations using non-finite or
 * zero inputs.  Member values chosen to validate Figure 19-23 on page
 * 19-28 of SA22-7832-10.  Each value in this table is tested against
 * every other value in the table.  Eight entries means 64 result sets.
@@ -894,8 +894,8 @@ SBFPNFCT EQU   (*-SBFPNFIN)/4    Count of short BFP in list
 * Second input test data set.  These are finite pairs intended to
 * trigger overflow, underflow, and inexact exceptions.  Each pair is
 * added twice, once non-trappable and once trappable.  Trappable
-* overflow or underflow yields a scaled result.  Trappable inexact 
-* will show whether the Incremented DXC code is returned.  
+* overflow or underflow yields a scaled result.  Trappable inexact
+* will show whether the Incremented DXC code is returned.
 *
 * The following test cases are required:
 * 1. Overflow
@@ -925,18 +925,18 @@ SBFPIN   DS    0F                Inputs for short BFP finite tests
          DC    X'00040000'         Subnormal, < +Dmax
          DC    X'00000F0F'         Smaller subnormal
 *
-* We cannot generate a normal result from product of subnormals 
+* We cannot generate a normal result from product of subnormals
 * because the result will be smaller than both the multiplicand and the
-* multiplier.  So we'll try multiplying +Dmax by 2.  The result should 
+* multiplier.  So we'll try multiplying +Dmax by 2.  The result should
 * be +Nmin
 *
          DC    X'007FFFFF'         +Dmax
          DC    X'40000000'         +2.0
 *
 * Multiply a value from 1.0 such that the added digits are to the right
-* of the right-most bit in the stored significand. The result will be 
-* inexact, and incremented will be determined by the value of the 
-* bits in the multiplier.  
+* of the right-most bit in the stored significand. The result will be
+* inexact, and incremented will be determined by the value of the
+* bits in the multiplier.
 *
          DC    X'3F80000C'   Multiplicand 1.000001430511474609375
          DC    X'3F880000'   Multiplier 1.0625  (1/16)
@@ -951,9 +951,9 @@ SBFPCT   EQU   (*-SBFPIN)/4/2    Count of short BFP in list
 ***********************************************************************
 *
 * Third input test data set.  These are finite pairs intended to
-* test all combinations of rounding mode for the product and the 
+* test all combinations of rounding mode for the product and the
 * remainder.  Values are chosen to create a requirement to round
-* to the target precision after the computation and to generate 
+* to the target precision after the computation and to generate
 * varying results depending on the rounding mode in the FPCR.
 *
 * The result set will have cases that represent each of the following
@@ -968,16 +968,16 @@ SBFPCT   EQU   (*-SBFPIN)/4/2    Count of short BFP in list
 * 8. Negative, tie, nearest even has lower magnitude
 *
 * Round For Shorter precision correctness can be determined from the
-* above test cases.  
+* above test cases.
 *
 ***********************************************************************
          SPACE 2
 SBFPINRM DS    0F                Inputs for short BFP rounding testing
 *
 * Multiply a value from 1.0 such that the added digits are to the right
-* of the right-most bit in the stored significand. The result will be 
-* inexact, and incremented will be determined by the value of the 
-* bits in the multiplier.  
+* of the right-most bit in the stored significand. The result will be
+* inexact, and incremented will be determined by the value of the
+* bits in the multiplier.
 *
          DC    X'3F800007'   Multiplicand +1.00000083446502685546875
          DC    X'3F880000'   Multiplier 1.0625  (1/16)
@@ -1007,28 +1007,28 @@ SBFPRMCT EQU   (*-SBFPINRM)/4/2  Count of short BFP rounding tests
          EJECT
 ***********************************************************************
 *
-* Long BFP test data sets for Add testing.  
+* Long BFP test data sets for Add testing.
 *
 * The first test data set is used for tests of basic functionality,
 * NaN propagation, and results from operations involving other than
-* finite numbers.  
+* finite numbers.
 *
 * The second test data set is used for testing boundary conditions
 * using two finite non-zero values.  Each possible type of result
-* (normal, scaled, etc) is created by members of this test data set.  
+* (normal, scaled, etc) is created by members of this test data set.
 *
-* The third test data set is used for exhaustive testing of final 
+* The third test data set is used for exhaustive testing of final
 * results across the five rounding modes available for the Add
 * instruction.
 *
 * See the Short BFP test cases header for a discussion of test case
-* selection for rounding mode test case values. 
+* selection for rounding mode test case values.
 *
 ***********************************************************************
          SPACE 2
 ***********************************************************************
 *
-* First input test data set, to test operations using non-finite or 
+* First input test data set, to test operations using non-finite or
 * zero inputs.  Member values chosen to validate Figure 19-23 on page
 * 19-28 of SA22-7832-10.  Each value in this table is tested against
 * every other value in the table.  Eight entries means 64 result sets.
@@ -1051,8 +1051,8 @@ LBFPNFCT EQU   (*-LBFPNFIN)/8     Count of long BFP in list
 * Second input test data set.  These are finite pairs intended to
 * trigger overflow, underflow, and inexact exceptions.  Each pair is
 * added twice, once non-trappable and once trappable.  Trappable
-* overflow or underflow yields a scaled result.  Trappable inexact 
-* will show whether the Incremented DXC code is returned.  
+* overflow or underflow yields a scaled result.  Trappable inexact
+* will show whether the Incremented DXC code is returned.
 *
 * The following test cases are required:
 * 1. Overflow
@@ -1071,7 +1071,7 @@ LBFPIN   DS    0D                Inputs for long BFP finite tests
          DC    X'7FEFFFFFFFFFFFFF'  +Nmax
          DC    X'FFEFFFFFFFFFFFFF'  +Nmax
 *
-* Underflow from product of normals.  We wil multiply a small 
+* Underflow from product of normals.  We wil multiply a small
 * normal by a slightly smaller normal to generate a subnormal.
 *
          DC    X'001FFFFFFFFFFFFF'  Very small normal number
@@ -1082,18 +1082,18 @@ LBFPIN   DS    0D                Inputs for long BFP finite tests
          DC    X'0008000000000000'  Subnormal, < +Dmax
          DC    X'0000F0F000000000'  Smaller subnormal
 *
-* We cannot generate a normal result from product of subnormals 
+* We cannot generate a normal result from product of subnormals
 * because the result will be smaller than both the multiplicand and the
-* multiplier.  So we'll try multiplying +Dmax by 2.  The result should 
+* multiplier.  So we'll try multiplying +Dmax by 2.  The result should
 * be +Nmin
 *
          DC    X'000FFFFFFFFFFFFF'  +Dmax
          DC    X'4000000000000000'  +2.0, result should be normal
 *
 * Multiply a value from 1.0 such that the added digits are to the right
-* of the right-most bit in the stored significand. The result will be 
-* inexact, and incremented will be determined by the value of the 
-* bits in the multiplier.  
+* of the right-most bit in the stored significand. The result will be
+* inexact, and incremented will be determined by the value of the
+* bits in the multiplier.
 *
          DC    X'3FF000000000000C'  Multiplicand +1, aka 1.0b0
          DC    X'3FF1000000000000'  Multiplier 1.0625  (1/16)
@@ -1108,9 +1108,9 @@ LBFPCT   EQU   (*-LBFPIN)/8/2   Count of long BFP in list
 ***********************************************************************
 *
 * Third input test data set.  These are finite pairs intended to
-* test all combinations of rounding mode for the product and the 
+* test all combinations of rounding mode for the product and the
 * remainder.  Values are chosen to create a requirement to round
-* to the target precision after the computation and to generate 
+* to the target precision after the computation and to generate
 * varying results depending on the rounding mode in the FPCR.
 *
 * The result set will have cases that represent each of the following
@@ -1125,16 +1125,16 @@ LBFPCT   EQU   (*-LBFPIN)/8/2   Count of long BFP in list
 * 8. Negative, tie, nearest even has lower magnitude
 *
 * Round For Shorter precision correctness can be determined from the
-* above test cases.  
+* above test cases.
 *
 ***********************************************************************
          SPACE 2
 LBFPINRM DS    0F
 *
 * Multiply a value from 1.0 such that the added digits are to the right
-* of the right-most bit in the stored significand. The result will be 
-* inexact, and incremented will be determined by the value of the 
-* bits in the multiplier.  
+* of the right-most bit in the stored significand. The result will be
+* inexact, and incremented will be determined by the value of the
+* bits in the multiplier.
 *
          DC    X'3FF0000000000007'  Multiplicand
          DC    X'3FF1000000000000'  Multiplier 1.0625  (1/16)
@@ -1164,28 +1164,28 @@ LBFPRMCT EQU   (*-LBFPINRM)/8/2  Count of long BFP rounding tests
          EJECT
 ***********************************************************************
 *
-* Extended BFP test data sets for Add testing.  
+* Extended BFP test data sets for Add testing.
 *
 * The first test data set is used for tests of basic functionality,
 * NaN propagation, and results from operations involving other than
-* finite numbers.  
+* finite numbers.
 *
 * The second test data set is used for testing boundary conditions
-* using two finite non-zero values.  Each possible type of result 
-* (normal, scaled, etc) is created by members of this test data set.  
+* using two finite non-zero values.  Each possible type of result
+* (normal, scaled, etc) is created by members of this test data set.
 *
-* The third test data set is used for exhaustive testing of final 
+* The third test data set is used for exhaustive testing of final
 * results across the five rounding modes available for the Add
 * instruction.
 *
 * See the Short BFP test cases header for a discussion of test case
-* selection for rounding mode test case values. 
+* selection for rounding mode test case values.
 *
 ***********************************************************************
          SPACE 2
 ***********************************************************************
 *
-* First input test data set, to test operations using non-finite or 
+* First input test data set, to test operations using non-finite or
 * zero inputs.  Member values chosen to validate Figure 19-23 on page
 * 19-28 of SA22-7832-10.  Each value in this table is tested against
 * every other value in the table.  Eight entries means 64 result sets.
@@ -1208,8 +1208,8 @@ XBFPNFCT EQU   (*-XBFPNFIN)/16     Count of extended BFP in list
 * Second input test data set.  These are finite pairs intended to
 * trigger overflow, underflow, and inexact exceptions.  Each pair is
 * added twice, once non-trappable and once trappable.  Trappable
-* overflow or underflow yields a scaled result.  Trappable inexact 
-* will show whether the Incremented DXC code is returned.  
+* overflow or underflow yields a scaled result.  Trappable inexact
+* will show whether the Incremented DXC code is returned.
 *
 * The following test cases are required:
 * The following test cases are required:
@@ -1229,30 +1229,30 @@ XBFPIN   DS    0F                Inputs for extended BFP finite tests
          DC    X'7FFEFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  +Nmax
          DC    X'FFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  +Nmax
 *
-* Underflow from product of normals.  We will multiply a small 
+* Underflow from product of normals.  We will multiply a small
 * normal by a slightly smaller normal to generate a subnormal.
 *
          DC    X'0001FFFFFFFFFFFFFFFFFFFFFFFFFFFF'  Very small normal
          DC    X'00010000000000000000000000000000'  Smaller normal
 *
-* Underflow from product of subnormals.  
+* Underflow from product of subnormals.
 *
          DC    X'00008000000000000000000000000000'  Subnormal, < +Dmax
          DC    X'00000F0F000000000000000000000000'  Smaller subnormal
 *
-* We cannot generate a normal result from product of subnormals 
+* We cannot generate a normal result from product of subnormals
 * because the result will be smaller than both the multiplicand and the
-* multiplier.  So we'll try multiplying +Dmax by 2.  The result should 
+* multiplier.  So we'll try multiplying +Dmax by 2.  The result should
 * be +Nmin
 *
          DC    X'0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF'  +Dmax
-         DC    X'40000000000000000000000000000001'  +2.0, 
+         DC    X'40000000000000000000000000000001'  +2.0,
 *                                   ...result will be normal
 *
 * Multiply a value from 1.0 such that the added digits are to the right
-* of the right-most bit in the stored significand. The result will be 
-* inexact, and incremented will be determined by the value of the 
-* bits in the multiplier.  
+* of the right-most bit in the stored significand. The result will be
+* inexact, and incremented will be determined by the value of the
+* bits in the multiplier.
 *
          DC    X'3FFF000000000000000000000000000C'  +1, aka 1.0b0
          DC    X'3FFF1000000000000000000000000000'  1.0625
@@ -1262,14 +1262,14 @@ XBFPIN   DS    0F                Inputs for extended BFP finite tests
          DC    X'3FFF1000000000000000000000000000'  1.0625
 *..nearest is toward zero, truncated
 *
-XBFPCT   EQU   (*-XBFPIN)/16/2   Count of extended BFP in list 
+XBFPCT   EQU   (*-XBFPIN)/16/2   Count of extended BFP in list
          SPACE 3
 ***********************************************************************
 *
 * Third input test data set.  These are finite pairs intended to
-* test all combinations of rounding mode for the product and the 
+* test all combinations of rounding mode for the product and the
 * remainder.  Values are chosen to create a requirement to round
-* to the target precision after the computation and to generate 
+* to the target precision after the computation and to generate
 * varying results depending on the rounding mode in the FPCR.
 *
 * The result set will have cases that represent each of the following
@@ -1284,16 +1284,16 @@ XBFPCT   EQU   (*-XBFPIN)/16/2   Count of extended BFP in list
 * 8. Negative, tie, nearest even has lower magnitude
 *
 * Round For Shorter precision correctness can be determined from the
-* above test cases.  
+* above test cases.
 *
 ***********************************************************************
          SPACE 2
 XBFPINRM DS    0D
 *
 * Multiply a value from 1.0 such that the added digits are to the right
-* of the right-most bit in the stored significand. The result will be 
-* inexact, and incremented will be determined by the value of the 
-* bits in the multiplier.  
+* of the right-most bit in the stored significand. The result will be
+* inexact, and incremented will be determined by the value of the
+* bits in the multiplier.
 *
          DC    X'3FFF0000000000000000000000000007'  +1, aka +1.0b0
          DC    X'3FFF1000000000000000000000000000'  1.0625
@@ -1338,9 +1338,9 @@ SBFPFLGS EQU   STRTLABL+X'1900'    FPCR flags and DXC from short BFP
 *                                  ..room for 16 tests, 6 used
 *
 SBFPRMO  EQU   STRTLABL+X'1A00'    Short BFP rounding mode test results
-*                                  ..Room for 16, 8 used.  
+*                                  ..Room for 16, 8 used.
 SBFPRMOF EQU   STRTLABL+X'1D00'    Short BFP rounding mode FPCR results
-*                                  ..Room for 16, 8 used.  
+*                                  ..Room for 16, 8 used.
 *                                  ..next location starts at X'2000'
 *
 LBFPNFOT EQU   STRTLABL+X'3000'    Long non-finite BFP results
@@ -1354,9 +1354,9 @@ LBFPFLGS EQU   STRTLABL+X'3E00'    FPCR flags and DXC from long BFP
 *                                  ..room for 16 tests, 6 used
 *
 LBFPRMO  EQU   STRTLABL+X'4000'    Long BFP rounding mode test results
-*                                  ..Room for 16, 8 used.  
+*                                  ..Room for 16, 8 used.
 LBFPRMOF EQU   STRTLABL+X'4500'    Long BFP rounding mode FPCR results
-*                                  ..Room for 16, 8 used.  
+*                                  ..Room for 16, 8 used.
 *                                  ..next location starts at X'4800'
 *
 XBFPNFOT EQU   STRTLABL+X'5000'    Extended non-finite BFP results
@@ -1370,9 +1370,9 @@ XBFPFLGS EQU   STRTLABL+X'5E00'    FPCR flags and DXC from ext'd BFP
 *                                  ..room for 16 tests, 6 used
 *
 XBFPRMO  EQU   STRTLABL+X'6000'    Ext'd BFP rounding mode test results
-*                                  ..Room for 16, 8 used.  
+*                                  ..Room for 16, 8 used.
 XBFPRMOF EQU   STRTLABL+X'6500'    Ext'd BFP rounding mode FPCR results
-*                                  ..Room for 16, 8 used.  
+*                                  ..Room for 16, 8 used.
 *                                  ..next location starts at X'6800'
 *
          EJECT

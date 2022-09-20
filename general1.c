@@ -201,7 +201,7 @@ U16     i2;                             /* 16-bit immediate op       */
   ALRgen( r1, C )                                                     \
   ALRgen( r1, D )                                                     \
   ALRgen( r1, E )                                                     \
-  ALRgen( r1, F )                                                    
+  ALRgen( r1, F )
 
 ALRgenr2( 0 )
 ALRgenr2( 1 )

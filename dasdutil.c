@@ -2546,15 +2546,15 @@ DLL_EXPORT bool is_dh_devid_typ( BYTE* dh_devid, U32 typmsk )
         || memcmp( dh_devid, "CKD_P370", 8 ) == 0
         || memcmp( dh_devid, "CKD_C370", 8 ) == 0
         || memcmp( dh_devid, "CKD_S370", 8 ) == 0
-                              
+
 //      || memcmp( dh_devid, "FBA_P370", 8 ) == 0
         || memcmp( dh_devid, "FBA_C370", 8 ) == 0
         || memcmp( dh_devid, "FBA_S370", 8 ) == 0
-                              
+
         || memcmp( dh_devid, "CKD_P064", 8 ) == 0
         || memcmp( dh_devid, "CKD_C064", 8 ) == 0
         || memcmp( dh_devid, "CKD_S064", 8 ) == 0
-                              
+
 //      || memcmp( dh_devid, "FBA_P064", 8 ) == 0
         || memcmp( dh_devid, "FBA_C064", 8 ) == 0
         || memcmp( dh_devid, "FBA_S064", 8 ) == 0

@@ -13,4 +13,4 @@ sysclear
 loadcore "$(testpath)/fix-page.core"
 runtest
 ostailor default
-*Done 
+*Done

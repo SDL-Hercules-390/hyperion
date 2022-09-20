@@ -272,7 +272,7 @@ cpu 1
 restart
 cpu 2
 restart
-cpu 3 
+cpu 3
 restart
 * Restart the same number of cpus as the underlying machine
 

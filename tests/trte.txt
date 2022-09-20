@@ -12,11 +12,11 @@ r 218=41100300     # LA R1,TABLE1      R1=>Translate table
 r 21C=41600280     # LA R6,DATA1       R6=>Test data
 r 220=41700006     # LA R7,L'DATA1     R7=>Length of test data
 r 224=B9BF0068     # TRTE R6,R8        Translate and test single
-r 228=A734FFFE     # BRC 3,*-4         Repeat if more data  
+r 228=A734FFFE     # BRC 3,*-4         Repeat if more data
 r 22C=B2B20270     # LPSWE WAITPSW     Load enabled wait PSW
 r 270=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 * Test data
-r 280=F1F2F3F4E7F6                     # DATA1 DC C'1234X6'  
+r 280=F1F2F3F4E7F6                     # DATA1 DC C'1234X6'
 r 300=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF # TABLE1 DC 240X'FF',10X'00',6X'FF'
 r 310=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 r 320=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF

@@ -12,7 +12,7 @@ r 210=41400006     # LA R4,6           Load R4 = length
 r 214=83240008     # DIAG X'008'       Test data
 r 218=82000300     # LPSW WAITPSW      Load enabled wait PSW
 r 280=C4C9C1C7F8C3D4C4                 # C'DIAG8CMD'
-r 290=D4C1E7C3D7E4                     # C'MAXCPU'  
+r 290=D4C1E7C3D7E4                     # C'MAXCPU'
 r 300=070A000080FED0D0                 # WAITPSW Enabled wait state PSW
 ostailor null
 s+

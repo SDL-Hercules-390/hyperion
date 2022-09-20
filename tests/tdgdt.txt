@@ -8,11 +8,11 @@ r 204=4100000C     # LA R0,12          R0=Number of tests
 r 208=41100340     # LA R1,TEST1       R1=>Test data table
 r 20C=68601000     #A LD F6,0(,R1)     Load FPR6=TESTn
 r 210=68D00330     # LD F13,DFP52      Load bit number
-r 214=68F00338     # LD F15,DFP01      Load increment 
+r 214=68F00338     # LD F15,DFP01      Load increment
 r 218=41200800     # LA R2,X'800'      Set R2 bit52 = 1
 r 21C=ED6020000055 #T TDGDT F6,0(,R2)  Test FPR6 using mask in R2
 r 222=47400232     # BM X              Branch if bit is set
-r 226=B3D2F0DD     # ADTR F13,F13,F15  Add 1 to bit number in FPR13  
+r 226=B3D2F0DD     # ADTR F13,F13,F15  Add 1 to bit number in FPR13
 r 22A=8A200001     # SRA R2,1          Shift bitmask in R2
 r 22E=4770021C     # BNZ T             Loop to test next bit
 r 232=60D01100     #X STD F13,RESn     Store bit number in result table
@@ -21,7 +21,7 @@ r 23A=4600020C     # BCT R0,A          Loop to end of table
 r 23E=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 300=07020001800000000000000000FED0D0 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=00000000     # FPCREG            Floating point control register        
+r 314=00000000     # FPCREG            Floating point control register
 r 330=2238000000000052 # DFP52 DC DD'52'
 r 338=2238000000000001 # DFP01 DC DD'1'
 r 340=2238000000000000 # TEST1 DC DD'0' Safe zero positive (52)
@@ -39,6 +39,6 @@ r 398=FE0000000000ABCD # TESTC DC DD'-SNAN' Special negative (63)
 restart
 pause 1
 * Display test data
-r 340.60 
+r 340.60
 * Display results
-r 440.60 
+r 440.60

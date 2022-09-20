@@ -62,8 +62,8 @@
 *   CONVERT FROM PACKED
 *        CDPT (packed to long DFP)
 *        CXPT (packed to extended DFP)
-*  
-* This routine tests both signed and unsigned packed decimal fields 
+*
+* This routine tests both signed and unsigned packed decimal fields
 * and ignore sign flag.
 *
 * Test data is compiled into this program.  The test script that runs
@@ -72,9 +72,9 @@
 *
 * Test Case Order
 * 1) Long signed packed to long DFP tests
-* 2) Long unsigned packed to long DFP tests 
+* 2) Long unsigned packed to long DFP tests
 * 3) Extended signed packed to extended DFP tests
-* 4) Extended unsigned packed to extended DFP tests  
+* 4) Extended unsigned packed to extended DFP tests
 *
 *
 * Also tests the following floating point support instructions
@@ -89,13 +89,13 @@
 .*
 .*  Macro to pad the CSECT to include result data areas if this test
 .*  program is not being assembled using asma.  asma generates a core
-.*  image that is loaded by the loadcore command, and because the 
+.*  image that is loaded by the loadcore command, and because the
 .*  core image is a binary stored in Github, it makes sense to make
-.*  this small effort to keep the core image small.  
+.*  this small effort to keep the core image small.
 .*
          AIF   (D'&ENDLABL).GOODPAD
          MNOTE 4,'Missing or invalid CSECT padding label ''&ENDLABL'''
-         MNOTE *,'No CSECT padding performed'  
+         MNOTE *,'No CSECT padding performed'
          MEXIT
 .*
 .GOODPAD ANOP            Label valid.  See if we're on asma
@@ -104,14 +104,14 @@
          MEXIT
 .*
 .NOPAD   ANOP
-         MNOTE *,'asma detected; no CSECT padding performed'  
+         MNOTE *,'asma detected; no CSECT padding performed'
          MEND
 *
          MACRO
          SVCALL &CODE
 * SVCALL macro - perform supervisory functions
 .* Perform various functions as SVCs on Hercules (asma), and by
-.* z/CMS friendly equivalents otherwise.  
+.* z/CMS friendly equivalents otherwise.
          AIF   ('&SYSASM' EQ 'A SMALL MAINFRAME ASSEMBLER').DOSVC
          AIF   ('&CODE' EQ 'EOJ').ZEOJ
          AIF   ('&CODE' EQ 'AEOJ').ZAEOJ
@@ -160,23 +160,23 @@
          MEND
 *
 *  Note: for compatibility with the z/CMS test rig, do not change
-*  or use R11, R14, or R15.  Everything else is fair game.  
+*  or use R11, R14, or R15.  Everything else is fair game.
 *
 DFPLTTDC START 0
 STRTLABL EQU   *
-R0       EQU   0                   
-R1       EQU   1                   
-R2       EQU   2                   
-R3       EQU   3                   
-R4       EQU   4                   
-R5       EQU   5                   
-R6       EQU   6                   
-R7       EQU   7                   
-R8       EQU   8                   
-R9       EQU   9                   
-R10      EQU   10                  
+R0       EQU   0
+R1       EQU   1
+R2       EQU   2
+R3       EQU   3
+R4       EQU   4
+R5       EQU   5
+R6       EQU   6
+R7       EQU   7
+R8       EQU   8
+R9       EQU   9
+R10      EQU   10
 R11      EQU   11                  **Reserved for z/CMS test rig
-R12      EQU   12                 
+R12      EQU   12
 R13      EQU   13                  Mainline return address
 R14      EQU   14                  **Return address for z/CMS test rig
 R15      EQU   15                  **Base register on z/CMS or Hyperion
@@ -202,13 +202,13 @@ FPR15    EQU   15
 *
          USING *,R15
 *
-* Above works on real iron (R15=0 after sysclear) 
+* Above works on real iron (R15=0 after sysclear)
 * and in z/CMS (R15 points to start of load module)
 *
-         SPACE 2 
+         SPACE 2
 ***********************************************************************
 *
-* Low core definitions, Restart PSW, Program Check routine, and 
+* Low core definitions, Restart PSW, Program Check routine, and
 * Supervisor Call routine..
 *
 ***********************************************************************
@@ -228,30 +228,30 @@ SVOLDPSW EQU   STRTLABL+X'140'     z/Arch Supervisor call old PSW
 PCOLDPSW EQU   STRTLABL+X'150'     z/Arch Program check old PSW
 *
          ORG   STRTLABL+X'1A0'     z/Arch Restart PSW
-         DC    X'0000000180000000',AD(START)   
+         DC    X'0000000180000000',AD(START)
 *
          ORG   STRTLABL+X'1C0'     z/Arch Supervisor call new PSW
          DC    X'0000000000000000',AD(SVCALL)
 *
          ORG   STRTLABL+X'1D0'     z/Arch Program check new PSW
          DC    X'0000000000000000',AD(PROGCHK)
-* 
+*
 * Program check routine.  If Program Specification or Data Exception,
 * continue execution at the instruction following the program check.
 * Otherwise, hard wait.
 * Save Program interrup code to confirm Program Exceptions:
-* Data with DXC 0, general operand for 'Unused digits must be zero.' 
+* Data with DXC 0, general operand for 'Unused digits must be zero.'
 * checks.
 *
          ORG   STRTLABL+X'200'
 PROGCHK  DS    0H            Program check occured...
          MVC   LASTPCIND,PCINTCD
          CLI   PCINTCD+1,X'06'  Program Specification Exception?
-         JE    PCCONT            ..yes, continue test         
+         JE    PCCONT            ..yes, continue test
          CLI   PCINTCD+1,X'07'  Data Exception?
          JE    PCCONT            ..yes, continue test
 *                            ..no, hardwait (not sure if R15 is ok)
-PCNOTDTA DS    0H             
+PCNOTDTA DS    0H
          SVCALL AEOJ         Signal abend
 *
 PCCONT   DS    0H
@@ -314,7 +314,7 @@ HARDWAIT DC    X'0002000000000000',XL6'00',X'DEAD' Abnormal end
 LASTPCIND DS   H              last Interupt code
 *
          LTORG ,             Interrupt handler literal pool
-*         
+*
 ***********************************************************************
          EJECT
 ***********************************************************************
@@ -347,47 +347,47 @@ START    DS    0H
 *
 CTLR0    DS    F
 *
-* Input values parameter list, three fullwords for each test data set 
-*      1) Address of inputs, 
+* Input values parameter list, three fullwords for each test data set
+*      1) Address of inputs,
 *      2) Address to place results, and
-*      3) Address to place DXC/Flags/cc values.  
+*      3) Address to place DXC/Flags/cc values.
 *
          ORG   STRTLABL+X'300'  Enable run-time replacement
 *
 * Test sets for Convert From Packed : CDPT and CXDT
 *
 ARGLSP   DS    0F             Input for long signed packed
-         DC    A(LSPADRS)     
+         DC    A(LSPADRS)
          DC    A(LSPOUT)
          DC    A(LSPOUTCC)
 
 ARGLUP   DS    0F             Input for long unsigned packed
-         DC    A(LUPADRS)     
+         DC    A(LUPADRS)
          DC    A(LUPOUT)
-         DC    A(LUPOUTCC)           
+         DC    A(LUPOUTCC)
 
 
 ARGXSP   DS    0F             Input for extended signed packed
-         DC    A(XSPADRS)     
+         DC    A(XSPADRS)
          DC    A(XSPOUT)
-         DC    A(XSPOUTCC)          
-         
+         DC    A(XSPOUTCC)
+
 ARGXUP   DS    0F             Input for extended unsigned packed
-         DC    A(XUPADRS)     
+         DC    A(XUPADRS)
          DC    A(XUPOUT)
-         DC    A(XUPOUTCC)   
-*         
+         DC    A(XUPOUTCC)
+*
          EJECT
 ***********************************************************************
 *
 * Perform CONVERT FROM PACKED for signed packed tests.
-* This includes 14 packed fields with two CDPT executions  
-* per field. CDPT The condition code remained unchanged. 
+* This includes 14 packed fields with two CDPT executions
+* per field. CDPT The condition code remained unchanged.
 *
-*        R0    work register      
+*        R0    work register
 *        R1    length of packed field (R5 ->)
 *        R2    pointer to input address list
-*              
+*
 *        R5    pointer to packed signed field
 *        R7    pointer to results area
 *        R8    pointer to prog Check, DXC, CC area
@@ -396,7 +396,7 @@ ARGXUP   DS    0F             Input for extended unsigned packed
 *        R13   RETURN ADDRESS
 *        R15   Base register
 *
-*        FPR0  work register - result of CDPT and CXDT instructions      
+*        FPR0  work register - result of CDPT and CXDT instructions
 ***********************************************************************
          SPACE 2
 TESTLSP  DS    0H             Test long signed packed input
@@ -411,17 +411,17 @@ TESTLSP  DS    0H             Test long signed packed input
          LTR   R5,R5          End of arg list?
          BZR   R13              yes, return
 
-         LR    R1,R5          packed field address    
+         LR    R1,R5          packed field address
          S     R1,=F'2'       packed field length address
          LH    R1,0(R1)       get packed field length
          BCTR  R1,0              less one (for Execute)
-         
+
          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
 
          EX    R1,LSPEX       do CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND    
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0             Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)     save conversion
@@ -429,11 +429,11 @@ TESTLSP  DS    0H             Test long signed packed input
          LA    R8,4(R8)       move to next result exception
 
          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
-         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable         
-         
+         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+
          EX    R1,LSPEX+6     do 2nd CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND  
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0             Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)     save conversion
@@ -451,13 +451,13 @@ LSPEX    CDPT  FPR0,0(,R5),8      SIGNED PACKED
 ***********************************************************************
 *
 * Perform CONVERT FROM PACKED for unsigned packed tests.
-* This includes 10 packed fields with two CDPT executions  
-* per field. CDPT The condition code remained unchanged. 
+* This includes 10 packed fields with two CDPT executions
+* per field. CDPT The condition code remained unchanged.
 *
-*        R0    work register      
+*        R0    work register
 *        R1    length of packed field (R5 ->)
 *        R2    pointer to input address list
-*              
+*
 *        R5    pointer to packed unsigned field
 *        R7    pointer to results area
 *        R8    pointer to prog Check, DXC, CC area
@@ -466,7 +466,7 @@ LSPEX    CDPT  FPR0,0(,R5),8      SIGNED PACKED
 *        R13   RETURN ADDRESS
 *        R15   Base register
 *
-*        FPR0  work register - result of CDPT and CXDT instructions      
+*        FPR0  work register - result of CDPT and CXDT instructions
 ***********************************************************************
          SPACE 2
 TESTLUP  DS    0H             Test long unsigned packed input
@@ -481,17 +481,17 @@ TESTLUP  DS    0H             Test long unsigned packed input
          LTR   R5,R5          End of arg list?
          BZR   R13              yes, return
 
-         LR    R1,R5          packed field address    
+         LR    R1,R5          packed field address
          S     R1,=F'2'       packed field length address
          LH    R1,0(R1)       get packed field length
          BCTR  R1,0              less one (for Execute)
-         
+
          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
 
          EX    R1,LUPEX       do CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND    
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0             Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)     save conversion
@@ -499,11 +499,11 @@ TESTLUP  DS    0H             Test long unsigned packed input
          LA    R8,4(R8)       move to next result exception
 
          LD    FPR0,LFPINVL   Ensure an unchanged FPR0 is detectable
-         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable         
-         
+         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+
          EX    R1,LUPEX+6     do 2nd CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND  
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0             Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)     save conversion
@@ -521,13 +521,13 @@ LUPEX    CDPT  FPR0,0(,R5),0        UNSIGNED PACKED
 ***********************************************************************
 *
 * Perform CONVERT FROM PACKED for signed packed tests.
-* This includes 22 packed fields with two CXPT executions  
-* per field. For CXPT, the condition code remained unchanged. 
+* This includes 22 packed fields with two CXPT executions
+* per field. For CXPT, the condition code remained unchanged.
 *
-*        R0    work register      
+*        R0    work register
 *        R1    length of packed field (R5 ->)
 *        R2    pointer to input address list
-*              
+*
 *        R5    pointer to packed signed field
 *        R7    pointer to results area
 *        R8    pointer to prog Check, DXC, CC area
@@ -536,7 +536,7 @@ LUPEX    CDPT  FPR0,0(,R5),0        UNSIGNED PACKED
 *        R13   RETURN ADDRESS
 *        R15   Base register
 *
-*        FPR0  work register - result of CDPT and CXDT instructions      
+*        FPR0  work register - result of CDPT and CXDT instructions
 ***********************************************************************
          SPACE 2
 TESTXSP  DS    0H              Test extended unsigned packed input
@@ -551,36 +551,36 @@ TESTXSP  DS    0H              Test extended unsigned packed input
          LTR   R5,R5           End of arg list?
          BZR   R13              yes, return
 
-         LR    R1,R5           packed field address    
+         LR    R1,R5           packed field address
          S     R1,=F'2'        packed field length address
          LH    R1,0(R1)        get packed field length
          BCTR  R1,0              less one (for Execute)
-         
+
          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
          LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
 
          EX    R1,XSPEX        do CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND    
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0              Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)      save conversion - first half
-         STD   FPR2,8(R7)      save conversion - second half     
-         LA    R7,16(R7)       move to next result        
+         STD   FPR2,8(R7)      save conversion - second half
+         LA    R7,16(R7)       move to next result
          LA    R8,4(R8)        move to next result exception
 
          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
-         LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable         
-         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable         
-         
+         LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
+         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+
          EX    R1,XSPEX+6      do 2nd CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND  
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0              Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)      save conversion - first half
-         STD   FPR2,8(R7)      save conversion - second half     
+         STD   FPR2,8(R7)      save conversion - second half
          LA    R7,16(R7)       move to next result
          LA    R8,4(R8)        move to next result exception
 
@@ -596,13 +596,13 @@ XSPEX    CXPT  FPR0,0(,R5),8       SIGNED PACKED
 ***********************************************************************
 *
 * Perform CONVERT FROM PACKED for unsigned packed tests.
-* This includes 17 packed fields with two CXPT executions  
-* per field. For CXPT, the condition code remained unchanged. 
+* This includes 17 packed fields with two CXPT executions
+* per field. For CXPT, the condition code remained unchanged.
 *
-*        R0    work register      
+*        R0    work register
 *        R1    length of packed field (R5 ->)
 *        R2    pointer to input address list
-*              
+*
 *        R5    pointer to packed unsigned field
 *        R7    pointer to results area
 *        R8    pointer to prog Check, DXC, CC area
@@ -611,7 +611,7 @@ XSPEX    CXPT  FPR0,0(,R5),8       SIGNED PACKED
 *        R13   RETURN ADDRESS
 *        R15   Base register
 *
-*        FPR0  work register - result of CDPT and CXDT instructions      
+*        FPR0  work register - result of CDPT and CXDT instructions
 ***********************************************************************
          SPACE 2
 TESTXUP  DS    0H              Test extended unsigned packed input
@@ -626,36 +626,36 @@ TESTXUP  DS    0H              Test extended unsigned packed input
          LTR   R5,R5           End of arg list?
          BZR   R13              yes, return
 
-         LR    R1,R5           packed field address    
+         LR    R1,R5           packed field address
          S     R1,=F'2'        packed field length address
          LH    R1,0(R1)        get packed field length
          BCTR  R1,0              less one (for Execute)
-         
+
          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
          LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
          MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
 
          EX    R1,XUPEX        do CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND    
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0              Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)      save conversion - first half
-         STD   FPR2,8(R7)      save conversion - second half     
-         LA    R7,16(R7)       move to next result        
+         STD   FPR2,8(R7)      save conversion - second half
+         LA    R7,16(R7)       move to next result
          LA    R8,4(R8)        move to next result exception
 
          LD    FPR0,LFPINVL    Ensure an unchanged FPR0 is detectable
-         LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable         
-         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable         
-         
+         LD    FPR2,LFPINVL    Ensure an unchanged FPR2 is detectable
+         MVC   LASTPCIND,=x'FFFF' ensure Prg Check detectable
+
          EX    R1,XUPEX+6      do 2nd CDPT into FPR0
-         
-         MVC   0(L'LASTPCIND,R8),LASTPCIND  
+
+         MVC   0(L'LASTPCIND,R8),LASTPCIND
          EFPC  R0              Extract FPC contents to R0
          STCM  R0,B'0010',2(R8)  Store any DXC code
          STD   FPR0,0(R7)      save conversion - first half
-         STD   FPR2,8(R7)      save conversion - second half     
+         STD   FPR2,8(R7)      save conversion - second half
          LA    R7,16(R7)       move to next result
          LA    R8,4(R8)        move to next result exception
 
@@ -666,7 +666,7 @@ TESTXUP  DS    0H              Test extended unsigned packed input
 *
 XUPEX    CXPT  FPR0,0(,R5),0       UNSIGNED PACKED
          CXPT  FPR0,0(,R5),1       UNSIGNED PACKED - ignore sign
-         LTORG         
+         LTORG
          EJECT
 ***********************************************************************
          SPACE 3
@@ -682,17 +682,17 @@ XUPEX    CXPT  FPR0,0(,R5),0       UNSIGNED PACKED
          EJECT
 ***********************************************************************
 *
-*  Invalid FPR results ...  
+*  Invalid FPR results ...
 *
-***********************************************************************         
-LFPINVL  DC    X'FFFFFFFFFFFFFFFF'  Invalid result, used to 
+***********************************************************************
+LFPINVL  DC    X'FFFFFFFFFFFFFFFF'  Invalid result, used to
 *                                ..polute result FPR
 XFPINVL  DC    X'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'  Invalid result,
 *                                ..used to polute result EXTENDED FPR
          EJECT
 ***********************************************************************
 *
-*  Input: Address list of Signed Long Pack fields 
+*  Input: Address list of Signed Long Pack fields
 *
 ***********************************************************************
 LSPADRS  DS    0F
@@ -709,14 +709,14 @@ LSPADRS  DS    0F
          DC    A(LSP11)
          DC    A(LSP12)
          DC    A(LSP13)
-         DC    A(LSP14)                  
-*                                    
+         DC    A(LSP14)
+*
          DC    F'0'                 end of address list
-         SPACE 1           
+         SPACE 1
 ***********************************************************************
 *
 *  Input: Signed Long Pack test fields.
-*              Length (2 bytes) of packed field preceeds packed test       
+*              Length (2 bytes) of packed field preceeds packed test
 *
 ***********************************************************************
          DS    0H
@@ -749,22 +749,22 @@ LSP09    DC    P'+3141592653589793'
          DS    0H
          DC    AL2(L'LSP10)
 LSP10    DC    P'-3141592653589793'
-         DS    0H         
+         DS    0H
          DC    AL2(L'LSP11)
 LSP11    DC    P'+93141592653589793'   error - too long - 17 digits
          DS    0H
-         DC    AL2(L'LSP12)              
+         DC    AL2(L'LSP12)
 LSP12    DC    P'-93141592653589793'   error - too long - 17 digits
-         DS    0H         
+         DS    0H
          DC    AL2(L'LSP13)
 LSP13    DC    P'+993141592653589793'  Program Specification Exception
          DS    0H
-         DC    AL2(L'LSP14)              
+         DC    AL2(L'LSP14)
 LSP14    DC    P'-993141592653589793'  Program Specification Exception
-         EJECT 
+         EJECT
 ***********************************************************************
 *
-*  Input: Address list of Unsigned Long Pack fields 
+*  Input: Address list of Unsigned Long Pack fields
 *
 ***********************************************************************
 LUPADRS  DS    0F
@@ -777,14 +777,14 @@ LUPADRS  DS    0F
          DC    A(LUP07)
          DC    A(LUP08)
          DC    A(LUP09)
-         DC    A(LUP10)         
-*                  
+         DC    A(LUP10)
+*
          DC    F'0'                 end of address list
-         SPACE 1           
+         SPACE 1
 ***********************************************************************
 *
 *  Input: Unsigned Long Pack test fields.
-*              Length (2 bytes) of packed field preceeds packed test       
+*              Length (2 bytes) of packed field preceeds packed test
 *
 ***********************************************************************
          DS    0H
@@ -815,14 +815,14 @@ LUP08    DC    X'93141592653589793'     error - too long - 17 digits
          DC    AL2(L'LUP09)
 LUP09    DC    X'993141592653589793'    error - too long - 18 digits
          DS    0H
-         DC    AL2(L'LUP10)              
+         DC    AL2(L'LUP10)
 LUP10    DC    X'9993141592653589793'  Program Specification Exception
          EJECT
 ***********************************************************************
 *
 *  Input: Address list of Signed Extended Pack fields
-*              - use long packed test fields 
-*              - add extended fields with 17-34 digits          
+*              - use long packed test fields
+*              - add extended fields with 17-34 digits
 *
 ***********************************************************************
 XSPADRS  DS    0F
@@ -841,22 +841,22 @@ XSPADRS  DS    0F
          DC    A(LSP11)
          DC    A(LSP12)
          DC    A(LSP13)
-         DC    A(LSP14)                  
-*                             additional extended signed packed fields  
+         DC    A(LSP14)
+*                             additional extended signed packed fields
          DC    A(XSP01)
          DC    A(XSP02)
          DC    A(XSP03)
-         DC    A(XSP04)  
+         DC    A(XSP04)
          DC    A(XSP05)
          DC    A(XSP06)
          DC    A(XSP07)
-         DC    A(XSP08)                  
-*                                                                          
+         DC    A(XSP08)
+*
          DC    F'0'                 end of address list
 ***********************************************************************
 *
 *  Input: Signed Extended Pack test fields: 17-34 digits.
-*              Length (2 bytes) of packed field preceeds packed test       
+*              Length (2 bytes) of packed field preceeds packed test
 *
 ***********************************************************************
          DS    0H
@@ -864,7 +864,7 @@ XSPADRS  DS    0F
 XSP01    DC    P'+1234567890123456789012345'
          DS    0H
          DC    AL2(L'XSP02)
-XSP02    DC    P'-1234567890123456789012345' 
+XSP02    DC    P'-1234567890123456789012345'
          DS    0H
          DC    AL2(L'XSP03)
 XSP03    DC    P'+3141592653589793238462643383279502'
@@ -876,19 +876,19 @@ XSP04    DC    P'-3141592653589793238462643383279502'
 XSP05    DC    P'+93141592653589793238462643383279502'
          DS    0H
          DC    AL2(L'XSP06)            error - too long - 35 digits
-XSP06    DC    P'-93141592653589793238462643383279502'     
+XSP06    DC    P'-93141592653589793238462643383279502'
          DS    0H
          DC    AL2(L'XSP07)            Program Specification Exception
 XSP07    DC    P'+993141592653589793238462643383279502'
          DS    0H
          DC    AL2(L'XSP08)            Program Specification Exception
-XSP08    DC    P'-993141592653589793238462643383279502'                
+XSP08    DC    P'-993141592653589793238462643383279502'
          EJECT
 ***********************************************************************
 *
 *  Input: Address list of Signed Extended Pack fields
-*              - use long packed test fields 
-*              - add extended fields with 17-34 digits          
+*              - use long packed test fields
+*              - add extended fields with 17-34 digits
 *
 ***********************************************************************
 XUPADRS  DS    0F
@@ -903,21 +903,21 @@ XUPADRS  DS    0F
          DC    A(LUP07)
          DC    A(LUP08)
          DC    A(LUP09)
-         DC    A(LUP10)          
-*                             additional extended signed packed fields  
+         DC    A(LUP10)
+*                             additional extended signed packed fields
          DC    A(XUP01)
          DC    A(XUP02)
          DC    A(XUP03)
-         DC    A(XUP04)  
+         DC    A(XUP04)
          DC    A(XUP05)
          DC    A(XUP06)
-         DC    A(XUP07)         
-*                                                                          
+         DC    A(XUP07)
+*
          DC    F'0'                 end of address list
 ***********************************************************************
 *
 *  Input: Signed Extended Pack test fields: 17-34 digits.
-*              Length (2 bytes) of packed field preceeds packed test       
+*              Length (2 bytes) of packed field preceeds packed test
 *
 ***********************************************************************
          DS    0H
@@ -925,7 +925,7 @@ XUPADRS  DS    0F
 XUP01    DC    X'12345678901234567890'
          DS    0H
          DC    AL2(L'XUP02)
-XUP02    DC    X'1234567890123456789012345' 
+XUP02    DC    X'1234567890123456789012345'
          DS    0H
          DC    AL2(L'XUP03)
 XUP03    DC    X'3141592653589793238462643'

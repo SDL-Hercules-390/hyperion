@@ -20,7 +20,7 @@ cpuserial   666666
 
 *If $can_s370_mode
   *If $max_cpu_engines > 0
-  
+
 #----------------------------------------------------------------------
 
 defsym      test_name         "S/370  BASIC  FMT-0  CPUs = 1"
@@ -103,7 +103,7 @@ script "$(testpath)/stidp-s370.subtst"
     *Message SKIPPING: MAXCPU < 1
   *Fi
   *If $max_cpu_engines > 1
-  
+
 #----------------------------------------------------------------------
 
 defsym      test_name         "S/370  BASIC  FMT-0  CPUs = 2"

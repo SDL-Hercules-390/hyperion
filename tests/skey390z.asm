@@ -30,7 +30,7 @@
 *   to fetch the next instruction), which is expected.
 *
 *   FINALLY, in order to support successfully running on non-Hercules
-*   systems, we utilize the Hercules "CPUVERID xx FORCE" statement 
+*   systems, we utilize the Hercules "CPUVERID xx FORCE" statement
 *   to allow us to detect if we're running under Hercules. On "real
 *   iron" (including  zPDT and RD&T) the CPUID "Version code" (which
 *   they're now calling the "Environment" field) will be either 00,
@@ -322,7 +322,7 @@ ZARCH    STIDP CPUID                Save CPU ID (for later test for VM)
          L     R2,=A((7*_4K)+X'900')
          SSKE  R1,R2
          LCTLG R1,R1,CR1_Z              Configure DAT
-         SSM   =X'04'                   Enable DAT 
+         SSM   =X'04'                   Enable DAT
          IVSK  R1,R2
          SSM   =X'00'                   Disable DAT
          CLM   R1,B'0001',=X'68'
@@ -457,7 +457,7 @@ SKIPTBZ  EQU   *
          L     R2,=A(2*_1M)
          PFMF  R1,R2
          L     R2,=A(2*_1M)
-         ISKE  R1,R2 
+         ISKE  R1,R2
          CLM   R1,B'0001',=X'F2'    (spot check)
          BNE   *+1
          L     R2,=A(2*_1M+(128*_4K))
@@ -544,14 +544,14 @@ SKIPRRBM EQU   *
 **********                                                   **********
 ***********************************************************************
 ***********************************************************************
-                                                                SPACE 2 
+                                                                SPACE 2
          LPSWE GOODPSWZ               Load SUCCESS disabled wait PSW
                                                                 SPACE 3
 GOODPSWZ DC    0D'0',XL4'00020001'    z/Arch SUCCESS disabled wait PSW
          DC    XL4'80000000'          z/Arch SUCCESS disabled wait PSW
          DC    XL4'00000000'          z/Arch SUCCESS disabled wait PSW
          DC    A(0)                   z/Arch SUCCESS disabled wait PSW
-                                                                SPACE 2 
+                                                                SPACE 2
 FAILZ    LPSWE FAILPSWZ               Load FAILURE disabled wait PSW
 *                                     (currently unused but available
 *                                      for future debugging purposes)
@@ -683,7 +683,7 @@ SSKE_MB  EQU   X'01'              Multiple Blocks Option
          LTORG ,                                Literals pool
                                                                 EJECT
 ***********************************************************************
-*                      390 DAT tables        
+*                      390 DAT tables
 ***********************************************************************
                                                                 SPACE
          ORG   TEST+X'1000'
@@ -711,7 +711,7 @@ PAGTAB39 DC    A(0*_4K)
          DC    A(15*_4K)
                                                                 EJECT
 ***********************************************************************
-*                      z/Arch DAT tables        
+*                      z/Arch DAT tables
 ***********************************************************************
                                                                 SPACE
          ORG   TEST+X'2000'

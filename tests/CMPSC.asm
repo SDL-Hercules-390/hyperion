@@ -130,8 +130,8 @@ FLAGADDR EQU   X'500'             Fixed address of test results flag
 INADDR   EQU   X'1000'            Address of input data
 CMPADDR  EQU   X'2000'            Address of compression buffer
 EXPADDR  EQU   X'3000'            Address of expansion buffer
-CDICTADR EQU   X'20000'           Address of 64K compression dictionary 
-EDICTADR EQU   X'30000'           Address of 64K expansion dictionary 
+CDICTADR EQU   X'20000'           Address of 64K compression dictionary
+EDICTADR EQU   X'30000'           Address of 64K expansion dictionary
                                                                 SPACE 3
          DC    0D'0'                    (alignment)
 CMP_R0   DC    XL8'0000000000005200'    R0 Compression options

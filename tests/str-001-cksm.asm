@@ -7,7 +7,7 @@
 *
 ***********************************************************************
 *
-*                        str-001-cksm.asm 
+*                        str-001-cksm.asm
 *
 * Created and placed into the public domain 2018-12-30 by Bob Polmanter
 * Remove runtest *Compare dependency on 2022-03-08 by Fish

@@ -1466,7 +1466,7 @@ U32     n;                              /* 32-bit operand values     */
   SLRgen( r1, C )                                                     \
   SLRgen( r1, D )                                                     \
   SLRgen( r1, E )                                                     \
-  SLRgen( r1, F )                                                    
+  SLRgen( r1, F )
 
 SLRgenr2( 0 )
 SLRgenr2( 1 )

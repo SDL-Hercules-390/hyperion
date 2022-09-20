@@ -2002,7 +2002,7 @@ U32    newgr1;
 /* only be used (executed) by guests running under z/VM via z/VM     */
 /* instruction interception and simulation. An operation execption   */
 /* program interrupt will always occur if this instruction is not    */
-/* intercepted by z/VM.                                              */ 
+/* intercepted by z/VM.                                              */
 /* Ref: page 895 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
 /*-------------------------------------------------------------------*/
 DEF_INST( store_hypervisor_information )
@@ -2026,7 +2026,7 @@ DEF_INST( store_hypervisor_information )
 /* only be used (executed) by guests running under z/VM via z/VM     */
 /* instruction interception and simulation. An operation execption   */
 /* program interrupt will always occur if this instruction is not    */
-/* intercepted by z/VM.                                              */ 
+/* intercepted by z/VM.                                              */
 /* Ref: page 870 of SC24-6272-03 "zVM 7.1 CP Programming Services"   */
 /*-------------------------------------------------------------------*/
 DEF_INST( extract_and_set_storage_attributes )

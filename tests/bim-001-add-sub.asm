@@ -67,7 +67,7 @@
 * Basic 32-bit test data is:    2147483647(=M), 0, 1, -1,
 *            -2147483647(=-M), -2147483648(=-M-1=-(M+1))
 *
-* Basic 64-bit test data is:    9223372036854775807(=G) , 0, 1, -1, 
+* Basic 64-bit test data is:    9223372036854775807(=G) , 0, 1, -1,
 *   -9223372036854775807(=-G), -9223372036854775808(=-G-1=-(G+1))
 *
 * Test Case Order
@@ -76,11 +76,11 @@
 * 3) SR,  RR, 32-bit subtraction
 * 4) SGR, RR, 64-bit subtraction
 *
-* Routines have not been coded for the other ADD / SUB instructions.  
+* Routines have not been coded for the other ADD / SUB instructions.
 *   It would not be hard, and no additional test data would be needed.
 *
 * Each value is added / subtracted to every value twice, once with
-*   interruptions suppressed, once with interruptions enabled.  
+*   interruptions suppressed, once with interruptions enabled.
 *   72 results are generated for each such test case.
 *
 * Opportunities for future development:
@@ -98,15 +98,15 @@ R0       EQU   0                   Work register for cc extraction
 *                                  ..also augend / minuend and result
 *                                  ..register for two-operand add and
 *                                  ..subtract
-R1       EQU   1                   addend / subtrahend register for 
+R1       EQU   1                   addend / subtrahend register for
 *                                  ..RR two-operand variants.
-R2       EQU   2                   Count of test augends / minuends 
-*                                  ..remaining  
-R3       EQU   3                   Pointer to next test augend / 
+R2       EQU   2                   Count of test augends / minuends
+*                                  ..remaining
+R3       EQU   3                   Pointer to next test augend /
 *                                  ..minuend
-R4       EQU   4                   Count of test addends / 
+R4       EQU   4                   Count of test addends /
 *                                  ..subtrahends remaining
-R5       EQU   5                   Pointer to next test addend / 
+R5       EQU   5                   Pointer to next test addend /
 *                                  ..subtrahend
 R6       EQU   6                   Size of each augend / minuend and
 *                                  ..addend / subtrahend
@@ -188,7 +188,7 @@ START    DS    0H
 * SUB REGISTER (64-bit operands, two operand)
 *
          LA    R10,SGRTABL   64-bit test table
-         BAS   R13,SGRTEST   SGR, subtract register 64-bit         
+         BAS   R13,SGRTEST   SGR, subtract register 64-bit
 *
 ***********************************************************************
 *                   Verify test results...
@@ -211,7 +211,7 @@ FAILPSW  DC    X'0002000000000000',XL6'00',X'0BAD' Abnormal end
 *      3) Address of addends / subtrahends
 *      4) Address to place sums / differences
 *      5) Address to place condition code and interruption code
-*      6) Size of augends / minuends, addends / subtrahends 
+*      6) Size of augends / minuends, addends / subtrahends
 *         ..and sums / differences
 *
 ARTABL   DS    0F           Inputs for 32-bit/32-bit tests
@@ -229,14 +229,14 @@ AGRTABL  DS    0F           Inputs for 64-bit/64-bit tests
          DC    A(AGRSUM)    Address to store sums
          DC    A(AGRFLG)    Address to store cc, int code
          DC    A(8)         8 byte augends, addends and sums
-*        
+*
 SRTABL   DS    0F           Inputs for 32-bit/32-bit tests
          DC    A(VALCT/4)
          DC    A(A32VALS)   Address of minuends
          DC    A(A32VALS)   Address of subtrahends
          DC    A(SRSUM)     Address to store differences
          DC    A(SRFLG)     Address to store cc, int code
-         DC    A(4)         4 byte minuends, subtrahends and 
+         DC    A(4)         4 byte minuends, subtrahends and
 *                           ..differences
 *
 SGRTABL  DS    0F           Inputs for 64-bit/64-bit tests
@@ -246,7 +246,7 @@ SGRTABL  DS    0F           Inputs for 64-bit/64-bit tests
          DC    A(SGRSUM)    Address to store differences
          DC    A(SGRFLG)    Address to store cc, int code
          DC    A(8)         8 byte minuends, subtrahends and
-*                           ..differences         
+*                           ..differences
          EJECT
 ***********************************************************************
 *
@@ -391,7 +391,7 @@ SRTEST   IPM   R0            Get cc, program mask
          OI    ARCCPMOV,X'08'  Enable fixed point overflow ints
          LM    R2,R3,0(R10)  Get count and addresses of minuends
          LM    R7,R8,12(R10) Get address of result area and flag area.
-         L     R6,20(,R10)   Get size of minuends, subtrahends 
+         L     R6,20(,R10)   Get size of minuends, subtrahends
 *                            ..and results.
          LTR   R2,R2         Any test cases?
          BZR   R13           ..No, return to caller
@@ -457,7 +457,7 @@ SGRTEST  IPM   R0            Get cc, program mask
          OI    ARCCPMOV,X'08'  Enable fixed point overflow ints
          LM    R2,R3,0(R10)  Get count and addresses of minuends
          LM    R7,R8,12(R10) Get address of result area and flag area.
-         L     R6,20(,R10)   Get size of minuends, subtrahends and 
+         L     R6,20(,R10)   Get size of minuends, subtrahends and
 *                            ..and results.
          LTR   R2,R2         Any test cases?
          BZR   R13           ..No, return to caller
@@ -515,8 +515,8 @@ ARCCPMOV DC    F'0'          cc/program mask with interupts enabled
          EJECT
 ***********************************************************************
 *
-* Integer inputs.  The same values are used for 32-bit addends / 
-* subtrahends and augends / minuends.  Each addend is added to each 
+* Integer inputs.  The same values are used for 32-bit addends /
+* subtrahends and augends / minuends.  Each addend is added to each
 * augend, and each subtrahend is subtracted from each minuend.
 *
 * N.B., the number of 32-bit and 64-bit test values must be the same.

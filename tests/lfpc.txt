@@ -10,6 +10,6 @@ r 204=B29D0314     # LFPC FPCREG       Load value into FPC register
 r 208=82000300     # LPSW WAITPSW      Load enabled wait PSW
 r 300=070A000080FED0D0                 # WAITPSW Enabled wait state PSW
 r 310=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 314=F8F8FF73     # FPCREG            Floating point control register        
+r 314=F8F8FF73     # FPCREG            Floating point control register
 s+
 restart

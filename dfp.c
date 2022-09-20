@@ -1493,7 +1493,7 @@ dfp_number_from_packed(decNumber* dn, char* packed, int len,
         /* Data exception if invalid digit */
         if (c > 0x09) return 1;
         *ppw++ = c + '0';
-        
+
         if (i == len && signflag) break;   /* is last nibble a sign, already done */
 
         /* 2nd digit of byte */
@@ -1503,7 +1503,7 @@ dfp_number_from_packed(decNumber* dn, char* packed, int len,
         *ppw++ = c + '0';
     }
     *ppw = '\0';
- 
+
     /* Convert decimal string to decimal number structure */
     decNumberFromString(dn, pwork, pset);
 
@@ -1548,7 +1548,7 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
     int             pSigned;                /* packed field is signed    */
     unsigned char   pSign;                  /* packed sign               */
     int             pDigits;                /* number of packed digits   */
-    
+
     UNREFERENCED(pset);
 
     /* determine whether packed value is signed and the sign field */
@@ -1556,13 +1556,13 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
     if (pSigned) {
         if (decNumberIsNegative(dn)) {
             pSign = 0x0D;
-            /* -0 : force positive sign based on plus-sign-control */ 
+            /* -0 : force positive sign based on plus-sign-control */
             if ( m_F && decNumberIsZero(dn))
-                pSign =  (m_P) ? 0x0F : 0x0C;      /* 0b1111 : 0b1100 */       
+                pSign =  (m_P) ? 0x0F : 0x0C;      /* 0b1111 : 0b1100 */
         }
         else {
             /* select plus sign */
-            pSign = (m_P) ? 0x0F : 0x0C;            /* 0b1111 : 0b1100 */   
+            pSign = (m_P) ? 0x0F : 0x0C;            /* 0b1111 : 0b1100 */
         }
     }
 
@@ -1570,7 +1570,7 @@ dfp_number_to_packed(decNumber* dn, decNumber* dc, char* packed, int len,
     pDigits = 2 * (len + 1) - pSigned;
 
     /* Convert decimal number to string */
-    /* only sigificant digits, ignore exponent and sign */    
+    /* only sigificant digits, ignore exponent and sign */
     if (decNumberIsNaN(dn) || (decNumberIsInfinite(dn)))
     {
         /* For NaN or Inf set cc=3 and use coefficient only */
@@ -2907,7 +2907,7 @@ char            zoned[CDZT_MAXLEN];     /* Zoned decimal operand     */
 #endif /*defined(FEATURE_048_DFP_ZONE_CONV_FACILITY)*/
 
 
-#if defined(FEATURE_080_DFP_PACK_CONV_FACILITY)                     
+#if defined(FEATURE_080_DFP_PACK_CONV_FACILITY)
 /*-------------------------------------------------------------------*/
 /* EDAF CXPT - Convert from packed to DFP Extended           [RSL-b] */
 /*-------------------------------------------------------------------*/
@@ -2950,7 +2950,7 @@ DEF_INST(convert_packed_to_dfp_ext)
             if (packed[0] & 0xF0)  rc = 1;
         }
         else {
-            /* unsigned - first byte must be 0 */ 
+            /* unsigned - first byte must be 0 */
             if (packed[0]) rc = 1;
         }
     }
@@ -3015,7 +3015,7 @@ DEF_INST(convert_packed_to_dfp_long)
             if ( (packed[0] & 0xF0) != 0)  rc = 1;
         }
         else {
-            /* unsigned - first byte must be 0 */ 
+            /* unsigned - first byte must be 0 */
             if (packed[0] != 0)  rc = 1;
         }
     }

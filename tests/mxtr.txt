@@ -1,5 +1,5 @@
 * MXTR test
-sysclear           
+sysclear
 archmode esame
 r 1a0=00000001800000000000000000000200 # z/Arch restart PSW
 r 1d0=0002000180000000000000000000DEAD # z/Arch pgm new PSW
@@ -9,14 +9,14 @@ r 208=EB3502480004 # LMG R3,R5,PACKED  Load R3=PACKED1 R4,R5=PACKED2
 r 20E=B3F30073     # CDSTR R7,R3       Load FPR R7 from PACKED1 R3
 r 212=B3DC0847     # LXDTR R4,R7,8     Load FPR R4,R6 from FPR R7
 r 216=B3FB0014     # CXSTR R1,R4       Load FPR R1,R3 from PACKED2 R4,R5
-r 21A=B2B90003     # SRNMT 3           Set decimal rounding mode              
+r 21A=B2B90003     # SRNMT 3           Set decimal rounding mode
 r 21E=B3D81094     # MXTR R9,R4,R1     Multiply FPR R4,R6 by R1,R3 giving R9,R11
 r 222=B3EB00A9     # CSXTR R10,R9,0    Convert FPR R9,R11 to PACKED R10,R11
-r 226=B3EB01C9     # CSXTR R12,R9,1    Convert FPR R9,R11 to PACKED R12,R13 
+r 226=B3EB01C9     # CSXTR R12,R9,1    Convert FPR R9,R11 to PACKED R12,R13
 r 22A=EBAD02600024 # STMG R10,R13,RESULTC  R10,R11=>RESULTC R12,R13=>RESULTF
 r 230=B2B20300     # LPSWE WAITPSW     Load enabled wait PSW
 r 240=00040000     # CTLR0             Control register 0 (bit45 AFP control)
-r 244=40000000     # FPCREG            Floating point control register        
+r 244=40000000     # FPCREG            Floating point control register
 r 248=000000000000500C                 # PACKED1  DC PL8'500'
 r 250=0000000000000000000000000000003C # PACKED2  DC PL16'3'
 r 260=FEEDFEEDFEEDFEEDFEEDFEEDFEEDFEED # RESULTC (with sign C)

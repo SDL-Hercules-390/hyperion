@@ -162,7 +162,7 @@ a real System/390.  The configuration file is an ASCII text file.
     0E40      <a href="#CTCE">CTCE</a>    31880  192.168.1.202  32880
     0E41      <a href="#CTCE">CTCE</a>    31882  192.168.1.202  32882
 
-    0E42.2    <a href="#CTCE">CTCE</a>         1=192.168.1.202            
+    0E42.2    <a href="#CTCE">CTCE</a>         1=192.168.1.202
     0460.2    <a href="#PTP">PTP</a>     192.168.200.1  192.168.200.2/24
     0470.2    <a href="#PTP">PTP</a>     tun0
 
@@ -1349,7 +1349,7 @@ a real System/390.  The configuration file is an ASCII text file.
     as follows:
     <blockquote><code>
         OSTAILOR &nbsp;z/VM</br>
-        OSTAILOR &nbsp;+Z/OS    
+        OSTAILOR &nbsp;+Z/OS
     </code> </blockquote>
     <p>
     Use the <code>ostailor</code> or <code>pgmtrace</code> panel
@@ -1383,7 +1383,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
     <code>TITLE=xxx</code> defines an optional console window title-bar string
     to be used in place of the default supplied by the windowing system, and allows
-    you to distinguish between different Hercules sessions (instances) running 
+    you to distinguish between different Hercules sessions (instances) running
     on the same machine. If the value contains any blanks, the entire option
     specification should be enclosed within double-quotes (e.g. <code>"TITLE=my title"</code>,
     <i>not</i> &nbsp;<code>TITLE="my title"</code> which is an error).
@@ -3257,7 +3257,7 @@ a real System/390.  The configuration file is an ASCII text file.
             A message is also issued whenever a successful mount or unmount
             is performed.
             <p>
-            A sample guest automount program called 
+            A sample guest automount program called
             <code><a href="https://github.com/SDL-Hercules-390/hyperion/blob/master/util/TMOUNT.txt">TMOUNT</a></code>
             for the DOS/VSE operating system is provided in the
             <code>util</code> subdirectory of the distributed source code.
@@ -4142,14 +4142,14 @@ ROUTE  00  172.21.3.32  255.255.255.224
         networking devices will fail and your guest's networking will not work.
         </i>
 
-        <p>       
+        <p>
         A Hercules CTCE device requires two even-odd pairs of devices, one for
-        reading and the other for writing.  In the previous CTCE version these had 
+        reading and the other for writing.  In the previous CTCE version these had
         to be an even-odd pair of port numbers, whereby only the even port numbers
         had to be specified in the CTCE configuration.  This restriction has now
         been removed.  Any port number > 1024 and < 65534 is allowed.  The CTCE
-        configuration specifies the listening port number at the receiving end, 
-        the sender side port number is a free randomly chosen one. 
+        configuration specifies the listening port number at the receiving end,
+        the sender side port number is a free randomly chosen one.
         <p>
         The socket connection pairs cross-connect,
         the arrows showing the send->receive direction :
@@ -4160,16 +4160,16 @@ ROUTE  00  172.21.3.32  255.255.255.224
         CTCE connected Hercules instances can be hosted on either Unix or Windows
         or MacOS platforms.  Neither side needs to be the same as the other.
         Each side can be different from the other if needed. One side
-        can be Windows and the other side can be Linux if so desired.     
+        can be Windows and the other side can be Linux if so desired.
         <p>
-        The configuration statement for CTCE devices is in one of these 2 possible 
+        The configuration statement for CTCE devices is in one of these 2 possible
         formats (noting that items between [] brackets are optional):
         <p>
-        <dl> <!-- begin CTCE parms -->     
+        <dl> <!-- begin CTCE parms -->
         <dt><code><em>ldevnum</em> &nbsp;&nbsp;&nbsp; CTCE [<em>lport</em>] [<em>rdevnum</em>=]<em>raddress</em> &nbsp; <em>rport</em>  [[<em>mtu</em>]<em>sml</em>] [ATTNDELAY <em>delay</em>] [FICON]</code>
         <dt><code><em>ldevnum</em>[.n]                CTCE [<em>lport</em>] [<em>rdevnum</em>]=<em>raddress</em>       [<em>rport</em>] [[<em>mtu</em>]<em>sml</em>] [ATTNDELAY <em>delay</em>] [FICON]</code>
         </dl> <!-- end CTCE parms -->
-            
+
         <p>
         <dl> <!-- begin required CTCE parameters -->
         <dt>There is only one or two <i>required</i> positional arguments in addition to the <em>ldevnum</em>:
@@ -4179,7 +4179,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dd>The device number (CCUU) on the <i>local</i> system.
                     Please note that this can optionally be followed by <em>.n</em> in
                     which case multiple CTCE devices can be configured with one config
-                    statement.   
+                    statement.
 
                 <p>
 
@@ -4190,7 +4190,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
                 <dt><code><em>rport</em></code>
                 <dd>The listening TCP/IP port number on the <i>remote</i> system.
-                    Please note that this parameter is only required when the 
+                    Please note that this parameter is only required when the
                     <em>rdevnum</em> parameter and the following equal sign are
                     not specified, or when the <em>mtu</em> parameter needs to be
                     specified.  When not required, the default is 3088.
@@ -4206,21 +4206,21 @@ ROUTE  00  172.21.3.32  255.255.255.224
                 <dt><code><em>lport</em></code>
                 <dd>The listening TCP/IP port number on the <i>local</i> system.
                     The default value is 3088.
-                
+
                 <p>
-                
+
                 <dt><code><em>rdevnum</em></code>
                 <dd>The device number (CCUU) on the <i>remote</i> system.
-                    The default is equal to the <em>ldevnum</em> on the  <i>local</i> system. 
-                    Please note that in case only one or two hexadecimal digits are given (i.e. a		
+                    The default is equal to the <em>ldevnum</em> on the  <i>local</i> system.
+                    Please note that in case only one or two hexadecimal digits are given (i.e. a
                     value up to 255 and thus not a complete device number CCUU), the effective
                     <em>rdevnum</em> will be computed by exclusive-or of this value with the
                     <em>ldevnum</em> specified.  In case <em>.n</em> is given and > 1, this
                     will apply to all <em>ldevnum</em> - <em>rdevnum</em> pairs.  Please see an
                     example of this down below.
 
-                <p>                
-                            
+                <p>
+
                 <dt><code><em>mtu</em></code>
                 <dd>Maximum Transmission Unit buffer size.
                     The default value is 62552 bytes.
@@ -4231,8 +4231,8 @@ ROUTE  00  172.21.3.32  255.255.255.224
 
                 <dt><code><em>sml</em></code>
                 <dd>Small minimum for MTU. The default value is 16 bytes.
-                
-                <p>              
+
+                <p>
 
                 <dt><code><em>delay</em></code>
                 <dd>The number of msec ATTN signals will be delayed for in order
@@ -4262,23 +4262,23 @@ ROUTE  00  172.21.3.32  255.255.255.224
     0E41   CTCE  30882  192.168.1.100  30882 </pre>
         </blockquote>
         <p>
-        
+
                 <p>
         Exploiting the new features of the newer CTCE version 2 format, this can be simplified omitting all port numbers
         <blockquote>
             <p>
             First Hercules PC Host with IP address 192.168.1.100:
             <pre>
-    0E40   CTCE    0E40=192.168.1.200       
+    0E40   CTCE    0E40=192.168.1.200
     0E41   CTCE    0E41=192.168.1.200        </pre>
             <p>
             Second Hercules PC Host with IP address 192.168.1.200:
             <pre>
-    0E40   CTCE    0E40=192.168.1.100       
+    0E40   CTCE    0E40=192.168.1.100
     0E41   CTCE    0E41=192.168.1.100        </pre>
         </blockquote>
         <p>
-        
+
         <p>
         As there are <em>2</em> equal <em>ldevnum</em> - <em>rdevnum</em> pairs, this can be simplified further:
         <blockquote>
@@ -4291,7 +4291,7 @@ ROUTE  00  172.21.3.32  255.255.255.224
             <pre>
     0E40.2 CTCE        =192.168.1.100        </pre>
         </blockquote>
-        <p>        
+        <p>
 
         <p>
         Showing an example of specifying a <em>rdevnum</em> using the exclusive-or operation with a small value:
@@ -4302,24 +4302,24 @@ ROUTE  00  172.21.3.32  255.255.255.224
             <p>
             The above is axactly the same as this specification:
             <pre>
-    0E40   CTCE    0E41=192.168.1.200       
-    0E41   CTCE    0E40=192.168.1.200       
-    0E42   CTCE    0E43=192.168.1.200               
+    0E40   CTCE    0E41=192.168.1.200
+    0E41   CTCE    0E40=192.168.1.200
+    0E42   CTCE    0E43=192.168.1.200
     0E43   CTCE    0E42=192.168.1.200        </pre>
                 <p>
             The above example could be used to establish a redundant pair
             of read/write CTC links, where each Hercules side uses the even
-            devnum addresses for reading, and the odd ones for writing 
-            (or the other way around).  That way, the operating system 
+            devnum addresses for reading, and the odd ones for writing
+            (or the other way around).  That way, the operating system
             definitions on each side can be identical, e.g. for a VTAM MPC CTC link :
             <pre>
-    CTCATRL  VBUILD TYPE=TRL                                                                                 
+    CTCATRL  VBUILD TYPE=TRL
     C0E40TRL TRLE  LNCTL=MPC,READ=(0E40,0E42),WRITE=(0E41,0E43)
 
-    CTCALCL  VBUILD TYPE=LOCAL                                                                      
+    CTCALCL  VBUILD TYPE=LOCAL
     C0E40LCL PU    TRLE=C0E40TRL,XID=YES,CONNTYPE=APPN,CPCP=YES,TGP=CHANNEL</pre>
         </blockquote>
-        <p>    
+        <p>
 
 <p><br>
 
