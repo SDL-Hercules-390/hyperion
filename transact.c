@@ -2508,6 +2508,7 @@ static const TXFMODELS txf_models[] =
     TXF_MODEL( 3907, z14ZR1 ),
     TXF_MODEL( 8561, z15    ),
     TXF_MODEL( 8562, z15T02 ),
+    TXF_MODEL( 3931, z16    ),
 };
 
 /*-------------------------------------------------------------------*/
