@@ -175,6 +175,13 @@
   "Sets the instruction address or address range where you wish to halt\n"      \
   "execution.  This command is synonymous with the \"s+\" command.\n"
 
+#define bear_cmd_desc           "Display or set BEAR register"
+#define bear_cmd_help           \
+                                \
+  "Format: \"bear [address]\" where 'address' is value the BEAR register\n"     \
+  "should be set to. Enter the command without any operand to just display\n"   \
+  "the current value of the BEAR register.\n"
+
 #define cachestats_cmd_desc     "Cache stats command"
 
 #define cckd_cmd_desc           "Compressed CKD command"
@@ -1872,6 +1879,7 @@ COMMAND( "b",                       trace_cmd,              SYSCMDNOPER,        
 COMMAND( "b?",                      trace_cmd,              SYSCMDNOPER,        bquest_cmd_desc,        NULL                )
 COMMAND( "b+",                      trace_cmd,              SYSCMDNOPER,        bplus_cmd_desc,         NULL                )
 
+COMMAND( "bear",                    bear_cmd,               SYSCMDNOPER,        bear_cmd_desc,          bear_cmd_help       )
 COMMAND( "cachestats",              EXTCMD(cachestats_cmd), SYSCMDNOPER,        cachestats_cmd_desc,    NULL                )
 COMMAND( "clocks",                  clocks_cmd,             SYSCMDNOPER,        clocks_cmd_desc,        NULL                )
 COMMAND( "codepage",                codepage_cmd,           SYSCMDNOPER,        codepage_cmd_desc,      codepage_cmd_help   )

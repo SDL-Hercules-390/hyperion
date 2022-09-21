@@ -1921,6 +1921,68 @@ POP_GCC_WARNINGS()
 
 
 /*-------------------------------------------------------------------*/
+/* bear command - display or alter BEAR register                     */
+/*-------------------------------------------------------------------*/
+int bear_cmd( int argc, char* argv[], char* cmdline )
+{
+    UNREFERENCED( cmdline );
+
+    UPPER_ARGV_0( argv );
+
+    /* Correct number of arguments? */
+
+    if (argc < 1 || argc > 2)
+    {
+        // "Invalid command usage. Type 'help %s' for assistance."
+        WRMSG( HHC02299, "E", argv[0] );
+        return -1;
+    }
+
+    obtain_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+    {
+        REGS* regs = sysblk.regs[ sysblk.pcpu ];
+        char cbear[17] = {0};
+
+        if (!IS_CPU_ONLINE( sysblk.pcpu ))
+        {
+            release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+            // "Processor %s%02X: processor is not %s"
+            WRMSG( HHC00816, "E", PTYPSTR( sysblk.pcpu ), sysblk.pcpu, "online");
+            return -1;
+        }
+
+        if (argc > 1)       // (set new value)
+        {
+            U64 bear;
+            BYTE c;
+
+            if (sscanf( argv[1], "%"SCNx64"%c", &bear, &c) != 1)
+            {
+                release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+                // "Invalid argument %s%s"
+                WRMSG( HHC02205, "E", argv[1], ": invalid address" );
+                return -1;
+            }
+
+            regs->bear = bear;
+
+            // "%-14s set to %s"
+            MSGBUF( cbear, "%"PRIx64, regs->bear );
+            WRMSG( HHC02204, "I", argv[0], cbear );
+        }
+        else // (display current value)
+        {
+            // "%-14s: %s"
+            MSGBUF( cbear, "%"PRIx64, regs->bear );
+            WRMSG( HHC02203, "I", argv[0], cbear );
+        }
+    }
+    release_lock( &sysblk.cpulock[ sysblk.pcpu ]);
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* gpr command - display or alter general purpose registers          */
 /*-------------------------------------------------------------------*/
 int gpr_cmd(int argc, char *argv[], char *cmdline)
