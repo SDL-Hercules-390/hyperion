@@ -4,14 +4,14 @@
 *                     CLCLE Unaligned Buffers Test
 *
 *        NOTE: This is a copy of the CLCL Unaligned Buffers Test
-*              modified to test the CLCLE instruction and CC=3 
+*              modified to test the CLCLE instruction and CC=3
 *              with lengths > 4096.
 *              James Wekel August 2022
 ***********************************************************************
 *
-*  This program tests proper functioning of the CLCL instruction's
+*  This program tests proper functioning of the CLCLE instruction's
 *  optimization logic (specifically, the "mem_cmp" function that the
-*  CLCL instruction makes use of) to ensure the location of the in-
+*  CLCLE instruction makes use of) to ensure the location of the in-
 *  equality is properly reported.
 *
 *  Depending on the alignment of the two operands being compared, if
@@ -19,12 +19,12 @@
 *  comparison to cross a page boundary for both operands and the in-
 *  equality occurs at an offset past the distance each operand is
 *  from its respective page boundary added together, then the address
-*  of the inequality that CLCL returns would be off by the shorter
+*  of the inequality that CLCLE returns would be off by the shorter
 *  of the two distances.
 *
 *  For example, if the operand addresses were X'123456' and X'456789'
 *  (and the page size was X'800') and the inequality was at (or past)
-*  X'123877', then CLCL would incorrectly report the address of the
+*  X'123877', then CLCLE would incorrectly report the address of the
 *  inequality as being at address X'123877' - X'77' = X'123800':
 *
 *  X'123456' is X'3AA' bytes from the end of its page boundary.
@@ -64,7 +64,7 @@
 *        numcpu      1
 *        sysclear
 *
-*        loadcore    "$(testpath)/CLCLE-02-unaligned-buffers.core" 
+*        loadcore    "$(testpath)/CLCLE-02-unaligned-buffers.core"
 *
 *        runtest     0.1
 *        *Done
@@ -153,9 +153,9 @@ CHNKLOOP LR    R0,R4            R0 --> BUFFER1
                                                                 SPACE
 *                 Compare the two buffers...
                                                                 SPACE
-*                          Compare BUFFER1 with BUFFER2..                      
+*                          Compare BUFFER1 with BUFFER2..
 CONTINUE CLCLE R0,R14,0    with padding x'00'
-         BC    B'0001',CONTINUE      CC=3, not finished     
+         BC    B'0001',CONTINUE      CC=3, not finished
          BE    NXTCHUNK         Equal: Buffer compare complete
                                                                 SPACE
 *           Inequality found: VERIFY ITS ACCURACY!
@@ -182,7 +182,7 @@ NXTCHUNK ALR   R5,R8            R5 --> Next DATA1 chunk
          SR    R9,R8            Decrement DATA bytes remaining
          BZ    SUCCESS          None: We're done...
          BP    CHNKLOOP         Lots: Go compare next chunk...
-         LPR   R8,R9            Some: Make R8 <== positive remaining 
+         LPR   R8,R9            Some: Make R8 <== positive remaining
          B     CHNKLOOP         Go compare final chunk...
                                                                 EJECT
 ***********************************************************************

@@ -5,7 +5,7 @@
 *
 *        NOTE: This is based on the CLCL-et-al Test and modified
 *              to ONLY test CLCLE instruction performance.
-*                      
+*
 *        James Wekel August 2022
 ***********************************************************************
 ***********************************************************************
@@ -13,17 +13,19 @@
 *  This program ONY tests performancce of the CLCLE instructions.
 *
 ***********************************************************************
+*  NOTE: When assembling using SATK, use the "-t S390" option.
+***********************************************************************
 *
 *  Example Hercules Testcase:
 *
 *        *Testcase CLCE-04-performance (Test CLCLE instructions)
-* 
+*
 *        archlvl     390
 *        mainsize    3
 *        numcpu      1
 *        sysclear
-* 
-*        loadcore    "CLCLE-04-performance.core" 0x0
+*
+*        loadcore    "$(testpath)/CLCLE-04-performance.core" 0x0
 *
 *        ##r           21fd=ff   # (enable timing tests too!)
 *        ##runtest     300       # (TIMING too test duration)
@@ -124,16 +126,16 @@ SAVER5   DC    F'0'
 TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          BZR   R14              No, skip timing tests
                                                                 SPACE
-         LA    R5,CLEPERF         Point R5 --> testing control table    
+         LA    R5,CLEPERF         Point R5 --> testing control table
          USING CLETEST,R5         What each table entry looks like
 *
 TST91LOP EQU   *
-         ST    R5,SAVER5          save current pref table base 
+         ST    R5,SAVER5          save current pref table base
 *
          IC    R6,TNUM            Set test number
          STC   R6,TESTNUM
          IC    R6,TSUBNUM         Set sub test number
-         STC   R6,SUBTEST                                                
+         STC   R6,SUBTEST
                                                                 SPACE
 
 **       First, make sure we start clean!
@@ -143,13 +145,13 @@ TST91LOP EQU   *
          L     R11,OP1LEN           operand-1 length
          L     R6,OP1DATA         Where op1 data is right now
          L     R7,OP1LEN          How much of it there is
-         MVCL  R10,R6              
-*      
+         MVCL  R10,R6
+*
          L     R12,OP2WHERE       Where to move operand-2 data to
          L     R13,OP2LEN         How much of it there is
          L     R6,OP2DATA         Where op2 data is right now
          L     R7,OP2LEN          How much of it there is
-         MVCL  R12,R6    
+         MVCL  R12,R6
 
 *
 **       Next, time the overhead...
@@ -159,214 +161,214 @@ TST91LOP EQU   *
          BALR  R6,0
 
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4          include not finished         
+         BC    B'0001',*+4          include not finished
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4          include not finished          
+         BC    B'0001',*+4          include not finished
 *        .........ETC.........
          PRINT OFF
 *
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                            
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4          
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                            
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4          
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4                   
+         BC    B'0001',*+4
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4           
+         BC    B'0001',*+4
 *
          PRINT ON
 *
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4          include not finished          
+         BC    B'0001',*+4          include not finished
          LM    R10,R13,OPSWHERE
-         BC    B'0001',*+4          include not finished          
- 
+         BC    B'0001',*+4          include not finished
+
          BCTR  R7,R6
          STCK  ENDCLOCK
          BAL   R15,CALCDUR
@@ -379,312 +381,312 @@ TST91LOP EQU   *
          BALR  R6,0
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?          
+         BC    B'0001',*-4          not finished?
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?          
+         BC    B'0001',*-4          not finished?
 *        .........ETC.........
 *        PRINT OFF
-*                                   96 LM; CLCLE; BC instruction sets        
+*                                   96 LM; CLCLE; BC instruction sets
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                   
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4          
+         BC    B'0001',*-4
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4                               
+         BC    B'0001',*-4
 *
          PRINT ON
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?   
+         BC    B'0001',*-4          not finished?
          LM    R10,R13,OPSWHERE
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?   
+         BC    B'0001',*-4          not finished?
 
          BCTR  R7,R6
          STCK  ENDCLOCK
@@ -694,19 +696,19 @@ TST91LOP EQU   *
          MVC   PRTLINE+33(5),=CL6'CLCLE'
          BAL   R15,RPTSPEED
 *
-*  more performance tests      
+*  more performance tests
 *
          L     R5,SAVER5          restore perf table base
          USING CLETEST,R5         What each table entry looks like
-         
+
          LA    R5,CLENEXT         Go on to next table entry
          CLC   =F'0',0(R5)        End of table?
          BNE   TST91LOP           No, loop...
-         
+
          L     R1,SAVER1          Restore register 1
          L     R2,SAVER2          Restore first base register
-         BR    R14                Return to caller or FAILTEST         
-         
+         BR    R14                Return to caller or FAILTEST
+
          DROP  R5
                                                                 EJECT
 ***********************************************************************
@@ -799,7 +801,7 @@ INIT     DS     0H              Program Initialization
          LA     R3,IOCB_009     Point to IOCB
          L      R8,IOCBORB      Point to ORB
                                                                 SPACE
-         BAL    R15,IOINIT      Initialize the CPU for I/O operations        
+         BAL    R15,IOINIT      Initialize the CPU for I/O operations
          BAL    R15,ENADEV      Enable our device making ready for use
          BR     R14             Return to caller
                                                                 SPACE 5
@@ -885,8 +887,8 @@ EDIT     DC    X'402020206B2020206B202120'
                                                                 SPACE 2
 CLETEST  DSECT ,
                                                                 SPACE 2
-TNUM     DC    X'00'          CLCLE table Number  
-TSUBNUM  DC    X'00'                 sub table number   
+TNUM     DC    X'00'          CLCLE table Number
+TSUBNUM  DC    X'00'                 sub table number
          DC    X'00'
          DC    X'00'
                                                                 SPACE 2
@@ -904,7 +906,7 @@ OP2WLEN  DC    F'0'           How much data is there - 2
 FAILMASK DC    A(0)           not used in performance test
                                                                 SPACE 2
 ENDREG   DC    A(0)           not used in performance test
-ENDSTOR  DC    A(0)           not used in performance test   
+ENDSTOR  DC    A(0)           not used in performance test
                                                                 SPACE 2
 CLENEXT  EQU   *              Start of next table entry...
                                                                 SPACE 8
@@ -912,7 +914,7 @@ CLCLE04  CSECT ,
                                                                 SPACE 4
 ***********************************************************************
 *        CLCLE Performace Test data...
-*         
+*
 *        Note: The test CLCLE pad byte is always X'00'.
 *
 *        Note: These timing test do not generate a CC=3 as the
@@ -922,7 +924,7 @@ CLCLE04  CSECT ,
 ***********************************************************************
 CLEPERF  DC    0A(0)      start of table
                                                                 SPACE 4
-CLEPOP1  DC    X'91',X'00',X'00',X'00'  
+CLEPOP1  DC    X'91',X'00',X'00',X'00'
          DC    A(CLEOP10),A(512)
          DC    A(CLEOP10),A(512)
          DC    A(00+(01*K64)),A(512)
@@ -930,35 +932,35 @@ CLEPOP1  DC    X'91',X'00',X'00',X'00'
          DC    A(7) CC0
          DC    A(00+(01*K64)+512),A(REG2PATT)
                                                                 SPACE 4
-CLEPOP2  DC    X'92',X'00',X'00',X'00'  
+CLEPOP2  DC    X'92',X'00',X'00',X'00'
          DC    A(CLEOP10),A(512)
          DC    A(CLEOP10),A(512)
          DC    A(00+(02*K64)-12),A(512)         op1 crosses
-         DC    A(MB+(02*K64)),A(512)      
+         DC    A(MB+(02*K64)),A(512)
          DC    A(7) CC0
          DC    A(00+(02*K64)-12+512),A(REG2PATT)
                                                                 SPACE 4
-CLEPOP3  DC    X'93',X'00',X'00',X'00'  
+CLEPOP3  DC    X'93',X'00',X'00',X'00'
          DC    A(CLEOP10),A(2048)
          DC    A(CLEOP10),A(2048)
-         DC    A(00+(03*K64)),A(2048)     
-         DC    A(MB+(03*K64)),A(2048)           no crosses      
+         DC    A(00+(03*K64)),A(2048)
+         DC    A(MB+(03*K64)),A(2048)           no crosses
          DC    A(7) CC0
          DC    A(00+(03*K64)+512),A(REG2PATT)
                                                                 SPACE 4
-CLEPOP4  DC    X'94',X'00',X'00',X'00'  
+CLEPOP4  DC    X'94',X'00',X'00',X'00'
          DC    A(CLEOP10),A(2048)
          DC    A(CLEOP10),A(2048)
-         DC    A(00+(04*K64)),A(2048)              
-         DC    A(MB+(04*K64)-12),A(2048)        op2 crosses    
+         DC    A(00+(04*K64)),A(2048)
+         DC    A(MB+(04*K64)-12),A(2048)        op2 crosses
          DC    A(7) CC0
          DC    A(00+(04*K64)+512),A(REG2PATT)
                                                                 SPACE 4
-CLEPOP5  DC    X'95',X'00',X'00',X'00'  
+CLEPOP5  DC    X'95',X'00',X'00',X'00'
          DC    A(CLEOP10),A(2048)
          DC    A(CLEOP10),A(2048)
-         DC    A(00+(05*K64)-12),A(2048)        op1 crosses      
-         DC    A(MB+(05*K64)-12),A(2048)        op2 crosses    
+         DC    A(00+(05*K64)-12),A(2048)        op1 crosses
+         DC    A(MB+(05*K64)-12),A(2048)        op2 crosses
          DC    A(7) CC0
          DC    A(00+(05*K64)-12+512),A(REG2PATT)
                                                                 SPACE 4
@@ -966,13 +968,13 @@ CLEPOP5  DC    X'95',X'00',X'00',X'00'
          DC    A(0)        end of table
 *
 REG2PATT EQU   X'AABBCCDD'    Register 2 starting/ending CC0 value
-REG2LOW  EQU         X'DD'    (last byte above)         
+REG2LOW  EQU         X'DD'    (last byte above)
                                                                 SPACE 4
 ***********************************************************************
 *        CLCLE compare data...
 ***********************************************************************
-         DS    0F                                                      
-CLEOP10  DC    512XL4'78125634'               
+         DS    0F
+CLEOP10  DC    512XL4'78125634'
                                                                 EJECT
 ***********************************************************************
 *        Fixed storage locations

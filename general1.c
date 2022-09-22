@@ -201,7 +201,7 @@ U16     i2;                             /* 16-bit immediate op       */
   ALRgen( r1, C )                                                     \
   ALRgen( r1, D )                                                     \
   ALRgen( r1, E )                                                     \
-  ALRgen( r1, F )                                                    
+  ALRgen( r1, F )
 
 ALRgenr2( 0 )
 ALRgenr2( 1 )
@@ -3558,11 +3558,7 @@ DEF_INST(compare_logical_character_long)
 /*-------------------------------------------------------------------*/
 
 #undef   MAX_CPU_AMT
-#define  MAX_CPU_AMT    (PAGEFRAME_PAGESIZE - 256)  // for (CC=3) and 0 <  MAX_CPU_AMT < pagesize) 
-
-#ifndef CLCLE_ONETIME
- #define CLCLE_ONETIME
-#endif
+#define  MAX_CPU_AMT    (PAGEFRAME_PAGESIZE - 256)  // for (CC=3) and 0 <  MAX_CPU_AMT < pagesize)
 
 DEF_INST(compare_logical_long_extended)
 {
@@ -3571,14 +3567,14 @@ DEF_INST(compare_logical_long_extended)
     VADR    effective_addr2;                /* effective address         */
     VADR    addr1, addr2;                   /* Operand addresses         */
     GREG    len1, len2;                     /* Operand lengths           */
-    BYTE    pad;                            /* Padding byte              */ 
+    BYTE    pad;                            /* Padding byte              */
 
     U64   unpadded_len;         // work (lesser of the two lengths)
     U64   padded_len;           // work (greater length minus lesser)
     U32   in_amt;               // Work (amount to be compared)
     U32   out_amt;              // Work (amount that was found equal)
     U64   total = 0;            // TOTAL amount compared so far
-    GREG  wlen1, wlen3;         // Work length (current reg length) 
+    GREG  wlen1, wlen3;         // Work length (current reg length)
     int   rc = 0;               // memcmp() return code
 
     RS( inst, regs, r1, r3, b2, effective_addr2 );
@@ -3598,8 +3594,8 @@ DEF_INST(compare_logical_long_extended)
     len1 = GR_A( r1+1, regs );
     len2 = GR_A( r3+1, regs );
 
-    // Nothing to compare, so equal 
-    if (len1 == 0 && len2 == 0)  {  
+    // Nothing to compare, so equal
+    if (len1 == 0 && len2 == 0)  {
         regs->psw.cc = 0;
         return;
     }
@@ -3628,12 +3624,12 @@ DEF_INST(compare_logical_long_extended)
     rc = ARCH_DEP( mem_cmp )( regs, addr1, r1, addr2, r3, in_amt,
                                                         &out_amt );
     addr1 += out_amt;
-    addr1 &= ADDRESS_MAXWRAP( regs );        
+    addr1 &= ADDRESS_MAXWRAP( regs );
     addr2 += out_amt;
-    addr2 &= ADDRESS_MAXWRAP( regs );        
+    addr2 &= ADDRESS_MAXWRAP( regs );
     total += out_amt;
 
-    // Update register values 
+    // Update register values
 
     SET_GR_A( r1, regs, addr1 );
     wlen1 = GR_A( r1+1, regs );
@@ -3655,7 +3651,7 @@ DEF_INST(compare_logical_long_extended)
         VADR  addr     =  (len1 > len2) ? addr1 : addr2;
         int   r        =  (len1 > len2) ? r1    : r3;
         bool  swap_rc  =  (len1 > len2) ? false : true;
-        GREG  wlen; 
+        GREG  wlen;
 
         memset( padding, pad, MIN( padded_len, sizeof( padding )));
 
@@ -3666,23 +3662,23 @@ DEF_INST(compare_logical_long_extended)
         rc = ARCH_DEP( mem_pad_cmp )( regs, addr, r, padding, in_amt,
                                                             &out_amt );
         addr  += out_amt;
-        addr  &= ADDRESS_MAXWRAP( regs );            
+        addr  &= ADDRESS_MAXWRAP( regs );
         total += out_amt;
 
-        // Update register values 
+        // Update register values
 
         SET_GR_A( r, regs, addr );
         wlen = GR_A( r+1, regs );
         if ( wlen >= out_amt)
             SET_GR_A( r+1, regs, wlen - out_amt);
         else SET_GR_A( r+1, regs, 0);
-        
+
         if (swap_rc)
             rc = -rc;
     }
 
     // Set the condition code and return
-    if (rc == 0 && total >= MAX_CPU_AMT )  
+    if (rc == 0 && total >= MAX_CPU_AMT )
         regs->psw.cc = 3;
     else
         regs->psw.cc = (!rc ? 0 : (rc < 0 ? 1 : 2));

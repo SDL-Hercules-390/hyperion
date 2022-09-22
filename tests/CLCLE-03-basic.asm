@@ -1,4 +1,4 @@
- TITLE '            CLCE-03-performance (Test CLCLE instructions)'
+ TITLE '            CLCE-03-basic (Test CLCLE instructions)'
 ***********************************************************************
 *
 *        CLCE  instruction tests
@@ -6,15 +6,15 @@
 *        NOTE: This is a copy of the CLCL-et-al Test
 *              modified to only test the CLCLE instruction.
 *              Specifically, instuction
-*        
+*
 *              CLCL  R10,R12
-*       
-*              was changed to  
-*       
+*
+*              was changed to
+*
 *              CLCLE R10,R12,0
 *              BC    B'0001',*-4          not finished?
-*              
-*        
+*
+*
 *        James Wekel August 2022
 ***********************************************************************
 ***********************************************************************
@@ -31,15 +31,15 @@
 *
 *
 *        *Testcase CLCE-03-basic (Test CLCLE instructions)
-* 
+*
 *        archlvl     390
 *        mainsize    3
 *        numcpu      1
 *        sysclear
-* 
-*        loadcore    "CLCLE-03-basic.core" 0x0
 *
-*        runtest     1         
+*        loadcore    "$(testpath)/CLCLE-03-basic.core" 0x0
+*
+*        runtest     1
 *        *Done
 *
 ***********************************************************************
@@ -76,12 +76,12 @@ CLCLE03  ASALOAD  REGION=CODE
 *  Register Usage:
 *
 *        R0       (work)
-*        R1       
+*        R1
 *        R2       First base register
-*        R3       
-*        R4       
+*        R3
+*        R4
 *        R5-R7    (work)
-*        R8       
+*        R8
 *        R9       Second base register
 *        R10-R13  (work)
 *        R14      Subroutine call
@@ -147,7 +147,7 @@ TEST01   MVI   TESTNUM,X'01'
          MVI   SUBTEST,X'01'
          LM    R10,R13,CLCL1
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?         
+         BC    B'0001',*-4          not finished?
          BNE   FAILTEST
          LA    R5,ECLCL1
          BAL   R15,ENDCLCL
@@ -157,7 +157,7 @@ TEST01   MVI   TESTNUM,X'01'
          MVI   SUBTEST,X'02'
          LM    R10,R13,CLCL2
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?         
+         BC    B'0001',*-4          not finished?
          BNE   FAILTEST
          LA    R5,ECLCL2
          BAL   R15,ENDCLCL
@@ -168,7 +168,7 @@ TEST01   MVI   TESTNUM,X'01'
          MVI   SUBTEST,X'04'
          LM    R10,R13,CLCL4
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?         
+         BC    B'0001',*-4          not finished?
          BNH   FAILTEST                 (see INIT; CLCL4:   op1 > op2)
          LA    R5,ECLCL4
          BAL   R15,ENDCLCL
@@ -190,7 +190,7 @@ TEST01   MVI   TESTNUM,X'01'
          MVI   SUBTEST,X'00'
          LM    R10,R13,CLCL1K
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?         
+         BC    B'0001',*-4          not finished?
          BNE   FAILTEST
          LA    R5,ECLCL1K
          BAL   R15,ENDCLCL
@@ -211,7 +211,7 @@ TEST01   MVI   TESTNUM,X'01'
          MVI   SUBTEST,X'10'
          LM    R10,R13,CLCLOP1
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?         
+         BC    B'0001',*-4          not finished?
          BNH   FAILTEST                 (see INIT; CLCLOP1: op1 > op2)
          LA    R5,ECLCLOP1
          BAL   R15,ENDCLCL
@@ -221,7 +221,7 @@ TEST01   MVI   TESTNUM,X'01'
          MVI   SUBTEST,X'20'
          LM    R10,R13,CLCLOP2
          CLCLE R10,R12,0
-         BC    B'0001',*-4          not finished?         
+         BC    B'0001',*-4          not finished?
          BNE   FAILTEST
          LA    R5,ECLCLOP2
          BAL   R15,ENDCLCL
@@ -237,7 +237,7 @@ TEST91   MVI   TESTNUM,X'91'
 *
 **       First, make sure we start clean!
 *
-         LM    R10,R13,CLCLPF     Retrieve CLCL PF test parameters
+         LM    R10,R13,CLCLPF     Retrieve CLCLE PF test parameters
          MVCL  R10,R12            (forces full comparison)
 *
 **       Initialize Dynamic Address Translation tables...
@@ -264,7 +264,7 @@ PAGELOOP ST    R0,0(,R12)         Page Table Entry = Page Frame Address
 *
 **       Update desired page table entry to cause page fault
 *
-         LM    R10,R13,CLCLPF     Retrieve CLCL PF test parameters
+         LM    R10,R13,CLCLPF     Retrieve CLCLE PF test parameters
          LR    R5,R10             R5 --> Operand-1
          AL    R5,=A(PFPGBYTS)    R5 --> Operand-1 Page Fault address
          LR    R6,R5              R6 --> Address where PF should occur
@@ -294,7 +294,7 @@ BEGDATON NOP   *                  (pad)
          NOP   *                  (pad)
          PTLB  ,                  Purge Translation Lookaside Buffer
 PFINSADR CLCLE R10,R12,0          Page Fault should occur on this instr
-         BC    B'0001',*-4        not finished? 
+         BC    B'0001',*-4        not finished?
          CNOP  0,8                        (align to doubleword)
 LOGICERR DC    D'0'                       We should never reach here!
 SVPGMNEW DC    D'0'                       Original Program New PSW
@@ -325,13 +325,13 @@ MYPGMNEW MVC   PGMNPSW,SVPGMNEW   Restore original Program New PSW
          SRL   R0,12
          SLL   R0,12
                                                                 SPACE
-         SRL   R6,12              Where Page Fault is expected 
+         SRL   R6,12              Where Page Fault is expected
          SLL   R6,12
                                                                 SPACE
          CLR   R0,R6              Page Fault occur on expected Page?
          BNE   FAILTEST           No? Then something is very wrong!
 *
-**       Verify CLCL instruction registers were updated as expected
+**       Verify CLCLE instruction registers were updated as expected
 *
          MVI   SUBTEST,X'06'
          CL    R10,CLCLPF         (op1 greater than starting value?)
@@ -372,7 +372,7 @@ ENDCLCL  STM    R10,R13,CLCLEND     Save actual ending register values
          CLC    0(4*4,R5),CLCLEND   Do they have the expected values?
          BNE    FAILTEST            If not then the test has failed
          BR     R15                 Otherwise return to caller
-                                                                SPACE 
+                                                                SPACE
                                                                 EJECT
 ***********************************************************************
 *        Normal completion or Abnormal termination PSWs
