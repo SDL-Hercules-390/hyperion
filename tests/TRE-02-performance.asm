@@ -19,14 +19,16 @@
 *  instructions.
 *        Tests:
 *              1. TRE of 512 bytes
-*              2. TRE of 512 bytes that crosses a page boundary, 
+*              2. TRE of 512 bytes that crosses a page boundary,
 *                 which results in a CC=3, and a branch back
-*                 to complete the TRE instruction   
+*                 to complete the TRE instruction
 *              3. TRE of 2048 bytes
-*              4. TRE of 2048 bytes that crosses a page boundary, 
+*              4. TRE of 2048 bytes that crosses a page boundary,
 *                 which results in a CC=3, and a branch back
-*                 to complete the TRE instruction   
+*                 to complete the TRE instruction
 *
+***********************************************************************
+*  NOTE: When assembling using SATK, use the "-t S390" option.
 ***********************************************************************
 *
 *  Example Hercules Testcase:
@@ -43,7 +45,7 @@
 *
 *     r           21fd=ff   # (enable timing tests)
 *     runtest     20        # (depends on the host)
-*
+*qui
 *     *Done
 *
 *
@@ -145,11 +147,11 @@ TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
          BZR   R14              No, skip timing tests
                                                                 SPACE
          LA    R5,TREPERF         Point R5 --> testing control table
-         
+
          USING TRETEST,R5         What each table entry looks like
 *
 TST91LOP EQU   *
-         ST    R5,SAVER5          save current pref table base 
+         ST    R5,SAVER5          save current pref table base
 *
          IC    R6,TNUM            Set test number
          STC   R6,TESTNUM
@@ -160,16 +162,16 @@ TST91LOP EQU   *
          L     R11,OP1LEN           operand-1 length
          L     R6,OP1DATA         Where op1 data is right now
          L     R7,OP1LEN          How much of it there is
-         MVCL  R10,R6              
-*      
+         MVCL  R10,R6
+*
          L     R12,OP2WHERE       Where to move operand-2 data to
          L     R13,=A(OP2LEN)     How much of it there is
          L     R6,OP2DATA         Where op2 data is right now
          L     R7,=A(OP2LEN)          How much of it there is
-         MVCL  R12,R6    
+         MVCL  R12,R6
 *
-         IC    R0,TBYTE           Set test byte  
-                                                                SPACE 2 
+         IC    R0,TBYTE           Set test byte
+                                                                SPACE 2
 *
 **       Next, time the overhead...
 *
@@ -179,210 +181,210 @@ TST91LOP EQU   *
 
          LM    R10,R12,OPSWHERE     get TRE operands
          TRE   R10,R12                do TRE
-         BC    B'0001',*-4            not finished 
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4                     
+         BC    B'0001',*-4            not finished
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
 *        .........ETC.........
          PRINT OFF
-*                                   96 sets of overhead            
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4             
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
+*                                   96 sets of overhead
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
 
          PRINT ON
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
-         LM    R10,R12,OPSWHERE     
-         BC    B'0001',*+4  
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
+         LM    R10,R12,OPSWHERE
+         BC    B'0001',*+4
 
          BCTR  R7,R6
          STCK  ENDCLOCK
@@ -395,281 +397,281 @@ TST91LOP EQU   *
          STCK  BEGCLOCK
          BALR  R6,0
 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
 *        .........ETC.........
          PRINT OFF
 *                                   96 sets of instructions
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE           Load TRE operands   
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE           Load TRE operands
          TRE   R10,R12                       do TRE
          BC    B'0001',*-4                   not finished?
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4                                 
-         LM    R10,R12,OPSWHERE         
-         TRE   R10,R12                 
-         BC    B'0001',*-4 
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
+         LM    R10,R12,OPSWHERE
+         TRE   R10,R12
+         BC    B'0001',*-4
 *
          PRINT ON
          LM    R10,R12,OPSWHERE
-         TRE   R10,R12                   
-         BC    B'0001',*-4  
+         TRE   R10,R12
+         BC    B'0001',*-4
          LM    R10,R12,OPSWHERE
-         TRE   R10,R12                   
-         BC    B'0001',*-4                                          
+         TRE   R10,R12
+         BC    B'0001',*-4
 
 
          BCTR  R7,R6
@@ -678,7 +680,7 @@ TST91LOP EQU   *
          MVC   PRTLINE+33(5),=CL5'TRE'
          BAL   R15,RPTSPEED
 *
-*  more performance tests      
+*  more performance tests
 *
          L     R5,SAVER5          restore perf table base
          LA    R5,TRENEXT         Go on to next table entry
@@ -863,8 +865,8 @@ EDIT     DC    X'402020206B2020206B202120'
                                                                 SPACE 2
 TRETEST  DSECT ,
                                                                 SPACE 2
-TNUM     DC    X'00'          TRE table Number  
-TBYTE    DC    X'00'          TRE Testbyte   
+TNUM     DC    X'00'          TRE table Number
+TBYTE    DC    X'00'          TRE Testbyte
          DC    X'00'
          DC    X'00'
                                                                 SPACE 2
@@ -893,25 +895,25 @@ TRE02TST CSECT ,
 ***********************************************************************
 TREPERF  DC    0A(0)      start of table
                                                                 SPACE 4
-TREPOP1  DC    X'91',X'99',X'00',X'00'  
+TREPOP1  DC    X'91',X'99',X'00',X'00'
          DC    A(TRELOP10),A(TRELOP20)
          DC    A(00+(02*K64)),A(512),A(MB+(02*K64))      no crosses
          DC    A(7) CC0
          DC    A(00+(02*K64)+512),A(REG2PATT)
                                                                 SPACE 4
-TREPOP2  DC    X'92',X'99',X'00',X'00'  
+TREPOP2  DC    X'92',X'99',X'00',X'00'
          DC    A(TRELOP10),A(TRELOP20)
          DC    A(00+(03*K64)-12),A(512),A(MB+(03*K64))   op1 crosses
          DC    A(7) CC0
          DC    A(00+(03*K64)-12+512),A(REG2PATT)
                                                                 SPACE 4
-TREPOP3  DC    X'93',X'99',X'00',X'00'  
+TREPOP3  DC    X'93',X'99',X'00',X'00'
          DC    A(TRELOP10),A(TRELOP20)
          DC    A(00+(04*K64)),A(2048),A(MB+(04*K64))     no crosses
          DC    A(7) CC0
-         DC    A(00+(041*K64)+2048),A(REG2PATT)         
+         DC    A(00+(041*K64)+2048),A(REG2PATT)
                                                                 SPACE 4
-TREPOP4  DC    X'94',X'99',X'00',X'00'  
+TREPOP4  DC    X'94',X'99',X'00',X'00'
          DC    A(TRELOP10),A(TRELOP20)
          DC    A(00+(04*K64)-12),A(2048),A(MB+(04*K64))  op1 crosses
          DC    A(7) CC0
@@ -943,7 +945,7 @@ TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
                                                                 SPACE
 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
                                                                 SPACE
-TRELOP20 DC    X'FF',255X'00'                   
+TRELOP20 DC    X'FF',255X'00'
                                                                 EJECT
 ***********************************************************************
 *        Fixed storage locations

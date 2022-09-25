@@ -15,7 +15,7 @@
 ***********************************************************************
 *
 *  This program tests proper functioning of the TRE
-*  instructions.  
+*  instructions.
 *
 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
 *  obvious coding errors.  None of the tests are thorough.  They are
@@ -142,16 +142,16 @@ TST1LOOP EQU   *
          L     R11,OP1LEN           operand-1 length
          L     R6,OP1DATA         Where op1 data is right now
          L     R7,OP1LEN          How much of it there is
-         MVCL  R10,R6              
-*      
+         MVCL  R10,R6
+*
          L     R12,OP2WHERE       Where to move operand-2 data to
          L     R13,=A(OP2LEN)     How much of it there is
          L     R6,OP2DATA         Where op2 data is right now
          L     R7,=A(OP2LEN)          How much of it there is
-         MVCL  R12,R6    
+         MVCL  R12,R6
 *
-         IC    R0,TBYTE           Set test byte  
-                                                                SPACE 2 
+         IC    R0,TBYTE           Set test byte
+                                                                SPACE 2
 *
 **       Execute TRE instruction and check for expected condition code
 *
@@ -166,7 +166,7 @@ TREMORE  TRE   R10,R12              TRE...
          BC    B'0001',TREMORE             not finished
 
 *
-**       Verify end conditions R10 and expected main store 
+**       Verify end conditions R10 and expected main store
 *        (last 4 bytes)
 *
          L     R6,ENDREG
@@ -176,7 +176,7 @@ TREMORE  TRE   R10,R12              TRE...
          BNE   TREFAIL            No, FAILTEST!
 
          MVI   SUBTEST,X'02'      (end store)
-         LR    R6,R10               
+         LR    R6,R10
          S     R6,=F'4'
          CLC   ENDSTOR,0(R6)      end storage correct?
          BNE   TREFAIL            No, FAILTEST!
@@ -234,8 +234,8 @@ TESTADDR EQU   (2*PAGE+X'200'-2)  Where test/subtest numbers will go
                                                                 SPACE 2
 TRETEST  DSECT ,
                                                                 SPACE 2
-TNUM     DC    X'00'          TRE table Number  
-TBYTE    DC    X'00'          TRE Testbyte   
+TNUM     DC    X'00'          TRE table Number
+TBYTE    DC    X'00'          TRE Testbyte
          DC    X'00'
          DC    X'00'
                                                                 SPACE 2
@@ -272,76 +272,76 @@ TRE1     DS    0F
          DC    A(00+(1*K64)+01),X'00000000'
                                                                 SPACE 4
 TRE2     DS    0F
-         DC    X'02',X'00',X'00',X'00'  
+         DC    X'02',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRTOP20)
          DC    A(00+(2*K64)),A(002),A(MB+(2*K64))
          DC    A(7) CC0
          DC    A(00+(2*K64)+02),X'00000000'
                                                                 SPACE 4
 TRE4     DS    0F
-         DC    X'03',X'00',X'00',X'00'  
+         DC    X'03',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRTOP20)
          DC    A(00+(3*K64)),A(004),A(MB+(3*K64))
          DC    A(7) CC0
          DC    A(00+(3*K64)+04),X'00000000'
                                                                 SPACE 4
 TRE8     DS    0F
-         DC    X'04',X'00',X'00',X'00'  
+         DC    X'04',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRTOP20)
          DC    A(00+(4*K64)),A(008),A(MB+(4*K64))
          DC    A(7) CC0
          DC    A(00+(4*K64)+08),X'00000000'
                                                                 EJECT
 TRE256   DS    0F
-         DC    X'05',X'00',X'00',X'00'  
+         DC    X'05',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRTOP20)
          DC    A(00+(5*K64)),A(256),A(MB+(5*K64))
          DC    A(7) CC0
          DC    A(00+(5*K64)+256),X'00000000'
                                                                 SPACE 4
 TREBTH   DS    0F
-         DC    X'06',X'11',X'00',X'00'  
+         DC    X'06',X'11',X'00',X'00'
          DC    A(TRTOP111),A(TRTOP211)
          DC    A(00+(6*K64)-12),A(256),A(MB+(6*K64)-34) both cross page
          DC    A(10)   CC1 = stop, scan incomplete or CC=3
          DC    A(00+(6*K64)-12+X'11'),X'00000000'
                                                                 SPACE 4
 TREOP1   DS    0F
-         DC    X'07',X'F0',X'00',X'00'  
+         DC    X'07',X'F0',X'00',X'00'
          DC    A(TRTOP1F0),A(TRTOP2F0)
          DC    A(00+(7*K64)-12),A(256),A(MB+(7*K64)) only op1 crosses
          DC    A(10) CC1 = stopped on last byte  or CC=3
          DC    A(00+(7*K64)-12+255),X'00000000'
                                                                 SPACE 4
 TREOP2   DS    0F
-         DC    X'08',X'11',X'00',X'00'  
+         DC    X'08',X'11',X'00',X'00'
          DC    A(TRTOP111),A(TRTOP211)
          DC    A(00+(8*K64)),A(256),A(MB+(8*K64)-34)   only op2 crosses
          DC    A(10) CC1 = stop, scan incomplete or CC=3
          DC    A(00+(8*K64)+X'11'),X'00000000'
                                                                 SPACE 4
 TRELOP1  DS    0F
-         DC    X'09',X'00',X'00',X'00'  
+         DC    X'09',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRELOP20)
          DC    A(00+(9*K64)-12),A(512),A(MB+(9*K64)) only op1 crosses
          DC    A(6)  CC0 or CC=3
          DC    A(00+(9*K64)-12+512),X'00000000'
                                                                 SPACE 4
 TRELOP2  DS    0F
-         DC    X'0A',X'00',X'00',X'00'  
+         DC    X'0A',X'00',X'00',X'00'
          DC    A(TRTOP10),A(TRELOP21)
          DC    A(00+(10*K64)-12),A(4600),A(MB+(10*K64)) op1 crosses 2X
          DC    A(6)  CC0 or CC=3
          DC    A(00+(10*K64)-12+4600),X'FFFFFFFF'
                                                                SPACE 7
          DC    A(0)     end of table
-         DC    A(0)     end of table         
+         DC    A(0)     end of table
                                                                 EJECT
 ***********************************************************************
 *        TRE op1 scan data...
 ***********************************************************************
                                                                 SPACE
-TRTOP10  DC    1150XL4'78125634'              
+TRTOP10  DC    1150XL4'78125634'
                                                                 SPACE
 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
                                                                 SPACE
@@ -359,9 +359,9 @@ TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
                                                                 SPACE
 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
                                                                 SPACE
-TRELOP20 DC    X'FF',255X'00'                   
-                                                                                
-TRELOP21 DC    256X'FF'  
+TRELOP20 DC    X'FF',255X'00'
+
+TRELOP21 DC    256X'FF'
                                                                 EJECT
 ***********************************************************************
 *        Fixed storage locations

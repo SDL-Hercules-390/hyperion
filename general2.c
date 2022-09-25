@@ -1466,7 +1466,7 @@ U32     n;                              /* 32-bit operand values     */
   SLRgen( r1, C )                                                     \
   SLRgen( r1, D )                                                     \
   SLRgen( r1, E )                                                     \
-  SLRgen( r1, F )                                                    
+  SLRgen( r1, F )
 
 SLRgenr2( 0 )
 SLRgenr2( 1 )
@@ -2009,14 +2009,14 @@ BYTE   *main1;                      /* Mainstor addresses            */
 
     TXFC_INSTR_CHECK( regs );
     ODD_CHECK(r1, regs);
-    
+
     /* Load first operand length from R1+1 */
     len1 = GR_A(r1+1, regs);
 
     /* fast exit path */
     if (len1 == 0) {
         regs->psw.cc =  0;
-        return;      
+        return;
     }
 
     /* Load the operand addresses */
@@ -2032,7 +2032,7 @@ BYTE   *main1;                      /* Mainstor addresses            */
     ARCH_DEP(vfetchc) ( trtab, 255, addr2, r2, regs );
 
     /* Process first operand from left to right */
-    /*  POP : SA22-7832-13 Page 7-422   
+    /*  POP : SA22-7832-13 Page 7-422
         The amount of processing that results in the setting
         of condition code 3 is determined by the CPU on the
         basis of improving system performance, and it may
@@ -2042,8 +2042,8 @@ BYTE   *main1;                      /* Mainstor addresses            */
         CC=3 :  Processed first operand to end of page and
                 indicate more data remaining.
     */
-    
-    /* get on page translate length */ 
+
+    /* get on page translate length */
     len = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
     if (len1 > len)
     {
@@ -2052,9 +2052,9 @@ BYTE   *main1;                      /* Mainstor addresses            */
     else
     {
       len = len1;     /* all of operand 1 is on page */
-      cc = 0;         /* can't be a cc=3, assume 0 */ 
-    } 
-    
+      cc = 0;         /* can't be a cc=3, assume 0 */
+    }
+
     /* Get operand 1 on page address */
     main1 = MADDRL( addr1, len, r1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
@@ -2070,11 +2070,11 @@ BYTE   *main1;                      /* Mainstor addresses            */
 
         /* Load indicated byte from translate table */
         *main1 = trtab[ *main1 ];
-        
+
         main1++;
         translen++;
     } /* end for(i) */
-   
+
     /* Update the registers */
     addr1 += translen;
     addr1 &= ADDRESS_MAXWRAP(regs);

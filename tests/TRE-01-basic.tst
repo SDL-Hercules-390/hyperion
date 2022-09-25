@@ -13,6 +13,6 @@ sysclear
 
 loadcore    "$(testpath)/TRE-01-basic.core" 0x0
 
-runtest     1        
+runtest     1
 
 *Done
