@@ -1700,6 +1700,18 @@
     <None Include="tests\bim-001-add-sub.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>              
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1961,6 +1973,18 @@
     <None Include="tests\bim-001-add-sub.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None> 
+    <None Include="tests\CLCLE-03-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>                  
     <None Include="tests\cipher.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2192,6 +2216,18 @@
     <None Include="tests\bim-001-add-sub.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None> 
+    <None Include="tests\CLCLE-03-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>                  
     <None Include="tests\dfp-080-from-packed.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2354,6 +2390,18 @@
     <None Include="tests\bim-001-add-sub.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-03-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None> 
+    <None Include="tests\CLCLE-04-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>            
     <None Include="tests\dfp-080-from-packed.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
