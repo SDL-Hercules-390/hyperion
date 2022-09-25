@@ -1083,6 +1083,14 @@
     <None Include="tests\tape.list" />
     <None Include="tests\tape.pdf" />
     <None Include="tests\tape.tst" />
+    <None Include="tests\TRE-01-basic.asm" />
+    <None Include="tests\TRE-01-basic.core" />
+    <None Include="tests\TRE-01-basic.list" />
+    <None Include="tests\TRE-01-basic.tst" />
+    <None Include="tests\TRE-02-performance.asm" />
+    <None Include="tests\TRE-02-performance.core" />
+    <None Include="tests\TRE-02-performance.list" />
+    <None Include="tests\TRE-02-performance.tst" />     
     <None Include="tests\TXFPER.asm" />
     <None Include="tests\TXFPER.core" />
     <None Include="tests\TXFPER.list" />

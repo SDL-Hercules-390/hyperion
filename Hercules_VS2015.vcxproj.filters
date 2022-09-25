@@ -1724,6 +1724,12 @@
     <None Include="tests\FAC53.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
+    <None Include="tests\TRE-01-basic.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.core">
+      <Filter>Other Files\tests\core</Filter>
+    </None>    
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2105,6 +2111,12 @@
     <None Include="tests\timeout.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
+    <None Include="tests\TRE-01-basic.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.tst">
+      <Filter>Other Files\tests\scripts\tst</Filter>
+    </None>     
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2243,6 +2255,12 @@
     <None Include="tests\pfpo.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
+    <None Include="tests\TRE-01-basic.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.asm">
+      <Filter>Other Files\tests\scripts\asm</Filter>
+    </None>     
     <None Include="tests\3211.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -2420,6 +2438,12 @@
     <None Include="tests\PFPO.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\TRE-01-basic.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>    
     <None Include="hercules.cnf">
       <Filter>Other Files\misc</Filter>
     </None>

@@ -1,0 +1,1701 @@
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     1
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                     2 ***********************************************************************
+                                                     3 *
+                                                     4 *            TRE instruction tests
+                                                     5 *
+                                                     6 *        NOTE: This test is based the CLCL-et-al Test
+                                                     7 *              modified to only test the Performance
+                                                     8 *              of the TRE instruction.
+                                                     9 *
+                                                    10 *        James Wekel August 2022
+                                                    11 ***********************************************************************
+                                                    12 ***********************************************************************
+                                                    13 *
+                                                    14 *            TRE Performance instruction tests
+                                                    15 *
+                                                    16 ***********************************************************************
+                                                    17 *
+                                                    18 *  This program ONLY tests the performance of the TRE
+                                                    19 *  instructions.
+                                                    20 *        Tests:
+                                                    21 *              1. TRE of 512 bytes
+                                                    22 *              2. TRE of 512 bytes that crosses a page boundary,
+                                                    23 *                 which results in a CC=3, and a branch back
+                                                    24 *                 to complete the TRE instruction
+                                                    25 *              3. TRE of 2048 bytes
+                                                    26 *              4. TRE of 2048 bytes that crosses a page boundary,
+                                                    27 *                 which results in a CC=3, and a branch back
+                                                    28 *                 to complete the TRE instruction
+                                                    29 *
+                                                    30 ***********************************************************************
+                                                    31 *  NOTE: When assembling using SATK, use the "-t S390" option.
+                                                    32 ***********************************************************************
+                                                    33 *
+                                                    34 *  Example Hercules Testcase:
+                                                    35 *
+                                                    36 *
+                                                    37 *     *Testcase TRE-02-performance (Test TRE instructions)
+                                                    38 *
+                                                    39 *     archlvl     390
+                                                    40 *     mainsize    3
+                                                    41 *     numcpu      1
+                                                    42 *     sysclear
+                                                    43 *
+                                                    44 *     loadcore    "$(testpath)/TRE-02-performance"
+                                                    45 *
+                                                    46 *     r           21fd=ff   # (enable timing tests)
+                                                    47 *     runtest     20        # (depends on the host)
+                                                    48 *qui
+                                                    49 *     *Done
+                                                    50 *
+                                                    51 *
+                                                    52 ***********************************************************************
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     2
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                    54          PRINT OFF
+                                                  3435          PRINT ON
+
+                                                  3437 ***********************************************************************
+                                                  3438 *        SATK prolog stuff...
+                                                  3439 ***********************************************************************
+
+                                                  3441          ARCHLVL  ZARCH=NO,MNOTE=NO
+                                                  3443+$AL      OPSYN AL
+                                                  3444+$ALR     OPSYN ALR
+                                                  3445+$B       OPSYN B
+                                                  3446+$BAS     OPSYN BAS
+                                                  3447+$BASR    OPSYN BASR
+                                                  3448+$BC      OPSYN BC
+                                                  3449+$BCTR    OPSYN BCTR
+                                                  3450+$BE      OPSYN BE
+                                                  3451+$BH      OPSYN BH
+                                                  3452+$BL      OPSYN BL
+                                                  3453+$BM      OPSYN BM
+                                                  3454+$BNE     OPSYN BNE
+                                                  3455+$BNH     OPSYN BNH
+                                                  3456+$BNL     OPSYN BNL
+                                                  3457+$BNM     OPSYN BNM
+                                                  3458+$BNO     OPSYN BNO
+                                                  3459+$BNP     OPSYN BNP
+                                                  3460+$BNZ     OPSYN BNZ
+                                                  3461+$BO      OPSYN BO
+                                                  3462+$BP      OPSYN BP
+                                                  3463+$BXLE    OPSYN BXLE
+                                                  3464+$BZ      OPSYN BZ
+                                                  3465+$CH      OPSYN CH
+                                                  3466+$L       OPSYN L
+                                                  3467+$LH      OPSYN LH
+                                                  3468+$LM      OPSYN LM
+                                                  3469+$LPSW    OPSYN LPSW
+                                                  3470+$LR      OPSYN LR
+                                                  3471+$LTR     OPSYN LTR
+                                                  3472+$NR      OPSYN NR
+                                                  3473+$SL      OPSYN SL
+                                                  3474+$SLR     OPSYN SLR
+                                                  3475+$SR      OPSYN SR
+                                                  3476+$ST      OPSYN ST
+                                                  3477+$STM     OPSYN STM
+                                                  3478+$X       OPSYN X
+                                                  3479+$AHI     OPSYN AHI
+                                                  3480+$B       OPSYN J
+                                                  3481+$BC      OPSYN BRC
+                                                  3482+$BE      OPSYN JE
+                                                  3483+$BH      OPSYN JH
+                                                  3484+$BL      OPSYN JL
+                                                  3485+$BM      OPSYN JM
+                                                  3486+$BNE     OPSYN JNE
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     3
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3487+$BNH     OPSYN JNH
+                                                  3488+$BNL     OPSYN JNL
+                                                  3489+$BNM     OPSYN JNM
+                                                  3490+$BNO     OPSYN JNO
+                                                  3491+$BNP     OPSYN JNP
+                                                  3492+$BNZ     OPSYN JNZ
+                                                  3493+$BO      OPSYN JO
+                                                  3494+$BP      OPSYN JP
+                                                  3495+$BXLE    OPSYN JXLE
+                                                  3496+$BZ      OPSYN JZ
+                                                  3497+$CHI     OPSYN CHI
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     4
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3499 ***********************************************************************
+                                                  3500 *        Initiate the TRE02TST CSECT in the CODE region
+                                                  3501 *        with the location counter at 0
+                                                  3502 ***********************************************************************
+
+                                                  3504 TRE02TST ASALOAD  REGION=CODE
+                              00000000  00003000  3505+TRE02TST START 0,CODE
+00000000  000A0000 00000008                       3507+         PSW   0,0,2,0,X'008'      64-bit Restart ISR Trap New PSW
+00000008                      00000008  00000058  3508+         ORG   TRE02TST+X'058'
+00000058  000A0000 00000018                       3510+         PSW   0,0,2,0,X'018'      64-bit External ISR Trap New PSW
+00000060  000A0000 00000020                       3511+         PSW   0,0,2,0,X'020'      64-bit Supervisor Call ISR Trap New PSW
+00000068  000A0000 00000028                       3512+         PSW   0,0,2,0,X'028'      64-bit Program ISR Trap New PSW
+00000070  000A0000 00000030                       3513+         PSW   0,0,2,0,X'030'      64-bit Machine Check Trap New PSW
+00000078  000A0000 00000038                       3514+         PSW   0,0,2,0,X'038'      64-bit Input/Output Trap New PSW
+00000080                      00000080  00000200  3515+         ORG   TRE02TST+512
+
+
+
+                                                  3517 ***********************************************************************
+                                                  3518 *        Create IPL (restart) PSW
+                                                  3519 ***********************************************************************
+
+                                                  3521          ASAIPL   IA=BEGIN
+                              00000000  00003000  3522+TRE02TST CSECT
+00000200                      00000200  00000000  3523+         ORG   TRE02TST
+00000000  00080000 00000200                       3524+         PSW   0,0,0,0,BEGIN,24
+00000008                      00000008  00000200  3525+         ORG   TRE02TST+512     Reset CSECT to end of assigned storage area
+                              00000000  00003000  3526+TRE02TST CSECT
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     5
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3528 ***********************************************************************
+                                                  3529 *               The actual "TRE02TST" program itself...
+                                                  3530 ***********************************************************************
+                                                  3531 *
+                                                  3532 *  Architecture Mode: 390
+                                                  3533 *  Addressing Mode:   31-bit
+                                                  3534 *  Register Usage:
+                                                  3535 *
+                                                  3536 *   R0       (work)
+                                                  3537 *   R1       I/O device used by ENADEV and RAWIO macros
+                                                  3538 *   R2       First base register
+                                                  3539 *   R3       IOCB pointer for ENADEV and RAWIO macros
+                                                  3540 *   R4       IO work register used by ENADEV and RAWIO
+                                                  3541 *   R5-R7    (work)
+                                                  3542 *   R8       ORB pointer
+                                                  3543 *   R9       Second base register
+                                                  3544 *   R10-R13  (work)
+                                                  3545 *   R14      Subroutine call
+                                                  3546 *   R15      Secondary Subroutine call or work
+                                                  3547 *
+                                                  3548 ***********************************************************************
+
+00000200                      00000000            3550          USING  ASA,R0          Low core addressability
+00000200                      00000200            3551          USING  BEGIN,R2        FIRST Base Register
+00000200                      00001200            3552          USING  BEGIN+4096,R9   SECOND Base Register
+00000200                      00000000            3553          USING  IOCB,R3         SATK Device I/O Control Block
+00000200                      00000000            3554          USING  ORB,R8          ESA/390 Operation Request Block
+
+00000200  0520                                    3556 BEGIN    BALR  R2,0             Initalize FIRST base register
+00000202  0620                                    3557          BCTR  R2,0             Initalize FIRST base register
+00000204  0620                                    3558          BCTR  R2,0             Initalize FIRST base register
+00000206  5020 203C                     0000023C  3559          ST    R2,SAVER2
+
+0000020A  4190 2800                     00000800  3561          LA    R9,2048(,R2)     Initalize SECOND base register
+0000020E  4190 9800                     00000800  3562          LA    R9,2048(,R9)     Initalize SECOND base register
+
+00000212  45E0 29A0                     00000BA0  3564          BAL   R14,INIT         Initalize Program
+                                                  3565 *
+                                                  3566 **       Run the tests...
+                                                  3567 *
+00000216  45E0 2050                     00000250  3568          BAL   R14,TEST91       Time TRE   instruction  (speed test)
+                                                  3569 *
+                                                  3570 ***********************************************************************
+                                                  3571 *         Test for normal or unexpected test completion...
+                                                  3572 ***********************************************************************
+
+0000021A  95FF 9FFD                     000021FD  3574          CLI   TIMEOPT,X'FF'    Was this a timing run?
+0000021E  4770 29B2                     00000BB2  3575          BNE   EOJ              No, timing run; just go end normally
+
+00000222  9594 9FFE                     000021FE  3577          CLI   TESTNUM,X'94'    Did we end on expected test?
+00000226  4770 29E0                     00000BE0  3578          BNE   FAILTEST         No?! Then FAIL the test!
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     6
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+0000022A  9500 9FFF                     000021FF  3580          CLI   SUBTEST,X'00'    Did we end on expected SUB-test?
+0000022E  4770 29E0                     00000BE0  3581          BNE   FAILTEST         No?! Then FAIL the test!
+
+00000232  47F0 29B2                     00000BB2  3583          B     EOJ              Yes, then normal completion!
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     7
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3585
+00000238  00000000                                3586 SAVER1   DC    F'0'
+0000023C  00000000                                3587 SAVER2   DC    F'0'
+00000240  00000000                                3588 SAVER5   DC    F'0'
+00000248  00000000 00000000                       3589 SAVETRT  DC    D'0'               (saved R1/R2 from TRT results)
+                                                  3590
+00000250                                          3591          DROP  R15
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     8
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  3593 ***********************************************************************
+                                                  3594 *        TEST91                 Time TRE instruction  (speed test)
+                                                  3595 ***********************************************************************
+
+00000250  91FF 9FFD                     000021FD  3597 TEST91   TM    TIMEOPT,X'FF'    Is timing tests option enabled?
+00000254  078E                                    3598          BZR   R14              No, skip timing tests
+
+00000256  4150 2B80                     00000D80  3600          LA    R5,TREPERF         Point R5 --> testing control table
+                                                  3601
+0000025A                      00000000            3602          USING TRETEST,R5         What each table entry looks like
+                                                  3603 *
+                              0000025A  00000001  3604 TST91LOP EQU   *
+0000025A  5050 2040                     00000240  3605          ST    R5,SAVER5          save current pref table base
+                                                  3606 *
+0000025E  4360 5000                     00000000  3607          IC    R6,TNUM            Set test number
+00000262  4260 9FFE                     000021FE  3608          STC   R6,TESTNUM
+                                                  3609 *
+                                                  3610 **       Initialize operand data  (move data to testing address)
+                                                  3611 *
+00000266  58A0 500C                     0000000C  3612          L     R10,OP1WHERE       Where to move operand-1 data to
+0000026A  58B0 5010                     00000010  3613          L     R11,OP1LEN           operand-1 length
+0000026E  5860 5004                     00000004  3614          L     R6,OP1DATA         Where op1 data is right now
+00000272  5870 5010                     00000010  3615          L     R7,OP1LEN          How much of it there is
+00000276  0EA6                                    3616          MVCL  R10,R6
+                                                  3617 *
+00000278  58C0 5014                     00000014  3618          L     R12,OP2WHERE       Where to move operand-2 data to
+0000027C  58D0 2ACC                     00000CCC  3619          L     R13,=A(OP2LEN)     How much of it there is
+00000280  5860 5008                     00000008  3620          L     R6,OP2DATA         Where op2 data is right now
+00000284  5870 2ACC                     00000CCC  3621          L     R7,=A(OP2LEN)          How much of it there is
+00000288  0EC6                                    3622          MVCL  R12,R6
+                                                  3623 *
+0000028A  4300 5001                     00000001  3624          IC    R0,TBYTE           Set test byte
+
+
+                                                  3626 *
+                                                  3627 **       Next, time the overhead...
+                                                  3628 *
+0000028E  5870 2AEC                     00000CEC  3629          L     R7,NUMLOOPS
+00000292  B205 2AF0                     00000CF0  3630          STCK  BEGCLOCK
+00000296  0560                                    3631          BALR  R6,0
+                                                  3632
+00000298  98AC 500C                     0000000C  3633          LM    R10,R12,OPSWHERE     get TRE operands
+0000029C  B2A5 00AC                               3634          TRE   R10,R12                do TRE
+000002A0  4710 209C                     0000029C  3635          BC    B'0001',*-4            not finished
+000002A4  98AC 500C                     0000000C  3636          LM    R10,R12,OPSWHERE
+000002A8  4710 20AC                     000002AC  3637          BC    B'0001',*+4
+                                                  3638 *        .........ETC.........
+                                                  3639          PRINT OFF
+                                                  3834          PRINT ON
+000005AC  98AC 500C                     0000000C  3835          LM    R10,R12,OPSWHERE
+000005B0  4710 23B4                     000005B4  3836          BC    B'0001',*+4
+000005B4  98AC 500C                     0000000C  3837          LM    R10,R12,OPSWHERE
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page     9
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+000005B8  4710 23BC                     000005BC  3838          BC    B'0001',*+4
+                                                  3839
+000005BC  0676                                    3840          BCTR  R7,R6
+000005BE  B205 2AF8                     00000CF8  3841          STCK  ENDCLOCK
+000005C2  45F0 2914                     00000B14  3842          BAL   R15,CALCDUR
+000005C6  D207 2B08 2B00      00000D08  00000D00  3843          MVC   OVERHEAD,DURATION
+                                                  3844 *
+                                                  3845 **       Now do the actual timing run...
+                                                  3846 *
+000005CC  5870 2AEC                     00000CEC  3847          L     R7,NUMLOOPS
+000005D0  B205 2AF0                     00000CF0  3848          STCK  BEGCLOCK
+000005D4  0560                                    3849          BALR  R6,0
+                                                  3850
+000005D6  98AC 500C                     0000000C  3851          LM    R10,R12,OPSWHERE           Load TRE operands
+000005DA  B2A5 00AC                               3852          TRE   R10,R12                       do TRE
+000005DE  4710 23DA                     000005DA  3853          BC    B'0001',*-4                   not finished?
+000005E2  98AC 500C                     0000000C  3854          LM    R10,R12,OPSWHERE           Load TRE operands
+000005E6  B2A5 00AC                               3855          TRE   R10,R12                       do TRE
+000005EA  4710 23E6                     000005E6  3856          BC    B'0001',*-4                   not finished?
+                                                  3857 *        .........ETC.........
+                                                  3858          PRINT OFF
+                                                  4119          PRINT ON
+000009F6  98AC 500C                     0000000C  4120          LM    R10,R12,OPSWHERE
+000009FA  B2A5 00AC                               4121          TRE   R10,R12
+000009FE  4710 27FA                     000009FA  4122          BC    B'0001',*-4
+00000A02  98AC 500C                     0000000C  4123          LM    R10,R12,OPSWHERE
+00000A06  B2A5 00AC                               4124          TRE   R10,R12
+00000A0A  4710 2806                     00000A06  4125          BC    B'0001',*-4
+                                                  4126
+                                                  4127
+00000A0E  0676                                    4128          BCTR  R7,R6
+00000A10  B205 2AF8                     00000CF8  4129          STCK  ENDCLOCK
+                                                  4130 *
+00000A14  D204 2B51 2AD8      00000D51  00000CD8  4131          MVC   PRTLINE+33(5),=CL5'TRE'
+00000A1A  45F0 283A                     00000A3A  4132          BAL   R15,RPTSPEED
+                                                  4133 *
+                                                  4134 *  more performance tests
+                                                  4135 *
+00000A1E  5850 2040                     00000240  4136          L     R5,SAVER5          restore perf table base
+00000A22  4150 5024                     00000024  4137          LA    R5,TRENEXT         Go on to next table entry
+00000A26  D503 2AD0 5000      00000CD0  00000000  4138          CLC   =F'0',0(R5)        End of table?
+00000A2C  4770 205A                     0000025A  4139          BNE   TST91LOP           No, loop...
+00000A30  5810 2038                     00000238  4140          L     R1,SAVER1          Restore register 1
+00000A34  5820 203C                     0000023C  4141          L     R2,SAVER2          Restore first base register
+00000A38  07FE                                    4142          BR    R14                Return to caller or FAILTEST
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    10
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4144 ***********************************************************************
+                                                  4145 *        RPTSPEED                 Report instruction speed
+                                                  4146 ***********************************************************************
+
+00000A3A  50F0 2910                     00000B10  4148 RPTSPEED ST    R15,RPTSAVE        Save return address
+00000A3E  45F0 2914                     00000B14  4149          BAL   R15,CALCDUR        Calculate duration
+                                                  4150 *
+00000A42  4150 2B08                     00000D08  4151          LA    R5,OVERHEAD        Subtract overhead
+00000A46  4160 2B00                     00000D00  4152          LA    R6,DURATION        From raw timing
+00000A4A  4170 2B00                     00000D00  4153          LA    R7,DURATION        Yielding true instruction timing
+00000A4E  45F0 2968                     00000B68  4154          BAL   R15,SUBDWORD       Do it
+                                                  4155 *
+00000A52  98CD 2B00                     00000D00  4156          LM    R12,R13,DURATION   Convert to...
+00000A56  8CC0 000C                     0000000C  4157          SRDL  R12,12             ... microseconds
+                                                  4158 *
+00000A5A  4EC0 2B10                     00000D10  4159          CVD   R12,TICKSAAA       convert HIGH part to decimal
+00000A5E  4ED0 2B18                     00000D18  4160          CVD   R13,TICKSBBB       convert LOW  part to decimal
+                                                  4161 *
+00000A62  F877 2B20 2B10      00000D20  00000D10  4162          ZAP   TICKSTOT,TICKSAAA            Calculate...
+00000A68  FC75 2B20 2ADD      00000D20  00000CDD  4163          MP    TICKSTOT,=P'4294967296'      ...decimal...
+00000A6E  FA77 2B20 2B18      00000D20  00000D18  4164          AP    TICKSTOT,TICKSBBB            ...microseconds
+                                                  4165 *
+00000A74  D20B 2B5B 2B74      00000D5B  00000D74  4166          MVC   PRTLINE+43(L'EDIT),EDIT          (edit into...
+00000A7A  DE0B 2B5B 2B23      00000D5B  00000D23  4167          ED    PRTLINE+43(L'EDIT),TICKSTOT+3     ...print line)
+
+
+
+
+
+
+                                                  4169          RAWIO 4,FAIL=FAILIO      Print elapsed time on console
+00000A80  9200 300E                     0000000E  4170+         MVI   IOCBSC,X'00'          Clear SC information
+00000A84  D201 300A 3006      0000000A  00000006  4171+         MVC   IOCBST,IOCBZERO       Clear accumulated status
+00000A8A  5810 3000                     00000000  4172+         L     1,IOCBDID             Remember the device ID with which I am working
+                                                  4173+* Initiate Subchannel-based input/output operation
+00000A8E  5840 3018                     00000018  4174+         $L    4,IOCBORB             Locate the ORB for the channel subsystem
+00000A92  B233 4000                     00000000  4175+         SSCH  0(4)                  Initiate the I/O operation
+00000A96  A774 009D                     00000BD0  4176+         $BC   B'0111',FAILIO        ..Start function failed, report/handle the error
+00000A9A  5840 3020                     00000020  4177+         $L    4,IOCBIRB             Locate the IRB storage area
+00000A9E                      00000000            4178+         USING IRB,4                 Make it addressable
+
+                                                  4180+* Wait for I/O operation to present status via an interruption
+00000A9E                                          4181+IOWT0007 DS    0H  Wait for I/O to complete
+00000A9E  D207 28C0 0078      00000AC0  00000078  4183+         MVC   IOS0008(8),120(0)               Save Input/Output new PSW
+00000AA4  D207 0078 28B8      00000078  00000AB8  4184+         MVC   120(8,0),ION0008               Establish Input/Ouput new PSW
+00000AAA  8200 28B0                     00000AB0  4185+         $LPSW WPSW0008                       Wait for event
+00000AB0  020A0000 00000000                       4186+WPSW0008 PSW   2,0,2,0,0                      Wait for event
+00000AB8  00082000 00000AC8                       4187+ION0008  PSW   0,0,0,32,IRST0008,24                I/O New PSW: cc==2
+00000AC0  00000000 00000000                       4188+IOS0008  DC    XL8'00'
+                                                  4189+* Handle input/output interruption
+00000AC8                                          4190+IRST0008 DS    0H
+00000AC8  D207 0078 28C0      00000078  00000AC0  4191+         MVC   120(8,0),IOS0008             Restore input/output new PSW
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    11
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4192+* Process the interruption...
+                                                  4193+* Validate interruption is for the expected subchannel
+00000ACE  5510 00B8                     000000B8  4194+         CL    1,IOSSID              Is this the device for which I am waiting?
+00000AD2  A774 FFE6                     00000A9E  4195+         $BNE  IOWT0007              ..No, continue waiting for it
+                                                  4196+* Accumulate interruption information from IRB
+00000AD6  B235 4000                     00000000  4197+         TSCH  0(4)                  Retrive interrupt information
+00000ADA  A744 FFE2                     00000A9E  4198+         $BC   B'0100',IOWT0007      CC1 (not status pending), wait for it to arrive
+00000ADE  A714 0079                     00000BD0  4199+         $BC   B'0001',FAILIO        CC3 (not operational), an error then
+                                                  4200+*                                    CC0 (status was pending), accumulate the status
+00000AE2  D600 300E 4003      0000000E  00000003  4201+         OC    IOCBSC,IRBSCSW+SCSW2  Accumulate status control
+00000AE8  D601 300A 4008      0000000A  00000008  4202+         OC    IOCBST,IRBSCSW+SCSWUS Accumulate device and channel status
+00000AEE  9104 300E                     0000000E  4203+         TM    IOCBSC,SCSWSPRI       Primary subchannel status?
+00000AF2  A7E4 FFD6                     00000A9E  4204+         $BNO  IOWT0007              ..No, wait for primary status
+00000AF6  D203 3010 4004      00000010  00000004  4205+         MVC   IOCBSCCW,IRBSCSW+SCSWCCW  CCW address
+00000AFC  D201 3016 400A      00000016  0000000A  4206+         MVC   IOCBRCNT,IRBSCSW+SCSWCNT  Residual count
+                                                  4207+* Test for errors as specified in the IOCB
+00000B02  910C 300A                     0000000A  4208+         TM    IOCBUS,CSWCE+CSWDE    Channel end and device end both accumulated?
+00000B06  A7E4 0065                     00000BD0  4209+         $BNO  FAILIO                Hunh? No CE and DE but do have primary status!
+                                                  4210+* Input/Output operation successful
+
+
+00000B0A  58F0 2910                     00000B10  4212          L     R15,RPTSAVE        Restore return address
+00000B0E  07FF                                    4213          BR    R15                Return to caller
+
+00000B10  00000000                                4215 RPTSAVE  DC    F'0'               R15 save area
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    12
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4217 ***********************************************************************
+                                                  4218 *        CALCDUR                  Calculate DURATION
+                                                  4219 ***********************************************************************
+
+00000B14  50F0 2958                     00000B58  4221 CALCDUR  ST    R15,CALCRET        Save return address
+00000B18  9057 295C                     00000B5C  4222          STM   R5,R7,CALCWORK     Save work registers
+                                                  4223 *
+00000B1C  9867 2AF0                     00000CF0  4224          LM    R6,R7,BEGCLOCK     Remove CPU number from clock value
+00000B20  8C60 0006                     00000006  4225          SRDL  R6,6                            "
+00000B24  8D60 0006                     00000006  4226          SLDL  R6,6                            "
+00000B28  9067 2AF0                     00000CF0  4227          STM   R6,R7,BEGCLOCK                  "
+                                                  4228 *
+00000B2C  9867 2AF8                     00000CF8  4229          LM    R6,R7,ENDCLOCK     Remove CPU number from clock value
+00000B30  8C60 0006                     00000006  4230          SRDL  R6,6                            "
+00000B34  8D60 0006                     00000006  4231          SLDL  R6,6                            "
+00000B38  9067 2AF8                     00000CF8  4232          STM   R6,R7,ENDCLOCK                  "
+                                                  4233 *
+00000B3C  4150 2AF0                     00000CF0  4234          LA    R5,BEGCLOCK        Starting time
+00000B40  4160 2AF8                     00000CF8  4235          LA    R6,ENDCLOCK        Ending time
+00000B44  4170 2B00                     00000D00  4236          LA    R7,DURATION        Difference
+00000B48  45F0 2968                     00000B68  4237          BAL   R15,SUBDWORD       Calculate duration
+                                                  4238 *
+00000B4C  9857 295C                     00000B5C  4239          LM    R5,R7,CALCWORK     Restore work registers
+00000B50  58F0 2958                     00000B58  4240          L     R15,CALCRET        Restore return address
+00000B54  07FF                                    4241          BR    R15                Return to caller
+
+00000B58  00000000                                4243 CALCRET  DC    F'0'               R15 save area
+00000B5C  00000000 00000000                       4244 CALCWORK DC    3F'0'              R5-R7 save area
+
+
+
+
+                                                  4246 ***********************************************************************
+                                                  4247 *        SUBDWORD                 Subtract two doublewords
+                                                  4248 *        R5 --> subtrahend, R6 --> minuend, R7 --> result
+                                                  4249 ***********************************************************************
+
+00000B68  90AD 2990                     00000B90  4251 SUBDWORD STM   R10,R13,SUBDWSAV   Save registers
+                                                  4252 *
+00000B6C  98AB 5000                     00000000  4253          LM    R10,R11,0(R5)      Subtrahend  (value to subtract)
+00000B70  98CD 6000                     00000000  4254          LM    R12,R13,0(R6)      Minuend     (what to subtract FROM)
+00000B74  1FDB                                    4255          SLR   R13,R11            Subtract LOW part
+00000B76  47B0 297E                     00000B7E  4256          BNM   *+4+4              (branch if no borrow)
+00000B7A  5FC0 2AD4                     00000CD4  4257          SL    R12,=F'1'          (otherwise do borrow)
+00000B7E  1FCA                                    4258          SLR   R12,R10            Subtract HIGH part
+00000B80  90CD 7000                     00000000  4259          STM   R12,R13,0(R7)      Store results
+                                                  4260 *
+00000B84  98AD 2990                     00000B90  4261          LM    R10,R13,SUBDWSAV   Restore registers
+00000B88  07FF                                    4262          BR    R15                Return to caller
+
+00000B90  00000000 00000000                       4264 SUBDWSAV DC    2D'0'              R10-R13 save area
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    13
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4266 ***********************************************************************
+                                                  4267 *        Program Initialization
+                                                  4268 ***********************************************************************
+
+00000BA0                                          4270 INIT     DS     0H              Program Initialization
+
+00000BA0  4130 2A50                     00000C50  4272          LA     R3,IOCB_009     Point to IOCB
+00000BA4  5880 3018                     00000018  4273          L      R8,IOCBORB      Point to ORB
+
+00000BA8  45F0 29F0                     00000BF0  4275          BAL    R15,IOINIT      Initialize the CPU for I/O operations
+00000BAC  45F0 29FE                     00000BFE  4276          BAL    R15,ENADEV      Enable our device making ready for use
+00000BB0  07FE                                    4277          BR     R14             Return to caller
+
+
+
+
+
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    14
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4280 ***********************************************************************
+                                                  4281 *        Normal completion or Abnormal termination PSWs
+                                                  4282 ***********************************************************************
+
+
+
+
+
+                                                  4284 EOJ      DWAITEND LOAD=YES          Normal completion
+00000BB2                                          4286+EOJ      DS    0H
+00000BB2  8200 29B8                     00000BB8  4287+         LPSW  DWAT0010
+00000BB8  000A0000 00000000                       4288+DWAT0010 PSW   0,0,2,0,X'000000'
+
+
+
+
+
+                                                  4290 FAILDEV  DWAIT LOAD=YES,CODE=01     ENADEV failed
+00000BC0                                          4291+FAILDEV  DS    0H
+00000BC0  8200 29C8                     00000BC8  4292+         LPSW  DWAT0011
+00000BC8  000A0000 00010001                       4293+DWAT0011 PSW   0,0,2,0,X'010001'
+
+
+
+
+
+                                                  4295 FAILIO   DWAIT LOAD=YES,CODE=02     RAWIO failed
+00000BD0                                          4296+FAILIO   DS    0H
+00000BD0  8200 29D8                     00000BD8  4297+         LPSW  DWAT0012
+00000BD8  000A0000 00010002                       4298+DWAT0012 PSW   0,0,2,0,X'010002'
+
+
+
+
+
+                                                  4300 FAILTEST DWAIT LOAD=YES,CODE=BAD    Abnormal termination
+00000BE0                                          4301+FAILTEST DS    0H
+00000BE0  8200 29E8                     00000BE8  4302+         LPSW  DWAT0013
+00000BE8  000A0000 00010BAD                       4303+DWAT0013 PSW   0,0,2,0,X'010BAD'
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    15
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4305 ***********************************************************************
+                                                  4306 *        Initialize the CPU for I/O operations
+                                                  4307 ***********************************************************************
+
+
+                                                  4309 IOINIT   IOINIT ,
+00000BF0  B766 29F8                     00000BF8  4310+IOINIT   LCTL  6,6,IOMK0014       Enable subchannel subclasses for interruptions
+00000BF4  47F0 29FC                     00000BFC  4311+         B     IOMK0014+4
+00000BF8                                          4312+IOMK0014 DS    0F
+00000BF8  FF000000                                4313+         DC    XL4'FF000000'         All subchannel subclasses enabled
+
+
+00000BFC  07FF                                    4315          BR    R15                Return to caller
+
+
+
+
+
+
+                                                  4317 ***********************************************************************
+                                                  4318 *        Enable the device, making it ready for use
+                                                  4319 ***********************************************************************
+
+
+                                                  4321 ENADEV   ENADEV ENAOKAY,FAILDEV,REG=4
+00000BFE  5810 2A44                     00000C44  4322+ENADEV   L     1,FIND0015
+00000C02  5840 3028                     00000028  4323+         $L    4,IOCBSIB          Locate where the SCHIB is to be stored
+00000C06                      00000000            4324+         USING SCHIB,4
+00000C06                                          4325+FINL0015 DS    0H   Retrieve Subchannel Information Block for desired device number
+00000C06  B234 4000                     00000000  4326+         STSCH 0(4)               Store the SCHIB for first subchannel
+00000C0A  A774 FFDB                     00000BC0  4327+         $BC   B'0111',FAILDEV    Subchannel does not exist and device number not found
+00000C0E  9101 4005                     00000005  4328+         TM    PMCW1_8,PMCWV      Is the subchannel device number valid?
+00000C12  A784 0011                     00000C34  4329+         $BZ   FINN0015           ..No, check the next subchannel
+00000C16  D501 4006 3004      00000006  00000004  4330+         CLC   PMCWDNUM,IOCBDEV   Is this the device number being sought?
+00000C1C  A774 000C                     00000C34  4331+         $BNE  FINN0015           ..No, check the next subchannel
+                                                  4332+* Subchannel found!
+00000C20  5010 3000                     00000000  4333+         ST    1,IOCBDID          Remember the subchannel so I/O can be done to it.
+00000C24  9680 4005                     00000005  4334+         OI    PMCW1_8,PMCWE      Make sure it is enabled so I/O requests accepted
+00000C28  B232 4000                     00000000  4335+         MSCH  0(4)               Enable the subchannel to the channel sub-system
+00000C2C  A784 0010                     00000C4C  4336+         $BC   B'1000',ENAOKAY    CC0 (SCHIB updated), device is ready.
+00000C30  A7F4 FFC8                     00000BC0  4337+         $B    FAILDEV            CC1,CC2,CC3 (SCHIB update failed), quit
+00000C34                                          4338+FINN0015 DS    0H  Advance to next subchannel
+00000C34  4110 1001                     00000001  4339+         LA    1,1(0,1)           Advance to next subchannel
+00000C38  5510 2A48                     00000C48  4340+         CL    1,FINM0015         Beyond maximum subchannel
+00000C3C  A7D4 FFE5                     00000C06  4341+         $BNH  FINL0015           ..No, examine the next subchannel
+00000C40  A724 FFC0                     00000BC0  4342+         $BH   FAILDEV            ..Yes, failed to enable the device
+00000C44                                          4343+         DROP  4                  Forget SCHIB addressing
+00000C44  00010000                                4344+FIND0015 DC    A(X'00010000')     First subchannel subsystem ID
+00000C48  0001FFFF                                4345+FINM0015 DC    A(X'0001FFFF')     Last subchannel subsystem ID
+
+
+00000C4C  07FF                                    4347 ENAOKAY  BR    R15                Return to caller
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    16
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4349 ***********************************************************************
+                                                  4350 *         Structure used by RAWIO identifying
+                                                  4351 *         the device and operation being performed
+                                                  4352 ***********************************************************************
+
+
+                                                  4354 IOCB_009 IOCB  X'009',CCW=CONPGM
+00000C50  00000000                                4355+IOCB_009 DC    A(0)            +0 Device Identifier (supplied by ENADEV macro)
+00000C54  0009                                    4356+         DC    AL2(X'009')     +4 Device address or device number
+00000C56  0000                                    4357+         DC    H'0'            +6 Must be zeros
+00000C58  D3                                      4358+         DC    AL1(X'D3')      +8 Default detected unit errors
+00000C59  3F                                      4359+         DC    AL1(X'3F')      +9 Default detected channel errors
+00000C5A  0000                                    4360+         DC    HL2'0'          +10 Accumulated unit and channel errors
+00000C5C  0000                                    4361+         DC    HL2'0'          +12 Tested unit and channel status
+00000C5E  00                                      4362+         DC    XL1'00'         +14 Accumulated subchannel status control from SCSW
+00000C5F  80                                      4363+         DC    XL1'80'         +15 Default unsoliticed wait condition
+00000C60  00000000                                4364+         DC    F'0'            +16 I/O status CCW address
+00000C64  00000000                                4365+         DC    F'0'            +20 residual count
+00000C68  00000CC0                                4366+         DC    A(IORB0016)     +24  Address where ORB is located
+00000C6C  00000000                                4367+         DC    A(0)            +28  reserved
+00000C70  00000C80                                4368+         DC    A(IIRB0016)     +32 Address where IRB stored
+00000C74  00000000                                4369+         DC    A(0)            +36 reserved
+00000C78  00000C80                                4370+         DC    A(IIRB0016)     +40 Address where SCHIB stored
+00000C7C  00000000                                4371+         DC    A(0)            +44 reserved
+00000C80  00000000 00000000                       4372+IIRB0016 DC    16F'0'              Embedded shared IRB and SCHIB area
+00000CC0                                          4374+IORB0016 DS    0XL12
+00000CC0  00000000                                4375+         DC    A(0)                         Word 0 - Interruption Parameter
+00000CC4  00                                      4376+         DC    AL1((0)*16+B'0000')          Word 1, bits 0-7
+00000CC5  80                                      4377+         DC    BL1'10000000'                Word 1, bits 8-15
+00000CC6  FF                                      4378+         DC    AL1(255)                     Word 1, bits 16-23
+00000CC7  00                                      4379+         DC    BL1'00000000'                 Word 1, bits 24-31
+00000CC8  00000D28                                4380+         DC    AL4(CONPGM)                  Word 2 - CCW address
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    17
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4382 ***********************************************************************
+                                                  4383 *        Working Storage
+                                                  4384 ***********************************************************************
+
+
+00000CCC                                          4386          LTORG ,                Literals pool
+00000CCC  00000100                                4387                =A(OP2LEN)
+00000CD0  00000000                                4388                =F'0'
+00000CD4  00000001                                4389                =F'1'
+00000CD8  E3D9C540 40                             4390                =CL5'TRE'
+00000CDD  04294967 296C                           4391                =P'4294967296'
+
+                              00000400  00000001  4393 K        EQU   1024             One KB
+                              00001000  00000001  4394 PAGE     EQU   (4*K)            Size of one page
+                              00010000  00000001  4395 K64      EQU   (64*K)           64 KB
+                              00100000  00000001  4396 MB       EQU   (K*K)             1 MB
+
+                              000021FE  00000001  4398 TESTADDR EQU   (2*PAGE+X'200'-2)  Where test/subtest numbers will go
+                              000021FD  00000001  4399 TIMEADDR EQU   (TESTADDR-1)       Address of timing tests option flag
+
+                              00200000  00000001  4401 MAINSIZE EQU   (2*MB)                   Minimum required storage size
+                              00000020  00000001  4402 NUMPGTBS EQU   ((MAINSIZE+K64-1)/K64)   Number of Page Tables needed
+                              00000002  00000001  4403 NUMSEGTB EQU   ((NUMPGTBS*4)/(16*4))    Number of Segment Tables
+                              00003000  00000001  4404 SEGTABLS EQU   (3*PAGE)                 Segment Tables Origin
+                              00003080  00000001  4405 PAGETABS EQU   (SEGTABLS+(NUMPGTBS*4))  Page Tables Origin
+00000CE4  00B00060                                4406 CRLREG0  DC    0A(0),XL4'00B00060'      Control Register 0
+00000CE8  00003002                                4407 CTLREG1  DC    A(SEGTABLS+NUMSEGTB)     Control Register 1
+
+00000CEC  00002710                                4409 NUMLOOPS DC    F'10000'         10,000 * 100 = 1,000,000
+
+00000CF0  BBBBBBBB BBBBBBBB                       4411 BEGCLOCK DC    0D'0',8X'BB'     Begin
+00000CF8  EEEEEEEE EEEEEEEE                       4412 ENDCLOCK DC    0D'0',8X'EE'     End
+00000D00  DDDDDDDD DDDDDDDD                       4413 DURATION DC    0D'0',8X'DD'     Diff
+00000D08  FFFFFFFF FFFFFFFF                       4414 OVERHEAD DC    0D'0',8X'FF'     Overhead
+
+00000D10  00000000 0000000C                       4416 TICKSAAA DC    PL8'0'           Clock ticks high part
+00000D18  00000000 0000000C                       4417 TICKSBBB DC    PL8'0'           Clock ticks low part
+00000D20  00000000 0000000C                       4418 TICKSTOT DC    PL8'0'           Total clock ticks
+
+00000D28  09000044 00000D30                       4420 CONPGM   CCW1  X'09',PRTLINE,0,PRTLNG
+00000D30  40404040 40404040                       4421 PRTLINE  DC    C'         1,000,000 iterations of XXXXX'
+00000D56  40A39696 9240F9F9                       4422          DC    C' took 999,999,999 microseconds'
+                              00000044  00000001  4423 PRTLNG   EQU   *-PRTLINE
+00000D74  40202020 6B202020                       4424 EDIT     DC    X'402020206B2020206B202120'
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    18
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4426 ***********************************************************************
+                                                  4427 *        TRETEST DSECT
+                                                  4428 ***********************************************************************
+
+
+                                                  4430 TRETEST  DSECT ,
+
+
+00000000  00                                      4432 TNUM     DC    X'00'          TRE table Number
+00000001  00                                      4433 TBYTE    DC    X'00'          TRE Testbyte
+00000002  00                                      4434          DC    X'00'
+00000003  00                                      4435          DC    X'00'
+
+
+00000004  00000000                                4437 OP1DATA  DC    A(0)           Pointer to Operand-1 data
+00000008  00000000                                4438 OP2DATA  DC    A(0)           Pointer to Operand-2 data
+                                                  4439
+                              0000000C  00000001  4440 OPSWHERE EQU   *              Where TRE Operands are located
+0000000C  00000000                                4441 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
+00000010  00000000                                4442 OP1LEN   DC    F'0'           How much data is there - 1
+00000014  00000000                                4443 OP2WHERE DC    A(0)           Where Operand-2 data should be placed
+                              00000100  00000001  4444 OP2LEN   EQU   256            Operand-2 is always 256
+
+
+00000018  00000000                                4446 FAILMASK DC    A(0)           Failure Branch on Condition mask
+
+
+0000001C  00000000 00000000                       4448 ENDREGS  DC    A(0),XL4'00'   Ending R1/R2 register values
+
+
+                              00000024  00000001  4450 TRENEXT  EQU   *              Start of next table entry...
+
+
+
+
+
+
+                              AABBCCDD  00000001  4452 REG2PATT EQU   X'AABBCCDD'    Register 2 starting/ending CC0 value
+                              000000DD  00000001  4453 REG2LOW  EQU         X'DD'    (last byte above)
+
+
+
+
+
+
+
+
+                              00000000  00003000  4455 TRE02TST CSECT ,
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    19
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4457 ***********************************************************************
+                                                  4458 *        TRE Performace Test data...
+                                                  4459 ***********************************************************************
+00000D80                                          4460 TREPERF  DC    0A(0)      start of table
+
+
+
+
+00000D80  91990000                                4462 TREPOP1  DC    X'91',X'99',X'00',X'00'
+00000D84  00001118 00001C18                       4463          DC    A(TRELOP10),A(TRELOP20)
+00000D8C  00020000 00000200                       4464          DC    A(00+(02*K64)),A(512),A(MB+(02*K64))      no crosses
+00000D98  00000007                                4465          DC    A(7) CC0
+00000D9C  00020200 AABBCCDD                       4466          DC    A(00+(02*K64)+512),A(REG2PATT)
+
+
+
+
+00000DA4  92990000                                4468 TREPOP2  DC    X'92',X'99',X'00',X'00'
+00000DA8  00001118 00001C18                       4469          DC    A(TRELOP10),A(TRELOP20)
+00000DB0  0002FFF4 00000200                       4470          DC    A(00+(03*K64)-12),A(512),A(MB+(03*K64))   op1 crosses
+00000DBC  00000007                                4471          DC    A(7) CC0
+00000DC0  000301F4 AABBCCDD                       4472          DC    A(00+(03*K64)-12+512),A(REG2PATT)
+
+
+
+
+00000DC8  93990000                                4474 TREPOP3  DC    X'93',X'99',X'00',X'00'
+00000DCC  00001118 00001C18                       4475          DC    A(TRELOP10),A(TRELOP20)
+00000DD4  00040000 00000800                       4476          DC    A(00+(04*K64)),A(2048),A(MB+(04*K64))     no crosses
+00000DE0  00000007                                4477          DC    A(7) CC0
+00000DE4  00290800 AABBCCDD                       4478          DC    A(00+(041*K64)+2048),A(REG2PATT)
+
+
+
+
+00000DEC  94990000                                4480 TREPOP4  DC    X'94',X'99',X'00',X'00'
+00000DF0  00001118 00001C18                       4481          DC    A(TRELOP10),A(TRELOP20)
+00000DF8  0003FFF4 00000800                       4482          DC    A(00+(04*K64)-12),A(2048),A(MB+(04*K64))  op1 crosses
+00000E04  00000007                                4483          DC    A(7) CC0
+00000E08  002907F4 AABBCCDD                       4484          DC    A(00+(041*K64)-12+2048),A(REG2PATT)
+
+
+
+
+
+
+
+00000E10  00000000                                4486          DC    A(0)        end of table
+00000E14  00000000                                4487          DC    A(0)        end of table
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    20
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4489 ***********************************************************************
+                                                  4490 *        TRE op1 scan data...
+                                                  4491 ***********************************************************************
+
+00000E18  78125634 78125634                       4493 TRTOP10  DC    64XL4'78125634'               (CC0)
+
+00000F18  78125634 78125634                       4495 TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
+
+00001018  78125634 78125634                       4497 TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
+                                                  4498
+
+00001118  78125634 78125634                       4500 TRELOP10 DC    512XL4'78125634'               (CC0)
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    21
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4502 ***********************************************************************
+                                                  4503 *        TRE op2 stop tables...
+                                                  4504 ***********************************************************************
+
+00001918  00000000 00000000                       4506 TRTOP20  DC    256X'00'                   no stop
+
+00001A18  00000000 00000000                       4508 TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+
+00001B18  00000000 00000000                       4510 TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+
+00001C18  FF000000 00000000                       4512 TRELOP20 DC    X'FF',255X'00'
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    22
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4514 ***********************************************************************
+                                                  4515 *        Fixed storage locations
+                                                  4516 ***********************************************************************
+
+
+
+
+
+00001D18                      00001D18  000021FD  4518          ORG   TRE02TST+TIMEADDR      (s/b @ X'21FD')
+
+000021FD  00                                      4520 TIMEOPT  DC    X'00'      Set to non-zero to run timing tests
+
+
+
+
+
+
+
+
+
+000021FE                      000021FE  000021FE  4522          ORG   TRE02TST+TESTADDR      (s/b @ X'21FE', X'21FF')
+
+000021FE  00                                      4524 TESTNUM  DC    X'00'      Test number of active test
+000021FF  00                                      4525 SUBTEST  DC    X'00'      Active test sub-test number
+
+
+
+
+
+
+
+
+
+00002200                      00002200  00003000  4527          ORG   TRE02TST+SEGTABLS      (s/b @ X'3000')
+
+00003000  00                                      4529 DATTABS  DC    X'00'      Segment and Page Tables will go here...
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    23
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4531 ***********************************************************************
+                                                  4532 *        IOCB DSECT
+                                                  4533 ***********************************************************************
+
+                                                  4535          DSECTS NAME=IOCB
+                                                  4537+IOCB     DSECT
+                                                  4538+*     Field usage by: CH SC Description (R->program read-only, X->program read/write)
+00000000                                          4539+IOCBDID  DS    0F  +0     R  Device Identifier - Subsystem ID for channel subsystem
+00000000  0000                                    4540+         DS    H   +0  R       reserved - must be zeros
+00000002  0000                                    4541+IOCBDV   DS    H   +2  R       Channel Unit Device address of I/O operation
+00000004  0000                                    4542+IOCBDEV  DS    H   +4  X  X  Device address or device number (R after ENADEV)
+00000006  0000                                    4543+IOCBZERO DS    H   +6  R  R  Must be zeros
+00000008  00                                      4544+IOCBUM   DS    X   +8  X  X  Unit status test mask
+00000009  00                                      4545+IOCBCM   DS    X   +9  X  X  Channel status test mask
+0000000A                                          4546+IOCBST   DS    0H  +10 X  X  Input/Output unit and channel status accumulation
+0000000A  00                                      4547+IOCBUS   DS    X   +10 R  R  Accumulated unit status
+0000000B  00                                      4548+IOCBCS   DS    X   +11 R  R  Accumulated channel status
+0000000C  00                                      4549+IOCBUT   DS    X   +14 R  R  Used to test unit status
+0000000D  00                                      4550+IOCBCT   DS    X   +13 R  R  Used to test channel status
+0000000E  00                                      4551+IOCBSC   DS    X   +14    R  Accumulted subchanel status control
+0000000F  00                                      4552+IOCBWAIT DS    X   +15 X  X  Recognized unsolicited interruption unit status events
+00000010  00000000                                4553+IOCBSCCW DS    A   +16 R  R  I/O status CCW address
+00000014                                          4554+IOCBSCNT DS    0F  +20 R  R  I/O status residual count as a positive full word
+00000014  0000                                    4555+         DS    H   +20 R     reserved must be zeros
+00000016  0000                                    4556+IOCBRCNT DS    H   +22 R     I/O status residual count as an unsigned halfword
+00000018                                          4557+IOCBCAW  DS    0A  +24 X     Channel Address word
+00000018  00000000 00000000                       4558+IOCBORB  DS    AD  +24    X  Address of the ORB for channel subsystem I/O
+00000020  00000000 00000000                       4559+IOCBIRB  DS    AD  +32    X  Channel subsystem IRB address
+00000028  00000000 00000000                       4560+IOCBSIB  DS    AD  +40    X  Channel subsystem SCHIB address
+                              00000030  00000001  4561+IOCBL    EQU   *-IOCB  Length of IOCB control block (48) without embedded structures
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    24
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4563 ***********************************************************************
+                                                  4564 *        ORB DSECT
+                                                  4565 ***********************************************************************
+
+                                                  4567          DSECTS NAME=ORB
+                                                  4569+ORB      DSECT
+00000000  00000000                                4570+ORBPARM  DC    F'0'     Word 0, bits 0-31
+
+00000004  00                                      4572+ORB1_0   DC    X'00'    Word 1, bits 0-7
+                              000000F0  00000001  4573+ORBKEYM  EQU   X'F0'    Word 1, bits 0-3   - Storage Key Mask
+                              00000008  00000001  4574+ORBS     EQU   X'08'    Word 1, bit 4      - Suspend Control
+                              00000004  00000001  4575+ORBC     EQU   X'04'    Word 1, bit 5      - Streaming Mode Control
+                              00000002  00000001  4576+ORBM     EQU   X'02'    Word 1, bit 6      - Modification Control
+                              00000001  00000001  4577+ORBY     EQU   X'01'    Word 1, bit 7      - Synchronization Control
+
+00000005  00                                      4579+ORB1_8   DC    X'00'    Word 1, bits 8-15
+                              00000080  00000001  4580+ORBF     EQU   X'80'    Word 1, bit 8      - CCW Format-Control
+                              00000040  00000001  4581+ORBP     EQU   X'40'    Word 1, bit 9      - Pre-fetch control
+                              00000020  00000001  4582+ORBI     EQU   X'20'    Word 1, bit 10     - Initial-status Interruption Control
+                              00000010  00000001  4583+ORBA     EQU   X'10'    Word 1, bit 11     - Address Limit Checking Control
+                              00000008  00000001  4584+ORBU     EQU   X'08'    Word 1, bit 12     - Suppress-suspended-interruption control
+                              00000004  00000001  4585+ORBB     EQU   X'04'    Word 1, bit 13     - Channel-Program-Type Control
+                              00000002  00000001  4586+ORBH     EQU   X'02'    Word 1, bit 14     - Format 2-IDAW Control
+                              00000001  00000001  4587+ORBT     EQU   X'01'    Word 1, bit 15     - 2K-IDAW control
+00000006  00                                      4588+ORBLPM   DC    X'00'    Word 1, bits 16-23 - Logical Path Mask
+00000007  00                                      4589+ORRB1_24 DC    X'00'    Word 1, bits 24-31
+                              00000080  00000001  4590+ORBL     EQU   X'80'    Word 1, bit 24     - Incorrect Length Suppression Mode
+                              0000007F  00000001  4591+ORBRSV3  EQU   X'7F'    Word 1, bits 25-31 - reserved must be zeros
+                              00000040  00000001  4592+ORBD     EQU   X'40'    Word 1, bit 25     - MIDAW Addressing Control
+                              0000003E  00000001  4593+ORBRSV26 EQU   X'3E'    Word 1, bits 26-30 - reserved must be zeros
+                              0000007E  00000001  4594+ORBRSV25 EQU   X'7E'    Word 1, bits 25-30 - reserved must be zeros
+                              00000001  00000001  4595+ORBX     EQU   X'01'    Word 1, bit 31     - ORB-extension control
+
+00000008  00000000                                4597+ORBCCW   DC    A(0)     Word 2, bits 1-31  - Channel Program Address
+                              00000080  00000001  4598+ORBRSV4  EQU   X'80'    Word 2, bit 0      - reserved must be zero
+                              0000000C  00000001  4599+ORBLEN   EQU   *-ORB Length of standard ORB
+                                                  4600+* Extended ORB fields
+0000000C  00                                      4601+ORBCSS   DC    X'00'    Word 3, bits 0-7   - Channel Subsystem Priority
+0000000D  00                                      4602+ORBRSV5  DC    X'00'    Word 3, bits 8-15  - reserved must be zeros
+0000000E                                          4603+ORBPGM   DC    0X'00'   Word 3, bits 16-23 - Transport mode reserves for program use
+0000000E  00                                      4604+ORBCU    DC    X'00'    Word 3, bits 16-23 - Control Unit Priority
+0000000F  00                                      4605+ORBRSV6  DC    X'00'    Word 3, bits 24-31 - reserved must be zeros
+00000010  00000000 00000000                       4606+ORBRSV7  DC    XL16'00' Words 4-7          - reserved must be zeros
+                              00000020  00000001  4607+ORBXLEN  EQU   *-ORB Length of extended ORB
+
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    25
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4610 ***********************************************************************
+                                                  4611 *        IRB DSECT
+                                                  4612 ***********************************************************************
+
+                                                  4614          DSECTS NAME=IRB
+                                                  4616+IRB      DSECT Interruption          Response Block
+00000000  00000000 00000000                       4617+IRBSCSW  DC    XL12'00' Words 0-2 - Subchannel Status Word (Defined by DSECT SCSW)
+0000000C  00000000 00000000                       4618+IRBESW   DC    XL20'00' Words 3-7 - Extended Status Word
+00000020  00000000 00000000                       4619+IRBECW   DC    XL32'00' Words 8-15 - Extended Control Word
+                              00000040  00000001  4620+IRBL     EQU   *-IRB    IRB Length
+00000040  00000000 00000000                       4621+IRBEMW   DC    XL32'00' Words 16-23 - Extended Measurement Word
+                              00000060  00000001  4622+IRBXL    EQU   *-IRB    Extended IRB Length
+
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    26
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4625 ***********************************************************************
+                                                  4626 *        SCSW DSECT
+                                                  4627 ***********************************************************************
+
+                                                  4629          DSECTS NAME=SCSW
+                                                  4631+SCSW     DSECT Subchannel          Status Word
+00000000  00                                      4632+SCSWFLAG DC    X'00'    Flags
+                              000000F0  00000001  4633+SCSWKEYM EQU   X'F0'    Storage Key Mask of subchannel storage key
+                              00000008  00000001  4634+SCSWSUSC EQU   X'08'    Suspend Control
+                              00000004  00000001  4635+SCSWESWF EQU   X'04'    Extended Status Word Format
+                              00000003  00000001  4636+SCSWDCCM EQU   X'03'    Deferred condiont code mask
+                              00000000  00000001  4637+SCSWDCC0 EQU   X'00'    Normal I/O interruption
+                              00000001  00000001  4638+SCSWDCC1 EQU   X'01'    Deferred condition code is 1
+                              00000003  00000001  4639+SCSWDCC3 EQU   X'03'    Deferred condition code is 3
+
+00000001  00                                      4641+SCSWCTLS DC    X'00'    General Controls
+                              00000080  00000001  4642+SCSWCCWF EQU   X'80'    CCW Format control when ...
+                              00000040  00000001  4643+SCSWCCWP EQU   X'40'    CCW Prefetch Control
+                              00000020  00000001  4644+SCSWISIC EQU   X'20'    Initial-Status-Interruption Control
+                              00000010  00000001  4645+SCSWALKC EQU   X'10'    Address-Limit-Checking Control
+                              00000008  00000001  4646+SCSWSSIC EQU   X'08'    Suppress suspended interruption
+                              00000004  00000001  4647+SCSW0CC  EQU   X'04'    Zero-Condition Code
+                              00000002  00000001  4648+SCSWECWC EQU   X'02'    Extended Control Word control
+                              00000001  00000001  4649+SCSWPNOP EQU   X'01'    Path Not Operational
+
+00000002  00                                      4651+SCSW1    DC    X'00'    Control Byte 1
+                              00000070  00000001  4652+SCSWFM   EQU   X'70'    Functional Control Mask
+                              00000040  00000001  4653+SCSWFS   EQU   X'40'    Function Control - Start Function
+                              00000020  00000001  4654+SCSWFH   EQU   X'20'    Function Control - Halt Function
+                              00000010  00000001  4655+SCSWFC   EQU   X'10'    Function Control - Clear Function
+                              00000008  00000001  4656+SCSWARP  EQU   X'08'    Activity Control - Resume pending
+                              00000004  00000001  4657+SCSWASP  EQU   X'04'    Activity Control - Start pending
+                              00000002  00000001  4658+SCSWAHP  EQU   X'02'    Activity Control - Halt pending
+                              00000001  00000001  4659+SCSWACP  EQU   X'01'    Activity Control - Clear pending
+00000003  00                                      4660+SCSW2    DC    X'00'    Control Byte 2
+                              00000080  00000001  4661+SCSWASA  EQU   X'80'    Activity Control - Subchannel Active
+                              00000040  00000001  4662+SCSWADA  EQU   X'40'    Activity Control - Device Active
+                              00000020  00000001  4663+SCSWASUS EQU   X'20'    Activity Control - Suspended
+                              00000010  00000001  4664+SCSWSAS  EQU   X'10'    Status Control   - Alert Status
+                              00000008  00000001  4665+SCSWSINT EQU   X'08'    Status Control   - Intermediate Status
+                              00000004  00000001  4666+SCSWSPRI EQU   X'04'    Status Control   - Primary Status
+                              00000002  00000001  4667+SCSWSSEC EQU   X'02'    Status Control   - Secondary Status
+                              00000001  00000001  4668+SCSWSPEN EQU   X'01'    Status Control   - Status Pending
+
+00000004  00000000                                4670+SCSWCCW  DC    A(0)     CCW Address
+
+00000008  00                                      4672+SCSWUS   DC    X'00'    Unit Status
+                              00000080  00000001  4673+SCSWATTN EQU   X'80'    Attention
+                              00000040  00000001  4674+SCSWSM   EQU   X'40'    Status modifier
+                              00000020  00000001  4675+SCSWCUE  EQU   X'20'    Control-unit end
+                              00000010  00000001  4676+SCSWBUSY EQU   X'10'    Busy
+                              00000008  00000001  4677+SCSWCE   EQU   X'08'    Channel end
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    27
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                              00000004  00000001  4678+SCSWDE   EQU   X'04'    Device end
+                              00000002  00000001  4679+SCSWUC   EQU   X'02'    Unit check
+                              00000001  00000001  4680+SCSWUX   EQU   X'01'    Unit exception
+
+00000009  00                                      4682+SCSWCS   DC    X'00'    Channel Status
+                              00000080  00000001  4683+SCSWPCI  EQU   X'80'    Program-controlled interruption
+                              00000040  00000001  4684+SCSWIL   EQU   X'40'    Incorrect length
+                              00000020  00000001  4685+SCSWPRGM EQU   X'20'    Program check
+                              00000010  00000001  4686+SCSWPROT EQU   X'10'    Protection Check
+                              00000008  00000001  4687+SCSWCDAT EQU   X'08'    Channel-data check
+                              00000004  00000001  4688+SCSWCCTL EQU   X'04'    Channel-control check
+                              00000002  00000001  4689+SCSWICTL EQU   X'02'    Interface-control check
+                              00000001  00000001  4690+SCSWCHNG EQU   X'01'    Chaining check
+
+0000000A  0000                                    4692+SCSWCNT  DC    H'0'     Residual CCW count
+                              0000000C  00000001  4693+SCSWL    EQU   *-SCSW
+
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    28
+
+  LOC        OBJECT CODE       ADDR1     ADDR2    STMT
+
+                                                  4696 ***********************************************************************
+                                                  4697 *        (other DSECTS needed by SATK)
+                                                  4698 ***********************************************************************
+
+                                                  4700          DSECTS PRINT=OFF,NAME=(ASA,SCHIB,CCW0,CCW1,CSW)
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                  4976          PRINT ON
+
+                                                  4978 ***********************************************************************
+                                                  4979 *        Register equates
+                                                  4980 ***********************************************************************
+
+
+                              00000000  00000001  4982 R0       EQU   0
+                              00000001  00000001  4983 R1       EQU   1
+                              00000002  00000001  4984 R2       EQU   2
+                              00000003  00000001  4985 R3       EQU   3
+                              00000004  00000001  4986 R4       EQU   4
+                              00000005  00000001  4987 R5       EQU   5
+                              00000006  00000001  4988 R6       EQU   6
+                              00000007  00000001  4989 R7       EQU   7
+                              00000008  00000001  4990 R8       EQU   8
+                              00000009  00000001  4991 R9       EQU   9
+                              0000000A  00000001  4992 R10      EQU   10
+                              0000000B  00000001  4993 R11      EQU   11
+                              0000000C  00000001  4994 R12      EQU   12
+                              0000000D  00000001  4995 R13      EQU   13
+                              0000000E  00000001  4996 R14      EQU   14
+                              0000000F  00000001  4997 R15      EQU   15
+
+
+
+
+
+
+
+
+                                                  4999          END
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    29
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+ASA                 4    00000000         512  4704  3550
+ASBEGIN             U    00000000           1  4705  4710  4752  4788  4797  4815  4822  4828  4832  4836  4842  4859
+ASEND               U    00000200           1  4858  4859
+ASLENGTH            U    00000200           1  4859
+BCEXTCOD            H    0000001A           2  4722
+BCIOCOD             H    0000003A           2  4730
+BCMCKCOD            H    00000032           2  4728
+BCPGMCOD            H    0000002A           2  4726
+BCSVCCOD            H    00000022           2  4724
+BEGCLOCK            D    00000CF0           8  4411  3630  3848  4224  4227  4234
+BEGIN               I    00000200           2  3556  3524  3551  3552
+CALCDUR             I    00000B14           4  4221  3842  4149
+CALCRET             F    00000B58           4  4243  4221  4240
+CALCWORK            F    00000B5C           4  4244  4222  4239
+CAW                 F    00000048           4  4734
+CAWADDR             R    00000049           3  4737
+CAWKEY              X    00000048           1  4735
+CAWSUSP             U    00000008           1  4736
+CCW0                4    00000000           8  4863  4869
+CCW0ADDR            R    00000001           3  4865
+CCW0CNT             H    00000006           2  4868
+CCW0CODE            X    00000000           1  4864
+CCW0FLGS            X    00000004           1  4866
+CCW0L               U    00000008           1  4869
+CCW1                4    00000000           8  4881  4886
+CCW1ADDR            A    00000004           4  4885
+CCW1CNT             H    00000002           2  4884
+CCW1CODE            X    00000000           1  4882
+CCW1FLGS            X    00000001           1  4883
+CCW1L               U    00000008           1  4886
+CCWCC               U    00000040           1  4873
+CCWCD               U    00000080           1  4872
+CCWIDA              U    00000004           1  4877
+CCWPCI              U    00000008           1  4876
+CCWSKIP             U    00000010           1  4875
+CCWSLI              U    00000020           1  4874
+CCWSUSP             U    00000002           1  4878
+CHANID              F    000000A8           4  4789
+CODE                2    00000000       12289  3505
+CONPGM              W    00000D28           8  4420  4380
+CPUID               U    0000031B           1  4861
+CRLREG0             A    00000CE4           4  4406
+CSW                 F    00000040           8  4733
+CSWATTN             U    00000080           1  4903
+CSWBUSY             U    00000010           1  4906
+CSWCCTL             U    00000004           1  4918
+CSWCCW              R    00000001           3  4900
+CSWCDAT             U    00000008           1  4917
+CSWCE               U    00000008           1  4907  4208
+CSWCHNG             U    00000001           1  4920
+CSWCNT              H    00000006           2  4922
+CSWCS               X    00000005           1  4912
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    30
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+CSWCUE              U    00000020           1  4905
+CSWDCC0             U    00000000           1  4896
+CSWDCC1             U    00000001           1  4897
+CSWDCC3             U    00000003           1  4898
+CSWDCCM             U    00000003           1  4895
+CSWDE               U    00000004           1  4908  4208
+CSWFLAG             X    00000000           1  4890
+CSWFMT              4    00000000           8  4889  4923
+CSWFMTL             U    00000008           1  4923
+CSWICTL             U    00000002           1  4919
+CSWIL               U    00000040           1  4914
+CSWKEYM             U    000000F0           1  4891
+CSWLOG              U    00000004           1  4894
+CSWPCI              U    00000080           1  4913
+CSWPRGM             U    00000020           1  4915
+CSWPROT             U    00000010           1  4916
+CSWSM               U    00000040           1  4904
+CSWSUSP             U    00000008           1  4893
+CSWUC               U    00000002           1  4909
+CSWUS               X    00000004           1  4902
+CSWUX               U    00000001           1  4910
+CTLREG1             A    00000CE8           4  4407
+DATTABS             X    00003000           1  4529
+DURATION            D    00000D00           8  4413  3843  4152  4153  4156  4236
+DWAT0010            3    00000BB8           8  4288  4287
+DWAT0011            3    00000BC8           8  4293  4292
+DWAT0012            3    00000BD8           8  4298  4297
+DWAT0013            3    00000BE8           8  4303  4302
+EDIT                X    00000D74          12  4424  4166  4167
+ENADEV              I    00000BFE           4  4322  4276
+ENAOKAY             I    00000C4C           2  4347  4336
+ENDCLOCK            D    00000CF8           8  4412  3841  4129  4229  4232  4235
+ENDREGS             A    0000001C           4  4448
+EOJ                 H    00000BB2           2  4286  3575  3583
+EXTCPUAD            H    00000084           2  4754
+EXTICODE            H    00000086           2  4755
+EXTIPARM            F    00000080           4  4753
+EXTNPSW             F    00000058           8  4743
+EXTOPSW             F    00000018           8  4715  4721
+FAILDEV             H    00000BC0           2  4291  4327  4337  4342
+FAILIO              H    00000BD0           2  4296  4176  4199  4209
+FAILMASK            A    00000018           4  4446
+FAILTEST            H    00000BE0           2  4301  3578  3581
+FIND0015            A    00000C44           4  4344  4322
+FINL0015            H    00000C06           2  4325  4341
+FINM0015            A    00000C48           4  4345  4340
+FINN0015            H    00000C34           2  4338  4329  4331
+IIRB0016            F    00000C80           4  4372  4368  4370
+IMAGE               1    00000000       12289     0
+INIT                H    00000BA0           2  4270  3564
+IOCB                4    00000000          48  4537  4561  3553
+IOCBCAW             A    00000018           4  4557
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    31
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+IOCBCM              X    00000009           1  4545
+IOCBCS              X    0000000B           1  4548
+IOCBCT              X    0000000D           1  4550
+IOCBDEV             H    00000004           2  4542  4330
+IOCBDID             F    00000000           4  4539  4172  4333
+IOCBDV              H    00000002           2  4541
+IOCBIRB             A    00000020           8  4559  4177
+IOCBL               U    00000030           1  4561
+IOCBORB             A    00000018           8  4558  4174  4273
+IOCBRCNT            H    00000016           2  4556  4206
+IOCBSC              X    0000000E           1  4551  4170  4201  4203
+IOCBSCCW            A    00000010           4  4553  4205
+IOCBSCNT            F    00000014           4  4554
+IOCBSIB             A    00000028           8  4560  4323
+IOCBST              H    0000000A           2  4546  4171  4202
+IOCBUM              X    00000008           1  4544
+IOCBUS              X    0000000A           1  4547  4208
+IOCBUT              X    0000000C           1  4549
+IOCBWAIT            X    0000000F           1  4552
+IOCBZERO            H    00000006           2  4543  4171
+IOCB_009            A    00000C50           4  4355  4272
+IOELADDR            F    000000AC           4  4790
+IOICODE             H    000000BA           2  4795
+IOIID               F    000000C0           4  4800
+IOINIT              I    00000BF0           4  4310  4275
+IOIPARM             F    000000BC           4  4799
+IOMK0014            F    00000BF8           4  4312  4310  4311
+ION0008             3    00000AB8           8  4187  4184
+IONPSW              F    00000078           8  4747
+IOOPSW              F    00000038           8  4719  4729
+IORB0016            X    00000CC0          12  4374  4366
+IOS0008             X    00000AC0           8  4188  4183  4191
+IOSSID              F    000000B8           4  4798  4194
+IOWT0007            H    00000A9E           2  4181  4195  4198  4204
+IPLCCW1             F    00000008           8  4707
+IPLCCW2             F    00000010           8  4708
+IPLPSW              F    00000000           8  4706
+IRB                 4    00000000          96  4616  4620  4622  4178
+IRBECW              X    00000020          32  4619
+IRBEMW              X    00000040          32  4621
+IRBESW              X    0000000C          20  4618
+IRBL                U    00000040           1  4620
+IRBSCSW             X    00000000          12  4617  4201  4202  4205  4206
+IRBXL               U    00000060           1  4622
+IRST0008            H    00000AC8           2  4190  4187
+K                   U    00000400           1  4393  4394  4395  4396
+K64                 U    00010000           1  4395  4402  4464  4466  4470  4472  4476  4478  4482  4484
+LCHANLOG            F    000000B0           4  4791
+MAINSIZE            U    00200000           1  4401  4402
+MB                  U    00100000           1  4396  4401  4464  4470  4476  4482
+MCKLOG              F    00000100           4  4823
+MCKNPSW             F    00000070           8  4746
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    32
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+MCKOPSW             F    00000030           8  4718  4727
+MEASUREB            X    000000B9           1  4794
+MKARCHMD            X    000000A3           1  4782
+MKARS               F    00000120           4  4821
+MKCLKCMP            F    000000E0           8  4807
+MKCPUTIM            F    000000D8           8  4806
+MKCRS               F    000001C0           4  4826
+MKDMGCOD            F    000000F4           4  4810
+MKFAILA             F    000000F8           4  4812
+MKFPRS              D    00000160           8  4824
+MKICODE             F    000000E8           4  4808
+MKLOGOUT            F    00000100           4  4814
+MKMODEL             F    000000FC           4  4813
+MKXSAA              F    000000D4           4  4805
+MONCLS              H    00000094           2  4770
+MONCODE             F    0000009C           4  4777
+MONNUMBR            X    00000095           1  4772
+MPGACCID            X    000000A2           1  4780
+NKGRS               F    00000180           4  4825
+NUMLOOPS            F    00000CEC           4  4409  3629  3847
+NUMPGTBS            U    00000020           1  4402  4403  4405
+NUMSEGTB            U    00000002           1  4403  4407
+OP1DATA             A    00000004           4  4437  3614
+OP1LEN              F    00000010           4  4442  3613  3615
+OP1WHERE            A    0000000C           4  4441  3612
+OP2DATA             A    00000008           4  4438  3620
+OP2LEN              U    00000100           1  4444  3619
+OP2WHERE            A    00000014           4  4443  3618
+OPSWHERE            U    0000000C           1  4440  3633  3636  3641  3643  3645  3647  3649  3651  3653  3655  3657  3659  3661
+                                                     3663  3665  3667  3669  3671  3673  3675  3677  3679  3681  3683  3685  3687
+                                                     3689  3691  3693  3695  3697  3699  3701  3703  3705  3707  3709  3711  3713
+                                                     3715  3717  3719  3721  3723  3725  3727  3729  3731  3733  3735  3737  3739
+                                                     3741  3743  3745  3747  3749  3751  3753  3755  3757  3759  3761  3763  3765
+                                                     3767  3769  3771  3773  3775  3777  3779  3781  3783  3785  3787  3789  3791
+                                                     3793  3795  3797  3799  3801  3803  3805  3807  3809  3811  3813  3815  3817
+                                                     3819  3821  3823  3825  3827  3829  3831  3835  3837  3851  3854  3860  3863
+                                                     3866  3869  3872  3875  3878  3881  3884  3887  3890  3893  3896  3899  3902
+                                                     3905  3908  3911  3914  3917  3920  3923  3926  3929  3932  3935  3938  3941
+                                                     3944  3947  3950  3953  3956  3959  3962  3965  3968  3971  3974  3977  3980
+                                                     3983  3986  3989  3992  3995  3998  4001  4004  4007  4010  4013  4016  4019
+                                                     4022  4025  4028  4031  4034  4037  4040  4043  4046  4049  4052  4055  4058
+                                                     4061  4064  4067  4070  4073  4076  4079  4082  4085  4088  4091  4094  4097
+                                                     4100  4103  4106  4109  4112  4115  4120  4123
+ORB                 4    00000000          32  4569  4599  4607  3554
+ORB1_0              X    00000004           1  4572
+ORB1_8              X    00000005           1  4579
+ORBA                U    00000010           1  4583
+ORBB                U    00000004           1  4585
+ORBC                U    00000004           1  4575
+ORBCCW              A    00000008           4  4597
+ORBCSS              X    0000000C           1  4601
+ORBCU               X    0000000E           1  4604
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    33
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+ORBD                U    00000040           1  4592
+ORBF                U    00000080           1  4580
+ORBH                U    00000002           1  4586
+ORBI                U    00000020           1  4582
+ORBKEYM             U    000000F0           1  4573
+ORBL                U    00000080           1  4590
+ORBLEN              U    0000000C           1  4599
+ORBLPM              X    00000006           1  4588
+ORBM                U    00000002           1  4576
+ORBP                U    00000040           1  4581
+ORBPARM             F    00000000           4  4570
+ORBPGM              X    0000000E           1  4603
+ORBRSV25            U    0000007E           1  4594
+ORBRSV26            U    0000003E           1  4593
+ORBRSV3             U    0000007F           1  4591
+ORBRSV4             U    00000080           1  4598
+ORBRSV5             X    0000000D           1  4602
+ORBRSV6             X    0000000F           1  4605
+ORBRSV7             X    00000010          16  4606
+ORBS                U    00000008           1  4574
+ORBT                U    00000001           1  4587
+ORBU                U    00000008           1  4584
+ORBX                U    00000001           1  4595
+ORBXLEN             U    00000020           1  4607
+ORBY                U    00000001           1  4577
+ORRB1_24            X    00000007           1  4589
+OVERHEAD            D    00000D08           8  4414  3843  4151
+PAGE                U    00001000           1  4394  4398  4404
+PAGETABS            U    00003080           1  4405
+PCFETO              A    000000C4           4  4801
+PERACCID            X    000000A1           1  4779
+PERADDR             F    00000098           4  4776
+PERCODE             X    00000096           1  4773
+PERCODMK            U    000000F0           1  4774
+PGMACCID            X    000000A0           1  4778
+PGMDXC              F    00000090           4  4768
+PGMICODE            H    0000008E           2  4767
+PGMIID              F    0000008C           4  4763
+PGMIILC             X    0000008D           1  4765
+PGMIILCM            U    0000000C           1  4766
+PGMNPSW             F    00000068           8  4745
+PGMOPSW             F    00000028           8  4717  4725
+PGMTRX              F    00000090           4  4769
+PMCW1_0             X    00000004           1  4930
+PMCW1_8             X    00000005           1  4933  4328  4334
+PMCWB               U    00000004           1  4965
+PMCWCHP0            X    00000010           1  4954
+PMCWCHP1            X    00000011           1  4955
+PMCWCHP2            X    00000012           1  4956
+PMCWCHP3            X    00000013           1  4957
+PMCWCHP4            X    00000014           1  4958
+PMCWCHP5            X    00000015           1  4959
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    34
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+PMCWCHP6            X    00000016           1  4960
+PMCWCHP7            X    00000017           1  4961
+PMCWDNUM            H    00000006           2  4945  4330
+PMCWE               U    00000080           1  4934  4334
+PMCWEXC             X    0000001B           1  4964
+PMCWIP              F    00000000           4  4929
+PMCWISCM            U    00000038           1  4931
+PMCWLM              U    00000060           1  4935
+PMCWLMG             U    00000020           1  4936
+PMCWLML             U    00000040           1  4937
+PMCWLPM             X    00000008           1  4947
+PMCWLPUM            X    0000000A           1  4949
+PMCWM               U    00000004           1  4941
+PMCWMBI             H    0000000C           2  4951
+PMCWMM              U    00000018           1  4938
+PMCWMMC             U    00000008           1  4940
+PMCWMME             U    00000010           1  4939
+PMCWPAM             X    0000000F           1  4953
+PMCWPIM             X    0000000B           1  4950
+PMCWPNOM            X    00000009           1  4948
+PMCWPOM             X    0000000E           1  4952
+PMCWRES1            X    00000018           4  4962
+PMCWRES2            X    00000018           3  4963
+PMCWS               U    00000001           1  4967
+PMCWT               U    00000002           1  4942
+PMCWV               U    00000001           1  4943  4328
+PMCWX               U    00000002           1  4966
+PRTLINE             C    00000D30          38  4421  4423  4131  4166  4167  4420
+PRTLNG              U    00000044           1  4423  4420
+R0                  U    00000000           1  4982  3550  3624
+R1                  U    00000001           1  4983  4140
+R10                 U    0000000A           1  4992  3612  3616  3633  3634  3636  3641  3643  3645  3647  3649  3651  3653  3655
+                                                     3657  3659  3661  3663  3665  3667  3669  3671  3673  3675  3677  3679  3681
+                                                     3683  3685  3687  3689  3691  3693  3695  3697  3699  3701  3703  3705  3707
+                                                     3709  3711  3713  3715  3717  3719  3721  3723  3725  3727  3729  3731  3733
+                                                     3735  3737  3739  3741  3743  3745  3747  3749  3751  3753  3755  3757  3759
+                                                     3761  3763  3765  3767  3769  3771  3773  3775  3777  3779  3781  3783  3785
+                                                     3787  3789  3791  3793  3795  3797  3799  3801  3803  3805  3807  3809  3811
+                                                     3813  3815  3817  3819  3821  3823  3825  3827  3829  3831  3835  3837  3851
+                                                     3852  3854  3855  3860  3861  3863  3864  3866  3867  3869  3870  3872  3873
+                                                     3875  3876  3878  3879  3881  3882  3884  3885  3887  3888  3890  3891  3893
+                                                     3894  3896  3897  3899  3900  3902  3903  3905  3906  3908  3909  3911  3912
+                                                     3914  3915  3917  3918  3920  3921  3923  3924  3926  3927  3929  3930  3932
+                                                     3933  3935  3936  3938  3939  3941  3942  3944  3945  3947  3948  3950  3951
+                                                     3953  3954  3956  3957  3959  3960  3962  3963  3965  3966  3968  3969  3971
+                                                     3972  3974  3975  3977  3978  3980  3981  3983  3984  3986  3987  3989  3990
+                                                     3992  3993  3995  3996  3998  3999  4001  4002  4004  4005  4007  4008  4010
+                                                     4011  4013  4014  4016  4017  4019  4020  4022  4023  4025  4026  4028  4029
+                                                     4031  4032  4034  4035  4037  4038  4040  4041  4043  4044  4046  4047  4049
+                                                     4050  4052  4053  4055  4056  4058  4059  4061  4062  4064  4065  4067  4068
+                                                     4070  4071  4073  4074  4076  4077  4079  4080  4082  4083  4085  4086  4088
+                                                     4089  4091  4092  4094  4095  4097  4098  4100  4101  4103  4104  4106  4107
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    35
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+                                                     4109  4110  4112  4113  4115  4116  4120  4121  4123  4124  4251  4253  4258
+                                                     4261
+R11                 U    0000000B           1  4993  3613  4253  4255
+R12                 U    0000000C           1  4994  3618  3622  3633  3634  3636  3641  3643  3645  3647  3649  3651  3653  3655
+                                                     3657  3659  3661  3663  3665  3667  3669  3671  3673  3675  3677  3679  3681
+                                                     3683  3685  3687  3689  3691  3693  3695  3697  3699  3701  3703  3705  3707
+                                                     3709  3711  3713  3715  3717  3719  3721  3723  3725  3727  3729  3731  3733
+                                                     3735  3737  3739  3741  3743  3745  3747  3749  3751  3753  3755  3757  3759
+                                                     3761  3763  3765  3767  3769  3771  3773  3775  3777  3779  3781  3783  3785
+                                                     3787  3789  3791  3793  3795  3797  3799  3801  3803  3805  3807  3809  3811
+                                                     3813  3815  3817  3819  3821  3823  3825  3827  3829  3831  3835  3837  3851
+                                                     3852  3854  3855  3860  3861  3863  3864  3866  3867  3869  3870  3872  3873
+                                                     3875  3876  3878  3879  3881  3882  3884  3885  3887  3888  3890  3891  3893
+                                                     3894  3896  3897  3899  3900  3902  3903  3905  3906  3908  3909  3911  3912
+                                                     3914  3915  3917  3918  3920  3921  3923  3924  3926  3927  3929  3930  3932
+                                                     3933  3935  3936  3938  3939  3941  3942  3944  3945  3947  3948  3950  3951
+                                                     3953  3954  3956  3957  3959  3960  3962  3963  3965  3966  3968  3969  3971
+                                                     3972  3974  3975  3977  3978  3980  3981  3983  3984  3986  3987  3989  3990
+                                                     3992  3993  3995  3996  3998  3999  4001  4002  4004  4005  4007  4008  4010
+                                                     4011  4013  4014  4016  4017  4019  4020  4022  4023  4025  4026  4028  4029
+                                                     4031  4032  4034  4035  4037  4038  4040  4041  4043  4044  4046  4047  4049
+                                                     4050  4052  4053  4055  4056  4058  4059  4061  4062  4064  4065  4067  4068
+                                                     4070  4071  4073  4074  4076  4077  4079  4080  4082  4083  4085  4086  4088
+                                                     4089  4091  4092  4094  4095  4097  4098  4100  4101  4103  4104  4106  4107
+                                                     4109  4110  4112  4113  4115  4116  4120  4121  4123  4124  4156  4157  4159
+                                                     4254  4257  4258  4259
+R13                 U    0000000D           1  4995  3619  4156  4160  4251  4254  4255  4259  4261
+R14                 U    0000000E           1  4996  3564  3568  3598  4142  4277
+R15                 U    0000000F           1  4997  3591  3842  4132  4148  4149  4154  4212  4213  4221  4237  4240  4241  4262
+                                                     4275  4276  4315  4347
+R2                  U    00000002           1  4984  3551  3556  3557  3558  3559  3561  4141
+R3                  U    00000003           1  4985  3553  4272
+R4                  U    00000004           1  4986
+R5                  U    00000005           1  4987  3600  3602  3605  4136  4137  4138  4151  4222  4234  4239  4253
+R6                  U    00000006           1  4988  3607  3608  3614  3616  3620  3622  3631  3840  3849  4128  4152  4224  4225
+                                                     4226  4227  4229  4230  4231  4232  4235  4254
+R7                  U    00000007           1  4989  3615  3621  3629  3840  3847  4128  4153  4222  4224  4227  4229  4232  4236
+                                                     4239  4259
+R8                  U    00000008           1  4990  3554  4273
+R9                  U    00000009           1  4991  3552  3561  3562
+REG2LOW             U    000000DD           1  4453
+REG2PATT            U    AABBCCDD           1  4452  4466  4472  4478  4484
+RPTSAVE             F    00000B10           4  4215  4148  4212
+RPTSPEED            I    00000A3A           4  4148  4132
+RSTNPSW             F    00000000           8  4711
+RSTOPSW             F    00000008           8  4712
+SAVER1              F    00000238           4  3586  4140
+SAVER2              F    0000023C           4  3587  3559  4141
+SAVER5              F    00000240           4  3588  3605  4136
+SAVETRT             D    00000248           8  3589
+SCANOUT             X    00000080           1  4749  4750
+SCANOUTL            U    00000000           1  4750
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    36
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+SCHIB               4    00000000          52  4926  4973  4324
+SCHIBL              U    00000034           1  4973
+SCHMBA              A    00000028           8  4971
+SCHMDA1             X    00000030           4  4972
+SCHMDA3             X    00000028          12  4970
+SCHPMCW             X    00000000          28  4928
+SCHSCSW             X    0000001C          12  4969
+SCSW                4    00000000          12  4631  4693
+SCSW0CC             U    00000004           1  4647
+SCSW1               X    00000002           1  4651
+SCSW2               X    00000003           1  4660  4201
+SCSWACP             U    00000001           1  4659
+SCSWADA             U    00000040           1  4662
+SCSWAHP             U    00000002           1  4658
+SCSWALKC            U    00000010           1  4645
+SCSWARP             U    00000008           1  4656
+SCSWASA             U    00000080           1  4661
+SCSWASP             U    00000004           1  4657
+SCSWASUS            U    00000020           1  4663
+SCSWATTN            U    00000080           1  4673
+SCSWBUSY            U    00000010           1  4676
+SCSWCCTL            U    00000004           1  4688
+SCSWCCW             A    00000004           4  4670  4205
+SCSWCCWF            U    00000080           1  4642
+SCSWCCWP            U    00000040           1  4643
+SCSWCDAT            U    00000008           1  4687
+SCSWCE              U    00000008           1  4677
+SCSWCHNG            U    00000001           1  4690
+SCSWCNT             H    0000000A           2  4692  4206
+SCSWCS              X    00000009           1  4682
+SCSWCTLS            X    00000001           1  4641
+SCSWCUE             U    00000020           1  4675
+SCSWDCC0            U    00000000           1  4637
+SCSWDCC1            U    00000001           1  4638
+SCSWDCC3            U    00000003           1  4639
+SCSWDCCM            U    00000003           1  4636
+SCSWDE              U    00000004           1  4678
+SCSWECWC            U    00000002           1  4648
+SCSWESWF            U    00000004           1  4635
+SCSWFC              U    00000010           1  4655
+SCSWFH              U    00000020           1  4654
+SCSWFLAG            X    00000000           1  4632
+SCSWFM              U    00000070           1  4652
+SCSWFS              U    00000040           1  4653
+SCSWICTL            U    00000002           1  4689
+SCSWIL              U    00000040           1  4684
+SCSWISIC            U    00000020           1  4644
+SCSWKEYM            U    000000F0           1  4633
+SCSWL               U    0000000C           1  4693
+SCSWPCI             U    00000080           1  4683
+SCSWPNOP            U    00000001           1  4649
+SCSWPRGM            U    00000020           1  4685
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    37
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+SCSWPROT            U    00000010           1  4686
+SCSWSAS             U    00000010           1  4664
+SCSWSINT            U    00000008           1  4665
+SCSWSM              U    00000040           1  4674
+SCSWSPEN            U    00000001           1  4668
+SCSWSPRI            U    00000004           1  4666  4203
+SCSWSSEC            U    00000002           1  4667
+SCSWSSIC            U    00000008           1  4646
+SCSWSUSC            U    00000008           1  4634
+SCSWUC              U    00000002           1  4679
+SCSWUS              X    00000008           1  4672  4202
+SCSWUX              U    00000001           1  4680
+SEGTABLS            U    00003000           1  4404  4405  4527  4407
+SSARCHMD            X    000000A3           1  4781
+SSARS               F    00000120           4  4837
+SSCLKCMP            F    000000E0           8  4831
+SSCPUTIM            F    000000D8           8  4830
+SSCRS               F    000001C0           4  4840
+SSFPRS              D    00000160           8  4838
+SSGRS               F    00000180           4  4839
+SSMODEL             F    0000010C           4  4835
+SSPREFIX            F    00000108           4  4834
+SSPSW               F    00000100           8  4833
+SSXSAA              A    000000D4           4  4829
+STFLDATA            F    000000C8           4  4802
+SUBDWORD            I    00000B68           4  4251  4154  4237
+SUBDWSAV            D    00000B90           8  4264  4251  4261
+SUBTEST             X    000021FF           1  4525  3580
+SVCICODE            H    0000008A           2  4761
+SVCIID              F    00000088           4  4757
+SVCIILC             X    00000089           1  4759
+SVCIILCM            U    0000000C           1  4760
+SVCNPSW             F    00000060           8  4744
+SVCOPSW             F    00000020           8  4716  4723
+TBYTE               X    00000001           1  4433  3624
+TEST91              I    00000250           4  3597  3568
+TESTADDR            U    000021FE           1  4398  4399  4522
+TESTNUM             X    000021FE           1  4524  3577  3608
+TICKSAAA            P    00000D10           8  4416  4159  4162
+TICKSBBB            P    00000D18           8  4417  4160  4164
+TICKSTOT            P    00000D20           8  4418  4162  4163  4164  4167
+TIMEADDR            U    000021FD           1  4399  4518
+TIMEOPT             X    000021FD           1  4520  3574  3597
+TIMER               F    00000050           4  4740
+TNUM                X    00000000           1  4432  3607
+TRE02TST            J    00000000       12289  3505  3508  3515  3523  3525  4518  4522  4527
+TRELOP10            X    00001118           4  4500  4463  4469  4475  4481
+TRELOP20            X    00001C18           1  4512  4463  4469  4475  4481
+TRENEXT             U    00000024           1  4450  4137
+TREPERF             A    00000D80           4  4460  3600
+TREPOP1             X    00000D80           1  4462
+TREPOP2             X    00000DA4           1  4468
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    38
+
+     SYMBOL        TYPE   VALUE      LENGTH    DEFN  REFERENCES
+
+TREPOP3             X    00000DC8           1  4474
+TREPOP4             X    00000DEC           1  4480
+TRETEST             4    00000000          36  4430  3602
+TRTOP10             X    00000E18           4  4493
+TRTOP111            X    00000F18           4  4495
+TRTOP1F0            X    00001018           4  4497
+TRTOP20             X    00001918           1  4506
+TRTOP211            X    00001A18           1  4508
+TRTOP2F0            X    00001B18           1  4510
+TST91LOP            U    0000025A           1  3604  4139
+TTDES               F    00000054           4  4741
+UA0                 F    00000010           8  4713
+UA1                 F    0000004C           4  4738
+UA2                 F    000000A4           4  4783
+UA3                 F    000000B4           4  4792
+UA4                 X    000000B8           1  4793
+UA5                 X    000000CC           8  4803
+UA6                 X    000000EC           8  4809
+UA7                 F    00000118           8  4820
+UA8                 X    00000180          32  4849
+WPSW0008            3    00000AB0           8  4186  4185
+ZBRKADDR            A    00000110           8  4819
+ZEMONCNT            F    0000010C           4  4818
+ZEMONCTR            A    00000100           8  4816
+ZEMONSIZ            F    00000108           4  4817
+ZEXTNPSW            X    000001B0          16  4852
+ZEXTOPSW            X    00000130          16  4844
+ZIONPSW             X    000001F0          16  4856
+ZIOOPSW             X    00000170          16  4848
+ZMCKNPSW            X    000001E0          16  4855
+ZMCKOPSW            X    00000160          16  4847
+ZMKFAILA            F    000000F8           8  4811
+ZMONCODE            F    000000B0           8  4786
+ZPGMNPSW            X    000001D0          16  4854
+ZPGMOPSW            X    00000150          16  4846
+ZPGMTRX             F    000000A8           8  4785
+ZRSTNPSW            X    000001A0          16  4851
+ZRSTOPSW            X    00000120          16  4843
+ZSASDISP            U    000011C0           1  4857
+ZSVCNPSW            X    000001C0          16  4853
+ZSVCOPSW            X    00000140          16  4845
+=A(OP2LEN)          A    00000CCC           4  4387  3619  3621
+=CL5'TRE'           C    00000CD8           5  4390  4131
+=F'0'               F    00000CD0           4  4388  4138
+=F'1'               F    00000CD4           4  4389  4257
+=P'4294967296'      P    00000CDD           6  4391  4163
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    39
+
+ MACRO     DEFN  REFERENCES
+
+ANTR        120
+APROB       252
+ARCHIND     412   3442
+ARCHLVL     553   3441
+ASAIPL      679   3521
+ASALOAD     759   3504
+ASAREA      814   4703
+ASAZAREA    999
+CPUWAIT    1082   4182
+DSECTS     1408   4535   4567   4614   4629   4700
+DWAIT      1611   4285   4290   4295   4300
+DWAITEND   1668   4284
+ENADEV     1676   4321
+ESA390     1776
+IOCB       1787   4354
+IOCBDS     1963   4536
+IOFMT      1997   4568   4615   4630   4862   4880   4888   4925
+IOINIT     2335   4309
+IOTRFR     2376
+ORB        2424   4373
+POINTER    2613
+PSWFMT     2641
+RAWAIT     2775
+RAWIO      2871   4169
+SIGCPU     3029
+SMMGR      3087
+SMMGRB     3187
+TRAP128    3236
+TRAP64     3213   3506   3509
+TRAPS      3249
+ZARCH      3323
+ZEROH      3335
+ZEROL      3363
+ZEROLH     3391
+ZEROLL     3414
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    40
+
+   DESC     SYMBOL    SIZE     POS        ADDR
+
+Entry: 0
+
+Image      IMAGE     12289  0000-3000  0000-3000
+  Region   CODE      12289  0000-3000  0000-3000
+    CSECT  TRE02TST  12289  0000-3000  0000-3000
+ASMA Ver. 0.2.1              TRE-02-performance (Test TRE instructions)                             24 Sep 2022 22:09:51  Page    41
+
+   STMT                        FILE NAME
+
+1     /devstor/dev/satk/samples/tests/TRE-02-performance.asm
+2     /home/tn529/dev/satk/srcasm/satk.mac
+
+
+** NO ERRORS FOUND **
+
+
