@@ -7,6 +7,6 @@ sysclear
 
 loadcore    "$(testpath)/CLCLE-03-basic.core" 0x0
 
-runtest     1        
+runtest     1
 
 *Done

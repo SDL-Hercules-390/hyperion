@@ -3417,7 +3417,7 @@
 					<File
 						RelativePath=".\tests\CLCL.core"
 						>
-					</File>		
+					</File>
 					<File
 						RelativePath=".\tests\CLCLE-01-unaligned-buffers.core"
 						>
@@ -3429,11 +3429,11 @@
 					<File
 						RelativePath=".\tests\CLCLE-03-basic.core"
 						>
-					</File>						
+					</File>
 					<File
 						RelativePath=".\tests\CLCLE-04-performance.core"
 						>
-					</File>										
+					</File>
 					<File
 						RelativePath=".\tests\CMPSC.core"
 						>
@@ -3533,7 +3533,7 @@
 					<File
 						RelativePath=".\tests\TRE-02-performance.core"
 						>
-					</File>					
+					</File>
 					<File
 						RelativePath=".\tests\TXFPER.core"
 						>
@@ -4432,11 +4432,11 @@
 						<File
 							RelativePath=".\tests\CLCLE-03-basic.tst"
 							>
-						</File>						
+						</File>
 						<File
 							RelativePath=".\tests\CLCLE-04-performance.tst"
 							>
-						</File>						
+						</File>
 						<File
 							RelativePath=".\tests\cmd-abs.xxx"
 							>
@@ -4464,7 +4464,7 @@
 						<File
 							RelativePath=".\tests\cdfp-080-to-packed.tst"
 							>
-						</File>													
+						</File>
 						<File
 							RelativePath=".\tests\digest.tst"
 							>
@@ -4656,7 +4656,7 @@
 						<File
 							RelativePath=".\tests\TRE-02-performance.tst"
 							>
-						</File>							
+						</File>
 						<File
 							RelativePath=".\tests\TXFPER.tst"
 							>
@@ -4860,11 +4860,11 @@
 						<File
 							RelativePath=".\tests\CLCLE-03-basic.asm"
 							>
-						</File>						
+						</File>
 						<File
 							RelativePath=".\tests\CLCLE-04-performance.asm"
 							>
-						</File>						
+						</File>
 						<File
 							RelativePath=".\tests\CMPSC.asm"
 							>
@@ -4960,7 +4960,7 @@
 						<File
 							RelativePath=".\tests\TRE-02-performance.asm"
 							>
-						</File>							
+						</File>
 						<File
 							RelativePath=".\tests\TXFPER.asm"
 							>
@@ -5223,11 +5223,11 @@
 							<File
 								RelativePath=".\tests\CLCLE-03-basic.list"
 								>
-							</File>								
+							</File>
 							<File
 								RelativePath=".\tests\CLCLE-04-performance.list"
 								>
-							</File>							
+							</File>
 							<File
 								RelativePath=".\tests\dfp-080-from-packed.list"
 								>
@@ -5371,7 +5371,7 @@
 							<File
 								RelativePath=".\tests\TRE-02-performance.list"
 								>
-							</File>								
+							</File>
 							<File
 								RelativePath=".\tests\TXFPER.list"
 								>

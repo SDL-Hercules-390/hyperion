@@ -1711,7 +1711,7 @@
     </None>
     <None Include="tests\CLCLE-04-performance.core">
       <Filter>Other Files\tests\core</Filter>
-    </None>              
+    </None>
     <None Include="tests\cpu0off.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1720,7 +1720,7 @@
     </None>
     <None Include="tests\dfp-080-to-packed.core">
       <Filter>Other Files\tests\core</Filter>
-    </None>    
+    </None>
     <None Include="tests\FAC53.core">
       <Filter>Other Files\tests\core</Filter>
     </None>
@@ -1729,7 +1729,7 @@
     </None>
     <None Include="tests\TRE-02-performance.core">
       <Filter>Other Files\tests\core</Filter>
-    </None>    
+    </None>
     <None Include="tests\FAC53.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -1984,13 +1984,13 @@
     </None>
     <None Include="tests\CLCLE-02-unaligned-buffers.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
-    </None> 
+    </None>
     <None Include="tests\CLCLE-03-basic.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
     <None Include="tests\CLCLE-04-performance.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>                  
+    </None>
     <None Include="tests\cipher.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2011,7 +2011,7 @@
     </None>
     <None Include="tests\dfp-080-to-packed.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>    
+    </None>
     <None Include="tests\digest.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
     </None>
@@ -2116,7 +2116,7 @@
     </None>
     <None Include="tests\TRE-02-performance.tst">
       <Filter>Other Files\tests\scripts\tst</Filter>
-    </None>     
+    </None>
     <None Include="tests\cmd-abs-2K.subxxx">
       <Filter>Other Files\tests\scripts\tst\subtst</Filter>
     </None>
@@ -2233,22 +2233,22 @@
     </None>
     <None Include="tests\CLCLE-02-unaligned-buffers.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
-    </None> 
+    </None>
     <None Include="tests\CLCLE-03-basic.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\CLCLE-04-performance.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>                  
+    </None>
     <None Include="tests\dfp-080-from-packed.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
     <None Include="tests\dfp-080-to-packed.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>    
+    </None>
     <None Include="tests\dc-float.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>    
+    </None>
     <None Include="tests\PERZAD.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
     </None>
@@ -2260,7 +2260,7 @@
     </None>
     <None Include="tests\TRE-02-performance.asm">
       <Filter>Other Files\tests\scripts\asm</Filter>
-    </None>     
+    </None>
     <None Include="tests\3211.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -2416,16 +2416,16 @@
     </None>
     <None Include="tests\CLCLE-03-basic.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None> 
+    </None>
     <None Include="tests\CLCLE-04-performance.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>            
+    </None>
     <None Include="tests\dfp-080-from-packed.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\dfp-080-to-packed.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>       
+    </None>
     <None Include="tests\PERZAD.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
@@ -2443,7 +2443,7 @@
     </None>
     <None Include="tests\TRE-02-performance.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
-    </None>    
+    </None>
     <None Include="hercules.cnf">
       <Filter>Other Files\misc</Filter>
     </None>

@@ -9,21 +9,21 @@
 #
 #        Tests:
 #              1. TRE of 512 bytes
-#              2. TRE of 512 bytes that crosses a page boundary, 
+#              2. TRE of 512 bytes that crosses a page boundary,
 #                 which results in CC=3, and a branch back
 #                 to complete the TRE instruction. So, 2 TRE
-#                 are executed compared to test 1.     
+#                 are executed compared to test 1.
 #              3. TRE of 2048 bytes
-#              4. TRE of 2048 bytes that crosses a page boundary, 
+#              4. TRE of 2048 bytes that crosses a page boundary,
 #                 which results in CC=3, and a branch back
 #                 to complete the TRE instruction
-#        Output: 
+#        Output:
 #               For each test, a console line will the generated with timing results,
 #               as follows:
 #               /         1,000,000 iterations of TRE   took     258,117 microseconds
 #               /         1,000,000 iterations of TRE   took     305,606 microseconds
 #               /         1,000,000 iterations of TRE   took   1,016,256 microseconds
-#               /         1,000,000 iterations of TRE   took   1,056,531 microseconds 
+#               /         1,000,000 iterations of TRE   took   1,056,531 microseconds
 #  ----------------------------------------------------------------------------------
 
 archlvl     390

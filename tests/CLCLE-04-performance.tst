@@ -13,16 +13,16 @@
 #              3. CLCLE of 2048 bytes
 #              4. CLCLE of 2048 bytes where operand 1 crosses a page boundary
 #              5. CLCLE of 2048 bytes where both operand 1 and operand 2
-#                                     crosses a page boundary       
+#                                     crosses a page boundary
 #
-#        Output: 
+#        Output:
 #               For each test, a console line will the generated with timing results,
 #               as follows:
-#               /         1,000,000 iterations of CLCLE took      38,698 microseconds                                                                
-#               /         1,000,000 iterations of CLCLE took      48,617 microseconds                                                                
-#               /         1,000,000 iterations of CLCLE took      49,178 microseconds                                                                
-#               /         1,000,000 iterations of CLCLE took      68,355 microseconds                                                                
-#               /         1,000,000 iterations of CLCLE took      69,991 microseconds 
+#               /         1,000,000 iterations of CLCLE took      38,698 microseconds
+#               /         1,000,000 iterations of CLCLE took      48,617 microseconds
+#               /         1,000,000 iterations of CLCLE took      49,178 microseconds
+#               /         1,000,000 iterations of CLCLE took      68,355 microseconds
+#               /         1,000,000 iterations of CLCLE took      69,991 microseconds
 #  ----------------------------------------------------------------------------------
 
 archlvl     390
