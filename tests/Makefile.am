@@ -150,6 +150,26 @@ EXTRA_DIST =                    \
      CLCL.list                  \
      CLCL.pdf                   \
      CLCL.tst                   \
+     CLCLE-01-unaligned-buffers.asm   \
+     CLCLE-01-unaligned-buffers.core  \
+     CLCLE-01-unaligned-buffers.list  \
+     CLCLE-01-unaligned-buffers.pdf   \
+     CLCLE-01-unaligned-buffers.tst   \
+     CLCLE-02-unaligned-buffers.asm   \
+     CLCLE-02-unaligned-buffers.core  \
+     CLCLE-02-unaligned-buffers.list  \
+     CLCLE-02-unaligned-buffers.pdf   \
+     CLCLE-02-unaligned-buffers.tst   \
+     CLCLE-03-basic.asm               \
+     CLCLE-03-basic.core              \
+     CLCLE-03-basic.list              \
+     CLCLE-03-basic.pdf               \
+     CLCLE-03-basic.tst               \
+     CLCLE-04-performance.asm         \
+     CLCLE-04-performance.core        \
+     CLCLE-04-performance.list        \
+     CLCLE-04-performance.pdf         \
+     CLCLE-04-performance.tst         \
      cmd-abs-2K.subxxx          \
      cmd-abs-4K.subxxx          \
      cmd-abs.xxx                \
@@ -432,6 +452,16 @@ EXTRA_DIST =                    \
      str-001-srst.core          \
      str-001-srst.list          \
      str-001-srst.tst           \
+     TRE-01-basic.asm           \
+     TRE-01-basic.core          \
+     TRE-01-basic.list          \
+     TRE-01-basic.pdf           \
+     TRE-01-basic.tst           \
+     TRE-02-performance.asm     \
+     TRE-02-performance.core    \
+     TRE-02-performance.list    \
+     TRE-02-performance.pdf     \
+     TRE-02-performance.tst     \
      stsi.txt                   \
      sus40002.txt               \
      tape.240k-2.txt            \

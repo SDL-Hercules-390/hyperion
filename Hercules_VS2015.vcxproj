@@ -904,6 +904,10 @@
     <None Include="tests\CLCLE-02-unaligned-buffers.list" />
     <None Include="tests\CLCLE-03-basic.list" />
     <None Include="tests\CLCLE-04-performance.list" />
+    <None Include="tests\CLCLE-01-unaligned-buffers.pdf" />
+    <None Include="tests\CLCLE-02-unaligned-buffers.pdf" />
+    <None Include="tests\CLCLE-03-basic.pdf" />
+    <None Include="tests\CLCLE-04-performance.pdf" />
     <None Include="tests\CLCLE-01-unaligned-buffers.tst" />
     <None Include="tests\CLCLE-02-unaligned-buffers.tst" />
     <None Include="tests\CLCLE-03-basic.tst" />
@@ -1087,10 +1091,12 @@
     <None Include="tests\TRE-01-basic.asm" />
     <None Include="tests\TRE-01-basic.core" />
     <None Include="tests\TRE-01-basic.list" />
+    <None Include="tests\TRE-01-basic.pdf" />
     <None Include="tests\TRE-01-basic.tst" />
     <None Include="tests\TRE-02-performance.asm" />
     <None Include="tests\TRE-02-performance.core" />
     <None Include="tests\TRE-02-performance.list" />
+    <None Include="tests\TRE-02-performance.pdf" />
     <None Include="tests\TRE-02-performance.tst" />
     <None Include="tests\TXFPER.asm" />
     <None Include="tests\TXFPER.core" />

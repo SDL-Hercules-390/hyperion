@@ -2411,13 +2411,25 @@
     <None Include="tests\CLCLE-01-unaligned-buffers.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\CLCLE-01-unaligned-buffers.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\CLCLE-02-unaligned-buffers.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-02-unaligned-buffers.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\CLCLE-03-basic.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\CLCLE-03-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\CLCLE-04-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\CLCLE-04-performance.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="tests\dfp-080-from-packed.list">
@@ -2441,7 +2453,13 @@
     <None Include="tests\TRE-01-basic.list">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
+    <None Include="tests\TRE-01-basic.pdf">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
     <None Include="tests\TRE-02-performance.list">
+      <Filter>Other Files\tests\scripts\asm\list</Filter>
+    </None>
+    <None Include="tests\TRE-02-performance.pdf">
       <Filter>Other Files\tests\scripts\asm\list</Filter>
     </None>
     <None Include="hercules.cnf">
