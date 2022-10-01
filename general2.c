@@ -3105,8 +3105,8 @@ DEF_INST(translate_and_test_extended)
 
   fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
 
-  if(unlikely((a_bit && (buf_len % 1)) || r1 & 0x01))
-    regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+  if (unlikely((a_bit && (buf_len & 1)) || r1 & 0x01))
+    regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
   fc = 0;
   processed = 0;
@@ -3201,8 +3201,8 @@ DEF_INST(translate_and_test_reverse_extended)
 
   fct_addr = regs->GR(1) & ADDRESS_MAXWRAP(regs);
 
-  if(unlikely((a_bit && (buf_len % 1)) || r1 & 0x01))
-    regs->program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+  if (unlikely((a_bit && (buf_len & 1)) || r1 & 0x01))
+    regs->program_interrupt( regs, PGM_SPECIFICATION_EXCEPTION );
 
   fc = 0;
   processed = 0;
