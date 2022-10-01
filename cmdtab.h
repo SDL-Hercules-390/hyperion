@@ -353,11 +353,21 @@
 #define cpuverid_cmd_help       \
                                 \
   "Format: \"cpuverid xx [force]\" where 'xx' is the 2 hexadecimal digit\n"     \
-  "CPU version code stored by the STIDP instruction when the architecture\n"    \
-  "mode is S/370 or ESA390. If the architecture mode is z/Arch, then the\n"     \
-  "version code is always stored as '00' and the value specified here is\n"     \
-  "ignored unless the 'FORCE' option is specified. The default version code\n"  \
-   "is 'FD' unless set to a different value.\n"
+  "CPU version code stored by the STIDP instruction.\n"                         \
+  "\n"                                                                          \
+  "The default cpuverid version code at startup is 'FD', and that value will\n" \
+  "be stored by the STIDP instruction -- even for z/Arch -- unless and UNTIL\n" \
+  "you set it to a different value via the 'cpuverid' command/statement.\n"     \
+  "\n"                                                                          \
+  "If you try using the cpuverid command/statement to set a non-zero cpuverid\n"\
+  "value when the architecture mode is currently set to z/Arch, the version\n"  \
+  "code stored by the STIDP instruction will STILL be stored as '00' anyway,\n" \
+  "UNLESS ... the 'FORCE' option is used. For z/Arch, the 'FORCE' option is\n"  \
+  "the ONLY way to cause the cpuverid command to force the STIDP instruction\n" \
+  "to store a non-zero version code. (But as explained, at startup, the value\n"\
+  "stored will STILL be 'FD' even for z/Arch since that is the default. This\n" \
+  "means if you want your STIDP version code to be '00' for z/Arch, then you\n" \
+  "MUST use a 'cpuverid' command/statement in your configuration file!)\n"
 
 #define cr_cmd_desc             "Display or alter control registers"
 #define cr_cmd_help             \

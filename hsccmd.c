@@ -5261,7 +5261,7 @@ int lparnum_cmd( int argc, char* argv[], char* cmdline )
 int cpuverid_cmd( int argc, char* argv[], char* cmdline )
 {
     U32   version;
-    char  chversion[8];
+    char  chversion[16];
     BYTE  c;
 
     UNREFERENCED( cmdline );
@@ -5292,6 +5292,7 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
     )
     {
         bool force = false;
+        char* sev = "I";
 
         /* Check for 'FORCE' option */
         if (argc == 3)
@@ -5311,12 +5312,17 @@ int cpuverid_cmd( int argc, char* argv[], char* cmdline )
             return -1;
 
         MSGBUF( chversion,"%02X", sysblk.cpuversion );
-
         set_symbol( "CPUVERID", chversion );
+
+        if (force)
+        {
+            sev = "W";
+            MSGBUF( chversion,"%02X (FORCED)", sysblk.cpuversion );
+        }
 
         if (MLVL( VERBOSE ))
             // "%-14s set to %s"
-            WRMSG( HHC02204, "I", argv[0], chversion );
+            WRMSG( HHC02204, sev, argv[0], chversion );
     }
     else
     {
