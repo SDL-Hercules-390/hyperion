@@ -3090,37 +3090,50 @@ int tt32_cmd( int argc, char *argv[], char *cmdline )
 /*-------------------------------------------------------------------*/
 /* sclproot command - set SCLP base directory                        */
 /*-------------------------------------------------------------------*/
-int sclproot_cmd(int argc, char *argv[], char *cmdline)
+int sclproot_cmd( int argc, char* argv[], char* cmdline )
 {
-char *basedir;
+    char* basedir;
 
-    UNREFERENCED(cmdline);
-
+    UNREFERENCED( cmdline );
     UPPER_ARGV_0( argv );
 
     if (argc > 1)
-        if ( CMD(argv[1],none,4) )
-            set_sce_dir(NULL);
-        else
-            set_sce_dir(argv[1]);
-    else
-        if ( ( basedir = get_sce_dir() ) )
-        {
-            char buf[MAX_PATH+64];
-            char *p = strchr(basedir,' ');
+    {
+        char* p = "NONE";
 
-            if ( p == NULL )
+        if (CMD( argv[1], NONE, 4 ))
+            set_sce_dir( NULL );
+        else
+
+            set_sce_dir( p = argv[1] );
+
+        // "%-14s set to %s"
+        WRMSG( HHC02204, "I", argv[0], p );
+    }
+    else
+    {
+        if ((basedir = get_sce_dir()))
+        {
+            char buf[ MAX_PATH + 64 ];
+            char* p = strchr( basedir, ' ' );
+
+            if (!p)
                 p = basedir;
             else
             {
-                MSGBUF( buf, "'%s'", basedir );
+                MSGBUF( buf, "\"%s\"", basedir );
                 p = buf;
             }
-            WRMSG( HHC02204, "I", argv[0], p );
+
+            // "%-14s: %s"
+            WRMSG( HHC02203, "I", argv[0], p );
         }
         else
-            WRMSG(HHC02204, "I", "SCLP disk I/O", "disabled");
-
+        {
+            // "%-14s: %s"
+            WRMSG( HHC02203, "I", "SCLP disk I/O", "disabled" );
+        }
+    }
     return 0;
 }
 
