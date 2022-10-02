@@ -928,6 +928,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
     bool  off     =  false;             /* Whether - was specified   */
     bool  query   =  false;             /* Whether ? was specified   */
     bool  update  =  false;             /* Whether parms were given  */
+    bool  unlock  =  false;             /* Should do RELEASE_INTLOCK */
 
     cmdline[0] = tolower( cmdline[0] );
 
@@ -1061,7 +1062,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
         c[0] = '-';
 
     /* Process their request */
-    OBTAIN_INTLOCK( NULL );
+    unlock = (TRY_OBTAIN_INTLOCK( NULL ) == 0);
     {
         /* Update and/or enable/disable tracing/stepping */
         if (on || off || update)
@@ -1126,7 +1127,7 @@ int trace_cmd( int argc, char* argv[], char* cmdline )
             on        = sysblk.instbreak;
         }
     }
-    RELEASE_INTLOCK( NULL );
+    if (unlock) RELEASE_INTLOCK( NULL );
 
     /* Build range and asid message fragments, if appropriate */
     if (addr[0] || addr[1])
