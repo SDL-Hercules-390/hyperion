@@ -9,12 +9,11 @@
 /* Interpretive Execution - (C) Copyright Jan Jaeger, 1999-2012      */
 /* z/Architecture support - (C) Copyright Jan Jaeger, 1999-2012      */
 
-#if !defined(_SERVICE_H)
-
+#ifndef _SERVICE_H
 #define _SERVICE_H
 
 /*-------------------------------------------------------------------*/
-/* Service Call Logical Processor command word definitions           */
+/*    Service Call Logical Processor command word definitions        */
 /*-------------------------------------------------------------------*/
 #define SCLP_READ_SCP_INFO      0x00020001
 #define SCLP_READ_IFL_INFO      0x00120001
@@ -39,16 +38,18 @@
 #define SCLP_RESOURCE_SHIFT     8
 
 /*-------------------------------------------------------------------*/
-/* Service Call Control Block (SCCB) header layout                   */
+/*     Service Call Control Block (SCCB) header layout               */
 /*-------------------------------------------------------------------*/
-typedef struct _SCCB_HEADER {
-        HWORD   length;                 /* Total length of SCCB      */
-        BYTE    flag;                   /* Flag byte                 */
-        BYTE    resv1[2];               /* Reserved                  */
-        BYTE    type;                   /* Request type              */
-        BYTE    reas;                   /* Reason code               */
-        BYTE    resp;                   /* Response class code       */
-    } SCCB_HEADER;
+typedef struct _SCCB_HEADER
+{
+/*00*/  HWORD   length;                 /* Total length of SCCB      */
+/*02*/  BYTE    flag;                   /* Flag byte                 */
+/*03*/  BYTE    resv1[2];               /* Reserved                  */
+/*05*/  BYTE    type;                   /* Request type              */
+/*06*/  BYTE    reas;                   /* Reason code               */
+/*07*/  BYTE    resp;                   /* Response class code       */
+}
+SCCB_HEADER; /* size: 0x08 */
 
 /* Bit definitions for SCCB header flag byte */
 #define SCCB_FLAG_SYNC          0x80    /* Synchronous request       */
@@ -75,7 +76,6 @@ typedef struct _SCCB_HEADER {
 #define SCCB_RESP_BACKOUT       0x40    /* Command backed out        */
 #define SCCB_RESP_REJECT        0xF0    /* Command reject            */
 
-// #ifdef FEATURE_SYSTEM_CONSOLE
 #define SCCB_REAS_NO_EVENTS     0x60    /* No outstanding EVENTs     */
 #define SCCB_RESP_NO_EVENTS     0xF0
 #define SCCB_REAS_EVENTS_SUP    0x62    /* All events suppressed     */
@@ -92,7 +92,6 @@ typedef struct _SCCB_HEADER {
 #define SCCB_RESP_INVALID_MSKL  0xF0
 #define SCCB_REAS_EXCEEDS_SCCB  0x75    /* Exceeds SCCB max capacity */
 #define SCCB_RESP_EXCEEDS_SCCB  0xF0
-// #endif /*FEATURE_SYSTEM_CONSOLE*/
 
 /*-------------------------------------------------------------------*/
 /* The following maximum value constants define the architectural    */
@@ -105,9 +104,10 @@ typedef struct _SCCB_HEADER {
 #define MAX_SCP_STORSIZE    (MAX_STORINCR * (MAX_INCRSIZE_MB * _1M))
 
 /*-------------------------------------------------------------------*/
-/* SCCB System Control Program (SCP) information block layout        */
+/*   SCCB System Control Program (SCP) information block layout      */
 /*-------------------------------------------------------------------*/
-typedef struct _SCCB_SCP_INFO {
+typedef struct _SCCB_SCP_INFO
+{
         HWORD   realinum;               /* Number of real storage
                                            increments installed      */
         BYTE    realiszm;               /* Size of each real storage
@@ -161,7 +161,8 @@ typedef struct _SCCB_SCP_INFO {
                                            when it is larger than
                                            64K or when ESAME is on   */
         BYTE    resv8[16];              /* Reserved                  */
-    } SCCB_SCP_INFO;
+}
+SCCB_SCP_INFO;
 
 /* Bit definitions for installed facilities */
 #define SCCB_IFM0_CHANNEL_PATH_INFORMATION              0x80
@@ -222,14 +223,18 @@ typedef struct _SCCB_SCP_INFO {
 #define SCCB_CFGB_LOAD_WITH_DUMP                        0x02
 #define SCCB_CFGB_LIST_DIRECTED_IPL                     0x01
 
-/* CPU information array entry */
-typedef struct _SCCB_CPU_INFO {
+/*-------------------------------------------------------------------*/
+/*            CPU information array entry                            */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_CPU_INFO
+{
         BYTE    cpa;                    /* CPU address               */
         BYTE    tod;                    /* TOD clock number          */
         BYTE    cpf[12];                /* RCPU facility map         */
         BYTE    ptyp;                   /* Processor type            */
         BYTE    ksid;                   /* Crypto unit identifier    */
-    } SCCB_CPU_INFO;
+}
+SCCB_CPU_INFO;
 
 /* Bit definitions for CPU installed features */
 #define SCCB_CPF0_SIE_370_MODE                          0x80
@@ -257,7 +262,7 @@ typedef struct _SCCB_CPU_INFO {
 #define SCCB_CPF5_GUEST_WAIT_STATE_ASSIST               0x40
 
 /*-------------------------------------------------------------------*/
-/* Processor type codes  (mostly for diag 224)                       */
+/*       Processor type codes  (mostly for diag 224)                 */
 /*-------------------------------------------------------------------*/
 /* PROGRAMMING NOTE: if you define/add a new value to the below,     */
 /* be sure to ALSO update the 'ptypes' table in 'hsccmd.c'!          */
@@ -271,7 +276,7 @@ typedef struct _SCCB_CPU_INFO {
 #define MAX_SCCB_PTYP /*(see above PROGRAMMING NOTE!)*/ 5
 
 /*-------------------------------------------------------------------*/
-/* Processor type macro                                              */
+/*                Processor type macro                               */
 /*-------------------------------------------------------------------*/
 #define PTYPSTR(cpu_num)        ptyp2short( sysblk.ptyp[(cpu_num)] )
 
@@ -285,94 +290,146 @@ typedef struct _SCCB_CPU_INFO {
 /* Definitions for crypto unit identifier */
 #define SCCB_KSID_CRYPTO_UNIT_ID                        0x01
 
-/* HSA information array entry */
-typedef struct _SCCB_HSA_INFO {
+/*-------------------------------------------------------------------*/
+/*               HSA information array entry                         */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_HSA_INFO
+{
         HWORD   hssz;                   /* Size of HSA in 4K blocks  */
         FWORD   ahsa;                   /* Address of HSA            */
-    } SCCB_HSA_INFO;
+}
+SCCB_HSA_INFO;
 
-/* MPF information array entry */
-typedef struct _SCCB_MPF_INFO {
+/*-------------------------------------------------------------------*/
+/*               MPF information array entry                         */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_MPF_INFO
+{
         HWORD   mpfy;                   /* MPF info array entry      */
-    } SCCB_MPF_INFO;
+}
+SCCB_MPF_INFO;
 
-/* Channel path information data area */
-typedef struct _SCCB_CHP_INFO {
+/*-------------------------------------------------------------------*/
+/*           Channel path information data area                      */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_CHP_INFO
+{
         BYTE    installed[32];          /* Channels installed bits   */
         BYTE    standby[32];            /* Channels standby bits     */
         BYTE    online[32];             /* Channels online bits      */
-    } SCCB_CHP_INFO;
+}
+SCCB_CHP_INFO;
 
-/* Channel path information data area */
-typedef struct _SCCB_CHSET {
+/*-------------------------------------------------------------------*/
+/*           Channel path information data area                      */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_CHSET
+{
         BYTE    chanset0a[32];          /* 370 channel set 0A        */
         BYTE    chanset1a[32];          /* 370 channel set 1A        */
         BYTE    chanset0b[32];          /* 370 channel set 0B        */
         BYTE    chanset1b[32];          /* 370 channel set 1B        */
         BYTE    csconfig;               /* Channel set configuration */
         BYTE    resv[23];               /* Reserved, set to zero     */
-    } SCCB_CHSET_INFO;
+}
+SCCB_CHSET_INFO;
 
-/* Read Channel Subsystem Information data area */
-typedef struct _SCCB_CSI_INFO {
+/*-------------------------------------------------------------------*/
+/*        Read Channel Subsystem Information data area               */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_CSI_INFO
+{
         BYTE    csif[8];                /* Channel Subsystem installed
                                            facility field            */
         BYTE    resv[48];
-    } SCCB_CSI_INFO;
+}
+SCCB_CSI_INFO;
 
 /* Bit definitions for channel subsystem installed facilities */
 #define SCCB_CSI0_CANCEL_IO_REQUEST_FACILITY            0x02
 #define SCCB_CSI0_CONCURRENT_SENSE_FACILITY             0x01
 
-// #ifdef FEATURE_SYSTEM_CONSOLE
-/* Write Event Mask */
-typedef struct _SCCB_EVENT_MASK {
-        HWORD   reserved;
-        HWORD   length;                 /* Event mask length         */
-        BYTE    masks[32];              /* Event masks               */
-//      FWORD   cp_recv_mask;           /* These mask fields have    */
-//      FWORD   cp_send_mask;           /* the length defined by     */
-//      FWORD   sclp_recv_mask;         /* the length halfword       */
-//      FWORD   sclp_send_mask;
-    } SCCB_EVENT_MASK;
+/*-------------------------------------------------------------------*/
+/*                    Write Event Mask                               */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_EVENT_MASK
+{
+/*00*/  HWORD   reserved;
+/*02*/  HWORD   length;                 /* Event mask length         */
+/*04*/  BYTE    masks[32];              /* Event masks               */
+/*??*///FWORD   cp_recv_mask;           /* These mask fields have    */
+/*??*///FWORD   cp_send_mask;           /* the length defined by     */
+/*??*///FWORD   sclp_recv_mask;         /* the length halfword       */
+/*??*///FWORD   sclp_send_mask;
+
+}
+SCCB_EVENT_MASK;
 
 #define SCCB_EVENT_CONS_RECV_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_MSG-1))   | \
         (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) )
+
 #define SCCB_EVENT_CONS_SEND_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
         (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) )
 
-/* Read/Write Event Data Header */
-typedef struct _SCCB_EVD_HDR {
-        HWORD   totlen;                 /* Event Data Buffer total
+/*-------------------------------------------------------------------*/
+/*              Read/Write Event Data Header                         */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_EVD_HDR
+{
+/*00*/  HWORD   totlen;                 /* Event Data Buffer total
                                            length                    */
-        BYTE    type;
-#define SCCB_EVD_TYPE_OPCMD     0x01    /* Operator command          */
-#define SCCB_EVD_TYPE_MSG       0x02    /* Message from Control Pgm  */
-// #if defined(FEATURE_SCEDIO )
-#define SCCB_EVD_TYPE_SCEDIO    0x07    /* SCE DASD I/O              */
-// #endif /*defined(FEATURE_SCEDIO )*/
-#define SCCB_EVD_TYPE_STATECH   0x08    /* State Change              */
-#define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
-#define SCCB_EVD_TYPE_CPIDENT   0x0B    /* CntlProgIdent             */
-// #endif defined(_FEATURE_HARDWARE_LOADER)
-#define SCCB_EVD_TYPE_HWL       0x0C    /* Hardware Loader           */
-#define SCCB_EVD_TYPE_SDIAS     0x1C    /* Dump retrieval            */
-// #endif /*defined(_FEATURE_HARDWARE_LOADER)*/
-#define SCCB_EVD_TYPE_VT220     0x1A    /* VT220 Msg                 */
-#define SCCB_EVD_TYPE_SYSG      0x1B    /* 3270 Msg (SYSG console)   */
-#define SCCB_EVD_TYPE_SIGQ      0x1D    /* SigQuiesce                */
-#define SCCB_EVD_TYPE_CPCMD     0x20    /* CntlProgOpCmd             */
-        BYTE    flag;
+/*02*/  BYTE    type;
+
+#define SCCB_EVD_TYPE_OPCMD     0x01    /* 80 Operator command       */
+#define SCCB_EVD_TYPE_MSG       0x02    /* 40 Msg from Control Pgm   */
+//efine SCCB_EVD_TYPE_???       0x03    /* 20 ???                    */
+//efine SCCB_EVD_TYPE_???       0x04    /* 10 ???                    */
+//efine SCCB_EVD_TYPE_???       0x05    /* 08 ???                    */
+//efine SCCB_EVD_TYPE_???       0x06    /* 04 ???                    */
+#define SCCB_EVD_TYPE_SCEDIO    0x07    /* 02 SCE DASD I/O           */
+#define SCCB_EVD_TYPE_STATECH   0x08    /* 01 State Change           */
+
+#define SCCB_EVD_TYPE_PRIOR     0x09    /* 80 Priority msg/cmd       */
+//efine SCCB_EVD_TYPE_???       0x0A    /* 40 ???                    */
+#define SCCB_EVD_TYPE_CPIDENT   0x0B    /* 20 CntlProgIdent          */
+#define SCCB_EVD_TYPE_HWL       0x0C    /* 10 Hardware Loader        */
+//efine SCCB_EVD_TYPE_???       0x0D    /* 08 ???                    */
+//efine SCCB_EVD_TYPE_???       0x0E    /* 04 ???                    */
+//efine SCCB_EVD_TYPE_???       0x0F    /* 02 ???                    */
+//efine SCCB_EVD_TYPE_???       0x10    /* 01 ???                    */
+
+//efine SCCB_EVD_TYPE_???       0x11    /* 80 ???                    */
+//efine SCCB_EVD_TYPE_???       0x12    /* 40 ???                    */
+//efine SCCB_EVD_TYPE_???       0x13    /* 20 ???                    */
+//efine SCCB_EVD_TYPE_???       0x14    /* 10 ???                    */
+//efine SCCB_EVD_TYPE_???       0x15    /* 08 ???                    */
+//efine SCCB_EVD_TYPE_???       0x16    /* 04 ???                    */
+//efine SCCB_EVD_TYPE_???       0x17    /* 02 ???                    */
+//efine SCCB_EVD_TYPE_???       0x18    /* 01 ???                    */
+
+//efine SCCB_EVD_TYPE_???       0x19    /* 80 ???                    */
+#define SCCB_EVD_TYPE_VT220     0x1A    /* 40 VT220 Msg              */
+#define SCCB_EVD_TYPE_SYSG      0x1B    /* 20 3270 Msg (SYSG cons)   */
+#define SCCB_EVD_TYPE_SDIAS     0x1C    /* 10 Dump retrieval         */
+#define SCCB_EVD_TYPE_SIGQ      0x1D    /* 08 SigQuiesce             */
+//efine SCCB_EVD_TYPE_???       0x1E    /* 04 ???                    */
+//efine SCCB_EVD_TYPE_???       0x1F    /* 02 ???                    */
+#define SCCB_EVD_TYPE_CPCMD     0x20    /* 01 CntlProgOpCmd          */
+
+/*03*/  BYTE    flag;
 #define SCCB_EVD_FLAG_PROC      0x80    /* Event successful          */
-        HWORD   resv;                   /* Reserved for future use   */
-    } SCCB_EVD_HDR;
+/*04*/  HWORD   resv;                   /* Reserved for future use   */
+}
+SCCB_EVD_HDR; /* size: 0x06 */
 
-
-/* Read/Write Event Data Buffer */
-typedef struct _SCCB_EVD_BK {
+/*-------------------------------------------------------------------*/
+/*              Read/Write Event Data Buffer                         */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_EVD_BK
+{
         HWORD   msglen;
         BYTE    const1[51];
         HWORD   cplen;                  /* CP message length         */
@@ -384,28 +441,40 @@ typedef struct _SCCB_EVD_BK {
         BYTE    tmlen;
         BYTE    const5;                 /* Text Message format       */
 //      BYTE    txtmsg[n];
-    } SCCB_EVD_BK;
+}
+SCCB_EVD_BK;
 
-/* Message Control Data Block */
-typedef struct _SCCB_MCD_BK {
+/*-------------------------------------------------------------------*/
+/*              Message Control Data Block                           */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_MCD_BK
+{
         HWORD   length;                 /* Total length of MCD       */
         HWORD   type;                   /* Type must be 0x0001       */
         FWORD   tag;                    /* Tag must be 0xD4C4C240    */
         FWORD   revcd;                  /* Revision code 0x00000001  */
-    } SCCB_MCD_BK;
+}
+SCCB_MCD_BK;
 
-/* Message Control Data Block Header */
-typedef struct _SCCB_OBJ_HDR {
+/*-------------------------------------------------------------------*/
+/*            Message Control Data Block Header                      */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_OBJ_HDR
+{
         HWORD   length;                 /* Total length of OBJ       */
         HWORD   type;                   /* Object type               */
 #define SCCB_OBJ_TYPE_GENERAL   0x0001  /* General Object            */
 #define SCCB_OBJ_TYPE_CPO       0x0002  /* Control Program Object    */
 #define SCCB_OBJ_TYPE_NLS       0x0003  /* NLS data Object           */
 #define SCCB_OBJ_TYPE_MESSAGE   0x0004  /* Message Text Object       */
-    } SCCB_OBJ_HDR;
+}
+SCCB_OBJ_HDR;
 
-/* Message Control Data Block Message Text Object */
-typedef struct _SCCB_MTO_BK {
+/*-------------------------------------------------------------------*/
+/*       Message Control Data Block Message Text Object              */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_MTO_BK
+{
         BYTE    ltflag[2];              /* Line type flag            */
 #define SCCB_MTO_LTFLG0_CNTL    0x80    /* Control text line         */
 #define SCCB_MTO_LTFLG0_LABEL   0x40    /* Label text line           */
@@ -425,10 +494,14 @@ typedef struct _SCCB_MTO_BK {
 #define SCCB_MTO_PRATTR0_ALARM  0x80    /* Sound alarm (console)     */
 #define SCCB_MTO_PRATTR3_HIGH   0xE8    /* Highlighted               */
 #define SCCB_MTO_PRATTR3_NORM   0xE4    /* Normal                    */
-    } SCCB_MTO_BK;
+}
+SCCB_MTO_BK;
 
-/* Message Control Data Block General Object */
-typedef struct _SCCB_MGO_BK {
+/*-------------------------------------------------------------------*/
+/*         Message Control Data Block General Object                 */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_MGO_BK
+{
         FWORD   seq;                    /* Message DOM ID            */
         BYTE    time[11];               /* C'HH.MM.SS.th'            */
         BYTE    resv1;
@@ -453,10 +526,14 @@ typedef struct _SCCB_MGO_BK {
                                            field overrides           */
         BYTE    sysname[8];             /* Originating system name   */
         BYTE    jobname[8];             /* Jobname or guestname      */
-    } SCCB_MGO_BK;
+}
+SCCB_MGO_BK;
 
-/* Control Program Information */
-typedef struct _SCCB_CPI_BK {
+/*-------------------------------------------------------------------*/
+/*           Control Program Information Block                       */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_CPI_BK
+{
         BYTE    id_fmt;
         BYTE    resv0;
         BYTE    system_type[8];
@@ -467,29 +544,39 @@ typedef struct _SCCB_CPI_BK {
         DBLWRD  resv3;
         BYTE    sysplex_name[8];
         BYTE    resv4[16];
-    } SCCB_CPI_BK;
+}
+SCCB_CPI_BK;
 
-/* Message Control Data Block NLS Object */
-typedef struct _SCCB_NLS_BK {
+/*-------------------------------------------------------------------*/
+/*          Message Control Data Block NLS Object                    */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_NLS_BK
+{
         HWORD   scpgid;                 /* CPGID for SBCS (def 037)  */
         HWORD   scpsgid;                /* CPSGID for SBCS (def 637) */
         HWORD   dcpgid;                 /* CPGID for DBCS (def 037)  */
         HWORD   dcpsgid;                /* CPSGID for DBCS (def 637) */
-    } SCCB_NLS_BK;
+}
+SCCB_NLS_BK;
 
-/* Signal Quiesce */
-typedef struct _SCCB_SGQ_BK {
+/*-------------------------------------------------------------------*/
+/*                 Signal Quiesce Block                              */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_SGQ_BK
+{
     HWORD   count;                  /* Countdown in units        */
     BYTE    unit;                   /* Unit type                 */
 #define SCCB_SGQ_SEC 0
 #define SCCB_SGQ_MIN 1
 #define SCCB_SGQ_HR  2
-    } SCCB_SGQ_BK;
+}
+SCCB_SGQ_BK;
 
-// #endif /*FEATURE_SYSTEM_CONSOLE*/
-
-// #ifdef FEATURE_EXPANDED_STORAGE
-typedef struct _SCCB_XST_INFO {
+/*-------------------------------------------------------------------*/
+/*                   Storage Information                             */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_XST_INFO
+{
         HWORD   elmid;                  /* Extended storage element
                                                                 id   */
         BYTE    resv1[6];
@@ -498,20 +585,26 @@ typedef struct _SCCB_XST_INFO {
         BYTE    elmchar;                /* Element characteristics   */
 #define SCCB_XST_INFO_ELMCHAR_REQ 0x80; /* Required element          */
         BYTE    resv2[39];
-    } SCCB_XST_INFO;
+}
+SCCB_XST_INFO;
 
-typedef struct _SCCB_XST_MAP {
+/*-------------------------------------------------------------------*/
+/*                      Storage Map                                  */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_XST_MAP
+{
         FWORD   incnum;                 /* Increment number          */
         FWORD   resv;
 //      BYTE    map[];                  /* Bitmap of all usable
 //                                         expanded storage blocks   */
-    } SCCB_XST_MAP;
-// #endif /*FEATURE_EXPANDED_STORAGE*/
+}
+SCCB_XST_MAP;
 
-
-// #if defined(FEATURE_SCEDIO )
-/* SCE DASD I/O Request */
-typedef struct _SCCB_SCEDIO_BK {
+/*-------------------------------------------------------------------*/
+/*               SCE DASD I/O Request Block                          */
+/*-------------------------------------------------------------------*/
+typedef struct _SCCB_SCEDIO_BK
+{
         BYTE    flag0;
         BYTE    flag1;
 #define SCCB_SCEDIO_FLG1_IOR       0x03
@@ -519,10 +612,15 @@ typedef struct _SCCB_SCEDIO_BK {
         BYTE    flag2;
         BYTE    flag3;
 #define SCCB_SCEDIO_FLG3_COMPLETE  0x80
+}
+SCCB_SCEDIO_BK; /* size: 0x04 */
 
-    } SCCB_SCEDIO_BK;
-
-typedef struct _SCCB_SCEDIOV_BK {
+/*-------------------------------------------------------------------*/
+/*                SCE DASD I/O VVVV Block                            */
+/*-------------------------------------------------------------------*/
+// I wish I knew what this control block was!  ('V' = Virtual??)
+typedef struct _SCCB_SCEDIOV_BK
+{
         BYTE    type;
 #define SCCB_SCEDIOV_TYPE_INIT     0x00
 #define SCCB_SCEDIOV_TYPE_READ     0x01
@@ -538,9 +636,16 @@ typedef struct _SCCB_SCEDIOV_BK {
         DBLWRD  resv3;
         DBLWRD  sto;
         BYTE    filename[256];
-    } SCCB_SCEDIOV_BK;
+}
+SCCB_SCEDIOV_BK;
 
-typedef struct _SCCB_SCEDIOR_BK {
+/*-------------------------------------------------------------------*/
+/*                SCE DASD I/O RRRR Block                            */
+/*-------------------------------------------------------------------*/
+// I wish I knew what this control block was!  ('R' = Real??)
+
+typedef struct _SCCB_SCEDIOR_BK
+{
         BYTE    type;
 #define SCCB_SCEDIOR_TYPE_INIT     0x00
 #define SCCB_SCEDIOR_TYPE_READ     0x01
@@ -551,8 +656,7 @@ typedef struct _SCCB_SCEDIOR_BK {
         FWORD   resv1;
         FWORD   resv2;
         BYTE    image[8];
-    } SCCB_SCEDIOR_BK;
+}
+SCCB_SCEDIOR_BK;
 
-// #endif /*defined(FEATURE_SCEDIO )*/
-
-#endif /*!defined(_SERVICE_H)*/
+#endif /* _SERVICE_H */
