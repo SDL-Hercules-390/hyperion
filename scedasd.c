@@ -611,7 +611,7 @@ U32  origin;
 char image[9];
 unsigned int i;
 char filename[MAX_PATH];
-int rc;
+bool success;
 
 static const bool noisy =
 #if defined(_DEBUG) || defined(DEBUG)
@@ -636,8 +636,8 @@ static const bool noisy =
         return FALSE;
     }
 
-    rc = ARCH_DEP( load_main )( filename, origin, noisy );
-    return rc;
+    success = ARCH_DEP( load_main )( filename, origin, noisy ) == 0;
+    return success;
 }
 
 /*-------------------------------------------------------------------*/
