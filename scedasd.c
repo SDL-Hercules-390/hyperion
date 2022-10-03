@@ -605,7 +605,7 @@ eof:
 /*-------------------------------------------------------------------*/
 // (returns boolean true/false success/failure)
 
-static int ARCH_DEP(scedio_ior)(SCCB_SCEDIOR_BK *scedior_bk)
+static int ARCH_DEP( scedio_ior )( SCCB_SCEDIO_R_BK* scedio_r_bk )
 {
 U32  origin;
 char image[9];
@@ -620,11 +620,11 @@ static const bool noisy =
     false;
 #endif
 
-    FETCH_FW( origin, scedior_bk->origin );
+    FETCH_FW( origin, scedio_r_bk->origin );
 
     /* Convert image filename to null terminated ascii string */
-    for (i=0; i < sizeof( image ) - 1 && scedior_bk->image[i] != 0x40; i++)
-        image[i] = guest_to_host( (int)  scedior_bk->image[i]);
+    for (i=0; i < sizeof( image ) - 1 && scedio_r_bk->image[i] != 0x40; i++)
+        image[i] = guest_to_host( (int)  scedio_r_bk->image[i]);
     image[i] = '\0';
 
     /* Ensure file access is allowed and within specified directory */
@@ -643,7 +643,7 @@ static const bool noisy =
 /*-------------------------------------------------------------------*/
 // (returns boolean true/false success/failure)
 
-static int ARCH_DEP(scedio_iov)(SCCB_SCEDIOV_BK *scediov_bk)
+static int ARCH_DEP( scedio_iov )( SCCB_SCEDIO_V_BK* scedio_v_bk )
 {
 S64     seek;
 S64     length;
@@ -651,7 +651,7 @@ S64     totread, totwrite;
 U64     sto;
 char    fname[MAX_PATH];
 
-    switch (scediov_bk->type)
+    switch (scedio_v_bk->type)
     {
     case SCCB_SCEDIOV_TYPE_INIT:
 
@@ -660,7 +660,7 @@ char    fname[MAX_PATH];
     case SCCB_SCEDIOV_TYPE_READ:
 
         /* Ensure file access is allowed and within specified directory */
-        if (!check_sce_filepath( (char*)scediov_bk->filename, fname ))
+        if (!check_sce_filepath( (char*)scedio_v_bk->filename, fname ))
         {
             if (errno != ENOENT)
                 // "SCE file %s: access error: %s"
@@ -668,20 +668,20 @@ char    fname[MAX_PATH];
             return FALSE;
         }
 
-        FETCH_DW( sto,    scediov_bk->sto );
-        FETCH_DW( seek,   scediov_bk->seek );
-        FETCH_DW( length, scediov_bk->length );
+        FETCH_DW( sto,    scedio_v_bk->sto );
+        FETCH_DW( seek,   scedio_v_bk->seek );
+        FETCH_DW( length, scedio_v_bk->length );
 
         totread = ARCH_DEP( read_file )( fname, sto, seek, length );
 
         if (totread > 0)
         {
-            STORE_DW( scediov_bk->length, totread );
+            STORE_DW( scedio_v_bk->length, totread );
 
             if (totread == length)
-                STORE_DW( scediov_bk->ncomp, 0 );
+                STORE_DW( scedio_v_bk->ncomp, 0 );
             else
-                STORE_DW( scediov_bk->ncomp, seek + totread );
+                STORE_DW( scedio_v_bk->ncomp, seek + totread );
 
             return TRUE;
         }
@@ -692,33 +692,33 @@ char    fname[MAX_PATH];
     case SCCB_SCEDIOV_TYPE_APPEND:
 
         /* Ensure file access is allowed and within specified directory */
-        if (!check_sce_filepath( (char*)scediov_bk->filename, fname ))
+        if (!check_sce_filepath( (char*)scedio_v_bk->filename, fname ))
         {
             if (errno != ENOENT)
                 // "SCE file %s: access error: %s"
                 WRMSG( HHC00605, "E", fname, strerror( errno ));
 
             /* A file not found error may be expected for a create request */
-            if (!(errno == ENOENT && scediov_bk->type == SCCB_SCEDIOV_TYPE_CREATE))
+            if (!(errno == ENOENT && scedio_v_bk->type == SCCB_SCEDIOV_TYPE_CREATE))
                 return FALSE;
         }
 
-        FETCH_DW( sto,    scediov_bk->sto );
-        FETCH_DW( length, scediov_bk->length );
+        FETCH_DW( sto,    scedio_v_bk->sto );
+        FETCH_DW( length, scedio_v_bk->length );
 
         totwrite = ARCH_DEP( write_file ) (fname,
-            scediov_bk->type == SCCB_SCEDIOV_TYPE_CREATE ? (O_CREAT | O_TRUNC) : O_APPEND, sto, length );
+            scedio_v_bk->type == SCCB_SCEDIOV_TYPE_CREATE ? (O_CREAT | O_TRUNC) : O_APPEND, sto, length );
 
         if(totwrite >= 0)
         {
-            STORE_DW( scediov_bk->ncomp, totwrite );
+            STORE_DW( scedio_v_bk->ncomp, totwrite );
             return TRUE;
         }
         else
             return FALSE;
 
     default:
-        PTT_ERR("*SERVC", (U32)scediov_bk->type, (U32)scediov_bk->flag1, scediov_bk->flag2 );
+        PTT_ERR("*SERVC", (U32)scedio_v_bk->type, (U32)scedio_v_bk->flag1, scedio_v_bk->flag2 );
         return FALSE;
     }
 }
@@ -728,17 +728,17 @@ char    fname[MAX_PATH];
 /*-------------------------------------------------------------------*/
 static void* ARCH_DEP( scedio_thread )( void* arg )
 {
-SCCB_SCEDIOV_BK* scediov_bk;
-SCCB_SCEDIOR_BK* scedior_bk;
+SCCB_SCEDIO_V_BK* scedio_v_bk;
+SCCB_SCEDIO_R_BK* scedio_r_bk;
 SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
 
     switch (scedio_bk->flag1)
     {
     case SCCB_SCEDIO_FLG1_IOV:
 
-        scediov_bk = (SCCB_SCEDIOV_BK*)(scedio_bk + 1);
+        scedio_v_bk = (SCCB_SCEDIO_V_BK*)(scedio_bk + 1);
 
-        if (ARCH_DEP( scedio_iov )( scediov_bk ))
+        if (ARCH_DEP( scedio_iov )( scedio_v_bk ))
             scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
         else
             scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
@@ -746,9 +746,9 @@ SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
 
     case SCCB_SCEDIO_FLG1_IOR:
 
-        scedior_bk = (SCCB_SCEDIOR_BK*)(scedio_bk + 1);
+        scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
 
-        if (ARCH_DEP( scedio_ior )( scedior_bk ))
+        if (ARCH_DEP( scedio_ior )( scedio_r_bk ))
             scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
         else
             scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
@@ -797,45 +797,46 @@ static int ARCH_DEP( scedio_request )( U32 sclp_command, SCCB_EVD_HDR* evd_hdr )
 {
 int rc;
 SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*)(evd_hdr + 1);
-SCCB_SCEDIOV_BK* scediov_bk;
-SCCB_SCEDIOR_BK* scedior_bk;
-
+SCCB_SCEDIO_V_BK* scedio_v_bk;
+SCCB_SCEDIO_R_BK* scedio_r_bk;
 
 static struct
 {
     SCCB_SCEDIO_BK  scedio_bk;
     union
     {
-        SCCB_SCEDIOV_BK  v;
-        SCCB_SCEDIOR_BK  r;
+        SCCB_SCEDIO_V_BK  v;
+        SCCB_SCEDIO_R_BK  r;
     }
     io;
 }
 static_scedio_bk;
 
-static int scedio_pending;
+static bool scedio_pending;
 
     if (sclp_command == SCLP_READ_EVENT_DATA)
     {
-        int pending_req = scedio_pending;
+        bool pending_req = scedio_pending;
         U16 evd_len;
 
-        /* Return no data if the scedio thread is still active */
+        /* Return not-completed if the scedio thread is still active */
         if (scedio_tid)
         {
             return 0;
         }
 
-        /* Update the scedio_bk copy in the SCCB */
+        /* Was there a preceding I/O request to respond to? */
         if (scedio_pending)
         {
-            /* Zero all fields */
+            /* Update the scedio_bk copy in the SCCB... */
+
+            /* Zero all event fields */
             memset( evd_hdr, 0, sizeof( SCCB_EVD_HDR ));
 
             /* Set type in event header */
             evd_hdr->type = SCCB_EVD_TYPE_SCEDIO;
 
-            /* Store scedio header */
+            /* Store copy of original saved SCEDIO header */
             *scedio_bk = static_scedio_bk.scedio_bk;
 
             /* Calculate event response length */
@@ -845,16 +846,16 @@ static int scedio_pending;
             {
             case SCCB_SCEDIO_FLG1_IOR:
 
-                scedior_bk = (SCCB_SCEDIOR_BK*)(scedio_bk + 1);
-                *scedior_bk = static_scedio_bk.io.r;
-                evd_len += sizeof( SCCB_SCEDIOR_BK );
+                scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
+                *scedio_r_bk = static_scedio_bk.io.r;
+                evd_len += sizeof( SCCB_SCEDIO_R_BK );
                 break;
 
             case SCCB_SCEDIO_FLG1_IOV:
 
-                scediov_bk = (SCCB_SCEDIOV_BK*)(scedio_bk + 1);
-                *scediov_bk = static_scedio_bk.io.v ;
-                evd_len += sizeof( SCCB_SCEDIOV_BK );
+                scedio_v_bk = (SCCB_SCEDIO_V_BK*)(scedio_bk + 1);
+                *scedio_v_bk = static_scedio_bk.io.v ;
+                evd_len += sizeof( SCCB_SCEDIO_V_BK );
                 break;
 
             default:
@@ -865,29 +866,30 @@ static int scedio_pending;
             STORE_HW(evd_hdr->totlen, evd_len);
         }
 
-
-        /* Reset the pending flag */
-        scedio_pending = 0;
+        /* Indicate I/O request no longer active */
+        scedio_pending = false;
 
         /* Return true if a request was pending */
         return pending_req;
     }
     else // ('SCLP_WRITE_EVENT_DATA' or 'SCLP_WRITE_EVENT_MASK')
     {
-        /* Take a copy of the scedio_bk in the SCCB */
+        /* Save copy of original dasd I/O header */
         static_scedio_bk.scedio_bk = *scedio_bk;
         switch (scedio_bk->flag1)
         {
         case SCCB_SCEDIO_FLG1_IOR:
 
-            scedior_bk = (SCCB_SCEDIOR_BK*)(scedio_bk + 1);
-            static_scedio_bk.io.r = *scedior_bk;
+            /* Save copy of original dasd I/O block */
+            scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
+            static_scedio_bk.io.r = *scedio_r_bk;
             break;
 
         case SCCB_SCEDIO_FLG1_IOV:
 
-            scediov_bk = (SCCB_SCEDIOV_BK*)(scedio_bk + 1);
-            static_scedio_bk.io.v = *scediov_bk;
+            /* Save copy of original dasd I/O block */
+            scedio_v_bk = (SCCB_SCEDIO_V_BK*)(scedio_bk + 1);
+            static_scedio_bk.io.v = *scedio_v_bk;
             break;
 
         default:
@@ -903,7 +905,9 @@ static int scedio_pending;
             WRMSG( HHC00102, "E", strerror( rc ));
             return -1;
         }
-        scedio_pending = 1;
+
+        /* Remember an I/O request was started and is now running */
+        scedio_pending = true;
     }
 
     return 0;
@@ -918,13 +922,13 @@ void ARCH_DEP( sclp_scedio_request )( SCCB_HEADER* sccb )
 
     if (ARCH_DEP( scedio_request )( SCLP_WRITE_EVENT_DATA, evd_hdr ))
     {
-        // non-zero: error; request NOT started
+        // non-zero: error: I/O request NOT started...
 
         /* Set response code X'0040' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_BACKOUT;
     }
-    else // zero: I/O request successfully started
+    else // zero: I/O request WAS successfully started...
     {
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -934,7 +938,6 @@ void ARCH_DEP( sclp_scedio_request )( SCCB_HEADER* sccb )
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
 }
-
 
 /*-------------------------------------------------------------------*/
 /*     Function to read service processor I/O event data             */

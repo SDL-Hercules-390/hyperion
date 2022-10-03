@@ -619,7 +619,7 @@ SCCB_SCEDIO_BK; /* size: 0x04 */
 /*                SCE DASD I/O VVVV Block                            */
 /*-------------------------------------------------------------------*/
 // I wish I knew what this control block was!  ('V' = Virtual??)
-typedef struct _SCCB_SCEDIOV_BK
+typedef struct _SCCB_SCEDIO_V_BK
 {
         BYTE    type;
 #define SCCB_SCEDIOV_TYPE_INIT     0x00
@@ -637,14 +637,14 @@ typedef struct _SCCB_SCEDIOV_BK
         DBLWRD  sto;
         BYTE    filename[256];
 }
-SCCB_SCEDIOV_BK;
+SCCB_SCEDIO_V_BK;
 
 /*-------------------------------------------------------------------*/
 /*                SCE DASD I/O RRRR Block                            */
 /*-------------------------------------------------------------------*/
 // I wish I knew what this control block was!  ('R' = Real??)
 
-typedef struct _SCCB_SCEDIOR_BK
+typedef struct _SCCB_SCEDIO_R_BK
 {
         BYTE    type;
 #define SCCB_SCEDIOR_TYPE_INIT     0x00
@@ -657,6 +657,6 @@ typedef struct _SCCB_SCEDIOR_BK
         FWORD   resv2;
         BYTE    image[8];
 }
-SCCB_SCEDIOR_BK;
+SCCB_SCEDIO_R_BK;
 
 #endif /* _SERVICE_H */

@@ -337,8 +337,11 @@ typedef struct DAT  DAT;
 #define CR0_CRYPTO              0x00000004      /* Crypto control       ESAME */
 #define CR0_IUCV                0x00000002      /* IUCV interrupt mask        */
 
-#define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
+/*-------------------------------------------------------------------*/
+/* Service signal parameter masks */
+
 #define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
+#define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for control register 1 */
