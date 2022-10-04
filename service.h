@@ -652,10 +652,13 @@ typedef struct _SCCB_SCEDIO_R_BK
         BYTE    flag1;
         BYTE    flag2;
         BYTE    flag3;
+
         FWORD   origin;
-        FWORD   resv1;
-        FWORD   resv2;
-        BYTE    image[8];
+
+#define SCCB_SCEDIO_R_IMAGE_LEN    8
+
+        BYTE    imageout[ SCCB_SCEDIO_R_IMAGE_LEN ];
+        BYTE    imagein [ SCCB_SCEDIO_R_IMAGE_LEN ];
 }
 SCCB_SCEDIO_R_BK;
 

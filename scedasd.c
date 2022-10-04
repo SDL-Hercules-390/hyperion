@@ -623,8 +623,8 @@ static const bool noisy =
     FETCH_FW( origin, scedio_r_bk->origin );
 
     /* Convert image filename to null terminated ascii string */
-    for (i=0; i < sizeof( image ) - 1 && scedio_r_bk->image[i] != 0x40; i++)
-        image[i] = guest_to_host( (int)  scedio_r_bk->image[i]);
+    for (i=0; i < sizeof( image ) - 1 && scedio_r_bk->imagein[i] != 0x40; i++)
+        image[i] = guest_to_host( (int)  scedio_r_bk->imagein[i]);
     image[i] = '\0';
 
     /* Ensure file access is allowed and within specified directory */
@@ -749,7 +749,11 @@ SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
         scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
 
         if (ARCH_DEP( scedio_ior )( scedio_r_bk ))
+        {
+            /* Indicate what SCE dasd file we finished reading? */
+            memcpy( scedio_r_bk->imageout, scedio_r_bk->imagein, SCCB_SCEDIO_R_IMAGE_LEN );
             scedio_bk->flag3 |= SCCB_SCEDIO_FLG3_COMPLETE;
+        }
         else
             scedio_bk->flag3 &= ~SCCB_SCEDIO_FLG3_COMPLETE;
         break;
@@ -757,7 +761,6 @@ SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
     default:
         PTT_ERR("*SERVC", (U32)scedio_bk->flag0, (U32)scedio_bk->flag1, scedio_bk->flag3 );
     }
-
 
     OBTAIN_INTLOCK( NULL );
     {
@@ -771,9 +774,7 @@ SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
         }
 
         sclp_attention( SCCB_EVD_TYPE_SCEDIO );
-
         scedio_tid = 0;
-
     }
     RELEASE_INTLOCK( NULL );
     return NULL;
@@ -837,7 +838,7 @@ static bool scedio_pending;
             evd_hdr->type = SCCB_EVD_TYPE_SCEDIO;
 
             /* Store copy of original saved SCEDIO header */
-            *scedio_bk = static_scedio_bk.scedio_bk;
+            memcpy( scedio_bk, &static_scedio_bk.scedio_bk, sizeof( SCCB_SCEDIO_BK ));
 
             /* Calculate event response length */
             evd_len = sizeof( SCCB_EVD_HDR ) + sizeof( SCCB_SCEDIO_BK );
@@ -847,14 +848,14 @@ static bool scedio_pending;
             case SCCB_SCEDIO_FLG1_IOR:
 
                 scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
-                *scedio_r_bk = static_scedio_bk.io.r;
+                memcpy( scedio_r_bk, &static_scedio_bk.io.r, sizeof( SCCB_SCEDIO_R_BK ));
                 evd_len += sizeof( SCCB_SCEDIO_R_BK );
                 break;
 
             case SCCB_SCEDIO_FLG1_IOV:
 
                 scedio_v_bk = (SCCB_SCEDIO_V_BK*)(scedio_bk + 1);
-                *scedio_v_bk = static_scedio_bk.io.v ;
+                memcpy( scedio_v_bk, &static_scedio_bk.io.v, sizeof( SCCB_SCEDIO_V_BK ));
                 evd_len += sizeof( SCCB_SCEDIO_V_BK );
                 break;
 
@@ -864,51 +865,53 @@ static bool scedio_pending;
 
             /* Set length in event header */
             STORE_HW(evd_hdr->totlen, evd_len);
-        }
 
-        /* Indicate I/O request no longer active */
-        scedio_pending = false;
+            /* Indicate I/O request no longer active */
+            scedio_pending = false;
+        }
 
         /* Return true if a request was pending */
         return pending_req;
     }
-    else // ('SCLP_WRITE_EVENT_DATA' or 'SCLP_WRITE_EVENT_MASK')
+
+    // else... 'SCLP_WRITE_EVENT_DATA' or 'SCLP_WRITE_EVENT_MASK'
+
+    /* Save copy of original dasd I/O header */
+    memcpy( &static_scedio_bk.scedio_bk, scedio_bk, sizeof( SCCB_SCEDIO_BK ));
+
+    switch (scedio_bk->flag1)
     {
-        /* Save copy of original dasd I/O header */
-        static_scedio_bk.scedio_bk = *scedio_bk;
-        switch (scedio_bk->flag1)
-        {
-        case SCCB_SCEDIO_FLG1_IOR:
+    case SCCB_SCEDIO_FLG1_IOR:
 
-            /* Save copy of original dasd I/O block */
-            scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
-            static_scedio_bk.io.r = *scedio_r_bk;
-            break;
+        /* Save copy of original dasd I/O block */
+        scedio_r_bk = (SCCB_SCEDIO_R_BK*)(scedio_bk + 1);
+        memcpy( &static_scedio_bk.io.r, scedio_r_bk, sizeof( SCCB_SCEDIO_R_BK ));
+        break;
 
-        case SCCB_SCEDIO_FLG1_IOV:
+    case SCCB_SCEDIO_FLG1_IOV:
 
-            /* Save copy of original dasd I/O block */
-            scedio_v_bk = (SCCB_SCEDIO_V_BK*)(scedio_bk + 1);
-            static_scedio_bk.io.v = *scedio_v_bk;
-            break;
+        /* Save copy of original dasd I/O block */
+        scedio_v_bk = (SCCB_SCEDIO_V_BK*)(scedio_bk + 1);
+        memcpy( &static_scedio_bk.io.v, scedio_v_bk, sizeof( SCCB_SCEDIO_V_BK ));
+        break;
 
-        default:
-            PTT_ERR("*SERVC",(U32)evd_hdr->type,(U32)scedio_bk->flag1,scedio_bk->flag3);
-        }
-
-        /* Create the scedio thread */
-        rc = create_thread( &scedio_tid, &sysblk.detattr,
-            ARCH_DEP( scedio_thread ), &static_scedio_bk, "scedio_thread" );
-        if (rc)
-        {
-            // "Error in function create_thread(): %s"
-            WRMSG( HHC00102, "E", strerror( rc ));
-            return -1;
-        }
-
-        /* Remember an I/O request was started and is now running */
-        scedio_pending = true;
+    default:
+        PTT_ERR("*SERVC",(U32)evd_hdr->type,(U32)scedio_bk->flag1,scedio_bk->flag3);
     }
+
+    /* Create the scedio thread */
+    rc = create_thread( &scedio_tid, &sysblk.detattr,
+        ARCH_DEP( scedio_thread ), &static_scedio_bk, "scedio_thread" );
+
+    if (rc)
+    {
+        // "Error in function create_thread(): %s"
+        WRMSG( HHC00102, "E", strerror( rc ));
+        return -1;
+    }
+
+    /* Remember an I/O request was started and is now running */
+    scedio_pending = true;
 
     return 0;
 }
@@ -933,10 +936,10 @@ void ARCH_DEP( sclp_scedio_request )( SCCB_HEADER* sccb )
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_COMPLETE;
-    }
 
-    /* Indicate Event Processed */
-    evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+        /* Event write processed and event read now pending */
+        evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -964,6 +967,9 @@ U16 evd_len;
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_COMPLETE;
+
+        /* Event read processed and now no events are pending */
+        evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
     }
 }
 
