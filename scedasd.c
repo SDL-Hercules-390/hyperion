@@ -27,67 +27,72 @@ static char*  sce_basedir = NULL;     /* base directory for SCE load */
 
 /*-------------------------------------------------------------------*/
 
-char *get_sce_dir()
+char* get_sce_dir()
 {
     return sce_basedir;
 }
 
 /*-------------------------------------------------------------------*/
 
-void set_sce_dir(char *path)
+void set_sce_dir( char* path )
 {
-char realdir[MAX_PATH];
-char tempdir[MAX_PATH];
+char realdir[ MAX_PATH ];
+char tempdir[ MAX_PATH ];
 
-    if(sce_basedir)
+    if (sce_basedir)
     {
-        free(sce_basedir);
+        free( sce_basedir );
         sce_basedir = NULL;
     }
 
-    if(!path)
+    if (!path)
         sce_basedir = NULL;
     else
-        if(!realpath(path,tempdir))
+    {
+        if (!realpath( path, tempdir ))
         {
-            WRMSG(HHC00600, "E", path, "realpath()", strerror(errno));
+            // "SCE file %s: error in function %s: %s"
+            WRMSG( HHC00600, "E", path, "realpath()", strerror( errno ));
             sce_basedir = NULL;
         }
         else
         {
-            hostpath(realdir, tempdir, sizeof(realdir));
+            hostpath( realdir, tempdir, sizeof( realdir ));
             STRLCAT( realdir, PATHSEPS );
-            sce_basedir = strdup(realdir);
+            sce_basedir = strdup( realdir );
         }
+    }
 }
 
 /*-------------------------------------------------------------------*/
 
-static char *set_sce_basedir(char *path)
+static char* set_sce_basedir( char* path )
 {
-char *basedir;
-char realdir[MAX_PATH];
-char tempdir[MAX_PATH];
+char* basedir;
+char  realdir[ MAX_PATH ];
+char  tempdir[ MAX_PATH ];
 
-    if(sce_basedir)
+    if (sce_basedir)
     {
-        free(sce_basedir);
+        free( sce_basedir );
         sce_basedir = NULL;
     }
 
-    if(!realpath(path,tempdir))
+    if (!realpath( path, tempdir ))
     {
-        WRMSG(HHC00600,"E",path,"realpath()",strerror(errno));
+        // "SCE file %s: error in function %s: %s"
+        WRMSG( HHC00600, "E", path, "realpath()", strerror( errno ));
         sce_basedir = NULL;
         return NULL;
     }
-    hostpath(realdir, tempdir, sizeof(realdir));
 
-    if((basedir = strrchr(realdir,PATHSEPC)))
+    hostpath( realdir, tempdir, sizeof( realdir ));
+
+    if ((basedir = strrchr( realdir, PATHSEPC )))
     {
         *(++basedir) = '\0';
-        sce_basedir = strdup(realdir);
-        return (basedir = strrchr(path,PATHSEPC)) ? ++basedir : path;
+        sce_basedir = strdup( realdir );
+        return (basedir = strrchr( path, PATHSEPC )) ? ++basedir : path;
     }
     else
     {
@@ -98,15 +103,15 @@ char tempdir[MAX_PATH];
 
 /*-------------------------------------------------------------------*/
 
-static char *check_sce_filepath(const char *path, char *fullpath)
+static char* check_sce_filepath( const char* path, char* fullpath )
 {
-char temppath[MAX_PATH];
-char tempreal[MAX_PATH];
+char temppath[ MAX_PATH ];
+char tempreal[ MAX_PATH ];
 
     /* Return file access error if no basedir has been set */
-    if(!sce_basedir)
+    if (!sce_basedir)
     {
-        strlcpy(fullpath,path,sizeof(temppath));
+        strlcpy( fullpath, path, sizeof( temppath ));
         errno = EACCES;
         return NULL;
     }
@@ -115,16 +120,17 @@ char tempreal[MAX_PATH];
     STRLCPY( temppath, sce_basedir );
     STRLCAT( temppath, path );
 
-    if(!realpath(temppath,tempreal))
+    if (!realpath( temppath, tempreal ))
     {
-        hostpath(fullpath, tempreal, sizeof(temppath));
-        if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
+        hostpath( fullpath, tempreal, sizeof( temppath ));
+        if (strncmp( sce_basedir, fullpath, strlen( sce_basedir )))
             errno = EACCES;
         return NULL;
     }
 
-    hostpath(fullpath, tempreal, sizeof(temppath));
-    if(strncmp( sce_basedir, fullpath, strlen(sce_basedir)))
+    hostpath( fullpath, tempreal, sizeof( temppath ));
+
+    if (strncmp( sce_basedir, fullpath, strlen( sce_basedir )))
     {
         errno = EACCES;
         return NULL;
@@ -161,17 +167,18 @@ CASSERT( !(CHUNKSIZE &            PAGEFRAME_BYTEMASK), scedasd_c );
 /*-------------------------------------------------------------------*/
 int ARCH_DEP( load_main )( char* fname, RADR startloc, int noisy )
 {
-U64 loaded;
-RADR aaddr;
-RADR pageaddr;
-int fd;
-int pages;
-size_t chunk;
-int bytes;
-time_t begtime, curtime;
-char fmt_mem[8];
+U64     loaded;
+RADR    aaddr;
+RADR    pageaddr;
+int     fd;
+int     pages;
+size_t  chunk;
+int     bytes;
+time_t  begtime, curtime;
+char    fmt_mem[8];
 
     fd = HOPEN( fname, O_RDONLY | O_BINARY );
+
     if (fd < 0)
     {
         if (errno != ENOENT)
@@ -234,6 +241,7 @@ char fmt_mem[8];
         if (aaddr >= sysblk.mainsize)
         {
             int rc;
+       
             if (read( fd, &rc, 1 ) > 0)
             {
                 rc = +1;
@@ -260,6 +268,7 @@ char fmt_mem[8];
             if (difftime( curtime, begtime ) > 2.0)
             {
                 begtime = curtime;
+
                 // "%s bytes %s so far..."
                 WRMSG( HHC02317, "I",
                     fmt_memsize( loaded, fmt_mem, sizeof( fmt_mem )),
@@ -315,7 +324,7 @@ static const bool noisy =
 
     /* The actual IPL proper starts here... */
 
-    regs = sysblk.regs[cpu];    /* Point to IPL CPU's registers */
+    regs = sysblk.regs[ cpu ];          /* Point to IPL CPU's regs   */
 
     if (fname == NULL)                  /* Default ipl from DASD     */
         fname = "HERCULES.ins";         /*   from HERCULES.ins       */
@@ -349,7 +358,6 @@ static const bool noisy =
         if (inputline && *inputline == 0x1a)
             inputline = NULL;
 #endif
-
         if (inputline)
         {
             rc = sscanf( inputline,"%" QSTR( MAX_PATH ) "s %i", filename, &fileaddr );
@@ -382,7 +390,7 @@ static const bool noisy =
             sysblk.main_clear = sysblk.xpnd_clear = 0;
         }
     }
-    while( inputline );
+    while (inputline);
 
     fclose( fp );
 
@@ -399,11 +407,12 @@ static const bool noisy =
 /*-------------------------------------------------------------------*/
 static S64 ARCH_DEP( write_file )( char* fname, int mode, CREG sto, S64 size )
 {
-int fd, nwrite;
-U64 totwrite = 0;
+int  fd, nwrite;
+U64  totwrite = 0;
 
     fd = HOPEN( fname, mode | O_WRONLY | O_BINARY,
             S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH );
+
     if (fd < 0)
     {
         // "SCE file %s: error in function %s: %s"
@@ -420,11 +429,11 @@ U64 totwrite = 0;
     for ( ; size > 0 ; sto += sizeof( sto ))
     {
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-    DBLWRD *ste;
+    DBLWRD* ste;
 #else
-    FWORD *ste;
+    FWORD*  ste;
 #endif
-    CREG pto, pti;
+    CREG    pto, pti;
 
         /* Fetch segment table entry and calc Page Table Origin */
         if (sto >= sysblk.mainsize)
@@ -449,12 +458,12 @@ U64 totwrite = 0;
         for (pti = 0; pti < 256 && size > 0; pti++, pto += sizeof( pto ))
         {
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-        DBLWRD *pte;
+        DBLWRD* pte;
 #else
-        FWORD *pte;
+        FWORD*  pte;
 #endif
-        CREG pgo;
-        BYTE* page;
+        CREG    pgo;
+        BYTE*   page;
 
             /* Fetch Page Table Entry to get page origin */
             if (pto >= sysblk.mainsize)
@@ -502,8 +511,8 @@ eof:
 /*-------------------------------------------------------------------*/
 static S64 ARCH_DEP( read_file )( char* fname, CREG sto, S64 seek, S64 size )
 {
-int fd, nread;
-U64 totread = 0;
+int  fd, nread;
+U64  totread = 0;
 
     fd = HOPEN( fname, O_RDONLY | O_BINARY );
 
@@ -527,9 +536,9 @@ U64 totread = 0;
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         DBLWRD* ste;
 #else
-        FWORD* ste;
+        FWORD*  ste;
 #endif
-        CREG pto, pti;
+        CREG    pto, pti;
 
             /* Fetch segment table entry and calc Page Table Origin */
             if (sto >= sysblk.mainsize)
@@ -554,12 +563,12 @@ U64 totread = 0;
             for (pti = 0; pti < 256 && size > 0; pti++, pto += sizeof( pto ))
             {
 #if defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
-            DBLWRD *pte;
+            DBLWRD* pte;
 #else
-            FWORD *pte;
+            FWORD*  pte;
 #endif
-            CREG pgo;
-            BYTE* page;
+            CREG    pgo;
+            BYTE*   page;
 
                 /* Fetch Page Table Entry to get page origin */
                 if (pto >= sysblk.mainsize)
@@ -605,13 +614,13 @@ eof:
 /*-------------------------------------------------------------------*/
 // (returns boolean true/false success/failure)
 
-static int ARCH_DEP( scedio_ior )( SCCB_SCEDIO_R_BK* scedio_r_bk )
+static bool ARCH_DEP( scedio_ior )( SCCB_SCEDIO_R_BK* scedio_r_bk )
 {
-U32  origin;
-char image[9];
-unsigned int i;
-char filename[MAX_PATH];
-bool success;
+U32           origin;
+char          image[9];
+unsigned int  i;
+char          filename[MAX_PATH];
+bool          success;
 
 static const bool noisy =
 #if defined(_DEBUG) || defined(DEBUG)
@@ -633,7 +642,7 @@ static const bool noisy =
         if (errno != ENOENT)
             // "SCE file %s: access error on image %s: %s"
             WRMSG( HHC00604, "E", filename, image, strerror( errno ));
-        return FALSE;
+        return false;
     }
 
     success = ARCH_DEP( load_main )( filename, origin, noisy ) == 0;
@@ -643,7 +652,7 @@ static const bool noisy =
 /*-------------------------------------------------------------------*/
 // (returns boolean true/false success/failure)
 
-static int ARCH_DEP( scedio_iov )( SCCB_SCEDIO_V_BK* scedio_v_bk )
+static bool ARCH_DEP( scedio_iov )( SCCB_SCEDIO_V_BK* scedio_v_bk )
 {
 S64     seek;
 S64     length;
@@ -655,7 +664,7 @@ char    fname[MAX_PATH];
     {
     case SCCB_SCEDIOV_TYPE_INIT:
 
-        return TRUE;
+        return true;
 
     case SCCB_SCEDIOV_TYPE_READ:
 
@@ -665,7 +674,7 @@ char    fname[MAX_PATH];
             if (errno != ENOENT)
                 // "SCE file %s: access error: %s"
                 WRMSG( HHC00605, "E", fname, strerror( errno ));
-            return FALSE;
+            return false;
         }
 
         FETCH_DW( sto,    scedio_v_bk->sto );
@@ -683,10 +692,10 @@ char    fname[MAX_PATH];
             else
                 STORE_DW( scedio_v_bk->ncomp, seek + totread );
 
-            return TRUE;
+            return true;
         }
         else
-            return FALSE;
+            return false;
 
     case SCCB_SCEDIOV_TYPE_CREATE:
     case SCCB_SCEDIOV_TYPE_APPEND:
@@ -700,7 +709,7 @@ char    fname[MAX_PATH];
 
             /* A file not found error may be expected for a create request */
             if (!(errno == ENOENT && scedio_v_bk->type == SCCB_SCEDIOV_TYPE_CREATE))
-                return FALSE;
+                return false;
         }
 
         FETCH_DW( sto,    scedio_v_bk->sto );
@@ -712,14 +721,14 @@ char    fname[MAX_PATH];
         if(totwrite >= 0)
         {
             STORE_DW( scedio_v_bk->ncomp, totwrite );
-            return TRUE;
+            return true;
         }
         else
-            return FALSE;
+            return false;
 
     default:
         PTT_ERR("*SERVC", (U32)scedio_v_bk->type, (U32)scedio_v_bk->flag1, scedio_v_bk->flag2 );
-        return FALSE;
+        return false;
     }
 }
 
@@ -730,7 +739,7 @@ static void* ARCH_DEP( scedio_thread )( void* arg )
 {
 SCCB_SCEDIO_V_BK* scedio_v_bk;
 SCCB_SCEDIO_R_BK* scedio_r_bk;
-SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
+SCCB_SCEDIO_BK*   scedio_bk  = (SCCB_SCEDIO_BK*) arg;
 
     switch (scedio_bk->flag1)
     {
@@ -786,20 +795,22 @@ SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*) arg;
 /* Returns either zero/non-zero or true/false                        */
 /*                                                                   */
 /*   SCLP_WRITE_EVENT_DATA:                                          */
-/*      zero: I/O request successfully started                       */
-/*      non-zero: error; request NOT started                         */
+/*                                                                   */
+/*      zero:      I/O request successfully started                  */
+/*      non-zero:  error; request NOT started                        */
 /*                                                                   */
 /*   SCLP_READ_EVENT_DATA:                                           */
-/*      true: an I/O request WAS pending and has now completed       */
-/*      false: an I/O request was NOT pending                        */
+/*                                                                   */
+/*      true:      an I/O request WAS pending and has now completed  */
+/*      false:     an I/O request was NOT pending                    */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP( scedio_request )( U32 sclp_command, SCCB_EVD_HDR* evd_hdr )
 {
 int rc;
-SCCB_SCEDIO_BK*  scedio_bk = (SCCB_SCEDIO_BK*)(evd_hdr + 1);
 SCCB_SCEDIO_V_BK* scedio_v_bk;
 SCCB_SCEDIO_R_BK* scedio_r_bk;
+SCCB_SCEDIO_BK*   scedio_bk  = (SCCB_SCEDIO_BK*)(evd_hdr + 1);
 
 static struct
 {
@@ -864,7 +875,7 @@ static bool scedio_pending;
             }
 
             /* Set length in event header */
-            STORE_HW(evd_hdr->totlen, evd_len);
+            STORE_HW( evd_hdr->totlen, evd_len );
 
             /* Indicate I/O request no longer active */
             scedio_pending = false;
@@ -948,8 +959,8 @@ void ARCH_DEP( sclp_scedio_request )( SCCB_HEADER* sccb )
 void ARCH_DEP( sclp_scedio_event )( SCCB_HEADER* sccb )
 {
 SCCB_EVD_HDR*  evd_hdr  = (SCCB_EVD_HDR*)(sccb + 1);
-U16 sccb_len;
-U16 evd_len;
+U16            evd_len;
+U16            sccb_len;
 
     if (ARCH_DEP( scedio_request )( SCLP_READ_EVENT_DATA, evd_hdr ))
     {
@@ -1011,48 +1022,50 @@ U16 evd_len;
 /*  Service Processor Load    (load/ipl from the specified file)     */
 /*-------------------------------------------------------------------*/
 
-int load_hmc (char *fname, int cpu, int clear)
+int load_hmc( char* fname, int cpu, int clear )
 {
-    switch(sysblk.arch_mode) {
-#if defined(_370)
-        case ARCH_370_IDX:
+    switch (sysblk.arch_mode)
+    {
+#if defined(       _370 )
+        case   ARCH_370_IDX:
             return s370_load_hmc (fname, cpu, clear);
 #endif
-#if defined(_390)
-        case ARCH_390_IDX:
+#if defined(       _390 )
+        case   ARCH_390_IDX:
             return s390_load_hmc (fname, cpu, clear);
 #endif
-#if defined(_900)
-        case ARCH_900_IDX:
+#if defined(       _900 )
+        case   ARCH_900_IDX:
             /* z/Arch always starts out in ESA390 mode */
             return s390_load_hmc (fname, cpu, clear);
 #endif
         default: CRASH();
     }
-    return -1;
+    UNREACHABLE_CODE( return -1 );
 }
 
 /*-------------------------------------------------------------------*/
 /* Load/Read specified file into absolute main storage               */
 /*-------------------------------------------------------------------*/
-int load_main (char *fname, RADR startloc, int noisy)
+int load_main( char* fname, RADR startloc, int noisy )
 {
-    switch(sysblk.arch_mode) {
-#if defined(_370)
-        case ARCH_370_IDX:
+    switch (sysblk.arch_mode)
+    {
+#if defined(       _370 )
+        case   ARCH_370_IDX:
             return s370_load_main (fname, startloc, noisy);
 #endif
-#if defined(_390)
-        case ARCH_390_IDX:
+#if defined(       _390 )
+        case   ARCH_390_IDX:
             return s390_load_main (fname, startloc, noisy);
 #endif
-#if defined(_900)
-        case ARCH_900_IDX:
+#if defined(       _900 )
+        case   ARCH_900_IDX:
             return z900_load_main (fname, startloc, noisy);
 #endif
         default: CRASH();
     }
-    return -1;
+    UNREACHABLE_CODE( return -1 );
 }
 
 #endif /* !defined( _GEN_ARCH ) */

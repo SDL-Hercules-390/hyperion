@@ -352,7 +352,7 @@ SCCB_CSI_INFO;
 /*-------------------------------------------------------------------*/
 /*                    Write Event Mask                               */
 /*-------------------------------------------------------------------*/
-typedef struct _SCCB_EVENT_MASK
+typedef struct _SCCB_EVT_MASK
 {
 /*00*/  HWORD   reserved;
 /*02*/  HWORD   length;                 /* Event mask length         */
@@ -361,9 +361,8 @@ typedef struct _SCCB_EVENT_MASK
 /*??*///FWORD   cp_send_mask;           /* the length defined by     */
 /*??*///FWORD   sclp_recv_mask;         /* the length halfword       */
 /*??*///FWORD   sclp_send_mask;
-
 }
-SCCB_EVENT_MASK;
+SCCB_EVT_MASK;
 
 #define SCCB_EVENT_CONS_RECV_MASK ( \
         (0x80000000 >> (SCCB_EVD_TYPE_MSG-1))   | \

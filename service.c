@@ -98,7 +98,7 @@ void sclp_attention( U16 type )
 
 static void* sclp_attn_thread( void* arg )
 {
-    U16 *type = (U16*) arg;
+    U16* type = (U16*) arg;
 
     OBTAIN_INTLOCK( NULL );
     {
@@ -138,8 +138,10 @@ static void sclp_attn_async( U16 type )
         U16* typ;
         typ = malloc( sizeof( U16 ));
         *typ = type;
-        rc = create_thread( &sclp_attn_tid, &sysblk.detattr, sclp_attn_thread, typ, "attn_thread" );
+        rc = create_thread( &sclp_attn_tid, &sysblk.detattr,
+                            sclp_attn_thread, typ, "attn_thread" );
         if (rc)
+            // "Error in function create_thread(): %s"
             WRMSG( HHC00102, "E", strerror( rc ));
     }
 }
@@ -197,7 +199,7 @@ int scp_command( char* command, int priomsg, int echo )
     }
 
     /* Error if command string is missing */
-    if (!command[0] )
+    if (!command[0])
     {
         // "Empty SCP command issued"
         WRMSG( HHC00003, "E" );
@@ -229,7 +231,7 @@ int scp_command( char* command, int priomsg, int echo )
 
 /*-------------------------------------------------------------------*/
 
-static void sclp_opcmd_event(SCCB_HEADER *sccb, U16 type)
+static void sclp_opcmd_event( SCCB_HEADER* sccb, U16 type )
 {
     static const BYTE const1_template[] =
     {
@@ -281,21 +283,21 @@ U16 evd_len;
 int event_msglen;
 int i;
 
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-SCCB_EVD_BK *evd_bk = (SCCB_EVD_BK*)(evd_hdr+1);
-BYTE *event_msg = (BYTE*)(evd_bk+1);
+SCCB_EVD_HDR* evd_hdr = (SCCB_EVD_HDR*)(sccb    + 1 );
+SCCB_EVD_BK*  evd_bk  = (SCCB_EVD_BK*) (evd_hdr + 1 );
+BYTE*         evd_msg = (BYTE*)        (evd_bk  + 1 );
 
     /* Get SCCB length */
-    FETCH_HW(sccb_len, sccb->length);
+    FETCH_HW( sccb_len, sccb->length  );
 
     /* Command length */
-    event_msglen = (int)strlen(servc_scpcmdstr);
+    event_msglen = (int)strlen( servc_scpcmdstr );
 
     /* Calculate required EVD length */
-    evd_len = event_msglen + (int)sizeof(SCCB_EVD_HDR) + (int)sizeof(SCCB_EVD_BK);
+    evd_len = event_msglen + (int)sizeof( SCCB_EVD_HDR ) + (int)sizeof( SCCB_EVD_BK );
 
     /* Set response code X'75F0' if SCCB length exceeded */
-    if ((evd_len + sizeof(SCCB_HEADER)) > sccb_len)
+    if ((evd_len + sizeof( SCCB_HEADER )) > sccb_len)
     {
         sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
         sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
@@ -308,40 +310,45 @@ BYTE *event_msg = (BYTE*)(evd_bk+1);
     if (sccb->type & SCCB_TYPE_VARIABLE)
     {
         /* Set new SCCB length */
-        sccb_len = evd_len + sizeof(SCCB_HEADER);
-        STORE_HW(sccb->length, sccb_len);
+        sccb_len = evd_len + sizeof( SCCB_HEADER );
+        STORE_HW( sccb->length, sccb_len  );
         sccb->type &= ~SCCB_TYPE_VARIABLE;
     }
 
     /* Set length in event header */
-    STORE_HW(evd_hdr->totlen, evd_len);
+    STORE_HW( evd_hdr->totlen, evd_len );
 
     /* Set type in event header */
     evd_hdr->type = type;
 
     /* Set message length in event data block */
-    i = evd_len - sizeof(SCCB_EVD_HDR);
-    STORE_HW(evd_bk->msglen, i);
-    memcpy (evd_bk->const1, const1_template,
-                            sizeof(const1_template));
-    i -= sizeof(const1_template) + 2;
-    STORE_HW(evd_bk->cplen, i);
-    memcpy (evd_bk->const2, const2_template,
-                            sizeof(const2_template));
-    i -= sizeof(const2_template) + 2;
-    STORE_HW(evd_bk->tdlen, i);
-    memcpy (evd_bk->const3, const3_template,
-                            sizeof(const3_template));
-    i -= sizeof(const3_template) + 2;
+    i = evd_len - sizeof( SCCB_EVD_HDR );
+    STORE_HW( evd_bk->msglen, i  );
+
+    memcpy( evd_bk->const1, const1_template,
+                    sizeof( const1_template ));
+    i -=            sizeof( const1_template ) + 2;
+    STORE_HW( evd_bk->cplen, i  );
+
+    memcpy( evd_bk->const2, const2_template,
+                    sizeof( const2_template ));
+    i -=            sizeof( const2_template ) + 2;
+    STORE_HW( evd_bk->tdlen, i  );
+
+    memcpy( evd_bk->const3, const3_template,
+                    sizeof( const3_template ));
+    i -=            sizeof( const3_template ) + 2;
+
     evd_bk->sdtlen = i;
     evd_bk->const4 = const4_template;
+
     i -= 2;
     evd_bk->tmlen = i;
     evd_bk->const5 = const5_template;
 
     /* Copy and translate command */
-    for (i = 0; i < event_msglen; i++)
-            event_msg[i] = host_to_guest(servc_scpcmdstr[i]);
+    for (i=0; i < event_msglen; i++)
+        evd_msg[i] = host_to_guest( servc_scpcmdstr[i] );
 
     /* Set response code X'0020' in SCCB header */
     sccb->reas = SCCB_REAS_NONE;
@@ -416,7 +423,7 @@ static void sclp_cpident( SCCB_HEADER* sccb )
 /*-------------------------------------------------------------------*/
 int can_signal_quiesce()
 {
-    return SCLP_RECV_ENABLED(SIGQ);
+    return SCLP_RECV_ENABLED( SIGQ );
 }
 
 /*-------------------------------------------------------------------*/
@@ -433,7 +440,7 @@ int can_signal_quiesce()
 /*-------------------------------------------------------------------*/
 int can_send_command()
 {
-    return SCLP_RECV_ENABLED(OPCMD);
+    return SCLP_RECV_ENABLED( OPCMD );
 }
 
 /*-------------------------------------------------------------------*/
@@ -449,44 +456,43 @@ int can_send_command()
 /*      count and unit values to be returned by SCLP_READ_EVENT_DATA */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-int signal_quiesce (U16 count, BYTE unit)
+int signal_quiesce( U16 count, BYTE unit )
 {
     /* Error if disabled for commands */
-    if (!SCLP_RECV_ENABLED(SIGQ))
+    if (!SCLP_RECV_ENABLED( SIGQ ))
     {
-        WRMSG (HHC00002, "E", "quiesce signals" );
+        // "SCLP console not receiving %s"
+        WRMSG( HHC00002, "E", "quiesce signals" );
         return -1;
     }
 
-    /* Obtain the interrupt lock */
-    OBTAIN_INTLOCK(NULL);
+    OBTAIN_INTLOCK( NULL );
+    {
+        /* Save delay values for signal shutdown event read */
+        servc_signal_quiesce_count = count;
+        servc_signal_quiesce_unit  = unit;
 
-    /* Save delay values for signal shutdown event read */
-    servc_signal_quiesce_count = count;
-    servc_signal_quiesce_unit = unit;
-
-    sclp_attention(SCCB_EVD_TYPE_SIGQ);
-
-    /* Release the interrupt lock */
-    RELEASE_INTLOCK(NULL);
+        sclp_attention( SCCB_EVD_TYPE_SIGQ );
+    }
+    RELEASE_INTLOCK( NULL );
 
     return 0;
-} /* end function signal_quiesce */
+}
 
 /*-------------------------------------------------------------------*/
 
-static void sclp_sigq_event(SCCB_HEADER *sccb)
+static void sclp_sigq_event( SCCB_HEADER* sccb )
 {
-U16 sccb_len;
-U16 evd_len;
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
+U16           sccb_len;
+U16           evd_len;
+SCCB_EVD_HDR* evd_hdr = (SCCB_EVD_HDR*)( sccb    + 1 );
+SCCB_SGQ_BK*  sgq_bk  = (SCCB_SGQ_BK*) ( evd_hdr + 1 );
 
-    FETCH_HW(sccb_len, sccb->length);
-    evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
+    FETCH_HW( sccb_len, sccb->length );
+    evd_len = sizeof( SCCB_EVD_HDR ) + sizeof( SCCB_SGQ_BK );
 
     /* Set response code X'75F0' if SCCB length exceeded */
-    if ((evd_len + sizeof(SCCB_HEADER)) > sccb_len)
+    if ((evd_len + sizeof( SCCB_HEADER )) > sccb_len)
     {
         sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
         sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
@@ -494,24 +500,24 @@ SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
     }
 
     /* Zero all fields */
-    memset (evd_hdr, 0, evd_len);
+    memset( evd_hdr, 0, evd_len );
 
     /* Update SCCB length field if variable request */
     if (sccb->type & SCCB_TYPE_VARIABLE)
     {
         /* Set new SCCB length */
-        sccb_len = evd_len + sizeof(SCCB_HEADER);
-        STORE_HW(sccb->length, sccb_len);
+        sccb_len = evd_len + sizeof( SCCB_HEADER );
+        STORE_HW( sccb->length, sccb_len );
         sccb->type &= ~SCCB_TYPE_VARIABLE;
     }
 
     /* Set length in event header */
-    STORE_HW(evd_hdr->totlen, evd_len);
+    STORE_HW( evd_hdr->totlen, evd_len );
 
     /* Set type in event header */
     evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
 
-    STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
+    STORE_HW( sgq_bk->count, servc_signal_quiesce_count );
     sgq_bk->unit = servc_signal_quiesce_unit;
 
     /* Set response code X'0020' in SCCB header */
@@ -536,22 +542,22 @@ SCCB_SGQ_BK *sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
 /*      Reason and response codes are set in the SCCB                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static void sclp_sysg_write(SCCB_HEADER *sccb)
+static void sclp_sysg_write( SCCB_HEADER* sccb )
 {
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-U16             evd_len;                /* SCCB event data length    */
-U16             sysg_len;               /* SYSG output data length   */
-DEVBLK         *dev;                    /* -> SYSG console devblk    */
-BYTE           *sysg_data;              /* -> SYSG output data       */
-BYTE            unitstat;               /* Unit status               */
-BYTE            more = 0;               /* Flag for device handler   */
-U32             residual;               /* Residual data count       */
-BYTE            cmdcode;                /* 3270 read/write command   */
+SCCB_EVD_HDR* evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+U16           evd_len;                  /* SCCB event data length    */
+U16           sysg_len;                 /* SYSG output data length   */
+DEVBLK*       dev;                      /* -> SYSG console devblk    */
+BYTE*         sysg_data;                /* -> SYSG output data       */
+BYTE          unitstat;                 /* Unit status               */
+BYTE          more = 0;                 /* Flag for device handler   */
+U32           residual;                 /* Residual data count       */
+BYTE         cmdcode;                   /* 3270 read/write command   */
 
     /* Calculate the address and length of the 3270 datastream */
-    FETCH_HW(evd_len,evd_hdr->totlen);
+    FETCH_HW( evd_len, evd_hdr->totlen );
     sysg_data = (BYTE*)(evd_hdr+1);
-    sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
+    sysg_len  = evd_len - sizeof( SCCB_EVD_HDR );
 
     /* The first data byte is the 3270 command code */
     cmdcode = *sysg_data;
@@ -560,7 +566,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
     dev = sysblk.sysgdev;
     if (dev == NULL)
     {
-        PTT_ERR("*SERVC",(U32)cmdcode,(U32)sysg_len,0);
+        PTT_ERR("*SERVC", (U32)cmdcode, (U32)sysg_len, 0 );
 
         /* Set response code X'05F0' in SCCB header */
         sccb->reas = SCCB_REAS_IMPROPER_RSC;
@@ -569,7 +575,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
     }
 
     /* If it is a read CCW then save the command until READ_EVENT_DATA */
-    if (IS_CCW_READ(cmdcode))
+    if (IS_CCW_READ( cmdcode ))
     {
 
         servc_sysg_cmdcode = cmdcode;
@@ -578,7 +584,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
         evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
 
         /* Generate a service call interrupt to trigger READ_EVENT_DATA */
-        sclp_attn_async(SCCB_EVD_TYPE_SYSG);
+        sclp_attn_async( SCCB_EVD_TYPE_SYSG );
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -591,11 +597,11 @@ BYTE            cmdcode;                /* 3270 read/write command   */
 
         /* Execute the 3270 command in data block */
         /* dev->hnd->exec points to loc3270_execute_ccw */
-        (dev->hnd->exec) (dev, /*ccw opcode*/ cmdcode,
+        (dev->hnd->exec)( dev, /*ccw opcode*/ cmdcode,
             /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
             /*count*/ sysg_len - 1,
             /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data+1,
-            &more, &unitstat, &residual);
+            &more, &unitstat, &residual );
 
         /* Indicate Event Processed */
         evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
@@ -603,7 +609,7 @@ BYTE            cmdcode;                /* 3270 read/write command   */
         /* If unit check occured, set response code X'0040' */
         if (unitstat & CSW_UC)
         {
-            PTT_ERR("*SERVC",(U32)more,(U32)unitstat,residual);
+            PTT_ERR("*SERVC", (U32)more, (U32)unitstat, residual );
 
             /* Set response code X'0040' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
@@ -630,35 +636,35 @@ BYTE            cmdcode;                /* 3270 read/write command   */
 /*      Data, reason and response codes are set in the SCCB          */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-static void sclp_sysg_poll(SCCB_HEADER *sccb)
+static void sclp_sysg_poll( SCCB_HEADER* sccb )
 {
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-U16             sccblen;                /* SCCB total length         */
-U16             evd_len;                /* SCCB event data length    */
-U16             sysg_len;               /* SYSG input data length    */
-DEVBLK         *dev;                    /* -> SYSG console devblk    */
-BYTE           *sysg_data;              /* -> SYSG input data        */
-BYTE           *sysg_cmd;               /* -> SYSG input data        */
-BYTE            unitstat;               /* Unit status               */
-BYTE            more = 0;               /* Flag for device handler   */
-U32             residual;               /* Residual data count       */
+SCCB_EVD_HDR*  evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+U16            sccblen;                 /* SCCB total length         */
+U16            evd_len;                 /* SCCB event data length    */
+U16            sysg_len;                /* SYSG input data length    */
+DEVBLK*        dev;                     /* -> SYSG console devblk    */
+BYTE*          sysg_data;               /* -> SYSG input data        */
+BYTE*          sysg_cmd;                /* -> SYSG input data        */
+BYTE           unitstat;                /* Unit status               */
+BYTE           more = 0;                /* Flag for device handler   */
+U32            residual;                /* Residual data count       */
 
     dev = sysblk.sysgdev;
     if (dev != NULL)
     {
         /* Zeroize the event data header */
-        memset (evd_hdr, 0, sizeof(SCCB_EVD_HDR));
+        memset( evd_hdr, 0, sizeof( SCCB_EVD_HDR ));
 
         /* Calculate maximum data length */
-        FETCH_HW(sccblen, sccb->length);
-        evd_len = sccblen - sizeof(SCCB_HEADER);
+        FETCH_HW( sccblen, sccb->length );
+        evd_len = sccblen - sizeof( SCCB_HEADER );
         sysg_data = (BYTE*)(evd_hdr+1);
-        sysg_len = evd_len - sizeof(SCCB_EVD_HDR);
+        sysg_len = evd_len - sizeof( SCCB_EVD_HDR );
 
         /* Insert flag byte before the 3270 input data */
-        sysg_cmd = sysg_data;
-        sysg_len-=1;
-        sysg_data+=1;
+        sysg_cmd  = sysg_data;
+        sysg_len  -= 1;
+        sysg_data += 1;
 
         /* Execute previously saved 3270 read command */
         if (servc_sysg_cmdcode)
@@ -671,14 +677,14 @@ U32             residual;               /* Residual data count       */
                 /*flags*/ CCW_FLAGS_SLI, /*chained*/0,
                 /*count*/ sysg_len,
                 /*prevcode*/ 0, /*ccwseq*/ 0, /*iobuf*/ sysg_data,
-                &more, &unitstat, &residual);
+                &more, &unitstat, &residual );
 
             servc_sysg_cmdcode = 0;
 
             /* Set response code X'0040' if unit check occurred */
             if (unitstat & CSW_UC)
             {
-                PTT_ERR("*SERVC",(U32)more,(U32)unitstat,residual);
+                PTT_ERR("*SERVC", (U32)more, (U32)unitstat, residual );
 
                 /* Set response code X'0040' in SCCB header */
                 sccb->reas = SCCB_REAS_NONE;
@@ -689,7 +695,7 @@ U32             residual;               /* Residual data count       */
             /* Set response code X'75F0' if SCCB length exceeded */
             if (more)
             {
-                PTT_ERR("*SERVC",(U32)more,(U32)unitstat,residual);
+                PTT_ERR("*SERVC", (U32)more, (U32)unitstat, residual );
 
                 sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
                 sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
@@ -698,7 +704,7 @@ U32             residual;               /* Residual data count       */
 
             /* Calculate actual length read */
             sysg_len -= residual;
-            evd_len = sizeof(SCCB_EVD_HDR) + sysg_len + 1;
+            evd_len = sizeof( SCCB_EVD_HDR ) + sysg_len + 1;
 
             /* Set response code X'0020' in SCCB header */
             sccb->reas = SCCB_REAS_NONE;
@@ -706,7 +712,7 @@ U32             residual;               /* Residual data count       */
         }
         else
         {
-            evd_len = sizeof(SCCB_EVD_HDR) + 1;
+            evd_len = sizeof( SCCB_EVD_HDR ) + 1;
             *sysg_cmd = 0x80;
 
             /* Set response code X'0020' in SCCB header */
@@ -718,13 +724,13 @@ U32             residual;               /* Residual data count       */
         if (sccb->type & SCCB_TYPE_VARIABLE)
         {
             /* Set new SCCB length */
-            sccblen = evd_len + sizeof(SCCB_HEADER);
-            STORE_HW(sccb->length, sccblen);
+            sccblen = evd_len + sizeof( SCCB_HEADER );
+            STORE_HW( sccb->length, sccblen );
             sccb->type &= ~SCCB_TYPE_VARIABLE;
         }
 
         /* Set length in event header */
-        STORE_HW(evd_hdr->totlen, evd_len);
+        STORE_HW( evd_hdr->totlen, evd_len );
 
         /* Set type in event header */
         evd_hdr->type = SCCB_EVD_TYPE_SYSG;
@@ -745,11 +751,11 @@ U32             residual;               /* Residual data count       */
 DLL_EXPORT void sclp_sysg_attention()
 {
 
-    OBTAIN_INTLOCK(NULL);
-
-    sclp_attn_async(SCCB_EVD_TYPE_SYSG);
-
-    RELEASE_INTLOCK(NULL);
+    OBTAIN_INTLOCK( NULL );
+    {
+        sclp_attn_async( SCCB_EVD_TYPE_SYSG );
+    }
+    RELEASE_INTLOCK( NULL );
 }
 #endif /* defined( _FEATURE_INTEGRATED_3270_CONSOLE ) */
 
@@ -757,26 +763,28 @@ DLL_EXPORT void sclp_sysg_attention()
 
 #if defined( _FEATURE_INTEGRATED_ASCII_CONSOLE )
 
-static int sclp_sysa_write(SCCB_HEADER *sccb)
+static int sclp_sysa_write( SCCB_HEADER* sccb )
 {
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-U16 evd_len;
-U16 sysa_len;
-BYTE *sysa_data;
-int i;
+SCCB_EVD_HDR* evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+U16           evd_len;
+U16           sysa_len;
+BYTE*         sysa_data;
+int           i;
+
     LOGMSG( "SYSA write:" );
-    FETCH_HW(evd_len,evd_hdr->totlen);
+    FETCH_HW( evd_len, evd_hdr->totlen );
     sysa_data = (BYTE*)(evd_hdr+1);
-    sysa_len = evd_len - sizeof(SCCB_EVD_HDR);
-    for(i = 0; i < sysa_len; i++)
+    sysa_len = evd_len - sizeof( SCCB_EVD_HDR );
+
+    for (i=0; i < sysa_len; i++)
     {
-        if(!(i & 15))
-            logmsg("\n          %4.4X:", i);
-        logmsg(" %2.2X", sysa_data[i]);
+        if (!(i & 15))
+            LOGMSG("\n          %4.4X:", i);
+        LOGMSG(" %2.2X", sysa_data[i]);
     }
 
-    if(i & 15)
-        logmsg("\n");
+    if (i & 15)
+        LOGMSG("\n");
 
     /* Indicate Event Processed */
     evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
@@ -785,19 +793,19 @@ int i;
     sccb->reas = SCCB_REAS_NONE;
     sccb->resp = SCCB_RESP_COMPLETE;  // maybe this needs to be INFO
 
-    //sclp_attention(SCCB_EVD_TYPE_VT220);
+    //sclp_attention( SCCB_EVD_TYPE_VT220 );
 
     return 0; // write ok
 }
 
 /*-------------------------------------------------------------------*/
 
-static int sclp_sysa_poll(SCCB_HEADER *sccb)
+static int sclp_sysa_poll( SCCB_HEADER* sccb )
 {
-SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
+SCCB_EVD_HDR* evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 
-    UNREFERENCED(sccb);
-    UNREFERENCED(evd_hdr);
+    UNREFERENCED( sccb );
+    UNREFERENCED( evd_hdr );
 
     LOGMSG( "VT220 poll\n" );
 }
@@ -818,16 +826,16 @@ SCCB_EVD_HDR *evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 
 /*-------------------------------------------------------------------*/
 
-int servc_hsuspend(void *file)
+int servc_hsuspend(void* file)
 {
-    SR_WRITE_VALUE(file, SR_SYS_SERVC_RECVMASK, servc_cp_recv_mask, sizeof(servc_cp_recv_mask));
-    SR_WRITE_VALUE(file, SR_SYS_SERVC_SENDMASK, servc_cp_send_mask, sizeof(servc_cp_send_mask));
-    SR_WRITE_VALUE(file, SR_SYS_SERVC_PENDING, servc_attn_pending, sizeof(servc_attn_pending));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_RECVMASK, servc_cp_recv_mask, sizeof( servc_cp_recv_mask ));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_SENDMASK, servc_cp_send_mask, sizeof( servc_cp_send_mask ));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_PENDING, servc_attn_pending, sizeof( servc_attn_pending ));
     SR_WRITE_STRING(file, SR_SYS_SERVC_SCPCMD,  servc_scpcmdstr);
     SR_WRITE_VALUE(file, SR_SYS_SERVC_SQC,      servc_signal_quiesce_count,
-                                         sizeof(servc_signal_quiesce_count));
+                                         sizeof( servc_signal_quiesce_count ));
     SR_WRITE_VALUE(file, SR_SYS_SERVC_SQU,      servc_signal_quiesce_unit,
-                                         sizeof(servc_signal_quiesce_unit));
+                                         sizeof( servc_signal_quiesce_unit ));
     SR_WRITE_VALUE(file, SR_SYS_SERVC_PARM,     sysblk.servparm,
                                          sizeof(sysblk.servparm));
     return 0;
@@ -835,7 +843,7 @@ int servc_hsuspend(void *file)
 
 /*-------------------------------------------------------------------*/
 
-int servc_hresume(void *file)
+int servc_hresume(void* file)
 {
     size_t key, len;
 
@@ -844,27 +852,27 @@ int servc_hresume(void *file)
         SR_READ_HDR(file, key, len);
         switch (key) {
         case SR_SYS_SERVC_RECVMASK:
-            SR_READ_VALUE(file, len, &servc_cp_recv_mask, sizeof(servc_cp_recv_mask));
+            SR_READ_VALUE(file, len, &servc_cp_recv_mask, sizeof( servc_cp_recv_mask ));
             break;
         case SR_SYS_SERVC_SENDMASK:
-            SR_READ_VALUE(file, len, &servc_cp_send_mask, sizeof(servc_cp_send_mask));
+            SR_READ_VALUE(file, len, &servc_cp_send_mask, sizeof( servc_cp_send_mask ));
             break;
         case SR_SYS_SERVC_PENDING:
-            SR_READ_VALUE(file, len, &servc_attn_pending, sizeof(servc_attn_pending));
+            SR_READ_VALUE(file, len, &servc_attn_pending, sizeof( servc_attn_pending ));
             break;
         case SR_SYS_SERVC_SCPCMD:
-            if ( len <= sizeof(servc_scpcmdstr) )
+            if ( len <= sizeof( servc_scpcmdstr ) )
                 SR_READ_STRING(file, servc_scpcmdstr, len);
             else
                 SR_READ_SKIP(file, len);
             break;
         case SR_SYS_SERVC_SQC:
             SR_READ_VALUE(file, len, &servc_signal_quiesce_count,
-                              sizeof(servc_signal_quiesce_count));
+                              sizeof( servc_signal_quiesce_count ));
             break;
         case SR_SYS_SERVC_SQU:
             SR_READ_VALUE(file, len, &servc_signal_quiesce_unit,
-                              sizeof(servc_signal_quiesce_unit));
+                              sizeof( servc_signal_quiesce_unit ));
             break;
         case SR_SYS_SERVC_PARM:
             SR_READ_VALUE(file, len, &sysblk.servparm, sizeof(sysblk.servparm));
@@ -897,14 +905,14 @@ int servc_hresume(void *file)
 /*-------------------------------------------------------------------*/
 /*     Architecture-dependent service processor bit strings          */
 /*-------------------------------------------------------------------*/
-BYTE ARCH_DEP(scpinfo_ifm)[8] =
+BYTE  ARCH_DEP( scpinfo_ifm )[8] =
 {
                         0
                         | SCCB_IFM0_CHANNEL_PATH_INFORMATION
                         | SCCB_IFM0_CHANNEL_PATH_SUBSYSTEM_COMMAND
 //                      | SCCB_IFM0_CHANNEL_PATH_RECONFIG
 //                      | SCCB_IFM0_CPU_INFORMATION
-#ifdef FEATURE_CPU_RECONFIG
+#if defined( FEATURE_CPU_RECONFIG )
                         | SCCB_IFM0_CPU_RECONFIG
 #endif
                         ,
@@ -921,7 +929,7 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] =
 //                      | SCCB_IFM2_REAL_STORAGE_ELEMENT_INFO
 //                      | SCCB_IFM2_REAL_STORAGE_ELEMENT_RECONFIG
 //                      | SCCB_IFM2_COPY_AND_REASSIGN_STORAGE
-#ifdef FEATURE_EXPANDED_STORAGE
+#if defined( FEATURE_EXPANDED_STORAGE )
                         | SCCB_IFM2_EXTENDED_STORAGE_USABILITY_MAP
 #endif
 //                      | SCCB_IFM2_EXTENDED_STORAGE_ELEMENT_INFO
@@ -931,7 +939,7 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] =
 #if defined( FEATURE_S370_S390_VECTOR_FACILITY ) && defined( FEATURE_CPU_RECONFIG )
                         | SCCB_IFM3_VECTOR_FEATURE_RECONFIG
 #endif
-#ifdef FEATURE_SYSTEM_CONSOLE
+#if defined( FEATURE_SYSTEM_CONSOLE )
                         | SCCB_IFM3_READ_WRITE_EVENT_FEATURE
 #endif
 //                      | SCCB_IFM3_READ_RESOURCE_GROUP_INFO
@@ -941,13 +949,13 @@ BYTE ARCH_DEP(scpinfo_ifm)[8] =
 
 /*-------------------------------------------------------------------*/
 
-BYTE ARCH_DEP(scpinfo_cfg)[6] =
+BYTE  ARCH_DEP( scpinfo_cfg )[6] =
 {
                         0
 #if defined( FEATURE_HYPERVISOR )
 //                      | SCCB_CFG0_LOGICALLY_PARTITIONED
 #endif
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+#if defined( FEATURE_SUPPRESSION_ON_PROTECTION )
                         | SCCB_CFG0_SUPPRESSION_ON_PROTECTION
 #endif
 //                      | SCCB_CFG0_INITIATE_RESET
@@ -969,10 +977,10 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] =
                         ,
                         0
 //                      | SCCB_CFG2_DEVICE_ACTIVE_ONLY_MEASUREMENT
-#ifdef FEATURE_CALLED_SPACE_IDENTIFICATION
+#if defined( FEATURE_CALLED_SPACE_IDENTIFICATION )
                         | SCCB_CFG2_CALLED_SPACE_IDENTIFICATION
 #endif
-#ifdef FEATURE_CHECKSUM_INSTRUCTION
+#if defined( FEATURE_CHECKSUM_INSTRUCTION )
                         | SCCB_CFG2_CHECKSUM_INSTRUCTION
 #endif
                         ,
@@ -983,13 +991,13 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] =
 #if defined( FEATURE_PERFORM_LOCKED_OPERATION )
                         | SCCB_CFG3_PERFORM_LOCKED_OPERATION
 #endif
-#ifdef FEATURE_IMMEDIATE_AND_RELATIVE
+#if defined( FEATURE_IMMEDIATE_AND_RELATIVE )
                         | SCCB_CFG3_IMMEDIATE_AND_RELATIVE
 #endif
-#ifdef FEATURE_COMPARE_AND_MOVE_EXTENDED
+#if defined( FEATURE_COMPARE_AND_MOVE_EXTENDED )
                         | SCCB_CFG3_COMPARE_AND_MOVE_EXTENDED
 #endif
-#ifdef FEATURE_BRANCH_AND_SET_AUTHORITY
+#if defined( FEATURE_BRANCH_AND_SET_AUTHORITY )
                         | SCCB_CFG3_BRANCH_AND_SET_AUTHORITY
 #endif
 #if defined( FEATURE_BASIC_FP_EXTENSIONS )
@@ -998,7 +1006,7 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] =
 /*ZZ*/                  | SCCB_CFG3_EXTENDED_LOGICAL_COMPUTATION_FACILITY
                         ,
                         0
-#ifdef FEATURE_EXTENDED_TOD_CLOCK
+#if defined( FEATURE_EXTENDED_TOD_CLOCK )
                         | SCCB_CFG4_EXTENDED_TOD_CLOCK
 #endif
 #if defined( FEATURE_EXTENDED_TRANSLATION_FACILITY_1 )
@@ -1024,7 +1032,7 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] =
 
 /*-------------------------------------------------------------------*/
 
-BYTE ARCH_DEP(scpinfo_cfg11) =
+BYTE  ARCH_DEP( scpinfo_cfg11 ) =
 
                             0
 #if defined( FEATURE_PER3 )
@@ -1035,7 +1043,7 @@ BYTE ARCH_DEP(scpinfo_cfg11) =
 
 /*-------------------------------------------------------------------*/
 
-BYTE ARCH_DEP(scpinfo_cpf)[12] =
+BYTE  ARCH_DEP( scpinfo_cpf )[12] =
 {
                             0
 #if defined( FEATURE_SIE )
@@ -1085,7 +1093,7 @@ BYTE ARCH_DEP(scpinfo_cpf)[12] =
 #endif
                             ,
                             0
-#ifdef FEATURE_PRIVATE_SPACE
+#if defined( FEATURE_PRIVATE_SPACE )
                             | SCCB_CPF3_PRIVATE_SPACE_FEATURE
                             | SCCB_CPF3_FETCH_ONLY_BIT
 #endif
@@ -1108,7 +1116,7 @@ BYTE ARCH_DEP(scpinfo_cpf)[12] =
 
 /*-------------------------------------------------------------------*/
 
-static const U32  ARCH_DEP(sclp_recv_mask) =
+static const U32  ARCH_DEP( sclp_recv_mask ) =
 
                               0
                               | EVDMASK(MSG)
@@ -1131,7 +1139,7 @@ static const U32  ARCH_DEP(sclp_recv_mask) =
 
 /*-------------------------------------------------------------------*/
 
-static const U32  ARCH_DEP(sclp_send_mask) =
+static const U32  ARCH_DEP( sclp_send_mask ) =
 
                               0
                               | EVDMASK(OPCMD)
@@ -1157,7 +1165,7 @@ static const U32  ARCH_DEP(sclp_send_mask) =
 /*-------------------------------------------------------------------*/
 /* B220 SERVC - Service Call                                   [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(service_call)
+DEF_INST( service_call )
 {
 U32             r1, r2;                 /* Values of R fields        */
 U32             sclp_command;           /* SCLP command code         */
@@ -1167,67 +1175,67 @@ U32             realinc;                /* Storage size in increments*/
 U32             incsizemb;              /* Increment size in MB      */
 U32             sccb_absolute_addr;     /* Absolute address of SCCB  */
 U16             sccblen;                /* Length of SCCB            */
-SCCB_HEADER    *sccb;                   /* -> SCCB header            */
-SCCB_SCP_INFO  *sccbscp;                /* -> SCCB SCP information   */
-SCCB_CPU_INFO  *sccbcpu;                /* -> SCCB CPU information   */
+SCCB_HEADER*    sccb;                   /* -> SCCB header            */
+SCCB_SCP_INFO*  sccbscp;                /* -> SCCB SCP information   */
+SCCB_CPU_INFO*  sccbcpu;                /* -> SCCB CPU information   */
 
 #if defined( FEATURE_MPF_INFO )
-SCCB_MPF_INFO  *sccbmpf;                /* -> SCCB MPF information   */
+SCCB_MPF_INFO*  sccbmpf;                /* -> SCCB MPF information   */
 #endif
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-SCCB_CHP_INFO  *sccbchp;                /* -> SCCB channel path info */
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+SCCB_CHP_INFO*  sccbchp;                /* -> SCCB channel path info */
 #else
-SCCB_CHSET_INFO *sccbchp;               /* -> SCCB channel path info */
+SCCB_CHSET_INFO* sccbchp;               /* -> SCCB channel path info */
 #endif
 
-SCCB_CSI_INFO  *sccbcsi;                /* -> SCCB channel subsys inf*/
+SCCB_CSI_INFO*  sccbcsi;                /* -> SCCB channel subsys inf*/
 U16             offset;                 /* Offset from start of SCCB */
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
-DEVBLK         *dev;                    /* Used to find CHPIDs       */
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
+DEVBLK*         dev;                    /* Used to find CHPIDs       */
 U32             chpbyte;                /* Offset to byte for CHPID  */
 U32             chpbit;                 /* Bit number for CHPID      */
 #endif
 
-#ifdef FEATURE_SYSTEM_CONSOLE
-SCCB_EVENT_MASK*evd_mask;               /* Event mask                */
-SCCB_EVD_HDR   *evd_hdr;                /* Event header              */
+#if defined( FEATURE_SYSTEM_CONSOLE )
+SCCB_EVT_MASK*  evd_mask;               /* Event mask                */
+SCCB_EVD_HDR*   evd_hdr;                /* Event header              */
 U16             evd_len;                /* Length of event data      */
-SCCB_MCD_BK    *mcd_bk;                 /* Message Control Data      */
+SCCB_MCD_BK*    mcd_bk;                 /* Message Control Data      */
 U16             mcd_len;                /* Length of MCD             */
-SCCB_OBJ_HDR   *obj_hdr;                /* Object Header             */
+SCCB_OBJ_HDR*   obj_hdr;                /* Object Header             */
 U16             obj_len;                /* Length of Object          */
 U16             obj_type;               /* Object type               */
-SCCB_MTO_BK    *mto_bk;                 /* Message Text Object       */
-BYTE           *event_msg;              /* Message Text pointer      */
+SCCB_MTO_BK*    mto_bk;                 /* Message Text Object       */
+BYTE*           evd_msg;                /* Message Text pointer      */
 int             event_msglen;           /* Message Text length       */
 BYTE            message[4089];          /* Maximum event data buffer
                                            length plus one for \0    */
 U32             masklen;                /* Length of event mask      */
 U32             old_cp_recv_mask;       /* Masks before write event  */
 U32             old_cp_send_mask;       /*              mask command */
-#endif /* FEATURE_SYSTEM_CONSOLE */
+#endif /* defined( FEATURE_SYSTEM_CONSOLE ) */
 
-#ifdef FEATURE_EXPANDED_STORAGE
-SCCB_XST_MAP    *sccbxmap;              /* Xstore usability map      */
+#if defined( FEATURE_EXPANDED_STORAGE )
+SCCB_XST_MAP*   sccbxmap;               /* Xstore usability map      */
 U32             xstincnum;              /* Number of expanded storage
                                                          increments  */
 U32             xstblkinc;              /* Number of expanded storage
                                                blocks per increment  */
-BYTE            *xstmap;                /* Xstore bitmap, zero means
+BYTE*           xstmap;                 /* Xstore bitmap, zero means
                                                            available */
-#endif /*FEATURE_EXPANDED_STORAGE*/
+#endif /* defined( FEATURE_EXPANDED_STORAGE ) */
 
-    RRE(inst, regs, r1, r2);
+    RRE( inst, regs, r1, r2 );
 
     PER_ZEROADDR_CHECK( regs, r2 );
     TXF_INSTR_CHECK( regs );
-    PRIV_CHECK(regs);
+    PRIV_CHECK( regs );
 
-    SIE_INTERCEPT(regs);
+    SIE_INTERCEPT( regs );
 
-    PTT_INF("SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+    PTT_INF("SERVC", regs->GR_L(r1), regs->GR_L(r2), regs->psw.IA_L );
 
     /* R1 is SCLP command word */
     sclp_command = regs->GR_L(r1);
@@ -1254,7 +1262,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     sccb = (SCCB_HEADER*)(regs->mainstor + sccb_absolute_addr);
 
     /* Load SCCB length from header */
-    FETCH_HW( sccblen, sccb->length );
+    FETCH_HW( sccblen, sccb->length  );
 
     /* Set the main storage reference bit */
     ARCH_DEP( or_storage_key )( sccb_absolute_addr, STORKEY_REF );
@@ -1286,13 +1294,13 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         || (sclp_command & SCLP_COMMAND_CLASS) == 0x01)
     {
         /* Obtain the interrupt lock */
-        OBTAIN_INTLOCK(regs);
+        OBTAIN_INTLOCK( regs );
 
         /* If a service signal is pending then return condition
            code 2 to indicate that service processor is busy */
         if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_ADDR))
         {
-            RELEASE_INTLOCK(regs);
+            RELEASE_INTLOCK( regs );
             regs->psw.cc = 2;
             return;
         }
@@ -1302,17 +1310,21 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     switch (sclp_command & SCLP_COMMAND_MASK)
     {
     case SCLP_READ_IFL_INFO:
+
         /* READ_IFL_INFO is only valid for processor type IFL */
-        if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_IFL)
+        if (sysblk.ptyp[ regs->cpuad ] != SCCB_PTYP_IFL)
             goto invalidcmd;
         else
             goto read_scpinfo;
 
     case SCLP_READ_SCP_INFO:
+
         /* READ_SCP_INFO is only valid for processor type CP */
-        if(sysblk.ptyp[regs->cpuad] != SCCB_PTYP_CP)
+        if (sysblk.ptyp[ regs->cpuad ] != SCCB_PTYP_CP)
         {
-            WRMSG(HHC00005, "W");
+            // "The configuration has been placed into a system check-
+            //  stop state because of an incompatible service call"
+            WRMSG( HHC00005, "W" );
             goto docheckstop;
             /*
              * Replace the following 2 lines with
@@ -1329,7 +1341,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
-            ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
+           ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
         {
             sccb->reas = SCCB_REAS_NOT_PGBNDRY;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1338,8 +1350,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Set response code X'0300' if SCCB length
            is insufficient to contain SCP info */
-        if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO)
-                + (sizeof(SCCB_CPU_INFO) * sysblk.maxcpu))
+        if ( sccblen < sizeof( SCCB_HEADER ) + sizeof( SCCB_SCP_INFO )
+                + (sizeof( SCCB_CPU_INFO ) * sysblk.maxcpu))
         {
             sccb->reas = SCCB_REAS_TOO_SHORT;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1348,7 +1360,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Point to SCCB data area following SCCB header */
         sccbscp = (SCCB_SCP_INFO*)(sccb+1);
-        memset (sccbscp, 0, sizeof(SCCB_SCP_INFO));
+        memset( sccbscp, 0, sizeof( SCCB_SCP_INFO ));
 
         /* Set main storage size in SCCB...
          *
@@ -1372,64 +1384,64 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         incsizemb = (sysblk.mainsize + (MAX_1MINCR_STORSIZE - 1)) / MAX_1MINCR_STORSIZE;
         realinc = sysblk.mainsize / (incsizemb << SHIFT_MEGABYTE);
 
-        STORE_HW(sccbscp->realinum, realinc);
+        STORE_HW( sccbscp->realinum, realinc );
         sccbscp->realiszm = (incsizemb & 0xFF);
         sccbscp->realbszk = 4;
-        STORE_HW(sccbscp->realiint, 1);
+        STORE_HW( sccbscp->realiint, 1 );
 
-#if defined(_900) || defined(FEATURE_001_ZARCH_INSTALLED_FACILITY)
+#if defined( _900 ) || defined( FEATURE_001_ZARCH_INSTALLED_FACILITY )
         /* SIE supports the full address range */
         sccbscp->maxvm = 0;
         /* realiszm is valid */
-        STORE_FW(sccbscp->grzm, 0);
+        STORE_FW( sccbscp->grzm, 0 );
         /* Number of storage increments installed in esame mode */
-        STORE_DW(sccbscp->grnmx, realinc);
+        STORE_DW( sccbscp->grnmx, realinc );
 #endif
 
-#ifdef FEATURE_EXPANDED_STORAGE
+#if defined( FEATURE_EXPANDED_STORAGE )
         /* Set expanded storage size in SCCB */
         xstincnum = sysblk.xpndsize /
                     (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
-        STORE_FW(sccbscp->xpndinum, xstincnum);
+        STORE_FW( sccbscp->xpndinum, xstincnum );
         xstblkinc = XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT;
-        STORE_FW(sccbscp->xpndsz4K, xstblkinc);
+        STORE_FW( sccbscp->xpndsz4K, xstblkinc );
 #endif
 
-#ifdef FEATURE_S370_S390_VECTOR_FACILITY
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
         /* Set the Vector section size in the SCCB */
-        STORE_HW(sccbscp->vectssiz, VECTOR_SECTION_SIZE);
+        STORE_HW( sccbscp->vectssiz, VECTOR_SECTION_SIZE );
         /* Set the Vector partial sum number in the SCCB */
-        STORE_HW(sccbscp->vectpsum, VECTOR_PARTIAL_SUM_NUMBER);
+        STORE_HW( sccbscp->vectpsum, VECTOR_PARTIAL_SUM_NUMBER );
 #endif
         /* Set CPU array count and offset in SCCB */
-        STORE_HW(sccbscp->numcpu, sysblk.maxcpu);
-        offset = sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO);
-        STORE_HW(sccbscp->offcpu, offset);
+        STORE_HW( sccbscp->numcpu, sysblk.maxcpu );
+        offset = sizeof( SCCB_HEADER ) + sizeof( SCCB_SCP_INFO );
+        STORE_HW( sccbscp->offcpu, offset );
 
 #if defined( FEATURE_MPF_INFO )
         /* Set MPF array count and offset in SCCB */
-        STORE_HW(sccbscp->nummpf, sysblk.maxcpu-1);
+        STORE_HW( sccbscp->nummpf, sysblk.maxcpu-1 );
 #endif
-        offset += (U16)sizeof(SCCB_CPU_INFO) * sysblk.maxcpu;
-        STORE_HW(sccbscp->offmpf, offset);
+        offset += (U16)sizeof( SCCB_CPU_INFO ) * sysblk.maxcpu;
+        STORE_HW( sccbscp->offmpf, offset );
 
         /* Set HSA array count and offset in SCCB */
-        STORE_HW(sccbscp->numhsa, 0);
+        STORE_HW( sccbscp->numhsa, 0 );
 
 #if defined( FEATURE_MPF_INFO )
-        offset += (U16)sizeof(SCCB_MPF_INFO) * sysblk.maxcpu-1;
+        offset += (U16)sizeof( SCCB_MPF_INFO ) * sysblk.maxcpu-1;
 #endif
-        STORE_HW(sccbscp->offhsa, offset);
+        STORE_HW( sccbscp->offhsa, offset );
 
         /* Build the MPF information array after the CPU info */
         /* Move IPL load parameter to SCCB */
-        get_loadparm (sccbscp->loadparm);
+        get_loadparm( sccbscp->loadparm );
 
         /* Set installed features bit mask in SCCB */
-        memcpy(sccbscp->ifm, ARCH_DEP(scpinfo_ifm), sizeof(sccbscp->ifm));
+        memcpy( sccbscp->ifm, ARCH_DEP( scpinfo_ifm ), sizeof( sccbscp->ifm ));
 
-        memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
-        /* sccbscp->cfg11 = ARCH_DEP(scpinfo_cfg11); */
+        memcpy( sccbscp->cfg, ARCH_DEP( scpinfo_cfg ), sizeof( sccbscp->cfg ));
+        /* sccbscp->cfg11 = ARCH_DEP( scpinfo_cfg11 ); */
 
         if (0
 #if defined( _FEATURE_HYPERVISOR )
@@ -1448,25 +1460,26 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Build the CPU information array after the SCP info */
         sccbcpu = (SCCB_CPU_INFO*)(sccbscp+1);
-        for (i = 0; i < sysblk.maxcpu; i++, sccbcpu++)
+
+        for (i=0; i < sysblk.maxcpu; i++, sccbcpu++)
         {
-            memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
+            memset( sccbcpu, 0, sizeof( SCCB_CPU_INFO ));
             sccbcpu->cpa = i;
             sccbcpu->tod = 0;
-            memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
+            memcpy( sccbcpu->cpf, ARCH_DEP( scpinfo_cpf ), sizeof( sccbcpu->cpf ));
             sccbcpu->ptyp = sysblk.ptyp[i];
 
 #if defined( FEATURE_CRYPTO )
 //          sccbcpu->ksid = SCCB_KSID_CRYPTO_UNIT_ID;
 #endif
 
-#ifdef FEATURE_S370_S390_VECTOR_FACILITY
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
-            if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
+            if (IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_INSTALLED;
-            if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
+            if (IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_CONNECTED;
-            if(!IS_CPU_ONLINE(i))
+            if (!IS_CPU_ONLINE(i))
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_STANDBY_STATE;
 #endif
         }
@@ -1474,7 +1487,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #if defined( FEATURE_MPF_INFO )
 
         /* Define machine capacity */
-        STORE_FW(sccbscp->rcci, 10000);
+        STORE_FW( sccbscp->rcci, 10000 );
+
         /* Fill in the MP Factors array */
         sccbmpf = (SCCB_MPF_INFO*)(sccbcpu);
         get_mpfactors((BYTE*)sccbmpf);
@@ -1486,6 +1500,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         break;
 
 docheckstop:
+
         ARCH_DEP( checkstop_all_cpus )( regs );
         RELEASE_INTLOCK( regs );
         longjmp( regs->progjmp, SIE_NO_INTERCEPT );
@@ -1498,7 +1513,7 @@ docheckstop:
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
-            ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
+           ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
         {
             sccb->reas = SCCB_REAS_NOT_PGBNDRY;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1507,54 +1522,54 @@ docheckstop:
 
         /* Set response code X'0300' if SCCB length
            is insufficient to contain channel path info */
-        if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_CHP_INFO))
+        if ( sccblen < sizeof( SCCB_HEADER ) + sizeof( SCCB_CHP_INFO ))
         {
             sccb->reas = SCCB_REAS_TOO_SHORT;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
             break;
         }
 
-#ifdef FEATURE_S370_CHANNEL
+#if defined( FEATURE_S370_CHANNEL )
 
         /* Point to SCCB data area following SCCB header */
         sccbchp = (SCCB_CHSET_INFO*)(sccb+1);
-        memset (sccbchp, 0, sizeof(SCCB_CHSET_INFO));
+        memset( sccbchp, 0, sizeof( SCCB_CHSET_INFO ));
 #else
         /* Point to SCCB data area following SCCB header */
         sccbchp = (SCCB_CHP_INFO*)(sccb+1);
-        memset (sccbchp, 0, sizeof(SCCB_CHP_INFO));
+        memset( sccbchp, 0, sizeof( SCCB_CHP_INFO ));
 #endif
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#if defined( FEATURE_CHANNEL_SUBSYSTEM )
 
         /* Identify CHPIDs installed, standby, and online */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
-            for (i = 0; i < 8; i++)
+            for (i=0; i < 8; i++)
             {
                 chpbyte = dev->pmcw.chpid[i] / 8;
-                chpbit = dev->pmcw.chpid[i] % 8;
+                chpbit  = dev->pmcw.chpid[i] % 8;
 
-                if( ((0x80 >> i) & dev->pmcw.pim))
+                if ( ((0x80 >> i) & dev->pmcw.pim))
                 {
-                    sccbchp->installed[chpbyte] |= 0x80 >> chpbit;
+                    sccbchp->installed  [ chpbyte ] |= 0x80 >> chpbit;
 
                     if (dev->pmcw.flag5 & PMCW5_V)
-                        sccbchp->online[chpbyte] |= 0x80 >> chpbit;
+                        sccbchp->online [ chpbyte ] |= 0x80 >> chpbit;
                     else
-                        sccbchp->standby[chpbyte] |= 0x80 >> chpbit;
+                        sccbchp->standby[ chpbyte ] |= 0x80 >> chpbit;
                 }
             }
         }
 #endif
 
-#ifdef FEATURE_S370_CHANNEL
+#if defined( FEATURE_S370_CHANNEL )
 
         /* For S/370, initialize identifiers for channel set 0A */
-        for (i = 0; i < 16; i++)
+        for (i=0; i < 16; i++)
         {
-            sccbchp->chanset0a[2*i] = 0x80;
-            sccbchp->chanset0a[2*i+1] = i;
+            sccbchp->chanset0a[ 2*i + 0 ] = 0x80;
+            sccbchp->chanset0a[ 2*i + 1 ] = i;
         }
 
         /* Set the channel set configuration byte */
@@ -1583,7 +1598,7 @@ docheckstop:
 
         /* Set response code X'0300' if SCCB length
            is insufficient to contain channel path info */
-        if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_CSI_INFO))
+        if ( sccblen < sizeof( SCCB_HEADER ) + sizeof( SCCB_CSI_INFO ))
         {
             sccb->reas = SCCB_REAS_TOO_SHORT;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1592,7 +1607,7 @@ docheckstop:
 
         /* Point to SCCB data area following SCCB header */
         sccbcsi = (SCCB_CSI_INFO*)(sccb+1);
-        memset (sccbcsi, 0, sizeof(SCCB_CSI_INFO));
+        memset( sccbcsi, 0, sizeof( SCCB_CSI_INFO ));
 
         sccbcsi->csif[0] =
             0
@@ -1607,7 +1622,7 @@ docheckstop:
         sccb->resp = SCCB_RESP_INFO;
         break;
 
-#ifdef FEATURE_SYSTEM_CONSOLE
+#if defined( FEATURE_SYSTEM_CONSOLE )
 
     case SCLP_WRITE_EVENT_DATA:
 
@@ -1625,39 +1640,43 @@ docheckstop:
 
         /* Point to SCCB data area following SCCB header */
         evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-        FETCH_HW(evd_len,evd_hdr->totlen);
+        FETCH_HW( evd_len, evd_hdr->totlen );
 
-        switch(evd_hdr->type) {
-
+        switch (evd_hdr->type)
+        {
         case SCCB_EVD_TYPE_MSG:
         case SCCB_EVD_TYPE_PRIOR:
 
-            while (sccblen > sizeof(SCCB_HEADER))
+            while (sccblen > sizeof( SCCB_HEADER ))
             {
-                FETCH_HW(evd_len,evd_hdr->totlen);
+                FETCH_HW( evd_len, evd_hdr->totlen );
 
                 /* Point to the Message Control Data Block */
                 mcd_bk = (SCCB_MCD_BK*)(evd_hdr+1);
-                FETCH_HW(mcd_len,mcd_bk->length);
+                FETCH_HW( mcd_len, mcd_bk->length );
 
                 obj_hdr = (SCCB_OBJ_HDR*)(mcd_bk+1);
 
-                while (mcd_len > sizeof(SCCB_MCD_BK))
+                while (mcd_len > sizeof( SCCB_MCD_BK ))
                 {
-                    FETCH_HW(obj_len,obj_hdr->length);
+                    FETCH_HW( obj_len, obj_hdr->length );
+
                     if (obj_len == 0)
                     {
                         sccb->reas = SCCB_REAS_BUFF_LEN_ERR;
                         sccb->resp = SCCB_RESP_BUFF_LEN_ERR;
                         break;
                     }
-                    FETCH_HW(obj_type,obj_hdr->type);
+
+                    FETCH_HW( obj_type, obj_hdr->type );
+
                     if (obj_type == SCCB_OBJ_TYPE_MESSAGE)
                     {
                         mto_bk = (SCCB_MTO_BK*)(obj_hdr+1);
-                        event_msg = (BYTE*)(mto_bk+1);
+                        evd_msg = (BYTE*)(mto_bk+1);
                         event_msglen = obj_len -
-                                (sizeof(SCCB_OBJ_HDR) + sizeof(SCCB_MTO_BK));
+                                (sizeof( SCCB_OBJ_HDR ) + sizeof( SCCB_MTO_BK ));
+
                         if (event_msglen < 0)
                         {
                             sccb->reas = SCCB_REAS_BUFF_LEN_ERR;
@@ -1668,15 +1687,16 @@ docheckstop:
                         /* Print line unless it is a response prompt */
                         if (!(mto_bk->ltflag[0] & SCCB_MTO_LTFLG0_PROMPT))
                         {
-                            for (i = 0; i < event_msglen; i++)
+                            for (i=0; i < event_msglen; i++)
                             {
-                                message[i] = isprint(guest_to_host(event_msg[i])) ?
-                                    guest_to_host(event_msg[i]) : 0x20;
+                                message[i] = isprint( guest_to_host( evd_msg[i] )) ?
+                                    guest_to_host( evd_msg[i] ) : 0x20;
                             }
                             message[i] = '\0';
                             LOGMSG("%s\n",message);
                         }
                     }
+
                     mcd_len -= obj_len;
                     obj_hdr=(SCCB_OBJ_HDR *)((BYTE*)obj_hdr + obj_len);
                 }
@@ -1700,40 +1720,40 @@ docheckstop:
 #if defined( FEATURE_SCEDIO )
 
         case SCCB_EVD_TYPE_SCEDIO:
-            ARCH_DEP(sclp_scedio_request)(sccb);
+            ARCH_DEP( sclp_scedio_request )( sccb );
             break;
 #endif
 
 #if defined( _FEATURE_HARDWARE_LOADER )
 
         case SCCB_EVD_TYPE_HWL:
-            ARCH_DEP(sclp_hwl_request)(sccb);
+            ARCH_DEP( sclp_hwl_request )( sccb );
             break;
 
         case SCCB_EVD_TYPE_SDIAS:
-            ARCH_DEP(sclp_sdias_request)(sccb);
+            ARCH_DEP( sclp_sdias_request )( sccb );
             break;
 #endif
 
 #if defined( FEATURE_INTEGRATED_3270_CONSOLE )
 
         case SCCB_EVD_TYPE_SYSG:
-            sclp_sysg_write(sccb);
+            sclp_sysg_write( sccb );
             break;
 #endif
 
 #if defined( FEATURE_INTEGRATED_ASCII_CONSOLE )
 
         case SCCB_EVD_TYPE_VT220:
-            sclp_sysa_write(sccb);
+            sclp_sysa_write( sccb );
             break;
 #endif
 
         default:
 
-            PTT_ERR("*SERVC",regs->GR_L(r1),regs->GR_L(r2),evd_hdr->type);
+            PTT_ERR("*SERVC", regs->GR_L(r1), regs->GR_L(r2), evd_hdr->type );
 
-            if( HDC3(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
+            if (HDC3( debug_sclp_unknown_event, evd_hdr, sccb, regs ))
                 break;
 
             /* Set response code X'73F0' in SCCB header */
@@ -1741,7 +1761,6 @@ docheckstop:
             sccb->resp = SCCB_RESP_SYNTAX_ERROR;
             break;
         }
-
         break;
 
     case SCLP_READ_EVENT_DATA:
@@ -1751,7 +1770,7 @@ docheckstop:
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
-            ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
+           ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
         {
             sccb->reas = SCCB_REAS_NOT_PGBNDRY;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1780,7 +1799,7 @@ docheckstop:
         if (SCLP_RECV_ENABLED(               SCEDIO ) &&
             sclp_attn_pending( SCCB_EVD_TYPE_SCEDIO ))
         {
-            ARCH_DEP(sclp_scedio_event)(sccb);
+            ARCH_DEP( sclp_scedio_event )( sccb );
             break;
         }
 #endif
@@ -1790,14 +1809,14 @@ docheckstop:
         if (SCLP_RECV_ENABLED(               HWL ) &&
             sclp_attn_pending( SCCB_EVD_TYPE_HWL ))
         {
-            ARCH_DEP(sclp_hwl_event)(sccb);
+            ARCH_DEP( sclp_hwl_event )( sccb );
             break;
         }
 
         if (SCLP_RECV_ENABLED(               SDIAS ) &&
             sclp_attn_pending( SCCB_EVD_TYPE_SDIAS ))
         {
-            ARCH_DEP(sclp_sdias_event)(sccb);
+            ARCH_DEP( sclp_sdias_event )( sccb );
             break;
         }
 #endif
@@ -1807,7 +1826,7 @@ docheckstop:
         if (SCLP_RECV_ENABLED(               SYSG ) &&
             sclp_attn_pending( SCCB_EVD_TYPE_SYSG ))
         {
-            sclp_sysg_poll(sccb);
+            sclp_sysg_poll( sccb );
             break;
         }
 #endif
@@ -1817,7 +1836,7 @@ docheckstop:
         if (SCLP_RECV_ENABLED(               VT220 ) &&
             sclp_attn_pending( SCCB_EVD_TYPE_VT220 ))
         {
-            sclp_sysa_poll(sccb);
+            sclp_sysa_poll( sccb );
             break;
         }
 #endif
@@ -1825,17 +1844,17 @@ docheckstop:
         if (SCLP_RECV_ENABLED(               SIGQ ) &&
             sclp_attn_pending( SCCB_EVD_TYPE_SIGQ ))
         {
-            sclp_sigq_event(sccb);
+            sclp_sigq_event( sccb );
             break;
         }
 
-        PTT_ERR("*SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT_ERR("*SERVC", regs->GR_L(r1), regs->GR_L(r2), regs->psw.IA_L );
 
         if (HDC3( debug_sclp_event_data, evd_hdr, sccb, regs ))
             break;
 
         /* Set response code X'62F0' if events are pending but suppressed */
-        if(sclp_attn_pending(0))
+        if (sclp_attn_pending( 0 ))
         {
             sccb->reas = SCCB_REAS_EVENTS_SUP;
             sccb->resp = SCCB_RESP_EVENTS_SUP;
@@ -1856,7 +1875,7 @@ docheckstop:
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
-            ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
+           ((sccb_absolute_addr + sccblen - 1) & STORAGE_KEY_PAGEMASK))
         {
             sccb->reas = SCCB_REAS_NOT_PGBNDRY;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -1864,47 +1883,48 @@ docheckstop:
         }
 
         /* Point to SCCB data area following SCCB header */
-        evd_mask = (SCCB_EVENT_MASK*)(sccb+1);
+        evd_mask = (SCCB_EVT_MASK*)(sccb+1);
 
         /* Get length of single mask field */
-        FETCH_HW(masklen, evd_mask->length);
+        FETCH_HW( masklen, evd_mask->length );
 
         /* Save old mask settings in order to suppress superflous messages */
-        old_cp_recv_mask = servc_cp_recv_mask & ARCH_DEP(sclp_send_mask) & SCCB_EVENT_CONS_RECV_MASK;
-        old_cp_send_mask = servc_cp_send_mask & ARCH_DEP(sclp_recv_mask) & SCCB_EVENT_CONS_SEND_MASK;
+        old_cp_recv_mask = servc_cp_recv_mask & ARCH_DEP( sclp_send_mask ) & SCCB_EVENT_CONS_RECV_MASK;
+        old_cp_send_mask = servc_cp_send_mask & ARCH_DEP( sclp_recv_mask ) & SCCB_EVENT_CONS_SEND_MASK;
 
-        for (i = 0; i < 4; i++)
+        for (i=0; i < 4; i++)
         {
             servc_cp_recv_mask <<= 8;
             servc_cp_send_mask <<= 8;
+
             if ((U32)i < masklen)
             {
-                servc_cp_recv_mask |= evd_mask->masks[i+(0*masklen)];
-                servc_cp_send_mask |= evd_mask->masks[i+(1*masklen)];
+                servc_cp_recv_mask |= evd_mask->masks[ i+(0*masklen) ];
+                servc_cp_send_mask |= evd_mask->masks[ i+(1*masklen) ];
             }
         }
 
         if (0
-            || (servc_cp_recv_mask & ~ARCH_DEP(sclp_recv_mask))
-            || (servc_cp_send_mask & ~ARCH_DEP(sclp_send_mask))
+            || (servc_cp_recv_mask & ~ARCH_DEP( sclp_recv_mask ))
+            || (servc_cp_send_mask & ~ARCH_DEP( sclp_send_mask ))
         )
         {
-            HDC3(debug_sclp_unknown_event_mask, evd_mask, sccb, regs);
+            HDC3( debug_sclp_unknown_event_mask, evd_mask, sccb, regs );
         }
 
         /* Write the events that we support back */
-        memset( &evd_mask->masks[2 * masklen], 0, 2 * masklen );
+        memset( &evd_mask->masks[ 2*masklen ], 0, 2 * masklen );
 
         for (i=0; (i < 4) && ((U32)i < masklen); i++)
         {
-            evd_mask->masks[i+(2*masklen)] |= (ARCH_DEP(sclp_recv_mask) >> ((3-i)*8)) & 0xFF;
-            evd_mask->masks[i+(3*masklen)] |= (ARCH_DEP(sclp_send_mask) >> ((3-i)*8)) & 0xFF;
+            evd_mask->masks[ i+(2*masklen) ] |= (ARCH_DEP( sclp_recv_mask ) >> ((3-i)*8)) & 0xFF;
+            evd_mask->masks[ i+(3*masklen) ] |= (ARCH_DEP( sclp_send_mask ) >> ((3-i)*8)) & 0xFF;
         }
 
         /* Issue message only when supported mask has changed */
         if (0
-            || (servc_cp_recv_mask & ARCH_DEP(sclp_send_mask) & SCCB_EVENT_CONS_RECV_MASK) != old_cp_recv_mask
-            || (servc_cp_send_mask & ARCH_DEP(sclp_recv_mask) & SCCB_EVENT_CONS_SEND_MASK) != old_cp_send_mask
+            || (servc_cp_recv_mask & ARCH_DEP( sclp_send_mask ) & SCCB_EVENT_CONS_RECV_MASK) != old_cp_recv_mask
+            || (servc_cp_send_mask & ARCH_DEP( sclp_recv_mask ) & SCCB_EVENT_CONS_SEND_MASK) != old_cp_send_mask
         )
         {
             if (0
@@ -1912,10 +1932,10 @@ docheckstop:
                 || (servc_cp_send_mask & SCCB_EVENT_CONS_SEND_MASK) != 0
             )
                 // "SCLP console interface %s"
-                WRMSG (HHC00006, "I", "active");
+                WRMSG( HHC00006, "I", "active" );
             else
                 // "SCLP console interface %s"
-                WRMSG (HHC00006, "I", "inactive");
+                WRMSG( HHC00006, "I", "inactive" );
         }
 
         /* Set response code X'0020' in SCCB header */
@@ -1923,9 +1943,9 @@ docheckstop:
         sccb->resp = SCCB_RESP_COMPLETE;
         break;
 
-#endif /* FEATURE_SYSTEM_CONSOLE */
+#endif /* defined( FEATURE_SYSTEM_CONSOLE ) */
 
-#ifdef FEATURE_EXPANDED_STORAGE
+#if defined( FEATURE_EXPANDED_STORAGE )
 
    case SCLP_READ_XST_MAP:
 
@@ -1946,7 +1966,7 @@ docheckstop:
 
         /* Set response code X'0300' if SCCB length
            is insufficient to contain xstore info */
-        if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_XST_MAP)
+        if ( sccblen < sizeof( SCCB_HEADER ) + sizeof( SCCB_XST_MAP )
                 + xstblkinc/8)
         {
             sccb->reas = SCCB_REAS_TOO_SHORT;
@@ -1960,8 +1980,9 @@ docheckstop:
         /* Verify expanded storage increment number */
         xstincnum = sysblk.xpndsize /
                     (XSTORE_INCREMENT_SIZE >> XSTORE_PAGESHIFT);
-        FETCH_FW(i, sccbxmap->incnum);
-        if ( i < 1 || (U32)i > xstincnum )
+        FETCH_FW( i, sccbxmap->incnum );
+
+        if (i < 1 || (U32)i > xstincnum)
         {
             sccb->reas = SCCB_REAS_INVALID_RSC;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1972,23 +1993,23 @@ docheckstop:
         xstmap = (BYTE*)(sccbxmap+1);
 
         /* Set all blocks available */
-        memset (xstmap, 0, xstblkinc/8);
+        memset( xstmap, 0, xstblkinc/8);
 
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
         break;
 
-#endif /* FEATURE_EXPANDED_STORAGE */
+#endif /* defined( FEATURE_EXPANDED_STORAGE ) */
 
-#ifdef FEATURE_CPU_RECONFIG
+#if defined( FEATURE_CPU_RECONFIG )
 
     case SCLP_CONFIGURE_CPU:
 
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= sysblk.maxcpu)
+        if (i >= sysblk.maxcpu)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -2008,7 +2029,7 @@ docheckstop:
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= sysblk.maxcpu)
+        if (i >= sysblk.maxcpu)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -2023,22 +2044,23 @@ docheckstop:
         sccb->resp = SCCB_RESP_COMPLETE;
         break;
 
-#ifdef FEATURE_S370_S390_VECTOR_FACILITY
+#if defined( FEATURE_S370_S390_VECTOR_FACILITY )
 
     case SCLP_DISCONNECT_VF:
 
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= sysblk.maxcpu || !IS_CPU_ONLINE(i))
+        if (i >= sysblk.maxcpu || !IS_CPU_ONLINE(i))
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
             break;
         }
 
-        if(sysblk.regs[i]->vf->online)
-            WRMSG(HHC00821, "I", PTYPSTR(i), i, "offline" );
+        if (sysblk.regs[i]->vf->online)
+            // "Processor %s%02X: vector facility configured %s"
+            WRMSG( HHC00821, "I", PTYPSTR(i), i, "offline" );
 
         /* Take the VF out of the configuration */
         sysblk.regs[i]->vf->online = 0;
@@ -2053,7 +2075,7 @@ docheckstop:
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= sysblk.maxcpu)
+        if (i >= sysblk.maxcpu)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -2061,15 +2083,16 @@ docheckstop:
         }
 
         /* Return improper state if associated cpu is offline */
-        if(!IS_CPU_ONLINE(i))
+        if (!IS_CPU_ONLINE(i))
         {
             sccb->reas = SCCB_REAS_IMPROPER_RSC;
             sccb->resp = SCCB_RESP_REJECT;
             break;
         }
 
-        if(!sysblk.regs[i]->vf->online)
-            WRMSG(HHC00821, "I", PTYPSTR(i), i, "online" );
+        if (!sysblk.regs[i]->vf->online)
+            // "Processor %s%02X: vector facility configured %s"
+            WRMSG( HHC00821, "I", PTYPSTR(i), i, "online" );
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i]->vf->online = 1;
@@ -2079,16 +2102,16 @@ docheckstop:
         sccb->resp = SCCB_RESP_COMPLETE;
         break;
 
-#endif /* FEATURE_S370_S390_VECTOR_FACILITY */
+#endif /* defined( FEATURE_S370_S390_VECTOR_FACILITY ) */
 
-#endif /* FEATURE_CPU_RECONFIG */
+#endif /* defined( FEATURE_CPU_RECONFIG ) */
 
     default:
     invalidcmd:
 
-        PTT(PTT_CL_INF|PTT_CL_ERR,"*SERVC",regs->GR_L(r1),regs->GR_L(r2),regs->psw.IA_L);
+        PTT( PTT_CL_INF | PTT_CL_ERR, "*SERVC", regs->GR_L(r1), regs->GR_L(r2), regs->psw.IA_L );
 
-        if( HDC3(debug_sclp_unknown_command, sclp_command, sccb, regs) )
+        if (HDC3( debug_sclp_unknown_command, sclp_command, sccb, regs ))
             break;
 
         /* Set response code X'01F0' for invalid SCLP command */
@@ -2096,7 +2119,7 @@ docheckstop:
         sccb->resp = SCCB_RESP_REJECT;
         break;
 
-    } /* end switch(sclp_command) */
+    } /* end switch (sclp_command) */
 
     /* If immediate response is requested, return condition code 1 */
     if ((sccb->flag & SCCB_FLAG_SYNC)
@@ -2112,12 +2135,12 @@ docheckstop:
     ON_IC_SERVSIG;
 
     /* Release the interrupt lock */
-    RELEASE_INTLOCK(regs);
+    RELEASE_INTLOCK( regs );
 
     /* Set condition code 0 */
     regs->psw.cc = 0;
 
-    RETURN_INTCHECK(regs);
+    RETURN_INTCHECK( regs );
 } /* end function service_call */
 
 
