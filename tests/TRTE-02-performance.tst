@@ -47,8 +47,8 @@ numcpu      1
 sysclear
 loadcore    "$(testpath)/TRTE-02-performance.core" 0x0
 
-r           408=ff   # (enable timing tests)
-runtest     20        # (test duration, depends on host)
+#r           408=ff   # (enable timing tests)
+runtest     200       # (test duration, depends on host)
 
 diag8cmd disable
 
