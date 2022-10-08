@@ -18,7 +18,7 @@
 *              to display messages and thus your .tst runtest script
 *              MUST contain a "DIAG8CMD ENABLE" statement within it!
 *
-*        James Wekel September 2022
+*        James Wekel October 2022
 ***********************************************************************
                                                                 SPACE 2
 ***********************************************************************
@@ -439,6 +439,7 @@ TST91LOP EQU   *
 *        .........ETC.........
          PRINT OFF
 *                                   96 sets of instructions
+*                                   1-10
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -468,69 +469,8 @@ TST91LOP EQU   *
          BC    B'0001',*-4
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
-
+*                                   11-20
          BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE           Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4                   not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE           Load TRTE operands
-         TRTE  R2,R4,12
-         BC    B'0001',*-4                   not finished?
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-         LM    R1,R4,OPSWHERE
-         TRTE  R2,R4,12
-         BC    B'0001',*-4
-
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -561,7 +501,7 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
-
+*                                   21-30
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -592,7 +532,7 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
-
+*                                   31-40
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -623,7 +563,7 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
-
+*                                   41-50
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -654,7 +594,7 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
-
+*                                   51-60
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -685,7 +625,7 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
-
+*                                   61-70
          LM    R1,R4,OPSWHERE           Load TRTE operands
          TRTE  R2,R4,12
          BC    B'0001',*-4                   not finished?
@@ -716,7 +656,69 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
-
+*                                   71-80
+         LM    R1,R4,OPSWHERE           Load TRTE operands
+         TRTE  R2,R4,12
+         BC    B'0001',*-4                   not finished?
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+*                                   81-90
+         LM    R1,R4,OPSWHERE           Load TRTE operands
+         TRTE  R2,R4,12
+         BC    B'0001',*-4                   not finished?
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+*                                   91-96
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4

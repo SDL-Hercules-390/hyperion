@@ -6,7 +6,7 @@
 *        NOTE: This test is based the CLCL-et-al Test
 *              modified to only test the TRTE instruction.
 *
-*        James Wekel August 2022
+*        James Wekel October 2022
 ***********************************************************************
                                                                 SPACE 2
 ***********************************************************************
@@ -25,20 +25,31 @@
 *
 *  Example Hercules Testcase:
 *
+*         *Testcase TRTE-01-basic (Test TRTE instruction)
 *
-*     *Testcase TRTE-01-basic (Test TRTE instructions)
+*        # ------------------------------------------------------------
+*        # This tests only the basic function of the TRTE instruction.
+*        # Specification exceptions are NOT tested.
+*        # ------------------------------------------------------------
 *
-*     archlvl     390
-*     mainsize    3
-*     numcpu      1
-*     sysclear
+*        # ------------------------------------------------------------
+*        # need facility bit 26 enabled for:
+*        #       026_PARSING_ENHANCE      *Parsing-Enhancement Facility
+*        #       which is not included in archlvl 390
+*        #       so use backport to 370
+*        # ------------------------------------------------------------
 *
-*     loadcore    "$(testpath)/TRTE-01-basic" 0x0
+*        archlvl  S/370
+*        facility enable  HERC_370_EXTENSION
+*        mainsize    16
+*        numcpu      1
 *
-*     runtest     1
+*        sysclear
+*        loadcore    "TRTE-01-basic.core" 0x0
 *
-*     *Done
+*        runtest     1
 *
+*        *Done
 *
 ***********************************************************************
                                                                 EJECT
