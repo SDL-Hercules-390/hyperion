@@ -685,6 +685,38 @@ TST91LOP EQU   *
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
+
+         LM    R1,R4,OPSWHERE           Load TRTE operands
+         TRTE  R2,R4,12
+         BC    B'0001',*-4                   not finished?
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+         LM    R1,R4,OPSWHERE
+         TRTE  R2,R4,12
+         BC    B'0001',*-4
+
          LM    R1,R4,OPSWHERE
          TRTE  R2,R4,12
          BC    B'0001',*-4
