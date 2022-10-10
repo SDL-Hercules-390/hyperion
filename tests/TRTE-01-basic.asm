@@ -1,47 +1,40 @@
  TITLE '            TRTE-01-basic (Test TRTE instructions)'
 ***********************************************************************
 *
-*        TRTE instruction tests
+*                  TRTE basic instruction tests
 *
-*        NOTE: This test is based the CLCL-et-al Test
-*              modified to only test the TRTE instruction.
-*
-*        James Wekel October 2022
-***********************************************************************
-                                                                SPACE 2
 ***********************************************************************
 *
-*            TRTE basic instruction tests
-*
-***********************************************************
-*  This program tests proper functioning of the TRTE
-*  instructions. Specification exceptions are not tested.
+*  This program tests proper functioning of the TRTE instructions.
+*  Specification Exceptions are not tested.
 *
 *  PLEASE NOTE that the tests are very SIMPLE TESTS designed to catch
 *  obvious coding errors.  None of the tests are thorough.  They are
 *  NOT designed to test all aspects of any of the instructions.
 *
+*  NOTE: This test is based on the CLCL-et-al Test but modified to
+*        only test the TRTE instruction.  --  James Wekel October 2022
+*
 ***********************************************************************
 *
 *  Example Hercules Testcase:
 *
-*        *Testcase TRTE-01-basic (Test TRTE instruction)
 *
-*        # ------------------------------------------------------------
-*        #  This tests only the basic function of the TRTE instruction.
-*        #  Specification Exceptions are NOT tested.
-*        # ------------------------------------------------------------
+*      *Testcase TRTE-01-basic (Test TRTE instructions)
 *
-*        mainsize    16
-*        numcpu      1
-*        sysclear
-*        archlvl     z/Arch
+*      # ------------------------------------------------------------
+*      #  This tests only the basic function of the TRTE instruction.
+*      #  Specification Exceptions are NOT tested.
+*      # ------------------------------------------------------------
 *
-*        loadcore    "$(testpath)/TRTE-01-basic.core" 0x0
+*      mainsize    16
+*      numcpu      1
+*      sysclear
+*      archlvl     z/Arch
+*      loadcore    "TRTE-01-basic.core" 0x0
+*      runtest     1
+*      *Done
 *
-*        runtest     1
-*
-*        *Done
 *
 ***********************************************************************
                                                                 SPACE 2
@@ -89,12 +82,13 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
                                                                 SPACE
          LA    R9,2048(,R8)     Initalize SECOND base register
          LA    R9,2048(,R9)     Initalize SECOND base register
-*
-**       Run the tests...
-*
-         BAL   R14,TEST01       Test TRTE   instruction
-*
-                                                                EJECT
+                                                                SPACE 2
+***********************************************************************
+*        Run the test(s)...
+***********************************************************************
+                                                                SPACE
+         BAL   R14,TEST01       Test TRTE instruction
+                                                                SPACE 2
 ***********************************************************************
 *         Test for normal or unexpected test completion...
 ***********************************************************************
@@ -104,94 +98,96 @@ BEGIN    BALR  R8,0             Initalize FIRST base register
                                                                 SPACE
          CLI   SUBTEST,X'03'    Did we end on expected SUB-test?
          BNE   FAILTEST         No?! Then FAIL the test!
-                                                               SPACE
+                                                                SPACE
          B     EOJ              Yes, then normal completion!
-                                                               SPACE 4
+                                                                EJECT
 ***********************************************************************
 *        Fixed test storage locations ...
 ***********************************************************************
-                                                               SPACE 2
-         ORG   BEGIN+X'200'
-
-TESTADDR DS    0D         Where test/subtest numbers will go
-TESTNUM  DC    X'99'      Test number of active test
-SUBTEST  DC    X'99'      Active test sub-test number
-                                                               SPACE 2
+                                                                SPACE 2
+         ORG   TRTE1TST+X'400'
+                                                                SPACE 4
+TESTADDR DS    0D               Where test/subtest numbers will go
+TESTNUM  DC    X'99'            Test number of active test
+SUBTEST  DC    X'99'            Active test sub-test number
+                                                                SPACE 4
          ORG   *+X'100'
-                                                               EJECT
+                                                                EJECT
 ***********************************************************************
 *        TEST01                   Test TRTE instruction
 ***********************************************************************
                                                                 SPACE
 TEST01   MVI   TESTNUM,X'01'
-
-         LA    R5,TRTECTL          Point R5 --> testing control table
-         USING TRTETEST,R5         What each table entry looks like
-
+                                                                SPACE
+         LA    R5,TRTECTL         Point R5 --> testing control table
+         USING TRTETEST,R5        What each table entry looks like
+                                                                SPACE
 TST1LOOP EQU   *
          IC    R6,TNUM            Set test number
          STC   R6,TESTNUM
 *
 **       Initialize operand data  (move data to testing address)
 *
-         L     R10,OP1WHERE         Where to move operand-1 data to
-         L     R11,OP1LEN           operand-1 length
-         ST    R11,OP1WLEN            and save for later
-         L     R6,OP1DATA           Where op1 data is right now
-         L     R7,OP1LEN            How much of it there is
+         L     R10,OP1WHERE       Where to move operand-1 data to
+         L     R11,OP1LEN         Get operand-1 length
+         ST    R11,OP1WLEN        and save for later
+         L     R6,OP1DATA         Where op1 data is right now
+         L     R7,OP1LEN          How much of it there is
          MVCL  R10,R6
 *
-         L     R10,OP2WHERE         Where to move operand-2 data to
-         L     R11,OP2LEN           How much of it there is
-         L     R6,OP2DATA           Where op2 data is right now
-         L     R7,OP2LEN             How much of it there is
+         L     R10,OP2WHERE       Where to move operand-2 data to
+         L     R11,OP2LEN         How much of it there is
+         L     R6,OP2DATA         Where op2 data is right now
+         L     R7,OP2LEN          How much of it there is
          MVCL  R10,R6
-                                                               SPACE 3
+                                                                SPACE 3
+*
 **       Execute TRTE instruction and check for expected condition code
-                                                               SPACE 1
+*
          LM    R1,R4,OPSWHERE     get TRTE input
-
+                                                                SPACE
          SR    R7,R7              get M3 bits for TRTE
          IC    R7,M3              (M3)
          STC   R7,TRTEMOD+2       DYNAMICALLY MODIFIED CODE
-
+                                                                SPACE
          L     R11,FAILMASK       (failure CC)
          SLL   R11,4              (shift to BC instr CC position)
-
+                                                                SPACE
          MVI   SUBTEST,X'00'      (primary TRT)
-TRTEMOD  TRTE  R2,R4,0             Start with TRTE and m3=0
-
+TRTEMOD  TRTE  R2,R4,0            Start with TRTE and m3=0
+                                                                SPACE
          STM   R1,R4,SAVETRT      (save R1/R4 results)
-         EX    R11,TRTEBC          fail if...
-         BC    B'0001',TRTEMOD     cc=3, not finished
-                                                               EJECT
+         EX    R11,TRTEBC         fail if...
+         BC    B'0001',TRTEMOD    cc=3, not finished
+                                                                EJECT
+*
 **       Verify R2,R3,R4 contain (or still contain!) expected values
-
+*
          LM    R10,R12,ENDREGS
-
+                                                                SPACE
          MVI   SUBTEST,X'01'      (R2 result - op1 found addr)
-         CLR   R2,R10              R2 correct?
+         CLR   R2,R10             R2 correct?
          BNE   TRTEFAIL           No, FAILTEST!
-
+                                                                SPACE
          MVI   SUBTEST,X'02'      (R3 result - op1 remaining len)
-         CLR   R3,R11              R3 correct
+         CLR   R3,R11             R3 correct
          BNE   TRTEFAIL           No, FAILTEST!
-
+                                                                SPACE
          MVI   SUBTEST,X'03'      (R4 result - FC code)
-         CLR   R4,R12              R4 correct
+         CLR   R4,R12             R4 correct
          BNE   TRTEFAIL           No, FAILTEST!
-
+                                                                SPACE
          LA    R5,TRTENEXT        Go on to next table entry
          CLC   =F'0',0(R5)        End of table?
          BNE   TST1LOOP           No, loop...
-         B     TRTEDONE            Done! (success!)
+         B     TRTEDONE           Done! (success!)
                                                                 SPACE 2
 TRTEFAIL LA    R14,FAILTEST       Unexpected results!
 TRTEDONE BR    R14                Return to caller or FAILTEST
                                                                 SPACE 2
-TRTEBC   BC    0,TRTEFAIL          (fail if unexpected condition code)
+TRTEBC   BC    0,TRTEFAIL         (fail if unexpected condition code)
                                                                 SPACE 2
-SAVETRT  DC    4D'0'               (saved R1/R4 from TRT results)
+SAVETRT  DC    4D'0'              (saved R1/R4 from TRT results)
                                                                 SPACE 2
          DROP  R5
          DROP  R15
@@ -214,7 +210,7 @@ FAILTEST LPSWE FAILPSW              Abnormal termination
 ***********************************************************************
                                                                 SPACE 2
          LTORG ,                Literals pool
-                                                                SPACE
+                                                                SPACE 3
 K        EQU   1024             One KB
 PAGE     EQU   (4*K)            Size of one page
 K64      EQU   (64*K)           64 KB
@@ -236,15 +232,15 @@ OP1DATA  DC    A(0)           Pointer to Operand-1 data
 OP1LEN   DC    F'0'           How much data is there - 1
 OP2DATA  DC    A(0)           Pointer to FC table data
 OP2LEN   DC    F'0'           How much data is there - FC Table
-                                                               SPACE 2
+                                                                SPACE 2
 OPSWHERE EQU   *
 OP2WHERE DC    A(0)           Where FC Table  data should be placed
 OP1WHERE DC    A(0)           Where Operand-1 data should be placed
 OP1WLEN  DC    F'0'           How much data is there - 1
          DC    A(0)           pollute - found FC
-                                                               SPACE 2
+                                                                SPACE 2
 FAILMASK DC    A(0)           Failure Branch on Condition mask
-                                                               SPACE 2
+                                                                SPACE 2
 *                             Ending register values
 ENDREGS  DC    A(0)              Operand 1 address
          DC    A(0)              Operand 1 length
@@ -255,19 +251,19 @@ TRTENEXT EQU   *              Start of next table entry...
 REG2PATT EQU   X'AABBCCDD'    Polluted Register pattern
 REG2LOW  EQU         X'DD'    (last byte above)
                                                                 EJECT
-TRTE1TST CSECT ,
-                                                                SPACE 2
 ***********************************************************************
 *        TRTE Testing Control tables   (ref: TRTETEST DSECT)
 ***********************************************************************
+                                                                SPACE
+TRTE1TST CSECT ,
          PRINT DATA
 TRTECTL  DC    0A(0)    start of table
-                                                                SPACE 2
+                                                                SPACE
 ***********************************************************************
 *        tests with   M3: A=0,F=0,L=0, reserved=0    (0)
 *                            FC Table = 1 byte
 ***********************************************************************
-                                                                SPACE 4
+                                                                SPACE
 M0T1     DS    0F
          DC    X'01'                       Test Num
          DC    X'00',X'00'
@@ -279,7 +275,7 @@ M0T1     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(2*MB+(1*K64)+001),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE
 M0T2     DS    0F
          DC    X'02'                       Test Num
          DC    X'00',X'00'
@@ -291,7 +287,7 @@ M0T2     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(2*MB+(2*K64)+002),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE
 M0T3     DS    0F
          DC    X'03'                       Test Num
          DC    X'00',X'00'
@@ -303,7 +299,7 @@ M0T3     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(2*MB+(3*K64)+004),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M0T4     DS    0F
          DC    X'04'                       Test Num
          DC    X'00',X'00'
@@ -339,7 +335,7 @@ M0T6     DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(2*MB+(6*K64)-12+X'11'),A(256-X'11'),XL4'11'
-                                                                SPACE 4
+                                                                EJECT
 M0T7     DS    0F
          DC    X'07'                       Test Num
          DC    X'00',X'00'
@@ -351,7 +347,6 @@ M0T7     DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(2*MB+(7*K64)-12+255),A(256-255),XL4'F0'
-
                                                                 SPACE 4
 M0T8     DS    0F
          DC    X'08'                       Test Num
@@ -376,7 +371,7 @@ M0T9     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(2*MB+(9*K64)+2048),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M0T10    DS    0F
          DC    X'0A'                       Test Num
          DC    X'00',X'00'
@@ -441,7 +436,7 @@ M4T3     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(4*MB+(4*K64)+004),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M4T4     DS    0F
          DC    X'44'                       Test Num
          DC    X'00',X'00'
@@ -477,7 +472,7 @@ M4T6     DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(4*MB+(6*K64)-12+X'11'),A(256-X'11'),XL4'11'
-                                                                SPACE 4
+                                                                EJECT
 M4T7     DS    0F
          DC    X'47'                       Test Num
          DC    X'00',X'00'
@@ -513,7 +508,7 @@ M4T9     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(4*MB+(9*K64)+2048),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M4T10    DS    0F
          DC    X'4A'                       Test Num
          DC    X'00',X'00'
@@ -556,7 +551,6 @@ M8T1     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(6*MB+(1*K64)+002),A(000),A(0)
-
                                                                 SPACE 4
 M8T2     DS    0F
          DC    X'82'                       Test Num
@@ -581,7 +575,7 @@ M8T3     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(6*MB+(3*K64)+008),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M8T4     DS    0F
          DC    X'84'                       Test Num
          DC    X'00',X'00'
@@ -617,7 +611,7 @@ M8T6     DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(6*MB+(6*K64)-12+(256-2)),A(2),XL4'F0'
-                                                                SPACE 4
+                                                                EJECT
 M8T7     DS    0F
          DC    X'87'                       Test Num
          DC    X'00',X'00'
@@ -653,7 +647,7 @@ M8T9     DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(6*MB+(10*K64)+2048),A(0),XL4'00'
-                                                                SPACE 4
+                                                                EJECT
 M8T10    DS    0F
          DC    X'8A'                       Test Num
          DC    X'00',X'00'
@@ -698,7 +692,7 @@ M10T1    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(11*MB+(0*K64)+002),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE 3
 M10T2    DS    0F
          DC    X'A2'                       Test Num
          DC    X'00',X'00'
@@ -710,7 +704,7 @@ M10T2    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(11*MB+(1*K64)+004),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE 3
 M10T3    DS    0F
          DC    X'A3'                       Test Num
          DC    X'00',X'00'
@@ -722,7 +716,7 @@ M10T3    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(11*MB+(2*K64)+008),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M10T4    DS    0F
          DC    X'A4'                       Test Num
          DC    X'00',X'00'
@@ -758,7 +752,7 @@ M10T6    DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(11*MB+(5*K64)-12+(256-2)),A(2),XL4'F0'
-                                                                SPACE 4
+                                                                EJECT
 M10T7    DS    0F
          DC    X'A7'                       Test Num
          DC    X'00',X'00'
@@ -794,7 +788,7 @@ M10T9    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(11*MB+(8*K64)+2048),A(0),XL4'00'
-                                                                SPACE 4
+                                                                EJECT
 M10T10   DS    0F
          DC    X'AA'                       Test Num
          DC    X'00',X'00'
@@ -838,8 +832,7 @@ M12T1    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(9*MB+(0*K64)+002),A(000),A(0)
-
-                                                                SPACE 4
+                                                                SPACE 3
 M12T2    DS    0F
          DC    X'C2'                       Test Num
          DC    X'00',X'00'
@@ -851,7 +844,7 @@ M12T2    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(9*MB+(1*K64)+004),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE 3
 M12T3    DS    0F
          DC    X'C3'                       Test Num
          DC    X'00',X'00'
@@ -863,7 +856,7 @@ M12T3    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(9*MB+(2*K64)+008),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M12T4    DS    0F
          DC    X'C4'                       Test Num
          DC    X'00',X'00'
@@ -899,7 +892,7 @@ M12T6    DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(9*MB+(5*K64)-12+(256-2)),A(2),XL4'F0'
-                                                                SPACE 4
+                                                                EJECT
 M12T7    DS    0F
          DC    X'C7'                       Test Num
          DC    X'00',X'00'
@@ -935,7 +928,7 @@ M12T9    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(9*MB+(8*K64)+2048),A(0),XL4'00'
-                                                                SPACE 4
+                                                                EJECT
 M12T10   DS    0F
          DC    X'CA'                       Test Num
          DC    X'00',X'00'
@@ -980,7 +973,7 @@ M14T1    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(12*MB+(0*K64)+002),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE 3
 M14T2    DS    0F
          DC    X'E2'                       Test Num
          DC    X'00',X'00'
@@ -992,7 +985,7 @@ M14T2    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(12*MB+(1*K64)+004),A(000),A(0)
-                                                                SPACE 4
+                                                                SPACE 3
 M14T3    DS    0F
          DC    X'E3'                       Test Num
          DC    X'00',X'00'
@@ -1004,7 +997,7 @@ M14T3    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(12*MB+(2*K64)+008),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M14T4    DS    0F
          DC    X'E4'                       Test Num
          DC    X'00',X'00'
@@ -1040,7 +1033,7 @@ M14T6    DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(12*MB+(5*K64)-12+254),A(2),XL4'F0'
-                                                                SPACE 4
+                                                                EJECT
 M14T7    DS    0F
          DC    X'E7'                       Test Num
          DC    X'00',X'00'
@@ -1076,7 +1069,7 @@ M14T9    DS    0F
          DC    A(REG2PATT)
          DC    A(7) CC0
          DC    A(12*MB+(8*K64)+2048),A(000),A(0)
-                                                                SPACE 4
+                                                                EJECT
 M14T10   DS    0F
          DC    X'EA'                       Test Num
          DC    X'00',X'00'
@@ -1121,7 +1114,7 @@ F12T8    DS    0F
          DC    A(REG2PATT)
          DC    A(11) CC1
          DC    A(9*MB+(1*K64)+510),A(2),XL4'F1'
-                                                                SPACE 4
+                                                                SPACE 3
 F12T8A   DS    0F
          DC    X'F9'                       Test Num
          DC    X'00',X'00'
@@ -1133,7 +1126,7 @@ F12T8A   DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(9*MB+(3*K64)-127+510),A(2),XL4'F1'
-                                                                SPACE 4
+                                                                SPACE 3
 F12T11   DS    0F
          DC    X'FB'                       Test Num
          DC    X'00',X'00'
@@ -1145,7 +1138,7 @@ F12T11   DS    0F
          DC    A(REG2PATT)
          DC    A(11) CC1
          DC    A(9*MB+(6*K64)+2048-2),A(2),XL4'F0'
-                                                                SPACE 4
+                                                                EJECT
 F12T11A  DS    0F
          DC    X'FC'                       Test Num
          DC    X'00',X'00'
@@ -1157,9 +1150,7 @@ F12T11A  DS    0F
          DC    A(REG2PATT)
          DC    A(10) CC1 or CC3
          DC    A(9*MB+(9*K64)-481+2048-2),A(2),XL4'F0'
-
-
-
+                                                                SPACE 2
          DC    A(0)     end of table
          DC    A(0)     end of table
                                                                 EJECT
@@ -1167,55 +1158,53 @@ F12T11A  DS    0F
 *        TRTE op1 scan data...
 ***********************************************************************
                                                                 SPACE
-TRTOP10  DC    64XL4'78125634'    (CC0)
+TRTOP10  DC    64XL4'78125634'                               (CC0)
                                                                 SPACE
-TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'    (CC1)
+TRTOP111 DC    04XL4'78125634',X'00110000',59XL4'78125634'   (CC1)
                                                                 SPACE
-TRTOP1F0 DC    63XL4'78125634',X'000000F0'    (CC1)
+TRTOP1F0 DC    63XL4'78125634',X'000000F0'                   (CC1)
                                                                 SPACE
-TRTOP1F1 DC    127XL4'78125634',X'000000F1'    (CC1)
+TRTOP1F1 DC    127XL4'78125634',X'000000F1'                  (CC1)
                                                                 SPACE
-TRTO1L0  DC    512XL4'98765432'    (CC0)
+TRTO1L0  DC    512XL4'98765432'                              (CC0)
                                                                 SPACE
-TRTO1L11 DC    256XL4'98765432',X'00110000',255XL4'98765432'    (CC1)
+TRTO1L11 DC    256XL4'98765432',X'00110000',255XL4'98765432' (CC1)
                                                                 SPACE
-TRTO1LF0 DC    511XL4'98765432',X'000000F0'    (CC1)
-
+TRTO1LF0 DC    511XL4'98765432',X'000000F0'                  (CC1)
                                                                 EJECT
 ***********************************************************************
 *        Function Code (FC) Tables (GR1)
 ***********************************************************************
                                                                 SPACE
-TRTOP20  DC    256X'00'            no stop
+TRTOP20  DC    256X'00'                           no stop
          ORG   *+2*K64
                                                                 SPACE
-TRTOP211 DC    17X'00',X'11',238X'00'     stop on X'11'
+TRTOP211 DC    17X'00',X'11',238X'00'             stop on X'11'
                                                                 SPACE
-TRTOP2F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+TRTOP2F0 DC    240X'00',X'F0',15X'00'             stop on X'F0'
                                                                 SPACE
-TRTOP411 DC    34X'00',X'0011',476X'00'   stop on X'11'
+TRTOP411 DC    34X'00',X'0011',476X'00'           stop on X'11'
                                                                 SPACE
-TRTOP4F0 DC    480X'00',X'00F0',30X'00'     stop on X'F0'
-
-TRTOP811 DC    17X'00',X'11',238X'00'       stop on X'11'
+TRTOP4F0 DC    480X'00',X'00F0',30X'00'           stop on X'F0'
+                                                                SPACE
+TRTOP811 DC    17X'00',X'11',238X'00'             stop on X'11'
          ORG   *+2*K64
-
-TRTOP8F0 DC    240X'00',X'F0',15X'00'     stop on X'F0'
+                                                                SPACE
+TRTOP8F0 DC    240X'00',X'F0',15X'00'             stop on X'F0'
          ORG   *+2*K64
-
-TRTOP8F1 DC    240X'00',X'00',X'F1',14X'00'     stop on X'F1'
+                                                                SPACE
+TRTOP8F1 DC    240X'00',X'00',X'F1',14X'00'       stop on X'F1'
          ORG   *+2*K64
-
-TRTOPC11 DC    34X'00',X'0011'        stop on X'11'
+                                                                SPACE
+TRTOPC11 DC    34X'00',X'0011'                    stop on X'11'
          ORG   *+2*K64
-
-
-TRTOPCF0 DC    480X'00',X'00F0',28X'00'     stop on X'F0'
+                                                                SPACE
+TRTOPCF0 DC    480X'00',X'00F0',28X'00'           stop on X'F0'
          ORG   *+2*K64
-
-TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'     stop on X'F1'
+                                                                SPACE
+TRTOPCF1 DC    480X'00',X'0000',X'00F1',28X'00'   stop on X'F1'
          ORG   *+2*K64
-                                                                 EJECT
+                                                                EJECT
 ***********************************************************************
 *        Register equates
 ***********************************************************************
@@ -1236,5 +1225,5 @@ R12      EQU   12
 R13      EQU   13
 R14      EQU   14
 R15      EQU   15
-                                                                SPACE 8
+                                                                SPACE 4
          END
