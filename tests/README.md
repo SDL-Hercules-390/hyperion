@@ -103,20 +103,20 @@ APATH:=${USD}/SATK/tools
 While ASMA so obviously is superior to hand assembly, it does have a few
 limitations relative to HLASM that you should be aware of:
 
-*     Always check the documentation of the assembler instructions you
-      intend to use to be sure they are indeed implemented.  Notable
-      omissions are `AMODE` and `RMODE`.
+* Always check the documentation of the assembler instructions you
+  intend to use to be sure they are indeed implemented.  Notable
+  omissions are `AMODE` and `RMODE`.
 
-*     No floating point constants.  `D'...'` assembles as if `FD'...'` were
-      specified, which is correct only for `D'0'`.  Use hexadecimal
-      constants to assemble floating point constants.  The file
-      `dc-float.asm` contains, in no particular order, a number of
-      constants suitable for cut-and-paste.  This file was generated
-      from the HLASM listing file from an assembly of float constants.
+* No floating point constants.  `D'...'` assembles as if `FD'...'` were
+  specified, which is correct only for `D'0'`.  Use hexadecimal
+  constants to assemble floating point constants.  The file
+  `dc-float.asm` contains, in no particular order, a number of
+  constants suitable for cut-and-paste.  This file was generated
+  from the HLASM listing file from an assembly of float constants.
 
-*     Input is variable length ASCII.  Continuation is specified by a
-      backslash at the end of a line.  The alternate format for macro
-      instructions is not supported.
+* Input is variable length ASCII.  Continuation is specified by a
+  backslash at the end of a line.  The alternate format for macro
+  instructions is not supported.
 
 
 <b>.list</b>
